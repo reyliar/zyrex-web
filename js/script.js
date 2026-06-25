@@ -45,7 +45,7 @@ navLinks.forEach(link => {
 });
 
 /* ===================== DISCORD API - TEAM PROFILES ===================== */
-const API_BASE = 'https://reyliar.xyz/api/discord-user';
+const API_BASE = '/api/discord-user';
 const CDN_BASE = 'https://cdn.discordapp.com';
 
 const teamMembers = [
