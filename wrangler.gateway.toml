@@ -1,0 +1,18 @@
+name = "zyrex-gateway"
+main = "workers/discord_gateway.js"
+compatibility_date = "2024-12-01"
+
+# Secrets (set via wrangler secret put):
+# DISCORD_BOT_TOKEN
+
+# Route
+routes = [{ pattern = "zyrexediting.xyz/gateway", zone_id = "1844c05896c2b3897c61d37dc08b71e8" }]
+
+# Delete the old Durable Object class
+[[migrations]]
+tag = "v2"
+deleted_classes = ["GatewayDO"]
+
+# Cron trigger - every 30 seconds
+[triggers]
+crons = ["*/30 * * * * *"]

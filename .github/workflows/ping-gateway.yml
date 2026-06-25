@@ -1,0 +1,13 @@
+name: Ping Gateway Bot
+
+on:
+  schedule:
+    - cron: '*/1 * * * *'   # Every minute
+  workflow_dispatch:         # Manual trigger
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Gateway Worker
+        run: curl -s --max-time 10 "https://zyrexediting.xyz/gateway" -o /dev/null -w "%{http_code}"
