@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zyrex | Plugins</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        /* ===== PLUGINS HERO ===== */
+        .plugins-hero {
+            text-align:center; padding:100px 20px 60px;
+            background:radial-gradient(ellipse at 50% 0%, rgba(220,20,60,.08) 0%, transparent 70%);
+        }
+        .plugins-hero h1 { font-size:2.5rem; font-weight:900; margin-bottom:10px; }
+        .plugins-hero h1 span { background:linear-gradient(135deg,#dc143c,#ff4d6d); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
+        .plugins-hero p { color:#606070; max-width:500px; margin:0 auto 30px; font-size:.95rem; line-height:1.6; }
+
+        .filter-bar {
+            display:flex; align-items:center; justify-content:center; gap:10px;
+            flex-wrap:wrap; margin-bottom:30px;
+        }
+        .filter-bar .search-wrap {
+            position:relative; flex:1; max-width:400px; min-width:200px;
+        }
+        .filter-bar .search-wrap input {
+            width:100%; padding:10px 16px 10px 40px;
+            background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.06);
+            border-radius:10px; color:#fff; font-family:inherit; font-size:.85rem; outline:none;
+            transition:all .3s;
+        }
+        .filter-bar .search-wrap input:focus { border-color:rgba(220,20,60,.3); background:rgba(220,20,60,.05); }
+        .filter-bar .search-wrap i {
+            position:absolute; left:14px; top:50%; transform:translateY(-50%);
+            color:#505060; font-size:.85rem;
+        }
+        .platform-btn {
+            padding:8px 18px; border-radius:8px; border:1px solid rgba(255,255,255,.06);
+            background:transparent; color:#9090a0; cursor:pointer; font-family:inherit;
+            font-size:.8rem; font-weight:500; transition:all .3s;
+        }
+        .platform-btn:hover { border-color:rgba(220,20,60,.2); color:#fff; }
+        .platform-btn.active { background:rgba(220,20,60,.15); border-color:#dc143c; color:#dc143c; }
+
+        /* ===== CATEGORY TABS ===== */
+        .cat-tabs {
+            display:flex; flex-wrap:wrap; gap:8px; justify-content:center;
+            margin-bottom:35px;
+        }
+        .cat-tab {
+            padding:7px 18px; border-radius:20px; border:1px solid rgba(255,255,255,.06);
+            background:transparent; color:#707080; cursor:pointer; font-family:inherit;
+            font-size:.78rem; font-weight:500; transition:all .3s;
+        }
+        .cat-tab:hover { border-color:rgba(220,20,60,.2); color:#fff; }
+        .cat-tab.active { background:#dc143c; border-color:#dc143c; color:#fff; }
+
+        /* ===== PLUGINS GRID ===== */
+        .plugins-grid {
+            display:grid;
+            grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+            gap:16px;
+            padding-bottom:60px;
+        }
+        .plugin-card {
+            background:#121216; border:1px solid rgba(255,255,255,.04);
+            border-radius:12px; padding:20px;
+            display:flex; flex-direction:column; gap:12px;
+            transition:all .3s; cursor:pointer; position:relative;
+        }
+        .plugin-card:hover { border-color:rgba(220,20,60,.15); transform:translateY(-2px); box-shadow:0 8px 30px rgba(220,20,60,.06); }
+        .plugin-card .top { display:flex; align-items:flex-start; gap:14px; }
+        .plugin-card .top .icon {
+            width:48px; height:48px; border-radius:12px;
+            background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.06);
+            display:flex; align-items:center; justify-content:center;
+            font-size:1.2rem; color:#dc143c; flex-shrink:0;
+        }
+        .plugin-card .top .info { flex:1; min-width:0; }
+        .plugin-card .top .info h3 { font-size:.9rem; font-weight:700; margin-bottom:3px; color:#fff; }
+        .plugin-card .top .info .author { font-size:.72rem; color:#505060; }
+        .plugin-card .top .info .author span { color:#dc143c; }
+        .plugin-card .desc { font-size:.78rem; color:#606070; line-height:1.5; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+        .plugin-card .tags { display:flex; flex-wrap:wrap; gap:5px; margin-top:auto; }
+        .plugin-card .tags span {
+            padding:3px 10px; border-radius:5px; background:rgba(220,20,60,.08);
+            color:#dc143c; font-size:.65rem; font-weight:600;
+        }
+        .plugin-card .dl-link {
+            display:inline-flex; align-items:center; gap:6px;
+            padding:6px 14px; border-radius:6px;
+            background:rgba(220,20,60,.1); color:#ff4d6d;
+            font-size:.75rem; font-weight:600; text-decoration:none;
+            transition:all .3s; align-self:flex-start;
+        }
+        .plugin-card .dl-link:hover { background:#dc143c; color:#fff; }
+
+        .no-results {
+            text-align:center; padding:60px 20px; color:#505060; grid-column:1/-1;
+        }
+        .no-results i { font-size:2.5rem; margin-bottom:16px; opacity:.4; }
+        .no-results p { font-size:.9rem; }
+
+        @media(max-width:600px) {
+            .plugins-hero h1 { font-size:1.6rem; }
+            .plugins-grid { grid-template-columns:1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo">
+                <img src="https://cdn.discordapp.com/attachments/1421433783717990570/1519453492572328039/content.png?ex=6a3d9cd6&is=6a3c4b56&hm=d923795bdb21d6d38a09fa9bdbf8584fef5b10c1eadc2ef7b2d6b71c52b46bc5&" alt="ZYREX" class="logo-img">
+                <span class="logo-text">yrex</span>
+            </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="/">Home</a></li>
+                <li><a href="resources.html">Resources</a></li>
+                <li><a href="plugins.html" class="active">Plugins</a></li>
+                <li><a href="/#contact">Contact</a></li>
+            </ul>
+            <div class="nav-actions">
+                <div id="authBtn"></div>
+                <a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord">
+                    <i class="fab fa-discord"></i> <span>Join Us</span>
+                </a>
+                <button class="hamburger" id="hamburger" aria-label="Menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- PLUGINS HERO -->
+    <section class="plugins-hero">
+        <h1><span>Plugins</span> & Software</h1>
+        <p>Download the best editing plugins, scripts, and tools curated for professionals.</p>
+        <div class="filter-bar">
+            <div class="search-wrap">
+                <i class="fas fa-search"></i>
+                <input type="text" id="pluginSearch" placeholder="Search plugins..." oninput="filterPlugins()">
+            </div>
+            <button class="platform-btn active" data-platform="all" onclick="filterPlatform(this,'all')">All</button>
+            <button class="platform-btn" data-platform="windows" onclick="filterPlatform(this,'windows')"><i class="fab fa-windows"></i> Windows</button>
+            <button class="platform-btn" data-platform="mac" onclick="filterPlatform(this,'apple')"><i class="fab fa-apple"></i> Mac</button>
+            <button class="platform-btn" data-platform="linux" onclick="filterPlatform(this,'linux')"><i class="fab fa-linux"></i> Linux</button>
+        </div>
+    </section>
+
+    <div class="container">
+        <!-- CATEGORY TABS -->
+        <div class="cat-tabs" id="catTabs"></div>
+
+        <!-- PLUGINS GRID -->
+        <div class="plugins-grid" id="pluginsGrid"></div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <img src="https://cdn.discordapp.com/attachments/1421433783717990570/1519453492572328039/content.png?ex=6a3d9cd6&is=6a3c4b56&hm=d923795bdb21d6d38a09fa9bdbf8584fef5b10c1eadc2ef7b2d6b71c52b46bc5&" alt="ZYREX">
+                    <span>Zyrex Editing</span>
+                </div>
+                <div class="footer-links">
+                    <a href="/">Home</a>
+                    <a href="resources.html">Resources</a>
+                    <a href="plugins.html">Plugins</a>
+                    <a href="https://discord.gg/fAydSzpafA" target="_blank">Discord</a>
+                </div>
+                <div class="footer-copy">
+                    &copy; 2026 Zyrex. All rights reserved.
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/resources-data.js"></script>
+    <script src="js/resources.js"></script>
+    <script src="js/auth.js"></script>
+    <script>
+        // Hamburger
+        document.getElementById('hamburger')?.addEventListener('click', ()=>{
+            document.getElementById('navLinks').classList.toggle('active');
+        });
+
+        // ===== DATA =====
+        let allPlugins = [];
+        let currentPlatform = 'all';
+        let currentCategory = 'all';
+
+        function initPlugins() {
+            if (typeof RESOURCES === 'undefined') {
+                document.getElementById('pluginsGrid').innerHTML = '<div class="no-results"><i class="fas fa-database"></i><p>Loading plugin data...</p></div>';
+                return;
+            }
+            allPlugins = RESOURCES.filter(r => r.type === 'plugin' || !r.type);
+            renderCategories();
+            renderPlugins();
+        }
+
+        function renderCategories() {
+            const cats = [...new Set(allPlugins.map(p => p.category).filter(Boolean))];
+            const container = document.getElementById('catTabs');
+            container.innerHTML = `<button class="cat-tab active" data-cat="all" onclick="filterCategory(this,'all')">All</button>` +
+                cats.map(c => `<button class="cat-tab" data-cat="${c}" onclick="filterCategory(this,'${c}')">${c}</button>`).join('');
+        }
+
+        function filterCategory(el, cat) {
+            document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            currentCategory = cat;
+            renderPlugins();
+        }
+
+        function filterPlatform(el, platform) {
+            document.querySelectorAll('.platform-btn').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+            currentPlatform = platform;
+            renderPlugins();
+        }
+
+        function filterPlugins() {
+            renderPlugins();
+        }
+
+        function renderPlugins() {
+            const grid = document.getElementById('pluginsGrid');
+            const q = (document.getElementById('pluginSearch')?.value || '').toLowerCase();
+
+            let filtered = allPlugins.filter(p => {
+                if (currentPlatform !== 'all' && p.platform && p.platform !== currentPlatform) return false;
+                if (currentCategory !== 'all' && p.category !== currentCategory) return false;
+                if (q && !(p.name||'').toLowerCase().includes(q) && !(p.description||'').toLowerCase().includes(q)) return false;
+                return true;
+            });
+
+            if (!filtered.length) {
+                grid.innerHTML = '<div class="no-results"><i class="fas fa-search"></i><p>No plugins match your filters.</p></div>';
+                return;
+            }
+
+            grid.innerHTML = filtered.map(p => `
+                <div class="plugin-card" onclick="window.open('${p.url||'#'}','_blank')">
+                    <div class="top">
+                        <div class="icon"><i class="fas ${p.icon||'fa-puzzle-piece'}"></i></div>
+                        <div class="info">
+                            <h3>${p.name||'Untitled'}</h3>
+                            <div class="author">by <span>${p.author||'Unknown'}</span></div>
+                        </div>
+                    </div>
+                    <div class="desc">${p.description||''}</div>
+                    <div class="tags">
+                        ${(p.tags||[]).map(t => `<span>${t}</span>`).join('')}
+                        ${p.platform ? `<span style="background:rgba(255,255,255,.04);color:#707080">${p.platform}</span>` : ''}
+                    </div>
+                    <a href="${p.url||'#'}" target="_blank" class="dl-link"><i class="fas fa-download"></i> Download</a>
+                </div>
+            `).join('');
+        }
+
+        document.addEventListener('DOMContentLoaded', initPlugins);
+    </script>
+</body>
+</html>
