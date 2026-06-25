@@ -45,7 +45,6 @@ navLinks.forEach(link => {
 });
 
 /* ===================== DISCORD API - TEAM PROFILES ===================== */
-const API_BASE = '/api/discord-user';
 const CDN_BASE = 'https://cdn.discordapp.com';
 
 const teamMembers = [
@@ -74,21 +73,19 @@ function getBannerUrl(user, size = 480) {
 }
 
 async function fetchDiscordUser(userId) {
-    const url = new URL(API_BASE);
-    url.searchParams.set('userId', userId);
-    url.searchParams.set('fresh', String(Math.floor(Date.now() / 300000)));
-
     try {
-        const response = await fetch(url, { cache: 'no-store' });
+        const url = new URL('/api/discord-user', location.origin);
+        url.searchParams.set('userId', userId);
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 5000);
+        const response = await fetch(url, { signal: controller.signal });
+        clearTimeout(timeout);
         const data = await response.json();
-        if (data.success && data.user) {
-            return data.user;
-        }
-        return null;
+        if (data.success && data.user) return data.user;
     } catch (err) {
         console.warn(`Failed to fetch Discord user ${userId}:`, err);
-        return null;
     }
+    return null;
 }
 
 async function loadTeamMembers() {
@@ -97,6 +94,30 @@ async function loadTeamMembers() {
 
     teamGrid.innerHTML = '<div class="loading-team"><i class="fas fa-spinner fa-spin"></i> Loading team...</div>';
 
+    // Timeout: show fallback after 6 seconds if still loading
+    const timeoutId = setTimeout(() => {
+        if (teamGrid.querySelector('.loading-team')) {
+            teamGrid.innerHTML = '';
+            teamMembers.forEach(member => {
+                const card = document.createElement('div');
+                card.className = 'team-card';
+                card.innerHTML = `
+                    <a href="https://discord.com/users/${member.userId}" target="_blank" class="team-card-link">
+                        <div class="team-avatar">
+                            <div class="avatar-placeholder"><i class="fas fa-user"></i></div>
+                        </div>
+                        <h4>Loading...</h4>
+                        <span class="team-discord-tag">@${member.userId}</span>
+                        <span class="team-role" style="color: ${member.roleColor}">
+                            <i class="fas fa-crown"></i> ${member.role}
+                        </span>
+                    </a>
+                `;
+                teamGrid.appendChild(card);
+            });
+        }
+    }, 6000);
+
     const members = await Promise.all(
         teamMembers.map(async (member) => {
             const user = await fetchDiscordUser(member.userId);
@@ -104,6 +125,7 @@ async function loadTeamMembers() {
         })
     );
 
+    clearTimeout(timeoutId);
     teamGrid.innerHTML = '';
 
     members.forEach(member => {
@@ -147,25 +169,23 @@ async function fetchGuildStats() {
             badge.innerHTML = `<i class="fab fa-discord"></i> ${data.name.toUpperCase()}`;
         }
         
-        if (data.member_count > 0 || data.online_count > 0) {
-            const statMap = {
-                'Members': data.member_count,
-                'Online': data.online_count,
-                'Channels': data.channels_count || 0,
-                'Roles': data.roles_count || 0,
-                'Boost Level': data.boost_level || 0
-            };
-            document.querySelectorAll('.stats-item').forEach(item => {
-                const label = item.querySelector('.stats-label');
-                const number = item.querySelector('.stats-number');
-                if (label && number) {
-                    const key = label.textContent.trim();
-                    if (statMap[key] !== undefined) {
-                        number.setAttribute('data-target', statMap[key]);
-                    }
+        const statMap = {
+            'Members': data.member_count || 0,
+            'Online': data.online_count || 0,
+            'Channels': data.channels_count || 0,
+            'Roles': data.roles_count || 0,
+            'Boost Level': data.boost_level || 0
+        };
+        document.querySelectorAll('.stats-item').forEach(item => {
+            const label = item.querySelector('.stats-label');
+            const number = item.querySelector('.stats-number');
+            if (label && number) {
+                const key = label.textContent.trim();
+                if (statMap[key] !== undefined) {
+                    number.setAttribute('data-target', statMap[key]);
                 }
-            });
-        }
+            }
+        });
     } catch(e) {
         console.warn('Guild stats unavailable');
     }

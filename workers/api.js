@@ -135,19 +135,50 @@ export default {
 
       // GUILD STATS
       if (path === "/api/guild/stats") {
+        // Fetch guild with counts
         const gr = await fetch(`${DISCORD_API}/guilds/${env.GUILD_ID}?with_counts=true`, {
           headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` },
         });
         if (!gr.ok) {
-          return json({ name: "Zyrex", member_count: 0, online_count: 0, channels_count: 0, boost_level: 0 });
+          return json({ name: "Zyrex", member_count: 0, online_count: 0, channels_count: 0, roles_count: 0, boost_level: 0 });
         }
         const g = await gr.json();
+
+        // Fetch channels count
+        let channelsCount = 0;
+        try {
+          const cr = await fetch(`${DISCORD_API}/guilds/${env.GUILD_ID}/channels`, {
+            headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` },
+          });
+          if (cr.ok) {
+            const channels = await cr.json();
+            channelsCount = Array.isArray(channels) ? channels.length : 0;
+          }
+        } catch (e) { console.error("Channels fetch:", e); }
+
+        // Fetch roles count (roles might not be in guild response)
+        let rolesCount = 0;
+        if (g.roles && Array.isArray(g.roles)) {
+          rolesCount = g.roles.length;
+        } else {
+          try {
+            const rr = await fetch(`${DISCORD_API}/guilds/${env.GUILD_ID}/roles`, {
+              headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` },
+            });
+            if (rr.ok) {
+              const roles = await rr.json();
+              rolesCount = Array.isArray(roles) ? roles.length : 0;
+            }
+          } catch (e) { console.error("Roles fetch:", e); }
+        }
+
         return json({
           name: g.name || "Zyrex",
           icon: g.icon || "",
           member_count: g.approximate_member_count || g.member_count || 0,
           online_count: g.approximate_presence_count || 0,
-          channels_count: 0,
+          channels_count: channelsCount,
+          roles_count: rolesCount,
           boost_level: g.premium_tier || 0,
         });
       }
