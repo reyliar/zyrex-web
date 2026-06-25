@@ -13,8 +13,6 @@ async function checkAuth() {
                 ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=64`
                 : '';
 
-            const hasAccess = user.can_upload || user.is_admin;
-
             btn.innerHTML = `
                 <div class="auth-user" style="position:relative;display:flex;align-items:center;gap:8px;cursor:pointer" onclick="toggleUserMenu()">
                     ${avatarUrl ? `<img src="${avatarUrl}" alt="" style="width:32px;height:32px;border-radius:50%;border:2px solid rgba(220,20,60,.3)">` : ''}
@@ -26,7 +24,7 @@ async function checkAuth() {
                         <div style="font-size:.85rem;font-weight:600">${user.global_name || user.username}</div>
                         <div style="font-size:.7rem;color:#606070">@${user.username}</div>
                     </div>
-                    ${hasAccess ? `<a href="/settings" style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:6px;color:#9090a0;text-decoration:none;font-size:.8rem;transition:all .2s" onmouseover="this.style.background='rgba(255,255,255,.04)'" onmouseout="this.style.background='transparent'"><i class="fas fa-cog" style="width:16px;text-align:center"></i> Settings</a>` : ''}
+                    <a href="/settings" style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:6px;color:#9090a0;text-decoration:none;font-size:.8rem;transition:all .2s" onmouseover="this.style.background='rgba(255,255,255,.04)'" onmouseout="this.style.background='transparent'"><i class="fas fa-cog" style="width:16px;text-align:center"></i> Settings</a>
                     <a href="/api/logout" style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:6px;color:#9090a0;text-decoration:none;font-size:.8rem;transition:all .2s" onmouseover="this.style.background='rgba(255,255,255,.04)'" onmouseout="this.style.background='transparent'"><i class="fas fa-sign-out-alt" style="width:16px;text-align:center"></i> Logout</a>
                 </div>
             `;
