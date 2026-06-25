@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Zyrex Resources - Product detail">
+    <meta name="author" content="Zyrex">
+    <title>Zyrex | Product</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        .product-page {
+            padding-top: 120px;
+            min-height: 100vh;
+            background: var(--dark);
+        }
+
+        .product-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--gray);
+            font-size: 0.9rem;
+            margin-bottom: 30px;
+            transition: var(--transition);
+        }
+
+        .product-back:hover {
+            color: var(--cherry-light);
+        }
+
+        .product-back {
+            animation: fadeSlideIn 0.5s ease forwards;
+        }
+
+        .product-card {
+            max-width: 700px;
+            margin: 0 auto;
+            background: var(--dark-2);
+            border: 1px solid rgba(220, 20, 60, 0.1);
+            border-radius: var(--radius-lg);
+            padding: 50px 45px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            animation: fadeSlideUp 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+        }
+
+        .product-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: var(--gradient);
+        }
+
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateX(-15px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .product-dl-btn {
+            animation: fadeSlideUp 0.5s ease forwards;
+            opacity: 0;
+        }
+
+        .product-dl-btn:nth-child(1) { animation-delay: 0.1s; }
+        .product-dl-btn:nth-child(2) { animation-delay: 0.2s; }
+        .product-dl-btn:nth-child(3) { animation-delay: 0.3s; }
+        .product-dl-btn:nth-child(4) { animation-delay: 0.4s; }
+        .product-dl-btn:nth-child(5) { animation-delay: 0.5s; }
+
+        .product-thumb-large {
+            width: 96px;
+            height: 96px;
+            border-radius: 20px;
+            background: var(--dark-3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 25px;
+            overflow: hidden;
+            border: 2px solid rgba(220, 20, 60, 0.15);
+        }
+
+        .product-thumb-large img {
+            width: 56px;
+            height: 56px;
+            object-fit: contain;
+        }
+
+        .product-thumb-large .thumb-fallback {
+            font-size: 2.2rem;
+            color: var(--cherry);
+            opacity: 0.6;
+        }
+
+        .product-category-badge {
+            display: inline-block;
+            padding: 5px 16px;
+            background: rgba(220, 20, 60, 0.1);
+            border: 1px solid rgba(220, 20, 60, 0.2);
+            border-radius: 50px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--cherry-light);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+        }
+
+        .product-card h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin-bottom: 12px;
+            line-height: 1.3;
+        }
+
+        .product-desc {
+            color: var(--gray);
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        .product-platform-tags {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .product-platform-tags span {
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .product-platform-tags .tag-win {
+            background: rgba(0, 168, 45, 0.12);
+            color: #00a82d;
+            border: 1px solid rgba(0, 168, 45, 0.15);
+        }
+
+        .product-platform-tags .tag-mac {
+            background: rgba(0, 122, 255, 0.12);
+            color: #007aff;
+            border: 1px solid rgba(0, 122, 255, 0.15);
+        }
+
+        .product-platform-tags .tag-both {
+            background: rgba(220, 20, 60, 0.12);
+            color: var(--cherry-light);
+            border: 1px solid rgba(220, 20, 60, 0.15);
+        }
+
+        .product-password-box {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 24px;
+            background: var(--dark-3);
+            border: 1px solid rgba(220, 20, 60, 0.15);
+            border-radius: var(--radius);
+            margin-bottom: 30px;
+        }
+
+        .product-password-box i {
+            color: var(--cherry-light);
+            font-size: 1rem;
+        }
+
+        .product-password-box span {
+            color: var(--gray);
+            font-size: 0.85rem;
+        }
+
+        .product-password-box code {
+            background: rgba(220, 20, 60, 0.15);
+            color: var(--cherry-light);
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .product-password-box code:hover {
+            background: rgba(220, 20, 60, 0.25);
+        }
+
+        .product-notes {
+            background: rgba(255, 193, 7, 0.05);
+            border: 1px solid rgba(255, 193, 7, 0.1);
+            border-radius: var(--radius);
+            padding: 14px 20px;
+            margin-bottom: 30px;
+            text-align: left;
+            font-size: 0.82rem;
+            color: var(--gray);
+            line-height: 1.5;
+        }
+
+        .product-notes i {
+            color: #ffc107;
+            margin-right: 8px;
+        }
+
+        .product-downloads-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--gray-dark);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+        }
+
+        .product-downloads {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .product-dl-btn {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 22px;
+            background: var(--dark-3);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: var(--radius);
+            text-decoration: none;
+            transition: var(--transition);
+            text-align: left;
+        }
+
+        .product-dl-btn:hover {
+            border-color: rgba(220, 20, 60, 0.2);
+            transform: translateX(5px);
+            background: rgba(220, 20, 60, 0.05);
+        }
+
+        .product-dl-btn .dl-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            background: rgba(220, 20, 60, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .product-dl-btn .dl-icon.pixeldrain { color: #00d084; }
+        .product-dl-btn .dl-icon.gofile { color: #f78da7; }
+        .product-dl-btn .dl-icon.mediafire { color: #ff8c00; }
+        .product-dl-btn .dl-icon.default { color: var(--cherry-light); }
+
+        .product-dl-btn .dl-info {
+            flex: 1;
+        }
+
+        .product-dl-btn .dl-info strong {
+            display: block;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--light);
+        }
+
+        .product-dl-btn .dl-info span {
+            font-size: 0.78rem;
+            color: var(--gray-dark);
+        }
+
+        .product-dl-btn .dl-arrow {
+            color: var(--gray-dark);
+            font-size: 1.1rem;
+            transition: var(--transition);
+        }
+
+        .product-dl-btn:hover .dl-arrow {
+            color: var(--cherry-light);
+            transform: translateX(3px);
+        }
+
+        .product-loading {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--gray);
+        }
+
+        .product-loading i {
+            font-size: 2rem;
+            color: var(--cherry);
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .product-error {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--gray);
+        }
+
+        .product-error i {
+            font-size: 3rem;
+            color: var(--cherry);
+            opacity: 0.5;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .product-page {
+                padding-top: 100px;
+            }
+            .product-card {
+                padding: 35px 25px;
+            }
+            .product-card h1 {
+                font-size: 1.4rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar scrolled">
+        <div class="container">
+            <a href="index.html" class="logo">
+                <img src="https://cdn.discordapp.com/attachments/1421433783717990570/1519453492572328039/content.png?ex=6a3d9cd6&is=6a3c4b56&hm=d923795bdb21d6d38a09fa9bdbf8584fef5b10c1eadc2ef7b2d6b71c52b46bc5&" alt="ZYREX" class="logo-img">
+            </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="resources.html">Resources</a></li>
+                <li><a href="index.html#contact">Contact</a></li>
+            </ul>
+            <div class="nav-actions">
+                <div id="authBtn"></div>
+                <a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord">
+                    <i class="fab fa-discord"></i> <span>Join Us</span>
+                </a>
+                <button class="hamburger" id="hamburger" aria-label="Menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <section class="product-page">
+        <div class="container" id="productContainer">
+            <div class="product-loading" id="productLoading">
+                <i class="fas fa-spinner fa-spin"></i>
+                Loading product...
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <h3>ZYREX <span class="cherry-text">Editing</span></h3>
+                    <p>Premium editing community & resources.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="resources.html">Resources</a></li>
+                        <li><a href="more.html">Plugins</a></li>
+                        <li><a href="index.html#team">Team</a></li>
+                        <li><a href="index.html#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="https://discord.gg/fAydSzpafA">Discord</a></li>
+                        <li><a href="index.html#team">Team</a></li>
+                        <li><a href="index.html#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-newsletter">
+                    <h4>Newsletter</h4>
+                    <p>Stay updated with Zyrex Editing.</p>
+                    <div class="newsletter-form">
+                        <input type="email" placeholder="Your email">
+                        <button type="submit"><i class="fas fa-arrow-right"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Zyrex Editing. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/auth.js"></script>
+    <script src="js/resources-data.js"></script>
+    <script src="js/presets-data.js"></script>
+    <script>
+    /* ===================== PRODUCT PAGE RENDER ===================== */
+    document.addEventListener('DOMContentLoaded', () => {
+        const params = new URLSearchParams(window.location.search);
+        const productId = params.get('id');
+
+        const container = document.getElementById('productContainer');
+        const loading = document.getElementById('productLoading');
+
+        if (!productId || !window.resourcesData) {
+            loading.innerHTML = `
+                <div class="product-error">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Product not found</h3>
+                    <p style="margin-top:10px;color:var(--gray-dark)">The product you're looking for doesn't exist.</p>
+                    <a href="resources.html" class="btn btn-primary" style="margin-top:20px;display:inline-flex">Back to Resources</a>
+                </div>
+            `;
+            return;
+        }
+
+        let product = window.resourcesData ? window.resourcesData.find(p => p.id === productId) : null;
+        let backLink = 'resources.html';
+        if (!product) {
+            product = window.presetsData ? window.presetsData.find(p => p.id === productId) : null;
+            backLink = 'resources.html';
+        }
+
+        if (!product) {
+            loading.innerHTML = `
+                <div class="product-error">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>Product not found</h3>
+                    <p style="margin-top:10px;color:var(--gray-dark)">"${productId}" could not be found.</p>
+                    <a href="resources.html" class="btn btn-primary" style="margin-top:20px;display:inline-flex">Back to Resources</a>
+                </div>
+            `;
+            return;
+        }
+
+        const favicon = product.links[0]?.url 
+            ? `https://www.google.com/s2/favicons?domain=${new URL(product.links[0].url).hostname}&sz=64`
+            : '';
+
+        const platformTags = [];
+        if (product.platform === 'win' || product.platform === 'both') platformTags.push('<span class="tag-win"><i class="fab fa-windows"></i> WIN</span>');
+        if (product.platform === 'mac' || product.platform === 'both') platformTags.push('<span class="tag-mac"><i class="fab fa-apple"></i> MAC</span>');
+
+        const categoryLabels = {
+            'software': 'Software',
+            'adobe-plugins': 'Adobe Plugin',
+            'ofx-plugins': 'OFX Plugin'
+        };
+
+        const dlIcons = {
+            'pixeldrain': 'pixeldrain',
+            'gofile': 'gofile',
+            'mediafire': 'mediafire',
+            'mediafire': 'mediafire'
+        };
+
+        function getDlClass(label) {
+            const l = label.toLowerCase();
+            if (l.includes('pixel')) return 'pixeldrain';
+            if (l.includes('gofile') || l.includes('go')) return 'gofile';
+            if (l.includes('media')) return 'mediafire';
+            return 'default';
+        }
+
+        function getDlIcon(label) {
+            const l = label.toLowerCase();
+            if (l.includes('pixel')) return 'fa-cloud-arrow-down';
+            if (l.includes('gofile') || l.includes('go')) return 'fa-cloud';
+            if (l.includes('media')) return 'fa-file-zipper';
+            return 'fa-download';
+        }
+
+        const thumbHtml = favicon
+            ? `<img src="${favicon}" alt="" onerror="this.parentElement.innerHTML='<div class=\\'thumb-fallback\\'><i class=\\'fas fa-cube\\'></i></div>'">`
+            : `<div class="thumb-fallback"><i class="fas fa-cube"></i></div>`;
+
+        const notesHtml = product.notes 
+            ? `<div class="product-notes"><i class="fas fa-circle-info"></i> ${product.notes}</div>`
+            : '';
+
+        container.innerHTML = `
+            <div style="max-width:700px;margin:0 auto">
+                <a href="resources.html" class="product-back">
+                    <i class="fas fa-arrow-left"></i> Back to Resources
+                </a>
+                <div class="product-card">
+                    <div class="product-thumb-large">${thumbHtml}</div>
+                    <span class="product-category-badge">${categoryLabels[product.category] || product.category}</span>
+                    <h1>${product.name}</h1>
+                    ${product.desc ? `<p class="product-desc">${product.desc}</p>` : ''}
+                    ${platformTags.length ? `<div class="product-platform-tags">${platformTags.join('')}</div>` : ''}
+                    <div class="product-password-box">
+                        <i class="fas fa-lock"></i>
+                        <span>Password:</span>
+                        <code onclick="navigator.clipboard.writeText('${product.password}');this.textContent='Copied!';setTimeout(()=>this.textContent='${product.password}',1500)">${product.password}</code>
+                    </div>
+                    ${notesHtml}
+                    <div class="product-downloads-title"><i class="fas fa-download"></i> Download Links</div>
+                    <div class="product-downloads">
+                        ${product.links.map(link => `
+                            <a href="${link.url}" target="_blank" rel="noopener" class="product-dl-btn">
+                                <div class="dl-icon ${getDlClass(link.label)}">
+                                    <i class="fas ${getDlIcon(link.label)}"></i>
+                                </div>
+                                <div class="dl-info">
+                                    <strong>${link.label}</strong>
+                                    <span>${new URL(link.url).hostname}</span>
+                                </div>
+                                <i class="fas fa-arrow-right dl-arrow"></i>
+                            </a>
+                        `).join('')}
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Zyrex More - Premium plugins, software & tools for editors">
+    <meta name="author" content="Zyrex">
+    <title>Zyrex | More</title>
+    <link rel="stylesheet" href="css/style.css?v=8">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        .resources-page { padding-top: 100px; min-height: 100vh; background: var(--dark); }
+        .resources-page .resources-header { text-align: center; padding: 40px 0 30px; }
+        .resources-page .resources-header h1 { font-size: 2.8rem; font-weight: 900; margin-bottom: 8px; }
+        .resources-page .resources-header p { color: var(--gray); font-size: 1rem; margin-bottom: 5px; }
+        .resources-page .resources-header .password-badge {
+            display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; padding: 8px 20px;
+            background: rgba(220, 20, 60, 0.1); border: 1px solid rgba(220, 20, 60, 0.2);
+            border-radius: 50px; font-size: 0.85rem;
+        }
+        .resources-page .resources-header .password-badge code {
+            background: var(--dark-3); padding: 3px 10px; border-radius: 5px;
+            color: var(--cherry-light); font-weight: 600; font-size: 0.9rem;
+        }
+        .category-tabs {
+            display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;
+            margin-bottom: 30px; padding: 0 20px;
+        }
+        .category-tab {
+            padding: 10px 22px; border-radius: 50px; background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.1); color: var(--gray);
+            font-family: inherit; font-size: 0.85rem; font-weight: 500; cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); position: relative; overflow: hidden;
+        }
+        .category-tab:hover { border-color: var(--cherry); color: var(--light); transform: translateY(-1px); }
+        .category-tab.active { background: var(--gradient); border-color: transparent; color: var(--light); transform: translateY(-1px); box-shadow: 0 4px 15px rgba(220, 20, 60, 0.3); }
+        .platform-selector { display: flex; justify-content: center; gap: 15px; margin-bottom: 35px; }
+        .platform-btn {
+            padding: 12px 30px; border-radius: 50px; background: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.1); color: var(--gray);
+            font-family: inherit; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            display: flex; align-items: center; gap: 8px;
+        }
+        .platform-btn i { font-size: 1.2rem; transition: transform 0.3s ease; }
+        .platform-btn:hover { border-color: var(--cherry); color: var(--light); transform: translateY(-2px); }
+        .platform-btn:hover i { transform: scale(1.15); }
+        .platform-btn.active { border-color: var(--cherry); background: rgba(220, 20, 60, 0.1); color: var(--light); transform: translateY(-2px); box-shadow: 0 4px 20px rgba(220, 20, 60, 0.2); }
+        .resources-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 16px; padding: 0 20px 60px; max-width: 1200px; margin: 0 auto;
+        }
+        .resource-item {
+            background: var(--dark-2); border: 1px solid rgba(220, 20, 60, 0.06);
+            border-radius: var(--radius); overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); position: relative;
+        }
+        .resource-item:hover { transform: translateY(-6px) scale(1.01); border-color: rgba(220, 20, 60, 0.25); box-shadow: 0 12px 40px rgba(220, 20, 60, 0.15); }
+        .resource-item::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, transparent 50%, rgba(220, 20, 60, 0.03)); opacity: 0; transition: opacity 0.4s ease; pointer-events: none; }
+        .resource-item:hover::after { opacity: 1; }
+        .resource-thumb { width: 100%; aspect-ratio: 1; background: var(--dark-3); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+        .resource-thumb img { width: 56px; height: 56px; border-radius: 14px; object-fit: cover; transition: transform 0.3s ease; }
+        .resource-item:hover .resource-thumb img { transform: scale(1.1); }
+        .resource-thumb .thumb-fallback { font-size: 2.2rem; color: var(--cherry); opacity: 0.4; }
+        .resource-platform-badge { position: absolute; top: 8px; right: 8px; padding: 3px 8px; border-radius: 6px; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; backdrop-filter: blur(4px); }
+        .resource-platform-badge.win { background: rgba(0, 168, 45, 0.2); color: #00a82d; }
+        .resource-platform-badge.mac { background: rgba(0, 122, 255, 0.2); color: #007aff; }
+        .resource-platform-badge.both { background: rgba(220, 20, 60, 0.2); color: var(--cherry-light); }
+        .resource-info { padding: 14px 16px 16px; }
+        .resource-info h3 { font-size: 0.88rem; font-weight: 700; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .resource-info .resource-category { font-size: 0.7rem; color: var(--cherry-light); font-weight: 500; margin-bottom: 5px; display: block; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.5px; }
+        .resource-info .resource-desc { font-size: 0.75rem; color: var(--gray-dark); line-height: 1.4; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .more-banner {
+            text-align: center; padding: 15px 20px; margin: 0 20px 20px;
+            background: rgba(220, 20, 60, 0.05); border: 1px solid rgba(220, 20, 60, 0.1);
+            border-radius: var(--radius); font-size: 0.85rem; color: var(--gray);
+        }
+        .more-banner a { color: var(--cherry-light); font-weight: 600; }
+        .more-banner a:hover { text-decoration: underline; }
+        @media (max-width: 768px) {
+            .resources-page .resources-header h1 { font-size: 2rem; }
+            .resources-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 0 12px 40px; }
+            .platform-selector { gap: 10px; }
+            .platform-btn { padding: 10px 20px; font-size: 0.85rem; }
+        }
+        @media (max-width: 480px) {
+            .resources-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; max-width: 450px; margin: 0 auto; }
+        }
+        .satvrn-credit {
+            text-align: center;
+            padding: 20px;
+            background: rgba(255,255,255,.02);
+            border-top: 1px solid rgba(255,255,255,.04);
+        }
+        .satvrn-credit .container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .satvrn-credit span {
+            font-size: .82rem;
+            color: #606070;
+        }
+        .satvrn-credit a {
+            display: flex;
+            align-items: center;
+            transition: opacity .3s;
+        }
+        .satvrn-credit a:hover {
+            opacity: .8;
+        }
+        .satvrn-credit img {
+            height: 28px;
+            width: auto;
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar scrolled">
+        <div class="container">
+            <a href="index.html" class="logo">
+                <img src="https://cdn.discordapp.com/attachments/1421433783717990570/1519453492572328039/content.png?ex=6a3d9cd6&is=6a3c4b56&hm=d923795bdb21d6d38a09fa9bdbf8584fef5b10c1eadc2ef7b2d6b71c52b46bc5&" alt="ZYREX" class="logo-img">
+                <span class="logo-text">yrex</span>
+            </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="resources.html">Resources</a></li>
+                <li><a href="more.html" class="active">Plugins</a></li>
+                <li><a href="index.html#contact">Contact</a></li>
+            </ul>
+            <div class="nav-actions">
+                <div id="authBtn"></div>
+                <a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord">
+                    <i class="fab fa-discord"></i> <span>Join Us</span>
+                </a>
+                <button class="hamburger" id="hamburger" aria-label="Menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <section class="resources-page">
+        <div class="container">
+            <div class="resources-header">
+                <h1><span class="cherry-text">Plugins</span></h1>
+                <p>Premium plugins, software & tools for editors.</p>
+                <div class="password-badge">
+                    <i class="fas fa-lock"></i> Password: <code>star</code>
+                </div>
+            </div>
+
+            <div class="more-banner">
+                <i class="fas fa-arrow-left"></i> Looking for presets instead? Visit 
+                <a href="resources.html">Resources</a>.
+            </div>
+
+            <div class="platform-selector">
+                <button class="platform-btn active" data-platform="all"><i class="fas fa-globe"></i> All</button>
+                <button class="platform-btn" data-platform="win"><i class="fab fa-windows"></i> Windows</button>
+                <button class="platform-btn" data-platform="mac"><i class="fab fa-apple"></i> Mac</button>
+            </div>
+
+            <div class="category-tabs" id="categoryTabs">
+                <button class="category-tab active" data-category="all">All</button>
+                <button class="category-tab" data-category="software">Software</button>
+                <button class="category-tab" data-category="adobe-plugins">Adobe Plugins</button>
+                <button class="category-tab" data-category="ofx-plugins">OFX Plugins</button>
+            </div>
+        </div>
+
+        <div class="resources-grid" id="resourcesGrid"></div>
+    </section>
+
+    <div class="satvrn-credit">
+        <div class="container">
+            <span>Plugins sourced from</span>
+            <a href="https://satvrn.li" target="_blank">
+                <img src="https://satvrn.li/Satvrn.png" alt="Satvrn">
+            </a>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <h3>ZYREX <span class="cherry-text">Editing</span></h3>
+                    <p>Premium editing community & resources.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="index.html">Home</a></li>
+                        <li><a href="resources.html">Resources</a></li>
+                        <li><a href="more.html">Plugins</a></li>
+                        <li><a href="index.html#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="https://discord.gg/fAydSzpafA">Discord</a></li>
+                        <li><a href="index.html#team">Team</a></li>
+                        <li><a href="index.html#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-newsletter">
+                    <h4>Newsletter</h4>
+                    <p>Stay updated with Zyrex Editing.</p>
+                    <div class="newsletter-form">
+                        <input type="email" placeholder="Your email">
+                        <button type="submit"><i class="fas fa-arrow-right"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Zyrex Editing. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/auth.js"></script>
+    <script src="js/resources-data.js"></script>
+    <script src="js/resources.js"></script>
+</body>
+</html>
