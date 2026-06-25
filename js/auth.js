@@ -17,7 +17,7 @@ async function checkAuth() {
                 <div class="auth-user" style="display:flex;align-items:center;gap:8px">
                     ${avatarUrl ? `<img src="${avatarUrl}" alt="" style="width:32px;height:32px;border-radius:50%;border:2px solid rgba(220,20,60,.3)">` : ''}
                     <span style="font-size:.82rem;font-weight:500;color:#fff">${user.global_name || user.username}</span>
-                    ${user.can_upload ? `<a href="/admin" style="font-size:.7rem;color:#dc143c;text-decoration:none;font-weight:600"><i class="fas fa-cog"></i></a>` : ''}
+                    ${user.can_upload || user.is_admin ? `<a href="/settings" style="font-size:.7rem;color:#dc143c;text-decoration:none;font-weight:600"><i class="fas fa-cog"></i></a>` : ''}
                 </div>
             `;
             return;

@@ -1,6 +1,7 @@
 // Zyrex API Worker - Discord OAuth, Guild Stats, User Profiles
 
 const DISCORD_API = "https://discord.com/api/v10";
+const ADMIN_IDS = ["1421177012814614548", "1382421118098346174"];
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -75,6 +76,7 @@ export default {
           global_name: session.displayName || session.username,
           avatar: session.avatar,
           can_upload: session.canUpload || false,
+          is_admin: ADMIN_IDS.includes(session.userId),
         });
       }
 
@@ -105,16 +107,18 @@ export default {
         if (!ur.ok) return redirect("/?error=user_fetch_failed");
         const du = await ur.json();
 
-        let canUpload = false;
-        try {
-          const mr = await fetch(`${DISCORD_API}/guilds/${env.GUILD_ID}/members/${du.id}`, {
-            headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` },
-          });
-          if (mr.ok) {
-            const member = await mr.json();
-            canUpload = member.roles?.includes(env.UPLOAD_ROLE_ID);
-          }
-        } catch (e) { console.error("Guild check:", e); }
+        let canUpload = ADMIN_IDS.includes(du.id);
+        if (!canUpload) {
+          try {
+            const mr = await fetch(`${DISCORD_API}/guilds/${env.GUILD_ID}/members/${du.id}`, {
+              headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` },
+            });
+            if (mr.ok) {
+              const member = await mr.json();
+              canUpload = member.roles?.includes(env.UPLOAD_ROLE_ID);
+            }
+          } catch (e) { console.error("Guild check:", e); }
+        }
 
         return new Response(null, {
           status: 302,
@@ -170,6 +174,18 @@ export default {
           user: userData,
           presence: null,
         });
+      }
+
+      // DELETE PRODUCT (admin only)
+      if (path === "/api/products/delete" && request.method === "POST") {
+        const session = parseSession(request.headers.get("Cookie"));
+        if (!session || !ADMIN_IDS.includes(session.userId)) {
+          return json({ error: "Unauthorized" }, 403);
+        }
+        const { id } = await request.json();
+        if (!id) return json({ error: "Product ID required" }, 400);
+        // For now, respond success (DB integration later)
+        return json({ success: true, message: `Product ${id} deleted` });
       }
 
       return json({ error: "Not found" }, 404);
