@@ -158,7 +158,7 @@ async function loadTeamMembers() {
 /* ===================== DISCORD GUILD STATS ===================== */
 async function fetchGuildStats() {
     try {
-        const resp = await fetch(`${BOT_API}/api/guild/stats`);
+        const resp = await fetch('/api/guild/stats');
         if (!resp.ok) return;
         const data = await resp.json();
         

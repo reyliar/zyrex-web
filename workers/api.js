@@ -197,18 +197,26 @@ export default {
         return json({ name: "Zyrex", member_count: 0, online_count: 0, channels_count: 0, roles_count: 0, boost_level: 0 });
       }
 
-      // DISCORD USER PROFILE - Direct to Discord API (bot token)
+      // DISCORD USER PROFILE - Proxy to Bot
       if (path === "/api/discord-user") {
         const userId = url.searchParams.get("userId") || "1421177012814614548";
         if (!/^\d{17,20}$/.test(userId)) {
           return json({ success: false, error: "Invalid userId" }, 400);
         }
-        const ur = await fetch(`${DISCORD_API}/users/${userId}`, {
-          headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` },
-        });
-        if (!ur.ok) return json({ success: false, error: "User not found" });
-        const userData = await ur.json();
-        return json({ success: true, source: "discord-rest", user: userData });
+        const resp = await fetch(`${BOT_API}/api/discord-user?userId=${userId}`);
+        if (resp.ok) return json(await resp.json());
+        
+        // Fallback: Query Discord REST directly if bot fails and token exists
+        if (env.DISCORD_BOT_TOKEN) {
+          const ur = await fetch(`${DISCORD_API}/users/${userId}`, {
+            headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` },
+          });
+          if (ur.ok) {
+            const userData = await ur.json();
+            return json({ success: true, source: "discord-rest", user: userData });
+          }
+        }
+        return json({ success: false, error: "User not found" });
       }
 
       // DELETE PRODUCT (admin only)
