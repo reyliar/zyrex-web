@@ -243,11 +243,21 @@ export default {
 
       // ============ BOT PROXY (SFTPGo, products) ============
       if (path.startsWith("/api/sftpgo/") || path.startsWith("/api/products/")) {
+        const session = parseSession(request.headers.get("Cookie"));
+        const proxyHeaders = {
+          "Content-Type": "application/json",
+        };
+        if (session) {
+          proxyHeaders["X-User-ID"] = session.userId || "";
+          proxyHeaders["X-User-Name"] = session.username || "";
+          proxyHeaders["X-User-Can-Upload"] = session.canUpload ? "true" : "false";
+          proxyHeaders["X-User-Is-Admin"] = ADMIN_IDS.includes(session.userId) ? "true" : "false";
+        }
         const targetUrl = `${BOT_API}${path}${url.search}`;
         const body = request.method !== "GET" && request.method !== "HEAD" ? await request.text() : undefined;
         const botResp = await fetch(targetUrl, {
           method: request.method,
-          headers: { "Content-Type": "application/json" },
+          headers: proxyHeaders,
           body: body || undefined,
         });
         const data = await botResp.text();

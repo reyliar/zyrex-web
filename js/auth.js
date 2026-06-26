@@ -35,8 +35,8 @@ async function checkAuth() {
         console.log('Auth API unavailable, showing invite link');
     }
     
-    // Fallback: show Discord invite
-    btn.innerHTML = `<a href="https://discord.gg/fAydSzpafA" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;background:rgba(88,101,242,.15);color:#8b9aff;text-decoration:none;font-size:.8rem;font-weight:600;transition:all .3s"><i class="fab fa-discord"></i> Join</a>`;
+    // Fallback: show Discord Login button
+    btn.innerHTML = `<a href="/api/login" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;background:rgba(220,20,60,.15);color:#ff4d6d;text-decoration:none;font-size:.8rem;font-weight:600;transition:all .3s" onmouseover="this.style.background='rgba(220,20,60,.25)'" onmouseout="this.style.background='rgba(220,20,60,.15)'"><i class="fab fa-discord"></i> Login</a>`;
 }
 
 function toggleUserMenu() {
