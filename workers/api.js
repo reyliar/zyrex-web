@@ -197,15 +197,18 @@ export default {
         return json({ name: "Zyrex", member_count: 0, online_count: 0, channels_count: 0, roles_count: 0, boost_level: 0 });
       }
 
-      // DISCORD USER PROFILE - Proxy to Bot
+      // DISCORD USER PROFILE - Direct to Discord API (bot token)
       if (path === "/api/discord-user") {
         const userId = url.searchParams.get("userId") || "1421177012814614548";
         if (!/^\d{17,20}$/.test(userId)) {
           return json({ success: false, error: "Invalid userId" }, 400);
         }
-        const resp = await fetch(`${BOT_API}/api/discord-user?userId=${userId}`);
-        if (resp.ok) return json(await resp.json());
-        return json({ success: false, error: "User not found" });
+        const ur = await fetch(`${DISCORD_API}/users/${userId}`, {
+          headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` },
+        });
+        if (!ur.ok) return json({ success: false, error: "User not found" });
+        const userData = await ur.json();
+        return json({ success: true, source: "discord-rest", user: userData });
       }
 
       // DELETE PRODUCT (admin only)

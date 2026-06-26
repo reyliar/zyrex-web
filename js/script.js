@@ -75,11 +75,11 @@ function getBannerUrl(user, size = 480) {
 
 async function fetchDiscordUser(userId) {
     try {
-        const resp = await fetch(`${BOT_API}/api/discord-user?userId=${userId}`);
-        if (resp.ok) {
-            const data = await resp.json();
-            if (data.success && data.user) return data.user;
-        }
+        const url = new URL('/api/discord-user', location.origin);
+        url.searchParams.set('userId', userId);
+        const response = await fetch(url);
+        const data = await response.json();
+        if (data.success && data.user) return data.user;
     } catch (err) {
         console.warn(`Failed to fetch Discord user ${userId}:`, err);
     }
