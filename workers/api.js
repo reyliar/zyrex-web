@@ -266,8 +266,8 @@ export default {
         return json(data);
       }
 
-      // ============ BOT PROXY (SFTPGo, products) ============
-      if (path.startsWith("/api/sftpgo/") || path.startsWith("/api/products/")) {
+      // ============ BOT PROXY (SFTPGo, products, admin) ============
+      if (path.startsWith("/api/sftpgo/") || path.startsWith("/api/products/") || path.startsWith("/api/admin/")) {
         const session = parseSession(request.headers.get("Cookie"));
         const proxyHeaders = {
           "Content-Type": "application/json",

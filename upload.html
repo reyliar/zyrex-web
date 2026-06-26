@@ -451,29 +451,121 @@
                 const resp = await fetch(`/api/sftpgo/files?path=${encodeURIComponent(path)}`, { credentials: 'include' });
                 const data = await resp.json();
                 if (data.success) {
-                    cloudFiles = data.folders || [];
-                    renderFileBrowser(path);
+                    renderFileBrowser(path, data.files || [], data.folders || []);
                 }
             } catch(e) {
                 console.error('Failed to load files:', e);
             }
         }
 
-        function renderFileBrowser(currentPath) {
+        function renderFileBrowser(currentPath, files = [], folders = []) {
             const tree = document.getElementById('fileTree');
             const list = document.getElementById('fileList');
             
-            tree.innerHTML = cloudFiles.length ? cloudFiles.map(f => `
-                <div class="tree-item" onclick="navigateCloud('${f.name}')">
-                    <i class="fas fa-folder" style="color:#dc143c"></i> ${f.name.split('/').pop()}
-                </div>
-            `).join('') : '<div style="color:#606070;font-size:.8rem;padding:20px">No folders yet</div>';
+            let backHtml = '';
+            if (currentPath !== '/' && currentPath !== '') {
+                const parts = currentPath.split('/').filter(Boolean);
+                parts.pop();
+                const parentPath = '/' + parts.join('/');
+                backHtml = `
+                    <div class="tree-item" onclick="navigateCloud('${parentPath}')" style="font-weight: 600; color: #dc143c; margin-bottom: 8px;">
+                        <i class="fas fa-arrow-left"></i> .. (Back)
+                    </div>
+                `;
+            }
+            
+            const folderHtml = folders.length ? folders.map(f => {
+                const name = f.name.split('/').pop();
+                return `
+                    <div class="tree-item" onclick="navigateCloud('${f.name}')">
+                        <i class="fas fa-folder" style="color:#dc143c"></i> ${name}
+                    </div>
+                `;
+            }).join('') : '';
+            
+            tree.innerHTML = backHtml + (folderHtml || '<div style="color:#606070;font-size:.8rem;padding:20px 0;text-align:center">No folders</div>');
 
+            if (files.length === 0) {
+                list.innerHTML = `
+                    <div style="color:#606070;text-align:center;padding:40px 10px;font-size:.8rem">
+                        <i class="fas fa-folder-open" style="font-size:2rem;display:block;margin-bottom:10px;opacity:.3"></i>
+                        No files found in this directory.
+                    </div>`;
+                return;
+            }
+
+            list.innerHTML = files.map(file => {
+                const isSelected = selectedFiles.includes(file.path);
+                const sizeStr = formatBytes(file.size);
+                return `
+                    <div class="file-item ${isSelected ? 'selected' : ''}" onclick="toggleFileSelection('${file.path}', this)">
+                        <input type="checkbox" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation(); toggleFileSelection('${file.path}', this.parentElement)">
+                        <i class="far fa-file-code" style="color:#9090a0;font-size:1.1rem"></i>
+                        <div style="flex:1;min-width:0;text-align:left">
+                            <div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${file.name}</div>
+                            <div style="font-size:.7rem;color:#606070">${sizeStr}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function toggleFileSelection(path, element) {
+            const checkbox = element.querySelector('input[type="checkbox"]');
+            const idx = selectedFiles.indexOf(path);
+            if (idx > -1) {
+                selectedFiles.splice(idx, 1);
+                element.classList.remove('selected');
+                if (checkbox) checkbox.checked = false;
+            } else {
+                selectedFiles.push(path);
+                element.classList.add('selected');
+                if (checkbox) checkbox.checked = true;
+            }
+            updateSelectedFilesList();
+        }
+
+        function updateSelectedFilesList() {
+            const count = document.getElementById('selectedCount');
+            if (count) count.textContent = selectedFiles.length;
+            
+            const list = document.getElementById('selectedFiles');
+            if (selectedFiles.length === 0) {
+                list.innerHTML = `
+                    <h4><i class="fas fa-check-square"></i> Selected Files (0)</h4>
+                    <p style="color:#606070;font-size:.75rem;padding:10px 0 0 10px">No files selected.</p>
+                `;
+                return;
+            }
+            
             list.innerHTML = `
-                <div style="color:#606070;text-align:center;padding:40px 10px;font-size:.8rem">
-                    <i class="fas fa-folder-open" style="font-size:2rem;display:block;margin-bottom:10px;opacity:.3"></i>
-                    Browse folders and select files to include
-                </div>`;
+                <h4><i class="fas fa-check-square"></i> Selected Files (<span id="selectedCount">${selectedFiles.length}</span>)</h4>
+                <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px">
+                    ${selectedFiles.map(path => `
+                        <div class="sf-item">
+                            <span style="font-family:monospace;font-size:.75rem;word-break:break-all;color:#ff4d6d">${path}</span>
+                            <span class="remove" onclick="removeSelectedFile('${path}')"><i class="fas fa-times"></i></span>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function removeSelectedFile(path) {
+            const idx = selectedFiles.indexOf(path);
+            if (idx > -1) {
+                selectedFiles.splice(idx, 1);
+            }
+            updateSelectedFilesList();
+            
+            const items = document.querySelectorAll('.file-item');
+            items.forEach(el => {
+                if (el.getAttribute('onclick') && el.getAttribute('onclick').includes(path)) {
+                    el.classList.remove('selected');
+                    const checkbox = el.querySelector('input[type="checkbox"]');
+                    if (checkbox) checkbox.checked = false;
+                }
+            });
         }
 
         function navigateCloud(path) {
