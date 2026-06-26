@@ -197,6 +197,31 @@ export default {
         return json({ name: "Zyrex", member_count: 0, online_count: 0, channels_count: 0, roles_count: 0, boost_level: 0 });
       }
 
+      // GUILD MEMBERS - Proxy to Bot
+      if (path === "/api/guild/members") {
+        const session = parseSession(request.headers.get("Cookie"));
+        if (!session || !ADMIN_IDS.includes(session.userId)) {
+          return json({ error: "Unauthorized" }, 403);
+        }
+        const targetUrl = `${BOT_API}/api/guild/members`;
+        const botResp = await fetch(targetUrl, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            "X-User-ID": session.userId,
+            "X-User-Name": session.username,
+            "X-User-Can-Upload": session.canUpload ? "true" : "false",
+            "X-User-Is-Admin": "true",
+          }
+        });
+        const data = await botResp.text();
+        try {
+          return json(JSON.parse(data), botResp.status);
+        } catch {
+          return new Response(data, { status: botResp.status, headers: corsHeaders });
+        }
+      }
+
       // DISCORD USER PROFILE - Proxy to Bot
       if (path === "/api/discord-user") {
         const userId = url.searchParams.get("userId") || "1421177012814614548";
