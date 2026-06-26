@@ -45,6 +45,7 @@ navLinks.forEach(link => {
 });
 
 /* ===================== DISCORD API - TEAM PROFILES ===================== */
+const BOT_API = 'http://93.115.101.154:12988';
 const CDN_BASE = 'https://cdn.discordapp.com';
 
 const teamMembers = [
@@ -74,14 +75,11 @@ function getBannerUrl(user, size = 480) {
 
 async function fetchDiscordUser(userId) {
     try {
-        const url = new URL('/api/discord-user', location.origin);
-        url.searchParams.set('userId', userId);
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 5000);
-        const response = await fetch(url, { signal: controller.signal });
-        clearTimeout(timeout);
-        const data = await response.json();
-        if (data.success && data.user) return data.user;
+        const resp = await fetch(`${BOT_API}/api/discord-user?userId=${userId}`);
+        if (resp.ok) {
+            const data = await resp.json();
+            if (data.success && data.user) return data.user;
+        }
     } catch (err) {
         console.warn(`Failed to fetch Discord user ${userId}:`, err);
     }
@@ -160,7 +158,7 @@ async function loadTeamMembers() {
 /* ===================== DISCORD GUILD STATS ===================== */
 async function fetchGuildStats() {
     try {
-        const resp = await fetch('/api/guild/stats');
+        const resp = await fetch(`${BOT_API}/api/guild/stats`);
         if (!resp.ok) return;
         const data = await resp.json();
         
