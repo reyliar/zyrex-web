@@ -25,6 +25,7 @@ async function checkAuth() {
                         <div style="font-size:.7rem;color:#606070">@${user.username}</div>
                     </div>
                     <a href="/settings" style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:6px;color:#9090a0;text-decoration:none;font-size:.8rem;transition:all .2s" onmouseover="this.style.background='rgba(255,255,255,.04)'" onmouseout="this.style.background='transparent'"><i class="fas fa-cog" style="width:16px;text-align:center"></i> Settings</a>
+                    ${(user.can_upload || user.is_admin) ? `<a href="/upload" style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:6px;color:#9090a0;text-decoration:none;font-size:.8rem;transition:all .2s" onmouseover="this.style.background='rgba(255,255,255,.04)'" onmouseout="this.style.background='transparent'"><i class="fas fa-cloud-upload-alt" style="width:16px;text-align:center"></i> Upload</a>` : ''}
                     <a href="/api/logout" style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:6px;color:#9090a0;text-decoration:none;font-size:.8rem;transition:all .2s" onmouseover="this.style.background='rgba(255,255,255,.04)'" onmouseout="this.style.background='transparent'"><i class="fas fa-sign-out-alt" style="width:16px;text-align:center"></i> Logout</a>
                 </div>
             `;

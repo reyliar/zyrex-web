@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zyrex | Upload</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{background:#0a0a0f;color:#e0e0e8;font-family:Poppins,sans-serif;min-height:100vh}
+        
+        .upload-header{background:rgba(10,10,26,.95);backdrop-filter:blur(20px);border-bottom:1px solid rgba(220,20,60,.1);padding:16px 30px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+        .upload-header .logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:#fff}
+        .upload-header .logo img{height:36px}
+        
+        .upload-container{max-width:800px;margin:0 auto;padding:30px 20px 80px}
+        
+        /* Steps indicator */
+        .steps-indicator{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:40px}
+        .step-dot{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.9rem;transition:all .3s;background:rgba(255,255,255,.04);border:2px solid rgba(255,255,255,.08);color:#606070}
+        .step-dot.active{background:#dc143c;border-color:#dc143c;color:#fff;box-shadow:0 0 20px rgba(220,20,60,.3)}
+        .step-dot.done{background:rgba(220,20,60,.2);border-color:#dc143c;color:#dc143c}
+        .step-line{width:60px;height:2px;background:rgba(255,255,255,.06);transition:all .3s}
+        .step-line.done{background:#dc143c}
+        .step-label{text-align:center;font-size:.7rem;color:#606070;margin-top:6px;width:40px;margin-left:auto;margin-right:auto}
+        
+        /* Form styles */
+        .form-section{display:none}
+        .form-section.active{display:block}
+        .form-group{margin-bottom:20px}
+        .form-group label{display:block;font-size:.8rem;font-weight:600;margin-bottom:6px;color:#9090a0}
+        .form-group input, .form-group textarea, .form-group select{
+            width:100%;padding:10px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);
+            border-radius:8px;color:#fff;font-family:inherit;font-size:.85rem;outline:none;transition:all .3s;
+        }
+        .form-group input:focus, .form-group textarea:focus, .form-group select:focus{
+            border-color:rgba(220,20,60,.3);background:rgba(220,20,60,.03);
+        }
+        .form-group textarea{min-height:100px;resize:vertical}
+        .form-group select{appearance:none;cursor:pointer}
+        .form-group select option{background:#121216;color:#fff}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+        @media(max-width:600px){.form-row{grid-template-columns:1fr}}
+        
+        /* Payhip scraper */
+        .payhip-row{display:flex;gap:10px}
+        .payhip-row input{flex:1}
+        .btn-scrape{padding:10px 20px;border-radius:8px;background:rgba(220,20,60,.12);border:1px solid rgba(220,20,60,.2);color:#dc143c;cursor:pointer;font-family:inherit;font-size:.8rem;font-weight:600;white-space:nowrap;transition:all .3s}
+        .btn-scrape:hover{background:#dc143c;color:#fff}
+        .btn-scrape:disabled{opacity:.4;cursor:not-allowed}
+        .scrape-preview{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.04);border-radius:10px;padding:16px;margin-top:12px;display:none}
+        .scrape-preview.active{display:block}
+        .scrape-preview .preview-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+        .scrape-preview .preview-header span{font-size:.75rem;color:#606070}
+        .scrape-preview .btn-apply{font-size:.7rem;padding:4px 12px;border-radius:6px;background:#dc143c;color:#fff;border:none;cursor:pointer}
+        .scrape-preview img{max-width:120px;border-radius:8px;margin-right:12px}
+        .scrape-preview .preview-info{display:flex;gap:12px}
+        .scrape-preview .preview-info h4{font-size:.85rem;margin-bottom:4px}
+        .scrape-preview .preview-info p{font-size:.75rem;color:#606070}
+        
+        /* Thumbnail upload */
+        .thumbnail-upload{border:2px dashed rgba(255,255,255,.08);border-radius:12px;padding:40px;text-align:center;cursor:pointer;transition:all .3s}
+        .thumbnail-upload:hover{border-color:rgba(220,20,60,.3);background:rgba(220,20,60,.02)}
+        .thumbnail-upload i{font-size:2rem;color:#606070;margin-bottom:8px}
+        .thumbnail-upload p{font-size:.8rem;color:#606070}
+        .thumbnail-upload img{max-width:200px;max-height:150px;border-radius:8px;margin-top:12px}
+        
+        /* File browser */
+        .file-browser{background:#121216;border:1px solid rgba(255,255,255,.04);border-radius:12px;min-height:300px;display:flex}
+        .file-tree{width:280px;border-right:1px solid rgba(255,255,255,.04);padding:12px;overflow-y:auto;max-height:400px}
+        .file-tree .tree-item{padding:8px 12px;border-radius:6px;cursor:pointer;font-size:.8rem;display:flex;align-items:center;gap:8px;transition:all .2s;color:#9090a0}
+        .file-tree .tree-item:hover{background:rgba(255,255,255,.04);color:#fff}
+        .file-tree .tree-item i{width:18px;text-align:center;font-size:.75rem}
+        .file-list{flex:1;padding:12px;overflow-y:auto;max-height:400px}
+        .file-item{display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:6px;cursor:pointer;transition:all .2s;font-size:.8rem}
+        .file-item:hover{background:rgba(255,255,255,.04)}
+        .file-item.selected{background:rgba(220,20,60,.1);border:1px solid rgba(220,20,60,.2)}
+        .file-item input[type=checkbox]{accent-color:#dc143c}
+        
+        /* Selected files */
+        .selected-files{background:#121216;border:1px solid rgba(255,255,255,.04);border-radius:12px;padding:16px;margin-top:12px;min-height:60px}
+        .selected-files h4{font-size:.85rem;margin-bottom:10px;color:#9090a0}
+        .selected-files .sf-item{display:flex;align-items:center;justify-content:space-between;padding:6px 10px;border-radius:6px;font-size:.78rem;margin-bottom:4px;background:rgba(255,255,255,.02)}
+        .selected-files .sf-item .remove{color:#dc143c;cursor:pointer;font-size:.7rem}
+        
+        /* Buttons */
+        .btn{display:inline-flex;align-items:center;gap:6px;padding:10px 22px;border-radius:8px;font-size:.85rem;font-weight:600;cursor:pointer;border:none;font-family:inherit;transition:all .3s;text-decoration:none}
+        .btn-primary{background:#dc143c;color:#fff}
+        .btn-primary:hover{background:#ff1a45;transform:translateY(-1px)}
+        .btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+        .btn-secondary{background:rgba(255,255,255,.06);color:#e0e0e8}
+        .btn-secondary:hover{background:rgba(255,255,255,.1)}
+        .form-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:30px;padding-top:20px;border-top:1px solid rgba(255,255,255,.04)}
+        
+        /* Confirmation */
+        .confirm-card{background:#121216;border:1px solid rgba(255,255,255,.04);border-radius:12px;padding:30px;text-align:center}
+        .confirm-card .check-icon{width:70px;height:70px;border-radius:50%;background:rgba(0,200,100,.12);display:flex;align-items:center;justify-content:center;margin:0 auto 20px}
+        .confirm-card .check-icon i{font-size:2rem;color:#00c864}
+        .confirm-card h2{font-size:1.4rem;margin-bottom:10px}
+        .confirm-card .summary{text-align:left;padding:16px;background:rgba(255,255,255,.02);border-radius:8px;margin-top:16px}
+        .confirm-card .summary .row{display:flex;justify-content:space-between;padding:6px 0;font-size:.8rem;border-bottom:1px solid rgba(255,255,255,.03)}
+        .confirm-card .summary .row span:first-child{color:#606070}
+        
+        .alert{background:rgba(220,20,60,.1);border:1px solid rgba(220,20,60,.2);border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:.8rem;color:#ff4d6d;display:none}
+        .alert.show{display:block}
+        .alert-success{background:rgba(0,200,100,.1);border-color:rgba(0,200,100,.2);color:#00c864}
+    </style>
+</head>
+<body>
+    <div class="upload-header">
+        <a href="/" class="logo">
+            <img src="https://cdn.discordapp.com/attachments/1421433783717990570/1519453492572328039/content.png?ex=6a3d9cd6&is=6a3c4b56&hm=d923795bdb21d6d38a09fa9bdbf8584fef5b10c1eadc2ef7b2d6b71c52b46bc5&" alt="">
+            <span>Upload</span>
+        </a>
+        <a href="/api/logout" style="color:#606070;font-size:.8rem;text-decoration:none"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    </div>
+
+    <div class="upload-container">
+        <div id="alertBox" class="alert"></div>
+        
+        <!-- Steps indicator -->
+        <div class="steps-indicator" id="stepsIndicator">
+            <div><div class="step-dot active" id="stepDot1">1</div><div class="step-label">Details</div></div>
+            <div class="step-line" id="stepLine1"></div>
+            <div><div class="step-dot" id="stepDot2">2</div><div class="step-label">Files</div></div>
+            <div class="step-line" id="stepLine2"></div>
+            <div><div class="step-dot" id="stepDot3">3</div><div class="step-label">Review</div></div>
+        </div>
+
+        <!-- Step 1: Product Details -->
+        <div class="form-section active" id="step1">
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Resource ID</label>
+                    <input type="text" id="resourceId" readonly placeholder="Auto-generated">
+                </div>
+                <div class="form-group">
+                    <label>Product Name *</label>
+                    <input type="text" id="productName" placeholder="e.g. Hyper Pop Preset Pack">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Creator / Editor Name *</label>
+                    <input type="text" id="creatorName" placeholder="e.g. reyli">
+                </div>
+                <div class="form-group">
+                    <label>Category *</label>
+                    <select id="productCategory">
+                        <option value="">Select category...</option>
+                        <option value="color-grading">Color Grading</option>
+                        <option value="transition">Transitions</option>
+                        <option value="overlay">Overlays</option>
+                        <option value="lut">LUTs</option>
+                        <option value="effect">Effects</option>
+                        <option value="text">Text / Titles</option>
+                        <option value="audio">Audio</option>
+                        <option value="bundle">Bundle</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Tags</label>
+                <input type="text" id="productTags" placeholder="e.g. premiere pro, after effects, cinematic, warm">
+            </div>
+            <div class="form-group">
+                <label>Description *</label>
+                <textarea id="productDesc" placeholder="Describe what this resource includes and how editors can use it..."></textarea>
+            </div>
+            <div class="form-group">
+                <label>Payhip Link</label>
+                <div class="payhip-row">
+                    <input type="url" id="payhipLink" placeholder="https://payhip.com/b/xxxxx">
+                    <button class="btn-scrape" id="btnScrape" onclick="scrapePayhip()"><i class="fas fa-magic"></i> Scrape</button>
+                </div>
+                <div class="scrape-preview" id="scrapePreview">
+                    <div class="preview-header">
+                        <span><i class="fas fa-check-circle" style="color:#00c864"></i> Payhip Data Found</span>
+                        <button class="btn-apply" onclick="applyScraped()">Apply All</button>
+                    </div>
+                    <div class="preview-info">
+                        <img id="spImage" src="" alt="" style="display:none">
+                        <div>
+                            <h4 id="spTitle"></h4>
+                            <p id="spDesc"></p>
+                            <p style="font-size:.7rem;color:#dc143c" id="spPrice"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label>Thumbnail</label>
+                <div class="thumbnail-upload" id="thumbnailDrop" onclick="document.getElementById('thumbnailInput').click()">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <p>Click or drag image here</p>
+                    <p style="font-size:.65rem;color:#404050">Recommended: 600x400</p>
+                    <img id="thumbnailPreview" src="" alt="" style="display:none">
+                </div>
+                <input type="file" id="thumbnailInput" accept="image/*" onchange="handleThumbnail(this)" style="display:none">
+            </div>
+
+            <div class="form-actions">
+                <a href="/" class="btn btn-secondary">Cancel</a>
+                <button class="btn btn-primary" onclick="nextStep(2)">Save & Next <i class="fas fa-arrow-right"></i></button>
+            </div>
+        </div>
+
+        <!-- Step 2: Files -->
+        <div class="form-section" id="step2">
+            <div class="alert" id="cloudAlert">
+                <i class="fas fa-info-circle"></i> Connect your SFTPGo cloud account to manage files.
+                <button class="btn btn-primary" style="margin-left:12px;padding:6px 14px;font-size:.75rem" onclick="connectCloud()">Connect Cloud</button>
+            </div>
+            <div class="file-browser" id="fileBrowser">
+                <div class="file-tree" id="fileTree">
+                    <div style="color:#606070;text-align:center;padding:40px 10px;font-size:.8rem">
+                        <i class="fas fa-folder-open" style="font-size:2rem;display:block;margin-bottom:10px;opacity:.3"></i>
+                        Connect cloud storage to browse files
+                    </div>
+                </div>
+                <div class="file-list" id="fileList">
+                    <div style="color:#606070;text-align:center;padding:40px 10px;font-size:.8rem">
+                        <i class="fas fa-cloud" style="font-size:2rem;display:block;margin-bottom:10px;opacity:.3"></i>
+                        Select a folder to view files
+                    </div>
+                </div>
+            </div>
+            <div class="selected-files" id="selectedFiles">
+                <h4><i class="fas fa-check-square"></i> Selected Files (<span id="selectedCount">0</span>)</h4>
+            </div>
+
+            <div class="form-actions">
+                <button class="btn btn-secondary" onclick="prevStep(1)"><i class="fas fa-arrow-left"></i> Back</button>
+                <button class="btn btn-primary" onclick="nextStep(3)">Next <i class="fas fa-arrow-right"></i></button>
+            </div>
+        </div>
+
+        <!-- Step 3: Confirmation -->
+        <div class="form-section" id="step3">
+            <div class="confirm-card">
+                <div class="check-icon"><i class="fas fa-check"></i></div>
+                <h2>Ready to Submit</h2>
+                <p style="color:#606070;margin-bottom:20px">Review your resource before submitting</p>
+                
+                <div class="summary" id="reviewSummary"></div>
+                
+                <div style="display:flex;gap:12px;justify-content:center;margin-top:24px">
+                    <button class="btn btn-secondary" onclick="prevStep(2)"><i class="fas fa-arrow-left"></i> Back</button>
+                    <button class="btn btn-primary" id="btnSubmit" onclick="submitProduct()">
+                        <i class="fas fa-paper-plane"></i> Submit for Review
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script>
+        let currentStep = 1;
+        let productData = {};
+        let selectedFiles = [];
+        let scrapedData = null;
+        let cloudConnected = false;
+        let cloudFiles = [];
+
+        // Init
+        document.addEventListener('DOMContentLoaded', async () => {
+            productData.id = `preset-${Date.now().toString(36)}`;
+            document.getElementById('resourceId').value = productData.id;
+
+            // Check user permissions
+            try {
+                const resp = await fetch('/api/me', { credentials: 'include' });
+                if (!resp.ok) { window.location.href = '/'; return; }
+                const user = await resp.json();
+                if (!user.is_admin && !user.can_upload) {
+                    showAlert('You need the Uploader role on Discord to access this page. Please request the role from an admin.', true);
+                    document.getElementById('step1').innerHTML = `
+                        <div style="text-align:center;padding:60px 20px">
+                            <i class="fas fa-lock" style="font-size:3rem;color:#dc143c;opacity:.3;display:block;margin-bottom:16px"></i>
+                            <h2>Access Restricted</h2>
+                            <p style="color:#606070;margin-top:8px">Only Discord members with the Uploader role can upload resources.</p>
+                            <a href="/" class="btn btn-primary" style="margin-top:20px">Go Home</a>
+                        </div>`;
+                }
+                document.getElementById('creatorName').value = user.global_name || user.username;
+            } catch(e) {
+                window.location.href = '/';
+            }
+        });
+
+        // Step navigation
+        function nextStep(step) {
+            if (step === 2 && !validateStep1()) return;
+            showStep(step);
+        }
+        function prevStep(step) { showStep(step); }
+
+        function showStep(step) {
+            currentStep = step;
+            document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+            document.getElementById(`step${step}`).classList.add('active');
+            
+            // Update step indicators
+            for (let i = 1; i <= 3; i++) {
+                const dot = document.getElementById(`stepDot${i}`);
+                const line = document.getElementById(`stepLine${i}`);
+                dot.classList.remove('active', 'done');
+                if (line) line.classList.remove('done');
+                
+                if (i < step) {
+                    dot.classList.add('done');
+                    dot.innerHTML = '<i class="fas fa-check"></i>';
+                    if (line) line.classList.add('done');
+                } else if (i === step) {
+                    dot.classList.add('active');
+                    dot.innerHTML = i;
+                }
+            }
+
+            if (step === 3) buildReview();
+            if (step === 2 && !cloudConnected) {
+                document.getElementById('cloudAlert').classList.add('show');
+                document.getElementById('cloudAlert').classList.add('alert-success');
+                document.getElementById('cloudAlert').querySelector('.btn').style.display = 'inline-flex';
+            }
+        }
+
+        // Validation
+        function validateStep1() {
+            const name = document.getElementById('productName').value.trim();
+            const creator = document.getElementById('creatorName').value.trim();
+            const category = document.getElementById('productCategory').value;
+            const desc = document.getElementById('productDesc').value.trim();
+            
+            if (!name || !creator || !category || !desc) {
+                showAlert('Please fill all required fields (*)', true);
+                return false;
+            }
+
+            productData = {
+                ...productData,
+                name,
+                author: creator,
+                category,
+                tags: document.getElementById('productTags').value.split(',').map(t => t.trim()).filter(Boolean),
+                description: desc,
+                payhip_link: document.getElementById('payhipLink').value.trim(),
+            };
+            return true;
+        }
+
+        // Payhip scraper
+        async function scrapePayhip() {
+            const link = document.getElementById('payhipLink').value.trim();
+            if (!link) { showAlert('Enter a Payhip link first', true); return; }
+            
+            const btn = document.getElementById('btnScrape');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scraping...';
+
+            try {
+                const resp = await fetch(`/api/payhip/scrape?url=${encodeURIComponent(link)}`);
+                const data = await resp.json();
+                if (data.success) {
+                    scrapedData = data;
+                    document.getElementById('spTitle').textContent = data.title || '';
+                    document.getElementById('spDesc').textContent = (data.description || '').slice(0, 200);
+                    document.getElementById('spPrice').textContent = data.price ? `Price: ${data.price}` : '';
+                    if (data.image) {
+                        const img = document.getElementById('spImage');
+                        img.src = data.image;
+                        img.style.display = 'block';
+                    }
+                    document.getElementById('scrapePreview').classList.add('active');
+                    showAlert('Payhip data scraped! Click Apply All to fill the form.', false);
+                } else {
+                    showAlert('Failed to scrape: ' + (data.error || 'Unknown error'), true);
+                }
+            } catch(e) {
+                showAlert('Scrape failed: ' + e.message, true);
+            }
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-magic"></i> Scrape';
+        }
+
+        function applyScraped() {
+            if (!scrapedData) return;
+            if (scrapedData.title) document.getElementById('productName').value = scrapedData.title;
+            if (scrapedData.description) document.getElementById('productDesc').value = scrapedData.description;
+            if (scrapedData.price) document.getElementById('productDetails').value = (document.getElementById('productDetails')?.value || '') + '\nPrice: ' + scrapedData.price;
+            if (scrapedData.categories?.length) document.getElementById('productCategory').value = scrapedData.categories[0]?.toLowerCase().replace(/\s+/g, '-') || '';
+            showAlert('Form filled with scraped data!', false);
+        }
+
+        // Thumbnail
+        function handleThumbnail(input) {
+            if (input.files?.[0]) {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    const img = document.getElementById('thumbnailPreview');
+                    img.src = e.target.result;
+                    img.style.display = 'block';
+                    document.querySelector('.thumbnail-upload i').style.display = 'none';
+                    productData.thumbnail = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        // Cloud storage
+        async function connectCloud() {
+            try {
+                const resp = await fetch('/api/sftpgo/account', { credentials: 'include' });
+                const data = await resp.json();
+                if (data.success) {
+                    cloudConnected = true;
+                    document.getElementById('cloudAlert').classList.remove('show');
+                    loadCloudFiles();
+                    showAlert('Cloud storage connected!', false);
+                } else {
+                    showAlert('Failed to connect: ' + (data.error || 'Unknown'), true);
+                }
+            } catch(e) {
+                showAlert('Connection failed: ' + e.message, true);
+            }
+        }
+
+        async function loadCloudFiles(path = '/') {
+            try {
+                const resp = await fetch(`/api/sftpgo/files?path=${encodeURIComponent(path)}`, { credentials: 'include' });
+                const data = await resp.json();
+                if (data.success) {
+                    cloudFiles = data.folders || [];
+                    renderFileBrowser(path);
+                }
+            } catch(e) {
+                console.error('Failed to load files:', e);
+            }
+        }
+
+        function renderFileBrowser(currentPath) {
+            const tree = document.getElementById('fileTree');
+            const list = document.getElementById('fileList');
+            
+            tree.innerHTML = cloudFiles.length ? cloudFiles.map(f => `
+                <div class="tree-item" onclick="navigateCloud('${f.name}')">
+                    <i class="fas fa-folder" style="color:#dc143c"></i> ${f.name.split('/').pop()}
+                </div>
+            `).join('') : '<div style="color:#606070;font-size:.8rem;padding:20px">No folders yet</div>';
+
+            list.innerHTML = `
+                <div style="color:#606070;text-align:center;padding:40px 10px;font-size:.8rem">
+                    <i class="fas fa-folder-open" style="font-size:2rem;display:block;margin-bottom:10px;opacity:.3"></i>
+                    Browse folders and select files to include
+                </div>`;
+        }
+
+        function navigateCloud(path) {
+            loadCloudFiles(path);
+        }
+
+        // Review
+        function buildReview() {
+            const summary = document.getElementById('reviewSummary');
+            summary.innerHTML = `
+                <div class="row"><span>Resource ID</span><span>${productData.id}</span></div>
+                <div class="row"><span>Product Name</span><span>${productData.name || '-'}</span></div>
+                <div class="row"><span>Creator</span><span>${productData.author || '-'}</span></div>
+                <div class="row"><span>Category</span><span>${productData.category || '-'}</span></div>
+                <div class="row"><span>Tags</span><span>${(productData.tags || []).join(', ') || '-'}</span></div>
+                <div class="row"><span>Files</span><span>${selectedFiles.length || 'None selected'}</span></div>
+                <div class="row"><span>Status</span><span style="color:#ff4d6d">Pending Review</span></div>
+            `;
+        }
+
+        // Submit
+        async function submitProduct() {
+            const btn = document.getElementById('btnSubmit');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+
+            try {
+                const resp = await fetch('/api/products/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ ...productData, files: selectedFiles }),
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    document.getElementById('step3').innerHTML = `
+                        <div class="confirm-card">
+                            <div class="check-icon"><i class="fas fa-check"></i></div>
+                            <h2>Submitted!</h2>
+                            <p style="color:#606070;margin:10px 0">Your resource has been submitted for review.</p>
+                            <p style="font-size:.8rem;color:#9090a0">ID: ${data.id}</p>
+                            <a href="/" class="btn btn-primary" style="margin-top:20px">Go Home</a>
+                        </div>`;
+                } else {
+                    showAlert('Failed: ' + (data.error || 'Unknown'), true);
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit for Review';
+                }
+            } catch(e) {
+                showAlert('Submit failed: ' + e.message, true);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit for Review';
+            }
+        }
+
+        function showAlert(msg, isError) {
+            const el = document.getElementById('alertBox');
+            el.textContent = msg;
+            el.classList.add('show');
+            if (!isError) el.classList.add('alert-success');
+            else el.classList.remove('alert-success');
+            setTimeout(() => el.classList.remove('show'), 4000);
+        }
+    </script>
+</body>
+</html>
