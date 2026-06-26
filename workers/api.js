@@ -1,6 +1,6 @@
 // Zyrex API Worker - Discord OAuth + Proxy to Bot
 const DISCORD_API = "https://discord.com/api/v10";
-const BOT_API = "https://zyrex.wispbyte.org";
+const BOT_API = "http://93.115.101.154:5000";
 const ADMIN_IDS = ["1421177012814614548", "1382421118098346174"];
 
 const corsHeaders = {
