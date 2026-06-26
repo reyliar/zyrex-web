@@ -61,12 +61,19 @@
         .scrape-preview .preview-info h4{font-size:.85rem;margin-bottom:4px}
         .scrape-preview .preview-info p{font-size:.75rem;color:#606070}
         
-        /* Thumbnail upload */
-        .thumbnail-upload{border:2px dashed rgba(255,255,255,.08);border-radius:12px;padding:40px;text-align:center;cursor:pointer;transition:all .3s}
-        .thumbnail-upload:hover{border-color:rgba(220,20,60,.3);background:rgba(220,20,60,.02)}
-        .thumbnail-upload i{font-size:2rem;color:#606070;margin-bottom:8px}
-        .thumbnail-upload p{font-size:.8rem;color:#606070}
-        .thumbnail-upload img{max-width:200px;max-height:150px;border-radius:8px;margin-top:12px}
+        /* Thumbnail - URL */
+        .thumbnail-urls{display:flex;flex-wrap:wrap;gap:8px}
+        .thumbnail-urls input{flex:1;min-width:200px;padding:10px 14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.06);border-radius:8px;color:#fff;font-family:inherit;font-size:.85rem;outline:none}
+        .thumbnail-urls input:focus{border-color:rgba(220,20,60,.3)}
+        .thumbnail-urls .add-btn{padding:10px 14px;border-radius:8px;background:rgba(220,20,60,.1);border:1px solid rgba(220,20,60,.2);color:#dc143c;cursor:pointer;transition:all .3s}
+        .thumbnail-urls .add-btn:hover{background:#dc143c;color:#fff}
+        .thumb-preview{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+        .thumb-preview .tp-item{position:relative;width:100px;height:60px;border-radius:6px;overflow:hidden;border:1px solid rgba(255,255,255,.06)}
+        .thumb-preview .tp-item img{width:100%;height:100%;object-fit:cover}
+        .thumb-preview .tp-item .tp-remove{position:absolute;top:3px;right:3px;width:20px;height:20px;border-radius:50%;background:rgba(220,20,60,.8);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.6rem}
+        
+        .scraped-data{display:none;background:rgba(0,200,100,.05);border:1px solid rgba(0,200,100,.15);border-radius:10px;padding:16px;margin-top:12px}
+        .scraped-data.active{display:block}
         
         /* File browser */
         .file-browser{background:#121216;border:1px solid rgba(255,255,255,.04);border-radius:12px;min-height:300px;display:flex}
@@ -174,33 +181,21 @@
             <div class="form-group">
                 <label>Payhip Link</label>
                 <div class="payhip-row">
-                    <input type="url" id="payhipLink" placeholder="https://payhip.com/b/xxxxx">
+                    <input type="url" id="payhipLink" placeholder="https://payhip.com/b/xxxxx" onblur="autoScrape()">
                     <button class="btn-scrape" id="btnScrape" onclick="scrapePayhip()"><i class="fas fa-magic"></i> Scrape</button>
                 </div>
-                <div class="scrape-preview" id="scrapePreview">
-                    <div class="preview-header">
-                        <span><i class="fas fa-check-circle" style="color:#00c864"></i> Payhip Data Found</span>
-                        <button class="btn-apply" onclick="applyScraped()">Apply All</button>
-                    </div>
-                    <div class="preview-info">
-                        <img id="spImage" src="" alt="" style="display:none">
-                        <div>
-                            <h4 id="spTitle"></h4>
-                            <p id="spDesc"></p>
-                            <p style="font-size:.7rem;color:#dc143c" id="spPrice"></p>
-                        </div>
-                    </div>
+                <div class="scraped-data" id="scrapePreview">
+                    <i class="fas fa-check-circle" style="color:#00c864"></i>
+                    <span style="font-size:.8rem;color:#00c864" id="scrapeStatus">Data auto-filled</span>
                 </div>
             </div>
             <div class="form-group">
-                <label>Thumbnail</label>
-                <div class="thumbnail-upload" id="thumbnailDrop" onclick="document.getElementById('thumbnailInput').click()">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                    <p>Click or drag image here</p>
-                    <p style="font-size:.65rem;color:#404050">Recommended: 600x400</p>
-                    <img id="thumbnailPreview" src="" alt="" style="display:none">
+                <label>Thumbnail URLs</label>
+                <div class="thumbnail-urls" id="thumbnailUrls">
+                    <input type="url" placeholder="https://...image.png" class="thumb-input" oninput="updateThumbPreview()">
+                    <button class="add-btn" onclick="addThumbnailField()">+</button>
                 </div>
-                <input type="file" id="thumbnailInput" accept="image/*" onchange="handleThumbnail(this)" style="display:none">
+                <div class="thumb-preview" id="thumbPreview"></div>
             </div>
 
             <div class="form-actions">
@@ -354,62 +349,83 @@
             return true;
         }
 
-        // Payhip scraper
+        // Payhip scraper - auto-fills form
         async function scrapePayhip() {
             const link = document.getElementById('payhipLink').value.trim();
             if (!link) { showAlert('Enter a Payhip link first', true); return; }
+            if (!link.includes('payhip.com')) { showAlert('Not a Payhip URL', true); return; }
             
             const btn = document.getElementById('btnScrape');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scraping...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
             try {
                 const resp = await fetch(`/api/payhip/scrape?url=${encodeURIComponent(link)}`);
                 const data = await resp.json();
                 if (data.success) {
                     scrapedData = data;
-                    document.getElementById('spTitle').textContent = data.title || '';
-                    document.getElementById('spDesc').textContent = (data.description || '').slice(0, 200);
-                    document.getElementById('spPrice').textContent = data.price ? `Price: ${data.price}` : '';
-                    if (data.image) {
-                        const img = document.getElementById('spImage');
-                        img.src = data.image;
-                        img.style.display = 'block';
+                    // AUTO-FILL all fields
+                    if (data.title) document.getElementById('productName').value = data.title;
+                    if (data.description) document.getElementById('productDesc').value = data.description;
+                    
+                    // Auto-fill thumbnails
+                    if (data.thumbnails?.length) {
+                        const container = document.getElementById('thumbnailUrls');
+                        const thumbs = data.thumbnails;
+                        // Fill first input with first thumbnail
+                        const inputs = container.querySelectorAll('.thumb-input');
+                        inputs[0]?.value !== undefined && (inputs[0].value = thumbs[0] || '');
+                        // Add more fields for remaining
+                        for (let i = 1; i < thumbs.length; i++) {
+                            const div = document.createElement('div');
+                            div.style.display = 'contents';
+                            div.innerHTML = `<input type="url" class="thumb-input" value="${thumbs[i]}" placeholder="https://...image.png" oninput="updateThumbPreview()">`;
+                            container.insertBefore(div, container.lastElementChild);
+                        }
                     }
+                    
                     document.getElementById('scrapePreview').classList.add('active');
-                    showAlert('Payhip data scraped! Click Apply All to fill the form.', false);
+                    document.getElementById('scrapeStatus').textContent = `Auto-filled: ${data.title || 'product'} (${data.thumbnails?.length || 0} images)`;
+                    showAlert('Form auto-filled from Payhip!', false);
                 } else {
-                    showAlert('Failed to scrape: ' + (data.error || 'Unknown error'), true);
+                    showAlert('Scrape failed: ' + (data.error || 'Unknown'), true);
                 }
             } catch(e) {
-                showAlert('Scrape failed: ' + e.message, true);
+                showAlert('Scrape error: ' + e.message, true);
             }
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-magic"></i> Scrape';
+            updateThumbPreview();
         }
-
-        function applyScraped() {
-            if (!scrapedData) return;
-            if (scrapedData.title) document.getElementById('productName').value = scrapedData.title;
-            if (scrapedData.description) document.getElementById('productDesc').value = scrapedData.description;
-            if (scrapedData.price) document.getElementById('productDetails').value = (document.getElementById('productDetails')?.value || '') + '\nPrice: ' + scrapedData.price;
-            if (scrapedData.categories?.length) document.getElementById('productCategory').value = scrapedData.categories[0]?.toLowerCase().replace(/\s+/g, '-') || '';
-            showAlert('Form filled with scraped data!', false);
-        }
-
-        // Thumbnail
-        function handleThumbnail(input) {
-            if (input.files?.[0]) {
-                const reader = new FileReader();
-                reader.onload = e => {
-                    const img = document.getElementById('thumbnailPreview');
-                    img.src = e.target.result;
-                    img.style.display = 'block';
-                    document.querySelector('.thumbnail-upload i').style.display = 'none';
-                    productData.thumbnail = e.target.result;
-                };
-                reader.readAsDataURL(input.files[0]);
+        
+        function autoScrape() {
+            const link = document.getElementById('payhipLink').value.trim();
+            if (link.includes('payhip.com') && !document.getElementById('productName').value) {
+                scrapePayhip();
             }
+        }
+
+        function addThumbnailField() {
+            const container = document.getElementById('thumbnailUrls');
+            const div = document.createElement('div');
+            div.style.display = 'contents';
+            div.innerHTML = `<input type="url" class="thumb-input" placeholder="https://...image.png" oninput="updateThumbPreview()">`;
+            container.insertBefore(div, container.lastElementChild);
+        }
+        
+        function updateThumbPreview() {
+            const preview = document.getElementById('thumbPreview');
+            const inputs = document.querySelectorAll('.thumb-input');
+            const urls = [];
+            inputs.forEach(i => { if (i.value.trim()) urls.push(i.value.trim()); });
+            productData.thumbnails = urls;
+            
+            preview.innerHTML = urls.map((u, idx) => `
+                <div class="tp-item">
+                    <img src="${u}" onerror="this.parentElement.style.opacity='0.3'">
+                    <div class="tp-remove" onclick="this.parentElement.remove(); updateThumbPreview()">×</div>
+                </div>
+            `).join('');
         }
 
         // Cloud storage

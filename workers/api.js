@@ -36,6 +36,63 @@ function clearCookie() {
   return "zyrex_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0; Secure";
 }
 
+// ============ PAYHIP SCRAPER (Direct) ============
+async function scrapePayhip(url) {
+  try {
+    const resp = await fetch(url, {
+      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" },
+    });
+    if (!resp.ok) return { success: false, error: `HTTP ${resp.status}` };
+    const html = await resp.text();
+
+    // Title
+    let title = (html.match(/<title>(.*?)<\/title>/i) || [])[1]?.replace(/[|–\-]\s*Payhip.*/i, "").trim() || "";
+    title = title.replace(/&amp;/g, "&").replace(/&#39;/g, "'");
+
+    // Description
+    let description = (html.match(/<meta\s+name="description"\s+content="([^"]+)"/i) || [])[1] || "";
+
+    // OG Image
+    const ogImage = (html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i) || [])[1] || "";
+
+    // Price
+    let price = "";
+    const priceMatches = [
+      html.match(/"price":\s*"?\$?([\d.]+)/i),
+      html.match(/data-price="([^"]+)"/i),
+      html.match(/<span[^>]*class="[^"]*price[^"]*"[^>]*>\s*\$?([\d.]+)\s*<\/span>/i),
+    ];
+    for (const m of priceMatches) {
+      if (m?.[1]) { price = "$" + m[1]; break; }
+    }
+
+    // Thumbnails (product images)
+    const thumbnails = new Set();
+    const imgRegex = /<img[^>]+src="(https:\/\/[^"]*(?:payhip|pe56d)[^"]*\.(?:png|jpg|jpeg|gif|webp)[^"]*)"/gi;
+    let m;
+    while ((m = imgRegex.exec(html)) !== null) {
+      if (!m[1].includes("logo") && !m[1].includes("favicon") && !m[1].includes("avatar")) {
+        thumbnails.add(m[1]);
+      }
+    }
+    
+    // Also try meta tags for images
+    const metaImg = (html.match(/<meta\s+property="og:image:secure_url"\s+content="([^"]+)"/i) || [])[1];
+    if (metaImg) thumbnails.add(metaImg);
+
+    return {
+      success: true,
+      title,
+      description,
+      image: ogImage,
+      price,
+      thumbnails: [...thumbnails].slice(0, 8),
+    };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -163,12 +220,18 @@ export default {
         return json({ success: true, message: `Product ${id} deleted` });
       }
 
-      // ============ BOT PROXY ENDPOINTS ============
-      // All SFTPGo, Payhip, product operations are handled by the bot
-      
-      if (path === "/api/payhip/scrape" || 
-          path.startsWith("/api/sftpgo/") || 
-          path.startsWith("/api/products/")) {
+      // ============ PAYHIP SCRAPER (Direct) ============
+      if (path === "/api/payhip/scrape") {
+        const payhipUrl = url.searchParams.get("url");
+        if (!payhipUrl || !payhipUrl.includes("payhip.com")) {
+          return json({ success: false, error: "Invalid Payhip URL" }, 400);
+        }
+        const data = await scrapePayhip(payhipUrl);
+        return json(data);
+      }
+
+      // ============ BOT PROXY (SFTPGo, products) ============
+      if (path.startsWith("/api/sftpgo/") || path.startsWith("/api/products/")) {
         const targetUrl = `${BOT_API}${path}${url.search}`;
         const body = request.method !== "GET" && request.method !== "HEAD" ? await request.text() : undefined;
         const botResp = await fetch(targetUrl, {
