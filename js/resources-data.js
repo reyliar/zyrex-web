@@ -1136,8 +1136,27 @@ const resourcesData = [
             { url: 'https://gofile.io/d/ROPafq', label: 'GoFile' },
             { url: 'https://www.mediafire.com/file_premium/mieqgz1qzwrkxy8/FilmConvert.OFX.v2.20.CE_Win_VEGAS_-_satvrn.zip/file', label: 'MediaFire' }
         ]
-    }
-];
+},
+// ═══════════════════════════════════════════
+// TEST PRESET - For UI verification
+// ═══════════════════════════════════════════
+{
+    id: 'test-premiere-pro-pack',
+    name: '🎯 Test: Premiere Pro Cinematic Pack',
+    category: 'after-effects',
+    platform: '',
+    password: PASSWORD,
+    desc: 'This is a TEST preset for verifying the new category system, creator/uploader UI, and download flow.',
+    notes: 'TEST ENTRY - Can be deleted after verification.',
+    creator_nickname: 'ReyliFX',
+    creator_avatar: 'https://cdn.discordapp.com/avatars/1421177012814614548/abcdef123456.png?size=64',
+    creator_social_url: 'https://www.tiktok.com/@reyli',
+    uploader_name: 'Reyli',
+    uploader_avatar: 'https://cdn.discordapp.com/avatars/1421177012814614548/abcdef123456.png?size=64',
+    links: [
+        { url: 'https://pixeldrain.com/u/test123', label: 'Pixeldrain' },
+        { url: 'https://gofile.io/d/test123', label: 'GoFile' }
+    ]
 
 // Make available globally
 window.resourcesData = resourcesData;
