@@ -240,7 +240,7 @@ if (contactForm) {
 
         setTimeout(() => {
             submitBtn.innerHTML = 'Sent! <i class="fas fa-check"></i>';
-            submitBtn.style.background = 'linear-gradient(135deg, #dc143c, #8b0000)';
+            submitBtn.style.background = 'linear-gradient(135deg, #7a081e, #8b0000)';
 
             setTimeout(() => {
                 submitBtn.innerHTML = originalText;

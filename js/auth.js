@@ -15,9 +15,9 @@ async function checkAuth() {
 
             btn.innerHTML = `
                 <div class="auth-user" style="position:relative;display:flex;align-items:center;gap:8px;cursor:pointer" onclick="toggleUserMenu()">
-                    ${avatarUrl ? `<img src="${avatarUrl}" alt="" style="width:32px;height:32px;border-radius:50%;border:2px solid rgba(220,20,60,.3)">` : ''}
+                    ${avatarUrl ? `<img src="${avatarUrl}" alt="" style="width:32px;height:32px;border-radius:50%;border:2px solid rgba(122, 8, 30,.3)">` : ''}
                     <span style="font-size:.82rem;font-weight:500;color:#fff">${user.global_name || user.username}</span>
-                    ${user.is_admin ? '<span style="font-size:.55rem;padding:1px 5px;border-radius:4px;background:rgba(220,20,60,.15);color:#ff4d6d;font-weight:700">ADMIN</span>' : ''}
+                    ${user.is_admin ? '<span style="font-size:.55rem;padding:1px 5px;border-radius:4px;background:rgba(122, 8, 30,.15);color:#f53d5c;font-weight:700">ADMIN</span>' : ''}
                 </div>
                 <div id="userMenu" style="display:none;position:absolute;top:100%;right:0;margin-top:8px;background:#121216;border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:6px;min-width:180px;z-index:9999;box-shadow:0 10px 40px rgba(0,0,0,.5)">
                     <div style="padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);margin-bottom:4px">
@@ -36,7 +36,7 @@ async function checkAuth() {
     }
     
     // Fallback: show Discord Login button
-    btn.innerHTML = `<a href="/api/login" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;background:rgba(220,20,60,.15);color:#ff4d6d;text-decoration:none;font-size:.8rem;font-weight:600;transition:all .3s" onmouseover="this.style.background='rgba(220,20,60,.25)'" onmouseout="this.style.background='rgba(220,20,60,.15)'"><i class="fab fa-discord"></i> Login</a>`;
+    btn.innerHTML = `<a href="/api/login" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;background:rgba(122, 8, 30,.15);color:#f53d5c;text-decoration:none;font-size:.8rem;font-weight:600;transition:all .3s" onmouseover="this.style.background='rgba(122, 8, 30,.25)'" onmouseout="this.style.background='rgba(122, 8, 30,.15)'"><i class="fab fa-discord"></i> Login</a>`;
 }
 
 function toggleUserMenu() {
@@ -157,7 +157,7 @@ function initCookieConsent() {
         }
         .btn-cookie-primary:hover {
             transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(220, 20, 60, 0.4);
+            box-shadow: 0 4px 12px rgba(122, 8, 30, 0.4);
         }
         .btn-cookie-secondary {
             background: rgba(255, 255, 255, 0.04);
@@ -210,7 +210,7 @@ function initCookieConsent() {
         }
         .cookie-option input[type="checkbox"] {
             margin-top: 3px;
-            accent-color: #dc143c;
+            accent-color: #7a081e;
             cursor: pointer;
         }
         .cookie-option label span {

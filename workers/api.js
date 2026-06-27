@@ -137,13 +137,29 @@ export default {
       if (path === "/api/me") {
         const session = parseSession(request.headers.get("Cookie"));
         if (!session) return json({ error: "Not logged in" }, 401);
+
+        // Live role check against Discord API so role changes are reflected immediately
+        let canUpload = session.canUpload || false;
+        const isAdmin = ADMIN_IDS.includes(session.userId);
+        if (!canUpload && !isAdmin) {
+          try {
+            const mr = await fetch(`${DISCORD_API}/guilds/${env.GUILD_ID}/members/${session.userId}`, {
+              headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` },
+            });
+            if (mr.ok) {
+              const member = await mr.json();
+              canUpload = member.roles?.includes(env.UPLOAD_ROLE_ID) || false;
+            }
+          } catch (e) { console.error("Live role check:", e); }
+        }
+
         return json({
           id: session.userId,
           username: session.username,
           global_name: session.displayName || session.username,
           avatar: session.avatar,
-          can_upload: session.canUpload || false,
-          is_admin: ADMIN_IDS.includes(session.userId),
+          can_upload: canUpload,
+          is_admin: isAdmin,
         });
       }
 
