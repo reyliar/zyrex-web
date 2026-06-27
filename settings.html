@@ -1144,12 +1144,13 @@
             </div>
             <form id="sftpgoUserForm" onsubmit="saveSFTPGoUser(event)">
                 <input type="hidden" id="sftpgoIsEdit" value="false">
+                <input type="hidden" id="sftpgoCurrentDiscordId" value="">
                 <div class="form-group" id="sftpgoDiscordSelectGroup">
-                    <label for="sftpgoDiscordSelect">Link to Discord User *</label>
+                    <label for="sftpgoDiscordSelect" id="sftpgoDiscordSelectLabel">Link to Discord User *</label>
                     <select id="sftpgoDiscordSelect" onchange="onDiscordMemberSelect()">
                         <option value="">Loading Discord members...</option>
                     </select>
-                    <small style="color:var(--text-muted);font-size:0.7rem;display:block;margin-top:4px">Select a Discord user to link this cloud account to.</small>
+                    <small id="sftpgoDiscordSelectHelp" style="color:var(--text-muted);font-size:0.7rem;display:block;margin-top:4px">Select a Discord user to link this cloud account to.</small>
                 </div>
                 <div class="form-group">
                     <label for="sftpgoUsername">SFTPGo Username *</label>
@@ -1582,8 +1583,8 @@
                         <td>${statusBadge}</td>
                         <td>
                             <div class="action-cell">
-                                <button class="btn-tbl btn-tbl-edit" onclick="editSFTPGoUserModal('${u.username}', ${quota}, '${(u.description || '').replace(/'/g, "\\'")}')" title="Configure"><i class="fas fa-cog"></i></button>
-                                <button class="btn-tbl btn-tbl-delete" onclick="deleteSFTPGoUser('${u.username}')" title="Delete"><i class="far fa-trash-alt"></i></button>
+                                <button class="btn-tbl btn-tbl-edit" onclick="editSFTPGoUserModal(${jsString(u.username)}, ${quota}, ${jsString(u.description || '')}, ${jsString(u.linked_discord_id || '')}, ${jsString(u.linked_display_name || '')})" title="Configure"><i class="fas fa-cog"></i></button>
+                                <button class="btn-tbl btn-tbl-delete" onclick="deleteSFTPGoUser(${jsString(u.username)})" title="Delete"><i class="far fa-trash-alt"></i></button>
                             </div>
                         </td>
                     </tr>
@@ -1605,14 +1606,20 @@
             }
         }
 
-        function populateDiscordSelect(excludeLinked) {
+        function populateDiscordSelect(excludeLinked, currentDiscordId = '', currentDisplayName = '') {
             const sel = document.getElementById('sftpgoDiscordSelect');
             // Get already-linked discord IDs
             const linkedIds = new Set(allCloudUsers.filter(u => u.linked_discord_id).map(u => u.linked_discord_id));
             
             let options = '<option value="">-- Select Discord User --</option>';
+            if (currentDiscordId) {
+                const label = currentDisplayName || currentDiscordId;
+                options += `<option value="${currentDiscordId}" selected>Currently linked: ${escapeHtml(label)} - ${currentDiscordId}</option>`;
+                options += '<option value="__unlink">Unlink current Discord user</option>';
+            }
             cachedGuildMembers.forEach(m => {
-                if (excludeLinked && linkedIds.has(m.id)) return;
+                if (excludeLinked && linkedIds.has(m.id) && m.id !== currentDiscordId) return;
+                if (m.id === currentDiscordId) return;
                 const name = m.global_name || m.username;
                 options += `<option value="${m.id}" data-name="${m.username}" data-display="${name}">${name} (@${m.username}) — ${m.id}</option>`;
             });
@@ -1645,7 +1652,10 @@
             document.getElementById('sftpgoPassword').value = '';
             document.getElementById('sftpgoDescription').value = '';
             document.getElementById('sftpgoQuota').value = "2";
+            document.getElementById('sftpgoCurrentDiscordId').value = '';
             document.getElementById('sftpgoDiscordSelectGroup').style.display = 'block';
+            document.getElementById('sftpgoDiscordSelectLabel').textContent = 'Link to Discord User *';
+            document.getElementById('sftpgoDiscordSelectHelp').textContent = 'Select a Discord user to link this cloud account to.';
             document.getElementById('sftpgoUserModal').classList.add('active');
             
             // Load guild members for dropdown
@@ -1653,7 +1663,7 @@
             populateDiscordSelect(true);
         }
 
-        function editSFTPGoUserModal(username, quotaBytes, description) {
+        async function editSFTPGoUserModal(username, quotaBytes, description, currentDiscordId = '', currentDisplayName = '') {
             document.getElementById('sftpgoUserModalTitle').textContent = `Manage Account: ${username}`;
             document.getElementById('sftpgoIsEdit').value = "true";
             document.getElementById('sftpgoUsername').value = username;
@@ -1661,13 +1671,19 @@
             document.getElementById('sftpgoPassword').value = '';
             document.getElementById('sftpgoPassword').placeholder = 'Leave blank to retain current password';
             document.getElementById('sftpgoDescription').value = description;
-            document.getElementById('sftpgoDiscordSelectGroup').style.display = 'none';
+            document.getElementById('sftpgoCurrentDiscordId').value = currentDiscordId || '';
+            document.getElementById('sftpgoDiscordSelectGroup').style.display = 'block';
+            document.getElementById('sftpgoDiscordSelectLabel').textContent = 'Discord Link';
+            document.getElementById('sftpgoDiscordSelectHelp').textContent = 'Keep the current user, pick a new Discord user, or unlink this cloud account.';
             
             // Map bytes back to select val
             const gb = Math.round(quotaBytes / (1024 * 1024 * 1024));
             document.getElementById('sftpgoQuota').value = [1,2,5,10,20].includes(gb) ? gb.toString() : "2";
 
             document.getElementById('sftpgoUserModal').classList.add('active');
+
+            await loadGuildMembersForSelect();
+            populateDiscordSelect(true, currentDiscordId || '', currentDisplayName || '');
         }
 
         function closeSFTPGoUserModal() {
@@ -1682,9 +1698,14 @@
             const password = document.getElementById('sftpgoPassword').value.trim();
             const desc = document.getElementById('sftpgoDescription').value.trim();
             const discordId = document.getElementById('sftpgoDiscordSelect').value;
+            const currentDiscordId = document.getElementById('sftpgoCurrentDiscordId').value;
 
             if (!username) {
                 alert('Username is required.');
+                return;
+            }
+            if (!isEdit && !discordId) {
+                alert('Select a Discord user to link this cloud account.');
                 return;
             }
 
@@ -1707,6 +1728,31 @@
                 });
                 const data = await resp.json();
                 if (data.success) {
+                    if (isEdit) {
+                        if (discordId === '__unlink' && currentDiscordId) {
+                            const unlinkResp = await fetch(`/api/cloud/unlink/${currentDiscordId}`, { method: 'DELETE' });
+                            const unlinkData = await unlinkResp.json();
+                            if (!unlinkData.success) {
+                                alert("User saved, but unlink failed: " + (unlinkData.error || 'Unknown'));
+                                return;
+                            }
+                        } else if (discordId && discordId !== '__unlink') {
+                            const linkResp = await fetch('/api/cloud/link', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    discord_id: discordId,
+                                    sftpgo_username: username,
+                                    display_name: desc || username
+                                })
+                            });
+                            const linkData = await linkResp.json();
+                            if (!linkData.success) {
+                                alert("User saved, but Discord link failed: " + (linkData.error || 'Unknown'));
+                                return;
+                            }
+                        }
+                    }
                     closeSFTPGoUserModal();
                     fetchSFTPGoUsers();
                 } else {
@@ -1861,12 +1907,16 @@
         }
 
         function escapeHtml(text) {
-            return text
+            return String(text ?? '')
                 .replace(/&/g, "&amp;")
                 .replace(/</g, "&lt;")
                 .replace(/>/g, "&gt;")
                 .replace(/"/g, "&quot;")
                 .replace(/'/g, "&#039;");
+        }
+
+        function jsString(value) {
+            return JSON.stringify(String(value ?? ''));
         }
     </script>
 </body>
