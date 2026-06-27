@@ -1239,11 +1239,11 @@
                 <div class="form-group">
                     <label for="sftpgoQuota">Storage Quota Size (GB) *</label>
                     <select id="sftpgoQuota">
-                        <option value="1">1 GB</option>
-                        <option value="2" selected>2 GB (Default)</option>
                         <option value="5">5 GB</option>
                         <option value="10">10 GB</option>
                         <option value="20">20 GB</option>
+                        <option value="40" selected>40 GB (Default)</option>
+                        <option value="80">80 GB</option>
                     </select>
                 </div>
                 <div class="form-actions">
@@ -1803,7 +1803,7 @@
             document.getElementById('sftpgoUsername').disabled = false;
             document.getElementById('sftpgoPassword').value = '';
             document.getElementById('sftpgoDescription').value = '';
-            document.getElementById('sftpgoQuota').value = "2";
+            document.getElementById('sftpgoQuota').value = "40";
             document.getElementById('sftpgoCurrentDiscordId').value = '';
             document.getElementById('sftpgoDiscordSelectGroup').style.display = 'block';
             document.getElementById('sftpgoDiscordSelectLabel').textContent = 'Link to Discord User *';
@@ -1830,7 +1830,7 @@
             
             // Map bytes back to select val
             const gb = Math.round(quotaBytes / (1024 * 1024 * 1024));
-            document.getElementById('sftpgoQuota').value = [1,2,5,10,20].includes(gb) ? gb.toString() : "2";
+            document.getElementById('sftpgoQuota').value = [5,10,20,40,80].includes(gb) ? gb.toString() : "40";
 
             document.getElementById('sftpgoUserModal').classList.add('active');
 
