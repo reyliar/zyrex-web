@@ -1161,3 +1161,5 @@ const resourcesData = [
 // Make available globally
 window.resourcesData = resourcesData;
 window.PASSWORD = PASSWORD;
+
+// force redeploy 20260627180134
