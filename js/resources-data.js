@@ -1158,6 +1158,7 @@ const resourcesData = [
         { url: 'https://gofile.io/d/test123', label: 'GoFile' }
     ]
 }
+];
 
 // Make available globally
 window.resourcesData = resourcesData;
