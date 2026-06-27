@@ -124,8 +124,8 @@
         .dl-loading {
             padding: 40px;
         }
-        
-        /* Files list block inside download.html */
+
+        /* Files list block */
         .dl-files-card {
             background: rgba(255, 255, 255, 0.02);
             border: 1px solid rgba(255, 255, 255, 0.05);
@@ -151,14 +151,8 @@
             overflow-y: auto;
             padding-right: 5px;
         }
-        /* Custom scrollbar */
-        .dl-files-list::-webkit-scrollbar {
-            width: 6px;
-        }
-        .dl-files-list::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 3px;
-        }
+        .dl-files-list::-webkit-scrollbar { width: 6px; }
+        .dl-files-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
         .dl-file-item {
             display: flex;
             align-items: center;
@@ -173,51 +167,13 @@
             background: rgba(var(--cherry-rgb), 0.03);
             border-color: rgba(var(--cherry-rgb), 0.15);
         }
-        .dl-file-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            min-width: 0;
-        }
-        .dl-file-info i {
-            color: var(--cherry);
-            font-size: 1rem;
-            flex-shrink: 0;
-        }
-        .dl-file-name {
-            color: var(--light);
-            font-size: 0.88rem;
-            font-weight: 500;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            user-select: all;
-        }
-        .dl-file-meta {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            flex-shrink: 0;
-        }
-        .dl-file-size {
-            color: var(--gray-dark);
-            font-size: 0.8rem;
-        }
-        .dl-file-btn {
-            background: none;
-            border: none;
-            color: var(--gray);
-            cursor: pointer;
-            padding: 4px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: var(--transition);
-        }
-        .dl-file-btn:hover {
-            color: var(--light);
-            transform: scale(1.15);
-        }
+        .dl-file-info { display: flex; align-items: center; gap: 10px; min-width: 0; }
+        .dl-file-info i { color: var(--cherry); font-size: 1rem; flex-shrink: 0; }
+        .dl-file-name { color: var(--light); font-size: 0.88rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; user-select: all; }
+        .dl-file-meta { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+        .dl-file-size { color: var(--gray-dark); font-size: 0.8rem; }
+        .dl-file-btn { background: none; border: none; color: var(--gray); cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: var(--transition); }
+        .dl-file-btn:hover { color: var(--light); transform: scale(1.15); }
     </style>
 </head>
 <body>
@@ -241,7 +197,7 @@
             <h1 class="dl-title" id="productName">Resource File</h1>
             <p class="dl-desc" id="productDesc">Loading details...</p>
 
-            <!-- Creator profile card (original author) -->
+            <!-- Creator profile card -->
             <div style="display:flex;align-items:center;gap:15px;background:rgba(var(--cherry-rgb),0.02);border:1px solid rgba(var(--cherry-rgb),0.05);border-radius:16px;padding:16px;margin:25px 0;text-align:left">
                 <div id="creatorAvatarWrapper" style="width:48px;height:48px;border-radius:50%;background:var(--cherry);overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2px solid rgba(255,56,96,0.2)">
                     <i class="fas fa-user" style="color:var(--light);font-size:1.3rem"></i>
@@ -253,7 +209,7 @@
                 </div>
             </div>
 
-            <!-- Uploader profile card (Discord user who shared) -->
+            <!-- Uploader profile card -->
             <div id="uploaderCard" style="display:none;align-items:center;gap:15px;background:rgba(88,101,242,0.08);border:1px solid rgba(88,101,242,0.15);border-radius:16px;padding:16px;margin:0 0 25px;text-align:left">
                 <div id="uploaderAvatarWrapper" style="width:44px;height:44px;border-radius:50%;background:rgba(88,101,242,0.15);overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2px solid rgba(88,101,242,0.25)">
                     <i class="fab fa-discord" style="color:var(--light);font-size:1.3rem"></i>
@@ -269,9 +225,7 @@
                 <div class="dl-files-title">
                     <i class="fas fa-folder-open"></i> Files inside this pack
                 </div>
-                <div class="dl-files-list" id="dlFilesList">
-                    <!-- files dynamically rendered -->
-                </div>
+                <div class="dl-files-list" id="dlFilesList"></div>
             </div>
 
             <!-- Password check -->
@@ -285,7 +239,7 @@
                     <i class="fas fa-cloud-arrow-down"></i> Download ZIP Package
                 </button>
             </div>
-            
+
             <p style="font-size: 0.72rem; color: var(--gray-dark)">
                 <i class="fas fa-circle-exclamation"></i> Link is single-use and will expire in 10 minutes.
             </p>
@@ -303,6 +257,7 @@
         </div>
     </div>
 
+    <script src="js/presets-data.js?v=5"></script>
     <script>
         const params = new URLSearchParams(window.location.search);
         const productId = params.get('id');
@@ -320,26 +275,35 @@
             }
 
             try {
-                // Fetch the product detail from bot backend (proxied)
                 const resp = await fetch(`/api/products?id=${productId}`);
-                if (!resp.ok) {
+                if (resp.ok) {
+                    product = await resp.json();
+                } else {
+                    const staticPresets = window.presetsData || [];
+                    product = staticPresets.find(p => p.id === productId);
+                }
+
+                if (!product) {
                     showError("Resource Not Found", "The secure file pack you are looking for does not exist in our database storage.");
                     return;
                 }
-
-                product = await resp.json();
                 renderProduct(product);
             } catch (e) {
                 console.error("Load error:", e);
-                showError("Connection Failed", "Unable to establish communication with the secure backend file server.");
+                const staticPresets = window.presetsData || [];
+                product = staticPresets.find(p => p.id === productId);
+                if (product) {
+                    renderProduct(product);
+                } else {
+                    showError("Connection Failed", "Unable to establish communication with the secure backend file server.");
+                }
             }
         });
 
         function renderProduct(p) {
             document.getElementById('productName').textContent = p.name;
             document.getElementById('productDesc').textContent = p.description || p.desc || "No description available for this package.";
-            
-            // Category badges
+
             const catBadge = document.getElementById('productCategory');
             const categoryLabels = {
                 'after-effects': 'After Effects',
@@ -362,7 +326,7 @@
                     const isAud = f.name.endsWith('.mp3') || f.name.endsWith('.wav');
                     const isImg = f.name.endsWith('.png') || f.name.endsWith('.jpg') || f.name.endsWith('.jpeg') || f.name.endsWith('.gif');
                     const fileIcon = isVid ? 'fa-file-video' : isAud ? 'fa-file-audio' : isImg ? 'fa-file-image' : 'fa-file-code';
-                    
+
                     return `
                         <div class="dl-file-item">
                             <div class="dl-file-info">
@@ -396,7 +360,7 @@
                 };
             }
 
-            // Creator Details (original author)
+            // Creator Details
             document.getElementById('creatorName').textContent = p.creator_nickname || p.author_name || 'Zyrex';
             if (p.creator_avatar) {
                 document.getElementById('creatorAvatarWrapper').innerHTML = `<img src="${p.creator_avatar}" style="width:100%;height:100%;object-fit:cover">`;
@@ -409,7 +373,7 @@
                 `;
             }
 
-            // Uploader Details (Discord user who shared)
+            // Uploader Details
             if (p.uploader_name) {
                 document.getElementById('uploaderCard').style.display = 'flex';
                 document.getElementById('uploaderName').innerHTML = `<i class="fab fa-discord" style="font-size:0.8rem;color:#5865F2"></i> ${p.uploader_name}`;
@@ -437,7 +401,6 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Zipping Storage Packages...';
 
             try {
-                // Request a single-use token from backend
                 const tokenResp = await fetch(`/api/downloads/request-token/${productId}`);
                 if (!tokenResp.ok) {
                     const data = await tokenResp.json();
@@ -450,9 +413,8 @@
                 const tokenData = await tokenResp.json();
                 if (tokenData.success && tokenData.token) {
                     btn.innerHTML = '<i class="fas fa-circle-check"></i> Launching stream download...';
-                    // Trigger dynamic zip packaging transfer download
                     window.location.href = `/api/downloads/download?token=${tokenData.token}`;
-                    
+
                     setTimeout(() => {
                         btn.innerHTML = '<i class="fas fa-arrow-rotate-right"></i> Link Used - Refresh to regenerate';
                         btn.disabled = true;
@@ -477,7 +439,6 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
             try {
-                // Request a fresh single-use token from backend
                 const tokenResp = await fetch(`/api/downloads/request-token/${productId}`);
                 if (!tokenResp.ok) {
                     const data = await tokenResp.json();
@@ -489,9 +450,8 @@
 
                 const tokenData = await tokenResp.json();
                 if (tokenData.success && tokenData.token) {
-                    // Trigger single file download
                     window.location.href = `/api/downloads/download?token=${tokenData.token}&file=${encodeURIComponent(filePath)}`;
-                    
+
                     setTimeout(() => {
                         btn.disabled = false;
                         btn.innerHTML = origHtml;
