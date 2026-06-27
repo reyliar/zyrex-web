@@ -124,6 +124,100 @@
         .dl-loading {
             padding: 40px;
         }
+        
+        /* Files list block inside download.html */
+        .dl-files-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 14px;
+            padding: 20px;
+            margin: 25px 0;
+            text-align: left;
+        }
+        .dl-files-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .dl-files-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-height: 250px;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+        /* Custom scrollbar */
+        .dl-files-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        .dl-files-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+        }
+        .dl-file-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.01);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 10px;
+            transition: var(--transition);
+        }
+        .dl-file-item:hover {
+            background: rgba(var(--cherry-rgb), 0.03);
+            border-color: rgba(var(--cherry-rgb), 0.15);
+        }
+        .dl-file-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 0;
+        }
+        .dl-file-info i {
+            color: var(--cherry);
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+        .dl-file-name {
+            color: var(--light);
+            font-size: 0.88rem;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            user-select: all;
+        }
+        .dl-file-meta {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+        .dl-file-size {
+            color: var(--gray-dark);
+            font-size: 0.8rem;
+        }
+        .dl-file-btn {
+            background: none;
+            border: none;
+            color: var(--gray);
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+        .dl-file-btn:hover {
+            color: var(--light);
+            transform: scale(1.15);
+        }
     </style>
 </head>
 <body>
@@ -167,6 +261,16 @@
                 <div style="flex:1;min-width:0">
                     <span style="font-size:0.75rem;color:var(--gray-dark);text-transform:uppercase;letter-spacing:1px;display:block">Shared by</span>
                     <strong id="uploaderName" style="font-size:0.9rem;color:var(--light);display:flex;align-items:center;gap:6px"><i class="fab fa-discord" style="font-size:0.8rem;color:#5865F2"></i> Uploader</strong>
+                </div>
+            </div>
+
+            <!-- Files List Card -->
+            <div class="dl-files-card" id="dlFilesCard" style="display: none;">
+                <div class="dl-files-title">
+                    <i class="fas fa-folder-open"></i> Files inside this pack
+                </div>
+                <div class="dl-files-list" id="dlFilesList">
+                    <!-- files dynamically rendered -->
                 </div>
             </div>
 
@@ -248,13 +352,43 @@
             catBadge.textContent = categoryLabels[p.category] || p.category || 'Other';
             catBadge.className = 'tag-' + (p.category || 'other');
 
+            // Files Card Render
+            const filesCard = document.getElementById('dlFilesCard');
+            const filesList = document.getElementById('dlFilesList');
+            if (p.files && p.files.length > 0) {
+                filesList.innerHTML = p.files.map(f => {
+                    const fSize = f.size ? (f.size / 1024).toFixed(2) + ' KB' : 'Unknown';
+                    const isVid = f.name.endsWith('.mp4') || f.name.endsWith('.mov') || f.name.endsWith('.avi');
+                    const isAud = f.name.endsWith('.mp3') || f.name.endsWith('.wav');
+                    const isImg = f.name.endsWith('.png') || f.name.endsWith('.jpg') || f.name.endsWith('.jpeg') || f.name.endsWith('.gif');
+                    const fileIcon = isVid ? 'fa-file-video' : isAud ? 'fa-file-audio' : isImg ? 'fa-file-image' : 'fa-file-code';
+                    
+                    return `
+                        <div class="dl-file-item">
+                            <div class="dl-file-info">
+                                <i class="fas ${fileIcon}"></i>
+                                <span class="dl-file-name" title="${f.name}">${f.name}</span>
+                            </div>
+                            <div class="dl-file-meta">
+                                <span class="dl-file-size">${fSize}</span>
+                                <button class="dl-file-btn" onclick="triggerFileDownload('${f.name}', this)" title="Download file individually">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                filesCard.style.display = 'block';
+            } else {
+                filesCard.style.display = 'none';
+            }
+
             // Password
             if (p.password) {
                 document.getElementById('passwordBox').style.display = 'inline-flex';
                 document.getElementById('passwordCode').textContent = p.password;
                 document.getElementById('passwordBox').onclick = () => {
                     navigator.clipboard.writeText(p.password);
-                    const originalText = document.getElementById('passwordBox').innerHTML;
                     document.getElementById('passwordCode').textContent = "Copied!";
                     setTimeout(() => {
                         document.getElementById('passwordCode').textContent = p.password;
@@ -333,6 +467,45 @@
                 alert("Network communication error with the download packaging server.");
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-cloud-arrow-down"></i> Download ZIP Package';
+            }
+        }
+
+        async function triggerFileDownload(filePath, btn) {
+            if (!productId) return;
+            const origHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+            try {
+                // Request a fresh single-use token from backend
+                const tokenResp = await fetch(`/api/downloads/request-token/${productId}`);
+                if (!tokenResp.ok) {
+                    const data = await tokenResp.json();
+                    alert(data.error || "Unable to acquire download ticket.");
+                    btn.disabled = false;
+                    btn.innerHTML = origHtml;
+                    return;
+                }
+
+                const tokenData = await tokenResp.json();
+                if (tokenData.success && tokenData.token) {
+                    // Trigger single file download
+                    window.location.href = `/api/downloads/download?token=${tokenData.token}&file=${encodeURIComponent(filePath)}`;
+                    
+                    setTimeout(() => {
+                        btn.disabled = false;
+                        btn.innerHTML = origHtml;
+                    }, 3000);
+                } else {
+                    alert("Ticket generation failed.");
+                    btn.disabled = false;
+                    btn.innerHTML = origHtml;
+                }
+            } catch (e) {
+                console.error("Individual download error:", e);
+                alert("Network communication error with the download packaging server.");
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
             }
         }
     </script>

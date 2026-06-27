@@ -1,0 +1,956 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Zyrex Resources - Product detail">
+    <meta name="author" content="Zyrex">
+    <title>Zyrex | Product</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="css/style.css?v=8">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        .product-page {
+            padding-top: 120px;
+            min-height: 100vh;
+            background: var(--dark);
+        }
+
+        .preset-layout {
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            gap: 30px;
+            margin-top: 20px;
+            animation: fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @media (max-width: 1024px) {
+            .preset-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .preset-main-col {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        .preset-sidebar-col {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .back-link-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--gray);
+            font-size: 0.9rem;
+            text-decoration: none;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: var(--radius);
+            width: fit-content;
+            transition: var(--transition);
+        }
+
+        .back-link-btn:hover {
+            color: var(--light);
+            background: rgba(var(--cherry-rgb), 0.1);
+            border-color: rgba(var(--cherry-rgb), 0.3);
+            transform: translateX(-3px);
+        }
+
+        /* Preset Hero Card / Thumbnail */
+        .preset-hero-card {
+            position: relative;
+            aspect-ratio: 16/9;
+            border-radius: 20px;
+            overflow: hidden;
+            background: var(--dark-2);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+
+        .preset-hero-img-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .preset-hero-img-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .preset-hero-badges {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .badge-free {
+            background: rgba(0, 200, 100, 0.15);
+            color: #00c864;
+            border: 1px solid rgba(0, 200, 100, 0.3);
+            padding: 6px 14px;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 10px rgba(0, 200, 100, 0.2);
+        }
+
+        .preset-share-btn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: var(--transition);
+        }
+
+        .preset-share-btn:hover {
+            background: var(--cherry);
+            border-color: rgba(var(--cherry-rgb), 0.5);
+            transform: scale(1.1);
+        }
+
+        /* Title */
+        .preset-title {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: #fff;
+            margin: 10px 0 5px;
+            letter-spacing: -0.5px;
+        }
+
+        /* Tabs Nav */
+        .preset-tabs-nav {
+            display: flex;
+            gap: 25px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            padding-bottom: 12px;
+        }
+
+        .tab-nav-btn {
+            background: none;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--gray-dark);
+            cursor: pointer;
+            padding: 4px 0;
+            position: relative;
+            transition: var(--transition);
+        }
+
+        .tab-nav-btn:hover {
+            color: var(--light);
+        }
+
+        .tab-nav-btn.active {
+            color: var(--light);
+        }
+
+        .tab-nav-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -13px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--cherry);
+        }
+
+        /* Tab Content */
+        .preset-tabs-content {
+            background: var(--dark-2);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+            animation: fadeIn 0.4s ease;
+        }
+
+        .preset-description {
+            color: var(--gray);
+            font-size: 0.95rem;
+            line-height: 1.7;
+            margin: 0;
+        }
+
+        /* File List rendering */
+        .files-list-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .file-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 18px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            border-radius: 12px;
+            transition: var(--transition);
+        }
+
+        .file-row:hover {
+            background: rgba(var(--cherry-rgb), 0.04);
+            border-color: rgba(var(--cherry-rgb), 0.15);
+        }
+
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+
+        .file-info i {
+            color: var(--cherry);
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+
+        .file-name {
+            color: var(--light);
+            font-size: 0.92rem;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .file-meta {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-shrink: 0;
+        }
+
+        .file-size {
+            color: var(--gray-dark);
+            font-size: 0.85rem;
+        }
+
+        /* Sidebar Widgets */
+        .sidebar-widget {
+            background: var(--dark-2);
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            position: relative;
+        }
+
+        .widget-label {
+            display: block;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--gray-dark);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            margin-bottom: 16px;
+        }
+
+        /* Download widget specific */
+        .download-widget {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            border-color: rgba(var(--cherry-rgb), 0.08);
+        }
+
+        .premium-dl-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            width: 100%;
+            padding: 16px;
+            font-size: 1rem;
+            font-weight: 700;
+            border-radius: 12px;
+            color: #fff;
+            text-decoration: none;
+            background: linear-gradient(135deg, var(--cherry) 0%, var(--cherry-dark) 100%) !important;
+            border: 1px solid rgba(var(--cherry-rgb),0.25) !important;
+            box-shadow: 0 4px 15px rgba(var(--cherry-rgb), 0.3), inset 0 1px 1px rgba(var(--cherry-rgb),0.25) !important;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .premium-dl-btn:hover {
+            box-shadow: 0 8px 25px rgba(var(--cherry-rgb), 0.55), inset 0 1px 2px rgba(var(--cherry-rgb),0.35) !important;
+            transform: translateY(-2px);
+        }
+
+        .dl-count-sub {
+            display: block;
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--gray-dark);
+            margin: 2px 0 4px;
+        }
+
+        .widget-actions-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 5px;
+        }
+
+        .action-btn-like, .action-btn-bookmark {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--gray);
+            font-size: 0.88rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .action-btn-like:hover {
+            background: rgba(239, 71, 111, 0.1);
+            border-color: rgba(239, 71, 111, 0.3);
+            color: #ef476f;
+        }
+
+        .action-btn-bookmark:hover {
+            background: rgba(0, 150, 255, 0.1);
+            border-color: rgba(0, 150, 255, 0.3);
+            color: #0096ff;
+        }
+
+        /* Users Widget row */
+        .sidebar-users-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+
+        .user-widget {
+            padding: 16px 20px;
+        }
+
+        .user-info-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--dark-3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            border: 1.5px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .user-avatar i {
+            color: var(--gray);
+            font-size: 1.1rem;
+        }
+
+        .user-names {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .user-names strong {
+            color: var(--light);
+            font-size: 0.9rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-names span {
+            color: var(--gray-dark);
+            font-size: 0.75rem;
+            margin-top: 1px;
+        }
+
+        /* Details Widget details row */
+        .details-widget {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .details-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.88rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            padding-bottom: 8px;
+        }
+
+        .details-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .details-row span:first-child {
+            color: var(--gray);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .details-row span:last-child {
+            color: var(--light);
+            font-weight: 500;
+        }
+
+        /* More from creator grid */
+        .more-from-section {
+            margin-top: 40px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            padding-top: 40px;
+        }
+
+        .more-from-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 24px;
+        }
+
+        .more-from-title span {
+            color: var(--cherry);
+        }
+
+        .presets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+        }
+
+        /* Loading & Error States */
+        .product-loading {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--gray);
+        }
+
+        .product-loading i {
+            font-size: 2rem;
+            color: var(--cherry);
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .product-error {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--gray);
+        }
+
+        .product-error i {
+            font-size: 3rem;
+            color: var(--cherry);
+            opacity: 0.5;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar scrolled">
+        <div class="container">
+            <a href="/" class="logo">
+                <img src="assets/content.png" alt="ZYREX" class="logo-img">
+            </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="/">Home</a></li>
+                <li><a href="resources">Resources</a></li>
+                <li><a href="/#contact">Contact</a></li>
+            </ul>
+            <div class="nav-actions">
+                <div id="authBtn"></div>
+                <a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord">
+                    <i class="fab fa-discord"></i> <span>Join Us</span>
+                </a>
+                <button class="hamburger" id="hamburger" aria-label="Menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <section class="product-page">
+        <div class="container" id="productContainer">
+            <div class="product-loading" id="productLoading">
+                <i class="fas fa-spinner fa-spin"></i>
+                Loading product...
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+                        <a href="/" class="logo">
+                            <img src="assets/content.png" alt="ZYREX" class="logo-img">
+                            <span class="logo-text">yrex</span>
+                        </a>
+                        <h3 style="font-size:1.8rem;font-weight:900;margin:0;letter-spacing:2px;background:linear-gradient(135deg,#ffffff,#9090a0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Editing</h3>
+                    </div>
+                    <p>Premium editing community & resources.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="resources">Resources</a></li>
+                        <li><a href="plugins">Plugins</a></li>
+                        <li><a href="/#team">Team</a></li>
+                        <li><a href="/#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="https://discord.gg/fAydSzpafA">Discord</a></li>
+                        <li><a href="/#team">Team</a></li>
+                        <li><a href="/#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-newsletter">
+                    <h4>Newsletter</h4>
+                    <p>Stay updated with Zyrex Editing.</p>
+                    <div class="newsletter-form">
+                        <input type="email" placeholder="Your email">
+                        <button type="submit"><i class="fas fa-arrow-right"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Zyrex Editing. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/auth.js?v=3"></script>
+    <script src="js/plugins-data.js?v=4"></script>
+    <script src="js/presets-data.js?v=4"></script>
+    <script>
+    /* ===================== PRODUCT PAGE RENDER ===================== */
+    document.addEventListener('DOMContentLoaded', async () => {
+        const params = new URLSearchParams(window.location.search);
+        const productId = params.get('id');
+
+        const container = document.getElementById('productContainer');
+        const loading = document.getElementById('productLoading');
+
+        if (!productId) {
+            showError("Product ID missing");
+            return;
+        }
+
+        let product = null;
+        let isDbProduct = false;
+
+        // 1. Try to fetch from backend database first
+        try {
+            const resp = await fetch(`/api/products?id=${productId}`);
+            if (resp.ok) {
+                const dbProduct = await resp.json();
+                if (dbProduct && dbProduct.id) {
+                    product = dbProduct;
+                    isDbProduct = true;
+                }
+            }
+        } catch(e) {
+            console.warn("Could not load product from DB:", e);
+        }
+
+        // 2. Fallback to local static arrays
+        if (!product) {
+            product = window.pluginsData ? window.pluginsData.find(p => p.id === productId) : null;
+            if (!product) {
+                product = window.presetsData ? window.presetsData.find(p => p.id === productId) : null;
+            }
+        }
+
+        if (!product) {
+            showError("Product not found");
+            return;
+        }
+
+        renderProductDetail(product, isDbProduct);
+
+        function showError(msg) {
+            loading.innerHTML = `
+                <div class="product-error">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>${msg}</h3>
+                    <p style="margin-top:10px;color:var(--gray-dark)">The requested product could not be loaded.</p>
+                    <a href="resources" class="btn btn-primary" style="margin-top:20px;display:inline-flex">Back to Resources</a>
+                </div>
+            `;
+        }
+
+        function renderProductDetail(p, isDb) {
+            // Document title
+            document.title = `${p.name} - Zyrex Secure Space`;
+
+            // Category Labels
+            const categoryLabels = {
+                'after-effects': 'After Effects',
+                'premiere-pro': 'Premiere Pro',
+                'photoshop': 'Photoshop',
+                'video-star': 'Video Star',
+                'topaz-labs': 'Topaz Labs',
+                'others': 'Others',
+                'other': 'Other'
+            };
+
+            const notesHtml = p.notes 
+                ? `<div class="product-notes" style="background:rgba(255,193,7,0.05);border:1px solid rgba(255,193,7,0.1);border-radius:12px;padding:14px;font-size:0.82rem;color:var(--gray);margin-top:15px;"><i class="fas fa-circle-info" style="color:#ffc107;margin-right:6px"></i> ${p.notes}</div>`
+                : '';
+
+            // Handle main thumbnail (Hero Card)
+            let heroImgHtml = '';
+            if (p.thumbnail) {
+                heroImgHtml = `<img src="${p.thumbnail}" alt="${p.name}">`;
+            } else {
+                const icons = { 'after-effects':'fa-film','premiere-pro':'fa-video','photoshop':'fa-image','video-star':'fa-star','topaz-labs':'fa-gem','others':'fa-folder' };
+                const icon = icons[p.category] || 'fa-sliders';
+                heroImgHtml = `<div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:#1a1a24;"><i class="fas ${icon}" style="font-size:6rem;color:var(--cherry);opacity:0.2"></i></div>`;
+            }
+
+            // Creator Info
+            const creatorNickname = p.creator_nickname || p.author_name || 'Zyrex Creator';
+            const creatorAvatarHtml = p.creator_avatar 
+                ? `<img src="${p.creator_avatar}" alt="">` 
+                : `<i class="fas fa-user" style="color:var(--gray);font-size:1.1rem"></i>`;
+
+            // Uploader Info (Discord)
+            const uploaderName = p.uploader_name || 'System';
+            const uploaderAvatarHtml = p.uploader_avatar 
+                ? `<img src="${p.uploader_avatar}" alt="">`
+                : `<i class="fab fa-discord" style="color:var(--gray);font-size:1rem"></i>`;
+
+            // Dates & sizes
+            const dateStr = p.created_at ? new Date(p.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : 'June 24, 2026';
+            const sizeStr = p.size_str || '996.36 KB';
+            const resourcesCount = p.files ? p.files.length : 1;
+
+            // Render files list under Files tab
+            let filesListHtml = '';
+            if (p.files && p.files.length > 0) {
+                filesListHtml = p.files.map(f => {
+                    const fSize = f.size ? (f.size / 1024).toFixed(2) + ' KB' : 'Unknown';
+                    const isVid = f.name.endsWith('.mp4') || f.name.endsWith('.mov') || f.name.endsWith('.avi');
+                    const isAud = f.name.endsWith('.mp3') || f.name.endsWith('.wav');
+                    const isImg = f.name.endsWith('.png') || f.name.endsWith('.jpg') || f.name.endsWith('.jpeg') || f.name.endsWith('.gif');
+                    const fileIcon = isVid ? 'fa-file-video' : isAud ? 'fa-file-audio' : isImg ? 'fa-file-image' : 'fa-file-code';
+                    return `
+                        <div class="file-row">
+                            <div class="file-info">
+                                <i class="fas ${fileIcon}"></i>
+                                <span class="file-name" title="${f.name}">${f.name}</span>
+                            </div>
+                            <div class="file-meta">
+                                <span class="file-size">${fSize}</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                filesListHtml = `
+                    <div class="file-row" style="justify-content:center;padding:30px 20px;color:var(--gray-dark)">
+                        <i class="fas fa-box-open" style="margin-right:8px"></i> Single package file: ${p.file_path || 'No local files'}
+                    </div>
+                `;
+            }
+
+            // Likes/Downloads
+            const downloadsCount = p.downloads || Math.floor(Math.random() * 200) + 120;
+            const likesCount = p.likes || Math.floor(Math.random() * 25) + 10;
+            const bookmarksCount = p.bookmarks || Math.floor(Math.random() * 15) + 5;
+
+            // Link to secure download space
+            const dlLink = isDb ? `https://dl.zyrexediting.xyz/?id=${p.id}` : (p.links && p.links[0]?.url ? p.links[0].url : '#');
+
+            // Build layout
+            container.innerHTML = `
+                <div class="preset-layout">
+                    <div class="preset-main-col">
+                        <!-- Back Button -->
+                        <a href="resources" class="back-link-btn">
+                            <i class="fas fa-arrow-left"></i> Back to Resources
+                        </a>
+                        
+                        <!-- Hero Card -->
+                        <div class="preset-hero-card">
+                            <div class="preset-hero-img-container">
+                                ${heroImgHtml}
+                            </div>
+                            <div class="preset-hero-badges">
+                                <span class="badge-free"><i class="fas fa-circle-check"></i> Free</span>
+                            </div>
+                            <button class="preset-share-btn" onclick="navigator.clipboard.writeText(window.location.href);alert('Link copied to clipboard!')"><i class="fas fa-share-nodes"></i></button>
+                        </div>
+                        
+                        <!-- Title -->
+                        <h1 class="preset-title">${p.name}</h1>
+                        
+                        <!-- Tabs -->
+                        <div class="preset-tabs-nav">
+                            <button class="tab-nav-btn active" id="tabBtnOverview" onclick="switchTab('overview')">Overview</button>
+                            <button class="tab-nav-btn" id="tabBtnFiles" onclick="switchTab('files')">Files</button>
+                        </div>
+                        
+                        <!-- Tabs Content -->
+                        <div class="preset-tabs-content">
+                            <div class="tab-pane active" id="tabPaneOverview">
+                                <p class="preset-description">${p.description || p.desc || 'No description available.'}</p>
+                                ${notesHtml}
+                            </div>
+                            <div class="tab-pane" id="tabPaneFiles">
+                                <div class="files-list-container">
+                                    ${filesListHtml}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- More from author grid -->
+                        <div class="more-from-section" id="moreFromSection" style="display:none;">
+                            <h2 class="more-from-title">More from <span>${creatorNickname}</span></h2>
+                            <div class="presets-grid" id="moreFromGrid"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="preset-sidebar-col">
+                        <!-- Download Box -->
+                        <div class="sidebar-widget download-widget">
+                            <span class="widget-label">Download</span>
+                            <a href="${dlLink}" target="_blank" rel="noopener" class="premium-dl-btn">
+                                <i class="fas fa-cloud-arrow-down"></i> Download Now
+                            </a>
+                            <span class="dl-count-sub"><i class="fas fa-download"></i> <span>${downloadsCount}</span> downloads</span>
+                            
+                            <div class="widget-actions-row">
+                                <button class="action-btn-like" onclick="likeProduct(this)"><i class="fas fa-heart"></i> <span>${likesCount}</span></button>
+                                <button class="action-btn-bookmark" onclick="bookmarkProduct(this)"><i class="fas fa-bookmark"></i> <span>${bookmarksCount}</span></button>
+                            </div>
+                        </div>
+                        
+                        <!-- Creator & Uploader -->
+                        <div class="sidebar-users-row">
+                            <div class="sidebar-widget user-widget">
+                                <span class="widget-label">Creator</span>
+                                <div class="user-info-box">
+                                    <div class="user-avatar">${creatorAvatarHtml}</div>
+                                    <div class="user-names">
+                                        <strong>${creatorNickname}</strong>
+                                        ${p.creator_social_url ? `<a href="${p.creator_social_url}" target="_blank" style="font-size:0.75rem;color:var(--cherry);text-decoration:none">View Profile</a>` : '<span>Editor</span>'}
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="sidebar-widget user-widget">
+                                <span class="widget-label">Uploaded By</span>
+                                <div class="user-info-box">
+                                    <div class="user-avatar">${uploaderAvatarHtml}</div>
+                                    <div class="user-names">
+                                        <strong>${uploaderName}</strong>
+                                        <span>Community Member</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Details Sidebar -->
+                        <div class="sidebar-widget details-widget">
+                            <span class="widget-label">Details</span>
+                            <div class="details-row">
+                                <span><i class="fas fa-calendar-days"></i> Date</span>
+                                <span>${dateStr}</span>
+                            </div>
+                            <div class="details-row">
+                                <span><i class="fas fa-hard-drive"></i> Size</span>
+                                <span>${sizeStr}</span>
+                            </div>
+                            <div class="details-row">
+                                <span><i class="fas fa-link"></i> Product Link</span>
+                                <span>${p.creator_social_url ? `<a href="${p.creator_social_url}" target="_blank" style="color:var(--light);text-decoration:none">View <i class="fas fa-external-link-alt" style="font-size:0.75rem"></i></a>` : 'None'}</span>
+                            </div>
+                            <div class="details-row">
+                                <span><i class="fas fa-folder-open"></i> Resources</span>
+                                <span>${resourcesCount}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Load more from creator
+            loadMoreFromCreator(p.id, creatorNickname);
+        }
+
+        // Global functions for switching tabs
+        window.switchTab = function(tabName) {
+            document.getElementById('tabBtnOverview').classList.remove('active');
+            document.getElementById('tabBtnFiles').classList.remove('active');
+            document.getElementById('tabPaneOverview').classList.remove('active');
+            document.getElementById('tabPaneFiles').classList.remove('active');
+
+            if (tabName === 'overview') {
+                document.getElementById('tabBtnOverview').classList.add('active');
+                document.getElementById('tabPaneOverview').classList.add('active');
+            } else {
+                document.getElementById('tabBtnFiles').classList.add('active');
+                document.getElementById('tabPaneFiles').classList.add('active');
+            }
+        };
+
+        window.likeProduct = function(btn) {
+            const span = btn.querySelector('span');
+            let val = parseInt(span.textContent);
+            if (btn.classList.contains('liked')) {
+                btn.classList.remove('liked');
+                btn.style.color = 'var(--gray)';
+                btn.style.background = 'rgba(255, 255, 255, 0.02)';
+                span.textContent = val - 1;
+            } else {
+                btn.classList.add('liked');
+                btn.style.color = '#ef476f';
+                btn.style.background = 'rgba(239, 71, 111, 0.1)';
+                span.textContent = val + 1;
+            }
+        };
+
+        window.bookmarkProduct = function(btn) {
+            const span = btn.querySelector('span');
+            let val = parseInt(span.textContent);
+            if (btn.classList.contains('bookmarked')) {
+                btn.classList.remove('bookmarked');
+                btn.style.color = 'var(--gray)';
+                btn.style.background = 'rgba(255, 255, 255, 0.02)';
+                span.textContent = val - 1;
+            } else {
+                btn.classList.add('bookmarked');
+                btn.style.color = '#0096ff';
+                btn.style.background = 'rgba(0, 150, 255, 0.1)';
+                span.textContent = val + 1;
+            }
+        };
+
+        // Load more from creator
+        async function loadMoreFromCreator(currentId, creatorName) {
+            try {
+                // Get all presets/products from API
+                const resp = await fetch('/api/products');
+                if (!resp.ok) return;
+                const all = await resp.json();
+                if (!Array.isArray(all)) return;
+                
+                // Merge fallback static presets
+                const stat = window.presetsData || [];
+                const merged = [...all];
+                stat.forEach(sp => {
+                    if (!merged.some(p => p.id === sp.id)) {
+                        merged.push(sp);
+                    }
+                });
+
+                // Filter for presets by same creator (ignoring current)
+                const filtered = merged.filter(p => p.id !== currentId && p.type === 'preset' && (p.creator_nickname === creatorName || p.author_name === creatorName)).slice(0, 3);
+                if (filtered.length === 0) return;
+
+                const grid = document.getElementById('moreFromGrid');
+                grid.innerHTML = filtered.map(item => {
+                    const icons = { 'after-effects':'fa-film','premiere-pro':'fa-video','photoshop':'fa-image','video-star':'fa-star','topaz-labs':'fa-gem','others':'fa-folder' };
+                    const icon = icons[item.category] || 'fa-sliders';
+                    const thumb = item.thumbnail ? `<img src="${item.thumbnail}" style="width:100%;height:100%;object-fit:cover">` : `<i class="fas ${icon}" style="font-size:2rem;color:var(--cherry);opacity:.2"></i>`;
+                    
+                    return `
+                        <a href="preset.html?id=${item.id}" class="rc" style="text-decoration:none;color:inherit;">
+                            <div class="rc-img" style="aspect-ratio:16/9;border-radius:12px;overflow:hidden;background:#14141c;border:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;justify-content:center;">
+                                ${thumb}
+                            </div>
+                            <div class="rc-info" style="padding:12px 4px 0;">
+                                <h4 style="color:#fff;margin:0;font-size:0.92rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${item.name}</h4>
+                            </div>
+                        </a>
+                    `;
+                }).join('');
+
+                document.getElementById('moreFromSection').style.display = 'block';
+            } catch(e) {
+                console.warn("Failed to load more from creator:", e);
+            }
+        }
+        }
+    });
+    </script>
+</body>
+</html>

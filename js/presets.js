@@ -49,7 +49,7 @@ function renderPresets(items) {
             `<img src="${item.thumbnail}" style="width:100%;height:100%;object-fit:cover">` : 
             `<i class="fas ${icon}" style="font-size:2.5rem;color:#a80f2d;opacity:.3"></i>`;
 
-        return '<a href="product.html?id=' + item.id + '" class="rc">' +
+        return '<a href="preset.html?id=' + item.id + '" class="rc">' +
             '<div class="rc-img">' +
             '<div class="rimg" style="display:flex;align-items:center;justify-content:center;background:#1c1c24;overflow:hidden;width:100%;height:100%">' +
             thumbHtml + '</div>' +
