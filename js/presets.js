@@ -4,13 +4,22 @@ async function initPresets() {
         const resp = await fetch('/api/products');
         const data = await resp.json();
         if (Array.isArray(data)) {
-            window.presetsData = data;
-            renderPresets(data);
+            const staticPresets = window.presetsData || [];
+            const merged = [...data];
+            staticPresets.forEach(sp => {
+                if (!merged.some(p => p.id === sp.id)) {
+                    merged.push(sp);
+                }
+            });
+            window.presetsData = merged;
+            renderPresets(merged);
         } else {
-            console.error("Expected array from products endpoint");
+            console.error("Expected array from products endpoint, using fallback");
+            renderPresets(window.presetsData || []);
         }
     } catch(e) {
-        console.error("Failed to load presets:", e);
+        console.error("Failed to load presets, using fallback:", e);
+        renderPresets(window.presetsData || []);
     }
 }
 
