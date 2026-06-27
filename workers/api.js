@@ -96,6 +96,9 @@ async function scrapePayhip(url) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (url.hostname === "storage.zyrexediting.xyz") {
+      return fetch(request);
+    }
     const path = url.pathname;
 
     if (request.method === "OPTIONS") {
@@ -272,8 +275,8 @@ export default {
         }
       }
 
-      // ============ BOT PROXY (SFTPGo, products, admin) ============
-      if (path.startsWith("/api/sftpgo/") || path.startsWith("/api/products/") || path.startsWith("/api/admin/")) {
+      // ============ BOT PROXY (SFTPGo, products, admin, cloud) ============
+      if (path.startsWith("/api/sftpgo/") || path.startsWith("/api/products/") || path.startsWith("/api/admin/") || path.startsWith("/api/cloud/")) {
         const session = parseSession(request.headers.get("Cookie"));
         const proxyHeaders = {
           "Content-Type": "application/json",
