@@ -256,14 +256,20 @@ export default {
         return json({ success: true, message: `Product ${id} deleted` });
       }
 
-      // ============ PAYHIP SCRAPER (Direct) ============
+      // ============ PAYHIP SCRAPER (Proxied to Bot) ============
       if (path === "/api/payhip/scrape") {
         const payhipUrl = url.searchParams.get("url");
         if (!payhipUrl || !payhipUrl.includes("payhip.com")) {
           return json({ success: false, error: "Invalid Payhip URL" }, 400);
         }
-        const data = await scrapePayhip(payhipUrl);
-        return json(data);
+        const targetUrl = `${BOT_API}/api/payhip/scrape?url=${encodeURIComponent(payhipUrl)}`;
+        const botResp = await fetch(targetUrl);
+        const data = await botResp.text();
+        try {
+          return json(JSON.parse(data), botResp.status);
+        } catch {
+          return new Response(data, { status: botResp.status, headers: corsHeaders });
+        }
       }
 
       // ============ BOT PROXY (SFTPGo, products, admin) ============
