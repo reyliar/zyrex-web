@@ -907,6 +907,9 @@
                 <li class="menu-item" data-tab="files" id="tabFilesItem" style="display:none">
                     <button onclick="switchTab('files')"><i class="fas fa-folder-open"></i> My Cloud Files</button>
                 </li>
+                <li class="menu-item" data-tab="cloud-account" id="tabCloudAccountItem" style="display:none">
+                    <button onclick="switchTab('cloud-account')"><i class="fas fa-user-shield"></i> Cloud Account</button>
+                </li>
 
                 <!-- Admin specific title and menus -->
                 <div id="adminMenuSection" style="display:none">
@@ -965,6 +968,13 @@
                         <h4>Session Information</h4>
                         <p style="font-size:0.85rem;color:var(--text-muted);line-height:1.6">Welcome to Zyrex Editing administrative tools. Use the sidebar sections to manage presets, configure storage quotas, explore active Discord uploaders, and examine server health logs.</p>
                     </div>
+
+                    <!-- Cookie Preferences Card -->
+                    <div class="card">
+                        <h4>Cookie Preferences</h4>
+                        <p style="font-size:0.85rem;color:var(--text-muted);line-height:1.6;margin-bottom:15px">Configure the tracking and settings cookies used on our website to fit your privacy preferences.</p>
+                        <button onclick="openCookieSettings()" class="btn-action-primary" style="justify-content:center;width:100%"><i class="fas fa-cookie-bite"></i> Configure Preferences</button>
+                    </div>
                 </div>
             </div>
 
@@ -978,6 +988,56 @@
                     </div>
                     <div class="explorer-main" id="explorerFiles">
                         <p style="color:var(--text-muted);font-size:0.85rem;padding:20px;text-align:center"><i class="fas fa-folder-open" style="font-size:1.8rem;display:block;margin-bottom:10px;opacity:0.3"></i>Select a directory to inspect files.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB: MY PERSONAL CLOUD ACCOUNT -->
+            <div class="tab-panel" id="pane-cloud-account">
+                <h2 class="pane-title">Cloud Account Management</h2>
+                <p style="color:var(--text-muted);font-size:0.85rem;margin-bottom:20px">Manage your personal SFTPGo cloud account details and credentials linked to your Discord profile.</p>
+                <div class="grid-cards">
+                    <!-- Account Info Card -->
+                    <div class="card">
+                        <h4>Account Specifications</h4>
+                        <div class="cloud-details" style="margin-top:15px;display:flex;flex-direction:column;gap:12px;font-size:0.85rem">
+                            <div style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.05);padding-bottom:8px">
+                                <span style="color:var(--text-muted)">Username:</span>
+                                <strong id="myCloudUsername" style="color:#fff">-</strong>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.05);padding-bottom:8px">
+                                <span style="color:var(--text-muted)">Display Name:</span>
+                                <strong id="myCloudDisplayName" style="color:#fff">-</strong>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.05);padding-bottom:8px">
+                                <span style="color:var(--text-muted)">Storage Quota:</span>
+                                <strong id="myCloudQuota" style="color:#fff">-</strong>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.05);padding-bottom:8px">
+                                <span style="color:var(--text-muted)">Storage Used:</span>
+                                <strong id="myCloudUsed" style="color:#fff">-</strong>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;padding-bottom:4px">
+                                <span style="color:var(--text-muted)">Account Status:</span>
+                                <span id="myCloudStatus" class="badge" style="padding:2px 8px;font-size:0.75rem">-</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Change Password Card -->
+                    <div class="card">
+                        <h4>Security Credentials</h4>
+                        <form id="changeCloudPasswordForm" onsubmit="changeCloudPassword(event)" style="margin-top:15px;display:flex;flex-direction:column;gap:12px">
+                            <div class="form-group" style="margin-bottom:0">
+                                <label for="newCloudPassword" style="font-size:0.75rem;color:var(--text-muted)">New Cloud Password *</label>
+                                <input type="password" id="newCloudPassword" placeholder="Enter new password (min. 6 chars)" required style="width:100%;padding:10px;border-radius:6px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);color:#fff">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0">
+                                <label for="confirmCloudPassword" style="font-size:0.75rem;color:var(--text-muted)">Confirm New Password *</label>
+                                <input type="password" id="confirmCloudPassword" placeholder="Confirm new password" required style="width:100%;padding:10px;border-radius:6px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);color:#fff">
+                            </div>
+                            <button type="submit" class="btn-action-primary" style="justify-content:center;margin-top:5px;width:100%"><i class="fas fa-key"></i> Update Cloud Password</button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -1212,6 +1272,7 @@
                 // Check permissions
                 if (currentUser.can_upload || currentUser.is_admin) {
                     document.getElementById('tabFilesItem').style.display = 'block';
+                    document.getElementById('tabCloudAccountItem').style.display = 'block';
                     loadSFTPQuotaOverview();
                 }
 
@@ -1250,6 +1311,8 @@
             // Trigger fetch queries on tab activation
             if (tabName === 'files') {
                 loadCloudExplorerFiles('/');
+            } else if (tabName === 'cloud-account') {
+                loadMyCloudAccountDetails();
             } else if (tabName === 'products') {
                 fetchDbProducts();
             } else if (tabName === 'accounts') {
@@ -1308,6 +1371,75 @@
                 }
             } catch (e) {
                 console.warn("Failed to fetch quota for overview:", e);
+            }
+        }
+
+        // Load personal cloud details
+        async function loadMyCloudAccountDetails() {
+            try {
+                const resp = await fetch('/api/sftpgo/account', { credentials: 'include' });
+                const data = await resp.json();
+                if (data.success && data.user) {
+                    const u = data.user;
+                    document.getElementById('myCloudUsername').textContent = data.username || '-';
+                    document.getElementById('myCloudDisplayName').textContent = data.display_name || '-';
+                    
+                    const quota = u.quota_size || 0;
+                    const used = u.used_quota_size || 0;
+                    document.getElementById('myCloudQuota').textContent = formatBytes(quota);
+                    document.getElementById('myCloudUsed').textContent = formatBytes(used) + ` (${quota > 0 ? Math.round((used/quota)*100) : 0}%)`;
+                    
+                    const statusBadge = document.getElementById('myCloudStatus');
+                    if (u.status === 1) {
+                        statusBadge.textContent = 'Active';
+                        statusBadge.style.background = 'rgba(46, 204, 113, 0.15)';
+                        statusBadge.style.color = '#2ecc71';
+                    } else {
+                        statusBadge.textContent = 'Disabled';
+                        statusBadge.style.background = 'rgba(231, 76, 60, 0.15)';
+                        statusBadge.style.color = '#e74c3c';
+                    }
+                } else {
+                    document.getElementById('myCloudUsername').textContent = 'None';
+                    document.getElementById('myCloudDisplayName').textContent = 'No linked SFTPGo cloud user';
+                }
+            } catch(e) {
+                console.warn("Failed to load personal cloud account details:", e);
+            }
+        }
+
+        // Change password of personal cloud account
+        async function changeCloudPassword(e) {
+            e.preventDefault();
+            const password = document.getElementById('newCloudPassword').value;
+            const confirm = document.getElementById('confirmCloudPassword').value;
+
+            if (password.length < 6) {
+                alert('Password must be at least 6 characters long.');
+                return;
+            }
+
+            if (password !== confirm) {
+                alert('Passwords do not match.');
+                return;
+            }
+
+            try {
+                const resp = await fetch('/api/cloud/change-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: password })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    alert('Password updated successfully.');
+                    document.getElementById('newCloudPassword').value = '';
+                    document.getElementById('confirmCloudPassword').value = '';
+                } else {
+                    alert('Failed to update password: ' + (data.error || 'Unknown error'));
+                }
+            } catch(e) {
+                alert('Connection failed.');
             }
         }
 
