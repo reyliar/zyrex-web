@@ -101,10 +101,12 @@ export default {
     }
     if (url.hostname === "dl.zyrexediting.xyz") {
       const newUrl = new URL(request.url);
-      if (newUrl.pathname === "/") {
-        newUrl.pathname = "/download.html";
+      if (!newUrl.pathname.startsWith("/api/")) {
+        if (newUrl.pathname === "/") {
+          newUrl.pathname = "/download.html";
+        }
+        return env.ASSETS.fetch(newUrl);
       }
-      return env.ASSETS.fetch(newUrl);
     }
     const path = url.pathname;
 
@@ -296,6 +298,31 @@ export default {
         } catch {
           return new Response(data, { status: botResp.status, headers: corsHeaders });
         }
+      }
+
+      // ============ BINARY DOWNLOAD STREAM (passthrough, no text parsing) ============
+      if (path === "/api/downloads/download") {
+        const session = parseSession(request.headers.get("Cookie"));
+        const proxyHeaders = {};
+        if (session) {
+          proxyHeaders["X-User-ID"] = session.userId || "";
+          proxyHeaders["X-User-Name"] = session.username || "";
+        }
+        const targetUrl = `${BOT_API}${path}${url.search}`;
+        const botResp = await fetch(targetUrl, {
+          method: "GET",
+          headers: proxyHeaders,
+        });
+        // Pass binary response through directly without parsing
+        return new Response(botResp.body, {
+          status: botResp.status,
+          headers: {
+            "Content-Type": botResp.headers.get("Content-Type") || "application/octet-stream",
+            "Content-Disposition": botResp.headers.get("Content-Disposition") || "",
+            "Content-Length": botResp.headers.get("Content-Length") || "",
+            ...corsHeaders,
+          },
+        });
       }
 
       // ============ BOT PROXY (SFTPGo, products, admin, cloud, downloads) ============
