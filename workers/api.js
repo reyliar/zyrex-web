@@ -99,6 +99,13 @@ export default {
     if (url.hostname === "storage.zyrexediting.xyz") {
       return fetch(request);
     }
+    if (url.hostname === "dl.zyrexediting.xyz") {
+      const newUrl = new URL(request.url);
+      if (newUrl.pathname === "/") {
+        newUrl.pathname = "/download.html";
+      }
+      return env.ASSETS.fetch(newUrl);
+    }
     const path = url.pathname;
 
     if (request.method === "OPTIONS") {
@@ -275,8 +282,8 @@ export default {
         }
       }
 
-      // ============ BOT PROXY (SFTPGo, products, admin, cloud) ============
-      if (path.startsWith("/api/sftpgo/") || path.startsWith("/api/products/") || path.startsWith("/api/admin/") || path.startsWith("/api/cloud/")) {
+      // ============ BOT PROXY (SFTPGo, products, admin, cloud, downloads) ============
+      if (path.startsWith("/api/sftpgo/") || path.startsWith("/api/products") || path.startsWith("/api/admin/") || path.startsWith("/api/cloud/") || path.startsWith("/api/downloads/")) {
         const session = parseSession(request.headers.get("Cookie"));
         const proxyHeaders = {
           "Content-Type": "application/json",

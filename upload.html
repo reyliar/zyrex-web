@@ -201,16 +201,18 @@
             <input type="hidden" id="resourceId">
             <div class="form-group">
                 <label>Product Name *</label>
-                <input type="text" id="productName" placeholder="e.g. Hyper Pop Preset Pack">
+                <input type="text" id="productName" placeholder="e.g. Hyper Pop Preset Pack" oninput="updateLiveCardPreview()">
             </div>
             <div class="form-row">
                 <div class="form-group">
-                    <label>Creator / Editor Name *</label>
-                    <input type="text" id="creatorName" placeholder="e.g. reyli">
+                    <label>Creator Social Media URL *</label>
+                    <input type="url" id="creatorSocialUrl" placeholder="e.g. https://www.tiktok.com/@reyli" onblur="resolveCreatorSocial()" oninput="updateLiveCardPreview()">
+                    <input type="hidden" id="creatorName" value="">
+                    <input type="hidden" id="creatorAvatar" value="">
                 </div>
                 <div class="form-group">
                     <label>Category *</label>
-                    <select id="productCategory">
+                    <select id="productCategory" onchange="updateLiveCardPreview()">
                         <option value="">Select category...</option>
                         <option value="color-grading">Color Grading</option>
                         <option value="transition">Transitions</option>
@@ -230,7 +232,7 @@
             </div>
             <div class="form-group">
                 <label>Description *</label>
-                <textarea id="productDesc" placeholder="Describe what this resource includes and how editors can use it..."></textarea>
+                <textarea id="productDesc" placeholder="Describe what this resource includes and how editors can use it..." oninput="updateLiveCardPreview()"></textarea>
             </div>
             <div class="form-group">
                 <label>Payhip Link</label>
@@ -246,10 +248,42 @@
             <div class="form-group">
                 <label>Thumbnail URLs</label>
                 <div class="thumbnail-urls" id="thumbnailUrls">
-                    <input type="url" placeholder="https://...image.png" class="thumb-input" oninput="updateThumbPreview()">
+                    <input type="url" placeholder="https://...image.png" class="thumb-input" oninput="updateThumbPreview(); updateLiveCardPreview()">
                     <button class="add-btn" onclick="addThumbnailField()">+</button>
                 </div>
                 <div class="thumb-preview" id="thumbPreview"></div>
+            </div>
+
+            <!-- Live Card Preview -->
+            <div style="margin-top:35px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.06)">
+                <h4 style="font-size:0.9rem;color:#e6c8ce;margin-bottom:15px;display:flex;align-items:center;gap:8px"><i class="fas fa-eye" style="color:#ff4d6d"></i> Live Card Preview</h4>
+                <div style="display:flex;justify-content:center">
+                    <div id="livePreviewCard" class="rc" style="width:260px;pointer-events:none;opacity:0.9;border:1px solid rgba(255,255,255,0.08);background:rgba(22,6,10,0.6);border-radius:16px;overflow:hidden">
+                        <div class="rc-img" style="width:100%;aspect-ratio:16/10;position:relative;background:#1c1c24;display:flex;align-items:center;justify-content:center;overflow:hidden">
+                            <div id="previewThumbContainer" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center">
+                                <i class="fas fa-sliders" style="font-size:2.5rem;color:#a80f2d;opacity:.3"></i>
+                            </div>
+                            <div class="rbadge" style="position:absolute;bottom:8px;left:8px;display:flex;gap:4px">
+                                <span id="previewCategoryBadge" class="tag-others" style="padding:3px 8px;border-radius:4px;font-size:.58rem;font-weight:700;text-transform:uppercase;background:rgba(255,180,0,.15);color:#ffb400">Others</span>
+                            </div>
+                        </div>
+                        <div class="rc-content" style="padding:12px 14px">
+                            <h3 id="previewTitle" class="rc-title" style="font-size:.82rem;font-weight:700;margin:0 0 4px;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Untitled Resource</h3>
+                            <p id="previewDesc" class="rc-desc" style="font-size:.68rem;color:#8a656c;margin:0 0 10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">No description provided</p>
+                            <div class="rc-footer" style="display:flex;align-items:center;justify-content:space-between;gap:6px">
+                                <div class="rc-meta" style="display:flex;align-items:center;gap:5px">
+                                    <div id="previewAvatarWrapper" class="rava-fb" style="width:20px;height:20px;border-radius:50%;background:#a80f2d;display:flex;align-items:center;justify-content:center;color:#fff;font-size:.5rem;overflow:hidden">
+                                        <i class="fas fa-user" style="font-size:0.6rem"></i>
+                                    </div>
+                                    <span id="previewCreatorName" class="rname" style="font-size:.68rem;color:#e6c8ce">Zyrex</span>
+                                </div>
+                                <div class="rc-actions" style="display:flex;gap:8px">
+                                    <span style="font-size:.6rem;color:#8a656c"><i class="fas fa-download"></i> 0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="form-actions">
@@ -260,31 +294,78 @@
 
         <!-- Step 2: Files -->
         <div class="form-section" id="step2">
-            <div class="alert" id="cloudAlert">
-                <i class="fas fa-info-circle"></i> Connect your SFTPGo cloud account to manage files.
-                <button class="btn btn-primary" style="margin-left:12px;padding:6px 14px;font-size:.75rem" onclick="connectCloud()">Connect Cloud</button>
-            </div>
-            <div class="file-browser" id="fileBrowser">
-                <div class="file-tree" id="fileTree">
-                    <div style="color:#606070;text-align:center;padding:40px 10px;font-size:.8rem">
-                        <i class="fas fa-folder-open" style="font-size:2rem;display:block;margin-bottom:10px;opacity:.3"></i>
-                        Connect cloud storage to browse files
-                    </div>
+            <!-- Cloud Resource Selection Banner -->
+            <div style="background: rgba(168, 15, 45, 0.15); border: 1px solid rgba(168, 15, 45, 0.3); border-radius: 12px; padding: 18px; display: flex; gap: 14px; align-items: flex-start; margin-bottom: 25px;">
+                <div style="background: rgba(168, 15, 45, 0.2); width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #ff4d6d;">
+                    <i class="fas fa-info-circle" style="font-size: 1.1rem;"></i>
                 </div>
-                <div class="file-list" id="fileList">
-                    <div style="color:#606070;text-align:center;padding:40px 10px;font-size:.8rem">
-                        <i class="fas fa-cloud" style="font-size:2rem;display:block;margin-bottom:10px;opacity:.3"></i>
-                        Select a folder to view files
-                    </div>
+                <div>
+                    <h4 style="font-size: 0.95rem; font-weight: 700; color: #fff; margin: 0 0 4px;">Cloud Resource Selection</h4>
+                    <p style="font-size: 0.8rem; color: var(--gray); margin: 0; line-height: 1.4;">Select a detected resource from your private cloud and choose the destination editor in production storage.</p>
                 </div>
             </div>
-            <div class="selected-files" id="selectedFiles">
-                <h4><i class="fas fa-check-square"></i> Selected Files (<span id="selectedCount">0</span>)</h4>
+
+            <!-- Panel 1: Select resource from your cloud -->
+            <div class="panel-box" style="padding: 24px; margin-bottom: 25px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <h3 style="font-size: 0.95rem; font-weight: 800; color: #fff; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">1. Select resource from your cloud</h3>
+                    <button type="button" class="btn" style="padding: 6px 14px; font-size: 0.78rem; width: auto; display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);" onclick="scanCloudResources()">
+                        <i class="fas fa-arrows-rotate"></i> Refresh
+                    </button>
+                </div>
+                <p style="font-size: 0.78rem; color: var(--gray-dark); margin: 0 0 16px;">Only second-level folders in your personal cloud are selectable: <strong style="color: var(--gray);">EDITOR &rarr; RESOURCE</strong>.</p>
+                
+                <div id="detectedResourcesList" style="background: rgba(0,0,0,0.2); border: 1px dashed rgba(255,255,255,0.08); border-radius: 10px; min-height: 100px; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px;">
+                    <div style="color: var(--gray-dark); text-align: center; font-size: 0.82rem;">
+                        <i class="fas fa-spinner fa-spin" style="font-size: 1.8rem; color: #ff4d6d; display: block; margin-bottom: 12px;"></i>
+                        Scanning your personal cloud space...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel 2: Select destination editor -->
+            <div class="panel-box" style="padding: 24px; margin-bottom: 25px;">
+                <h3 style="font-size: 0.95rem; font-weight: 800; color: #fff; margin: 0 0 6px; text-transform: uppercase; letter-spacing: 0.5px;">2. Select destination editor</h3>
+                <p style="font-size: 0.78rem; color: var(--gray-dark); margin: 0 0 18px;">This is the production editor folder under the main cloud. It can differ from the source editor folder.</p>
+                
+                <div class="form-row" style="margin-bottom: 15px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray-dark);">Search Existing Editor Folder *</label>
+                        <select id="destinationEditorSelect" onchange="updateCheckConflict()" style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); color: #fff; border-radius: 8px; padding: 10px; font-size: 0.88rem; width: 100%;">
+                            <option value="">Select destination editor...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row" style="align-items: flex-end;">
+                    <div class="form-group" style="flex: 1; margin: 0;">
+                        <label style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray-dark);">Create New Folder</label>
+                        <input type="text" id="newEditorInput" placeholder="e.g. REYLIFFX" style="background: rgba(0,0,0,0.25); border: 1px solid rgba(255,255,255,0.08); color: #fff; border-radius: 8px; padding: 10px; font-size: 0.88rem; width: 100%;">
+                    </div>
+                    <button type="button" class="btn" style="padding: 10px 20px; font-size: 0.85rem; width: auto; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; background: linear-gradient(135deg, #ff4d6d, #a80f2d); border: none; height: 42px; border-radius: 8px; color:#fff" onclick="createNewDestinationFolder()">
+                        <i class="fas fa-folder-plus"></i> Create Folder
+                    </button>
+                </div>
+            </div>
+
+            <!-- Panel 3: Check conflict -->
+            <div class="panel-box" style="padding: 24px; margin-bottom: 30px;">
+                <h3 style="font-size: 0.95rem; font-weight: 800; color: #fff; margin: 0 0 6px; text-transform: uppercase; letter-spacing: 0.5px;">3. Check conflict</h3>
+                <p id="destinationPathText" style="font-size: 0.78rem; color: var(--gray-dark); margin: 0 0 16px;">Destination: <strong style="color: var(--gray);">EDITOR/RESOURCE</strong></p>
+                
+                <div class="form-group" style="margin-bottom: 20px;">
+                    <label style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray-dark);">Cloud File Path *</label>
+                    <input type="text" id="cloudFilePathDisplay" readonly placeholder="e.g. CINEFTY/AMERICANO CC" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.04); color: var(--gray); border-radius: 8px; padding: 10px; font-size: 0.88rem; width: 100%; cursor: not-allowed;">
+                </div>
+
+                <button type="button" class="btn-download-action" id="btnTransferCloud" style="width: 100%; justify-content: center; height: 50px; font-size: 0.95rem;" onclick="transferToProduction()">
+                    <i class="fas fa-cloud-arrow-up"></i> Transfer to Production Storage
+                </button>
             </div>
 
             <div class="form-actions">
                 <button class="btn btn-secondary" onclick="prevStep(1)"><i class="fas fa-arrow-left"></i> Back</button>
-                <button class="btn btn-primary" onclick="nextStep(3)">Next <i class="fas fa-arrow-right"></i></button>
+                <button class="btn btn-primary" id="btnNextStep3" disabled onclick="nextStep(3)">Next <i class="fas fa-arrow-right"></i></button>
             </div>
         </div>
 
@@ -336,7 +417,6 @@
                             <a href="/" class="btn btn-primary" style="margin-top:20px">Go Home</a>
                         </div>`;
                 }
-                document.getElementById('creatorName').value = user.global_name || user.username;
             } catch(e) {
                 window.location.href = '/';
             }
@@ -372,10 +452,85 @@
             }
 
             if (step === 3) buildReview();
-            if (step === 2 && !cloudConnected) {
-                document.getElementById('cloudAlert').classList.add('show');
-                document.getElementById('cloudAlert').classList.add('alert-success');
-                document.getElementById('cloudAlert').querySelector('.btn').style.display = 'inline-flex';
+            if (step === 2) {
+                scanCloudResources();
+                loadDestinationEditors();
+            }
+        }
+
+        // Resolve creator profile via HLX API Proxy
+        async function resolveCreatorSocial() {
+            const url = document.getElementById('creatorSocialUrl').value.trim();
+            if (!url) return;
+            
+            const loader = document.getElementById('previewCreatorName');
+            const originalText = loader.textContent;
+            loader.textContent = "Resolving...";
+            
+            try {
+                const resp = await fetch(`/api/hlx/resolve?url=${encodeURIComponent(url)}`);
+                const data = await resp.json();
+                if (data.success) {
+                    document.getElementById('creatorName').value = data.nickname;
+                    document.getElementById('creatorAvatar').value = data.avatar;
+                    
+                    // Update preview card
+                    document.getElementById('previewCreatorName').textContent = data.nickname;
+                    const wrapper = document.getElementById('previewAvatarWrapper');
+                    if (data.avatar) {
+                        wrapper.innerHTML = `<img src="${data.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+                    } else {
+                        wrapper.innerHTML = `<i class="fas fa-user" style="font-size:0.6rem"></i>`;
+                    }
+                    showAlert(`Social profile resolved: ${data.nickname}`, false);
+                } else {
+                    showAlert('Could not resolve social media profile. Please check the URL.', true);
+                    loader.textContent = "Unresolved";
+                    document.getElementById('creatorName').value = "";
+                    document.getElementById('creatorAvatar').value = "";
+                }
+            } catch(e) {
+                console.error("Resolve error:", e);
+                loader.textContent = "Error";
+                document.getElementById('creatorName').value = "";
+                document.getElementById('creatorAvatar').value = "";
+            }
+            updateLiveCardPreview();
+        }
+
+        // Live preview of preset/plugin card
+        function updateLiveCardPreview() {
+            const title = document.getElementById('productName').value.trim() || "Untitled Resource";
+            const category = document.getElementById('productCategory').value || "other";
+            const desc = document.getElementById('productDesc').value.trim() || "No description provided";
+            
+            document.getElementById('previewTitle').textContent = title;
+            document.getElementById('previewDesc').textContent = desc;
+            
+            const catBadge = document.getElementById('previewCategoryBadge');
+            const catLabels = {
+                'color-grading': 'Color Grading',
+                'transition': 'Transitions',
+                'overlay': 'Overlays',
+                'lut': 'LUTs',
+                'effect': 'Effects',
+                'text': 'Text / Titles',
+                'audio': 'Audio',
+                'bundle': 'Bundle',
+                'other': 'Others'
+            };
+            catBadge.textContent = catLabels[category] || 'Others';
+            catBadge.className = 'tag-' + category;
+            
+            const inputs = document.querySelectorAll('.thumb-input');
+            let firstThumb = '';
+            inputs.forEach(i => { if (i.value.trim() && !firstThumb) firstThumb = i.value.trim(); });
+            
+            const thumbContainer = document.getElementById('previewThumbContainer');
+            if (firstThumb) {
+                thumbContainer.innerHTML = `<img src="${firstThumb}" style="width:100%;height:100%;object-fit:cover">`;
+            } else {
+                thumbContainer.innerHTML = `<i class="fas fa-sliders" style="font-size:2.5rem;color:#a80f2d;opacity:.3"></i>`;
             }
         }
 
@@ -385,8 +540,17 @@
             const creator = document.getElementById('creatorName').value.trim();
             const category = document.getElementById('productCategory').value;
             const desc = document.getElementById('productDesc').value.trim();
+            const socialUrl = document.getElementById('creatorSocialUrl').value.trim();
             
-            if (!name || !creator || !category || !desc) {
+            if (!socialUrl) {
+                showAlert('Please enter your Creator Social Media URL', true);
+                return false;
+            }
+            if (!creator) {
+                showAlert('Creator name must be resolved. Please make sure the Creator Social Media URL is valid.', true);
+                return false;
+            }
+            if (!name || !category || !desc) {
                 showAlert('Please fill all required fields (*)', true);
                 return false;
             }
@@ -399,6 +563,9 @@
                 tags: document.getElementById('productTags').value.split(',').map(t => t.trim()).filter(Boolean),
                 description: desc,
                 payhip_link: document.getElementById('payhipLink').value.trim(),
+                creator_social_url: socialUrl,
+                creator_nickname: creator,
+                creator_avatar: document.getElementById('creatorAvatar').value.trim()
             };
             return true;
         }
@@ -483,147 +650,194 @@
         }
 
         // Cloud storage
-        async function connectCloud() {
+        let userResources = [];
+        let selectedSourceResource = null;
+
+        async function scanCloudResources() {
+            const container = document.getElementById('detectedResourcesList');
+            container.innerHTML = `
+                <div style="color: var(--gray-dark); text-align: center; font-size: 0.82rem;">
+                    <i class="fas fa-spinner fa-spin" style="font-size: 1.8rem; color: #ff4d6d; display: block; margin-bottom: 12px;"></i>
+                    Scanning your personal cloud space...
+                </div>
+            `;
+            
             try {
-                const resp = await fetch('/api/sftpgo/account', { credentials: 'include' });
+                const resp = await fetch('/api/sftpgo/detected-resources');
                 const data = await resp.json();
                 if (data.success) {
-                    cloudConnected = true;
-                    document.getElementById('cloudAlert').classList.remove('show');
-                    loadCloudFiles();
-                    showAlert('Cloud storage connected!', false);
+                    userResources = data.resources || [];
+                    renderDetectedResources();
                 } else {
-                    showAlert('Failed to connect: ' + (data.error || 'Unknown'), true);
+                    container.innerHTML = `<div style="color:#ff3860;font-size:0.8rem;text-align:center;"><i class="fas fa-circle-exclamation" style="font-size:1.5rem;display:block;margin-bottom:8px"></i>Failed to fetch: ${data.error || 'Unknown'}</div>`;
                 }
             } catch(e) {
-                showAlert('Connection failed: ' + e.message, true);
+                container.innerHTML = `<div style="color:#ff3860;font-size:0.8rem;text-align:center;"><i class="fas fa-circle-exclamation" style="font-size:1.5rem;display:block;margin-bottom:8px"></i>Scan failed: ${e.message}</div>`;
             }
         }
 
-        async function loadCloudFiles(path = '/') {
-            try {
-                const resp = await fetch(`/api/sftpgo/files?path=${encodeURIComponent(path)}`, { credentials: 'include' });
-                const data = await resp.json();
-                if (data.success) {
-                    renderFileBrowser(path, data.files || [], data.folders || []);
-                }
-            } catch(e) {
-                console.error('Failed to load files:', e);
-            }
-        }
-
-        function renderFileBrowser(currentPath, files = [], folders = []) {
-            const tree = document.getElementById('fileTree');
-            const list = document.getElementById('fileList');
-            
-            let backHtml = '';
-            if (currentPath !== '/' && currentPath !== '') {
-                const parts = currentPath.split('/').filter(Boolean);
-                parts.pop();
-                const parentPath = '/' + parts.join('/');
-                backHtml = `
-                    <div class="tree-item" onclick="navigateCloud('${parentPath}')" style="font-weight: 600; color: #dc143c; margin-bottom: 8px;">
-                        <i class="fas fa-arrow-left"></i> .. (Back)
+        function renderDetectedResources() {
+            const container = document.getElementById('detectedResourcesList');
+            if (userResources.length === 0) {
+                container.innerHTML = `
+                    <div style="color: var(--gray-dark); text-align: center; font-size: 0.8rem; max-width: 320px; padding: 10px 0;">
+                        <i class="fas fa-folder-open" style="font-size: 1.8rem; display: block; margin-bottom: 10px; opacity: .25;"></i>
+                        No valid resources were detected yet. Upload folders to your SFTPGo personal cloud as <strong style="color:var(--gray)">EDITOR/RESOURCE/files</strong>.
                     </div>
                 `;
-            }
-            
-            const folderHtml = folders.length ? folders.map(f => {
-                const name = f.name.split('/').pop();
-                return `
-                    <div class="tree-item" onclick="navigateCloud('${f.name}')">
-                        <i class="fas fa-folder" style="color:#dc143c"></i> ${name}
-                    </div>
-                `;
-            }).join('') : '';
-            
-            tree.innerHTML = backHtml + (folderHtml || '<div style="color:#606070;font-size:.8rem;padding:20px 0;text-align:center">No folders</div>');
-
-            if (files.length === 0) {
-                list.innerHTML = `
-                    <div style="color:#606070;text-align:center;padding:40px 10px;font-size:.8rem">
-                        <i class="fas fa-folder-open" style="font-size:2rem;display:block;margin-bottom:10px;opacity:.3"></i>
-                        No files found in this directory.
-                    </div>`;
                 return;
             }
 
-            list.innerHTML = files.map(file => {
-                const isSelected = selectedFiles.includes(file.path);
-                const sizeStr = formatBytes(file.size);
-                return `
-                    <div class="file-item ${isSelected ? 'selected' : ''}" onclick="toggleFileSelection('${file.path}', this)">
-                        <input type="checkbox" ${isSelected ? 'checked' : ''} onclick="event.stopPropagation(); toggleFileSelection('${file.path}', this.parentElement)">
-                        <i class="far fa-file-code" style="color:#9090a0;font-size:1.1rem"></i>
-                        <div style="flex:1;min-width:0;text-align:left">
-                            <div style="font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${file.name}</div>
-                            <div style="font-size:.7rem;color:#606070">${sizeStr}</div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function toggleFileSelection(path, element) {
-            const checkbox = element.querySelector('input[type="checkbox"]');
-            const idx = selectedFiles.indexOf(path);
-            if (idx > -1) {
-                selectedFiles.splice(idx, 1);
-                element.classList.remove('selected');
-                if (checkbox) checkbox.checked = false;
-            } else {
-                selectedFiles.push(path);
-                element.classList.add('selected');
-                if (checkbox) checkbox.checked = true;
-            }
-            updateSelectedFilesList();
-        }
-
-        function updateSelectedFilesList() {
-            const count = document.getElementById('selectedCount');
-            if (count) count.textContent = selectedFiles.length;
-            
-            const list = document.getElementById('selectedFiles');
-            if (selectedFiles.length === 0) {
-                list.innerHTML = `
-                    <h4><i class="fas fa-check-square"></i> Selected Files (0)</h4>
-                    <p style="color:#606070;font-size:.75rem;padding:10px 0 0 10px">No files selected.</p>
-                `;
-                return;
-            }
-            
-            list.innerHTML = `
-                <h4><i class="fas fa-check-square"></i> Selected Files (<span id="selectedCount">${selectedFiles.length}</span>)</h4>
-                <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px">
-                    ${selectedFiles.map(path => `
-                        <div class="sf-item">
-                            <span style="font-family:monospace;font-size:.75rem;word-break:break-all;color:#ff4d6d">${path}</span>
-                            <span class="remove" onclick="removeSelectedFile('${path}')"><i class="fas fa-times"></i></span>
-                        </div>
-                    `).join('')}
+            container.innerHTML = `
+                <div style="width: 100%; display: flex; flex-direction: column; gap: 8px; text-align: left;">
+                    ${userResources.map((res, index) => {
+                        const isSelected = selectedSourceResource && selectedSourceResource.editor === res.editor && selectedSourceResource.resource === res.resource;
+                        return `
+                            <div class="file-item ${isSelected ? 'selected' : ''}" onclick="selectSourceFolder(${index}, this)" style="border: 1px solid ${isSelected ? '#ff4d6d' : 'rgba(255,255,255,0.06)'}; padding: 12px 14px; border-radius: 8px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 12px; background: ${isSelected ? 'rgba(168,15,45,0.1)' : 'rgba(0,0,0,0.15)'};">
+                                <i class="fas fa-folder-open" style="color: ${isSelected ? '#ff4d6d' : '#88616a'}; font-size: 1.2rem;"></i>
+                                <div style="flex: 1; min-width: 0;">
+                                    <div style="font-weight: 700; color: #fff; font-size: 0.88rem;">${res.editor} &rarr; ${res.resource}</div>
+                                    <div style="font-size: 0.72rem; color: var(--gray-dark); margin-top: 2px;">Contains ${res.files.length} file(s)</div>
+                                </div>
+                                <i class="fas fa-circle-check" style="color: #ff4d6d; display: ${isSelected ? 'block' : 'none'};"></i>
+                            </div>
+                        `;
+                    }).join('')}
                 </div>
             `;
         }
 
-        function removeSelectedFile(path) {
-            const idx = selectedFiles.indexOf(path);
-            if (idx > -1) {
-                selectedFiles.splice(idx, 1);
-            }
-            updateSelectedFilesList();
+        function selectSourceFolder(idx, element) {
+            selectedSourceResource = userResources[idx];
             
-            const items = document.querySelectorAll('.file-item');
-            items.forEach(el => {
-                if (el.getAttribute('onclick') && el.getAttribute('onclick').includes(path)) {
-                    el.classList.remove('selected');
-                    const checkbox = el.querySelector('input[type="checkbox"]');
-                    if (checkbox) checkbox.checked = false;
+            renderDetectedResources();
+            
+            const select = document.getElementById('destinationEditorSelect');
+            let found = false;
+            for(let i=0; i<select.options.length; i++) {
+                if (select.options[i].value === selectedSourceResource.editor) {
+                    select.selectedIndex = i;
+                    found = true;
+                    break;
                 }
-            });
+            }
+            if (!found) {
+                document.getElementById('newEditorInput').value = selectedSourceResource.editor;
+            }
+            
+            updateCheckConflict();
         }
 
-        function navigateCloud(path) {
-            loadCloudFiles(path);
+        async function loadDestinationEditors() {
+            const select = document.getElementById('destinationEditorSelect');
+            select.innerHTML = '<option value="">Loading editors...</option>';
+            try {
+                const resp = await fetch('/api/products/destination-editors');
+                const data = await resp.json();
+                if (data.success) {
+                    select.innerHTML = '<option value="">Select destination editor...</option>' + 
+                        data.editors.map(e => `<option value="${e}">${e}</option>`).join('');
+                } else {
+                    select.innerHTML = '<option value="">Failed to load editors</option>';
+                }
+            } catch(e) {
+                select.innerHTML = '<option value="">Connection error</option>';
+            }
+            updateCheckConflict();
+        }
+
+        async function createNewDestinationFolder() {
+            const input = document.getElementById('newEditorInput');
+            const folderName = input.value.trim();
+            if (!folderName) {
+                showAlert('Please enter an editor folder name', true);
+                return;
+            }
+            
+            try {
+                const resp = await fetch('/api/products/create-editor', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name: folderName })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    showAlert(`Editor folder '${folderName}' created successfully!`, false);
+                    input.value = '';
+                    await loadDestinationEditors();
+                    const select = document.getElementById('destinationEditorSelect');
+                    for(let i=0; i<select.options.length; i++) {
+                        if (select.options[i].value === folderName) {
+                            select.selectedIndex = i;
+                            break;
+                        }
+                    }
+                    updateCheckConflict();
+                } else {
+                    showAlert(data.error || 'Failed to create folder', true);
+                }
+            } catch(e) {
+                showAlert('Failed to create folder: ' + e.message, true);
+            }
+        }
+
+        function updateCheckConflict() {
+            const destEditor = document.getElementById('destinationEditorSelect').value;
+            const textEl = document.getElementById('destinationPathText');
+            const displayEl = document.getElementById('cloudFilePathDisplay');
+            
+            if (selectedSourceResource && destEditor) {
+                textEl.innerHTML = `Destination: <strong style="color: #ff4d6d;">${destEditor}/${selectedSourceResource.resource}</strong>`;
+                displayEl.value = `${destEditor}/${selectedSourceResource.resource}`;
+            } else {
+                textEl.innerHTML = 'Destination: <strong style="color: var(--gray-dark);">EDITOR/RESOURCE</strong>';
+                displayEl.value = '';
+            }
+        }
+
+        async function transferToProduction() {
+            if (!selectedSourceResource) {
+                showAlert('Please select a source resource first (Section 1)', true);
+                return;
+            }
+            const destEditor = document.getElementById('destinationEditorSelect').value;
+            if (!destEditor) {
+                showAlert('Please select or create a destination editor (Section 2)', true);
+                return;
+            }
+            
+            const btn = document.getElementById('btnTransferCloud');
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Copying files on disk...';
+            
+            try {
+                const resp = await fetch('/api/products/transfer', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        source_editor: selectedSourceResource.editor,
+                        source_resource: selectedSourceResource.resource,
+                        destination_editor: destEditor
+                    })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    showAlert('Files transferred to production storage successfully!', false);
+                    productData.file_path = data.file_path;
+                    
+                    document.getElementById('btnNextStep3').disabled = false;
+                    btn.innerHTML = '<i class="fas fa-circle-check"></i> Transfer Completed';
+                } else {
+                    showAlert(data.error || 'Transfer failed', true);
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                }
+            } catch(e) {
+                showAlert('Transfer connection error: ' + e.message, true);
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
         }
 
         // Review
@@ -635,7 +849,7 @@
                 <div class="row"><span>Creator</span><span>${productData.author || '-'}</span></div>
                 <div class="row"><span>Category</span><span>${productData.category || '-'}</span></div>
                 <div class="row"><span>Tags</span><span>${(productData.tags || []).join(', ') || '-'}</span></div>
-                <div class="row"><span>Files</span><span>${selectedFiles.length || 'None selected'}</span></div>
+                <div class="row"><span>Cloud Path</span><span style="font-family:monospace;color:#ff4d6d">${productData.file_path || 'None'}</span></div>
                 <div class="row"><span>Status</span><span style="color:#ff4d6d">Pending Review</span></div>
             `;
         }

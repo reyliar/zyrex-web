@@ -340,13 +340,13 @@
 
     <nav class="navbar scrolled">
         <div class="container">
-            <a href="index.html" class="logo">
+            <a href="/" class="logo">
                 <img src="assets/content.png" alt="ZYREX" class="logo-img">
             </a>
             <ul class="nav-links" id="navLinks">
-                <li><a href="index.html">Home</a></li>
-                <li><a href="resources.html">Resources</a></li>
-                <li><a href="index.html#contact">Contact</a></li>
+                <li><a href="/">Home</a></li>
+                <li><a href="resources">Resources</a></li>
+                <li><a href="/#contact">Contact</a></li>
             </ul>
             <div class="nav-actions">
                 <div id="authBtn"></div>
@@ -376,7 +376,7 @@
             <div class="footer-content">
                 <div class="footer-brand">
                     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-                        <a href="index.html" class="logo">
+                        <a href="/" class="logo">
                             <img src="assets/content.png" alt="ZYREX" class="logo-img">
                             <span class="logo-text">yrex</span>
                         </a>
@@ -387,19 +387,19 @@
                 <div class="footer-links">
                     <h4>Quick Links</h4>
                     <ul>
-                        <li><a href="index.html">Home</a></li>
-                        <li><a href="resources.html">Resources</a></li>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="resources">Resources</a></li>
                         <li><a href="plugins">Plugins</a></li>
-                        <li><a href="index.html#team">Team</a></li>
-                        <li><a href="index.html#contact">Contact</a></li>
+                        <li><a href="/#team">Team</a></li>
+                        <li><a href="/#contact">Contact</a></li>
                     </ul>
                 </div>
                 <div class="footer-links">
                     <h4>Community</h4>
                     <ul>
                         <li><a href="https://discord.gg/fAydSzpafA">Discord</a></li>
-                        <li><a href="index.html#team">Team</a></li>
-                        <li><a href="index.html#contact">Contact</a></li>
+                        <li><a href="/#team">Team</a></li>
+                        <li><a href="/#contact">Contact</a></li>
                     </ul>
                 </div>
                 <div class="footer-newsletter">
@@ -422,127 +422,198 @@
     <script src="js/presets-data.js"></script>
     <script>
     /* ===================== PRODUCT PAGE RENDER ===================== */
-    document.addEventListener('DOMContentLoaded', () => {
+    document.addEventListener('DOMContentLoaded', async () => {
         const params = new URLSearchParams(window.location.search);
         const productId = params.get('id');
 
         const container = document.getElementById('productContainer');
         const loading = document.getElementById('productLoading');
 
-        if (!productId || !window.resourcesData) {
-            loading.innerHTML = `
-                <div class="product-error">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <h3>Product not found</h3>
-                    <p style="margin-top:10px;color:var(--gray-dark)">The product you're looking for doesn't exist.</p>
-                    <a href="resources.html" class="btn btn-primary" style="margin-top:20px;display:inline-flex">Back to Resources</a>
-                </div>
-            `;
+        if (!productId) {
+            showError("Product ID missing");
             return;
         }
 
-        let product = window.resourcesData ? window.resourcesData.find(p => p.id === productId) : null;
-        let backLink = 'resources.html';
-        if (product && product.category !== 'software') {
-            backLink = 'plugins';
+        let product = null;
+        let isDbProduct = false;
+
+        // 1. Try to fetch from backend database first
+        try {
+            const resp = await fetch(`/api/products?id=${productId}`);
+            if (resp.ok) {
+                const dbProduct = await resp.json();
+                if (dbProduct && dbProduct.id) {
+                    product = dbProduct;
+                    isDbProduct = true;
+                }
+            }
+        } catch(e) {
+            console.warn("Could not load product from DB:", e);
         }
+
+        // 2. Fallback to local static arrays
         if (!product) {
-            product = window.presetsData ? window.presetsData.find(p => p.id === productId) : null;
-            backLink = 'resources.html';
+            product = window.resourcesData ? window.resourcesData.find(p => p.id === productId) : null;
+            if (!product) {
+                product = window.presetsData ? window.presetsData.find(p => p.id === productId) : null;
+            }
         }
 
         if (!product) {
-            loading.innerHTML = `
-                <div class="product-error">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <h3>Product not found</h3>
-                    <p style="margin-top:10px;color:var(--gray-dark)">"${productId}" could not be found.</p>
-                    <a href="resources.html" class="btn btn-primary" style="margin-top:20px;display:inline-flex">Back to Resources</a>
-                </div>
-            `;
+            showError("Product not found");
             return;
         }
 
-        const favicon = product.links[0]?.url 
-            ? `https://www.google.com/s2/favicons?domain=${new URL(product.links[0].url).hostname}&sz=64`
-            : '';
+        renderProductDetail(product, isDbProduct);
 
-        const platformTags = [];
-        if (product.platform === 'win' || product.platform === 'both') platformTags.push('<span class="tag-win"><i class="fab fa-windows"></i> WIN</span>');
-        if (product.platform === 'mac' || product.platform === 'both') platformTags.push('<span class="tag-mac"><i class="fab fa-apple"></i> MAC</span>');
-
-        const categoryLabels = {
-            'software': 'Software',
-            'adobe-plugins': 'Adobe Plugin',
-            'ofx-plugins': 'OFX Plugin'
-        };
-
-        const dlIcons = {
-            'pixeldrain': 'pixeldrain',
-            'gofile': 'gofile',
-            'mediafire': 'mediafire',
-            'mediafire': 'mediafire'
-        };
-
-        function getDlClass(label) {
-            const l = label.toLowerCase();
-            if (l.includes('pixel')) return 'pixeldrain';
-            if (l.includes('gofile') || l.includes('go')) return 'gofile';
-            if (l.includes('media')) return 'mediafire';
-            return 'default';
+        function showError(msg) {
+            loading.innerHTML = `
+                <div class="product-error">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>${msg}</h3>
+                    <p style="margin-top:10px;color:var(--gray-dark)">The requested product could not be loaded.</p>
+                    <a href="resources" class="btn btn-primary" style="margin-top:20px;display:inline-flex">Back to Resources</a>
+                </div>
+            `;
         }
 
-        function getDlIcon(label) {
-            const l = label.toLowerCase();
-            if (l.includes('pixel')) return 'fa-cloud-arrow-down';
-            if (l.includes('gofile') || l.includes('go')) return 'fa-cloud';
-            if (l.includes('media')) return 'fa-file-zipper';
-            return 'fa-download';
-        }
+        function renderProductDetail(p, isDb) {
+            let backLink = 'resources';
+            if (p.category !== 'software' && p.category !== 'color-grading' && p.category !== 'transition' && p.category !== 'overlay' && p.category !== 'lut' && p.category !== 'effect' && p.category !== 'text' && p.category !== 'audio' && p.category !== 'bundle' && p.category !== 'other') {
+                backLink = 'plugins';
+            }
 
-        const thumbHtml = favicon
-            ? `<img src="${favicon}" alt="" onerror="this.parentElement.innerHTML='<div class=\\'thumb-fallback\\'><i class=\\'fas fa-cube\\'></i></div>'">`
-            : `<div class="thumb-fallback"><i class="fas fa-cube"></i></div>`;
+            const platformTags = [];
+            if (p.platform === 'win' || p.platform === 'both') platformTags.push('<span class="tag-win"><i class="fab fa-windows"></i> WIN</span>');
+            if (p.platform === 'mac' || p.platform === 'both') platformTags.push('<span class="tag-mac"><i class="fab fa-apple"></i> MAC</span>');
 
-        const notesHtml = product.notes 
-            ? `<div class="product-notes"><i class="fas fa-circle-info"></i> ${product.notes}</div>`
-            : '';
+            const categoryLabels = {
+                'software': 'Software',
+                'adobe-plugins': 'Adobe Plugin',
+                'ofx-plugins': 'OFX Plugin',
+                'color-grading': 'Color Grading',
+                'transition': 'Transitions',
+                'overlay': 'Overlays',
+                'lut': 'LUTs',
+                'effect': 'Effects',
+                'text': 'Text / Titles',
+                'audio': 'Audio',
+                'bundle': 'Bundle',
+                'other': 'Others'
+            };
 
-        container.innerHTML = `
-            <div style="max-width:700px;margin:0 auto">
-                <a href="${backLink}" class="product-back">
-                    <i class="fas fa-arrow-left"></i> Back to ${backLink === 'plugins' ? 'Plugins' : 'Resources'}
-                </a>
-                <div class="product-card">
-                    <div class="product-thumb-large">${thumbHtml}</div>
-                    <span class="product-category-badge">${categoryLabels[product.category] || product.category}</span>
-                    <h1>${product.name}</h1>
-                    ${product.desc ? `<p class="product-desc">${product.desc}</p>` : ''}
-                    ${platformTags.length ? `<div class="product-platform-tags">${platformTags.join('')}</div>` : ''}
-                    <div class="product-password-box">
-                        <i class="fas fa-lock"></i>
-                        <span>Password:</span>
-                        <code onclick="navigator.clipboard.writeText('${product.password}');this.textContent='Copied!';setTimeout(()=>this.textContent='${product.password}',1500)">${product.password}</code>
-                    </div>
-                    ${notesHtml}
-                    <div class="product-downloads-title"><i class="fas fa-download"></i> Download Links</div>
-                    <div class="product-downloads">
-                        ${product.links.map(link => `
-                            <a href="${link.url}" target="_blank" rel="noopener" class="product-dl-btn">
-                                <div class="dl-icon ${getDlClass(link.label)}">
-                                    <i class="fas ${getDlIcon(link.label)}"></i>
-                                </div>
-                                <div class="dl-info">
-                                    <strong>${link.label}</strong>
-                                    <span>${new URL(link.url).hostname}</span>
-                                </div>
-                                <i class="fas fa-arrow-right dl-arrow"></i>
-                            </a>
-                        `).join('')}
+            const notesHtml = p.notes 
+                ? `<div class="product-notes"><i class="fas fa-circle-info"></i> ${p.notes}</div>`
+                : '';
+
+            // Handle thumbnail
+            let thumbHtml = '';
+            if (p.thumbnail) {
+                thumbHtml = `<img src="${p.thumbnail}" alt="" style="width:100%;height:100%;object-fit:cover">`;
+            } else {
+                const favicon = p.links && p.links[0]?.url 
+                    ? `https://www.google.com/s2/favicons?domain=${new URL(p.links[0].url).hostname}&sz=64`
+                    : '';
+                thumbHtml = favicon 
+                    ? `<img src="${favicon}" alt="" onerror="this.parentElement.innerHTML='<div class=\\'thumb-fallback\\'><i class=\\'fas fa-cube\\'></i></div>'">`
+                    : `<div class="thumb-fallback"><i class="fas fa-cube"></i></div>`;
+            }
+
+            // Creator details
+            const creatorNickname = p.creator_nickname || p.author_name || 'Zyrex';
+            const creatorAvatarHtml = p.creator_avatar 
+                ? `<img src="${p.creator_avatar}" style="width:100%;height:100%;object-fit:cover">` 
+                : `<i class="fas fa-user" style="color:#fff;font-size:1.4rem"></i>`;
+            const creatorSocialHtml = p.creator_social_url 
+                ? `<a href="${p.creator_social_url}" target="_blank" style="font-size:0.78rem;color:#ff6b8b;text-decoration:underline;display:inline-flex;align-items:center;gap:4px;margin-top:2px"><i class="fas fa-external-link-alt" style="font-size:0.7rem"></i> View Profile</a>` 
+                : '';
+
+            // Build downloads block
+            let dlHtml = '';
+            if (isDb && p.file_path) {
+                const filename = p.file_path.split('/').pop() || 'Download File';
+                dlHtml = `
+                    <a href="/api/products/download/${p.id}" target="_blank" rel="noopener" class="product-dl-btn" style="background:linear-gradient(180deg, #ff4d6d 0%, #a80f2d 40%, #7d071e 100%) !important;border:1px solid rgba(255,255,255,0.15) !important;box-shadow:0 4px 15px rgba(168,15,45,0.35), inset 0 1px 1px rgba(255,255,255,0.3) !important;">
+                        <div class="dl-icon default" style="background:rgba(255,255,255,0.1)">
+                            <i class="fas fa-cloud-arrow-down" style="color:#fff"></i>
+                        </div>
+                        <div class="dl-info">
+                            <strong style="color:#fff">Download ZIP / Resource</strong>
+                            <span style="color:#e6c8ce">${filename}</span>
+                        </div>
+                        <i class="fas fa-arrow-right dl-arrow" style="color:#fff"></i>
+                    </a>
+                `;
+            } else if (p.links && p.links.length) {
+                function getDlClass(label) {
+                    const l = label.toLowerCase();
+                    if (l.includes('pixel')) return 'pixeldrain';
+                    if (l.includes('gofile') || l.includes('go')) return 'gofile';
+                    if (l.includes('media')) return 'mediafire';
+                    return 'default';
+                }
+                function getDlIcon(label) {
+                    const l = label.toLowerCase();
+                    if (l.includes('pixel')) return 'fa-cloud-arrow-down';
+                    if (l.includes('gofile') || l.includes('go')) return 'fa-cloud';
+                    if (l.includes('media')) return 'fa-file-zipper';
+                    return 'fa-download';
+                }
+                dlHtml = p.links.map(link => `
+                    <a href="${link.url}" target="_blank" rel="noopener" class="product-dl-btn">
+                        <div class="dl-icon ${getDlClass(link.label)}">
+                            <i class="fas ${getDlIcon(link.label)}"></i>
+                        </div>
+                        <div class="dl-info">
+                            <strong>${link.label}</strong>
+                            <span>${new URL(link.url).hostname}</span>
+                        </div>
+                        <i class="fas fa-arrow-right dl-arrow"></i>
+                    </a>
+                `).join('');
+            } else {
+                dlHtml = `<div style="color:var(--gray-dark);font-size:0.85rem">No download links available for this product.</div>`;
+            }
+
+            container.innerHTML = `
+                <div style="max-width:700px;margin:0 auto">
+                    <a href="${backLink}" class="product-back">
+                        <i class="fas fa-arrow-left"></i> Back to ${backLink === 'plugins' ? 'Plugins' : 'Resources'}
+                    </a>
+                    <div class="product-card">
+                        <div class="product-thumb-large">${thumbHtml}</div>
+                        <span class="product-category-badge">${categoryLabels[p.category] || p.category}</span>
+                        <h1>${p.name}</h1>
+                        ${p.description || p.desc ? `<p class="product-desc">${p.description || p.desc}</p>` : ''}
+                        ${platformTags.length ? `<div class="product-platform-tags">${platformTags.join('')}</div>` : ''}
+                        
+                        <div class="product-password-box">
+                            <i class="fas fa-lock"></i>
+                            <span>Password:</span>
+                            <code onclick="navigator.clipboard.writeText('${p.password || 'star'}');this.textContent='Copied!';setTimeout(()=>this.textContent='${p.password || 'star'}',1500)">${p.password || 'star'}</code>
+                        </div>
+
+                        <!-- Creator details badge -->
+                        <div style="display:flex;align-items:center;gap:15px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:16px;padding:16px;margin:25px 0;text-align:left">
+                            <div style="width:50px;height:50px;border-radius:50%;background:#a80f2d;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2px solid rgba(255,56,96,0.3)">
+                                ${creatorAvatarHtml}
+                            </div>
+                            <div style="flex:1;min-width:0">
+                                <span style="font-size:0.75rem;color:var(--gray-dark);text-transform:uppercase;letter-spacing:1px;display:block">Uploaded By</span>
+                                <strong style="font-size:1rem;color:#fff;display:block">${creatorNickname}</strong>
+                                ${creatorSocialHtml}
+                            </div>
+                        </div>
+
+                        ${notesHtml}
+                        <div class="product-downloads-title"><i class="fas fa-download"></i> Download Links</div>
+                        <div class="product-downloads">
+                            ${dlHtml}
+                        </div>
                     </div>
                 </div>
-            </div>
-        `;
+            `;
+        }
     });
     </script>
 </body>

@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure Download - Zyrex</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            margin: 0;
+        }
+        .dl-container {
+            width: 100%;
+            max-width: 580px;
+            padding: 30px;
+            text-align: center;
+        }
+        .dl-logo {
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            color: #fff;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .dl-logo span {
+            background: linear-gradient(135deg, #ff4d6d, #a80f2d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .product-badge-group {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .dl-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 12px;
+            line-height: 1.3;
+        }
+        .dl-desc {
+            color: var(--gray);
+            font-size: 0.92rem;
+            line-height: 1.6;
+            margin-bottom: 25px;
+        }
+        .dl-btn-container {
+            margin: 30px 0 20px;
+        }
+        .btn-download-action {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            padding: 16px 30px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border-radius: 14px;
+            cursor: pointer;
+            color: #fff;
+            background: linear-gradient(180deg, #ff4d6d 0%, #a80f2d 40%, #7d071e 100%) !important;
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            box-shadow: 0 4px 15px rgba(168, 15, 45, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .btn-download-action:hover:not(:disabled) {
+            background: linear-gradient(180deg, #ff6b8b 0%, #d0183e 40%, #a80f2d 100%) !important;
+            box-shadow: 0 6px 20px rgba(168, 15, 45, 0.5), inset 0 1px 2px rgba(255, 255, 255, 0.4) !important;
+            transform: translateY(-1px);
+        }
+        .btn-download-action:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .dl-password-box {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 10px;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            color: var(--gray);
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        .dl-password-box code {
+            font-family: monospace;
+            background: rgba(168, 15, 45, 0.2);
+            color: #ff6b8b;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: 700;
+        }
+        .dl-error-box {
+            background: rgba(168, 15, 45, 0.1);
+            border: 1px solid rgba(168, 15, 45, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        .dl-error-box i {
+            font-size: 2rem;
+            color: #ff3860;
+            margin-bottom: 10px;
+            display: block;
+        }
+        .dl-loading {
+            padding: 40px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dl-container card" id="downloadCard">
+        <div class="dl-loading" id="dlLoading">
+            <i class="fas fa-spinner fa-spin" style="font-size: 2.5rem; color: #ff4d6d; margin-bottom: 15px;"></i>
+            <p style="color: var(--gray)">Loading secure download space...</p>
+        </div>
+
+        <div id="dlContent" style="display: none;">
+            <div class="dl-logo">
+                <i class="fas fa-shield-halved" style="color: #ff4d6d;"></i> Zyrex<span>Download</span>
+            </div>
+
+            <div class="product-badge-group">
+                <span id="productCategory" class="tag-others" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase;">Category</span>
+                <span class="tag-free" style="font-size: 0.7rem; font-weight: 700; background: rgba(0, 200, 100, 0.1); color: #00c864; border: 1px solid rgba(0, 200, 100, 0.2); padding: 3px 8px; border-radius: 4px;">Free</span>
+            </div>
+
+            <h1 class="dl-title" id="productName">Resource File</h1>
+            <p class="dl-desc" id="productDesc">Loading details...</p>
+
+            <!-- Uploader social profile card -->
+            <div style="display:flex;align-items:center;gap:15px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:16px;padding:16px;margin:25px 0;text-align:left">
+                <div id="creatorAvatarWrapper" style="width:48px;height:48px;border-radius:50%;background:#a80f2d;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2px solid rgba(255,56,96,0.2)">
+                    <i class="fas fa-user" style="color:#fff;font-size:1.3rem"></i>
+                </div>
+                <div style="flex:1;min-width:0">
+                    <span style="font-size:0.75rem;color:var(--gray-dark);text-transform:uppercase;letter-spacing:1px;display:block">Uploaded By</span>
+                    <strong id="creatorName" style="font-size:0.95rem;color:#fff;display:block">Uploader</strong>
+                    <div id="creatorSocialLinkContainer"></div>
+                </div>
+            </div>
+
+            <!-- Password check -->
+            <div class="dl-password-box" id="passwordBox" style="display: none;">
+                <i class="fas fa-key"></i> File Extraction Password: <code id="passwordCode">star</code>
+            </div>
+
+            <!-- Download Action Button -->
+            <div class="dl-btn-container">
+                <button class="btn-download-action" id="btnDownload" onclick="triggerDownload()">
+                    <i class="fas fa-cloud-arrow-down"></i> Download ZIP Package
+                </button>
+            </div>
+            
+            <p style="font-size: 0.72rem; color: var(--gray-dark)">
+                <i class="fas fa-circle-exclamation"></i> Link is single-use and will expire in 10 minutes.
+            </p>
+        </div>
+
+        <div id="dlError" style="display: none;">
+            <div class="dl-error-box">
+                <i class="fas fa-triangle-exclamation"></i>
+                <h3 style="color: #fff;" id="errTitle">Secure link invalid</h3>
+                <p style="color: var(--gray); font-size: 0.85rem; margin-top: 8px;" id="errDesc">
+                    The requested file link could not be generated or has expired.
+                </p>
+                <a href="https://zyrexediting.xyz" class="btn btn-primary" style="margin-top:20px; display:inline-flex; width:auto; padding: 10px 24px;">Go back to home</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const params = new URLSearchParams(window.location.search);
+        const productId = params.get('id');
+
+        const loading = document.getElementById('dlLoading');
+        const content = document.getElementById('dlContent');
+        const errorBox = document.getElementById('dlError');
+
+        let product = null;
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (!productId) {
+                showError("Link ID Missing", "No resource product ID was supplied in the address URL query parameters.");
+                return;
+            }
+
+            try {
+                // Fetch the product detail from bot backend (proxied)
+                const resp = await fetch(`/api/products?id=${productId}`);
+                if (!resp.ok) {
+                    showError("Resource Not Found", "The secure file pack you are looking for does not exist in our database storage.");
+                    return;
+                }
+
+                product = await resp.json();
+                renderProduct(product);
+            } catch (e) {
+                console.error("Load error:", e);
+                showError("Connection Failed", "Unable to establish communication with the secure backend file server.");
+            }
+        });
+
+        function renderProduct(p) {
+            document.getElementById('productName').textContent = p.name;
+            document.getElementById('productDesc').textContent = p.description || p.desc || "No description available for this package.";
+            
+            // Category badges
+            const catBadge = document.getElementById('productCategory');
+            const categoryLabels = {
+                'color-grading': 'Color Grading',
+                'transition': 'Transitions',
+                'overlay': 'Overlays',
+                'lut': 'LUTs',
+                'effect': 'Effects',
+                'text': 'Text / Titles',
+                'audio': 'Audio',
+                'bundle': 'Bundle',
+                'other': 'Others'
+            };
+            catBadge.textContent = categoryLabels[p.category] || p.category || 'Other';
+            catBadge.className = 'tag-' + (p.category || 'other');
+
+            // Password
+            if (p.password) {
+                document.getElementById('passwordBox').style.display = 'inline-flex';
+                document.getElementById('passwordCode').textContent = p.password;
+                document.getElementById('passwordBox').onclick = () => {
+                    navigator.clipboard.writeText(p.password);
+                    const originalText = document.getElementById('passwordBox').innerHTML;
+                    document.getElementById('passwordCode').textContent = "Copied!";
+                    setTimeout(() => {
+                        document.getElementById('passwordCode').textContent = p.password;
+                    }, 1500);
+                };
+            }
+
+            // Creator Details
+            document.getElementById('creatorName').textContent = p.creator_nickname || p.author_name || 'Zyrex';
+            if (p.creator_avatar) {
+                document.getElementById('creatorAvatarWrapper').innerHTML = `<img src="${p.creator_avatar}" style="width:100%;height:100%;object-fit:cover">`;
+            }
+            if (p.creator_social_url) {
+                document.getElementById('creatorSocialLinkContainer').innerHTML = `
+                    <a href="${p.creator_social_url}" target="_blank" style="font-size:0.75rem;color:#ff6b8b;text-decoration:underline;display:inline-flex;align-items:center;gap:4px;margin-top:2px">
+                        <i class="fas fa-external-link-alt" style="font-size:0.65rem"></i> View Creator Profile
+                    </a>
+                `;
+            }
+
+            loading.style.display = 'none';
+            content.style.display = 'block';
+        }
+
+        function showError(title, desc) {
+            loading.style.display = 'none';
+            content.style.display = 'none';
+            errorBox.style.display = 'block';
+            document.getElementById('errTitle').textContent = title;
+            document.getElementById('errDesc').textContent = desc;
+        }
+
+        async function triggerDownload() {
+            if (!productId) return;
+            const btn = document.getElementById('btnDownload');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Zipping Storage Packages...';
+
+            try {
+                // Request a single-use token from backend
+                const tokenResp = await fetch(`/api/downloads/request-token/${productId}`);
+                if (!tokenResp.ok) {
+                    const data = await tokenResp.json();
+                    alert(data.error || "Unable to acquire download ticket.");
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-cloud-arrow-down"></i> Download ZIP Package';
+                    return;
+                }
+
+                const tokenData = await tokenResp.json();
+                if (tokenData.success && tokenData.token) {
+                    btn.innerHTML = '<i class="fas fa-circle-check"></i> Launching stream download...';
+                    // Trigger dynamic zip packaging transfer download
+                    window.location.href = `/api/downloads/download?token=${tokenData.token}`;
+                    
+                    setTimeout(() => {
+                        btn.innerHTML = '<i class="fas fa-arrow-rotate-right"></i> Link Used - Refresh to regenerate';
+                        btn.disabled = true;
+                    }, 4000);
+                } else {
+                    alert("Ticket generation failed.");
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-cloud-arrow-down"></i> Download ZIP Package';
+                }
+            } catch (e) {
+                console.error("Download fetch error:", e);
+                alert("Network communication error with the download packaging server.");
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-cloud-arrow-down"></i> Download ZIP Package';
+            }
+        }
+    </script>
+</body>
+</html>

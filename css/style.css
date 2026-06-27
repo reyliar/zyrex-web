@@ -1,4 +1,4 @@
-﻿/* ===================== RESET & BASE ===================== */
+/* ===================== RESET & BASE ===================== */
 *,
 *::before,
 *::after {
@@ -8,28 +8,28 @@
 }
 
 :root {
-    --primary: #dc143c;
-    --primary-dark: #b01030;
-    --primary-light: #ff1a4a;
-    --secondary: #ff6b6b;
-    --accent: #ffd700;
-    --cherry: #dc143c;
-    --cherry-dark: #8b0000;
-    --cherry-light: #ff4d6d;
-    --dark: #0a0a0f;
-    --dark-2: #121216;
-    --dark-3: #1c1c24;
+    --primary: #a80f2d;
+    --primary-dark: #6e0014;
+    --primary-light: #ff4d6d;
+    --secondary: #ff708a;
+    --accent: #ff0844;
+    --cherry: #a80f2d;
+    --cherry-dark: #580311;
+    --cherry-light: #ff6b8b;
+    --dark: #070103;
+    --dark-2: rgba(22, 6, 10, 0.65);
+    --dark-3: rgba(45, 12, 20, 0.45);
     --light: #ffffff;
-    --gray: #a0a0b0;
-    --gray-dark: #606070;
-    --gradient: linear-gradient(135deg, #dc143c, #8b0000);
-    --gradient-accent: linear-gradient(135deg, #dc143c, #ff6b6b);
-    --gradient-fire: linear-gradient(135deg, #dc143c, #ff4500);
-    --transition: all 0.3s ease;
-    --shadow: 0 10px 40px rgba(220, 20, 60, 0.2);
-    --shadow-glow: 0 0 30px rgba(220, 20, 60, 0.15);
-    --radius: 12px;
-    --radius-lg: 20px;
+    --gray: #e6c8ce;
+    --gray-dark: #8a656c;
+    --gradient: linear-gradient(135deg, #a80f2d, #580311);
+    --gradient-accent: linear-gradient(135deg, #ff3860, #a80f2d);
+    --gradient-fire: linear-gradient(135deg, #ff6b8b, #ff0844);
+    --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    --shadow-glow: 0 0 25px rgba(168, 15, 45, 0.3);
+    --radius: 16px;
+    --radius-lg: 24px;
 }
 
 html {
@@ -1215,6 +1215,63 @@ img {
         justify-content: center;
     }
 
+}
+
+/* ===================== APPLE LIQUID GLASS OVERRIDES ===================== */
+body {
+    background: radial-gradient(circle at 50% 0%, rgba(168, 15, 45, 0.18) 0%, #070103 80%) !important;
+}
+
+/* Make cards and containers glassmorphic */
+.card, .panel-box, .product-card, .upload-container, .navbar, .sc, .rc, .cookie-banner, .confirm-card, .selected-files, .file-browser {
+    background: rgba(22, 6, 10, 0.6) !important;
+    backdrop-filter: blur(20px) saturate(190%) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(190%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.45) !important;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Glossy highlight line reflection for all glass cards */
+.card::before, .panel-box::before, .product-card::before, .upload-container::before, .sc::before, .rc::before, .confirm-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(255, 255, 255, 0.0) 0%, rgba(255, 255, 255, 0.15) 30%, rgba(255, 255, 255, 0.25) 50%, rgba(255, 255, 255, 0.15) 70%, rgba(255, 255, 255, 0.0) 100%) !important;
+    z-index: 2;
+    pointer-events: none;
+}
+
+/* Soft gloss gradient fill to mimic reflecting 3D volume */
+.card::after, .panel-box::after, .product-card::after, .upload-container::after, .rc::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 45%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0) 100%) !important;
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Buttons with 3D glossy apple look */
+.btn-primary, .btn-action-primary, .btn-cookie-primary, .btn-discord {
+    background: linear-gradient(180deg, #ff4d6d 0%, #a80f2d 40%, #7d071e 100%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 4px 15px rgba(168, 15, 45, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
+    text-shadow: 0 -1px 0 rgba(0,0,0,0.4);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.btn-primary:hover, .btn-action-primary:hover, .btn-cookie-primary:hover, .btn-discord:hover {
+    background: linear-gradient(180deg, #ff6b8b 0%, #d0183e 40%, #a80f2d 100%) !important;
+    box-shadow: 0 6px 20px rgba(168, 15, 45, 0.5), inset 0 1px 2px rgba(255, 255, 255, 0.4) !important;
+    transform: translateY(-1px);
 }
 
 

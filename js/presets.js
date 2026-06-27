@@ -1,8 +1,17 @@
 /* ===================== PRESETS GRID RENDERER ===================== */
-function initPresets() {
-    const data = window.presetsData;
-    if (!data) { setTimeout(initPresets, 100); return; }
-    renderPresets(data);
+async function initPresets() {
+    try {
+        const resp = await fetch('/api/products');
+        const data = await resp.json();
+        if (Array.isArray(data)) {
+            window.presetsData = data;
+            renderPresets(data);
+        } else {
+            console.error("Expected array from products endpoint");
+        }
+    } catch(e) {
+        console.error("Failed to load presets:", e);
+    }
 }
 
 function renderPresets(items) {
@@ -21,12 +30,20 @@ function renderPresets(items) {
         const catClass = 'tag-' + item.category;
         const icons = { 'after-effects':'fa-film','premiere-pro':'fa-video','photoshop':'fa-image','video-star':'fa-star','topaz-labs':'fa-gem','others':'fa-folder' };
         const icon = icons[item.category] || 'fa-sliders';
-        const shortDesc = item.desc ? item.desc.substring(0, 100) + (item.desc.length > 100 ? '...' : '') : '';
+        const descriptionText = item.description || item.desc || '';
+        const shortDesc = descriptionText ? descriptionText.substring(0, 100) + (descriptionText.length > 100 ? '...' : '') : '';
+        const avatarUrl = item.creator_avatar || '';
+        const avatarHtml = avatarUrl ? `<img src="${avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : `<i class="fas fa-user" style="font-size:.6rem"></i>`;
+        const nickname = item.creator_nickname || item.author_name || 'Zyrex';
+
+        const thumbHtml = item.thumbnail ? 
+            `<img src="${item.thumbnail}" style="width:100%;height:100%;object-fit:cover">` : 
+            `<i class="fas ${icon}" style="font-size:2.5rem;color:#a80f2d;opacity:.3"></i>`;
 
         return '<a href="product.html?id=' + item.id + '" class="rc">' +
             '<div class="rc-img">' +
-            '<div class="rimg" style="display:flex;align-items:center;justify-content:center;background:#1c1c24">' +
-            '<i class="fas ' + icon + '" style="font-size:2.5rem;color:#dc143c;opacity:.3"></i></div>' +
+            '<div class="rimg" style="display:flex;align-items:center;justify-content:center;background:#1c1c24;overflow:hidden;width:100%;height:100%">' +
+            thumbHtml + '</div>' +
             '<div class="roverlay"></div>' +
             '<div class="rbadge"><span class="' + catClass + '">' + cat + '</span><span class="tag-free">Free</span></div>' +
             '</div>' +
@@ -35,8 +52,8 @@ function renderPresets(items) {
             (shortDesc ? '<p class="rc-desc">' + shortDesc + '</p>' : '') +
             '<div class="rc-footer">' +
             '<div class="rc-meta">' +
-            '<div class="rava-fb"><i class="fas fa-sliders" style="font-size:.6rem"></i></div>' +
-            '<span class="rname">Zyrex</span>' +
+            '<div class="rava-fb" style="overflow:hidden;display:flex;align-items:center;justify-content:center">' + avatarHtml + '</div>' +
+            '<span class="rname">' + nickname + '</span>' +
             '<span class="rdate">Premium</span></div>' +
             '<div class="rc-actions">' +
             '<span><i class="fas fa-download"></i> 0</span>' +
