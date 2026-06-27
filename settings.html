@@ -582,6 +582,17 @@
             border-color: var(--cherry);
         }
 
+        .btn-tbl-link {
+            background: rgba(88, 101, 242, 0.08);
+            color: #9aa4ff;
+        }
+
+        .btn-tbl-link:hover {
+            background: #5865F2;
+            color: #fff;
+            border-color: #5865F2;
+        }
+
         /* File Explorer Component */
         .explorer-container {
             display: flex;
@@ -1554,15 +1565,23 @@
                 let discordCell = '<span style="color:var(--text-muted);font-size:0.75rem">Not linked</span>';
                 if (u.linked_discord_id) {
                     const adminBadge = u.linked_is_admin ? ' <span class="badge badge-admin" style="font-size:0.6rem;padding:1px 5px">Admin</span>' : '';
+                    const displayName = u.linked_global_name || u.linked_display_name || u.linked_username || 'Unknown';
+                    const avatarUrl = discordAvatarUrl(u.linked_discord_id, u.linked_avatar);
                     discordCell = `
                         <div style="display:flex;align-items:center;gap:6px">
-                            <i class="fab fa-discord" style="color:#5865F2;font-size:1rem"></i>
+                            ${avatarUrl
+                                ? `<img src="${avatarUrl}" alt="" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid rgba(255,255,255,0.08)">`
+                                : '<div style="width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(88,101,242,0.12);color:#9aa4ff"><i class="fab fa-discord"></i></div>'}
                             <div>
-                                <div style="font-size:0.8rem;font-weight:600;color:#fff">${u.linked_display_name || 'Unknown'}${adminBadge}</div>
+                                <div style="font-size:0.8rem;font-weight:600;color:#fff">${escapeHtml(displayName)}${adminBadge}</div>
                                 <div style="font-size:0.65rem;color:var(--text-muted);font-family:monospace">${u.linked_discord_id}</div>
                             </div>
                         </div>`;
                 }
+                const accountArgs = `${jsString(u.username)}, ${quota}, ${jsString(u.description || '')}, ${jsString(u.linked_discord_id || '')}, ${jsString(u.linked_display_name || u.linked_global_name || '')}`;
+                const linkButton = u.linked_discord_id
+                    ? `<button class="btn-tbl btn-tbl-link" onclick="unlinkSFTPGoUser(${jsString(u.username)}, ${jsString(u.linked_discord_id)})" title="Unlink Discord user"><i class="fas fa-unlink"></i></button>`
+                    : `<button class="btn-tbl btn-tbl-link" onclick="editSFTPGoUserModal(${accountArgs})" title="Link Discord user"><i class="fas fa-link"></i></button>`;
 
                 // Quota bar
                 const pct = quota > 0 ? Math.round(used / quota * 100) : 0;
@@ -1583,7 +1602,8 @@
                         <td>${statusBadge}</td>
                         <td>
                             <div class="action-cell">
-                                <button class="btn-tbl btn-tbl-edit" onclick="editSFTPGoUserModal(${jsString(u.username)}, ${quota}, ${jsString(u.description || '')}, ${jsString(u.linked_discord_id || '')}, ${jsString(u.linked_display_name || '')})" title="Configure"><i class="fas fa-cog"></i></button>
+                                ${linkButton}
+                                <button class="btn-tbl btn-tbl-edit" onclick="editSFTPGoUserModal(${accountArgs})" title="Configure"><i class="fas fa-cog"></i></button>
                                 <button class="btn-tbl btn-tbl-delete" onclick="deleteSFTPGoUser(${jsString(u.username)})" title="Delete"><i class="far fa-trash-alt"></i></button>
                             </div>
                         </td>
@@ -1778,6 +1798,22 @@
             }
         }
 
+        async function unlinkSFTPGoUser(username, discordId) {
+            if (!discordId) return;
+            if (!confirm(`Unlink Discord user ${discordId} from SFTPGo account "${username}"?`)) return;
+            try {
+                const resp = await fetch(`/api/cloud/unlink/${discordId}`, { method: 'DELETE' });
+                const data = await resp.json();
+                if (data.success) {
+                    fetchSFTPGoUsers();
+                } else {
+                    alert("Unlink failed: " + (data.error || 'Unknown'));
+                }
+            } catch(e) {
+                alert("Connection failed.");
+            }
+        }
+
         // ================== DISCORD MEMBERS TAB ==================
         async function fetchDiscordGuildMembers() {
             const grid = document.getElementById('discordMembersGrid');
@@ -1904,6 +1940,12 @@
             const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
             const i = Math.floor(Math.log(bytes) / Math.log(k));
             return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
+        function discordAvatarUrl(discordId, avatarHash) {
+            if (!discordId || !avatarHash) return '';
+            const ext = avatarHash.startsWith('a_') ? 'gif' : 'png';
+            return `https://cdn.discordapp.com/avatars/${discordId}/${avatarHash}.${ext}?size=64`;
         }
 
         function escapeHtml(text) {
