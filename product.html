@@ -479,7 +479,7 @@
 
         function renderProductDetail(p, isDb) {
             let backLink = 'resources';
-            if (p.category !== 'software' && p.category !== 'color-grading' && p.category !== 'transition' && p.category !== 'overlay' && p.category !== 'lut' && p.category !== 'effect' && p.category !== 'text' && p.category !== 'audio' && p.category !== 'bundle' && p.category !== 'other') {
+            if (p.category === 'software' || p.category === 'adobe-plugins' || p.category === 'ofx-plugins') {
                 backLink = 'plugins';
             }
 
@@ -491,15 +491,13 @@
                 'software': 'Software',
                 'adobe-plugins': 'Adobe Plugin',
                 'ofx-plugins': 'OFX Plugin',
-                'color-grading': 'Color Grading',
-                'transition': 'Transitions',
-                'overlay': 'Overlays',
-                'lut': 'LUTs',
-                'effect': 'Effects',
-                'text': 'Text / Titles',
-                'audio': 'Audio',
-                'bundle': 'Bundle',
-                'other': 'Others'
+                'after-effects': 'After Effects',
+                'premiere-pro': 'Premiere Pro',
+                'photoshop': 'Photoshop',
+                'video-star': 'Video Star',
+                'topaz-labs': 'Topaz Labs',
+                'others': 'Others',
+                'other': 'Other'
             };
 
             const notesHtml = p.notes 
@@ -519,29 +517,36 @@
                     : `<div class="thumb-fallback"><i class="fas fa-cube"></i></div>`;
             }
 
-            // Creator details
+            // Creator details (original preset author)
             const creatorNickname = p.creator_nickname || p.author_name || 'Zyrex';
             const creatorAvatarHtml = p.creator_avatar 
                 ? `<img src="${p.creator_avatar}" style="width:100%;height:100%;object-fit:cover">` 
-                : `<i class="fas fa-user" style="color:#fff;font-size:1.4rem"></i>`;
+                : `<i class="fas fa-user" style="color:var(--light);font-size:1.4rem"></i>`;
             const creatorSocialHtml = p.creator_social_url 
-                ? `<a href="${p.creator_social_url}" target="_blank" style="font-size:0.78rem;color:#ff6b8b;text-decoration:underline;display:inline-flex;align-items:center;gap:4px;margin-top:2px"><i class="fas fa-external-link-alt" style="font-size:0.7rem"></i> View Profile</a>` 
+                ? `<a href="${p.creator_social_url}" target="_blank" style="font-size:0.78rem;color:var(--cherry-light);text-decoration:underline;display:inline-flex;align-items:center;gap:4px;margin-top:2px"><i class="fas fa-external-link-alt" style="font-size:0.7rem"></i> View Profile</a>` 
                 : '';
+
+            // Uploader details (Discord user who leaked)
+            const uploaderName = p.uploader_name || '';
+            const uploaderAvatarUrl = p.uploader_avatar || '';
+            const uploaderAvatarHtml = uploaderAvatarUrl
+                ? `<img src="${uploaderAvatarUrl}" style="width:100%;height:100%;object-fit:cover">`
+                : `<i class="fab fa-discord" style="color:var(--light);font-size:1.3rem"></i>`;
 
             // Build downloads block
             let dlHtml = '';
             if (isDb && p.file_path) {
                 const filename = p.file_path.split('/').pop() || 'Download File';
                 dlHtml = `
-                    <a href="/api/products/download/${p.id}" target="_blank" rel="noopener" class="product-dl-btn" style="background:linear-gradient(180deg, #f53d5c 0%, #a80f2d 40%, #7d071e 100%) !important;border:1px solid rgba(255,255,255,0.15) !important;box-shadow:0 4px 15px rgba(168,15,45,0.35), inset 0 1px 1px rgba(255,255,255,0.3) !important;">
+                    <a href="/api/products/download/${p.id}" target="_blank" rel="noopener" class="product-dl-btn" style="background:var(--gradient-accent) !important;border:1px solid rgba(255,255,255,0.15) !important;box-shadow:0 4px 15px rgba(168,15,45,0.35), inset 0 1px 1px rgba(255,255,255,0.3) !important;">
                         <div class="dl-icon default" style="background:rgba(255,255,255,0.1)">
-                            <i class="fas fa-cloud-arrow-down" style="color:#fff"></i>
+                            <i class="fas fa-cloud-arrow-down" style="color:var(--light)"></i>
                         </div>
                         <div class="dl-info">
-                            <strong style="color:#fff">Download ZIP / Resource</strong>
-                            <span style="color:#e6c8ce">${filename}</span>
+                            <strong style="color:var(--light)">Download ZIP / Resource</strong>
+                            <span style="color:var(--gray)">${filename}</span>
                         </div>
-                        <i class="fas fa-arrow-right dl-arrow" style="color:#fff"></i>
+                        <i class="fas fa-arrow-right dl-arrow" style="color:var(--light)"></i>
                     </a>
                 `;
             } else if (p.links && p.links.length) {
@@ -593,17 +598,30 @@
                             <code onclick="navigator.clipboard.writeText('${p.password || 'star'}');this.textContent='Copied!';setTimeout(()=>this.textContent='${p.password || 'star'}',1500)">${p.password || 'star'}</code>
                         </div>
 
-                        <!-- Creator details badge -->
+                        <!-- Creator details badge (original author) -->
                         <div style="display:flex;align-items:center;gap:15px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:16px;padding:16px;margin:25px 0;text-align:left">
-                            <div style="width:50px;height:50px;border-radius:50%;background:#a80f2d;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2px solid rgba(255,56,96,0.3)">
+                            <div style="width:50px;height:50px;border-radius:50%;background:var(--cherry);overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2px solid rgba(255,56,96,0.3)">
                                 ${creatorAvatarHtml}
                             </div>
                             <div style="flex:1;min-width:0">
-                                <span style="font-size:0.75rem;color:var(--gray-dark);text-transform:uppercase;letter-spacing:1px;display:block">Uploaded By</span>
-                                <strong style="font-size:1rem;color:#fff;display:block">${creatorNickname}</strong>
+                                <span style="font-size:0.75rem;color:var(--gray-dark);text-transform:uppercase;letter-spacing:1px;display:block">Created By</span>
+                                <strong style="font-size:1rem;color:var(--light);display:block">${creatorNickname}</strong>
                                 ${creatorSocialHtml}
                             </div>
                         </div>
+
+                        ${uploaderName ? `
+                        <!-- Uploader badge (Discord user who shared) -->
+                        <div style="display:flex;align-items:center;gap:15px;background:rgba(88,101,242,0.08);border:1px solid rgba(88,101,242,0.15);border-radius:16px;padding:16px;margin:0 0 25px;text-align:left">
+                            <div style="width:44px;height:44px;border-radius:50%;background:rgba(88,101,242,0.15);overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2px solid rgba(88,101,242,0.25)">
+                                ${uploaderAvatarHtml}
+                            </div>
+                            <div style="flex:1;min-width:0">
+                                <span style="font-size:0.75rem;color:var(--gray-dark);text-transform:uppercase;letter-spacing:1px;display:block">Shared by</span>
+                                <strong style="font-size:0.95rem;color:var(--light);display:flex;align-items:center;gap:6px"><i class="fab fa-discord" style="font-size:0.85rem;color:#5865F2"></i> ${uploaderName}</strong>
+                            </div>
+                        </div>
+                        ` : ''}
 
                         ${notesHtml}
                         <div class="product-downloads-title"><i class="fas fa-download"></i> Download Links</div>

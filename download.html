@@ -35,7 +35,7 @@
             gap: 10px;
         }
         .dl-logo span {
-            background: linear-gradient(135deg, #f53d5c, #a80f2d);
+            background: linear-gradient(135deg, var(--cherry-light), var(--cherry));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -73,14 +73,14 @@
             border-radius: 14px;
             cursor: pointer;
             color: #fff;
-            background: linear-gradient(180deg, #f53d5c 0%, #a80f2d 40%, #7d071e 100%) !important;
+            background: linear-gradient(180deg, var(--cherry-light) 0%, var(--cherry) 40%, var(--cherry-dark) 100%) !important;
             border: 1px solid rgba(255, 255, 255, 0.15) !important;
-            box-shadow: 0 4px 15px rgba(168, 15, 45, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
+            box-shadow: 0 4px 15px rgba(var(--cherry-rgb), 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.3) !important;
             transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .btn-download-action:hover:not(:disabled) {
-            background: linear-gradient(180deg, #ff6b8b 0%, #d0183e 40%, #a80f2d 100%) !important;
-            box-shadow: 0 6px 20px rgba(168, 15, 45, 0.5), inset 0 1px 2px rgba(255, 255, 255, 0.4) !important;
+            background: linear-gradient(180deg, var(--cherry-light) 0%, var(--primary-light) 40%, var(--cherry) 100%) !important;
+            box-shadow: 0 6px 20px rgba(var(--cherry-rgb), 0.5), inset 0 1px 2px rgba(255, 255, 255, 0.4) !important;
             transform: translateY(-1px);
         }
         .btn-download-action:disabled {
@@ -102,15 +102,15 @@
         }
         .dl-password-box code {
             font-family: monospace;
-            background: rgba(168, 15, 45, 0.2);
+            background: rgba(var(--cherry-rgb), 0.2);
             color: #ff6b8b;
             padding: 2px 6px;
             border-radius: 4px;
             font-weight: 700;
         }
         .dl-error-box {
-            background: rgba(168, 15, 45, 0.1);
-            border: 1px solid rgba(168, 15, 45, 0.2);
+            background: rgba(var(--cherry-rgb), 0.1);
+            border: 1px solid rgba(var(--cherry-rgb), 0.2);
             border-radius: 12px;
             padding: 20px;
             margin-top: 20px;
@@ -130,13 +130,13 @@
 
     <div class="dl-container card" id="downloadCard">
         <div class="dl-loading" id="dlLoading">
-            <i class="fas fa-spinner fa-spin" style="font-size: 2.5rem; color: #f53d5c; margin-bottom: 15px;"></i>
+            <i class="fas fa-spinner fa-spin" style="font-size: 2.5rem; color: var(--cherry-light); margin-bottom: 15px;"></i>
             <p style="color: var(--gray)">Loading secure download space...</p>
         </div>
 
         <div id="dlContent" style="display: none;">
             <div class="dl-logo">
-                <i class="fas fa-shield-halved" style="color: #f53d5c;"></i> Zyrex<span>Download</span>
+                <i class="fas fa-shield-halved" style="color: var(--cherry-light);"></i> Zyrex<span>Download</span>
             </div>
 
             <div class="product-badge-group">
@@ -147,15 +147,26 @@
             <h1 class="dl-title" id="productName">Resource File</h1>
             <p class="dl-desc" id="productDesc">Loading details...</p>
 
-            <!-- Uploader social profile card -->
+            <!-- Creator profile card (original author) -->
             <div style="display:flex;align-items:center;gap:15px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-radius:16px;padding:16px;margin:25px 0;text-align:left">
-                <div id="creatorAvatarWrapper" style="width:48px;height:48px;border-radius:50%;background:#a80f2d;overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2px solid rgba(255,56,96,0.2)">
-                    <i class="fas fa-user" style="color:#fff;font-size:1.3rem"></i>
+                <div id="creatorAvatarWrapper" style="width:48px;height:48px;border-radius:50%;background:var(--cherry);overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2px solid rgba(255,56,96,0.2)">
+                    <i class="fas fa-user" style="color:var(--light);font-size:1.3rem"></i>
                 </div>
                 <div style="flex:1;min-width:0">
-                    <span style="font-size:0.75rem;color:var(--gray-dark);text-transform:uppercase;letter-spacing:1px;display:block">Uploaded By</span>
-                    <strong id="creatorName" style="font-size:0.95rem;color:#fff;display:block">Uploader</strong>
+                    <span style="font-size:0.75rem;color:var(--gray-dark);text-transform:uppercase;letter-spacing:1px;display:block">Created By</span>
+                    <strong id="creatorName" style="font-size:0.95rem;color:var(--light);display:block">Creator</strong>
                     <div id="creatorSocialLinkContainer"></div>
+                </div>
+            </div>
+
+            <!-- Uploader profile card (Discord user who shared) -->
+            <div id="uploaderCard" style="display:none;align-items:center;gap:15px;background:rgba(88,101,242,0.08);border:1px solid rgba(88,101,242,0.15);border-radius:16px;padding:16px;margin:0 0 25px;text-align:left">
+                <div id="uploaderAvatarWrapper" style="width:44px;height:44px;border-radius:50%;background:rgba(88,101,242,0.15);overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2px solid rgba(88,101,242,0.25)">
+                    <i class="fab fa-discord" style="color:var(--light);font-size:1.3rem"></i>
+                </div>
+                <div style="flex:1;min-width:0">
+                    <span style="font-size:0.75rem;color:var(--gray-dark);text-transform:uppercase;letter-spacing:1px;display:block">Shared by</span>
+                    <strong id="uploaderName" style="font-size:0.9rem;color:var(--light);display:flex;align-items:center;gap:6px"><i class="fab fa-discord" style="font-size:0.8rem;color:#5865F2"></i> Uploader</strong>
                 </div>
             </div>
 
@@ -227,15 +238,13 @@
             // Category badges
             const catBadge = document.getElementById('productCategory');
             const categoryLabels = {
-                'color-grading': 'Color Grading',
-                'transition': 'Transitions',
-                'overlay': 'Overlays',
-                'lut': 'LUTs',
-                'effect': 'Effects',
-                'text': 'Text / Titles',
-                'audio': 'Audio',
-                'bundle': 'Bundle',
-                'other': 'Others'
+                'after-effects': 'After Effects',
+                'premiere-pro': 'Premiere Pro',
+                'photoshop': 'Photoshop',
+                'video-star': 'Video Star',
+                'topaz-labs': 'Topaz Labs',
+                'others': 'Others',
+                'other': 'Other'
             };
             catBadge.textContent = categoryLabels[p.category] || p.category || 'Other';
             catBadge.className = 'tag-' + (p.category || 'other');
@@ -254,17 +263,26 @@
                 };
             }
 
-            // Creator Details
+            // Creator Details (original author)
             document.getElementById('creatorName').textContent = p.creator_nickname || p.author_name || 'Zyrex';
             if (p.creator_avatar) {
                 document.getElementById('creatorAvatarWrapper').innerHTML = `<img src="${p.creator_avatar}" style="width:100%;height:100%;object-fit:cover">`;
             }
             if (p.creator_social_url) {
                 document.getElementById('creatorSocialLinkContainer').innerHTML = `
-                    <a href="${p.creator_social_url}" target="_blank" style="font-size:0.75rem;color:#ff6b8b;text-decoration:underline;display:inline-flex;align-items:center;gap:4px;margin-top:2px">
+                    <a href="${p.creator_social_url}" target="_blank" style="font-size:0.75rem;color:var(--cherry-light);text-decoration:underline;display:inline-flex;align-items:center;gap:4px;margin-top:2px">
                         <i class="fas fa-external-link-alt" style="font-size:0.65rem"></i> View Creator Profile
                     </a>
                 `;
+            }
+
+            // Uploader Details (Discord user who shared)
+            if (p.uploader_name) {
+                document.getElementById('uploaderCard').style.display = 'flex';
+                document.getElementById('uploaderName').innerHTML = `<i class="fab fa-discord" style="font-size:0.8rem;color:#5865F2"></i> ${p.uploader_name}`;
+                if (p.uploader_avatar) {
+                    document.getElementById('uploaderAvatarWrapper').innerHTML = `<img src="${p.uploader_avatar}" style="width:100%;height:100%;object-fit:cover">`;
+                }
             }
 
             loading.style.display = 'none';
