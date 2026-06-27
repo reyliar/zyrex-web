@@ -464,6 +464,12 @@
             return;
         }
 
+        // Redirect to preset.html if it's a preset/resource product
+        if (product.type === 'preset' || ['after-effects', 'premiere-pro', 'photoshop', 'video-star', 'topaz-labs', 'others'].includes(product.category)) {
+            window.location.replace(`preset.html?id=${productId}`);
+            return;
+        }
+
         renderProductDetail(product, isDbProduct);
 
         function showError(msg) {
