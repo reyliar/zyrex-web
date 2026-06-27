@@ -443,6 +443,9 @@
 
         let product = window.resourcesData ? window.resourcesData.find(p => p.id === productId) : null;
         let backLink = 'resources.html';
+        if (product && product.category !== 'software') {
+            backLink = 'plugins';
+        }
         if (!product) {
             product = window.presetsData ? window.presetsData.find(p => p.id === productId) : null;
             backLink = 'resources.html';
@@ -507,8 +510,8 @@
 
         container.innerHTML = `
             <div style="max-width:700px;margin:0 auto">
-                <a href="resources.html" class="product-back">
-                    <i class="fas fa-arrow-left"></i> Back to Resources
+                <a href="${backLink}" class="product-back">
+                    <i class="fas fa-arrow-left"></i> Back to ${backLink === 'plugins' ? 'Plugins' : 'Resources'}
                 </a>
                 <div class="product-card">
                     <div class="product-thumb-large">${thumbHtml}</div>

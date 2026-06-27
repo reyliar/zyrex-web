@@ -167,18 +167,44 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-brand">
-                    <img src="assets/content.png" alt="ZYREX">
-                    <span>Zyrex Editing</span>
+                    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+                        <a href="/" class="logo">
+                            <img src="assets/content.png" alt="ZYREX" class="logo-img">
+                            <span class="logo-text">yrex</span>
+                        </a>
+                        <h3 style="font-size:1.8rem;font-weight:900;margin:0;letter-spacing:2px;background:linear-gradient(135deg,#ffffff,#9090a0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Editing</h3>
+                    </div>
+                    <p>Premium editing community &amp; resources.</p>
                 </div>
                 <div class="footer-links">
-                    <a href="/">Home</a>
-                    <a href="resources.html">Resources</a>
-                    <a href="plugins">Plugins</a>
-                    <a href="https://discord.gg/fAydSzpafA" target="_blank">Discord</a>
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="resources.html">Resources</a></li>
+                        <li><a href="plugins" class="active">Plugins</a></li>
+                        <li><a href="/#team">Team</a></li>
+                        <li><a href="/#contact">Contact</a></li>
+                    </ul>
                 </div>
-                <div class="footer-copy">
-                    &copy; 2026 Zyrex. All rights reserved.
+                <div class="footer-links">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="https://discord.gg/fAydSzpafA" target="_blank">Discord</a></li>
+                        <li><a href="/#team">Team</a></li>
+                        <li><a href="/#contact">Contact</a></li>
+                    </ul>
                 </div>
+                <div class="footer-newsletter">
+                    <h4>Newsletter</h4>
+                    <p>Stay updated with Zyrex Editing.</p>
+                    <div class="newsletter-form">
+                        <input type="email" placeholder="Your email">
+                        <button type="submit"><i class="fas fa-arrow-right"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Zyrex Editing. All rights reserved.</p>
             </div>
         </div>
     </footer>
@@ -196,12 +222,30 @@
         let currentPlatform = 'all';
         let currentCategory = 'all';
 
+        function getCategoryIcon(cat) {
+            if (cat === 'ofx-plugins') return 'fa-plug';
+            if (cat === 'adobe-plugins' || cat === 'ae-plugins' || cat === 'pr-plugins') return 'fa-video';
+            return 'fa-puzzle-piece';
+        }
+
+        function getCategoryLabel(cat) {
+            const labels = {
+                'ofx-plugins': 'OFX Plugin',
+                'adobe-plugins': 'Adobe Plugin',
+                'ae-plugins': 'After Effects Plugin',
+                'pr-plugins': 'Premiere Pro Plugin'
+            };
+            return labels[cat] || cat;
+        }
+
         function initPlugins() {
-            if (typeof RESOURCES === 'undefined') {
+            const data = window.resourcesData;
+            if (!data) {
                 document.getElementById('pluginsGrid').innerHTML = '<div class="no-results"><i class="fas fa-database"></i><p>Loading plugin data...</p></div>';
                 return;
             }
-            allPlugins = RESOURCES.filter(r => r.type === 'plugin' || !r.type);
+            // Filter out 'software' category so only plugins are displayed
+            allPlugins = data.filter(r => r.category !== 'software');
             renderCategories();
             renderPlugins();
         }
@@ -210,7 +254,7 @@
             const cats = [...new Set(allPlugins.map(p => p.category).filter(Boolean))];
             const container = document.getElementById('catTabs');
             container.innerHTML = `<button class="cat-tab active" data-cat="all" onclick="filterCategory(this,'all')">All</button>` +
-                cats.map(c => `<button class="cat-tab" data-cat="${c}" onclick="filterCategory(this,'${c}')">${c}</button>`).join('');
+                cats.map(c => `<button class="cat-tab" data-cat="${c}" onclick="filterCategory(this,'${c}')">${getCategoryLabel(c)}</button>`).join('');
         }
 
         function filterCategory(el, cat) {
@@ -236,9 +280,14 @@
             const q = (document.getElementById('pluginSearch')?.value || '').toLowerCase();
 
             let filtered = allPlugins.filter(p => {
-                if (currentPlatform !== 'all' && p.platform && p.platform !== currentPlatform) return false;
+                if (currentPlatform !== 'all') {
+                    const plat = (p.platform || '').toLowerCase();
+                    if (currentPlatform === 'windows' && plat !== 'win' && plat !== 'both') return false;
+                    if (currentPlatform === 'apple' && plat !== 'mac' && plat !== 'both') return false;
+                    if (currentPlatform === 'linux' && plat !== 'linux') return false;
+                }
                 if (currentCategory !== 'all' && p.category !== currentCategory) return false;
-                if (q && !(p.name||'').toLowerCase().includes(q) && !(p.description||'').toLowerCase().includes(q)) return false;
+                if (q && !(p.name||'').toLowerCase().includes(q) && !(p.desc||'').toLowerCase().includes(q)) return false;
                 return true;
             });
 
@@ -248,20 +297,19 @@
             }
 
             grid.innerHTML = filtered.map(p => `
-                <div class="plugin-card" onclick="window.open('${p.url||'#'}','_blank')">
+                <div class="plugin-card" onclick="window.location.href='product.html?id=${p.id}'">
                     <div class="top">
-                        <div class="icon"><i class="fas ${p.icon||'fa-puzzle-piece'}"></i></div>
+                        <div class="icon"><i class="fas ${getCategoryIcon(p.category)}"></i></div>
                         <div class="info">
                             <h3>${p.name||'Untitled'}</h3>
-                            <div class="author">by <span>${p.author||'Unknown'}</span></div>
+                            <div class="author">Category: <span>${getCategoryLabel(p.category)}</span></div>
                         </div>
                     </div>
-                    <div class="desc">${p.description||''}</div>
+                    <div class="desc">${p.desc||''}</div>
                     <div class="tags">
-                        ${(p.tags||[]).map(t => `<span>${t}</span>`).join('')}
-                        ${p.platform ? `<span style="background:rgba(255,255,255,.04);color:#707080">${p.platform}</span>` : ''}
+                        ${p.platform ? `<span style="background:rgba(255,255,255,.04);color:#707080;text-transform:uppercase">${p.platform}</span>` : ''}
                     </div>
-                    <a href="${p.url||'#'}" target="_blank" class="dl-link"><i class="fas fa-download"></i> Download</a>
+                    <a href="product.html?id=${p.id}" class="dl-link"><i class="fas fa-download"></i> Get Plugin</a>
                 </div>
             `).join('');
         }
