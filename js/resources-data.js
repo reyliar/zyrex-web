@@ -1157,6 +1157,7 @@ const resourcesData = [
         { url: 'https://pixeldrain.com/u/test123', label: 'Pixeldrain' },
         { url: 'https://gofile.io/d/test123', label: 'GoFile' }
     ]
+}
 
 // Make available globally
 window.resourcesData = resourcesData;
