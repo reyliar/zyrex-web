@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zyrex | Admin - Add Plugin</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="css/style.css?v=9">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{
+            background:var(--dark);
+            background-image:radial-gradient(circle at 50% 0%, rgba(var(--cherry-rgb),.06) 0%, transparent 60%);
+            color:var(--light);font-family:Poppins,sans-serif;min-height:100vh;padding-top:100px;
+        }
+        .admin-header{
+            background:rgba(12,2,4,0.6);backdrop-filter:blur(25px) saturate(210%);
+            -webkit-backdrop-filter:blur(25px) saturate(210%);
+            border-bottom:1px solid rgba(var(--cherry-rgb),.1);
+            box-shadow:0 4px 30px rgba(0,0,0,0.5);padding:16px 30px;
+            display:flex;align-items:center;justify-content:space-between;
+            position:fixed;top:0;left:0;width:100%;z-index:10000;
+        }
+        .admin-header .logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--light)}
+        .admin-header .logo img{height:36px}
+        .admin-header .logo span{font-weight:800;font-size:1.1rem;letter-spacing:1px;color:var(--cherry-light)}
+        .admin-badge{font-size:.65rem;font-weight:700;background:var(--cherry);color:#fff;padding:3px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:1px}
+        .wizard-container{max-width:900px;margin:40px auto;padding:40px;
+            background:rgba(12,2,4,0.45);backdrop-filter:blur(25px) saturate(210%);
+            -webkit-backdrop-filter:blur(25px) saturate(210%);
+            border:1px solid rgba(var(--cherry-rgb),.12);border-radius:20px;
+            box-shadow:0 25px 60px rgba(0,0,0,0.5),0 0 40px rgba(var(--cherry-rgb),.15);position:relative;overflow:hidden;
+        }
+        .wizard-container::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+            background:linear-gradient(90deg,rgba(var(--cherry-rgb),0) 0%,rgba(var(--cherry-rgb),.35) 50%,rgba(var(--cherry-rgb),0) 100%);z-index:2}
+        .section-title{font-size:1.4rem;font-weight:900;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+        .section-title i{color:var(--cherry-light)}
+        .section-sub{font-size:.85rem;color:var(--gray-dark);margin-bottom:30px}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
+        @media(max-width:600px){.form-row{grid-template-columns:1fr}}
+        .form-group{margin-bottom:20px}
+        .form-group label{display:block;font-size:.78rem;font-weight:700;margin-bottom:8px;color:var(--gray);text-transform:uppercase;letter-spacing:1px}
+        .form-group input,.form-group textarea,.form-group select{
+            width:100%;padding:14px 18px;background:rgba(12,2,4,0.45);border:1px solid rgba(var(--cherry-rgb),.15);
+            border-radius:12px;color:var(--light);font-family:inherit;font-size:.88rem;outline:none;transition:all .3s cubic-bezier(0.16,1,0.3,1);
+        }
+        .form-group input:focus,.form-group textarea:focus,.form-group select:focus{
+            border-color:var(--cherry-light);background:rgba(var(--cherry-rgb),.05);box-shadow:0 0 0 3px rgba(var(--cherry-rgb),.25);
+        }
+        .form-group textarea{min-height:80px;resize:vertical}
+        .form-group select{appearance:none;cursor:pointer}
+        .form-group select option{background:#0e0e12;color:var(--light)}
+        .btn-row{display:flex;gap:12px;margin-top:25px;padding-top:20px;border-top:1px solid rgba(var(--cherry-rgb),.08);flex-wrap:wrap}
+        .btn{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:10px;font-size:.85rem;font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:all .3s;text-decoration:none}
+        .btn-primary{background:linear-gradient(180deg,#7a081e 0%,#42020d 50%,#300109 100%);border:1px solid rgba(var(--cherry-rgb),.25);color:#fff;box-shadow:0 4px 15px rgba(122,8,30,.35),inset 0 1px 1px rgba(255,255,255,.1)}
+        .btn-primary:hover{box-shadow:0 6px 20px rgba(122,8,30,.5);transform:translateY(-1px)}
+        .btn-secondary{background:rgba(var(--cherry-rgb),.06);color:var(--light);border:1px solid rgba(var(--cherry-rgb),.12)}
+        .btn-secondary:hover{background:rgba(var(--cherry-rgb),.12)}
+        .btn-success{background:linear-gradient(180deg,#00c864 0%,#008a3a 100%);border:1px solid rgba(0,200,100,.25);color:#fff;box-shadow:0 4px 15px rgba(0,200,100,.2)}
+        .code-output{background:#0a0a0f;border:1px solid rgba(var(--cherry-rgb),.15);border-radius:12px;padding:20px;margin-top:20px;font-family:'Consolas','Courier New',monospace;font-size:.8rem;color:#00c864;white-space:pre-wrap;overflow-x:auto;max-height:400px;overflow-y:auto;display:none}
+        .code-output.show{display:block}
+        .code-output .key{color:#ffb400}.code-output .str{color:#00c864}.code-output .num{color:#5284ff}
+        .alert{background:rgba(var(--cherry-rgb),.1);border:1px solid rgba(var(--cherry-rgb),.2);border-radius:12px;padding:14px 20px;margin-bottom:20px;font-size:.85rem;color:var(--cherry-light);display:none;font-weight:600}
+        .alert.show{display:block}.alert-success{background:rgba(0,200,100,.1);border-color:rgba(0,200,100,.2);color:#00c864}
+        .preview-card{border:1px dashed rgba(var(--cherry-rgb),.2);border-radius:12px;padding:20px;margin-top:25px;display:none}
+        .preview-card.show{display:block}
+        .preview-card h4{font-size:.85rem;color:var(--gray);margin-bottom:12px}
+    </style>
+</head>
+<body>
+    <div class="admin-header">
+        <a href="/" class="logo"><img src="assets/content.png" alt=""><span>Admin</span></a>
+        <div style="display:flex;align-items:center;gap:12px">
+            <span class="admin-badge"><i class="fas fa-crown"></i> Admin Panel</span>
+            <a href="/api/logout" style="color:var(--gray-dark);font-size:.8rem;text-decoration:none"><i class="fas fa-sign-out-alt"></i></a>
+        </div>
+    </div>
+
+    <div class="wizard-container">
+        <div id="alertBox" class="alert"></div>
+        
+        <div class="section-title"><i class="fas fa-puzzle-piece"></i> Add Plugin / Software</div>
+        <p class="section-sub">Generate a new entry for <code>plugins-data.js</code>. Fill the form and copy the generated code.</p>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Product Name *</label>
+                <input type="text" id="prodName" placeholder="e.g. BorisFX Sapphire AE 2026.5" oninput="updatePreview()">
+            </div>
+            <div class="form-group">
+                <label>Category *</label>
+                <select id="prodCategory" onchange="updatePreview()">
+                    <option value="">Select...</option>
+                    <option value="software">Software</option>
+                    <option value="after-effects">After Effects Plugin</option>
+                    <option value="premiere-pro">Premiere Pro Plugin</option>
+                    <option value="photoshop">Photoshop Plugin</option>
+                    <option value="others">Other / AVX / OFX</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label>Platform *</label>
+                <select id="prodPlatform" onchange="updatePreview()">
+                    <option value="">Select...</option>
+                    <option value="win">Windows</option>
+                    <option value="mac">Mac</option>
+                    <option value="both">Both (Win + Mac)</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>ZIP Password</label>
+                <input type="text" id="prodPassword" placeholder="Leave empty if none" oninput="updatePreview()">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Description</label>
+            <textarea id="prodDesc" placeholder="Describe the plugin/software..." oninput="updatePreview()"></textarea>
+        </div>
+
+        <div class="form-group">
+            <label>Notes (optional)</label>
+            <input type="text" id="prodNotes" placeholder="e.g. Compatible with AE 2025+" oninput="updatePreview()">
+        </div>
+
+        <div class="form-group">
+            <label>Download URL *</label>
+            <input type="url" id="prodUrl" placeholder="https://..." oninput="updatePreview()">
+        </div>
+        <div class="form-group">
+            <label>Link Label</label>
+            <input type="text" id="prodLabel" placeholder="e.g. GoFile (direct)" value="GoFile (direct)" oninput="updatePreview()">
+        </div>
+
+        <!-- PREVIEW -->
+        <div class="preview-card show" id="previewCard">
+            <h4><i class="fas fa-eye" style="color:var(--cherry)"></i> Live Preview</h4>
+            <div id="previewContent" style="font-family:Consolas,monospace;font-size:.78rem;color:var(--gray);line-height:1.6"></div>
+        </div>
+
+        <!-- CODE OUTPUT -->
+        <div class="code-output" id="codeOutput"></div>
+
+        <div class="btn-row">
+            <button class="btn btn-primary" onclick="generateCode()"><i class="fas fa-code"></i> Generate Code</button>
+            <button class="btn btn-success" id="btnCopy" onclick="copyCode()" style="display:none"><i class="fas fa-copy"></i> Copy to Clipboard</button>
+            <button class="btn btn-secondary" onclick="clearForm()"><i class="fas fa-undo"></i> Clear</button>
+            <a href="/settings" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back to Settings</a>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script>
+        // Auth check — admin only
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const resp = await fetch('/api/me', { credentials: 'include' });
+                if (!resp.ok) { window.location.href = '/'; return; }
+                const user = await resp.json();
+                if (!user.is_admin) {
+                    document.body.innerHTML = `<div style="text-align:center;padding:150px 20px;color:var(--gray)"><i class="fas fa-lock" style="font-size:4rem;color:var(--cherry);opacity:.3;display:block;margin-bottom:20px"></i><h2>Access Denied</h2><p style="margin-top:10px">Admin only.</p><a href="/" style="color:var(--cherry);margin-top:20px;display:inline-block">Go Home</a></div>`;
+                }
+            } catch(e) { window.location.href = '/'; }
+        });
+
+        function updatePreview() {
+            const n = document.getElementById('prodName').value.trim() || 'Untitled';
+            const c = document.getElementById('prodCategory').value || 'software';
+            const p = document.getElementById('prodPlatform').value || 'win';
+            const pw = document.getElementById('prodPassword').value.trim();
+            const d = document.getElementById('prodDesc').value.trim() || 'No description.';
+            const nt = document.getElementById('prodNotes').value.trim();
+            const u = document.getElementById('prodUrl').value.trim() || 'https://...';
+            const l = document.getElementById('prodLabel').value.trim() || 'Download';
+
+            const preview = document.getElementById('previewContent');
+            preview.innerHTML = `
+<span style="color:#ffb400">{</span>
+  <span style="color:#ffb400">id:</span> <span style="color:#00c864">makeId('${n}')</span>,
+  <span style="color:#ffb400">name:</span> <span style="color:#00c864">'${n}'</span>,
+  <span style="color:#ffb400">category:</span> <span style="color:#00c864">'${c}'</span>, <span style="color:#ffb400">platform:</span> <span style="color:#00c864">'${p}'</span>, <span style="color:#ffb400">password:</span> <span style="color:#5284ff">${pw ? "'" + pw + "'" : 'null'}</span>,
+  <span style="color:#ffb400">desc:</span> <span style="color:#00c864">'${d.replace(/'/g,"\\'")}'</span>,
+  ${nt ? `<span style="color:#ffb400">notes:</span> <span style="color:#00c864">'${nt.replace(/'/g,"\\'")}'</span>,\n  ` : ''}<span style="color:#ffb400">links:</span> [{ <span style="color:#ffb400">url:</span> <span style="color:#00c864">'${u}'</span>, <span style="color:#ffb400">label:</span> <span style="color:#00c864">'${l}'</span> }]
+<span style="color:#ffb400">}</span>`;
+        }
+
+        function generateCode() {
+            const n = document.getElementById('prodName').value.trim();
+            const c = document.getElementById('prodCategory').value;
+            const p = document.getElementById('prodPlatform').value;
+            const u = document.getElementById('prodUrl').value.trim();
+
+            if (!n || !c || !p || !u) {
+                showAlert('Please fill Name, Category, Platform, and Download URL.', true);
+                return;
+            }
+
+            const pw = document.getElementById('prodPassword').value.trim();
+            const d = document.getElementById('prodDesc').value.trim() || 'No description.';
+            const nt = document.getElementById('prodNotes').value.trim();
+            const l = document.getElementById('prodLabel').value.trim() || 'Download';
+
+            const code = `    {
+        id: makeId('${n}'),
+        name: '${n}',
+        category: '${c}', platform: '${p}', password: ${pw ? "'" + pw + "'" : 'null'},
+        desc: '${d.replace(/'/g,"\\'")}',
+        ${nt ? `notes: '${nt.replace(/'/g,"\\'")}',\n        ` : ''}links: [{ url: '${u}', label: '${l}' }]
+    },`;
+
+            const output = document.getElementById('codeOutput');
+            output.textContent = code;
+            output.classList.add('show');
+            document.getElementById('btnCopy').style.display = 'inline-flex';
+            output.scrollIntoView({ behavior: 'smooth' });
+            showAlert('Code generated! Copy and add to plugins-data.js', false);
+        }
+
+        function copyCode() {
+            const code = document.getElementById('codeOutput').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                showAlert('Copied! Paste into js/plugins-data.js', false);
+            });
+        }
+
+        function clearForm() {
+            ['prodName','prodCategory','prodPlatform','prodPassword','prodDesc','prodNotes','prodUrl','prodLabel'].forEach(id => {
+                document.getElementById(id).value = '';
+            });
+            document.getElementById('prodLabel').value = 'GoFile (direct)';
+            document.getElementById('codeOutput').classList.remove('show');
+            document.getElementById('btnCopy').style.display = 'none';
+            updatePreview();
+        }
+
+        function showAlert(msg, isError) {
+            const box = document.getElementById('alertBox');
+            box.textContent = msg;
+            box.className = 'alert show' + (isError ? '' : ' alert-success');
+            setTimeout(() => box.classList.remove('show'), 4000);
+        }
+
+        updatePreview();
+    </script>
+</body>
+</html>

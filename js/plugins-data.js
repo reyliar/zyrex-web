@@ -337,7 +337,136 @@ window.pluginsData = [
         links: [{ url: 'https://depositfiles.com/files/ntgw0ah78', label: 'DepositFiles' }]
     },
 
+
     // ═══════════════════════════════════════════
+    // MORE AE PLUGINS (from codec.kyiv.ua/ad0be.html)
+    // ═══════════════════════════════════════════
+    {
+        id: makeId('BorisFX Silhouette 2026.0.2'),
+        name: 'BorisFX Silhouette 2026.0.2',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'BorisFX Silhouette 2026.0.2 — GPU-accelerated rotoscoping and paint tool. Industry standard for visual effects.',
+        links: [{ url: 'https://fuckingfast.net/a87gozlaya2w', label: 'FuckingFast' }]
+    },
+    {
+        id: makeId('BorisFX SynthEyes Pro 2026.0.3'),
+        name: 'BorisFX SynthEyes Pro 2026.0.3',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'BorisFX SynthEyes Pro 2026.0.3 — 3D camera tracking and match moving. Solve 3D cameras from video footage.',
+        links: [{ url: 'https://fuckingfast.net/t3cfes1hk896', label: 'FuckingFast' }]
+    },
+    {
+        id: makeId('Autocroma bundle 2025.7'),
+        name: 'Autocroma Bundle 2025.7',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'Autocroma bundle 2025.7 — chromatic aberration and color fringe plugins.',
+        links: [{ url: 'https://rapidgator.net/file/916b99f20c7c9d05e57adc46c4fae2a6/Autocroma.bundle.2025.7.rar.html', label: 'RapidGator' }]
+    },
+    {
+        id: makeId('BAO plugins bundle 2025.5'),
+        name: 'BAO Plugins Bundle 2025.5',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'BAO plugins bundle 2025.5 — masking and rotoscoping plugins for AE.',
+        links: [{ url: 'https://clicknupload.cfd/9p3y70qrwlz8', label: 'ClicknUpload' }]
+    },
+    {
+        id: makeId('CROSSPHERE bundle 2025'),
+        name: 'CROSSPHERE Bundle 2025',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'CROSSPHERE plugins bundle 2025 — creative effects and transitions.',
+        links: [{ url: 'https://rg.to/file/1f48d60aebfaa3e5f309bdc728f3bbef/CROSSPHERE.rar.html', label: 'RapidGator' }]
+    },
+    {
+        id: makeId('CycoreFX bundle v1.3.2'),
+        name: 'CycoreFX Bundle v1.3.2',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'CycoreFX bundle v1.3.2 — classic AE plugin collection.',
+        links: [{ url: 'https://clicknupload.click/28n9ax31v010/CycoreFX.bundle.v1.3.2.rar', label: 'ClicknUpload' }]
+    },
+    {
+        id: makeId('DataClay Templater v2.8.4'),
+        name: 'DataClay Templater v2.8.4',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'DataClay Templater v2.8.4 — batch rendering and data-driven automation for AE.',
+        links: [{ url: 'https://depositfiles.com/files/h2mq4qywc', label: 'DepositFiles' }]
+    },
+    {
+        id: makeId('DFT FilmStocks v3.0.2'),
+        name: 'DFT FilmStocks v3.0.2',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'DFT FilmStocks v3.0.2 — film stock emulation plugins.',
+        links: [{ url: 'https://depositfiles.com/files/5wcrf60q2', label: 'DepositFiles' }]
+    },
+    {
+        id: makeId('DFT Rays v2.1'),
+        name: 'DFT Rays v2.1',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'DFT Rays v2.1 — volumetric light ray effects.',
+        links: [{ url: 'https://depositfiles.com/files/l1tvauofc', label: 'DepositFiles' }]
+    },
+    {
+        id: makeId('FanDev bundle 2025'),
+        name: 'FanDev Bundle 2025',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'FanDev bundle 2025 — community-developed AE plugins and scripts.',
+        links: [{ url: 'https://clicknupload.click/9xloatfyfiwy/Fandev.bundle.rar', label: 'ClicknUpload' }]
+    },
+    {
+        id: makeId('Filmworkz Adobe DVO v1.0.1'),
+        name: 'Filmworkz Adobe DVO v1.0.1',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'Filmworkz Adobe DVO v1.0.1 — professional film restoration and enhancement.',
+        links: [{ url: 'https://clicknupload.space/fwf2kzsdj6xi', label: 'ClicknUpload' }]
+    },
+    {
+        id: makeId('Fixel Algorithms bundle v2.0.3'),
+        name: 'Fixel Algorithms Bundle v2.0.3',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'Fixel Algorithms bundle v2.0.3 — AI-powered image enhancement plugins.',
+        links: [{ url: 'https://depositfiles.com/files/woqke257d', label: 'DepositFiles' }]
+    },
+    {
+        id: makeId('frischluft AEX bundle'),
+        name: 'frischluft AEX Bundle',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'frischluft.com AEX bundle — Lenscare and depth of field plugins.',
+        links: [{ url: 'https://www.filefactory.com/file/5h7g47aqc42m/Frischluft.com.rar', label: 'FileFactory' }]
+    },
+    {
+        id: makeId('GenArts Monsters GT v7.0.5'),
+        name: 'GenArts Monsters GT v7.0.5',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'GenArts Monsters GT v7.0.5 — creative effects plugin collection.',
+        links: [{ url: 'https://depositfiles.com/files/0cdxlup9d', label: 'DepositFiles' }]
+    },
+    {
+        id: makeId('Imagenomic Video Plugin Suite'),
+        name: 'Imagenomic Video Plugin Suite',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'Imagenomic Video Plugin Suite build 1007 — Portraiture for video, skin smoothing.',
+        links: [{ url: 'https://depositfiles.com/files/n5jcqbiht', label: 'DepositFiles' }]
+    },
+    {
+        id: makeId('RE:VisionFX Color Genius Plus v25.11'),
+        name: 'RE:VisionFX Color Genius Plus v25.11',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'RE:VisionFX Color Genius Plus v25.11 — color correction and grading tools.',
+        links: [{ url: 'https://rg.to/file/35eeed3101deee60bfd28b534f210096', label: 'RapidGator' }]
+    },
+    {
+        id: makeId('Pixel Sorter Studio bundle 2025.7'),
+        name: 'Pixel Sorter Studio Bundle 2025.7',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'Pixel Sorter Studio bundle 2025.7 — glitch and pixel sorting effects.',
+        links: [{ url: 'https://rg.to/file/fbe33a3e786b1f810a04b6b52357aa11/GG.PixelSorter.rar.html', label: 'RapidGator' }]
+    },
+    {
+        id: makeId('ProductionCrate LaForge Suite v1.5.07'),
+        name: 'ProductionCrate LaForge Suite v1.5.07',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'ProductionCrate LaForge Suite v1.5.07 — VFX and compositing plugins from ProductionCrate.',
+        links: [{ url: 'https://fuckingfast.net/qyg3k2w431p1', label: 'FuckingFast' }]
+    },    // ═══════════════════════════════════════════
     // PREMIERE PRO PLUGINS (from codec.kyiv.ua/ad0be.html)
     // ═══════════════════════════════════════════
     {
