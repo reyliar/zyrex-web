@@ -1,0 +1,78 @@
+<!-- redesigned 2026-06-29 -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Zyrex Resources - Preset detail">
+    <meta name="author" content="Zyrex">
+    <title>Zyrex | Preset</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="css/style.css?v=9">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body { background: var(--dark); color: var(--light); font-family: 'Poppins', sans-serif; min-height: 100vh; }
+        .preset-page { padding-top: 110px; min-height: 100vh; }
+        .preset-card { max-width: 800px; margin: 0 auto 60px; background: rgba(12, 2, 4, 0.5); border: 1px solid rgba(var(--cherry-rgb), 0.12); border-radius: 20px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.4), 0 0 40px rgba(var(--cherry-rgb), 0.08); animation: fadeSlideUp 0.5s ease forwards; }
+        @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .preset-header { padding: 40px 40px 30px; text-align: center; background: radial-gradient(ellipse at 50% 0%, rgba(var(--cherry-rgb), 0.08) 0%, transparent 80%); border-bottom: 1px solid rgba(255,255,255,0.03); }
+        .preset-thumb { width: 100%; max-height: 300px; object-fit: cover; background: #1a1a22; display: flex; align-items: center; justify-content: center; border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
+        .preset-thumb img { width: 100%; max-height: 280px; object-fit: contain; }
+        .preset-thumb .thumb-placeholder { font-size: 4rem; color: var(--cherry); opacity: 0.25; padding: 60px 0; }
+        .preset-cat-badge { display: inline-block; padding: 5px 14px; border-radius: 50px; background: rgba(var(--cherry-rgb), 0.1); border: 1px solid rgba(var(--cherry-rgb), 0.2); font-size: 0.72rem; font-weight: 700; color: var(--cherry); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px; }
+        .preset-header h1 { font-size: 2rem; font-weight: 900; margin: 0 0 10px; line-height: 1.2; }
+        .preset-creator { display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--gray); font-size: 0.9rem; margin-bottom: 8px; }
+        .preset-creator img { width: 28px; height: 28px; border-radius: 50%; border: 1px solid rgba(var(--cherry-rgb), 0.2); }
+        .preset-creator .creator-fb { width: 28px; height: 28px; border-radius: 50%; background: var(--cherry); display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: #fff; }
+        .preset-tags { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
+        .preset-tags span { padding: 3px 10px; border-radius: 4px; font-size: 0.65rem; font-weight: 600; background: rgba(255,255,255,0.03); color: var(--gray-dark); border: 1px solid rgba(255,255,255,0.04); }
+        .preset-body { padding: 30px 40px; }
+        .preset-desc { color: var(--gray); font-size: 0.92rem; line-height: 1.7; margin-bottom: 30px; }
+        .preset-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 30px; }
+        .preset-meta-item { background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; padding: 14px; text-align: center; }
+        .preset-meta-item .meta-icon { font-size: 1.1rem; color: var(--cherry); margin-bottom: 6px; }
+        .preset-meta-item .meta-label { font-size: 0.65rem; color: var(--gray-dark); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+        .preset-meta-item .meta-value { font-size: 0.85rem; font-weight: 700; color: var(--light); }
+        .preset-downloads { display: flex; flex-direction: column; gap: 10px; }
+        .dl-btn { display: flex; align-items: center; gap: 14px; padding: 14px 20px; background: rgba(var(--cherry-rgb), 0.04); border: 1px solid rgba(var(--cherry-rgb), 0.1); border-radius: 12px; text-decoration: none; transition: all 0.3s; }
+        .dl-btn:hover { background: rgba(var(--cherry-rgb), 0.08); border-color: rgba(var(--cherry-rgb), 0.2); transform: translateX(4px); }
+        .dl-btn .dl-icon { width: 40px; height: 40px; border-radius: 10px; background: rgba(var(--cherry-rgb), 0.12); display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+        .dl-btn .dl-icon.direct { color: var(--cherry); } .dl-btn .dl-icon.pixeldrain { color: #00d084; } .dl-btn .dl-icon.gofile { color: #f78da7; } .dl-btn .dl-icon.mediafire { color: #ff8c00; }
+        .dl-btn .dl-info { flex: 1; } .dl-btn .dl-info strong { display: block; font-size: 0.9rem; font-weight: 600; color: var(--light); } .dl-btn .dl-info span { font-size: 0.75rem; color: var(--gray-dark); }
+        .dl-btn .dl-arrow { color: var(--gray-dark); font-size: 1rem; transition: all 0.3s; } .dl-btn:hover .dl-arrow { color: var(--cherry); transform: translateX(3px); }
+        .preset-password { display: inline-flex; align-items: center; gap: 10px; padding: 10px 20px; background: rgba(255,255,255,0.02); border: 1px solid rgba(var(--cherry-rgb), 0.12); border-radius: 10px; margin-bottom: 24px; }
+        .preset-password i { color: var(--cherry); } .preset-password span { color: var(--gray); font-size: 0.8rem; } .preset-password code { background: rgba(var(--cherry-rgb), 0.12); color: var(--cherry); padding: 3px 10px; border-radius: 4px; font-weight: 700; cursor: pointer; }
+        .loading-state { text-align: center; padding: 100px 20px; color: var(--gray); } .loading-state i { font-size: 2.5rem; color: var(--cherry); opacity: 0.4; display: block; margin-bottom: 15px; }
+        .error-state { text-align: center; padding: 80px 20px; color: var(--gray); } .error-state i { font-size: 3rem; color: var(--cherry); opacity: 0.3; display: block; margin-bottom: 15px; }
+        .back-link { display: inline-flex; align-items: center; gap: 8px; color: var(--gray); font-size: 0.85rem; text-decoration: none; margin-bottom: 25px; transition: all 0.2s; } .back-link:hover { color: var(--cherry); }
+        @media (max-width: 600px) { .preset-header { padding: 25px 20px 20px; } .preset-header h1 { font-size: 1.4rem; } .preset-body { padding: 20px; } }
+    </style>
+</head>
+<body>
+    <nav class="navbar scrolled"><div class="container">
+        <a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a>
+        <ul class="nav-links" id="navLinks"><li><a href="/">Home</a></li><li><a href="resources" class="active">Resources</a></li><li><a href="plugins">Plugins</a></li><li><a href="/#contact">Contact</a></li></ul>
+        <div class="nav-actions"><div id="authBtn"></div><a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord"><i class="fab fa-discord"></i> <span>Join Us</span></a><button class="hamburger" id="hamburger"><span></span><span></span><span></span></button></div>
+    </div></nav>
+    <section class="preset-page"><div class="container" style="max-width:860px">
+        <a href="resources" class="back-link"><i class="fas fa-arrow-left"></i> Back to Resources</a>
+        <div class="loading-state" id="loadingState"><i class="fas fa-spinner fa-spin"></i>Loading preset...</div>
+        <div class="error-state" id="errorState" style="display:none"><i class="fas fa-exclamation-circle"></i><p id="errorMsg">Preset not found.</p><a href="resources" class="back-link" style="display:inline-flex;margin-top:15px"><i class="fas fa-arrow-left"></i> Browse Resources</a></div>
+        <div id="presetContent" style="display:none"></div>
+    </div></section>
+    <footer class="footer"><div class="container"><div class="footer-content">
+        <div class="footer-brand"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><h3 style="font-size:1.8rem;font-weight:900;margin:0;letter-spacing:2px;background:linear-gradient(135deg,#fff,#9090a0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Editing</h3></div><p>Premium editing community &amp; resources.</p></div>
+        <div class="footer-links"><h4>Quick Links</h4><ul><li><a href="/">Home</a></li><li><a href="resources">Resources</a></li><li><a href="plugins">Plugins</a></li><li><a href="/#contact">Contact</a></li></ul></div>
+        <div class="footer-links"><h4>Community</h4><ul><li><a href="https://discord.gg/fAydSzpafA">Discord</a></li><li><a href="/#contact">Contact</a></li></ul></div>
+        <div class="footer-newsletter"><h4>Newsletter</h4><p>Stay updated with Zyrex Editing.</p><div class="newsletter-form"><input type="email" placeholder="Your email"><button type="submit"><i class="fas fa-arrow-right"></i></button></div></div>
+    </div><div class="footer-bottom"><p>&copy; 2026 Zyrex Editing. All rights reserved.</p></div></div></footer>
+    <script src="js/auth.js"></script>
+    <script src="js/presets-data.js?v=4"></script>
+    <script>
+    document.addEventListener("DOMContentLoaded",async()=>{const p=new URLSearchParams(window.location.search);const id=p.get("id");if(!id){showError("Preset ID missing");return}let product=null;try{const r=await fetch("/api/products?id="+id);if(r.ok){const d=await r.json();if(d&&d.id)product=d}}catch(e){console.warn(e)}if(!product&&window.presetsData)product=window.presetsData.find(p=>p.id===id);if(!product&&window.pluginsData)product=window.pluginsData.find(p=>p.id===id);if(!product){showError("Preset not found");return}renderPreset(product)});
+    function showError(m){document.getElementById("loadingState").style.display="none";document.getElementById("errorState").style.display="block";document.getElementById("errorMsg").textContent=m}
+    function renderPreset(p){document.getElementById("loadingState").style.display="none";document.getElementById("presetContent").style.display="block";const L={"after-effects":"After Effects","premiere-pro":"Premiere Pro","photoshop":"Photoshop","video-star":"Video Star","topaz-labs":"Topaz Labs","others":"Others"};const I={"after-effects":"fa-film","premiere-pro":"fa-video","photoshop":"fa-image","video-star":"fa-star","topaz-labs":"fa-gem","others":"fa-folder"};const cat=L[p.category]||p.category||"Preset";const icon=I[p.category]||"fa-sliders";const av=p.creator_avatar||"";const nick=p.creator_nickname||p.author_name||"Zyrex";const desc=p.description||p.desc||"";const tags=(p.tags&&Array.isArray(p.tags)?p.tags:(typeof p.tags==="string"?p.tags.split(",").map(t=>t.trim()).filter(Boolean):[]));const platform=p.platform||"both";const links=[];if(p.links&&Array.isArray(p.links))links.push(...p.links);else{if(p.link)links.push({url:p.link,label:"Download"});if(p.link_2)links.push({url:p.link_2,label:"Mirror"});if(p.link_3)links.push({url:p.link_3,label:"Mirror 2"})}const HI={pixeldrain:"pixeldrain",gofile:"gofile",mediafire:"mediafire",dropbox:"default",google:"default",mega:"default"};function gi(u){const l=u.toLowerCase();for(const[k,v]of Object.entries(HI)){if(l.includes(k))return v}return"default"}const dl=links.length>0?links.map((l,i)=>{const ic=gi(l.url||l);const lb=l.label||(links.length===1?"Download":"Mirror "+(i+1));const u=l.url||l;return'<a href="'+u+'" target="_blank" class="dl-btn"><div class="dl-icon '+ic+'"><i class="fas fa-download"></i></div><div class="dl-info"><strong>'+lb+'</strong><span>'+new URL(u).hostname+'</span></div><div class="dl-arrow"><i class="fas fa-external-link-alt"></i></div></a>'}).join(""):'<p style="color:var(--gray-dark);font-size:0.85rem;text-align:center">No download links available yet.</p>';const pw=(p.password&&p.password!=="star")?'<div class="preset-password"><i class="fas fa-lock"></i><span>Password:</span><code onclick="navigator.clipboard.writeText(\''+p.password+'\')">'+p.password+"</code></div>":"";document.getElementById("presetContent").innerHTML='<div class="preset-card"><div class="preset-header">'+(p.thumbnail?'<div class="preset-thumb"><img src="'+p.thumbnail+'" alt="'+p.name+'" onerror="this.parentElement.innerHTML=\'<div class=thumb-placeholder><i class=fas '+icon+'></i></div>\'"></div>':'<div class="preset-thumb"><div class="thumb-placeholder"><i class="fas '+icon+'"></i></div></div>')+'<span class="preset-cat-badge">'+cat+'</span><h1>'+p.name+'</h1><div class="preset-creator">'+(av?'<img src="'+av+'" alt="">':'<div class="creator-fb"><i class="fas fa-user"></i></div>')+"<span>by <strong>"+nick+"</strong></span></div>"+(tags.length>0?'<div class="preset-tags">'+tags.map(t=>"<span>"+t+"</span>").join("")+"</div>":"")+'</div><div class="preset-body">'+(desc?'<p class="preset-desc">'+desc+"</p>":"")+'<div class="preset-meta"><div class="preset-meta-item"><div class="meta-icon"><i class="fas fa-tag"></i></div><div class="meta-label">Category</div><div class="meta-value">'+cat+'</div></div><div class="preset-meta-item"><div class="meta-icon"><i class="fas fa-desktop"></i></div><div class="meta-label">Platform</div><div class="meta-value">'+(platform==="win"?"Windows":platform==="mac"?"Mac":"Both")+'</div></div><div class="preset-meta-item"><div class="meta-icon"><i class="fas fa-download"></i></div><div class="meta-label">Downloads</div><div class="meta-value">'+(p.downloads||0)+"</div></div></div>"+pw+'<div class="preset-downloads">'+dl+"</div></div></div>"}
+    </script>
+</body>
+</html>

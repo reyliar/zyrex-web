@@ -1,4 +1,3 @@
-<!-- redesigned 2026-06-29 -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -12,67 +11,95 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        body { background: var(--dark); color: var(--light); font-family: 'Poppins', sans-serif; min-height: 100vh; }
-        .preset-page { padding-top: 110px; min-height: 100vh; }
-        .preset-card { max-width: 800px; margin: 0 auto 60px; background: rgba(12, 2, 4, 0.5); border: 1px solid rgba(var(--cherry-rgb), 0.12); border-radius: 20px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.4), 0 0 40px rgba(var(--cherry-rgb), 0.08); animation: fadeSlideUp 0.5s ease forwards; }
-        @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-        .preset-header { padding: 40px 40px 30px; text-align: center; background: radial-gradient(ellipse at 50% 0%, rgba(var(--cherry-rgb), 0.08) 0%, transparent 80%); border-bottom: 1px solid rgba(255,255,255,0.03); }
-        .preset-thumb { width: 100%; max-height: 300px; object-fit: cover; background: #1a1a22; display: flex; align-items: center; justify-content: center; border-radius: 12px; overflow: hidden; margin-bottom: 20px; }
-        .preset-thumb img { width: 100%; max-height: 280px; object-fit: contain; }
-        .preset-thumb .thumb-placeholder { font-size: 4rem; color: var(--cherry); opacity: 0.25; padding: 60px 0; }
-        .preset-cat-badge { display: inline-block; padding: 5px 14px; border-radius: 50px; background: rgba(var(--cherry-rgb), 0.1); border: 1px solid rgba(var(--cherry-rgb), 0.2); font-size: 0.72rem; font-weight: 700; color: var(--cherry); text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 16px; }
-        .preset-header h1 { font-size: 2rem; font-weight: 900; margin: 0 0 10px; line-height: 1.2; }
-        .preset-creator { display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--gray); font-size: 0.9rem; margin-bottom: 8px; }
-        .preset-creator img { width: 28px; height: 28px; border-radius: 50%; border: 1px solid rgba(var(--cherry-rgb), 0.2); }
-        .preset-creator .creator-fb { width: 28px; height: 28px; border-radius: 50%; background: var(--cherry); display: flex; align-items: center; justify-content: center; font-size: 0.6rem; color: #fff; }
-        .preset-tags { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; margin-top: 8px; }
-        .preset-tags span { padding: 3px 10px; border-radius: 4px; font-size: 0.65rem; font-weight: 600; background: rgba(255,255,255,0.03); color: var(--gray-dark); border: 1px solid rgba(255,255,255,0.04); }
-        .preset-body { padding: 30px 40px; }
-        .preset-desc { color: var(--gray); font-size: 0.92rem; line-height: 1.7; margin-bottom: 30px; }
-        .preset-meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 14px; margin-bottom: 30px; }
-        .preset-meta-item { background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.04); border-radius: 10px; padding: 14px; text-align: center; }
-        .preset-meta-item .meta-icon { font-size: 1.1rem; color: var(--cherry); margin-bottom: 6px; }
-        .preset-meta-item .meta-label { font-size: 0.65rem; color: var(--gray-dark); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
-        .preset-meta-item .meta-value { font-size: 0.85rem; font-weight: 700; color: var(--light); }
-        .preset-downloads { display: flex; flex-direction: column; gap: 10px; }
-        .dl-btn { display: flex; align-items: center; gap: 14px; padding: 14px 20px; background: rgba(var(--cherry-rgb), 0.04); border: 1px solid rgba(var(--cherry-rgb), 0.1); border-radius: 12px; text-decoration: none; transition: all 0.3s; }
-        .dl-btn:hover { background: rgba(var(--cherry-rgb), 0.08); border-color: rgba(var(--cherry-rgb), 0.2); transform: translateX(4px); }
-        .dl-btn .dl-icon { width: 40px; height: 40px; border-radius: 10px; background: rgba(var(--cherry-rgb), 0.12); display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
-        .dl-btn .dl-icon.direct { color: var(--cherry); } .dl-btn .dl-icon.pixeldrain { color: #00d084; } .dl-btn .dl-icon.gofile { color: #f78da7; } .dl-btn .dl-icon.mediafire { color: #ff8c00; }
-        .dl-btn .dl-info { flex: 1; } .dl-btn .dl-info strong { display: block; font-size: 0.9rem; font-weight: 600; color: var(--light); } .dl-btn .dl-info span { font-size: 0.75rem; color: var(--gray-dark); }
-        .dl-btn .dl-arrow { color: var(--gray-dark); font-size: 1rem; transition: all 0.3s; } .dl-btn:hover .dl-arrow { color: var(--cherry); transform: translateX(3px); }
-        .preset-password { display: inline-flex; align-items: center; gap: 10px; padding: 10px 20px; background: rgba(255,255,255,0.02); border: 1px solid rgba(var(--cherry-rgb), 0.12); border-radius: 10px; margin-bottom: 24px; }
-        .preset-password i { color: var(--cherry); } .preset-password span { color: var(--gray); font-size: 0.8rem; } .preset-password code { background: rgba(var(--cherry-rgb), 0.12); color: var(--cherry); padding: 3px 10px; border-radius: 4px; font-weight: 700; cursor: pointer; }
-        .loading-state { text-align: center; padding: 100px 20px; color: var(--gray); } .loading-state i { font-size: 2.5rem; color: var(--cherry); opacity: 0.4; display: block; margin-bottom: 15px; }
-        .error-state { text-align: center; padding: 80px 20px; color: var(--gray); } .error-state i { font-size: 3rem; color: var(--cherry); opacity: 0.3; display: block; margin-bottom: 15px; }
-        .back-link { display: inline-flex; align-items: center; gap: 8px; color: var(--gray); font-size: 0.85rem; text-decoration: none; margin-bottom: 25px; transition: all 0.2s; } .back-link:hover { color: var(--cherry); }
-        @media (max-width: 600px) { .preset-header { padding: 25px 20px 20px; } .preset-header h1 { font-size: 1.4rem; } .preset-body { padding: 20px; } }
+        :root { --gap: 24px; --card-bg: rgba(12,4,6,0.55); --card-border: rgba(var(--cherry-rgb),0.1); }
+        * { margin:0; padding:0; box-sizing:border-box }
+        body { background:var(--dark); background-image:radial-gradient(circle at 50% 10%, rgba(var(--cherry-rgb),.06) 0%, transparent 60%); color:var(--light); font-family:Poppins,sans-serif; min-height:100vh }
+        .page { padding:100px 0 80px }
+        .wrap { max-width:1000px; margin:0 auto; padding:0 24px }
+        .back { display:inline-flex; align-items:center; gap:8px; color:var(--gray); font-size:.85rem; text-decoration:none; margin-bottom:24px; transition:.2s }
+        .back:hover { color:var(--cherry) }
+        @keyframes up { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        .a1 { animation:up .5s ease forwards }
+        .a2 { animation:up .5s .1s ease both }
+        .a3 { animation:up .5s .2s ease both }
+        .hero { position:relative; border-radius:20px; overflow:hidden; background:#0d0d15; border:1px solid rgba(var(--cherry-rgb),.12); box-shadow:0 15px 45px rgba(0,0,0,.45),0 0 35px rgba(var(--cherry-rgb),.06); margin-bottom:var(--gap) }
+        .hero-m { width:100%; aspect-ratio:16/9; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#14141e,#1a1a28,#14141e); position:relative; overflow:hidden }
+        .hero-m img { width:100%; height:100%; object-fit:contain; position:relative; z-index:1 }
+        .hero-m .ph { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:5rem; color:var(--cherry); opacity:.12; z-index:0 }
+        .hero-b { position:absolute; bottom:16px; left:20px; z-index:3; display:flex; gap:8px; flex-wrap:wrap }
+        .badge { padding:5px 12px; border-radius:50px; font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.8px; background:rgba(0,0,0,.6); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,.08); color:#fff; display:inline-flex; align-items:center; gap:5px }
+        .badge-f { background:rgba(0,200,100,.2); border-color:rgba(0,200,100,.35); color:#00e676 }
+        .ir { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; flex-wrap:wrap; margin-bottom:var(--gap) }
+        .ir-l { flex:1; min-width:0 }
+        .ir-l h1 { font-size:2rem; font-weight:900; color:#fff; margin-bottom:6px; letter-spacing:-.5px }
+        .tags { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px }
+        .tags span { padding:3px 9px; border-radius:4px; font-size:.63rem; font-weight:600; background:rgba(255,255,255,.03); color:var(--gray-dark); border:1px solid rgba(255,255,255,.06) }
+        .cr { display:flex; align-items:center; gap:10px; background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.05); border-radius:12px; padding:10px 16px }
+        .cr img { width:36px; height:36px; border-radius:50%; border:1.5px solid rgba(var(--cherry-rgb),.2); object-fit:cover }
+        .cr .cfb { width:36px; height:36px; border-radius:50%; background:rgba(var(--cherry-rgb),.15); display:flex; align-items:center; justify-content:center; color:var(--cherry); font-size:.75rem }
+        .cr strong { display:block; font-size:.82rem; color:var(--light) }
+        .cr a { font-size:.7rem; color:var(--cherry); text-decoration:none }
+        .cr a:hover { text-decoration:underline }
+        .card { background:var(--card-bg); border:1px solid var(--card-border); border-radius:16px; padding:24px; backdrop-filter:blur(15px); -webkit-backdrop-filter:blur(15px); box-shadow:0 8px 30px rgba(0,0,0,.25); margin-bottom:var(--gap) }
+        .ct { font-size:.72rem; font-weight:700; color:var(--gray-dark); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:16px; display:flex; align-items:center; gap:8px }
+        .ct i { color:var(--cherry); font-size:.8rem }
+        .desc { color:var(--gray); font-size:.9rem; line-height:1.7 }
+        .dlb { display:flex; align-items:center; justify-content:center; gap:12px; padding:18px 24px; background:linear-gradient(135deg,#8a0a22,#5a0614,#3d020c); border:1px solid rgba(var(--cherry-rgb),.3); border-radius:14px; color:#fff; font-size:1.05rem; font-weight:700; cursor:pointer; text-decoration:none; transition:.3s; margin-bottom:8px; box-shadow:0 4px 18px rgba(var(--cherry-rgb),.3),inset 0 1px 1px rgba(255,255,255,.1); font-family:inherit; width:100% }
+        .dlb:hover { box-shadow:0 6px 25px rgba(var(--cherry-rgb),.5),inset 0 1px 2px rgba(255,255,255,.15); transform:translateY(-1px) }
+        .dlb i { font-size:1.1rem }
+        .dls { text-align:center; font-size:.72rem; color:var(--gray-dark); margin-bottom:var(--gap) }
+        .dlg { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; margin-bottom:var(--gap) }
+        .dll { display:flex; align-items:center; gap:10px; padding:12px 16px; background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.06); border-radius:10px; color:var(--light); text-decoration:none; font-size:.82rem; font-weight:500; transition:.2s }
+        .dll:hover { background:rgba(var(--cherry-rgb),.06); border-color:rgba(var(--cherry-rgb),.15) }
+        .dll i { color:var(--cherry); font-size:.85rem; flex-shrink:0 }
+        .dll span { color:var(--gray-dark); font-size:.7rem; margin-left:auto }
+        .pw { display:inline-flex; align-items:center; gap:8px; padding:8px 14px; background:rgba(var(--cherry-rgb),.04); border:1px solid rgba(var(--cherry-rgb),.1); border-radius:8px; font-size:.75rem; margin-bottom:var(--gap) }
+        .pw i { color:var(--cherry) }
+        .pw span { color:var(--gray) }
+        .pw code { background:rgba(var(--cherry-rgb),.15); color:var(--cherry); padding:2px 8px; border-radius:4px; font-weight:700; cursor:pointer; font-size:.8rem; margin-left:auto }
+        .grid { display:grid; grid-template-columns:1fr 300px; gap:var(--gap) }
+        @media(max-width:800px) { .grid { grid-template-columns:1fr } }
+        .st { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid rgba(255,255,255,.03); font-size:.85rem }
+        .st:last-child { border-bottom:none }
+        .st .l { color:var(--gray); display:flex; align-items:center; gap:8px }
+        .st .l i { color:var(--cherry); width:16px; text-align:center }
+        .st .v { color:var(--light); font-weight:600 }
+        .files { display:flex; flex-direction:column; gap:8px; max-height:250px; overflow-y:auto }
+        .files::-webkit-scrollbar { width:4px } .files::-webkit-scrollbar-thumb { background:rgba(255,255,255,.08); border-radius:2px }
+        .fi { display:flex; align-items:center; justify-content:space-between; padding:8px 12px; background:rgba(255,255,255,.015); border:1px solid rgba(255,255,255,.03); border-radius:8px; font-size:.8rem }
+        .fi .fl { display:flex; align-items:center; gap:8px; min-width:0 }
+        .fi .fl i { color:var(--cherry); font-size:.75rem; flex-shrink:0 }
+        .fi .fl span { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--light) }
+        .fi .fs { color:var(--gray-dark); font-size:.7rem; flex-shrink:0; margin-left:8px }
+        .up { display:flex; align-items:center; gap:12px; padding:14px 16px; background:rgba(88,101,242,.05); border:1px solid rgba(88,101,242,.12); border-radius:12px; margin-bottom:var(--gap) }
+        .up img { width:34px; height:34px; border-radius:50%; border:1.5px solid rgba(88,101,242,.2); object-fit:cover }
+        .up .ufb { width:34px; height:34px; border-radius:50%; background:rgba(88,101,242,.15); display:flex; align-items:center; justify-content:center; color:#5865F2; font-size:.9rem }
+        .up strong { display:block; font-size:.8rem; color:var(--light) }
+        .up span { font-size:.7rem; color:var(--gray-dark) }
+        .load { text-align:center; padding:80px 20px; color:var(--gray) }
+        .load i { font-size:2.5rem; color:var(--cherry); opacity:.3; display:block; margin-bottom:15px }
+        .err { text-align:center; padding:60px 20px; color:var(--gray) }
+        .err i { font-size:3rem; color:var(--cherry); opacity:.25; display:block; margin-bottom:15px }
+        .btn-b { display:inline-flex; align-items:center; gap:6px; padding:10px 22px; border-radius:10px; background:rgba(var(--cherry-rgb),.1); border:1px solid rgba(var(--cherry-rgb),.2); color:var(--cherry); text-decoration:none; font-size:.85rem; font-weight:600; transition:.2s; font-family:inherit }
+        .btn-b:hover { background:rgba(var(--cherry-rgb),.18) }
+        @media(max-width:600px) { .ir { flex-direction:column } .ir-l h1 { font-size:1.4rem } .page { padding-top:80px } .wrap { padding:0 16px } }
     </style>
 </head>
 <body>
-    <nav class="navbar scrolled"><div class="container">
-        <a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a>
-        <ul class="nav-links" id="navLinks"><li><a href="/">Home</a></li><li><a href="resources" class="active">Resources</a></li><li><a href="plugins">Plugins</a></li><li><a href="/#contact">Contact</a></li></ul>
-        <div class="nav-actions"><div id="authBtn"></div><a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord"><i class="fab fa-discord"></i> <span>Join Us</span></a><button class="hamburger" id="hamburger"><span></span><span></span><span></span></button></div>
-    </div></nav>
-    <section class="preset-page"><div class="container" style="max-width:860px">
-        <a href="resources" class="back-link"><i class="fas fa-arrow-left"></i> Back to Resources</a>
-        <div class="loading-state" id="loadingState"><i class="fas fa-spinner fa-spin"></i>Loading preset...</div>
-        <div class="error-state" id="errorState" style="display:none"><i class="fas fa-exclamation-circle"></i><p id="errorMsg">Preset not found.</p><a href="resources" class="back-link" style="display:inline-flex;margin-top:15px"><i class="fas fa-arrow-left"></i> Browse Resources</a></div>
-        <div id="presetContent" style="display:none"></div>
+    <nav class="navbar scrolled"><div class="container"><a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><ul class="nav-links"><li><a href="/">Home</a></li><li><a href="/resources">Resources</a></li><li><a href="/plugins">Plugins</a></li><li><a href="/#contact">Contact</a></li></ul><div class="nav-actions"><div id="authBtn"></div><a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord"><i class="fab fa-discord"></i> <span>Join Us</span></a><button class="hamburger" id="hamburger"><span></span><span></span><span></span></button></div></div></nav>
+    <section class="page"><div class="wrap">
+        <a href="/resources" class="back"><i class="fas fa-arrow-left"></i> Back to Resources</a>
+        <div class="load" id="load"><i class="fas fa-spinner fa-spin"></i><p>Loading preset...</p></div>
+        <div class="err" id="err" style="display:none"><i class="fas fa-exclamation-circle"></i><p id="errMsg">Preset not found.</p><a href="/resources" class="btn-b"><i class="fas fa-arrow-left"></i> Browse Resources</a></div>
+        <div id="root" style="display:none"></div>
     </div></section>
-    <footer class="footer"><div class="container"><div class="footer-content">
-        <div class="footer-brand"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><h3 style="font-size:1.8rem;font-weight:900;margin:0;letter-spacing:2px;background:linear-gradient(135deg,#fff,#9090a0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Editing</h3></div><p>Premium editing community &amp; resources.</p></div>
-        <div class="footer-links"><h4>Quick Links</h4><ul><li><a href="/">Home</a></li><li><a href="resources">Resources</a></li><li><a href="plugins">Plugins</a></li><li><a href="/#contact">Contact</a></li></ul></div>
-        <div class="footer-links"><h4>Community</h4><ul><li><a href="https://discord.gg/fAydSzpafA">Discord</a></li><li><a href="/#contact">Contact</a></li></ul></div>
-        <div class="footer-newsletter"><h4>Newsletter</h4><p>Stay updated with Zyrex Editing.</p><div class="newsletter-form"><input type="email" placeholder="Your email"><button type="submit"><i class="fas fa-arrow-right"></i></button></div></div>
-    </div><div class="footer-bottom"><p>&copy; 2026 Zyrex Editing. All rights reserved.</p></div></div></footer>
-    <script src="js/auth.js"></script>
-    <script src="js/presets-data.js?v=4"></script>
+    <footer class="footer"><div class="container"><div class="footer-content"><div class="footer-brand"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><h3 style="font-size:1.8rem;font-weight:900;margin:0;letter-spacing:2px;background:linear-gradient(135deg,#fff,#9090a0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Editing</h3></div><p>Premium editing community &amp; resources.</p></div><div class="footer-links"><h4>Quick Links</h4><ul><li><a href="/">Home</a></li><li><a href="/resources">Resources</a></li><li><a href="/plugins">Plugins</a></li><li><a href="/#contact">Contact</a></li></ul></div><div class="footer-links"><h4>Community</h4><ul><li><a href="https://discord.gg/fAydSzpafA">Discord</a></li><li><a href="/#contact">Contact</a></li></ul></div><div class="footer-newsletter"><h4>Newsletter</h4><p>Stay updated with Zyrex Editing.</p><div class="newsletter-form"><input type="email" placeholder="Your email"><button type="submit"><i class="fas fa-arrow-right"></i></button></div></div></div><div class="footer-bottom"><p>&copy; 2026 Zyrex Editing. All rights reserved.</p></div></div></footer>
+    <script src="/js/auth.js"></script>
+    <script src="/js/presets-data.js?v=5"></script>
     <script>
-    document.addEventListener("DOMContentLoaded",async()=>{const p=new URLSearchParams(window.location.search);const id=p.get("id");if(!id){showError("Preset ID missing");return}let product=null;try{const r=await fetch("/api/products?id="+id);if(r.ok){const d=await r.json();if(d&&d.id)product=d}}catch(e){console.warn(e)}if(!product&&window.presetsData)product=window.presetsData.find(p=>p.id===id);if(!product&&window.pluginsData)product=window.pluginsData.find(p=>p.id===id);if(!product){showError("Preset not found");return}renderPreset(product)});
-    function showError(m){document.getElementById("loadingState").style.display="none";document.getElementById("errorState").style.display="block";document.getElementById("errorMsg").textContent=m}
-    function renderPreset(p){document.getElementById("loadingState").style.display="none";document.getElementById("presetContent").style.display="block";const L={"after-effects":"After Effects","premiere-pro":"Premiere Pro","photoshop":"Photoshop","video-star":"Video Star","topaz-labs":"Topaz Labs","others":"Others"};const I={"after-effects":"fa-film","premiere-pro":"fa-video","photoshop":"fa-image","video-star":"fa-star","topaz-labs":"fa-gem","others":"fa-folder"};const cat=L[p.category]||p.category||"Preset";const icon=I[p.category]||"fa-sliders";const av=p.creator_avatar||"";const nick=p.creator_nickname||p.author_name||"Zyrex";const desc=p.description||p.desc||"";const tags=(p.tags&&Array.isArray(p.tags)?p.tags:(typeof p.tags==="string"?p.tags.split(",").map(t=>t.trim()).filter(Boolean):[]));const platform=p.platform||"both";const links=[];if(p.links&&Array.isArray(p.links))links.push(...p.links);else{if(p.link)links.push({url:p.link,label:"Download"});if(p.link_2)links.push({url:p.link_2,label:"Mirror"});if(p.link_3)links.push({url:p.link_3,label:"Mirror 2"})}const HI={pixeldrain:"pixeldrain",gofile:"gofile",mediafire:"mediafire",dropbox:"default",google:"default",mega:"default"};function gi(u){const l=u.toLowerCase();for(const[k,v]of Object.entries(HI)){if(l.includes(k))return v}return"default"}const dl=links.length>0?links.map((l,i)=>{const ic=gi(l.url||l);const lb=l.label||(links.length===1?"Download":"Mirror "+(i+1));const u=l.url||l;return'<a href="'+u+'" target="_blank" class="dl-btn"><div class="dl-icon '+ic+'"><i class="fas fa-download"></i></div><div class="dl-info"><strong>'+lb+'</strong><span>'+new URL(u).hostname+'</span></div><div class="dl-arrow"><i class="fas fa-external-link-alt"></i></div></a>'}).join(""):'<p style="color:var(--gray-dark);font-size:0.85rem;text-align:center">No download links available yet.</p>';const pw=(p.password&&p.password!=="star")?'<div class="preset-password"><i class="fas fa-lock"></i><span>Password:</span><code onclick="navigator.clipboard.writeText(\''+p.password+'\')">'+p.password+"</code></div>":"";document.getElementById("presetContent").innerHTML='<div class="preset-card"><div class="preset-header">'+(p.thumbnail?'<div class="preset-thumb"><img src="'+p.thumbnail+'" alt="'+p.name+'" onerror="this.parentElement.innerHTML=\'<div class=thumb-placeholder><i class=fas '+icon+'></i></div>\'"></div>':'<div class="preset-thumb"><div class="thumb-placeholder"><i class="fas '+icon+'"></i></div></div>')+'<span class="preset-cat-badge">'+cat+'</span><h1>'+p.name+'</h1><div class="preset-creator">'+(av?'<img src="'+av+'" alt="">':'<div class="creator-fb"><i class="fas fa-user"></i></div>')+"<span>by <strong>"+nick+"</strong></span></div>"+(tags.length>0?'<div class="preset-tags">'+tags.map(t=>"<span>"+t+"</span>").join("")+"</div>":"")+'</div><div class="preset-body">'+(desc?'<p class="preset-desc">'+desc+"</p>":"")+'<div class="preset-meta"><div class="preset-meta-item"><div class="meta-icon"><i class="fas fa-tag"></i></div><div class="meta-label">Category</div><div class="meta-value">'+cat+'</div></div><div class="preset-meta-item"><div class="meta-icon"><i class="fas fa-desktop"></i></div><div class="meta-label">Platform</div><div class="meta-value">'+(platform==="win"?"Windows":platform==="mac"?"Mac":"Both")+'</div></div><div class="preset-meta-item"><div class="meta-icon"><i class="fas fa-download"></i></div><div class="meta-label">Downloads</div><div class="meta-value">'+(p.downloads||0)+"</div></div></div>"+pw+'<div class="preset-downloads">'+dl+"</div></div></div>"}
+    (async()=>{const p=new URLSearchParams(location.search);const id=p.get("id");if(!id)return E("Preset ID missing");let d=null;try{const r=await fetch("/api/products?id="+id);if(r.ok){const j=await r.json();if(j&&j.id)d=j}}catch(e){}if(!d&&window.presetsData)d=window.presetsData.find(x=>x.id===id);if(!d&&window.pluginsData)d=window.pluginsData.find(x=>x.id===id);if(!d)return E("Preset not found");R(d)})();
+    function E(m){document.getElementById("load").style.display="none";document.getElementById("err").style.display="block";document.getElementById("errMsg").textContent=m}
+    function R(p){document.getElementById("load").style.display="none";document.getElementById("root").style.display="block";document.title=(p.name||"Preset")+" - Zyrex";const L={"after-effects":"After Effects","premiere-pro":"Premiere Pro","photoshop":"Photoshop","video-star":"Video Star","topaz-labs":"Topaz Labs","others":"Others"};const I={"after-effects":"fa-film","premiere-pro":"fa-video","photoshop":"fa-image","video-star":"fa-star","topaz-labs":"fa-gem","others":"fa-folder"};const cat=L[p.category]||"Preset";const ic=I[p.category]||"fa-sliders";const av=p.creator_avatar||"";const nick=p.creator_nickname||p.author_name||"Zyrex Creator";const desc=p.description||p.desc||"";const tags=Array.isArray(p.tags)?p.tags:(typeof p.tags==="string"?p.tags.split(",").map(t=>t.trim()).filter(Boolean):[]);const platform=p.platform||"both";const links=[];if(Array.isArray(p.links))links.push(...p.links);else{if(p.link)links.push({url:p.link,label:"Download"});if(p.link_2)links.push({url:p.link_2,label:"Mirror"});if(p.link_3)links.push({url:p.link_3,label:"Mirror 2"})}const H={pixeldrain:"pixeldrain",gofile:"gofile",mediafire:"mediafire",dropbox:"default",google:"default",mega:"default"};function gi(u){const l=u.toLowerCase();for(const[k,v]of Object.entries(H))if(l.includes(k))return v;return"default"}const dlLinks=links.slice(1).map((l,i)=>{const lb=l.label||"Mirror "+(i+1);return'<a href="'+(l.url||l)+'" target="_blank" class="dll a3"><i class="fas fa-download"></i> '+lb+' <span>'+new URL(l.url||l).hostname+"</span></a>"}).join("");const pwHtml=(p.password&&p.password!=="star")?'<div class="pw"><i class="fas fa-lock"></i><span>Password:</span><code onclick="navigator.clipboard.writeText(\''+p.password.replace(/'/g,"\\'")+"');this.textContent='Copied!';setTimeout(()=>this.textContent='"+p.password.replace(/'/g,"\\'")+"',1500)\">"+p.password+"</code></div>":"";const filesHtml=p.files&&p.files.length>0?p.files.map(f=>{const sz=f.size?(f.size>1048576?(f.size/1048576).toFixed(1)+" MB":(f.size/1024).toFixed(1)+" KB"):"--";return'<div class="fi"><div class="fl"><i class="fas fa-file-lines"></i><span title="'+f.name+'">'+f.name+'</span></div><span class="fs">'+sz+"</span></div>"}).join(""):"";const upHtml=p.uploader_name?'<div class="up a3">'+(p.uploader_avatar?'<img src="'+p.uploader_avatar+'" alt="">':'<div class="ufb"><i class="fab fa-discord"></i></div>')+"<div><strong>"+p.uploader_name+"</strong><span>Community Uploader</span></div></div>":"";const heroImg=p.thumbnail?'<img src="'+p.thumbnail+'" alt="'+p.name+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">':"";const ph='<div class="ph" style="'+(p.thumbnail?"display:none":"")+'"><i class="fas '+ic+'"></i></div>';document.getElementById("root").innerHTML='<div class="hero a1"><div class="hero-m">'+heroImg+ph+'</div><div class="hero-b"><span class="badge"><i class="fas '+ic+'"></i> '+cat+'</span><span class="badge badge-f"><i class="fas fa-circle-check"></i> Free</span></div></div><div class="ir a2"><div class="ir-l"><h1>'+p.name+'</h1>'+(tags.length?'<div class="tags">'+tags.map(t=>"<span>"+t+"</span>").join("")+"</div>":"")+'</div><div class="cr">'+(av?'<img src="'+av+'" alt="">':'<div class="cfb"><i class="fas fa-user"></i></div>')+"<div><strong>"+nick+"</strong>"+(p.creator_social_url?'<a href="'+p.creator_social_url+'" target="_blank"><i class="fas fa-external-link-alt"></i> Profile</a>':'<span style="font-size:.7rem;color:var(--gray-dark)">Creator</span>')+"</div></div></div>"+upHtml+(links.length>0?'<a href="'+links[0].url+'" target="_blank" class="dlb a3"><i class="fas fa-cloud-arrow-down"></i> Download Now</a>'+(links.length>1?'<div class="dlg a3">'+dlLinks+"</div>":"")+'<div class="dls a3"><i class="fas fa-download"></i> '+(p.downloads||0)+" downloads</div>":'<div class="card a3" style="text-align:center;color:var(--gray-dark)"><i class="fas fa-box-open" style="font-size:2rem;display:block;margin-bottom:10px;opacity:.3"></i>No download links added yet.</div>')+pwHtml+'<div class="grid a3"><div>'+(desc?'<div class="card"><div class="ct"><i class="fas fa-align-left"></i> Description</div><div class="desc">'+desc.replace(/\n/g,"<br>")+"</div></div>":"")+(p.files&&p.files.length>0?'<div class="card"><div class="ct"><i class="fas fa-folder-open"></i> Files ('+p.files.length+')</div><div class="files">'+filesHtml+"</div></div>":"")+'</div><div><div class="card"><div class="ct"><i class="fas fa-circle-info"></i> Details</div><div class="st"><span class="l"><i class="fas fa-tag"></i> Category</span><span class="v">'+cat+'</span></div><div class="st"><span class="l"><i class="fas fa-desktop"></i> Platform</span><span class="v">'+(platform==="win"?"Windows":platform==="mac"?"Mac":"Both")+"</span></div><div class=\"st\"><span class=\"l\"><i class=\"fas fa-download\"></i> Downloads</span><span class=\"v\">"+(p.downloads||0)+(p.created_at?'</span></div><div class="st"><span class="l"><i class="fas fa-calendar"></i> Added</span><span class="v">'+new Date(p.created_at).toLocaleDateString("en-US",{year:"numeric",month:"short",day:"numeric"}):"")+"</span></div></div></div></div>"}
     </script>
 </body>
 </html>
