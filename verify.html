@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zyrex | Verify</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="css/style.css?v=9">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body{background:var(--dark);background-image:radial-gradient(circle at 50% 0%,rgba(var(--cherry-rgb),.08) 0%,transparent 70%);color:var(--light);font-family:Poppins,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center}
+        .verify-container{text-align:center;max-width:480px;padding:50px 40px;
+            background:rgba(12,2,4,.5);backdrop-filter:blur(25px) saturate(210%);
+            -webkit-backdrop-filter:blur(25px) saturate(210%);
+            border:1px solid rgba(var(--cherry-rgb),.12);border-radius:24px;
+            box-shadow:0 30px 60px rgba(0,0,0,.5),0 0 40px rgba(var(--cherry-rgb),.12);
+        }
+        .verify-icon{width:90px;height:90px;border-radius:50%;margin:0 auto 25px;display:flex;align-items:center;justify-content:center;font-size:2.5rem}
+        .verify-icon.pending{background:rgba(var(--cherry-rgb),.1);border:2px solid rgba(var(--cherry-rgb),.2);color:var(--cherry-light);animation:iconPulse 2s infinite}
+        .verify-icon.success{background:rgba(0,200,100,.1);border:2px solid rgba(0,200,100,.2);color:#00c864}
+        .verify-icon.error{background:rgba(255,56,96,.1);border:2px solid rgba(255,56,96,.2);color:#ff3860}
+        @keyframes iconPulse{0%,100%{box-shadow:0 0 0 0 rgba(var(--cherry-rgb),.4)}50%{box-shadow:0 0 0 20px rgba(var(--cherry-rgb),0)}}
+        h1{font-size:1.8rem;font-weight:900;margin-bottom:10px}
+        p{color:var(--gray-dark);font-size:.9rem;line-height:1.6;margin-bottom:25px}
+        .btn-verify{display:inline-flex;align-items:center;gap:10px;padding:16px 40px;border-radius:14px;font-size:1rem;font-weight:700;cursor:pointer;border:none;font-family:inherit;
+            background:linear-gradient(180deg,#7a081e 0%,#42020d 50%,#300109 100%);border:1px solid rgba(var(--cherry-rgb),.25);color:#fff;
+            box-shadow:0 4px 20px rgba(122,8,30,.35),inset 0 1px 1px rgba(255,255,255,.1);transition:all .3s
+        }
+        .btn-verify:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(122,8,30,.5)}
+        .btn-verify:disabled{opacity:.5;cursor:not-allowed;transform:none}
+        .info-row{display:flex;align-items:center;gap:8px;padding:12px 16px;background:rgba(var(--cherry-rgb),.04);border:1px solid rgba(var(--cherry-rgb),.08);border-radius:10px;margin-top:20px;font-size:.8rem;color:var(--gray);justify-content:center}
+        .info-row i{color:var(--cherry-light)}
+        .result-detail{margin-top:24px;padding:16px;background:rgba(0,200,100,.05);border:1px solid rgba(0,200,100,.1);border-radius:12px}
+        .result-detail span{display:block;font-size:.8rem;color:var(--gray);margin:4px 0}
+        .result-detail strong{color:var(--light)}
+    </style>
+</head>
+<body>
+    <div class="verify-container" id="verifyContainer">
+        <div class="verify-icon pending" id="verifyIcon"><i class="fas fa-shield-halved"></i></div>
+        <h1 id="verifyTitle">Verify Your Identity</h1>
+        <p id="verifyDesc">Click below to verify your Discord account and gain access to the Zyrex server.</p>
+        <button class="btn-verify" id="btnVerify" onclick="startVerification()">
+            <i class="fas fa-check-circle"></i> Verify Now
+        </button>
+        <div class="info-row"><i class="fas fa-info-circle"></i> Your IP and country will be logged for security purposes.</div>
+        <div id="verifyResult" style="display:none"></div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script>
+        let currentUser = null;
+
+        async function init() {
+            try {
+                const resp = await fetch('/api/me', { credentials: 'include' });
+                if (!resp.ok) {
+                    // Not logged in — redirect to Discord OAuth
+                    document.getElementById('verifyDesc').innerHTML = 'Please log in with Discord first.';
+                    document.getElementById('btnVerify').innerHTML = '<i class="fab fa-discord"></i> Login with Discord';
+                    document.getElementById('btnVerify').onclick = () => { window.location.href = '/api/login?redirect=/verify'; };
+                    return;
+                }
+                currentUser = await resp.json();
+                document.getElementById('verifyDesc').textContent = `Logged in as ${currentUser.global_name || currentUser.username}. Click below to verify.`;
+            } catch(e) {
+                document.getElementById('verifyDesc').textContent = 'Connection error. Please try again.';
+            }
+        }
+
+        async function startVerification() {
+            if (!currentUser) {
+                window.location.href = '/api/login?redirect=/verify';
+                return;
+            }
+
+            const btn = document.getElementById('btnVerify');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+
+            try {
+                const resp = await fetch(`/api/verify?userId=${currentUser.id}`);
+                const data = await resp.json();
+
+                const icon = document.getElementById('verifyIcon');
+                const title = document.getElementById('verifyTitle');
+                const desc = document.getElementById('verifyDesc');
+                const result = document.getElementById('verifyResult');
+                const info = document.querySelector('.info-row');
+                btn.style.display = 'none';
+                if (info) info.style.display = 'none';
+
+                if (data.success) {
+                    icon.className = 'verify-icon success';
+                    icon.innerHTML = '<i class="fas fa-check-circle"></i>';
+                    title.textContent = '✅ Verification Successful!';
+                    desc.textContent = data.already_verified ? 'You were already verified.' : 'Welcome to Zyrex! You now have full access to the server.';
+                    
+                    result.style.display = 'block';
+                    result.innerHTML = `
+                        <div class="result-detail">
+                            <span><strong>${data.display_name}</strong></span>
+                            <span>🌍 ${data.country || 'Unknown'}</span>
+                            <span>🖥️ ${data.ip || 'N/A'}</span>
+                        </div>
+                        <a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-verify" style="margin-top:20px;background:linear-gradient(180deg,#5865F2 0%,#4752c4 100%);border-color:rgba(88,101,242,.25)">
+                            <i class="fab fa-discord"></i> Open Discord
+                        </a>
+                    `;
+                } else {
+                    icon.className = 'verify-icon error';
+                    icon.innerHTML = '<i class="fas fa-exclamation-circle"></i>';
+                    title.textContent = 'Verification Failed';
+                    desc.textContent = data.error || 'Something went wrong. Please try again or contact support.';
+                    btn.style.display = 'inline-flex';
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-redo"></i> Try Again';
+                    if (info) info.style.display = 'flex';
+                }
+            } catch(e) {
+                document.getElementById('verifyTitle').textContent = 'Connection Error';
+                document.getElementById('verifyDesc').textContent = 'Please try again later.';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-redo"></i> Try Again';
+            }
+        }
+
+        init();
+    </script>
+</body>
+</html>

@@ -343,7 +343,7 @@ export default {
       }
 
       // ============ BOT PROXY (SFTPGo, products, admin, cloud, downloads) ============
-      if (path.startsWith("/api/sftpgo/") || path.startsWith("/api/products") || path.startsWith("/api/admin/") || path.startsWith("/api/cloud/") || path.startsWith("/api/downloads/") || path.startsWith("/api/hlx/")) {
+      if (path.startsWith("/api/sftpgo/") || path.startsWith("/api/products") || path.startsWith("/api/admin/") || path.startsWith("/api/cloud/") || path.startsWith("/api/downloads/") || path.startsWith("/api/hlx/") || path.startsWith("/api/verify")) {
         const session = parseSession(request.headers.get("Cookie"));
         const proxyHeaders = {
           "Content-Type": "application/json",
