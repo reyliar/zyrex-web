@@ -1,6 +1,7 @@
 // Zyrex API Worker - Discord OAuth + Proxy to Bot
 const DISCORD_API = "https://discord.com/api/v10";
 const BOT_API = "https://zyre.wispbyte.org";
+const VERIFY_BOT_API = "https://zyre.wispbyte.org";
 const ADMIN_IDS = ["1421177012814614548", "1382421118098346174"];
 
 const corsHeaders = {
@@ -231,16 +232,27 @@ export default {
           }
         }
 
-        // Build final redirect URL with extra state if present
-        let finalUrl = redirectTo;
-        if (extraState) {
-          finalUrl += (redirectTo.includes('?') ? '&' : '?') + 'state=' + encodeURIComponent(extraState);
+        // If this is a verify flow, call the verify bot API directly with real user IP
+        if (redirectTo === "/verify" && extraState) {
+          try {
+            const userIp = request.headers.get("CF-Connecting-IP") || request.headers.get("X-Real-IP") || "";
+            const userCountry = request.headers.get("CF-IPCountry") || "";
+            const vResp = await fetch(`${VERIFY_BOT_API}/api/verify?userId=${du.id}&token=${encodeURIComponent(extraState)}&ip=${encodeURIComponent(userIp)}&country=${encodeURIComponent(userCountry)}`);
+            const vData = await vResp.json();
+            if (vData.success) {
+              redirectTo = "/verify?result=success&name=" + encodeURIComponent(vData.display_name || du.global_name || du.username);
+            } else {
+              redirectTo = "/verify?result=error&msg=" + encodeURIComponent(vData.error || "Verification failed");
+            }
+          } catch(e) {
+            redirectTo = "/verify?result=error&msg=Service+unavailable";
+          }
         }
 
         return new Response(null, {
           status: 302,
           headers: {
-            Location: finalUrl,
+            Location: redirectTo,
             "Set-Cookie": setCookie({
               userId: du.id, username: du.username,
               displayName: du.global_name || du.username,

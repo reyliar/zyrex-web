@@ -47,94 +47,88 @@
         <div id="verifyResult" style="display:none"></div>
     </div>
 
-    <script src="js/auth.js"></script>
     <script>
-        let currentUser = null;
-        const VERIFY_TOKEN_KEY = 'zyrex_verify_token';
-
-        async function init() {
-            const params = new URLSearchParams(window.location.search);
-            const oauthToken = params.get('state');
-            const storedToken = localStorage.getItem(VERIFY_TOKEN_KEY);
-
-            try {
-                const resp = await fetch('/api/me', { credentials: 'include' });
-                if (!resp.ok) { showLoginScreen(); return; }
-                currentUser = await resp.json();
-
-                if (oauthToken && storedToken && oauthToken === storedToken) {
-                    localStorage.removeItem(VERIFY_TOKEN_KEY);
-                    window.history.replaceState({}, '', '/verify');
-                    await startVerification(oauthToken);
-                } else {
-                    localStorage.removeItem(VERIFY_TOKEN_KEY);
-                    showLoginScreen();
-                }
-            } catch(e) { showLoginScreen(); }
-        }
-
-        function showLoginScreen() {
-            document.getElementById('verifyIcon').className = 'verify-icon pending';
-            document.getElementById('verifyIcon').innerHTML = '<i class="fas fa-shield-halved"></i>';
-            document.getElementById('verifyTitle').textContent = 'Verification Required';
-            document.getElementById('verifyDesc').textContent = 'Please log in with Discord to complete identity verification and access the Zyrex server.';
-            const btn = document.getElementById('btnVerify');
-            btn.innerHTML = '<i class="fab fa-discord"></i> Login with Discord';
-            btn.onclick = () => {
-                const token = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36);
-                localStorage.setItem(VERIFY_TOKEN_KEY, token);
-                window.location.href = '/api/login?redirect=/verify?state=' + token;
-            };
-            btn.style.display = 'inline-flex';
-            btn.disabled = false;
-            document.getElementById('verifyResult').style.display = 'none';
-        }
-
-        async function startVerification(token) {
-            if (!currentUser || !token) { showLoginScreen(); return; }
-            const btn = document.getElementById('btnVerify');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
-            btn.style.display = 'inline-flex';
-
-            try {
-                const resp = await fetch(`/api/verify?userId=${currentUser.id}&token=${encodeURIComponent(token)}`);
-                const data = await resp.json();
-                const icon = document.getElementById('verifyIcon');
-                const title = document.getElementById('verifyTitle');
-                const desc = document.getElementById('verifyDesc');
-                const result = document.getElementById('verifyResult');
-                btn.style.display = 'none';
-
-                if (data.success) {
-                    icon.className = 'verify-icon success';
-                    icon.innerHTML = '<i class="fas fa-check-circle"></i>';
-                    title.textContent = '✅ Verification Successful!';
-                    desc.textContent = data.already_verified ? 'You were already verified.' : 'Welcome to Zyrex! You now have full access to the server.';
-                    result.style.display = 'block';
-                    result.innerHTML = `<div class="result-detail"><span><strong>${data.display_name || currentUser.username}</strong></span></div>
-                        <a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-verify" style="margin-top:20px;background:linear-gradient(180deg,#5865F2 0%,#4752c4 100%);border-color:rgba(88,101,242,.25)"><i class="fab fa-discord"></i> Open Discord</a>`;
-                } else {
-                    icon.className = 'verify-icon error';
-                    icon.innerHTML = '<i class="fas fa-exclamation-circle"></i>';
-                    title.textContent = 'Verification Failed';
-                    desc.textContent = data.error || 'Invalid or expired verification link. Please try again.';
-                    btn.style.display = 'inline-flex';
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-redo"></i> Try Again';
-                    btn.onclick = () => showLoginScreen();
-                }
-            } catch(e) {
-                document.getElementById('verifyTitle').textContent = 'Connection Error';
-                document.getElementById('verifyDesc').textContent = 'The verification service is currently unavailable.';
-                btn.style.display = 'inline-flex';
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-redo"></i> Try Again';
-                btn.onclick = () => showLoginScreen();
+        // Robust URL param extraction — try search, hash, and full href
+        function getParam(p) {
+            // Try standard search params first
+            const sp = new URLSearchParams(window.location.search);
+            let v = sp.get(p);
+            if (v) return v;
+            // Try hash (sometimes params end up after #)
+            if (window.location.hash.includes('?')) {
+                const hp = new URLSearchParams(window.location.hash.split('?')[1]);
+                v = hp.get(p);
+                if (v) return v;
             }
+            // Try full href as last resort
+            try {
+                const up = new URLSearchParams(window.location.href.split('?')[1]?.split('#')[0]);
+                v = up.get(p);
+                if (v) return v;
+            } catch(e) {}
+            return null;
         }
 
-        init();
+        const result = getParam('result');
+        const name = getParam('name') || '';
+        const msg = getParam('msg') || '';
+
+        const icon = document.getElementById('verifyIcon');
+        const title = document.getElementById('verifyTitle');
+        const desc = document.getElementById('verifyDesc');
+        const btn = document.getElementById('btnVerify');
+        const resultDiv = document.getElementById('verifyResult');
+
+        function showSuccess(displayName) {
+            icon.className = 'verify-icon success';
+            icon.innerHTML = '<i class="fas fa-check-circle"></i>';
+            title.textContent = '✅ Verification Successful!';
+            desc.textContent = 'Welcome to Zyrex! You now have full access to the server.';
+            btn.style.display = 'none';
+            resultDiv.style.display = 'block';
+            const dn = displayName || name || 'User';
+            resultDiv.innerHTML = `<div class="result-detail"><span><strong>${dn}</strong></span></div>
+                <a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-verify" style="margin-top:20px;background:linear-gradient(180deg,#5865F2 0%,#4752c4 100%);border-color:rgba(88,101,242,.25)"><i class="fab fa-discord"></i> Open Discord</a>`;
+        }
+
+        function showError(errorMsg) {
+            icon.className = 'verify-icon error';
+            icon.innerHTML = '<i class="fas fa-exclamation-circle"></i>';
+            title.textContent = 'Verification Failed';
+            desc.textContent = errorMsg || 'Something went wrong.';
+            btn.innerHTML = '<i class="fas fa-redo"></i> Try Again';
+            btn.onclick = () => { window.location.href = '/verify'; };
+        }
+
+        function showLogin() {
+            icon.className = 'verify-icon pending';
+            icon.innerHTML = '<i class="fas fa-shield-halved"></i>';
+            title.textContent = 'Verification Required';
+            desc.textContent = 'Please log in with Discord to complete identity verification and access the Zyrex server.';
+            btn.innerHTML = '<i class="fab fa-discord"></i> Login with Discord';
+            btn.onclick = () => { window.location.href = '/api/login?redirect=/verify&state=verify'; };
+        }
+
+        if (result === 'success') {
+            showSuccess(name);
+        } else if (result === 'error') {
+            showError(msg);
+        } else {
+            // No result param — check if user is already logged in via cookie
+            fetch('/api/me', { credentials: 'include' })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.id && data.username) {
+                        // User is logged in, show success
+                        showSuccess(data.global_name || data.username);
+                    } else {
+                        showLogin();
+                    }
+                })
+                .catch(() => {
+                    showLogin();
+                });
+        }
     </script>
 </body>
 </html>

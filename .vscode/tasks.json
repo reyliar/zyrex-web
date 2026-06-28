@@ -196,6 +196,83 @@
 			"command": "npx.cmd wrangler pages deploy . --project-name zyrexweb --branch main --commit-dirty=true; git add -A; git commit -m 'Worker: OAuth state encodes redirect+token, callback decodes and redirects properly'; git push origin main",
 			"isBackground": false,
 			"problemMatcher": []
+		},
+		{
+			"label": "Deploy Worker",
+			"type": "shell",
+			"command": "Push-Location $env:TEMP; New-Item -ItemType Directory -Force -Path wrangler-deploy -ErrorAction SilentlyContinue | Out-Null; New-Item -ItemType Directory -Force -Path wrangler-deploy\\workers -ErrorAction SilentlyContinue | Out-Null; Copy-Item c:\\Users\\reyli\\Desktop\\zyrexweb\\workers\\api.js wrangler-deploy\\workers\\api.js -Force; Copy-Item c:\\Users\\reyli\\Desktop\\zyrexweb\\wrangler.workers.toml wrangler-deploy\\wrangler.toml -Force; Set-Location wrangler-deploy; npx.cmd wrangler deploy; Pop-Location",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Wrangler Deploy Worker",
+			"type": "shell",
+			"command": "Push-Location $env:TEMP; New-Item -Force -ItemType Directory -Path wrangler-d3 | Out-Null; New-Item -Force -ItemType Directory -Path wrangler-d3\\workers | Out-Null; Copy-Item c:\\Users\\reyli\\Desktop\\zyrexweb\\workers\\api.js wrangler-d3\\workers\\api.js -Force; Copy-Item c:\\Users\\reyli\\Desktop\\zyrexweb\\wrangler.workers.toml wrangler-d3\\wrangler.toml -Force; Set-Location wrangler-d3; npx wrangler deploy; Pop-Location",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "DeployWorker",
+			"type": "shell",
+			"command": "Set-Location $env:TEMP; New-Item -Force -ItemType Directory -Path wrangler-d4 | Out-Null; New-Item -Force -ItemType Directory -Path wrangler-d4\\workers | Out-Null; Copy-Item c:\\Users\\reyli\\Desktop\\zyrexweb\\workers\\api.js wrangler-d4\\workers\\api.js; Copy-Item c:\\Users\\reyli\\Desktop\\zyrexweb\\wrangler.workers.toml wrangler-d4\\wrangler.toml; Set-Location wrangler-d4; npx.cmd wrangler deploy; Set-Location c:\\Users\\reyli\\Desktop\\zyrexweb",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Deploy Site",
+			"type": "shell",
+			"command": "npx.cmd wrangler pages deploy . --project-name zyrexweb --branch main --commit-dirty=true",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "DeployWorker2",
+			"type": "shell",
+			"command": "Set-Location $env:TEMP\\wrangler-d4; Copy-Item c:\\Users\\reyli\\Desktop\\zyrexweb\\workers\\api.js workers\\api.js -Force; npx.cmd wrangler deploy; Set-Location c:\\Users\\reyli\\Desktop\\zyrexweb",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Git Push",
+			"type": "shell",
+			"command": "git add -A; git commit -m 'Verify: worker handles verification directly, no second login needed'; git push origin main",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Deploy Site",
+			"type": "shell",
+			"command": "npx.cmd wrangler pages deploy . --project-name zyrexweb --branch main --commit-dirty=true",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Deploy W",
+			"type": "shell",
+			"command": "Set-Location $env:TEMP\\wrangler-d4; Copy-Item c:\\Users\\reyli\\Desktop\\zyrexweb\\workers\\api.js workers\\api.js -Force; npx.cmd wrangler deploy; Set-Location c:\\Users\\reyli\\Desktop\\zyrexweb",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Deploy W",
+			"type": "shell",
+			"command": "Set-Location $env:TEMP\\wrangler-d4; Copy-Item c:\\Users\\reyli\\Desktop\\zyrexweb\\workers\\api.js workers\\api.js -Force; npx.cmd wrangler deploy; Set-Location c:\\Users\\reyli\\Desktop\\zyrexweb",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Deploy Site + Worker",
+			"type": "shell",
+			"command": "npx.cmd wrangler pages deploy . --project-name zyrexweb --branch main --commit-dirty=true",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Deploy W",
+			"type": "shell",
+			"command": "Set-Location $env:TEMP\\wrangler-d4; Copy-Item c:\\Users\\reyli\\Desktop\\zyrexweb\\workers\\api.js workers\\api.js -Force; npx.cmd wrangler deploy; Set-Location c:\\Users\\reyli\\Desktop\\zyrexweb",
+			"isBackground": false,
+			"problemMatcher": []
 		}
 	]
 }
