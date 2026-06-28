@@ -50,21 +50,27 @@
     <script src="js/auth.js"></script>
     <script>
         let currentUser = null;
-        let verificationDone = false;
+        const VERIFY_TOKEN_KEY = 'zyrex_verify_token';
 
         async function init() {
+            const params = new URLSearchParams(window.location.search);
+            const oauthToken = params.get('state');
+            const storedToken = localStorage.getItem(VERIFY_TOKEN_KEY);
+
             try {
                 const resp = await fetch('/api/me', { credentials: 'include' });
-                if (!resp.ok) {
-                    showLoginScreen();
-                    return;
-                }
+                if (!resp.ok) { showLoginScreen(); return; }
                 currentUser = await resp.json();
-                // Auto-verify since we just came from OAuth or user is logged in
-                await startVerification();
-            } catch(e) {
-                showLoginScreen();
-            }
+
+                if (oauthToken && storedToken && oauthToken === storedToken) {
+                    localStorage.removeItem(VERIFY_TOKEN_KEY);
+                    window.history.replaceState({}, '', '/verify');
+                    await startVerification(oauthToken);
+                } else {
+                    localStorage.removeItem(VERIFY_TOKEN_KEY);
+                    showLoginScreen();
+                }
+            } catch(e) { showLoginScreen(); }
         }
 
         function showLoginScreen() {
@@ -74,85 +80,57 @@
             document.getElementById('verifyDesc').textContent = 'Please log in with Discord to complete identity verification and access the Zyrex server.';
             const btn = document.getElementById('btnVerify');
             btn.innerHTML = '<i class="fab fa-discord"></i> Login with Discord';
-            btn.onclick = () => { window.location.href = '/api/login?redirect=/verify'; };
+            btn.onclick = () => {
+                const token = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2) + Date.now().toString(36);
+                localStorage.setItem(VERIFY_TOKEN_KEY, token);
+                window.location.href = '/api/login?redirect=/verify?state=' + token;
+            };
             btn.style.display = 'inline-flex';
             btn.disabled = false;
-            const info = document.querySelector('.info-row');
-            if (info) info.style.display = 'flex';
             document.getElementById('verifyResult').style.display = 'none';
         }
 
-        function showVerifyScreen() {
-            document.getElementById('verifyIcon').className = 'verify-icon pending';
-            document.getElementById('verifyIcon').innerHTML = '<i class="fas fa-shield-halved"></i>';
-            document.getElementById('verifyTitle').textContent = 'Verify Your Identity';
-            document.getElementById('verifyDesc').textContent = 
-                `Logged in as ${currentUser.global_name || currentUser.username}. Click below to verify your Discord account.`;
-            const btn = document.getElementById('btnVerify');
-            btn.innerHTML = '<i class="fas fa-check-circle"></i> Verify Now';
-            btn.onclick = startVerification;
-            btn.disabled = false;
-            btn.style.display = 'inline-flex';
-        }
-
-        async function startVerification() {
-            if (!currentUser) {
-                window.location.href = '/api/login?redirect=/verify?authed=1';
-                return;
-            }
-
+        async function startVerification(token) {
+            if (!currentUser || !token) { showLoginScreen(); return; }
             const btn = document.getElementById('btnVerify');
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+            btn.style.display = 'inline-flex';
 
             try {
-                const resp = await fetch(`/api/verify?userId=${currentUser.id}`);
+                const resp = await fetch(`/api/verify?userId=${currentUser.id}&token=${encodeURIComponent(token)}`);
                 const data = await resp.json();
-
                 const icon = document.getElementById('verifyIcon');
                 const title = document.getElementById('verifyTitle');
                 const desc = document.getElementById('verifyDesc');
                 const result = document.getElementById('verifyResult');
-                const info = document.querySelector('.info-row');
                 btn.style.display = 'none';
-                if (info) info.style.display = 'none';
 
                 if (data.success) {
                     icon.className = 'verify-icon success';
                     icon.innerHTML = '<i class="fas fa-check-circle"></i>';
                     title.textContent = '✅ Verification Successful!';
-                    desc.textContent = data.already_verified 
-                        ? 'You were already verified.' 
-                        : 'Welcome to Zyrex! You now have full access to the server.';
-                    
-                    verificationDone = true;
+                    desc.textContent = data.already_verified ? 'You were already verified.' : 'Welcome to Zyrex! You now have full access to the server.';
                     result.style.display = 'block';
-                    result.innerHTML = `
-                        <div class="result-detail">
-                            <span><strong>${data.display_name || currentUser.username}</strong></span>
-                            <span>🌍 ${data.country || 'Unknown'}</span>
-                            <span>🖥️ ${data.ip || 'N/A'}</span>
-                        </div>
-                        <a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-verify" style="margin-top:20px;background:linear-gradient(180deg,#5865F2 0%,#4752c4 100%);border-color:rgba(88,101,242,.25)">
-                            <i class="fab fa-discord"></i> Open Discord
-                        </a>
-                    `;
+                    result.innerHTML = `<div class="result-detail"><span><strong>${data.display_name || currentUser.username}</strong></span></div>
+                        <a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-verify" style="margin-top:20px;background:linear-gradient(180deg,#5865F2 0%,#4752c4 100%);border-color:rgba(88,101,242,.25)"><i class="fab fa-discord"></i> Open Discord</a>`;
                 } else {
                     icon.className = 'verify-icon error';
                     icon.innerHTML = '<i class="fas fa-exclamation-circle"></i>';
                     title.textContent = 'Verification Failed';
-                    desc.textContent = data.error || 'Something went wrong. Please try again or join our Discord for help.';
+                    desc.textContent = data.error || 'Invalid or expired verification link. Please try again.';
                     btn.style.display = 'inline-flex';
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fas fa-redo"></i> Try Again';
-                    if (info) info.style.display = 'flex';
+                    btn.onclick = () => showLoginScreen();
                 }
             } catch(e) {
                 document.getElementById('verifyTitle').textContent = 'Connection Error';
-                document.getElementById('verifyDesc').textContent = 'The verification service is currently unavailable. Please try again later or join Discord for help.';
+                document.getElementById('verifyDesc').textContent = 'The verification service is currently unavailable.';
                 btn.style.display = 'inline-flex';
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-redo"></i> Try Again';
+                btn.onclick = () => showLoginScreen();
             }
         }
 
