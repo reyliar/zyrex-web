@@ -418,7 +418,8 @@ export default {
         if (newUrl.pathname === "/") {
           newUrl.pathname = "/download.html";
         }
-        return env.ASSETS.fetch(newUrl);
+        // Fetch from Pages deployment (ASSETS binding not available in standalone Worker)
+        return fetch(`https://main.zyrexweb.pages.dev${newUrl.pathname}${newUrl.search}`);
       }
     }
     const path = url.pathname;
@@ -680,7 +681,8 @@ export default {
         const token = url.searchParams.get("token");
         if (!token) return json({ error: "Token required" }, 400);
         try {
-          const apiUrl = `https://storage.zyrexediting.xyz/api/files/validate?token=${encodeURIComponent(token)}`;
+          // Use peek=1 so token is NOT consumed here — only download consumes it
+          const apiUrl = `https://storage.zyrexediting.xyz/api/files/validate?token=${encodeURIComponent(token)}&peek=1`;
           const resp = await fetch(apiUrl, { headers: { "X-Auth-Token": "zyrex-files-api-2026" } });
           if (resp.ok) return json(await resp.json());
         } catch (e) { console.error("Token validation error:", e.message); }
@@ -730,7 +732,7 @@ export default {
         const token = url.searchParams.get("token");
         if (!token) return json({ error: "Token required" }, 400);
         const apiUrl = `https://storage.zyrexediting.xyz/api/files/download?token=${encodeURIComponent(token)}`;
-        const resp = await fetch(apiUrl);
+        const resp = await fetch(apiUrl, { headers: { "X-Auth-Token": "zyrex-files-api-2026" } });
         if (!resp.ok) return json({ success: false, error: "Download failed" }, resp.status);
         return new Response(resp.body, {
           status: resp.status,

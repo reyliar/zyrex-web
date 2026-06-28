@@ -41,17 +41,18 @@ def generate_download_token(discord_id, product_id, file_path):
         del download_tokens[t]
     return token
 
-def validate_token(token):
-    """Validate and consume a download token. Returns token data or None."""
+def validate_token(token, consume=True):
+    """Validate a download token. If consume=True, marks as used (one-time). If False, just checks validity."""
     data = download_tokens.get(token)
     if not data:
         return None
-    if data["used"]:
-        return None  # Already used
+    if data.get("used", False):
+        return None
     if time.time() - data["created_at"] > TOKEN_EXPIRY_SECONDS:
         del download_tokens[token]
-        return None  # Expired
-    data["used"] = True  # Mark as used (one-time)
+        return None
+    if consume:
+        data["used"] = True
     return data
 
 def get_sftpgo_username(discord_id):
@@ -207,7 +208,8 @@ class FileAPIHandler(BaseHTTPRequestHandler):
             if not token:
                 self._send_json({"success": False, "error": "Missing token"}, 400)
                 return
-            data = validate_token(token)
+            peek_only = params.get("peek", ["0"])[0] == "1"
+            data = validate_token(token, consume=not peek_only)
             if not data:
                 self._send_json({"success": False, "error": "Invalid or expired token"}, 404)
                 return
