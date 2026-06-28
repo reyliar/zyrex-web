@@ -59,7 +59,7 @@ function renderResources(items) {
         const downloads = item.downloads !== undefined ? item.downloads : 0;
         const descriptionText = item.description || item.desc || '';
         const shortDesc = descriptionText ? descriptionText.substring(0, 100) + (descriptionText.length > 100 ? '...' : '') : '';
-        return '<a href="product.html?id=' + item.id + '" class="rc glass-card-enhanced shimmer-sweep">' +
+        return '<a href="/product?id=' + item.id + '" class="rc glass-card-enhanced shimmer-sweep">' +
             '<div class="rc-img">' +
             '<div class="rimg" style="display:flex;align-items:center;justify-content:center">' +
             (item.thumbnail ? '<img src="' + item.thumbnail + '" alt="">' : (faviconUrl ? '<img src="' + faviconUrl + '" alt="" onerror="this.parentElement.innerHTML=\'<i class=\\\'fas fa-cube\\\' style=\\\'font-size:2.5rem;opacity:0.3\\\'></i>\'">' : '<i class="fas fa-cube" style="font-size:2.5rem;opacity:0.3"></i>')) +

@@ -919,7 +919,7 @@
             `;
             
             try {
-                const resp = await fetch('/api/sftpgo/detected-resources');
+                const resp = await fetch('/api/sftpgo/detected-resources', { credentials: 'include' });
                 const data = await resp.json();
                 if (data.success) {
                     userResources = data.resources || [];
@@ -988,7 +988,7 @@
             const select = document.getElementById('destinationEditorSelect');
             select.innerHTML = '<option value="">Loading editors...</option>';
             try {
-                const resp = await fetch('/api/products/destination-editors');
+                const resp = await fetch('/api/products/destination-editors', { credentials: 'include' });
                 const data = await resp.json();
                 if (data.success) {
                     select.innerHTML = '<option value="">Select destination editor...</option>' + 
@@ -1014,6 +1014,7 @@
                 const resp = await fetch('/api/products/create-editor', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
                     body: JSON.stringify({ name: folderName })
                 });
                 const data = await resp.json();
@@ -1071,6 +1072,7 @@
                 const resp = await fetch('/api/products/transfer', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
                     body: JSON.stringify({
                         source_editor: selectedSourceResource.editor,
                         source_resource: selectedSourceResource.resource,
