@@ -1,5 +1,14 @@
-/* ===================== COMPLETE RESOURCES DATA ===================== */
-const PASSWORD = 'star';
+/* ===================== PLUGINS & SOFTWARE DATA =====================
+ * Sources: codec.kyiv.ua (ad0be, avid), monkrus.ws, macked.app
+ * Password per source:
+ *   codec.kyiv.ua → mostly no password (VR4ALL only for old archives marked on site)
+ *   monkrus.ws → no password (torrent, pre-activated)
+ *   macked.app → no password (direct download)
+ * =================================================================== */
+
+// Per-source passwords
+const PW_CODEC = 'VR4ALL';
+const PW_MONKRUS = null; const PW_MACKED = null;
 
 function makeId(name) {
     return name.toLowerCase()
@@ -8,1160 +17,560 @@ function makeId(name) {
         .replace(/--+/g, '-');
 }
 
-const pluginsData = [
+window.pluginsData = [
+
     // ═══════════════════════════════════════════
-    // SOFTWARE - WINDOWS
+    // ADOBE SOFTWARE (from monkrus.ws & codec.kyiv.ua)
     // ═══════════════════════════════════════════
     {
-        id: makeId('After Effects 2026.0'),
-        name: 'After Effects 2026.0',
-        category: 'software',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Adobe After Effects 2026.0 full installer for Windows.',
-        notes: 'Use a VPN to bypass Pixeldrain transfer limit.',
+        id: makeId('Adobe Photoshop 2026 v27.8'),
+        name: 'Adobe Photoshop 2026 (v27.8)',
+        category: 'software', platform: 'win', password: null,
+        desc: 'Adobe Photoshop 2026 v27.8 Multilingual — the industry standard for image editing and graphic design. Full pre-activated installer by m0nkrus.',
+        notes: 'Pre-activated. No crack needed. Torrent download.',
         links: [
-            { url: 'https://pixeldrain.com/u/UtdWrXrr', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/QiYZ9s', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/d8gr3jf5xow0f1b/After_Effects_2026_-_satvrn.zip/file', label: 'MediaFire' }
+            { url: 'https://korsars.pro/viewtopic.php?t=141417', label: 'Korsars (torrent)' },
+            { url: 'https://tapochek.net/viewtopic.php?t=287311', label: 'Tapochek (torrent)' },
+            { url: 'https://uztracker.me/threads/71029', label: 'UZTracker (torrent)' }
         ]
     },
     {
-        id: makeId('After Effects 2025.6'),
-        name: 'After Effects 2025.6',
-        category: 'software',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Adobe After Effects 2025.6 full installer for Windows.',
+        id: makeId('Adobe Premiere Pro 2026 v26.3'),
+        name: 'Adobe Premiere Pro 2026 (v26.3)',
+        category: 'software', platform: 'win', password: null,
+        desc: 'Adobe Premiere Pro 2026 v26.3 Multilingual — professional video editing software. Full pre-activated installer by m0nkrus.',
+        notes: 'Pre-activated. Torrent download.',
         links: [
-            { url: 'https://pixeldrain.com/u/twZB4iTm', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/WoJwUu', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/vvtdsi96uuzrwhw/Adobe_After_Effects_2025.6_WIN_-_satvrn.7z/file', label: 'MediaFire' }
+            { url: 'https://korsars.pro/viewtopic.php?t=141277', label: 'Korsars (torrent)' },
+            { url: 'https://tapochek.net/viewtopic.php?t=287252', label: 'Tapochek (torrent)' },
+            { url: 'https://uztracker.me/threads/70666', label: 'UZTracker (torrent)' }
         ]
     },
     {
-        id: makeId('After Effects 2024.5'),
-        name: 'After Effects 2024.5',
-        category: 'software',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Adobe After Effects 2024.5 full installer for Windows.',
-        links: [
-            { url: 'https://pixeldrain.com/u/rJDt2Fzr', label: 'Pixeldrain' }
-        ]
+        id: makeId('Adobe After Effects 2026'),
+        name: 'Adobe After Effects 2026',
+        category: 'software', platform: 'win', password: null,
+        desc: 'Adobe After Effects 2026 — industry-standard motion graphics and visual effects software. m0nkrus pre-activated release.',
+        notes: 'Pre-activated. Download via torrent from monkrus.ws.',
+        links: [{ url: 'https://w18.monkrus.ws/search/label/After%20Effects', label: 'Monkrus (torrent)' }]
     },
     {
-        id: makeId('Premiere Pro 2026'),
-        name: 'Premiere Pro 2026',
-        category: 'software',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Adobe Premiere Pro 2026 full installer for Windows.',
-        links: [
-            { url: 'https://pixeldrain.com/u/Gb78gPNE', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/ZHoK4E', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/sl5o2ggrblgkeup/Premiere_Pro_2026_-_satvrn.zip/file', label: 'MediaFire' }
-        ]
+        id: makeId('After Effects 2026 v26.0 Direct'),
+        name: 'After Effects 2026 (v26.0)',
+        category: 'software', platform: 'win', password: null,
+        desc: 'Adobe After Effects 2026 v26.0.0 — direct download for Windows.',
+        links: [{ url: 'https://is12.arfiles.net/After.Effects.2026.v26.0.0.rar', label: 'ArFiles (direct)' }]
     },
     {
-        id: makeId('Premiere Pro 2025.5'),
-        name: 'Premiere Pro 2025.5',
-        category: 'software',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Adobe Premiere Pro 2025.5 full installer for Windows.',
-        links: [
-            { url: 'https://pixeldrain.com/u/dV633qWx', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/lgjNuL', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/ird28gnna2yaush/Premiere.Pro.2025.5_Win_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
+        id: makeId('After Effects 2025 v25.5'),
+        name: 'After Effects 2025 (v25.5)',
+        category: 'software', platform: 'win', password: null,
+        desc: 'Adobe After Effects 2025 v25.5 — direct download for Windows.',
+        links: [{ url: 'https://is2.arfiles.net/After_Effects_25.5.rar', label: 'ArFiles (direct)' }]
     },
     {
-        id: makeId('Premiere Pro 2024.0'),
-        name: 'Premiere Pro 2024.0',
-        category: 'software',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Adobe Premiere Pro 2024.0 full installer for Windows.',
-        links: [
-            { url: 'https://pixeldrain.com/u/rQynW7a1', label: 'Pixeldrain' }
-        ]
+        id: makeId('After Effects 2024 v24.5'),
+        name: 'After Effects 2024 (v24.5)',
+        category: 'software', platform: 'win', password: null,
+        desc: 'Adobe After Effects 2024 v24.5.0.052 — direct download for Windows.',
+        links: [{ url: 'https://is14.arfiles.net/Adobe_After_Effects_2024_24.5.0.052.rar', label: 'ArFiles (direct)' }]
     },
     {
-        id: makeId('Media Encoder 2026.0'),
-        name: 'Media Encoder 2026.0',
-        category: 'software',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Adobe Media Encoder 2026.0 for Windows.',
-        links: [
-            { url: 'https://pixeldrain.com/u/8tSnCi3Q', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/KdgyhI', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/oc0p0kc7bcv3jko/Media_Encoder_2026_Win_-_satvrn.zip/file', label: 'MediaFire' }
-        ]
+        id: makeId('After Effects 2023 v23.2'),
+        name: 'After Effects 2023 (v23.2)',
+        category: 'software', platform: 'win', password: null,
+        desc: 'Adobe After Effects 2023 x64 — direct download for Windows.',
+        links: [{ url: 'https://download2268.mediafire.com/2yxtio5f1yzg7ssUS1neC2E8Ga-Y4zd8ZsBWrqKQlNV5Ez-hRbkqyU25U7pyzwoEW9pdi56mkDjoWGmyk3ubPF5l4R6Qk6KWFUbDtrZ3GAOhE678boAnlzyC2IwLmxrR7721SxqlCG9ndfIvJT4dcdQeUGPq_KWMiUvUG5SIRJQ/0b0dy18qbzp12ju/Adobe_After_Effects_2023_x64.rar', label: 'MediaFire (direct)' }]
     },
     {
-        id: makeId('Media Encoder 2025.6'),
-        name: 'Media Encoder 2025.6',
-        category: 'software',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Adobe Media Encoder 2025.6 for Windows.',
-        links: [
-            { url: 'https://pixeldrain.com/u/eMvbY8bn', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/a2ty1b', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/1vdz37eji47hsw3/Media.Encoder.2025.6_WIN_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
+        id: makeId('After Effects 2022 v22.6'),
+        name: 'After Effects 2022 (v22.6)',
+        category: 'software', platform: 'win', password: null,
+        desc: 'Adobe After Effects 2022 v22.6.0.64 Multilingual — direct download for Windows.',
+        links: [{ url: 'https://ins2.arfiles.net/Adobe%20After%20Effects%202022%20v22.6.0.64%20(x64)%20Multilingual.zip', label: 'ArFiles (direct)' }]
     },
     {
-        id: makeId('Media Encoder 2024.5'),
-        name: 'Media Encoder 2024.5',
-        category: 'software',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Adobe Media Encoder 2024.5 for Windows.',
-        links: [
-            { url: 'https://pixeldrain.com/u/zZGskAC2', label: 'Pixeldrain' }
-        ]
+        id: makeId('After Effects 2021 v18.4'),
+        name: 'After Effects 2021 (v18.4)',
+        category: 'software', platform: 'win', password: null,
+        desc: 'Adobe After Effects 2021 v18.4.1.4 x64 — direct download for Windows.',
+        links: [{ url: 'https://www.mediafire.com/file/dyjfzixm1trm5ji/AdobeAfterEffects2021v18.4.1.4x64.7z/file', label: 'MediaFire (direct)' }]
     },
     {
-        id: makeId('Photoshop 2026 v27.0'),
-        name: 'Photoshop 2026 (v27.0)',
-        category: 'software',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Adobe Photoshop 2026 v27.0 for Windows.',
-        links: [
-            { url: 'https://pixeldrain.com/u/phiG7Mgi', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/JsV4os', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/u1kx9092stsrbup/Photoshop.2026_%28v27.0%29_WIN_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
+        id: makeId('After Effects 2020 v17.5'),
+        name: 'After Effects 2020 (v17.5)',
+        category: 'software', platform: 'win', password: 'igetintopc.com',
+        desc: 'Adobe After Effects 2020 x64 — from igetintopc.com.',
+        notes: 'ZIP password: igetintopc.com',
+        links: [{ url: 'https://server81.safefilehosting.com:22372/igetintopc.com/download.php?url_str=https%3A%2F%2Fserver81.safefilehosting.com%2FiGetintopc.com%2Fdownload.php%3Ffilename%3D_igetintopc.com_Adobe_After_Effects_2020_x64.rar%26expires%3D1783272294%26signature%3D7a5c46964687fd4419672c0936496516&filename=_igetintopc.com_Adobe_After_Effects_2020_x64.rar&sdomain=igetintopc.com', label: 'iGetIntoPC (direct)' }]
     },
     {
-        id: makeId('Photoshop 2025 26.11'),
-        name: 'Photoshop 2025 (26.11)',
-        category: 'software',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Adobe Photoshop 2025 v26.11 for Windows.',
-        links: [
-            { url: 'https://pixeldrain.com/u/ZeYxQfv7', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/jP3UPU', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/o52rxal2mmemev0/Photoshop.2025_%2826.11%29_WIN_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
+        id: makeId('After Effects 2019 v16.1'),
+        name: 'After Effects 2019 (v16.1)',
+        category: 'software', platform: 'win', password: null,
+        desc: 'Adobe After Effects 2019 v16.1.2.55 Multilingual — direct download for Windows.',
+        links: [{ url: 'https://is7.arfiles.net/Adobe_After_Effects_2019_v16.1.2.55_Multilingual.zip', label: 'ArFiles (direct)' }]
     },
     {
-        id: makeId('Illustrator 2026 30.1'),
-        name: 'Illustrator 2026 (30.1)',
-        category: 'software',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Adobe Illustrator 2026 v30.1 for Windows.',
-        links: [
-            { url: 'https://pixeldrain.com/u/8nFDMFH7', label: 'Pixeldrain' }
-        ]
+        id: makeId('Adobe Lightroom Classic v15.4.1'),
+        name: 'Adobe Lightroom Classic v15.4.1',
+        category: 'software', platform: 'win', password: null,
+        desc: 'Adobe Lightroom Classic v15.4.1 Multilingual — powerful photo editing and organization tools. Pre-activated by m0nkrus.',
+        notes: 'Pre-activated. Torrent download.',
+        links: [{ url: 'https://korsars.pro/viewtopic.php?t=141388', label: 'Korsars (torrent)' }, { url: 'https://tapochek.net/viewtopic.php?t=287292', label: 'Tapochek (torrent)' }, { url: 'https://uztracker.me/threads/70840', label: 'UZTracker (torrent)' }]
     },
     {
-        id: makeId('Audition 2025.3'),
-        name: 'Audition 2025.3',
-        category: 'software',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Adobe Audition 2025.3 for Windows.',
-        links: [
-            { url: 'https://pixeldrain.com/u/ugKPR17g', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/l3zaWa', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/9b69n3wjg0d522s/Adobe_Audition_2025.3_WIN_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
+        id: makeId('Adobe Illustrator 2026 v30.6'),
+        name: 'Adobe Illustrator 2026 (v30.6)',
+        category: 'software', platform: 'win', password: null,
+        desc: 'Adobe Illustrator 2026 v30.6 Multilingual — vector graphics and illustration software. Pre-activated by m0nkrus.',
+        notes: 'Pre-activated. Torrent download.',
+        links: [{ url: 'https://korsars.pro/viewtopic.php?t=141342', label: 'Korsars (torrent)' }, { url: 'https://tapochek.net/viewtopic.php?t=287275', label: 'Tapochek (torrent)' }, { url: 'https://uztracker.me/threads/70726', label: 'UZTracker (torrent)' }]
     },
     {
-        id: makeId('Animate 24.0.12'),
-        name: 'Animate 2024 (24.0.12)',
-        category: 'software',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Adobe Animate 2024.0.12 for Windows.',
-        links: [
-            { url: 'https://pixeldrain.com/u/2cPkycEa', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/RGPI5t', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/qatz4usrjls1hck/Adobe_Animate_2024.0.12_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
+        id: makeId('Adobe InDesign 2026 v21.4.1'),
+        name: 'Adobe InDesign 2026 (v21.4.1)',
+        category: 'software', platform: 'win', password: null,
+        desc: 'Adobe InDesign 2026 v21.4.1 Multilingual — page design and layout for print and digital. Pre-activated by m0nkrus.',
+        notes: 'Pre-activated. Torrent download.',
+        links: [{ url: 'https://w18.monkrus.ws/2026/06/adobe-indesign-2026-v2141-multilingual.html', label: 'Torrent (monkrus.ws)' }]
     },
     {
-        id: makeId('DaVinci Resolve Studio 20 Patcher'),
-        name: 'DaVinci Resolve Studio 20 (Patcher)',
-        category: 'software',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Blackmagic DaVinci Resolve Studio 20.X Patcher for Windows.',
-        links: [
-            { url: 'https://pixeldrain.com/u/YnoEb6YJ', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/taeGSl', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/yl807ieicadd459/Davinci_Resolve_Patcher_WIN_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
+        id: makeId('Adobe Substance 3D Painter v12.1.0'),
+        name: 'Adobe Substance 3D Painter v12.1.0',
+        category: 'software', platform: 'win', password: null,
+        desc: 'Adobe Substance 3D Painter v12.1.0 Multilingual — 3D texturing tool for games, films, and design. Pre-activated by m0nkrus.',
+        notes: 'Pre-activated. Torrent download.',
+        links: [{ url: 'https://korsars.pro/viewtopic.php?t=141378', label: 'Korsars (torrent)' }, { url: 'https://tapochek.net/viewtopic.php?t=287291', label: 'Tapochek (torrent)' }]
     },
     {
-        id: makeId('Vegas Pro 23.0.0.278'),
-        name: 'Vegas Pro 23.0.0.278',
-        category: 'software',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'MAGIX Vegas Pro v23.0.0.278 with Emulator-R2R.',
-        links: [
-            { url: 'https://pixeldrain.com/u/RUGRd3V5', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/tNf0XL', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/1uiiqwf79cyp34l/MAGIX.VEGAS.Pro.v23.0.0.278.Incl.Emulator-R2R_WIN_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
+        id: makeId('Adobe Substance 3D Sampler v6.0.2'),
+        name: 'Adobe Substance 3D Sampler v6.0.2',
+        category: 'software', platform: 'win', password: null,
+        desc: 'Adobe Substance 3D Sampler v6.0.2 Multilingual — material creation from real-life images. Pre-activated by m0nkrus.',
+        notes: 'Pre-activated. Torrent download.',
+        links: [{ url: 'https://w18.monkrus.ws/2026/06/adobe-substance-3d-sampler-v602.html', label: 'Torrent (monkrus.ws)' }]
     },
     {
-        id: makeId('Vegas Pro Deep Learning 23.1.0.1'),
-        name: 'Vegas Pro Deep Learning 23.1.0.1',
-        category: 'software',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'MAGIX Vegas Pro Deep Learning model v23.1.0.1.',
-        links: [
-            { url: 'https://pixeldrain.com/u/NxYo5uS9', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/3QXp1O', label: 'GoFile' }
-        ]
+        id: makeId('Adobe Acrobat 2026 v26.1'),
+        name: 'Adobe Acrobat 2026 (v26.1)',
+        category: 'software', platform: 'win', password: null,
+        desc: 'Adobe Acrobat 2026 v26.1 x64 Multilingual — PDF creation and editing. Pre-activated by m0nkrus.',
+        notes: 'Pre-activated. Torrent download.',
+        links: [{ url: 'https://w18.monkrus.ws/2026/06/adobe-acrobat-2026-v26121691-x64.html', label: 'Torrent (monkrus.ws)' }]
     },
     {
-        id: makeId('Cinema 4D 2026.0'),
-        name: 'Cinema 4D 2026.0',
-        category: 'software',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Maxon Cinema 4D 2026.0 for Windows.',
-        links: [
-            { url: 'https://pixeldrain.com/u/yCTeaiZb', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/qMTdTy', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/5kvhw6foilzeu7g/Cinema_4D_2026.0_win_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
-    },
-    {
-        id: makeId('FL Studio 25.1.6'),
-        name: 'FL Studio 25.1.6',
-        category: 'software',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'FL Studio v25.1.6 Build 4997 Rev1.',
-        links: [
-            { url: 'https://pixeldrain.com/u/SruvC3je', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/AZJ0nB', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/xwtt5zt35rnxeps/FL_Studio_v25.1.6_Build_4997_Rev1_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
-    },
-    {
-        id: makeId('Serum 2.0.20'),
-        name: 'Serum 2.0.20',
-        category: 'software',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Xfer Records Serum v2.0.20 Synthesizer.',
-        links: [
-            { url: 'https://pixeldrain.com/u/67jHvDFi', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/G45dLz', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/xea1a2c5wm5oavj/Xfer.Records.Serum_v2.0.20_Win_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
-    },
-    {
-        id: makeId('Topaz Video Activator'),
-        name: 'Topaz Video Activator',
-        category: 'software',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Topaz Video AI Activator for Windows.',
-        links: [
-            { url: 'https://pixeldrain.com/u/82SR9mD4', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/bUEqsf', label: 'GoFile' }
-        ]
-    },
-    {
-        id: makeId('Topaz Photo Activator v2'),
-        name: 'Topaz Photo Activator v2',
-        category: 'software',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Topaz Photo AI Activator v2 for Windows.',
-        links: [
-            { url: 'https://pixeldrain.com/u/V17gKnNo', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/mxM6Dv', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file/3m2slwe7gm4t88w/Topaz+Photo+Activator+v2+(win)+-+satvrn.7z/file', label: 'MediaFire' }
-        ]
-    },
-    {
-        id: makeId('Topaz Gigapixel Activator'),
-        name: 'Topaz Gigapixel Activator',
-        category: 'software',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Topaz Gigapixel AI Activator for Windows.',
-        links: [
-            { url: 'https://pixeldrain.com/u/9q31KStN', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/4VZVz7', label: 'GoFile' }
-        ]
-    },
-    {
-        id: makeId('Marvelous Designer 2025.2.81'),
-        name: 'Marvelous Designer Enterprise 2025.2.81',
-        category: 'software',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Marvelous Designer Enterprise v2025.2.81.',
-        links: [
-            { url: 'https://pixeldrain.com/u/6ALNHXFB', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/qlbaIZ', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/gjjr5jyta4yhb8a/Marvelous_Designer_Enterprise_v2025.2.81_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
-    },
-    {
-        id: makeId('TouchDesigner Pro 2023'),
-        name: 'TouchDesigner Pro 2023.12230',
-        category: 'software',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'TouchDesigner Pro 2023.12230 for Windows.',
-        links: [
-            { url: 'https://pixeldrain.com/u/r8nW4cxx', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/RMPedp', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/bhs3ami4uqjxj9e/TouchDesigner_Pro_2023.12230_Win_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
-    },
-    {
-        id: makeId('Substance 3D Painter 11.1.2'),
-        name: 'Substance 3D Painter 11.1.2',
-        category: 'software',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Adobe Substance 3D Painter v11.1.2.',
-        links: [
-            { url: 'https://pixeldrain.com/u/kGP44cLy', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/DgVY26', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/y32cqto1107zwlj/Substance_3D_Painter_11.1.2_Win_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
-    },
-    {
-        id: makeId('Substance 3D Designer 15.1.2'),
-        name: 'Substance 3D Designer 15.1.2',
-        category: 'software',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Adobe Substance 3D Designer v15.1.2.',
-        links: [
-            { url: 'https://pixeldrain.com/u/xHJdTg2J', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/YBg0IG', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/xpvq5mrdzqmu9b1/Substance_3D_Designer_15.1.2_Win_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
+        id: makeId('Adobe Master Collection 2026 RUS-ENG v3'),
+        name: 'Adobe Master Collection 2026 RUS-ENG v3',
+        category: 'software', platform: 'win', password: null,
+        desc: 'Adobe Master Collection 2026 — all Adobe apps in one package. Pre-activated by m0nkrus.',
+        notes: 'Pre-activated. Full suite. Torrent download.',
+        links: [{ url: 'https://w18.monkrus.ws/2026/05/adobe-master-collection-2026-rus-eng-v3.html', label: 'Torrent (monkrus.ws)' }]
     },
 
     // ═══════════════════════════════════════════
-    // SOFTWARE - MAC
+    // AFTER EFFECTS PLUGINS (from codec.kyiv.ua/ad0be.html) — password: VR4ALL
     // ═══════════════════════════════════════════
     {
-        id: makeId('AE 2026.0 Mac'),
-        name: 'After Effects 2026.0 (M1+)',
-        category: 'software',
-        platform: 'mac',
-        password: PASSWORD,
-        desc: 'Adobe After Effects 2026.0 for Mac (M1+ only).',
-        links: [
-            { url: 'https://pixeldrain.com/u/QEdNp8VW', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/FX53aC', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/b1bebqg7eou8mk6/After_Effects_26.0_Mac_-_satvrn.zip/file', label: 'MediaFire' }
-        ]
+        id: makeId('Maxon Red Giant 2026.4.1'),
+        name: 'Maxon Red Giant 2026.4.1',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'Maxon Red Giant Complete 2026.4.1 — includes Trapcode Suite, Magic Bullet Suite, Universe, VFX Suite. The essential plugin collection for AE.',
+        notes: 'Compatible with AE 2025+. Includes Trapcode Particular, Magic Bullet Looks, Universe transitions.',
+        links: [{ url: 'https://fuckingfast.net/m8xfkjlm24lr', label: 'FuckingFast' }]
     },
     {
-        id: makeId('AE 2025.6 Mac'),
-        name: 'After Effects 2025.6 (M1+)',
-        category: 'software',
-        platform: 'mac',
-        password: PASSWORD,
-        desc: 'Adobe After Effects 2025.6 for Mac (M1+ only).',
-        links: [
-            { url: 'https://pixeldrain.com/u/nxqSEJm2', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/Roj7mG', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/uehha34jv5998r9/After_Effects_2025.6_Mac_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
+        id: makeId('BorisFX Continuum 2026.5 AE'),
+        name: 'BorisFX Continuum 2026.5 (AE)',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'BorisFX Continuum 2026.5 v19.5.4 — comprehensive VFX plugin suite with 300+ effects, transitions, and tools for After Effects.',
+        notes: 'Industry standard VFX suite. Includes Particle Illusion, Title Studio, and more.',
+        links: [{ url: 'https://fuckingfast.net/g33mdvvv0oxx', label: 'FuckingFast' }]
     },
     {
-        id: makeId('Premiere Pro 2026 Mac'),
-        name: 'Premiere Pro 2026.0 (M1+)',
-        category: 'software',
-        platform: 'mac',
-        password: PASSWORD,
-        desc: 'Adobe Premiere Pro 2026.0 for Mac (M1+ only).',
-        links: [
-            { url: 'https://pixeldrain.com/u/nMRpRMJ6', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/OeN8SR', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/kdelpozd3wcvpoh/Premiere_Pro_26.0_Mac_-_satvrn.zip/file', label: 'MediaFire' }
-        ]
+        id: makeId('BorisFX Sapphire AE 2026.5'),
+        name: 'BorisFX Sapphire AE 2026.5',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'BorisFX Sapphire 2026.5 for After Effects — 270+ visual effects and presets. Industry-standard glow, blur, and lighting effects.',
+        notes: 'Essential for professional editors. S_Glow, S_Blur, S_Shake are staples.',
+        links: [{ url: 'https://clicknupload.click/ndxiptqjlnl7/BorisFX.Sapphire.AE.2026.5.rar', label: 'ClicknUpload' }]
     },
     {
-        id: makeId('Premiere Pro 2025.5 Mac'),
-        name: 'Premiere Pro 2025.5 (M1+)',
-        category: 'software',
-        platform: 'mac',
-        password: PASSWORD,
-        desc: 'Adobe Premiere Pro 2025.5 for Mac (M1+ only).',
-        links: [
-            { url: 'https://pixeldrain.com/u/BULKmAMU', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/LshUGD', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/56gj933suh68b12/Premiere_Pro_2025.5_MacOS_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
+        id: makeId('BorisFX Mocha Pro AE 2026.5'),
+        name: 'BorisFX Mocha Pro AE 2026.5',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'BorisFX Mocha Pro 2026.5 for Adobe — award-winning planar tracking, rotoscoping, and object removal.',
+        notes: 'Industry standard for tracking and rotoscoping.',
+        links: [{ url: 'https://clicknupload.click/ma53cjej2biz/BorisFX.Mocha.Pro.Adobe.2026.5.0.rar', label: 'ClicknUpload' }]
     },
     {
-        id: makeId('Media Encoder 2026 Mac'),
-        name: 'Media Encoder 2026.0 (M1+)',
-        category: 'software',
-        platform: 'mac',
-        password: PASSWORD,
-        desc: 'Adobe Media Encoder 2026.0 for Mac (M1+ only).',
-        links: [
-            { url: 'https://pixeldrain.com/u/oaLpr4TK', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/VGIETT', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/f536hvd6fwcqi4w/Media_Encoder_26.0_Mac_-_satvrn.zip/file', label: 'MediaFire' }
-        ]
+        id: makeId('VideoCopilot Element 3D v2.2.2'),
+        name: 'VideoCopilot Element 3D v2.2.2',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'VideoCopilot Element 3D v2.2.2 — advanced 3D object rendering and animation inside After Effects. Import OBJ/C4D models.',
+        notes: 'One of the most popular AE plugins ever. 3D engine inside AE.',
+        links: [{ url: 'https://depositfiles.com/files/4g85m464s', label: 'DepositFiles' }]
     },
     {
-        id: makeId('Photoshop 2026 Mac'),
-        name: 'Photoshop 2026 v27.3 (M1+)',
-        category: 'software',
-        platform: 'mac',
-        password: PASSWORD,
-        desc: 'Adobe Photoshop 2026 v27.3 for Mac (M1+ only).',
-        links: [
-            { url: 'https://pixeldrain.com/u/mgTVLGt8', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/F4bJHv', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/vjhdj1k2bcq18yf/Photoshop_2026_%2827.3%29_Mac_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
+        id: makeId('VideoCopilot Optical Flares Pro v1.3.5'),
+        name: 'VideoCopilot Optical Flares Pro v1.3.5',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'VideoCopilot Optical Flares Pro v1.3.5 — realistic lens flare plugin with 3D occlusion, custom flare editor.',
+        notes: 'The go-to lens flare plugin for AE.',
+        links: [{ url: 'https://depositfiles.com/files/d980ysxep', label: 'DepositFiles' }]
     },
     {
-        id: makeId('Illustrator 2026 Mac'),
-        name: 'Illustrator 2026 v30.1 (M1+)',
-        category: 'software',
-        platform: 'mac',
-        password: PASSWORD,
-        desc: 'Adobe Illustrator 2026 v30.1 for Mac (M1+ only).',
-        links: [
-            { url: 'https://pixeldrain.com/u/soJ5fu54', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/6LopvU', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/yv4c965kw33cvk5/Illustrator_30.1_Mac_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
+        id: makeId('VideoCopilot Twitch v1.1'),
+        name: 'VideoCopilot Twitch v1.1',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'VideoCopilot Twitch v1.1 — glitch and distortion effects plugin for AE. Create analog-style glitches.',
+        links: [{ url: 'https://depositfiles.com/files/pmdg73mzl', label: 'DepositFiles' }]
     },
     {
-        id: makeId('DaVinci Resolve Mac'),
-        name: 'DaVinci Resolve Studio 20.3.1',
-        category: 'software',
-        platform: 'mac',
-        password: PASSWORD,
-        desc: 'DaVinci Resolve Studio v20.3.1 for Mac.',
-        links: [
-            { url: 'https://pixeldrain.com/u/xZk8cMgM', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/TpIaX3', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/eq7jr9frh8n7yf1/DaVinci_Resolve_Studio_v20.3.1_Mac_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
+        id: makeId('VideoCopilot Heat Distortion v1.0.31'),
+        name: 'VideoCopilot Heat Distortion v1.0.31',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'VideoCopilot Heat Distortion v1.0.31 — realistic heat haze and distortion effects for After Effects.',
+        links: [{ url: 'https://depositfiles.com/files/sq2pce2mu', label: 'DepositFiles' }]
     },
     {
-        id: makeId('Cinema 4D Mac'),
-        name: 'Cinema 4D 2024 (Mac)',
-        category: 'software',
-        platform: 'mac',
-        password: PASSWORD,
-        desc: 'Maxon Cinema 4D 2024.2 for Mac.',
-        links: [
-            { url: 'https://pixeldrain.com/u/4CGXwVDz', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/T4kBKa', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/87ymxa6j7hcapaq/C4D_2024.2_Mac_-_satvrn.zip/file', label: 'MediaFire' }
-        ]
+        id: makeId('Red Giant Universe 2026.0.1'),
+        name: 'Red Giant Universe 2026.0.1',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'Red Giant Universe 2026.0.1 — 80+ GPU-accelerated transitions, effects, and text tools. Now included in Maxon Red Giant.',
+        notes: 'Universe transitions and glows are editor favorites.',
+        links: [{ url: 'https://fuckingfast.net/si9i0iz1c49t', label: 'FuckingFast' }]
     },
     {
-        id: makeId('Topaz Video Patch Mac'),
-        name: 'Topaz Video Patch (Mac)',
-        category: 'software',
-        platform: 'mac',
-        password: PASSWORD,
-        desc: 'Topaz Video AI Patch for Mac.',
-        links: [
-            { url: 'https://pixeldrain.com/u/cUzwusXu', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/6ZX5aA', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/vcla59xj8xb9otj/Topaz_Video_Patch_Mac_-_satvrn.zip/file', label: 'MediaFire' }
-        ]
+        id: makeId('Dehancer Pro Ae/Pr v7.4.0'),
+        name: 'Dehancer Pro Ae/Pr v7.4.0',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'Dehancer Pro v7.4.0 for AE & Premiere Pro — film emulation, grain, halation, bloom, and color grading tools.',
+        notes: 'Excellent film emulation plugin.',
+        links: [{ url: 'https://clicknupload.click/gs3rvfqd6hc0/Dehancer.Pro.Ae.Pr.v7.4.0.rar', label: 'ClicknUpload' }]
     },
     {
-        id: makeId('TouchDesigner Mac'),
-        name: 'TouchDesigner 2023 (ARM)',
-        category: 'software',
-        platform: 'mac',
-        password: PASSWORD,
-        desc: 'TouchDesigner 2023.12230 for Mac (M1+ only).',
-        links: [
-            { url: 'https://pixeldrain.com/u/u3s2ZAfN', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/Pxzpxv', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/znk8clyc6aa14t0/TouchDesigner_2023.12230_%28ARM%29_MacOS_-_satvrn.zip/file', label: 'MediaFire' }
-        ]
+        id: makeId('Neat Video Pro AE v6.0.0'),
+        name: 'Neat Video Pro AE v6.0.0',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'Neat Video Pro v6.0.0 for AE — best-in-class video noise reduction. Remove noise and grain while preserving detail.',
+        notes: 'Best video denoiser on the market.',
+        links: [{ url: 'https://clicknupload.site/nk5fa5p4lwcm', label: 'ClicknUpload' }]
+    },
+    {
+        id: makeId('Topaz Video Pro v1.6.2'),
+        name: 'Topaz Video Pro v1.6.2',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'Topaz Video Pro v1.6.2 — AI-powered video enhancement. Upscale, denoise, deinterlace, and restore video quality.',
+        notes: 'AI upscaling up to 8K. Excellent for restoring old footage.',
+        links: [{ url: 'https://clicknupload.click/vek70t73fi0b/Topaz.Video.Pro.v1.6.2.rar', label: 'ClicknUpload' }]
+    },
+    {
+        id: makeId('RE:VisionFX Effections Plus v25.08'),
+        name: 'RE:VisionFX Effections Plus v25.08',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'RE:VisionFX Effections Plus v25.08 — includes Twixtor (slow motion), ReelSmart Motion Blur, DE:Noise, and more.',
+        notes: 'Twixtor is the industry standard for slow-motion.',
+        links: [{ url: 'https://katfile.com/5fb1hgoc0he4/REVisionFX.Effections.Plus.v25.8.rar.html', label: 'KatFile' }]
+    },
+    {
+        id: makeId('Rowbyte bundle v2025.8'),
+        name: 'Rowbyte Bundle v2025.8',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'Rowbyte plugin bundle v2025.8 — includes Plexus, Newton, and other creative AE plugins.',
+        notes: 'Plexus is great for data visualization and particle effects.',
+        links: [{ url: 'https://rapidgator.net/file/8612741086acce3aa76ec06e33f4ece8/Rowbyte.bundle.rar.html', label: 'RapidGator' }]
+    },
+    {
+        id: makeId('aescripts Paint & Stick v2.1.2'),
+        name: 'aescripts Paint & Stick v2.1.2',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'aescripts Paint & Stick v2.1.2 — paint and track objects in After Effects with realistic results.',
+        links: [{ url: 'https://rg.to/file/349310412017e738e6316b5d8ae4892d/Paint&Stick.v2.1.2.CE.rar.html', label: 'RapidGator' }]
+    },
+    {
+        id: makeId('DigiEffects Suite v3.0.2'),
+        name: 'DigiEffects Suite v3.0.2',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'DigiEffects Suite v3.0.2 — collection of creative plugins including Damage, Delirium, and more.',
+        links: [{ url: 'https://depositfiles.com/files/s96zeyjti', label: 'DepositFiles' }]
+    },
+    {
+        id: makeId('Digital Anarchy bundle 2025.5'),
+        name: 'Digital Anarchy Bundle 2025.5',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'Digital Anarchy bundle 2025.5 — includes Beauty Box, Flicker Free, and other video enhancement plugins.',
+        notes: 'Flicker Free is excellent for removing flicker from timelapse and slow-motion.',
+        links: [{ url: 'https://clicknupload.cfd/sqs8ljy6f1fv', label: 'ClicknUpload' }]
+    },
+    {
+        id: makeId('FXhome Ignite Pro v4.0'),
+        name: 'FXhome Ignite Pro v4.0',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'FXhome Ignite Pro v4.0 — 170+ VFX plugins for After Effects including glows, grading, and keying.',
+        links: [{ url: 'https://depositfiles.com/files/n3ejq5q2x', label: 'DepositFiles' }]
+    },
+    {
+        id: makeId('GraniteBay GBDeflicker v4.5.0'),
+        name: 'GraniteBay GBDeflicker v4.5.0',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'GraniteBay GBDeflicker v4.5.0 — remove flicker from video footage. Essential for timelapse and slow-motion.',
+        links: [{ url: 'https://depositfiles.com/files/4r86s4c2b', label: 'DepositFiles' }]
+    },
+    {
+        id: makeId('Motion Boutique Newton v3.0'),
+        name: 'Motion Boutique Newton v3.0',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'Motion Boutique Newton v3.0 — 2D physics simulator for After Effects.',
+        links: [{ url: 'https://depositfiles.com/files/eovosxgzt', label: 'DepositFiles' }]
+    },
+    {
+        id: makeId('proDAD Mercalli v6.0.671'),
+        name: 'proDAD Mercalli v6.0.671',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'proDAD Mercalli v6.0.671 — professional video stabilization plugin.',
+        links: [{ url: 'https://clicknupload.space/v64pfdhy1k09', label: 'ClicknUpload' }]
+    },
+    {
+        id: makeId('Rubber Monkey FilmConvert Nitrate AE v3.47'),
+        name: 'Rubber Monkey FilmConvert Nitrate AE v3.47',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'Rubber Monkey FilmConvert Nitrate v3.47 — film grain and color grading emulation for AE.',
+        links: [{ url: 'https://katfile.com/axle3nmjit85', label: 'KatFile' }]
+    },
+    {
+        id: makeId('SuperLuminal StarDust v1.3.1'),
+        name: 'SuperLuminal StarDust v1.3.1',
+        category: 'after-effects', platform: 'win', password: null,
+        desc: 'SuperLuminal StarDust v1.3.1 — 3D particle system plugin for After Effects.',
+        links: [{ url: 'https://depositfiles.com/files/ntgw0ah78', label: 'DepositFiles' }]
     },
 
     // ═══════════════════════════════════════════
-    // ADOBE PLUGINS - WINDOWS
+    // PREMIERE PRO PLUGINS (from codec.kyiv.ua/ad0be.html)
     // ═══════════════════════════════════════════
     {
-        id: makeId('Continuum 2026 Adobe'),
-        name: 'BorisFX Continuum 2026.0.1 (Adobe)',
-        category: 'adobe-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'BorisFX Continuum 2026 Adobe v19.0.1. For After Effects & Premiere Pro.',
-        links: [
-            { url: 'https://pixeldrain.com/u/ctrKmQ9n', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/Pt51Hg', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/br2e5e5m0z0390t/Continuum_2026.Adobe_.v19.0.1_Win_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
+        id: makeId('Neat Video Pro v6.0.5 for Premiere'),
+        name: 'Neat Video Pro v6.0.5 (Premiere)',
+        category: 'premiere-pro', platform: 'win', password: null,
+        desc: 'Neat Video Pro v6.0.5 for Premiere Pro — professional video noise reduction plugin.',
+        links: [{ url: 'https://clicknupload.cfd/dphcrh14z6vi', label: 'ClicknUpload' }]
     },
     {
-        id: makeId('Sapphire 2026 AE'),
-        name: 'BorisFX Sapphire 2026.0 (AE)',
-        category: 'adobe-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'BorisFX Sapphire 2026.0 for After Effects.',
-        links: [
-            { url: 'https://pixeldrain.com/u/YktPR5iW', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/vrzRJ3', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/3n0rjz0i6cwq95m/BorisFX_Sapphire_AE_WIN_2026.0_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
+        id: makeId('NewBlue TotalFX 360 build 250207'),
+        name: 'NewBlue TotalFX 360 (build 250207)',
+        category: 'premiere-pro', platform: 'win', password: null,
+        desc: 'NewBlue TotalFX 360 — comprehensive plugin bundle with 1500+ presets, transitions, titles, and effects for Premiere Pro.',
+        notes: 'Massive bundle. Includes Titler Pro, transitions, filters.',
+        links: [{ url: 'https://clicknupload.site/jwdwefoae91p', label: 'ClicknUpload' }]
     },
     {
-        id: makeId('Red Giant 2026 Win'),
-        name: 'Red Giant 2026.3.0',
-        category: 'adobe-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Maxon Red Giant Bundle 2026.3. Includes: Magic Bullet Suite, Trapcode Suite, VFX Suite, Universe.',
-        links: [
-            { url: 'https://pixeldrain.com/u/M2uczDR2', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/yY4QdY', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/zfqjr8vo2n2kuq1/RedGiant.v2026.3.0_Win_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
+        id: makeId('FilmImpact Premium Video Effects v25.2.5'),
+        name: 'FilmImpact Premium Video Effects v25.2.5',
+        category: 'premiere-pro', platform: 'win', password: null,
+        desc: 'FilmImpact Premium Video Effects v25.2.5 — professional transitions and effects for Premiere Pro.',
+        links: [{ url: 'https://clicknupload.cfd/2da270liv52d', label: 'ClicknUpload' }]
     },
     {
-        id: makeId('Twixtor 8.1.0'),
-        name: 'Twixtor 8.1.0',
-        category: 'adobe-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'RE:VisionFX Twixtor v8.1.0. High-quality optical flow slow motion.',
-        links: [
-            { url: 'https://pixeldrain.com/u/RpSfvLyt', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/ARWbpD', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/xbw9cl25c8q2jgu/Twixtor_v8.1.0_Win_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
+        id: makeId('Colourlab Ai Pro v3.5.0'),
+        name: 'Colourlab Ai Pro v3.5.0',
+        category: 'premiere-pro', platform: 'win', password: null,
+        desc: 'Colourlab Ai Pro v3.5.0 — AI-powered color grading. Auto-match colors between shots with one click.',
+        notes: 'Game-changer for color grading workflow.',
+        links: [{ url: 'https://clicknupload.click/b0546bm65qbj/Colourlab.Pro.V3.5.0.rar', label: 'ClicknUpload' }]
     },
     {
-        id: makeId('REVisionFX Bundle 25.08'),
-        name: 'RE:VisionFX Bundle 25.08',
-        category: 'adobe-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'RE:VisionFX Effects Plus Bundle v25.08. Includes Twixtor, RSMB, ReelSmart & more.',
-        notes: 'Full list: https://pastebin.com/f8xnCgVi',
-        links: [
-            { url: 'https://pixeldrain.com/u/mBa5hf3Z', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/tusFGY', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/zwh5xd3vv65dc5l/REVisionFX.Effections.Plus.v25.08_Win_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
+        id: makeId('Red Giant PluralEyes 2023.0.0'),
+        name: 'Red Giant PluralEyes 2023.0.0',
+        category: 'premiere-pro', platform: 'win', password: null,
+        desc: 'Red Giant PluralEyes 2023.0.0 — automatic audio/video sync tool. Sync multiple cameras and audio tracks instantly.',
+        notes: 'Essential for multi-camera shoots.',
+        links: [{ url: 'https://clicknupload.name/vhfqa7v6cyuf', label: 'ClicknUpload' }]
     },
     {
-        id: makeId('REVisionFX Bundle 23.08'),
-        name: 'RE:VisionFX Bundle 23.08',
-        category: 'adobe-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'RE:VisionFX Bundle v23.08. Includes RSMB 6.4.1 & Twixtor 7.5.5 + Pro versions.',
-        notes: 'Full list: https://pastebin.com/xxRuWiPH',
-        links: [
-            { url: 'https://pixeldrain.com/u/Qx2DQgjp', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/Q303TO', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/cwjkwug5091kkyb/REVisionFX_bundle_23.08_WIN_-_satvrn.zip/file', label: 'MediaFire' }
-        ]
+        id: makeId('Rubber Monkey CineMatch v1.24'),
+        name: 'Rubber Monkey CineMatch v1.24',
+        category: 'premiere-pro', platform: 'win', password: null,
+        desc: 'Rubber Monkey CineMatch v1.24 — sensor-based color matching. Match any camera to any other camera.',
+        links: [{ url: 'https://clicknupload.click/nujsfbvco6ij', label: 'ClicknUpload' }]
     },
     {
-        id: makeId('Element 3D 2.2.3'),
-        name: 'Element 3D 2.2.3',
-        category: 'adobe-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Video Copilot Element 3D v2.2.3. 3D object rendering for After Effects.',
-        links: [
-            { url: 'https://pixeldrain.com/u/BYY7Uu51', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/0YnuAK', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/qydyc7ppeyx71yw/Element_3D_2.2.3_Win_-_satvrn.zip/file', label: 'MediaFire' }
-        ]
+        id: makeId('FanDev CuteDCP Pr v1.5.11'),
+        name: 'FanDev CuteDCP Pr v1.5.11',
+        category: 'premiere-pro', platform: 'win', password: null,
+        desc: 'FanDev CuteDCP v1.5.11 for Premiere — DCP (Digital Cinema Package) export plugin.',
+        notes: 'Export DCP directly from Premiere Pro.',
+        links: [{ url: 'https://depositfiles.com/files/l3k9x5kbo', label: 'DepositFiles' }]
     },
     {
-        id: makeId('Heat Distortion 1.0.31'),
-        name: 'Heat Distortion 1.0.31',
-        category: 'adobe-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Video Copilot Heat Distortion v1.0.31.',
-        links: [
-            { url: 'https://pixeldrain.com/u/hspsVoSx', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/cjddGy', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/lmllpwc8uvxu1fw/HeatDistortion_Win_-_satvrn.zip/file', label: 'MediaFire' }
-        ]
-    },
-    {
-        id: makeId('Pro Shaders 1'),
-        name: 'Pro Shaders 1',
-        category: 'adobe-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Video Copilot Pro Shaders 1 for After Effects.',
-        links: [
-            { url: 'https://pixeldrain.com/u/xz1weY4M', label: 'Pixeldrain' }
-        ]
-    },
-    {
-        id: makeId('AutoKroma Bundle 2025.7'),
-        name: 'AutoKroma Bundle 2025.7',
-        category: 'adobe-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'AutoKroma Bundle: AfterCodecs 1.20.0, BRAW Studio 3.3.8, PlumePack 2.4.6, Influx Premium 1.5.7.',
-        links: [
-            { url: 'https://pixeldrain.com/u/eQt5AeH1', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/oSKpsJ', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/jmrm7vs37rwb4m1/Autokroma.bundle.2025.7_Win_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
-    },
-    {
-        id: makeId('AfterCodecs 1.12.1'),
-        name: 'AfterCodecs 1.12.1',
-        category: 'adobe-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'AutoKroma AfterCodecs v1.12.1. 2026 compatible.',
-        links: [
-            { url: 'https://pixeldrain.com/u/8UqNKBs9', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/e7wMU5', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/fyndesgemimx8di/AfterCodecs_v1.12.1_Win_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
-    },
-    {
-        id: makeId('Influx 1.6.1'),
-        name: 'Influx 1.6.1',
-        category: 'adobe-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'AutoKroma Influx v1.6.1. 2026 compatible.',
-        links: [
-            { url: 'https://pixeldrain.com/u/C3me7Qv8', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/LfXF4X', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file/ol6inkihlh9tx60/Influx+v1.6.1+Win+-+satvrn.7z/file', label: 'MediaFire' }
-        ]
-    },
-    {
-        id: makeId('Pixel Sorter Studio Bundle'),
-        name: 'Pixel Sorter Studio Bundle',
-        category: 'adobe-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Pixel Sorter, PixelGalactic, MotionMosh, Glasswork, BallPoint & more.',
-        notes: 'Includes: Pixel Sorter 3.1.0 & 2.2, PixelGalactic, MotionMosh, MadPainter, HydroChrome, Glasswork, BallPoint.',
-        links: [
-            { url: 'https://pixeldrain.com/u/DWoNBJoW', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/ofvsmt', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/qlefud4imoo616i/Pixel_Sorter_Studio_Bundle_%28WIN%29.zip/file', label: 'MediaFire' }
-        ]
-    },
-    {
-        id: makeId('Crossphere Bundle'),
-        name: 'Crossphere Plugins Bundle',
-        category: 'adobe-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Crossphere Bundle: Bokeh, Fractal Noise 3D, PixelBlend Accelerator, Power Cylinder, Power Sphere & more.',
-        links: [
-            { url: 'https://pixeldrain.com/u/oM56wZ1i', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/OYon9D', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/iwzblselvjlw6tl/Crossphere_Plugins_Bundle_WIN_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
-    },
-    {
-        id: makeId('Mettle Bundle 2024.2'),
-        name: 'Mettle Plugins Bundle 2024.2',
-        category: 'adobe-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Mettle Bundle: Flux v1.16, FreeForm Pro 2024, Mantra v2.25, ShapeShifter 2024.',
-        links: [
-            { url: 'https://pixeldrain.com/u/B97G1tRM', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/Xr9YO3', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/i0eb42d9m4x3ern/Mettle_Plugins_bundle_WIN_2024.2_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
-    },
-    {
-        id: makeId('Satori Bundle'),
-        name: 'Satori Bundle',
-        category: 'adobe-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Satori Bundle: Pixel Melt, Block Swap, Curve Tracer, Geometric Filter, Pixelocybe & more.',
-        links: [
-            { url: 'https://pixeldrain.com/u/ZRFHRjyq', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/G7Mf71', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/ylxmrfpemi7u7jd/Satori_Bundle_Win_250912.1_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
-    },
-    {
-        id: makeId('Irrealix Bundle'),
-        name: 'Irrealix Bundle 260215.1',
-        category: 'adobe-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Irrealix Bundle: LoopFlow, Nebulosity, Gaussian Splatting, DustTransition, Potok & more.',
-        links: [
-            { url: 'https://pixeldrain.com/u/uLtLvf8W', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/WuJaVv', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/tilvmlpyjacgswz/irrealix_Bundle_260215_Win.7z/file', label: 'MediaFire' }
-        ]
-    },
-    {
-        id: makeId('FilmConvert Bundle'),
-        name: 'FilmConvert Bundle',
-        category: 'adobe-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'FilmConvert Bundle: Nitrate, Cinematch, Hazy, Halation.',
-        links: [
-            { url: 'https://pixeldrain.com/u/dnx5RhTa', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/sYhpnx', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/7lu12yuqp29fwp8/FilmConvert_Bundle_Win_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
-    },
-    {
-        id: makeId('BAO Bundle 2025.5'),
-        name: 'BAO Plugins Bundle 2025.5',
-        category: 'adobe-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'BAO Bundle: Boa, Bones, Distortion Selector, Mask Avenger, Layer Sculptor & more.',
-        links: [
-            { url: 'https://pixeldrain.com/u/PzLVG7Jh', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/LeulaA', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/r2fnhaq7rqgyl3h/BAO_plugins_bundle_2025.5_Win_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
-    },
-    {
-        id: makeId('BSKL Suite'),
-        name: 'BSKL Suite',
-        category: 'adobe-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Baskl Suite: AI Relight, AI Color Match Pro, AI Depth of Field, Diffusae & more.',
-        links: [
-            { url: 'https://pixeldrain.com/u/qedfjXdW', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/vfjeqW', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/6fyaix6ns1x4ddj/BSKL_Suite_Win_-_satvrn.zip/file', label: 'MediaFire' }
-        ]
-    },
-    {
-        id: makeId('Vimager Bundle'),
-        name: 'Vimager Bundle 1.6.60209',
-        category: 'adobe-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Vimager Bundle: SpeedX, ScaleUp, StyleX, ContrastUp, FacePro & more.',
-        links: [
-            { url: 'https://pixeldrain.com/u/KznVF5BY', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/WMF4Yr', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/xqwgl8q31lm0ufo/Vimager_Bundle_1.6.60209_Win_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
-    },
-    {
-        id: makeId('Frischluft Bundle'),
-        name: 'Frischluft FL Bundle',
-        category: 'adobe-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Frischluft Bundle: FL Glow, Flair, Lenscare, Depth of Field, Volumetrics & more.',
-        links: [
-            { url: 'https://pixeldrain.com/u/EhcW9jKT', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/am8iSg', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/v1o4ptwvei7ycbf/Frischluft_Win_-_satvrn.zip/file', label: 'MediaFire' }
-        ]
-    },
-    {
-        id: makeId('Glitchify'),
-        name: 'Glitchify',
-        category: 'adobe-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'ElementSupply Glitchify - Glitch effects for AE.',
-        links: [
-            { url: 'https://pixeldrain.com/u/nVizBLQY', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/obWdfa', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file/5u46xxrkexxsaou/Glitchify+Win+Mac+-+satvrn.7z/file', label: 'MediaFire' }
-        ]
-    },
-    {
-        id: makeId('Depth Scanner 2 2.4.42'),
-        name: 'Depth Scanner v2 2.4.42',
-        category: 'adobe-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Blace Depth Scanner 2 v2.4.42.',
-        links: [
-            { url: 'https://pixeldrain.com/u/yLyEwcPi', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/jOLkX7', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/g05c6d99dvu7mav/Depth_Scanner_2_v2.4.42_Win_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
-    },
-    {
-        id: makeId('I Ate Mushrooms 6.24'),
-        name: 'I Ate Mushrooms 6.24',
-        category: 'adobe-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Blace I Ate Mushrooms v6.24 - Trippy visual effects.',
-        links: [
-            { url: 'https://pixeldrain.com/u/kSSPhfXg', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/p05mkW', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/0deji51wc017vhd/I_Ate_Mushrooms_v6.24_Win_-_satvrn.zip/file', label: 'MediaFire' }
-        ]
-    },
-    {
-        id: makeId('LaForge Suite 1.4.8.1'),
-        name: 'LaForge Suite 1.4.8.1',
-        category: 'adobe-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'ProductionCrate LaForge Suite. Over 25+ plugins for AE.',
-        links: [
-            { url: 'https://pixeldrain.com/u/J1MyK2ud', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/zJOhDN', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/scyxqrkfr1vzone/ProductionCrate_LaForge_Suite_Win_1.4.8.1_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
-    },
-    {
-        id: makeId('AutoFill 2.0.2'),
-        name: 'AutoFill 2.0.2',
-        category: 'adobe-plugins',
-        platform: 'both',
-        password: PASSWORD,
-        desc: 'Plugin Everything AutoFill v2.0.2. Win + Mac.',
-        links: [
-            { url: 'https://pixeldrain.com/u/FswW57j1', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/80lw6o', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file/rcnieqiyp7juq1y/AutoFill+v2.0.2+Win+Mac+-+satvrn.zip/file', label: 'MediaFire' }
-        ]
-    },
-    {
-        id: makeId('AndrewYang Bundle'),
-        name: 'AndrewYang Bundle 260215',
-        category: 'adobe-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'AndrewYang Bundle: YY_Ramp, YY_HexTex, YY_MagicKey, YY_ShockRing, YY_Voronoi.',
-        links: [
-            { url: 'https://pixeldrain.com/u/3SJgo6H6', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/QcXerR', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/7bl77crv2kwoqik/AndrewYang_Bundle_260215_Win_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
-    },
-    {
-        id: makeId('Rowbyte Bundle 2025.8'),
-        name: 'Rowbyte Bundle 2025.8',
-        category: 'adobe-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Rowbyte Bundle: Stipple, Plexus, Fast Bokeh, Buena Depth Cue, Aura, TVDistortion.',
-        links: [
-            { url: 'https://pixeldrain.com/u/GNBT2UMF', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/QVMhLA', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/z3uc7o7hpjgtnrk/Rowbyte_Plugins_Bundle_2025.8_Win_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
-    },
-    {
-        id: makeId('JPEG Glitch 1.0.4'),
-        name: 'JPEG Glitch 1.0.4',
-        category: 'adobe-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Zaebects JPEG Glitch v1.0.4.',
-        links: [
-            { url: 'https://pixeldrain.com/u/mT3wNQ2R', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/gp5JYc', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/7o5qfbyw97gm389/JPEG_Glitch_v1.0.4_Win_-_satvrn.zip/file', label: 'MediaFire' }
-        ]
-    },
-    {
-        id: makeId('Modulation 2.1'),
-        name: 'Modulation 2.1',
-        category: 'adobe-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Zaebects Modulation v2.1.',
-        links: [
-            { url: 'https://pixeldrain.com/u/jexwhKbg', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/IcIvSZ', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/2ia8mjolstw6i6t/Modulation_v2.1_Win_-_satvrn.zip/file', label: 'MediaFire' }
-        ]
-    },
-    {
-        id: makeId('Cartoon Moblur 1.6.3'),
-        name: 'Cartoon Moblur 1.6.3',
-        category: 'adobe-plugins',
-        platform: 'both',
-        password: PASSWORD,
-        desc: 'Plugin Everything Cartoon Moblur v1.6.3. Win + Mac.',
-        links: [
-            { url: 'https://pixeldrain.com/u/GinXeAC8', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/SnWJA5', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file/ck25t6dfdtdr9f7/Cartoon+Moblur+v1.6.3+Win+Mac+-+satvrn.zip/file', label: 'MediaFire' }
-        ]
-    },
-    {
-        id: makeId('Polytrace'),
-        name: 'Polytrace',
-        category: 'adobe-plugins',
-        platform: 'both',
-        password: PASSWORD,
-        desc: 'ElementSupply Polytrace. Win + Mac.',
-        links: [
-            { url: 'https://pixeldrain.com/u/8Tjdvqq1', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/OacmCo', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file/an6toquvdnbq5as/Polytrace+Win+Mac+-+satvrn.zip/file', label: 'MediaFire' }
-        ]
-    },
-    {
-        id: makeId('Color Llama 1.1.0'),
-        name: 'Color Llama 1.1.0',
-        category: 'adobe-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Color Llama v1.1.0 for After Effects.',
-        links: [
-            { url: 'https://pixeldrain.com/u/sddYRYTW', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/6E51Nl', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/ua00r497v3p5e59/Color_Llama_1.1.0_Win_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
+        id: makeId('Sorenson Squeeze Pro v11.1.0.9'),
+        name: 'Sorenson Squeeze Pro v11.1.0.9',
+        category: 'premiere-pro', platform: 'win', password: null,
+        desc: 'Sorenson Squeeze Pro v11.1.0.9 — video encoding and compression tool with SendTo plugin for Premiere.',
+        links: [{ url: 'https://depositfiles.com/files/cfwfjp8ba', label: 'DepositFiles' }]
     },
 
     // ═══════════════════════════════════════════
-    // ADOBE PLUGINS - MAC
+    // PHOTOSHOP PLUGINS (from codec.kyiv.ua/ad0be.html)
     // ═══════════════════════════════════════════
     {
-        id: makeId('Continuum 2026 Mac'),
-        name: 'BorisFX Continuum 2026.0.1 (Mac)',
-        category: 'adobe-plugins',
-        platform: 'mac',
-        password: PASSWORD,
-        desc: 'BorisFX Continuum 2026 Adobe for Mac.',
-        links: [
-            { url: 'https://pixeldrain.com/u/1qBvYdYt', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/59MCBk', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/l7cjr50eq2194gz/Continuum_%28BCC%29_2026.0.1_Adobe_Mac_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
+        id: makeId('BorisFX Optics 2026.0.3 for Photoshop'),
+        name: 'BorisFX Optics 2026.0.3 (Photoshop)',
+        category: 'photoshop', platform: 'win', password: null,
+        desc: 'BorisFX Optics 2026.0.3 for Photoshop — lens flares, filters, lighting effects, and color correction.',
+        links: [{ url: 'https://fuckingfast.net/0mplxxpcefbb', label: 'FuckingFast' }]
     },
     {
-        id: makeId('Sapphire 2026 Mac'),
-        name: 'BorisFX Sapphire 2026.0 (Mac)',
-        category: 'adobe-plugins',
-        platform: 'mac',
-        password: PASSWORD,
-        desc: 'BorisFX Sapphire 2026.0 for Adobe Mac.',
-        links: [
-            { url: 'https://pixeldrain.com/u/TuibauSf', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/XHGlHP', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/bx7ukqg8ixfsf3y/Sapphire_2026.0_Adobe_Mac_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
+        id: makeId('BorisFX Sapphire 2026.5 for Photoshop'),
+        name: 'BorisFX Sapphire 2026.5 (Photoshop)',
+        category: 'photoshop', platform: 'win', password: null,
+        desc: 'BorisFX Sapphire 2026.5 for Photoshop — 270+ VFX plugins for photo editing.',
+        links: [{ url: 'https://clicknupload.click/vgi2gzrk4jvq/BorisFX.Sapphire.PS.2026.5.rar', label: 'ClicknUpload' }]
     },
     {
-        id: makeId('Red Giant 2026 Mac'),
-        name: 'Red Giant 2026.3.0 (Mac)',
-        category: 'adobe-plugins',
-        platform: 'mac',
-        password: PASSWORD,
-        desc: 'Maxon Red Giant Bundle 2026.3 for Mac.',
-        links: [
-            { url: 'https://pixeldrain.com/u/3ZzRBPnV', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/LBYaDf', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/8gvvdeqqml0rgqo/Red_Giant_Bundle_2026.3.0_Mac_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
+        id: makeId('Dehancer Film Ps/Lr v2.8.0'),
+        name: 'Dehancer Film Ps/Lr v2.8.0',
+        category: 'photoshop', platform: 'win', password: null,
+        desc: 'Dehancer Film v2.8.0 for Photoshop & Lightroom — cinematic film emulation, grain, and halation.',
+        links: [{ url: 'https://clicknupload.click/fecagszzb3qa/Dehancer.Film.Ps.Lr.v2.8.0.rar', label: 'ClicknUpload' }]
     },
     {
-        id: makeId('REVisionFX Bundle 24.03 Mac'),
-        name: 'RE:VisionFX Bundle 24.03 (Mac)',
-        category: 'adobe-plugins',
-        platform: 'mac',
-        password: PASSWORD,
-        desc: 'RE:VisionFX Effects Bundle v24.03 for Mac.',
-        links: [
-            { url: 'https://pixeldrain.com/u/TVoF4WXu', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/DVTBhw', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/u0ywcbd2a9mfji1/REVision_Effections_2403_MacOS_-_DISCORD.GG_%E2%88%95SATVRN.zip/file', label: 'MediaFire' }
-        ]
+        id: makeId('Digital Anarchy Beauty Box PS v5.0.6'),
+        name: 'Digital Anarchy Beauty Box PS v5.0.6',
+        category: 'photoshop', platform: 'win', password: null,
+        desc: 'Digital Anarchy Beauty Box v5.0.6 for Photoshop — professional skin retouching plugin.',
+        links: [{ url: 'https://www.filefactory.com/file/87jgw5zpw44/Beauty.Box.PS.v5.0.6.CE.rar', label: 'FileFactory' }]
     },
     {
-        id: makeId('Element 3D Mac'),
-        name: 'Element 3D 2.2.3 (Mac)',
-        category: 'adobe-plugins',
-        platform: 'mac',
-        password: PASSWORD,
-        desc: 'Video Copilot Element 3D v2.2.3 for Mac.',
-        links: [
-            { url: 'https://pixeldrain.com/u/eWNqffQJ', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/SwHJuh', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/lp8t31tsi8iwucm/Element_3D_2.2.3_%282190%29.zip/file', label: 'MediaFire' }
-        ]
+        id: makeId('Imagenomic Portraiture v3.0.2.7'),
+        name: 'Imagenomic Portraiture v3.0.2.7',
+        category: 'photoshop', platform: 'win', password: null,
+        desc: 'Imagenomic Portraiture v3.0.2.7 — intelligent skin smoothing, healing, and enhancing plugin for Photoshop.',
+        notes: 'The gold standard for portrait retouching.',
+        links: [{ url: 'https://depositfiles.com/files/zqe1wbedv', label: 'DepositFiles' }]
     },
     {
-        id: makeId('Pro Shaders 1 Mac'),
-        name: 'Pro Shaders 1 (Mac)',
-        category: 'adobe-plugins',
-        platform: 'mac',
-        password: PASSWORD,
-        desc: 'Video Copilot Pro Shaders 1 for Mac.',
-        links: [
-            { url: 'https://pixeldrain.com/u/xz1weY4M', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/tpPvYF', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file/m8pwp3u0wps9y09/Pro+Shaders+1+Win+Mac+-+satvrn.zip/file', label: 'MediaFire' }
-        ]
+        id: makeId('Topaz Gigapixel Pro v1.3.0'),
+        name: 'Topaz Gigapixel Pro v1.3.0',
+        category: 'photoshop', platform: 'win', password: null,
+        desc: 'Topaz Gigapixel Pro v1.3.0 — AI image upscaling. Enlarge images up to 600% without quality loss.',
+        links: [{ url: 'https://clicknupload.click/l2moqa2hwp6v/Topaz.Gigapixel.Pro.v1.3.0.rar', label: 'ClicknUpload' }]
+    },
+    {
+        id: makeId('Topaz Photo Pro v1.6.1'),
+        name: 'Topaz Photo Pro v1.6.1',
+        category: 'photoshop', platform: 'win', password: null,
+        desc: 'Topaz Photo Pro v1.6.1 — AI photo enhancement. Denoise, sharpen, and upscale images automatically.',
+        links: [{ url: 'https://clicknupload.click/xtwnokjf2phe/Topaz.Photo.Pro.v1.6.1.rar', label: 'ClicknUpload' }]
     },
 
     // ═══════════════════════════════════════════
-    // OFX PLUGINS
+    // AVID SOFTWARE & PLUGINS (from codec.kyiv.ua/avid.html)
     // ═══════════════════════════════════════════
     {
-        id: makeId('Continuum 2026 OFX'),
-        name: 'BorisFX Continuum 2026 OFX',
-        category: 'ofx-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'BorisFX Continuum 2026 OFX v19.0.0 for DaVinci Resolve.',
-        links: [
-            { url: 'https://pixeldrain.com/u/xwtbStbt', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/3IaiOT', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/32npiq3z89zmvh4/BorisFX_Continuum_2026_OFX_v19.0.0_win_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
+        id: makeId('Avid Media Composer v25.6 Windows'),
+        name: 'Avid Media Composer v25.6 (Windows)',
+        category: 'software', platform: 'win', password: null,
+        desc: 'Avid Media Composer v25.6 for Windows 64-bit — professional video editing software used in Hollywood productions.',
+        links: [{ url: 'https://fuckingfast.net/ackifr10a8a0', label: 'FuckingFast' }]
     },
     {
-        id: makeId('Sapphire 2026 OFX'),
-        name: 'BorisFX Sapphire 2026 OFX',
-        category: 'ofx-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'BorisFX Sapphire 2026 OFX for DaVinci Resolve.',
-        links: [
-            { url: 'https://pixeldrain.com/u/kBUf6txt', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/oUPHHu', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/01vm0agltgnwe0y/Sapphire_OFX_2026_Win_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
+        id: makeId('Avid Media Composer v8.4.5 Mac'),
+        name: 'Avid Media Composer v8.4.5 (Mac)',
+        category: 'software', platform: 'mac', password: null,
+        desc: 'Avid Media Composer v8.4.5 for Mac OSX — professional NLE for macOS.',
+        links: [{ url: 'https://depositfiles.com/files/vhgdunxkl', label: 'DepositFiles' }]
     },
     {
-        id: makeId('Twixtor 8.1.0 OFX'),
-        name: 'Twixtor 8.1.0 OFX',
-        category: 'ofx-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'RE:VisionFX Twixtor v8.1.0 OFX for DaVinci Resolve.',
-        links: [
-            { url: 'https://pixeldrain.com/u/MoFKhWXE', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/Uku6ac', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/ydz6rvid4su4rj6/Twixtor_v8.1.0_OFX_Win_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
+        id: makeId('BorisFX Continuum AVX 2026.5'),
+        name: 'BorisFX Continuum AVX 2026.5',
+        category: 'others', platform: 'win', password: null,
+        desc: 'BorisFX Continuum AVX 2026.5 v19.5.4 — comprehensive VFX plugins for Avid Media Composer.',
+        links: [{ url: 'https://fuckingfast.net/ssneounyvbse', label: 'FuckingFast' }]
     },
     {
-        id: makeId('RSMB 6.6.0 OFX'),
-        name: 'RSMB 6.6.0 OFX',
-        category: 'ofx-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'RE:VisionFX RSMB v6.6.0 OFX - Motion Blur for DaVinci Resolve.',
-        links: [
-            { url: 'https://pixeldrain.com/u/sU7wq6tH', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/eWhvmj', label: 'GoFile' }
-        ]
+        id: makeId('BorisFX Sapphire AVX 2026.5'),
+        name: 'BorisFX Sapphire AVX 2026.5',
+        category: 'others', platform: 'win', password: null,
+        desc: 'BorisFX Sapphire AVX 2026.5 — 270+ effects and presets for Avid Media Composer.',
+        links: [{ url: 'https://clicknupload.click/7vl2lk7epz8e/BorisFX.Sapphire.AVX.v2026.5.rar', label: 'ClicknUpload' }]
     },
     {
-        id: makeId('REVisionFX Bundle 25.08 OFX'),
-        name: 'RE:VisionFX Bundle 25.08 OFX',
-        category: 'ofx-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'RE:VisionFX Effects Bundle v25.08 OFX for DaVinci Resolve.',
-        links: [
-            { url: 'https://pixeldrain.com/u/4zMtGpDG', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/Z7SJki', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/hkms9jglcj8o9r4/RE-VisionFX.Effections.OFX.v25.08_win_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
+        id: makeId('BorisFX Mocha Pro AVX 2026.5'),
+        name: 'BorisFX Mocha Pro AVX 2026.5',
+        category: 'others', platform: 'win', password: null,
+        desc: 'BorisFX Mocha Pro AVX 2026.5 — planar tracking and rotoscoping for Avid.',
+        links: [{ url: 'https://clicknupload.click/uz16jr28igal/BorisFX.Mocha.Pro.2026.5.0.AVX.rar', label: 'ClicknUpload' }]
     },
     {
-        id: makeId('Dehancer Pro 7.3.1 OFX'),
-        name: 'Dehancer Pro 7.3.1 OFX',
-        category: 'ofx-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Dehancer Pro OFX v7.3.1 for DaVinci Resolve.',
-        links: [
-            { url: 'https://pixeldrain.com/u/rJt8564w', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/VgijJJ', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/ni6o0s1m3eb562i/Dehancer_Pro_OFX_7.3.1_Win_-_satvrn.7z/file', label: 'MediaFire' }
-        ]
+        id: makeId('NeatVideo AVX v4.1.1'),
+        name: 'NeatVideo AVX v4.1.1',
+        category: 'others', platform: 'win', password: null,
+        desc: 'NeatVideo AVX v4.1.1 — noise reduction plugin for Avid Media Composer.',
+        links: [{ url: 'https://clicknupload.site/85nxfh6owjwb', label: 'ClicknUpload' }]
     },
     {
-        id: makeId('Bullet Time 1.1 OFX'),
-        name: 'Bullet Time 1.1 OFX',
-        category: 'ofx-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'Bullet Time 1.1.14 OFX for DaVinci Resolve.',
-        links: [
-            { url: 'https://pixeldrain.com/u/9ugj8Jft', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/g7oBJU', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/s1g8e6zktwtkqt0/BulletTime1.1.14_OFX_Win_-_satvrn.zip/file', label: 'MediaFire' }
-        ]
+        id: makeId('FilmLight BaseLight for Avid v6.0'),
+        name: 'FilmLight BaseLight for Avid v6.0',
+        category: 'others', platform: 'win', password: null,
+        desc: 'FilmLight BaseLight for Avid v6.0.21185 — professional color grading plugin for Avid.',
+        links: [{ url: 'https://clicknupload.name/vhckmoxgpz2w', label: 'ClicknUpload' }]
+    },
+
+    // ═══════════════════════════════════════════
+    // MAC APPS (from macked.app & audioz)
+    // ═══════════════════════════════════════════
+    {
+        id: makeId('Adobe Activation Tool Mac'),
+        name: 'Adobe Activation Tool 1.2.7/2.1.5 (Mac)',
+        category: 'software', platform: 'mac', password: null,
+        desc: 'Adobe Suite Activation Tools/Crack Patches for macOS. Activate Adobe CC apps on Mac.',
+        links: [{ url: 'https://macked.app/adobe-activation-tool-crack.html', label: 'MacKed' }]
     },
     {
-        id: makeId('FilmConvert Nitrate OFX'),
-        name: 'FilmConvert Nitrate Pro 2.20 OFX (VEGAS)',
-        category: 'ofx-plugins',
-        platform: 'win',
-        password: PASSWORD,
-        desc: 'FilmConvert Nitrate Pro 2.20 OFX for VEGAS Pro only.',
-        notes: 'Discontinued version, only version supporting VEGAS Pro.',
-        links: [
-            { url: 'https://pixeldrain.com/u/FzbhQ29c', label: 'Pixeldrain' },
-            { url: 'https://gofile.io/d/ROPafq', label: 'GoFile' },
-            { url: 'https://www.mediafire.com/file_premium/mieqgz1qzwrkxy8/FilmConvert.OFX.v2.20.CE_Win_VEGAS_-_satvrn.zip/file', label: 'MediaFire' }
-        ]
-},
-// ═══════════════════════════════════════════
-// TEST PRESET - For UI verification
-// ═══════════════════════════════════════════
-{
-    id: 'test-premiere-pro-pack',
-    name: '🎯 Test: Premiere Pro Cinematic Pack',
-    category: 'after-effects',
-    platform: '',
-    password: PASSWORD,
-    desc: 'This is a TEST preset for verifying the new category system, creator/uploader UI, and download flow.',
-    notes: 'TEST ENTRY - Can be deleted after verification.',
-    creator_nickname: 'ReyliFX',
-    creator_avatar: 'https://cdn.discordapp.com/avatars/1421177012814614548/abcdef123456.png?size=64',
-    creator_social_url: 'https://www.tiktok.com/@reyli',
-    uploader_name: 'Reyli',
-    uploader_avatar: 'https://cdn.discordapp.com/avatars/1421177012814614548/abcdef123456.png?size=64',
-    links: [
-        { url: 'https://pixeldrain.com/u/test123', label: 'Pixeldrain' },
-        { url: 'https://gofile.io/d/test123', label: 'GoFile' }
-    ]
-}
+        id: makeId('Setapp 3.53.2 Mac'),
+        name: 'Setapp 3.53.2 (Mac)',
+        category: 'software', platform: 'mac', password: null,
+        desc: 'Setapp 3.53.2 Cracked — third-party macOS app store with 240+ premium apps.',
+        notes: 'Subscription-free access to premium Mac apps.',
+        links: [{ url: 'https://macked.app/setapp-mac-crack.html', label: 'MacKed' }]
+    },
+    {
+        id: makeId('Parallels Desktop Business Edition 26.4 Mac'),
+        name: 'Parallels Desktop 26.4 Business (Mac)',
+        category: 'software', platform: 'mac', password: null,
+        desc: 'Parallels Desktop Business Edition 26.4.0.57513 macOS — run Windows on Mac seamlessly. Intel + Apple Silicon support.',
+        links: [{ url: 'https://audioz.download/software/297110-download_parallels-desktop-business-edition-264057513-macos-atb.html', label: 'AudioZ' }]
+    },
+
+    // ═══════════════════════════════════════════
+    // VIDEO SOFTWARE & UTILITIES
+    // ═══════════════════════════════════════════
+    {
+        id: makeId('CyberLink PowerDirector Ultimate 2026'),
+        name: 'CyberLink PowerDirector Ultimate 2026',
+        category: 'software', platform: 'win', password: null,
+        desc: 'CyberLink PowerDirector Ultimate 2026 v24.6.1824.2 — award-winning video editing software for professional creators.',
+        links: [{ url: 'https://audioz.download/software/win/297156-download_cyberlink-powerdirector-ultimate-2026-v24618242.html', label: 'AudioZ' }]
+    },
+    {
+        id: makeId('Virtual Audio Cable v4.71'),
+        name: 'Virtual Audio Cable v4.71',
+        category: 'software', platform: 'win', password: null,
+        desc: 'Virtual Audio Cable v4.71 — transfer audio streams between applications. Create virtual audio devices.',
+        notes: 'Useful for routing audio between apps.',
+        links: [{ url: 'https://audioz.download/software/win/297166-download_virtual-audio-cable-v471.html', label: 'AudioZ' }]
+    }
 ];
 
-// Make available globally
-window.pluginsData = pluginsData;
-window.PASSWORD = PASSWORD;
+// Post-process for compatibility
+window.pluginsData = window.pluginsData.map(p => {
+    if (p.platform) p.platform = p.platform.toLowerCase();
+    if (!p.downloadUrl && p.links && p.links.length > 0) {
+        p.downloadUrl = p.links[0].url;
+    }
+    if (!p.desc && p.description) p.desc = p.description;
+    return p;
+});
 
-// force redeploy 20260627180134
+console.log('📦 Zyrex Plugins loaded: ' + window.pluginsData.length + ' entries');

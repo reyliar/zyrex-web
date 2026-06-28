@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zyrex | Plugins</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="stylesheet" href="css/style.css?v=8">
+    <link rel="stylesheet" href="css/style.css?v=9">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
@@ -178,6 +178,17 @@
             box-shadow: 0 4px 15px rgba(var(--cherry-rgb), 0.4);
         }
 
+        /* Platform colored pills */
+        .platform-pill {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 4px 12px; border-radius: 20px;
+            font-size: .68rem; font-weight: 700; text-transform: uppercase;
+            letter-spacing: .5px;
+        }
+        .platform-badge-win { background: rgba(0,120,212,0.12); border:1px solid rgba(0,120,212,0.25); color:#4da3e0; }
+        .platform-badge-mac { background: rgba(160,160,170,0.1); border:1px solid rgba(160,160,170,0.2); color:#b0b0ba; }
+        .platform-badge-both { background: linear-gradient(90deg, rgba(0,120,212,0.08), rgba(160,160,170,0.08)); border:1px solid rgba(var(--cherry-rgb),0.15); color:var(--cherry-light); }
+        
         .no-results {
             text-align:center; padding:60px 20px; color:var(--gray-dark); grid-column:1/-1;
         }
@@ -236,25 +247,42 @@
     </section>
 
     <div class="container">
+        <!-- VERIFIED NOTICE -->
+        <div class="glass-card-enhanced" style="text-align:center;padding:18px 24px;margin-bottom:30px;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap">
+            <i class="fas fa-shield-check" style="color:#00c864;font-size:1.2rem"></i>
+            <span style="font-size:.82rem;color:var(--gray)">Files verified safe. More content added regularly.</span>
+            <span style="color:var(--gray-dark);opacity:.3">|</span>
+            <span style="font-size:.82rem;color:var(--gray-dark)">Questions? Join our</span>
+            <a href="https://discord.gg/fAydSzpafA" target="_blank" style="color:var(--cherry-light);font-weight:700;font-size:.82rem"><i class="fab fa-discord"></i> Discord Server</a>
+        </div>
+        
         <!-- CATEGORY TABS -->
         <div class="cat-tabs" id="catTabs"></div>
 
         <!-- PLUGINS GRID -->
-        <div class="plugins-grid" id="pluginsGrid"></div>
+        <div class="plugins-grid stagger-fade-in" id="pluginsGrid"></div>
 
-        <!-- SATVRN CREDIT BANNER -->
-        <div class="satvrn-credit-card" style="margin-bottom: 50px; background: rgba(var(--cherry-rgb), 0.08); border: 1px solid rgba(var(--cherry-rgb), 0.2); border-radius: 16px; padding: 24px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; backdrop-filter: blur(10px); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);">
-            <div style="display: flex; align-items: center; gap: 18px;">
-                <img src="https://satvrn.li/Satvrn.png" alt="Satvrn" style="height: 60px; border-radius: 12px; filter: drop-shadow(0 0 10px rgba(var(--cherry-rgb), 0.4)); flex-shrink: 0;">
+        <!-- CREDITS BANNER -->
+        <div class="glass-card-enhanced" style="margin-bottom:50px;padding:24px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:18px">
+                <div style="width:60px;height:60px;border-radius:14px;background:rgba(var(--cherry-rgb),0.12);border:1px solid rgba(var(--cherry-rgb),0.2);display:flex;align-items:center;justify-content:center;font-size:1.6rem;color:var(--cherry-light)">
+                    <i class="fas fa-shield-halved"></i>
+                </div>
                 <div>
-                    <h3 style="font-size: 1.1rem; font-weight: 800; color: #fff; margin: 0 0 4px; display: flex; align-items: center; gap: 8px;">
-                        Plugins by Satvrn <span style="font-size: 0.68rem; font-weight: 700; background: var(--cherry); color: #fff; padding: 2px 8px; border-radius: 99px; text-transform: uppercase;">Plugin Credits</span>
+                    <h3 style="font-size:1.1rem;font-weight:800;color:#fff;margin:0 0 4px;display:flex;align-items:center;gap:8px">
+                        Plugin Sources <span style="font-size:.68rem;font-weight:700;background:var(--cherry);color:#fff;padding:2px 8px;border-radius:99px;text-transform:uppercase">Curated</span>
                     </h3>
-                    <p style="font-size: 0.8rem; color: #9090a0; margin: 0; line-height: 1.4;">Software and plugin resources are sourced from the Satvrn community. Join their Discord server for official support and additional releases.</p>
+                    <p style="font-size:.8rem;color:var(--gray-dark);margin:0;line-height:1.4">
+                        <a href="https://codec.kyiv.ua/ad0be.html" target="_blank" style="color:var(--cherry-light);font-weight:600">codec.kyiv.ua</a>
+                        <span style="opacity:.4"> · </span>
+                        <a href="https://w18.monkrus.ws" target="_blank" style="color:var(--gray)">monkrus.ws</a>
+                        <span style="opacity:.4"> · </span>
+                        <a href="https://macked.app" target="_blank" style="color:var(--gray)">macked.app</a>
+                    </p>
                 </div>
             </div>
-            <a href="https://discord.gg/satvrn" target="_blank" class="btn" style="background: var(--gradient-fire); border: none; font-weight: 700; color: #fff; display: inline-flex; align-items: center; gap: 8px; border-radius: 8px; padding: 10px 20px; transition: all 0.3s; text-decoration: none; height: 42px;">
-                <i class="fab fa-discord"></i> Visit Satvrn
+            <a href="/upload" class="btn" style="background:var(--gradient-fire);border:none;font-weight:700;color:#fff;display:inline-flex;align-items:center;gap:8px;border-radius:8px;padding:10px 20px;transition:all .3s;text-decoration:none;height:42px">
+                <i class="fas fa-upload"></i> Submit Resource
             </a>
         </div>
     </div>
@@ -339,8 +367,8 @@
                 document.getElementById('pluginsGrid').innerHTML = '<div class="no-results"><i class="fas fa-database"></i><p>Loading plugin data...</p></div>';
                 return;
             }
-            // Filter out 'software' category so only plugins are displayed
-            allPlugins = data.filter(r => r.category !== 'software');
+            // All categories are shown including software
+            allPlugins = data;
             renderCategories();
             renderPlugins();
         }
@@ -391,8 +419,30 @@
                 return;
             }
 
-            grid.innerHTML = filtered.map(p => `
-                <div class="plugin-card" onclick="window.location.href='product.html?id=${p.id}'">
+            grid.innerHTML = filtered.map((p, index) => {
+                // Platform badge with brand color
+                let platformBadge = '';
+                if (p.platform) {
+                    const plat = (p.platform || '').toLowerCase();
+                    let badgeClass = '', badgeIcon = '', badgeLabel = '';
+                    if (plat === 'win' || plat === 'windows') {
+                        badgeClass = 'platform-badge-win';
+                        badgeIcon = '<i class="fab fa-windows"></i>';
+                        badgeLabel = 'Windows';
+                    } else if (plat === 'mac') {
+                        badgeClass = 'platform-badge-mac';
+                        badgeIcon = '<i class="fab fa-apple"></i>';
+                        badgeLabel = 'Mac';
+                    } else {
+                        badgeClass = 'platform-badge-both';
+                        badgeIcon = '<i class="fab fa-windows"></i><i class="fab fa-apple" style="margin-left:3px"></i>';
+                        badgeLabel = 'Both';
+                    }
+                    platformBadge = `<span class="platform-pill ${badgeClass}">${badgeIcon} ${badgeLabel}</span>`;
+                }
+                
+                return `
+                <div class="plugin-card shimmer-sweep stagger-item" onclick="window.location.href='product.html?id=${p.id}'" style="animation-delay:${index * 0.06}s">
                     <div class="top">
                         <div class="icon"><i class="fas ${getCategoryIcon(p.category)}"></i></div>
                         <div class="info">
@@ -402,11 +452,11 @@
                     </div>
                     <div class="desc">${p.desc||''}</div>
                     <div class="tags">
-                        ${p.platform ? `<span style="background:rgba(var(--cherry-rgb),.06);color:var(--gray-dark);text-transform:uppercase">${p.platform}</span>` : ''}
+                        ${platformBadge}
                     </div>
-                    <a href="product.html?id=${p.id}" class="dl-link"><i class="fas fa-download"></i> Get Plugin</a>
+                    <a href="product.html?id=${p.id}" class="dl-link" onclick="event.stopPropagation()"><i class="fas fa-download"></i> Get Plugin</a>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         document.addEventListener('DOMContentLoaded', initPlugins);

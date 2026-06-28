@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zyrex | Upload</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="stylesheet" href="css/style.css?v=8">
+    <link rel="stylesheet" href="css/style.css?v=9">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
@@ -219,6 +219,75 @@
         .alert{background:rgba(var(--cherry-rgb),.1);border:1px solid rgba(var(--cherry-rgb),.2);border-radius:12px;padding:14px 20px;margin-bottom:20px;font-size:.85rem;color: var(--cherry-light);display:none;font-weight:600}
         .alert.show{display:block}
         .alert-success{background:rgba(0,200,100,.1);border-color:rgba(0,200,100,.2);color:#00c864}
+        
+        /* HLX Lookup Overlay */
+        .hlx-lookup-overlay{
+            position:absolute;top:100%;left:0;right:0;margin-top:8px;
+            background:rgba(12,2,4,0.92);backdrop-filter:blur(30px) saturate(220%);
+            -webkit-backdrop-filter:blur(30px) saturate(220%);
+            border:1px solid rgba(var(--cherry-rgb),0.15);border-radius:14px;
+            padding:20px;z-index:100;box-shadow:0 20px 50px rgba(0,0,0,0.6),0 0 30px rgba(var(--cherry-rgb),0.12);
+            animation:fadeInUp .3s ease forwards;
+        }
+        .hlx-overlay-header{
+            display:flex;justify-content:space-between;align-items:center;
+            margin-bottom:16px;font-size:.82rem;font-weight:700;color:var(--gray);
+        }
+        .hlx-overlay-header i{color:var(--cherry-light);margin-right:6px}
+        .hlx-platform-picker{
+            display:flex;gap:10px;justify-content:center;margin-bottom:16px;
+        }
+        .hlx-platform-btn{
+            width:48px;height:48px;border-radius:50%;background:rgba(28,4,9,0.4);
+            border:1px solid rgba(var(--cherry-rgb),0.1);color:var(--gray-dark);
+            cursor:pointer;display:flex;align-items:center;justify-content:center;
+            font-size:1.1rem;transition:all .3s cubic-bezier(0.16,1,0.3,1);
+        }
+        .hlx-platform-btn:hover{border-color:rgba(var(--cherry-rgb),0.3);color:var(--light)}
+        .hlx-platform-btn.active{
+            background:rgba(var(--cherry-rgb),0.12);border-color:var(--cherry-light);
+            color:var(--cherry-light);box-shadow:0 0 15px rgba(var(--cherry-rgb),0.3);
+        }
+        .hlx-platform-btn[data-platform="tiktok"].active{color:#ff0050;border-color:#ff0050;box-shadow:0 0 15px rgba(255,0,80,0.3)}
+        .hlx-platform-btn[data-platform="instagram"].active{color:#e1306c;border-color:#e1306c;box-shadow:0 0 15px rgba(225,48,108,0.3)}
+        .hlx-platform-btn[data-platform="youtube"].active{color:#ff0000;border-color:#ff0000;box-shadow:0 0 15px rgba(255,0,0,0.3)}
+        .hlx-platform-btn[data-platform="x"].active{color:#fff;border-color:#fff;box-shadow:0 0 15px rgba(255,255,255,0.2)}
+        .hlx-input-row{
+            display:flex;align-items:center;gap:0;margin-bottom:16px;
+            background:rgba(0,0,0,0.3);border:1px solid rgba(var(--cherry-rgb),0.15);border-radius:10px;overflow:hidden;
+        }
+        .hlx-at-prefix{
+            padding:12px 0 12px 16px;color:var(--gray-dark);font-size:.9rem;font-weight:600;
+        }
+        .hlx-input-row input{
+            flex:1;padding:12px 14px;background:transparent;border:none;color:var(--light);
+            font-family:inherit;font-size:.85rem;outline:none;
+        }
+        .hlx-fetch-btn{
+            width:100%;padding:12px;border-radius:10px;
+            background:linear-gradient(180deg,#7a081e 0%,#42020d 50%,#300109 100%);
+            border:1px solid rgba(var(--cherry-rgb),0.2);color:#fff;font-weight:700;
+            cursor:pointer;font-family:inherit;font-size:.85rem;
+            display:flex;align-items:center;justify-content:center;gap:8px;
+            transition:all .3s cubic-bezier(0.16,1,0.3,1);
+            box-shadow:0 4px 15px rgba(122,8,30,0.35),inset 0 1px 1px rgba(255,255,255,0.1);
+        }
+        .hlx-fetch-btn:hover{box-shadow:0 6px 20px rgba(122,8,30,0.5);transform:translateY(-1px)}
+        .hlx-status{
+            margin-top:12px;padding:12px;border-radius:10px;
+            background:rgba(var(--cherry-rgb),0.05);border:1px solid rgba(var(--cherry-rgb),0.08);
+            font-size:.78rem;text-align:center;color:var(--gray);
+        }
+        .hlx-status .hlx-result{display:flex;align-items:center;gap:10px;justify-content:center}
+        .hlx-status .hlx-result img{width:36px;height:36px;border-radius:50%;border:1px solid rgba(var(--cherry-rgb),0.2)}
+        .hlx-status .hlx-result .hlx-name{font-weight:700;color:var(--light)}
+        .hlx-status .hlx-result .hlx-platform-tag{font-size:.65rem;color:var(--gray-dark);text-transform:uppercase}
+        .hlx-status.error{color:#ff3860;border-color:rgba(255,56,96,0.2);background:rgba(255,56,96,0.05)}
+        .hlx-status.success{color:#00c864;border-color:rgba(0,200,100,0.2);background:rgba(0,200,100,0.05)}
+        
+        /* Glowing step dots */
+        .step-dot.active.dot-pulse{animation:dotPulse 2s ease-in-out infinite}
+        @keyframes dotPulse{0%,100%{box-shadow:0 0 0 0 rgba(var(--cherry-rgb),0.5)}50%{box-shadow:0 0 0 12px rgba(var(--cherry-rgb),0)}}
     </style>
 </head>
 <body>
@@ -235,7 +304,7 @@
         
         <!-- Steps indicator -->
         <div class="steps-indicator" id="stepsIndicator">
-            <div><div class="step-dot active" id="stepDot1">1</div><div class="step-label">Details</div></div>
+            <div><div class="step-dot active dot-pulse" id="stepDot1">1</div><div class="step-label" style="color:var(--cherry-light)">Details</div></div>
             <div class="step-line" id="stepLine1"></div>
             <div><div class="step-dot" id="stepDot2">2</div><div class="step-label">Files</div></div>
             <div class="step-line" id="stepLine2"></div>
@@ -250,11 +319,38 @@
                 <input type="text" id="productName" placeholder="e.g. Hyper Pop Preset Pack" oninput="updateLiveCardPreview()">
             </div>
             <div class="form-row">
-                <div class="form-group">
+                <div class="form-group" style="position:relative">
                     <label>Creator Social Media URL *</label>
-                    <input type="url" id="creatorSocialUrl" placeholder="e.g. https://www.tiktok.com/@reyli" onblur="resolveCreatorSocial()" oninput="updateLiveCardPreview()">
+                    <div style="position:relative;display:flex;align-items:center">
+                        <input type="url" id="creatorSocialUrl" placeholder="e.g. https://www.tiktok.com/@reyli" onblur="resolveCreatorSocial()" oninput="updateLiveCardPreview()" style="padding-right:48px !important">
+                        <button id="hlxAssistantBtn" type="button" onclick="toggleHlxOverlay()" title="Social Lookup Assistant" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;background:rgba(var(--cherry-rgb),0.08);border:1px solid rgba(var(--cherry-rgb),0.2);color:var(--cherry-light);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.3s cubic-bezier(0.16,1,0.3,1);font-size:0.9rem;z-index:5">
+                            <i class="fas fa-magic"></i>
+                        </button>
+                    </div>
                     <input type="hidden" id="creatorName" value="">
                     <input type="hidden" id="creatorAvatar" value="">
+                    
+                    <!-- HLX Lookup Overlay -->
+                    <div id="hlxOverlay" class="hlx-lookup-overlay" style="display:none">
+                        <div class="hlx-overlay-header">
+                            <span><i class="fas fa-magic"></i> Social Lookup Assistant</span>
+                            <button onclick="toggleHlxOverlay()" style="background:none;border:none;color:var(--gray-dark);cursor:pointer;font-size:1rem">&times;</button>
+                        </div>
+                        <div class="hlx-platform-picker" id="hlxPlatformPicker">
+                            <button class="hlx-platform-btn active" data-platform="tiktok" onclick="selectHlxPlatform(this,'tiktok')" title="TikTok"><i class="fab fa-tiktok"></i></button>
+                            <button class="hlx-platform-btn" data-platform="instagram" onclick="selectHlxPlatform(this,'instagram')" title="Instagram"><i class="fab fa-instagram"></i></button>
+                            <button class="hlx-platform-btn" data-platform="youtube" onclick="selectHlxPlatform(this,'youtube')" title="YouTube"><i class="fab fa-youtube"></i></button>
+                            <button class="hlx-platform-btn" data-platform="x" onclick="selectHlxPlatform(this,'x')" title="X / Twitter"><i class="fab fa-x-twitter"></i></button>
+                        </div>
+                        <div class="hlx-input-row">
+                            <span class="hlx-at-prefix" id="hlxAtPrefix">@</span>
+                            <input type="text" id="hlxUsernameInput" placeholder="Enter username..." onkeydown="if(event.key==='Enter')hlxLookupAndFill()">
+                        </div>
+                        <button class="hlx-fetch-btn" id="hlxFetchBtn" onclick="hlxLookupAndFill()">
+                            <i class="fas fa-search"></i> Fetch & Fill
+                        </button>
+                        <div id="hlxStatus" class="hlx-status" style="display:none"></div>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>Category *</label>
@@ -483,18 +579,24 @@
             for (let i = 1; i <= 3; i++) {
                 const dot = document.getElementById(`stepDot${i}`);
                 const line = document.getElementById(`stepLine${i}`);
-                dot.classList.remove('active', 'done');
-                if (line) line.classList.remove('done');
+                dot.classList.remove('active', 'done', 'dot-pulse');
+                if (line) line.classList.remove('done', 'line-flow');
                 
                 if (i < step) {
                     dot.classList.add('done');
                     dot.innerHTML = '<i class="fas fa-check"></i>';
                     if (line) line.classList.add('done');
                 } else if (i === step) {
-                    dot.classList.add('active');
+                    dot.classList.add('active', 'dot-pulse');
                     dot.innerHTML = i;
                 }
             }
+            
+            // Update step labels
+            document.querySelectorAll('.step-label').forEach((label, idx) => {
+                label.style.color = (idx + 1 === step) ? 'var(--cherry-light)' : '';
+                label.style.textShadow = (idx + 1 === step) ? '0 0 10px rgba(var(--cherry-rgb),0.3)' : '';
+            });
 
             if (step === 3) buildReview();
             if (step === 2) {
@@ -528,20 +630,127 @@
                         wrapper.innerHTML = `<i class="fas fa-user" style="font-size:0.6rem"></i>`;
                     }
                     showAlert(`Social profile resolved: ${data.nickname}`, false);
+                    return data; // Return data for HLX assistant
                 } else {
                     showAlert('Could not resolve social media profile. Please check the URL.', true);
                     loader.textContent = "Unresolved";
                     document.getElementById('creatorName').value = "";
                     document.getElementById('creatorAvatar').value = "";
+                    return null;
                 }
             } catch(e) {
                 console.error("Resolve error:", e);
                 loader.textContent = "Error";
                 document.getElementById('creatorName').value = "";
                 document.getElementById('creatorAvatar').value = "";
+                return null;
             }
             updateLiveCardPreview();
         }
+
+        // ── HLX Social Lookup Assistant ──
+        let hlxSelectedPlatform = 'tiktok';
+        const hlxUrlPatterns = {
+            tiktok: u => `https://www.tiktok.com/@${u}`,
+            instagram: u => `https://www.instagram.com/${u}`,
+            youtube: u => `https://www.youtube.com/@${u}`,
+            x: u => `https://x.com/${u}`
+        };
+        const hlxPlatformLabels = {
+            tiktok: 'TikTok', instagram: 'Instagram', youtube: 'YouTube', x: 'X/Twitter'
+        };
+
+        function toggleHlxOverlay() {
+            const overlay = document.getElementById('hlxOverlay');
+            const isOpen = overlay.style.display === 'block';
+            overlay.style.display = isOpen ? 'none' : 'block';
+            if (!isOpen) {
+                document.getElementById('hlxUsernameInput').focus();
+                document.getElementById('hlxStatus').style.display = 'none';
+            }
+        }
+
+        function selectHlxPlatform(btn, platform) {
+            hlxSelectedPlatform = platform;
+            document.querySelectorAll('#hlxPlatformPicker .hlx-platform-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('hlxAtPrefix').textContent = platform === 'x' ? '' : '@';
+            document.getElementById('hlxStatus').style.display = 'none';
+            document.getElementById('hlxUsernameInput').focus();
+        }
+
+        async function hlxLookupAndFill() {
+            const username = document.getElementById('hlxUsernameInput').value.trim();
+            if (!username) {
+                document.getElementById('hlxStatus').style.display = 'block';
+                document.getElementById('hlxStatus').className = 'hlx-status error';
+                document.getElementById('hlxStatus').innerHTML = '<i class="fas fa-exclamation-circle"></i> Please enter a username';
+                return;
+            }
+
+            const url = hlxUrlPatterns[hlxSelectedPlatform](username);
+            const statusEl = document.getElementById('hlxStatus');
+            statusEl.style.display = 'block';
+            statusEl.className = 'hlx-status';
+            statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Resolving profile...';
+
+            // Set the main URL field
+            document.getElementById('creatorSocialUrl').value = url;
+
+            try {
+                const resp = await fetch(`/api/hlx/resolve?url=${encodeURIComponent(url)}`);
+                const data = await resp.json();
+                if (data.success) {
+                    document.getElementById('creatorName').value = data.nickname;
+                    document.getElementById('creatorAvatar').value = data.avatar;
+
+                    document.getElementById('previewCreatorName').textContent = data.nickname;
+                    const wrapper = document.getElementById('previewAvatarWrapper');
+                    if (data.avatar) {
+                        wrapper.innerHTML = `<img src="${data.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+                    } else {
+                        wrapper.innerHTML = `<i class="fas fa-user" style="font-size:0.6rem"></i>`;
+                    }
+
+                    statusEl.className = 'hlx-status success';
+                    statusEl.innerHTML = `
+                        <div class="hlx-result">
+                            ${data.avatar ? `<img src="${data.avatar}" alt="">` : '<i class="fas fa-user" style="font-size:1.2rem;color:var(--cherry)"></i>'}
+                            <div>
+                                <div class="hlx-name">${data.nickname}</div>
+                                <div class="hlx-platform-tag">${hlxPlatformLabels[hlxSelectedPlatform]}</div>
+                            </div>
+                        </div>`;
+                    
+                    updateLiveCardPreview();
+                    
+                    // Auto-close after success
+                    setTimeout(() => { document.getElementById('hlxOverlay').style.display = 'none'; }, 1800);
+                } else {
+                    statusEl.className = 'hlx-status error';
+                    statusEl.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${data.error || 'Could not resolve profile. Check the username.'}`;
+                }
+            } catch(e) {
+                statusEl.className = 'hlx-status error';
+                statusEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> Network error. Please try again.';
+            }
+        }
+
+        // Close overlay on click outside
+        document.addEventListener('click', function(e) {
+            const overlay = document.getElementById('hlxOverlay');
+            const btn = document.getElementById('hlxAssistantBtn');
+            if (overlay.style.display === 'block' && !overlay.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
+                overlay.style.display = 'none';
+            }
+        });
+
+        // Close overlay on Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.getElementById('hlxOverlay').style.display = 'none';
+            }
+        });
 
         // Live preview of preset/plugin card
         function updateLiveCardPreview() {

@@ -1244,6 +1244,221 @@ img {
 
 }
 
+/* ===================== PHASE 1: ENHANCED UTILITIES ===================== */
+
+/* -- Warm light text variable -- */
+:root {
+    --warm-light: #ffe8ec;
+}
+
+/* Enhanced glass card — stronger blur, subtle scale on hover, glow border */
+.glass-card-enhanced {
+    background: rgba(12, 2, 4, 0.55) !important;
+    backdrop-filter: blur(30px) saturate(280%) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(280%) !important;
+    border: 1px solid rgba(var(--cherry-rgb), 0.1) !important;
+    box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.55), 0 0 30px rgba(var(--cherry-rgb), 0.08) !important;
+    border-radius: var(--radius);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.glass-card-enhanced:hover {
+    transform: translateY(-4px) scale(1.01);
+    border-color: rgba(var(--cherry-rgb), 0.3) !important;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), 0 0 40px rgba(var(--cherry-rgb), 0.18) !important;
+}
+.glass-card-enhanced::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(var(--cherry-rgb),0) 0%, rgba(var(--cherry-rgb),0.2) 30%, rgba(var(--cherry-rgb),0.35) 50%, rgba(var(--cherry-rgb),0.2) 70%, rgba(var(--cherry-rgb),0) 100%);
+    z-index: 2;
+    pointer-events: none;
+}
+.glass-card-enhanced::after {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 45%;
+    background: linear-gradient(180deg, rgba(var(--cherry-rgb),0.08) 0%, rgba(255,255,255,0) 100%);
+    pointer-events: none;
+    z-index: 1;
+}
+
+/* Shimmer sweep — diagonal highlight pass across card on hover */
+.shimmer-sweep {
+    position: relative;
+    overflow: hidden;
+}
+.shimmer-sweep::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        105deg,
+        transparent 40%,
+        rgba(var(--cherry-rgb), 0.12) 45%,
+        rgba(var(--cherry-rgb), 0.25) 50%,
+        rgba(var(--cherry-rgb), 0.12) 55%,
+        transparent 60%
+    );
+    transform: translateX(-100%) translateY(-100%);
+    z-index: 5;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.shimmer-sweep:hover::after {
+    opacity: 1;
+    animation: sweepShimmer 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes sweepShimmer {
+    0% { transform: translateX(-100%) translateY(-100%); }
+    100% { transform: translateX(100%) translateY(100%); }
+}
+
+/* Glow pulse — text shadow cherry glow breathing */
+.glow-pulse {
+    animation: glowPulse 2s ease-in-out infinite;
+}
+
+@keyframes glowPulse {
+    0%, 100% { text-shadow: 0 0 8px rgba(var(--cherry-rgb), 0.4), 0 0 15px rgba(var(--cherry-rgb), 0.2); }
+    50% { text-shadow: 0 0 15px rgba(var(--cherry-rgb), 0.7), 0 0 30px rgba(var(--cherry-rgb), 0.4); }
+}
+
+/* Grid mesh background pattern */
+.grid-mesh-bg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.06;
+    background-image:
+        linear-gradient(rgba(var(--cherry-rgb), 0.3) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(var(--cherry-rgb), 0.3) 1px, transparent 1px);
+    background-size: 60px 60px;
+    mask-image: radial-gradient(circle at 50% 50%, black 30%, transparent 70%);
+    -webkit-mask-image: radial-gradient(circle at 50% 50%, black 30%, transparent 70%);
+}
+
+/* Staggered fade-in container and items */
+.stagger-fade-in {
+    --stagger-delay: 0.06s;
+}
+.stagger-item {
+    opacity: 0;
+    transform: translateY(24px);
+    animation: staggerIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes staggerIn {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Toggle switch glow */
+.toggle-glow {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 48px;
+    height: 26px;
+    background: rgba(28, 4, 9, 0.6);
+    border: 1px solid rgba(var(--cherry-rgb), 0.2);
+    border-radius: 13px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    outline: none;
+}
+.toggle-glow::before {
+    content: '';
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--gray-dark);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+.toggle-glow:checked {
+    background: var(--gradient-accent);
+    border-color: var(--cherry-light);
+    box-shadow: 0 0 15px rgba(var(--cherry-rgb), 0.4), 0 0 30px rgba(var(--cherry-rgb), 0.2);
+}
+.toggle-glow:checked::before {
+    left: 25px;
+    background: #fff;
+    box-shadow: 0 0 8px rgba(var(--cherry-rgb), 0.6);
+}
+
+/* Step dot pulse ring */
+.dot-pulse {
+    animation: dotPulse 2s ease-in-out infinite;
+}
+
+@keyframes dotPulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(var(--cherry-rgb), 0.5); }
+    50% { box-shadow: 0 0 0 12px rgba(var(--cherry-rgb), 0); }
+}
+
+/* Warm text with cherry tint */
+.warm-text {
+    color: var(--warm-light) !important;
+    text-shadow: 0 0 30px rgba(var(--cherry-rgb), 0.08);
+}
+
+/* Flowing connecting line gradient */
+.line-flow {
+    background: linear-gradient(90deg, var(--cherry-light), var(--cherry), var(--cherry-light)) !important;
+    background-size: 200% 100% !important;
+    animation: flowGradient 2s linear infinite;
+}
+
+@keyframes flowGradient {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* Hero floating geometric accents */
+.hero-accent {
+    position: absolute;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.07;
+}
+.hero-accent-1 {
+    width: 350px;
+    height: 350px;
+    background: radial-gradient(circle, var(--cherry-light), transparent 70%);
+    top: 10%;
+    right: -5%;
+    animation: floatAccent 12s ease-in-out infinite;
+}
+.hero-accent-2 {
+    width: 250px;
+    height: 250px;
+    background: radial-gradient(circle, rgba(var(--cherry-rgb), 0.8), transparent 70%);
+    bottom: 15%;
+    left: -3%;
+    animation: floatAccent 15s ease-in-out infinite reverse;
+}
+@keyframes floatAccent {
+    0%, 100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+    25% { transform: translate(30px, -20px) rotate(5deg) scale(1.1); }
+    50% { transform: translate(-20px, -40px) rotate(-3deg) scale(0.95); }
+    75% { transform: translate(-25px, -10px) rotate(2deg) scale(1.05); }
+}
+
 /* ===================== APPLE LIQUID GLASS OVERRIDES ===================== */
 html {
     background-color: #050001 !important;
@@ -1313,6 +1528,66 @@ body {
     background: linear-gradient(180deg, #7a081e 0%, #42020d 50%, #300109 100%) !important;
     box-shadow: 0 6px 20px rgba(122, 8, 30, 0.5), inset 0 1px 2px rgba(var(--cherry-rgb),0.35) !important;
     transform: translateY(-1px);
+}
+
+/* Custom Glow & Shimmer Utilities */
+.glass-card {
+    background: rgba(12, 2, 4, 0.55) !important;
+    backdrop-filter: blur(25px) saturate(210%) !important;
+    -webkit-backdrop-filter: blur(25px) saturate(210%) !important;
+    border: 1px solid rgba(var(--cherry-rgb),0.08) !important;
+    box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.55) !important;
+    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.glass-card:hover {
+    border-color: rgba(var(--cherry-rgb),0.25) !important;
+    box-shadow: 0 15px 45px rgba(var(--cherry-rgb), 0.1) !important;
+}
+
+.shimmer-border {
+    position: relative;
+}
+.shimmer-border::after {
+    content: '';
+    position: absolute;
+    top: -1px; left: -1px; right: -1px; bottom: -1px;
+    border-radius: inherit;
+    background: linear-gradient(90deg, transparent, rgba(var(--cherry-rgb), 0.25), transparent);
+    background-size: 200% 100%;
+    z-index: 10;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.shimmer-border:hover::after {
+    opacity: 1;
+    animation: borderShimmer 1.5s infinite linear;
+}
+
+@keyframes borderShimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+.glowing-text {
+    text-shadow: 0 0 10px rgba(var(--cherry-rgb), 0.6), 0 0 20px rgba(var(--cherry-rgb), 0.4);
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(12px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+.fade-in-up {
+    animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 
