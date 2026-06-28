@@ -367,9 +367,20 @@
                 document.getElementById('pluginsGrid').innerHTML = '<div class="no-results"><i class="fas fa-database"></i><p>Loading plugin data...</p></div>';
                 return;
             }
-            // Filter out deleted products (persisted via localStorage)
+            // Filter out deleted products
             const deletedIds = getDeletedIds();
             allPlugins = data.filter(p => !deletedIds.includes(p.id));
+            
+            // Merge locally-published products (from admin wizard)
+            try {
+                const localItems = JSON.parse(localStorage.getItem('zyrex_new_products') || '[]');
+                localItems.forEach(item => {
+                    if (!allPlugins.some(p => p.id === item.id)) {
+                        allPlugins.unshift(item); // Add to beginning
+                    }
+                });
+            } catch(e) {}
+            
             renderPlugins();
         }
 

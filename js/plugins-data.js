@@ -584,6 +584,14 @@ window.pluginsData = [
         links: [{ url: 'https://clicknupload.click/xtwnokjf2phe/Topaz.Photo.Pro.v1.6.1.rar', label: 'ClicknUpload' }]
     },
 
+        {
+        id: makeId('Topaz Video AI 3.3.10 (Recommended)'),
+        name: 'Topaz Video AI 3.3.10 (Recommended)',
+        category: 'software', platform: 'win', password: 'Editing',
+        desc: 'I recommend this version of Topaz Video AI. cuz It works good. 😊',
+        links: [{ url: 'https://download2390.mediafire.com/1rcr5yp7cgzgrIkjisGXTFMLbI5Jwyeo7jxcy01UJ04c1oGwZmQwq7AjX5jAkjuUImO9LG1xinHj2wXWNc9HMAXBc6Npb9fdYwWfQmxlHqje_ip0nhT_na-UYUDAYbW5EhQ3YqzargJW95e66Ou1Jz3J9ncC1tEbCGP6762-V7s/gyurk96eyucb7nk/Topaz+Video+AI+3.3.10+%28Win%29.rar', label: 'Mediafire' }]
+    },
+
     // ═══════════════════════════════════════════
     // AVID SOFTWARE & PLUGINS (from codec.kyiv.ua/avid.html)
     // ═══════════════════════════════════════════

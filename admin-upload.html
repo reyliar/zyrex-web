@@ -147,10 +147,11 @@
         <div class="code-output" id="codeOutput"></div>
 
         <div class="btn-row">
-            <button class="btn btn-primary" onclick="generateCode()"><i class="fas fa-code"></i> Generate Code</button>
-            <button class="btn btn-success" id="btnCopy" onclick="copyCode()" style="display:none"><i class="fas fa-copy"></i> Copy to Clipboard</button>
+            <button class="btn btn-primary" onclick="publishLive()"><i class="fas fa-rocket"></i> Publish Live</button>
+            <button class="btn btn-secondary" onclick="generateCode()"><i class="fas fa-code"></i> Generate Code</button>
+            <button class="btn btn-success" id="btnCopy" onclick="copyCode()" style="display:none"><i class="fas fa-copy"></i> Copy</button>
             <button class="btn btn-secondary" onclick="clearForm()"><i class="fas fa-undo"></i> Clear</button>
-            <a href="/settings" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back to Settings</a>
+            <a href="/settings" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
         </div>
     </div>
 
@@ -243,6 +244,63 @@
             box.textContent = msg;
             box.className = 'alert show' + (isError ? '' : ' alert-success');
             setTimeout(() => box.classList.remove('show'), 4000);
+        }
+
+        async function publishLive() {
+            const n = document.getElementById('prodName').value.trim();
+            const c = document.getElementById('prodCategory').value;
+            const p = document.getElementById('prodPlatform').value;
+            const u = document.getElementById('prodUrl').value.trim();
+
+            if (!n || !c || !p || !u) {
+                showAlert('Please fill Name, Category, Platform, and Download URL.', true);
+                return;
+            }
+
+            const pw = document.getElementById('prodPassword').value.trim();
+            const d = document.getElementById('prodDesc').value.trim() || 'No description.';
+            const nt = document.getElementById('prodNotes').value.trim();
+            const l = document.getElementById('prodLabel').value.trim() || 'Download';
+
+            const payload = {
+                name: n,
+                category: c,
+                platform: p,
+                description: d,
+                password: pw || null,
+                notes: nt || null,
+                links: [{ url: u, label: l }],
+                // Auto-generated fields
+                type: 'plugin'
+            };
+
+            showAlert('Publishing...', false);
+            try {
+                const resp = await fetch('/api/products/submit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload),
+                    credentials: 'include'
+                });
+                const result = await resp.json();
+                if (resp.ok && result.success) {
+                    const newId = result.id || makeId(n);
+                    // Also add to localStorage so it appears on plugins page immediately
+                    try {
+                        const key = 'zyrex_new_products';
+                        const items = JSON.parse(localStorage.getItem(key) || '[]');
+                        items.push({ id: newId, name: n, category: c, platform: p, desc: d, password: pw||null, notes: nt||null, links: [{url:u,label:l}] });
+                        localStorage.setItem(key, JSON.stringify(items));
+                    } catch(e) {}
+                    
+                    showAlert(`Published! View at product page.`, false);
+                    setTimeout(() => { window.location.href = 'product.html?id=' + newId; }, 1500);
+                } else {
+                    showAlert('Publish failed: ' + (result.error || 'Unknown error'), true);
+                }
+            } catch(e) {
+                showAlert('Network error: ' + e.message, true);
+            }
         }
 
         updatePreview();
