@@ -22,39 +22,21 @@ window.pluginsData = [
     // ═══════════════════════════════════════════
     // ADOBE SOFTWARE (from monkrus.ws & codec.kyiv.ua)
     // ═══════════════════════════════════════════
-    {
-        id: makeId('Adobe Photoshop 2026 v27.8'),
-        name: 'Adobe Photoshop 2026 (v27.8)',
-        category: 'software', platform: 'win', password: null,
-        desc: 'Adobe Photoshop 2026 v27.8 Multilingual — the industry standard for image editing and graphic design. Full pre-activated installer by m0nkrus.',
-        notes: 'Pre-activated. No crack needed. Torrent download.',
-        links: [
-            { url: 'https://korsars.pro/viewtopic.php?t=141417', label: 'Korsars (torrent)' },
-            { url: 'https://tapochek.net/viewtopic.php?t=287311', label: 'Tapochek (torrent)' },
-            { url: 'https://uztracker.me/threads/71029', label: 'UZTracker (torrent)' }
-        ]
+]
     },
     {
         id: makeId('Adobe Premiere Pro 2026 v26.3'),
         name: 'Adobe Premiere Pro 2026 (v26.3)',
         category: 'software', platform: 'win', password: null,
         desc: 'Adobe Premiere Pro 2026 v26.3 Multilingual — professional video editing software. Full pre-activated installer by m0nkrus.',
-        notes: 'Pre-activated. Torrent download.',
+        notes: 'Direct download.',
         links: [
             { url: 'https://korsars.pro/viewtopic.php?t=141277', label: 'Korsars (torrent)' },
             { url: 'https://tapochek.net/viewtopic.php?t=287252', label: 'Tapochek (torrent)' },
             { url: 'https://uztracker.me/threads/70666', label: 'UZTracker (torrent)' }
         ]
     },
-    {
-        id: makeId('Adobe After Effects 2026'),
-        name: 'Adobe After Effects 2026',
-        category: 'software', platform: 'win', password: null,
-        desc: 'Adobe After Effects 2026 — industry-standard motion graphics and visual effects software. m0nkrus pre-activated release.',
-        notes: 'Pre-activated. Download via torrent from monkrus.ws.',
-        links: [{ url: 'https://w18.monkrus.ws/search/label/After%20Effects', label: 'Monkrus (torrent)' }]
-    },
-    {
+{
         id: makeId('After Effects 2026 v26.0 Direct'),
         name: 'After Effects 2026 (v26.0)',
         category: 'software', platform: 'win', password: null,
@@ -112,60 +94,71 @@ window.pluginsData = [
         links: [{ url: 'https://is7.arfiles.net/Adobe_After_Effects_2019_v16.1.2.55_Multilingual.zip', label: 'ArFiles (direct)' }]
     },
     {
+        id: makeId('Adobe Photoshop 2026 GoFile'),
+        name: 'Adobe Photoshop 2026',
+        category: 'software', platform: 'win', password: 'star',
+        desc: 'Adobe Photoshop 2026 — direct download for Windows.',
+        links: [{ url: 'https://gofile.io/d/JsV4os', label: 'GoFile (direct)' }]
+    },
+    {
+        id: makeId('Adobe Photoshop 2025'),
+        name: 'Adobe Photoshop 2025',
+        category: 'software', platform: 'win', password: '09',
+        desc: 'Adobe Photoshop 2025 — direct download for Windows.',
+        notes: 'ZIP password: 09',
+        links: [{ url: 'https://pixeldrain.com/api/file/YuLRpjsN', label: 'Pixeldrain (direct)' }]
+    },
+    {
+        id: makeId('Adobe Photoshop 2024 GoFile'),
+        name: 'Adobe Photoshop 2024',
+        category: 'software', platform: 'win', password: 'star',
+        desc: 'Adobe Photoshop 2024 — direct download for Windows.',
+        links: [{ url: 'https://gofile.io/d/6CwYrr', label: 'GoFile (direct)' }]
+    },
+    {
+        id: makeId('Substance 3D Designer'),
+        name: 'Substance 3D Designer',
+        category: 'software', platform: 'win', password: 'star',
+        desc: 'Adobe Substance 3D Designer — material authoring tool for 3D. Direct download for Windows.',
+        links: [{ url: 'https://gofile.io/d/YBg0IG', label: 'GoFile (direct)' }]
+    },
+    {
+        id: makeId('Substance 3D Modeler'),
+        name: 'Substance 3D Modeler',
+        category: 'software', platform: 'win', password: 'star',
+        desc: 'Adobe Substance 3D Modeler — 3D modeling tool. Direct download for Windows.',
+        links: [{ url: 'https://gofile.io/d/dLhZHP', label: 'GoFile (direct)' }]
+    },    {
         id: makeId('Adobe Lightroom Classic v15.4.1'),
         name: 'Adobe Lightroom Classic v15.4.1',
-        category: 'software', platform: 'win', password: null,
+        category: 'software', platform: 'win', password: "star",
         desc: 'Adobe Lightroom Classic v15.4.1 Multilingual — powerful photo editing and organization tools. Pre-activated by m0nkrus.',
-        notes: 'Pre-activated. Torrent download.',
-        links: [{ url: 'https://korsars.pro/viewtopic.php?t=141388', label: 'Korsars (torrent)' }, { url: 'https://tapochek.net/viewtopic.php?t=287292', label: 'Tapochek (torrent)' }, { url: 'https://uztracker.me/threads/70840', label: 'UZTracker (torrent)' }]
+        notes: 'Direct download.',
+        links: [{ url: "https://gofile.io/d/EummVn", label: "GoFile (direct)" }]
     },
     {
         id: makeId('Adobe Illustrator 2026 v30.6'),
         name: 'Adobe Illustrator 2026 (v30.6)',
-        category: 'software', platform: 'win', password: null,
+        category: 'software', platform: 'win', password: "star",
         desc: 'Adobe Illustrator 2026 v30.6 Multilingual — vector graphics and illustration software. Pre-activated by m0nkrus.',
-        notes: 'Pre-activated. Torrent download.',
-        links: [{ url: 'https://korsars.pro/viewtopic.php?t=141342', label: 'Korsars (torrent)' }, { url: 'https://tapochek.net/viewtopic.php?t=287275', label: 'Tapochek (torrent)' }, { url: 'https://uztracker.me/threads/70726', label: 'UZTracker (torrent)' }]
+        notes: 'Direct download.',
+        links: [{ url: "https://gofile.io/d/UxyytM", label: "GoFile (direct)" }]
     },
     {
         id: makeId('Adobe InDesign 2026 v21.4.1'),
         name: 'Adobe InDesign 2026 (v21.4.1)',
         category: 'software', platform: 'win', password: null,
         desc: 'Adobe InDesign 2026 v21.4.1 Multilingual — page design and layout for print and digital. Pre-activated by m0nkrus.',
-        notes: 'Pre-activated. Torrent download.',
+        notes: 'Direct download.',
         links: [{ url: 'https://w18.monkrus.ws/2026/06/adobe-indesign-2026-v2141-multilingual.html', label: 'Torrent (monkrus.ws)' }]
     },
     {
         id: makeId('Adobe Substance 3D Painter v12.1.0'),
         name: 'Adobe Substance 3D Painter v12.1.0',
-        category: 'software', platform: 'win', password: null,
+        category: 'software', platform: 'win', password: "star",
         desc: 'Adobe Substance 3D Painter v12.1.0 Multilingual — 3D texturing tool for games, films, and design. Pre-activated by m0nkrus.',
-        notes: 'Pre-activated. Torrent download.',
-        links: [{ url: 'https://korsars.pro/viewtopic.php?t=141378', label: 'Korsars (torrent)' }, { url: 'https://tapochek.net/viewtopic.php?t=287291', label: 'Tapochek (torrent)' }]
-    },
-    {
-        id: makeId('Adobe Substance 3D Sampler v6.0.2'),
-        name: 'Adobe Substance 3D Sampler v6.0.2',
-        category: 'software', platform: 'win', password: null,
-        desc: 'Adobe Substance 3D Sampler v6.0.2 Multilingual — material creation from real-life images. Pre-activated by m0nkrus.',
-        notes: 'Pre-activated. Torrent download.',
-        links: [{ url: 'https://w18.monkrus.ws/2026/06/adobe-substance-3d-sampler-v602.html', label: 'Torrent (monkrus.ws)' }]
-    },
-    {
-        id: makeId('Adobe Acrobat 2026 v26.1'),
-        name: 'Adobe Acrobat 2026 (v26.1)',
-        category: 'software', platform: 'win', password: null,
-        desc: 'Adobe Acrobat 2026 v26.1 x64 Multilingual — PDF creation and editing. Pre-activated by m0nkrus.',
-        notes: 'Pre-activated. Torrent download.',
-        links: [{ url: 'https://w18.monkrus.ws/2026/06/adobe-acrobat-2026-v26121691-x64.html', label: 'Torrent (monkrus.ws)' }]
-    },
-    {
-        id: makeId('Adobe Master Collection 2026 RUS-ENG v3'),
-        name: 'Adobe Master Collection 2026 RUS-ENG v3',
-        category: 'software', platform: 'win', password: null,
-        desc: 'Adobe Master Collection 2026 — all Adobe apps in one package. Pre-activated by m0nkrus.',
-        notes: 'Pre-activated. Full suite. Torrent download.',
-        links: [{ url: 'https://w18.monkrus.ws/2026/05/adobe-master-collection-2026-rus-eng-v3.html', label: 'Torrent (monkrus.ws)' }]
+        notes: 'Direct download.',
+        links: [{ url: "https://gofile.io/d/DgVY26", label: "GoFile (direct)" }]
     },
 
     // ═══════════════════════════════════════════
