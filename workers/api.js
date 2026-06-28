@@ -140,28 +140,36 @@ export default {
         const session = parseSession(request.headers.get("Cookie"));
         if (!session) return json({ error: "Not logged in" }, 401);
 
-        // Live role check against Discord API so role changes are reflected immediately
         let canUpload = session.canUpload || false;
         const isAdmin = ADMIN_IDS.includes(session.userId);
-        if (!canUpload && !isAdmin) {
-          try {
-            const mr = await fetch(`${DISCORD_API}/guilds/${env.GUILD_ID}/members/${session.userId}`, {
-              headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` },
-            });
-            if (mr.ok) {
-              const member = await mr.json();
-              canUpload = member.roles?.includes(env.UPLOAD_ROLE_ID) || false;
-            }
-          } catch (e) { console.error("Live role check:", e); }
+        
+        // Query the VPS Bot API for live status
+        try {
+          const checkResp = await fetch(`${BOT_API}/api/check-uploader?userId=${session.userId}`);
+          if (checkResp.ok) {
+            const checkData = await checkResp.json();
+            canUpload = !!checkData.can_upload;
+          }
+        } catch (e) {
+          console.error("VPS live uploader check failed:", e);
         }
 
-        return json({
+        let responseHeaders = { ...corsHeaders };
+        if (canUpload !== session.canUpload) {
+          session.canUpload = canUpload;
+          responseHeaders["Set-Cookie"] = setCookie(session);
+        }
+
+        return new Response(JSON.stringify({
           id: session.userId,
           username: session.username,
           global_name: session.displayName || session.username,
           avatar: session.avatar,
           can_upload: canUpload,
           is_admin: isAdmin,
+        }), {
+          status: 200,
+          headers: { ...responseHeaders, "Content-Type": "application/json" }
         });
       }
 
@@ -195,14 +203,14 @@ export default {
         let canUpload = ADMIN_IDS.includes(du.id);
         if (!canUpload) {
           try {
-            const mr = await fetch(`${DISCORD_API}/guilds/${env.GUILD_ID}/members/${du.id}`, {
-              headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` },
-            });
-            if (mr.ok) {
-              const member = await mr.json();
-              canUpload = member.roles?.includes(env.UPLOAD_ROLE_ID);
+            const checkResp = await fetch(`${BOT_API}/api/check-uploader?userId=${du.id}`);
+            if (checkResp.ok) {
+              const checkData = await checkResp.json();
+              canUpload = !!checkData.can_upload;
             }
-          } catch (e) { console.error("Guild check:", e); }
+          } catch (e) {
+            console.error("VPS uploader check during auth failed:", e);
+          }
         }
 
         return new Response(null, {
