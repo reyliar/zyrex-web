@@ -36,16 +36,22 @@
         }
 
         .product-card {
-            max-width: 700px;
+            max-width: 900px;
             margin: 0 auto;
-            background: var(--dark-2);
-            border: 1px solid rgba(var(--cherry-rgb), 0.1);
+            background: rgba(12, 2, 4, 0.45);
+            border: 1px solid rgba(var(--cherry-rgb), 0.12);
             border-radius: var(--radius-lg);
-            padding: 50px 45px;
-            text-align: center;
+            padding: 40px;
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 40px;
+            text-align: left;
             position: relative;
             overflow: hidden;
-            animation: fadeSlideUp 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.4), 0 0 30px rgba(var(--cherry-rgb),0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            animation: fadeSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
         .product-card::before {
@@ -54,8 +60,36 @@
             top: 0;
             left: 0;
             right: 0;
-            height: 4px;
+            height: 3px;
             background: var(--gradient);
+        }
+
+        .product-left-col {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            padding-right: 30px;
+        }
+
+        .product-right-col {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        @media (max-width: 800px) {
+            .product-card {
+                grid-template-columns: 1fr;
+                padding: 30px 20px;
+                gap: 30px;
+            }
+            .product-left-col {
+                border-right: none;
+                padding-right: 0;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                padding-bottom: 30px;
+            }
         }
 
         @keyframes fadeSlideUp {
@@ -390,7 +424,6 @@
                         <li><a href="/">Home</a></li>
                         <li><a href="resources">Resources</a></li>
                         <li><a href="plugins">Plugins</a></li>
-                        <li><a href="/#team">Team</a></li>
                         <li><a href="/#contact">Contact</a></li>
                     </ul>
                 </div>
@@ -398,7 +431,6 @@
                     <h4>Community</h4>
                     <ul>
                         <li><a href="https://discord.gg/fAydSzpafA">Discord</a></li>
-                        <li><a href="/#team">Team</a></li>
                         <li><a href="/#contact">Contact</a></li>
                     </ul>
                 </div>
@@ -586,52 +618,79 @@
             }
 
             container.innerHTML = `
-                <div style="max-width:700px;margin:0 auto">
+                <div style="max-width:960px;margin:0 auto">
                     <a href="${backLink}" class="product-back">
                         <i class="fas fa-arrow-left"></i> Back to ${backLink === 'plugins' ? 'Plugins' : 'Resources'}
                     </a>
+                    
                     <div class="product-card">
-                        <div class="product-thumb-large">${thumbHtml}</div>
-                        <span class="product-category-badge">${categoryLabels[p.category] || p.category}</span>
-                        <h1>${p.name}</h1>
-                        ${p.description || p.desc ? `<p class="product-desc">${p.description || p.desc}</p>` : ''}
-                        ${platformTags.length ? `<div class="product-platform-tags">${platformTags.join('')}</div>` : ''}
+                        <!-- Left Column (Metadata) -->
+                        <div class="product-left-col">
+                            <div class="product-thumb-large">${thumbHtml}</div>
+                            <div style="text-align:center">
+                                <span class="product-category-badge">${categoryLabels[p.category] || p.category}</span>
+                            </div>
+                            
+                            ${platformTags.length ? `
+                            <div style="margin-top:10px">
+                                <div style="font-size:0.75rem;font-weight:700;color:var(--gray-dark);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Compatibility</div>
+                                <div class="product-platform-tags" style="justify-content:flex-start">${platformTags.join('')}</div>
+                            </div>
+                            ` : ''}
+                            
+                            <!-- Creator profile block -->
+                            <div style="margin-top:15px; padding-top:15px; border-top:1px solid rgba(255,255,255,0.05)">
+                                <div style="font-size:0.75rem;font-weight:700;color:var(--gray-dark);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Developer</div>
+                                <div style="display:flex;align-items:center;gap:12px">
+                                    <div style="width:38px;height:38px;border-radius:50%;background:rgba(var(--cherry-rgb),0.15);overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(var(--cherry-rgb),0.25)">
+                                        ${creatorAvatarHtml}
+                                    </div>
+                                    <div style="min-width:0;flex:1">
+                                        <strong style="font-size:0.88rem;color:var(--light);display:block">${creatorNickname}</strong>
+                                        ${creatorSocialHtml}
+                                    </div>
+                                </div>
+                            </div>
+
+                            ${uploaderName ? `
+                            <!-- Uploader profile block -->
+                            <div style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05)">
+                                <div style="font-size:0.75rem;font-weight:700;color:var(--gray-dark);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Shared by</div>
+                                <div style="display:flex;align-items:center;gap:12px">
+                                    <div style="width:38px;height:38px;border-radius:50%;background:rgba(88,101,242,0.08);overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(88,101,242,0.15)">
+                                        ${uploaderAvatarHtml}
+                                    </div>
+                                    <div style="min-width:0;flex:1">
+                                        <strong style="font-size:0.85rem;color:var(--light);display:flex;align-items:center;gap:4px"><i class="fab fa-discord" style="color:#5865F2;font-size:0.75rem"></i> ${uploaderName}</strong>
+                                    </div>
+                                </div>
+                            </div>
+                            ` : ''}
+                        </div>
                         
-                        <div class="product-password-box">
-                            <i class="fas fa-lock"></i>
-                            <span>Password:</span>
-                            <code onclick="navigator.clipboard.writeText('${p.password || 'star'}');this.textContent='Copied!';setTimeout(()=>this.textContent='${p.password || 'star'}',1500)">${p.password || 'star'}</code>
-                        </div>
-
-                        <!-- Creator details badge (original author) -->
-                        <div style="display:flex;align-items:center;gap:15px;background:rgba(var(--cherry-rgb),0.02);border:1px solid rgba(var(--cherry-rgb),0.05);border-radius:16px;padding:16px;margin:25px 0;text-align:left">
-                            <div style="width:50px;height:50px;border-radius:50%;background:var(--cherry);overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2px solid rgba(255,56,96,0.3)">
-                                ${creatorAvatarHtml}
+                        <!-- Right Column (Details & Download) -->
+                        <div class="product-right-col">
+                            <div>
+                                <h1 style="font-size:2.2rem;font-weight:900;margin:0 0 10px;letter-spacing:-0.5px;line-height:1.2;color:#fff">${p.name}</h1>
+                                ${p.description || p.desc ? `<p class="product-desc" style="font-size:0.92rem;line-height:1.6;color:var(--gray);margin:0">${p.description || p.desc}</p>` : ''}
                             </div>
-                            <div style="flex:1;min-width:0">
-                                <span style="font-size:0.75rem;color:var(--gray-dark);text-transform:uppercase;letter-spacing:1px;display:block">Created By</span>
-                                <strong style="font-size:1rem;color:var(--light);display:block">${creatorNickname}</strong>
-                                ${creatorSocialHtml}
+                            
+                            <div style="display:flex;align-items:center;gap:15px;flex-wrap:wrap">
+                                <div class="product-password-box" style="margin-bottom:0;padding:8px 18px">
+                                    <i class="fas fa-lock"></i>
+                                    <span>Zip Password:</span>
+                                    <code onclick="navigator.clipboard.writeText('${p.password || 'star'}');this.textContent='Copied!';setTimeout(()=>this.textContent='${p.password || 'star'}',1500)">${p.password || 'star'}</code>
+                                </div>
                             </div>
-                        </div>
-
-                        ${uploaderName ? `
-                        <!-- Uploader badge (Discord user who shared) -->
-                        <div style="display:flex;align-items:center;gap:15px;background:rgba(88,101,242,0.08);border:1px solid rgba(88,101,242,0.15);border-radius:16px;padding:16px;margin:0 0 25px;text-align:left">
-                            <div style="width:44px;height:44px;border-radius:50%;background:rgba(88,101,242,0.15);overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2px solid rgba(88,101,242,0.25)">
-                                ${uploaderAvatarHtml}
+                            
+                            ${notesHtml}
+                            
+                            <div style="margin-top:10px">
+                                <div class="product-downloads-title" style="margin-bottom:12px"><i class="fas fa-cloud-arrow-down"></i> Installation Package</div>
+                                <div class="product-downloads">
+                                    ${dlHtml}
+                                </div>
                             </div>
-                            <div style="flex:1;min-width:0">
-                                <span style="font-size:0.75rem;color:var(--gray-dark);text-transform:uppercase;letter-spacing:1px;display:block">Shared by</span>
-                                <strong style="font-size:0.95rem;color:var(--light);display:flex;align-items:center;gap:6px"><i class="fab fa-discord" style="font-size:0.85rem;color:#5865F2"></i> ${uploaderName}</strong>
-                            </div>
-                        </div>
-                        ` : ''}
-
-                        ${notesHtml}
-                        <div class="product-downloads-title"><i class="fas fa-download"></i> Download Links</div>
-                        <div class="product-downloads">
-                            ${dlHtml}
                         </div>
                     </div>
                 </div>

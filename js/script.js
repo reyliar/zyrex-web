@@ -99,6 +99,7 @@ async function loadTeamMembers() {
             teamMembers.forEach(member => {
                 const card = document.createElement('div');
                 card.className = 'team-card';
+                const roleClass = member.role.toLowerCase().replace(/\s+/g, '-');
                 card.innerHTML = `
                     <a href="https://discord.com/users/${member.userId}" target="_blank" class="team-card-link">
                         <div class="team-avatar">
@@ -106,7 +107,7 @@ async function loadTeamMembers() {
                         </div>
                         <h4>Loading...</h4>
                         <span class="team-discord-tag">@${member.userId}</span>
-                        <span class="team-role" style="color: ${member.roleColor}">
+                        <span class="team-role role-${roleClass}">
                             <i class="fas fa-crown"></i> ${member.role}
                         </span>
                     </a>
@@ -137,6 +138,7 @@ async function loadTeamMembers() {
         const displayName = member.user?.global_name || member.user?.username || 'Unknown';
         const username = member.user?.username || '';
         const discordTag = member.user ? `@${username}` : '';
+        const roleClass = member.role.toLowerCase().replace(/\s+/g, '-');
 
         card.innerHTML = `
             <a href="https://discord.com/users/${member.userId}" target="_blank" class="team-card-link">
@@ -145,7 +147,7 @@ async function loadTeamMembers() {
                 </div>
                 <h4>${displayName}</h4>
                 <span class="team-discord-tag">${discordTag}</span>
-                <span class="team-role" style="color: ${member.roleColor}">
+                <span class="team-role role-${roleClass}">
                     <i class="fas fa-crown"></i> ${member.role}
                 </span>
             </a>

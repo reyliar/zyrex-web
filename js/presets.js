@@ -92,7 +92,8 @@ function getCategoryLabel(category) {
         'photoshop': 'Photoshop',
         'video-star': 'Video Star',
         'topaz-labs': 'Topaz Labs',
-        'others': 'Others'
+        'others': 'Others',
+        'other': 'Others'
     };
     return labels[category] || category;
 }
@@ -110,7 +111,10 @@ function filterPresets() {
     const data = window.presetsData || [];
     let filtered = data;
     if (currentPresetCategory !== 'all') {
-        filtered = filtered.filter(r => r.category === currentPresetCategory);
+        filtered = filtered.filter(r => {
+            const cat = r.category === 'other' ? 'others' : r.category;
+            return cat === currentPresetCategory;
+        });
     }
     if (currentSearch) {
         const s = currentSearch.toLowerCase();

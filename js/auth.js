@@ -286,12 +286,6 @@ function initCookieConsent() {
     `;
     document.head.appendChild(style);
 
-    // Inject Cookie Backdrop
-    const backdrop = document.createElement('div');
-    backdrop.id = 'cookieConsentBackdrop';
-    backdrop.className = 'cookie-backdrop';
-    document.body.appendChild(backdrop);
-
     // Inject Cookie Consent Banner HTML (the bottom rectangle)
     const banner = document.createElement('div');
     banner.id = 'cookieConsentBanner';
@@ -304,76 +298,16 @@ function initCookieConsent() {
         <div class="cookie-actions">
             <button id="acceptAllCookies" class="btn-cookie-primary">Accept All</button>
             <button id="declineCookies" class="btn-cookie-secondary">Decline</button>
-            <button id="customizeCookies" class="btn-cookie-link">Customize</button>
+            <a href="/settings?tab=general" class="btn-cookie-link" style="text-decoration: underline; padding: 9px 12px;">Cookie Settings</a>
         </div>
     `;
     document.body.appendChild(banner);
 
-    // Inject Cookie Preferences Modal HTML (the customize modal)
-    const modal = document.createElement('div');
-    modal.id = 'cookiePreferencesModal';
-    modal.className = 'cookie-modal hidden';
-    modal.innerHTML = `
-        <h4>Customize Cookie Preferences</h4>
-        <p>Please choose which types of cookies you want to allow on our website. You can update your choices at any time.</p>
-        <div class="cookie-customize">
-            <div class="cookie-option">
-                <label>
-                    <input type="checkbox" id="cookieEssential" checked disabled>
-                    <span>Essential Cookies <small>(Required for login session and core operations)</small></span>
-                </label>
-            </div>
-            <div class="cookie-option">
-                <label>
-                    <input type="checkbox" id="cookieAnalytics" checked>
-                    <span>Analytical Cookies <small>(Helps us improve performance and site structures)</small></span>
-                </label>
-            </div>
-            <div class="cookie-option">
-                <label>
-                    <input type="checkbox" id="cookiePersonalization" checked>
-                    <span>Personalization Cookies <small>(Retains custom choices like themes and preferences)</small></span>
-                </label>
-            </div>
-            <div class="cookie-actions" style="margin-top:10px; justify-content: flex-end;">
-                <button id="saveCookiePreferences" class="btn-cookie-primary">Save Choices</button>
-                <button id="backCookieBanner" class="btn-cookie-secondary">Back</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-
     // Add Action Event Listeners
     document.getElementById('acceptAllCookies').onclick = () => saveConsent(true, true);
     document.getElementById('declineCookies').onclick = () => saveConsent(false, false);
-    
-    document.getElementById('customizeCookies').onclick = () => {
-        banner.classList.remove('show');
-        setTimeout(() => banner.classList.add('hidden'), 400);
 
-        modal.classList.remove('hidden');
-        setTimeout(() => {
-            modal.classList.add('show');
-            backdrop.classList.add('show');
-        }, 100);
-    };
-
-    document.getElementById('backCookieBanner').onclick = () => {
-        modal.classList.remove('show');
-        backdrop.classList.remove('show');
-        setTimeout(() => modal.classList.add('hidden'), 400);
-
-        banner.classList.remove('hidden');
-        setTimeout(() => banner.classList.add('show'), 100);
-    };
-
-    document.getElementById('saveCookiePreferences').onclick = () => {
-        const analytics = document.getElementById('cookieAnalytics').checked;
-        const personalization = document.getElementById('cookiePersonalization').checked;
-        saveConsent(analytics, personalization);
-    };
-
-    // Show popup after short delay if no preference saved (Banner only, NO backdrop)
+    // Show popup after short delay if no preference saved
     if (!consent) {
         setTimeout(() => {
             banner.classList.remove('hidden');
@@ -397,47 +331,14 @@ function saveConsent(analytics, personalization) {
     localStorage.setItem('zyrex_cookie_consent', JSON.stringify(preferences));
     
     const banner = document.getElementById('cookieConsentBanner');
-    const modal = document.getElementById('cookiePreferencesModal');
-    const backdrop = document.getElementById('cookieConsentBackdrop');
     if (banner) {
         banner.classList.remove('show');
         setTimeout(() => banner.classList.add('hidden'), 400);
-    }
-    if (modal) {
-        modal.classList.remove('show');
-        setTimeout(() => modal.classList.add('hidden'), 400);
-    }
-    if (backdrop) {
-        backdrop.classList.remove('show');
     }
 }
 
 function openCookieSettings() {
-    const banner = document.getElementById('cookieConsentBanner');
-    const modal = document.getElementById('cookiePreferencesModal');
-    const backdrop = document.getElementById('cookieConsentBackdrop');
-    if (!modal) return;
-
-    // Load saved preferences if available
-    const saved = localStorage.getItem('zyrex_cookie_consent');
-    if (saved) {
-        try {
-            const parsed = JSON.parse(saved);
-            document.getElementById('cookieAnalytics').checked = !!parsed.analytics;
-            document.getElementById('cookiePersonalization').checked = !!parsed.personalization;
-        } catch(e) {}
-    }
-
-    if (banner) {
-        banner.classList.remove('show');
-        setTimeout(() => banner.classList.add('hidden'), 400);
-    }
-    
-    modal.classList.remove('hidden');
-    setTimeout(() => {
-        modal.classList.add('show');
-        if (backdrop) backdrop.classList.add('show');
-    }, 100);
+    window.location.href = '/settings?tab=general';
 }
 
 function injectCookiePreferencesLink() {

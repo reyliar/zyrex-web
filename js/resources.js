@@ -1,4 +1,4 @@
-﻿/* ===================== RESOURCES GRID RENDERER ===================== */
+/* ===================== RESOURCES GRID RENDERER ===================== */
 // Data is loaded from resources-data.js via window.resourcesData
 
 function initResources() {
@@ -25,7 +25,13 @@ function getPlatformBadge(platform) {
 }
 
 function getCategoryLabel(category) {
-    const labels = { 'software': 'Software', 'adobe-plugins': 'Adobe Plugin', 'ofx-plugins': 'OFX Plugin' };
+    const labels = { 
+        'software': 'Software', 
+        'adobe-plugins': 'Adobe Plugin', 
+        'ofx-plugins': 'OFX Plugin',
+        'others': 'Others',
+        'other': 'Others'
+    };
     return labels[category] || category;
 }
 
@@ -38,32 +44,30 @@ function renderResources(items) {
     }
     grid.innerHTML = items.map(item => {
         const faviconUrl = getFavicon(item.links[0].url);
-        return '<a href="product.html?id=' + item.id + '" class="resource-item" style="text-decoration:none;color:inherit;display:block">' +
-            '<div class="resource-thumb">' +
-            (faviconUrl ? '<img src="' + faviconUrl + '" alt="" loading="lazy" onerror="this.style.display=\'none\';this.parentElement.innerHTML=\'<div class=&quot;thumb-fallback&quot;><i class=&quot;fas fa-cube&quot;></i></div>\'">' : '<div class="thumb-fallback"><i class="fas fa-cube"></i></div>') +
-            getPlatformBadge(item.platform) +
+        const platformBadge = getPlatformBadge(item.platform);
+        const downloads = item.downloads !== undefined ? item.downloads : 0;
+        const descriptionText = item.description || item.desc || '';
+        const shortDesc = descriptionText ? descriptionText.substring(0, 100) + (descriptionText.length > 100 ? '...' : '') : '';
+        return '<a href="product.html?id=' + item.id + '" class="rc">' +
+            '<div class="rc-img">' +
+            '<div class="rimg" style="display:flex;align-items:center;justify-content:center">' +
+            (item.thumbnail ? '<img src="' + item.thumbnail + '" alt="">' : (faviconUrl ? '<img src="' + faviconUrl + '" alt="" onerror="this.parentElement.innerHTML=\'<i class=\\\'fas fa-cube\\\' style=\\\'font-size:2.5rem;opacity:0.3\\\'></i>\'">' : '<i class="fas fa-cube" style="font-size:2.5rem;opacity:0.3"></i>')) +
             '</div>' +
-            '<div class="resource-info">' +
-            '<span class="resource-category">' + getCategoryLabel(item.category) + '</span>' +
-            '<h3>' + item.name + '</h3>' +
-            (item.desc ? '<p class="resource-desc">' + item.desc.substring(0, 60) + (item.desc.length > 60 ? '...' : '') + '</p>' : '') +
-            '</div></a>';
+            '<div class="roverlay"></div>' +
+            '<div class="rbadge">' +
+            '<span class="tag-others">' + getCategoryLabel(item.category) + '</span>' +
+            platformBadge +
+            '</div>' +
+            '</div>' +
+            '<div class="rc-content">' +
+            '<h3 class="rc-title">' + item.name + '</h3>' +
+            (shortDesc ? '<p class="rc-desc">' + shortDesc + '</p>' : '') +
+            '<div class="rc-footer">' +
+            '<span class="rdate">Plugin</span>' +
+            '<div class="rc-actions">' +
+            '<span><i class="fas fa-download"></i> ' + downloads + '</span>' +
+            '</div></div></div></a>';
     }).join('');
-
-    // Add stagger animation to grid items
-    requestAnimationFrame(() => {
-        const items = grid.querySelectorAll('.resource-item');
-        items.forEach((item, i) => {
-            item.style.opacity = '0';
-            item.style.transform = 'translateY(20px)';
-            item.style.transition = 'opacity 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
-            item.style.transitionDelay = (i * 0.03) + 's';
-            requestAnimationFrame(() => {
-                item.style.opacity = '1';
-                item.style.transform = 'translateY(0)';
-            });
-        });
-    });
 }
 
 let currentPlatform = 'all';
@@ -73,7 +77,12 @@ function filterResources() {
     const data = window.resourcesData || [];
     let filtered = data;
     if (currentPlatform !== 'all') filtered = filtered.filter(r => r.platform === currentPlatform || r.platform === 'both');
-    if (currentCategory !== 'all') filtered = filtered.filter(r => r.category === currentCategory);
+    if (currentCategory !== 'all') {
+        filtered = filtered.filter(r => {
+            const cat = r.category === 'other' ? 'others' : r.category;
+            return cat === currentCategory;
+        });
+    }
     renderResources(filtered);
 }
 
