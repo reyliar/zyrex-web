@@ -117,12 +117,18 @@ export default {
     try {
       // LOGIN
       if (path === "/api/login") {
+        const redirectTo = url.searchParams.get("redirect") || "/";
+        const extraState = url.searchParams.get("state") || "";
+        // Encode redirect + extra state into Discord's state param (JSON + base64url)
+        const stateObj = { r: redirectTo, s: extraState };
+        const state = btoa(JSON.stringify(stateObj)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        
         const p = new URLSearchParams({
           client_id: env.DISCORD_CLIENT_ID,
           redirect_uri: env.DISCORD_REDIRECT_URI,
           response_type: "code",
           scope: "identify email guilds.members.read",
-          prompt: "none",
+          state: state,
         });
         return redirect(`${DISCORD_API}/oauth2/authorize?${p}`);
       }
@@ -179,6 +185,16 @@ export default {
         const code = url.searchParams.get("code");
         if (!code) return redirect("/?error=no_code");
 
+        // Decode state to get redirect URL and extra state
+        let redirectTo = "/";
+        let extraState = "";
+        try {
+          const stateRaw = url.searchParams.get("state") || "";
+          const stateJson = JSON.parse(atob(stateRaw.replace(/-/g, '+').replace(/_/g, '/')));
+          redirectTo = stateJson.r || "/";
+          extraState = stateJson.s || "";
+        } catch(e) {}
+
         const body = new URLSearchParams({
           client_id: env.DISCORD_CLIENT_ID,
           client_secret: env.DISCORD_CLIENT_SECRET,
@@ -215,10 +231,16 @@ export default {
           }
         }
 
+        // Build final redirect URL with extra state if present
+        let finalUrl = redirectTo;
+        if (extraState) {
+          finalUrl += (redirectTo.includes('?') ? '&' : '?') + 'state=' + encodeURIComponent(extraState);
+        }
+
         return new Response(null, {
           status: 302,
           headers: {
-            Location: "/",
+            Location: finalUrl,
             "Set-Cookie": setCookie({
               userId: du.id, username: du.username,
               displayName: du.global_name || du.username,
