@@ -189,6 +189,10 @@
         .platform-badge-mac { background: rgba(160,160,170,0.1); border:1px solid rgba(160,160,170,0.2); color:#b0b0ba; }
         .platform-badge-both { background: linear-gradient(90deg, rgba(0,120,212,0.08), rgba(160,160,170,0.08)); border:1px solid rgba(var(--cherry-rgb),0.15); color:var(--cherry-light); }
         
+        .card-del-btn { position:absolute;top:10px;right:10px;width:28px;height:28px;border-radius:6px;background:rgba(255,56,96,.08);border:1px solid rgba(255,56,96,.15);color:#ff3860;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.7rem;transition:all .3s;z-index:5;opacity:0 }
+        .plugin-card:hover .card-del-btn { opacity:1 }
+        .card-del-btn:hover { background:rgba(255,56,96,.2);border-color:#ff3860 }
+        
         .no-results {
             text-align:center; padding:60px 20px; color:var(--gray-dark); grid-column:1/-1;
         }
@@ -434,11 +438,32 @@
                         ${platformBadge}
                     </div>
                     <a href="product.html?id=${p.id}" class="dl-link" onclick="event.stopPropagation()"><i class="fas fa-download"></i> Get Plugin</a>
+                    ${window._isAdmin ? `<button class="card-del-btn" onclick="event.stopPropagation();deletePlugin('${p.id}','${(p.name||'').replace(/'/g,"\\'")}')" title="Delete"><i class="fas fa-trash"></i></button>` : ''}
                 </div>
             `}).join('');
         }
 
-        document.addEventListener('DOMContentLoaded', initPlugins);
+        // ── ADMIN ──
+        let _isAdmin = false;
+        async function checkAdmin() {
+            try {
+                const r = await fetch('/api/me', { credentials: 'include' });
+                if (r.ok) { const u = await r.json(); _isAdmin = u.is_admin; window._isAdmin = _isAdmin; }
+            } catch(e) {}
+        }
+        async function deletePlugin(id, name) {
+            if (!confirm('Delete "' + name + '"? This cannot be undone.')) return;
+            try {
+                const r = await fetch('/api/products/delete', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id }), credentials: 'include'
+                });
+                if (r.ok) { alert('Deleted!'); location.reload(); }
+                else alert('Delete failed');
+            } catch(e) { alert('Error: ' + e.message); }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => { await checkAdmin(); initPlugins(); });
     </script>
 </body>
 </html>
