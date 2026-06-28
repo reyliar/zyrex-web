@@ -698,12 +698,17 @@ export default {
         
         let filePath = "";
         try {
-          const prodResp = await fetch(`${BOT_API}/api/products?id=${productId}`);
+          // Fetch product info from VPS bot with 5s timeout
+          const prodResp = await fetch(`${BOT_API}/api/products?id=${productId}`, {
+            signal: AbortSignal.timeout(5000),
+          });
           if (prodResp.ok) {
             const prod = await prodResp.json();
             filePath = prod.file_path || "";
           }
-        } catch (e) {}
+        } catch (e) {
+          console.error("Failed to fetch product from bot:", e.message);
+        }
         
         if (!filePath) {
           filePath = `production/${productId}`;
@@ -719,6 +724,7 @@ export default {
               product_id: productId,
               file_path: filePath,
             }),
+            signal: AbortSignal.timeout(10000),
           });
           if (resp.ok) return json(await resp.json());
           const errData = await resp.text();
