@@ -20,15 +20,13 @@ function makeId(name) {
 window.pluginsData = [
 
     // ═══════════════════════════════════════════
-    // ADOBE SOFTWARE (from monkrus.ws & codec.kyiv.ua)
+    // ADOBE SOFTWARE
     // ═══════════════════════════════════════════
-]
-    },
     {
         id: makeId('Adobe Premiere Pro 2026 v26.3'),
         name: 'Adobe Premiere Pro 2026 (v26.3)',
         category: 'software', platform: 'win', password: null,
-        desc: 'Adobe Premiere Pro 2026 v26.3 Multilingual — professional video editing software. Full pre-activated installer by m0nkrus.',
+        desc: 'Adobe Premiere Pro 2026 v26.3 Multilingual — professional video editing software.',
         notes: 'Direct download.',
         links: [
             { url: 'https://korsars.pro/viewtopic.php?t=141277', label: 'Korsars (torrent)' },
@@ -36,7 +34,7 @@ window.pluginsData = [
             { url: 'https://uztracker.me/threads/70666', label: 'UZTracker (torrent)' }
         ]
     },
-{
+    {
         id: makeId('After Effects 2026 v26.0 Direct'),
         name: 'After Effects 2026 (v26.0)',
         category: 'software', platform: 'win', password: null,
