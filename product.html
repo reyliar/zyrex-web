@@ -780,13 +780,15 @@
                                 ${p.description || p.desc ? `<p class="product-desc" style="font-size:0.92rem;line-height:1.6;color:var(--gray);margin:0">${p.description || p.desc}</p>` : ''}
                             </div>
                             
+                            ${p.password ? `
                             <div style="display:flex;align-items:center;gap:15px;flex-wrap:wrap">
                                 <div class="product-password-box" style="margin-bottom:0;padding:8px 18px">
                                     <i class="fas fa-lock"></i>
                                     <span>Zip Password:</span>
-                                    <code onclick="navigator.clipboard.writeText('${p.password || 'star'}');this.textContent='Copied!';setTimeout(()=>this.textContent='${p.password || 'star'}',1500)">${p.password || 'star'}</code>
+                                    <code onclick="navigator.clipboard.writeText('${p.password}');this.textContent='Copied!';setTimeout(()=>this.textContent='${p.password}',1500)">${p.password}</code>
                                 </div>
                             </div>
+                            ` : ''}
                             
                             ${notesHtml}
                             
