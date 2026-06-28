@@ -621,10 +621,9 @@
         }
 
         function renderProductDetail(p, isDb) {
-            let backLink = 'resources';
-            if (p.category === 'software' || p.category === 'adobe-plugins' || p.category === 'ofx-plugins') {
-                backLink = 'plugins';
-            }
+            let backLink = 'plugins';
+            // Only DB presets with specific types go to resources
+            if (isDb && p.type === 'preset') backLink = 'resources';
 
             const platformTags = [];
             if (p.platform === 'win' || p.platform === 'both') platformTags.push('<span class="tag-win"><i class="fab fa-windows"></i> WIN</span>');
