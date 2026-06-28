@@ -256,9 +256,6 @@
             <a href="https://discord.gg/fAydSzpafA" target="_blank" style="color:var(--cherry-light);font-weight:700;font-size:.82rem"><i class="fab fa-discord"></i> Discord Server</a>
         </div>
         
-        <!-- CATEGORY TABS -->
-        <div class="cat-tabs" id="catTabs"></div>
-
         <!-- PLUGINS GRID -->
         <div class="plugins-grid stagger-fade-in" id="pluginsGrid"></div>
 
@@ -343,7 +340,6 @@
         // ===== DATA =====
         let allPlugins = [];
         let currentPlatform = 'all';
-        let currentCategory = 'all';
 
         function getCategoryIcon(cat) {
             if (cat === 'ofx-plugins') return 'fa-plug';
@@ -369,21 +365,6 @@
             }
             // All categories are shown including software
             allPlugins = data;
-            renderCategories();
-            renderPlugins();
-        }
-
-        function renderCategories() {
-            const cats = [...new Set(allPlugins.map(p => p.category).filter(Boolean))];
-            const container = document.getElementById('catTabs');
-            container.innerHTML = `<button class="cat-tab active" data-cat="all" onclick="filterCategory(this,'all')">All</button>` +
-                cats.map(c => `<button class="cat-tab" data-cat="${c}" onclick="filterCategory(this,'${c}')">${getCategoryLabel(c)}</button>`).join('');
-        }
-
-        function filterCategory(el, cat) {
-            document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
-            el.classList.add('active');
-            currentCategory = cat;
             renderPlugins();
         }
 
@@ -407,9 +388,7 @@
                     const plat = (p.platform || '').toLowerCase();
                     if (currentPlatform === 'windows' && plat !== 'win' && plat !== 'both') return false;
                     if (currentPlatform === 'apple' && plat !== 'mac' && plat !== 'both') return false;
-                    if (currentPlatform === 'linux' && plat !== 'linux') return false;
                 }
-                if (currentCategory !== 'all' && p.category !== currentCategory) return false;
                 if (q && !(p.name||'').toLowerCase().includes(q) && !(p.desc||'').toLowerCase().includes(q)) return false;
                 return true;
             });
