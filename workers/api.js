@@ -143,15 +143,16 @@ export default {
         let canUpload = session.canUpload || false;
         const isAdmin = ADMIN_IDS.includes(session.userId);
         
-        // Query the VPS Bot API for live status
+        // Fetch uploaders list from VPS API
         try {
-          const checkResp = await fetch(`${BOT_API}/api/check-uploader?userId=${session.userId}`);
-          if (checkResp.ok) {
-            const checkData = await checkResp.json();
-            canUpload = !!checkData.can_upload;
+          const upResp = await fetch(`${BOT_API}/api/guild/uploaders`);
+          if (upResp.ok) {
+            const data = await upResp.json();
+            const uploaders = data.uploaders || [];
+            canUpload = uploaders.includes(session.userId);
           }
         } catch (e) {
-          console.error("VPS live uploader check failed:", e);
+          console.error("VPS guild uploaders fetch failed:", e);
         }
 
         let responseHeaders = { ...corsHeaders };
@@ -203,13 +204,14 @@ export default {
         let canUpload = ADMIN_IDS.includes(du.id);
         if (!canUpload) {
           try {
-            const checkResp = await fetch(`${BOT_API}/api/check-uploader?userId=${du.id}`);
-            if (checkResp.ok) {
-              const checkData = await checkResp.json();
-              canUpload = !!checkData.can_upload;
+            const upResp = await fetch(`${BOT_API}/api/guild/uploaders`);
+            if (upResp.ok) {
+              const data = await upResp.json();
+              const uploaders = data.uploaders || [];
+              canUpload = uploaders.includes(du.id);
             }
           } catch (e) {
-            console.error("VPS uploader check during auth failed:", e);
+            console.error("VPS guild uploaders auth check failed:", e);
           }
         }
 
@@ -231,6 +233,13 @@ export default {
         const resp = await fetch(`${BOT_API}/api/guild/stats`);
         if (resp.ok) return json(await resp.json());
         return json({ name: "Zyrex", member_count: 0, online_count: 0, channels_count: 0, roles_count: 0, boost_level: 0 });
+      }
+
+      // GUILD UPLOADERS - Proxy to Bot
+      if (path === "/api/guild/uploaders") {
+        const resp = await fetch(`${BOT_API}/api/guild/uploaders`);
+        if (resp.ok) return json(await resp.json());
+        return json({ uploaders: [] });
       }
 
       // GUILD MEMBERS - Proxy to Bot
