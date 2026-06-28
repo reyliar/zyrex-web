@@ -24,6 +24,11 @@ async function initPresets() {
 }
 
 function renderPresets(items) {
+    // Filter out deleted products
+    let deletedIds = [];
+    try { deletedIds = JSON.parse(localStorage.getItem('zyrex_deleted_products') || '[]'); } catch(e) {}
+    items = items.filter(p => !deletedIds.includes(p.id));
+    
     const grid = document.getElementById('pg') || document.getElementById('presetsGrid');
     if (!grid) return;
     if (items.length === 0) {

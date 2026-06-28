@@ -367,8 +367,9 @@
                 document.getElementById('pluginsGrid').innerHTML = '<div class="no-results"><i class="fas fa-database"></i><p>Loading plugin data...</p></div>';
                 return;
             }
-            // All categories are shown including software
-            allPlugins = data;
+            // Filter out deleted products (persisted via localStorage)
+            const deletedIds = getDeletedIds();
+            allPlugins = data.filter(p => !deletedIds.includes(p.id));
             renderPlugins();
         }
 
@@ -445,6 +446,16 @@
 
         // ── ADMIN ──
         let _isAdmin = false;
+        const DELETED_KEY = 'zyrex_deleted_products';
+        
+        function getDeletedIds() {
+            try { return JSON.parse(localStorage.getItem(DELETED_KEY) || '[]'); } catch(e) { return []; }
+        }
+        function addDeletedId(id) {
+            const ids = getDeletedIds();
+            if (!ids.includes(id)) { ids.push(id); localStorage.setItem(DELETED_KEY, JSON.stringify(ids)); }
+        }
+        
         async function checkAdmin() {
             try {
                 const r = await fetch('/api/me', { credentials: 'include' });
@@ -458,8 +469,11 @@
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id }), credentials: 'include'
                 });
-                if (r.ok) { alert('Deleted!'); location.reload(); }
-                else alert('Delete failed');
+                if (r.ok) {
+                    addDeletedId(id); // Persist in localStorage
+                    alert('Deleted!');
+                    location.reload();
+                } else alert('Delete failed');
             } catch(e) { alert('Error: ' + e.message); }
         }
 

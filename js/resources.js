@@ -36,6 +36,11 @@ function getCategoryLabel(category) {
 }
 
 function renderResources(items) {
+    // Filter out deleted products
+    let deletedIds = [];
+    try { deletedIds = JSON.parse(localStorage.getItem('zyrex_deleted_products') || '[]'); } catch(e) {}
+    items = items.filter(r => !deletedIds.includes(r.id));
+    
     const grid = document.getElementById('resourcesGrid');
     if (!grid) return;
     if (items.length === 0) {

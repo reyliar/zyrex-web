@@ -593,7 +593,18 @@
                     fetch('/api/products/delete', {
                         method: 'POST', headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ id: productId }), credentials: 'include'
-                    }).then(r => r.ok ? (alert('Deleted!'), location.href = 'resources') : alert('Delete failed'));
+                    }).then(r => {
+                        if (r.ok) {
+                            // Persist deletion in localStorage so it survives static data reloads
+                            try {
+                                const key = 'zyrex_deleted_products';
+                                const ids = JSON.parse(localStorage.getItem(key) || '[]');
+                                if (!ids.includes(productId)) { ids.push(productId); localStorage.setItem(key, JSON.stringify(ids)); }
+                            } catch(e) {}
+                            alert('Deleted!');
+                            location.href = 'resources';
+                        } else alert('Delete failed');
+                    });
                 }
             };
         }
