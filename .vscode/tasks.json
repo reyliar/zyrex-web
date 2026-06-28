@@ -35,6 +35,20 @@
 			"command": "Write-Host Deploying; npx.cmd wrangler pages deploy . --project-name zyrexweb --branch main --commit-dirty=true; Write-Host Pushing; git add -A; git commit -m 'Remove category tabs, keep only Win/Mac platform filter'; git push origin main; Write-Host Done",
 			"isBackground": false,
 			"problemMatcher": []
+		},
+		{
+			"label": "Retry Git Push",
+			"type": "shell",
+			"command": "git push origin main",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Deploy + Push",
+			"type": "shell",
+			"command": "Write-Host Fixing; npx.cmd wrangler pages deploy . --project-name zyrexweb --branch main --commit-dirty=true; git add -A; git commit -m 'Fix: preset.html redirect to product.html, all cards use unified product page'; git push origin main; Write-Host Done",
+			"isBackground": false,
+			"problemMatcher": []
 		}
 	]
 }
