@@ -168,11 +168,23 @@ export default {
           responseHeaders["Set-Cookie"] = setCookie(session);
         }
 
+        // Build avatar URL
+        let avatarUrl = "";
+        if (session.avatar) {
+          const ext = session.avatar.startsWith("a_") ? "gif" : "png";
+          avatarUrl = `https://cdn.discordapp.com/avatars/${session.userId}/${session.avatar}.${ext}?size=256`;
+        } else if (session.userId) {
+          // Default Discord avatar
+          const defIdx = (BigInt(session.userId) >> 22n) % 6n;
+          avatarUrl = `https://cdn.discordapp.com/embed/avatars/${defIdx}.png`;
+        }
+
         return new Response(JSON.stringify({
           id: session.userId,
           username: session.username,
           global_name: session.displayName || session.username,
           avatar: session.avatar,
+          avatar_url: avatarUrl,
           can_upload: canUpload,
           is_admin: isAdmin,
         }), {

@@ -2,6 +2,16 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
+			"label": "Deploy Worker",
+			"type": "shell",
+			"command": "Copy-Item workers/api.js ${env:TEMP}\\wrangler-d4\\workers\\api.js -Force; npx.cmd wrangler deploy",
+			"isBackground": false,
+			"problemMatcher": [],
+			"options": {
+				"cwd": "${env:TEMP}\\wrangler-d4"
+			}
+		},
+		{
 			"label": "Deploy Zyrex",
 			"type": "shell",
 			"command": "npx.cmd wrangler pages deploy . --commit-dirty=true",
@@ -306,6 +316,20 @@
 			"label": "Git Push V",
 			"type": "shell",
 			"command": "git add -A ; git commit -m 'Premium verify success page with avatar' ; git push origin main",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Deploy Site",
+			"type": "shell",
+			"command": "npx.cmd wrangler pages deploy . --project-name zyrexweb --branch main --commit-dirty=true",
+			"isBackground": false,
+			"problemMatcher": []
+		},
+		{
+			"label": "Git Push Final",
+			"type": "shell",
+			"command": "git add -A ; git commit -m 'Worker avatar_url + verify.html use server-side avatar' ; git push origin main",
 			"isBackground": false,
 			"problemMatcher": []
 		}

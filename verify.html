@@ -148,14 +148,9 @@
             document.getElementById('displayName').textContent = dn;
             document.getElementById('userTag').textContent = uname ? '@' + uname : '';
             
-            // Build Discord avatar URL
-            if (userData.id && userData.avatar) {
-                const ext = userData.avatar.startsWith('a_') ? 'gif' : 'png';
-                document.getElementById('avatarImg').src = `https://cdn.discordapp.com/avatars/${userData.id}/${userData.avatar}.${ext}?size=256`;
-            } else if (userData.id) {
-                // Default avatar
-                const defIdx = parseInt(userData.id) >> 22 % 6;
-                document.getElementById('avatarImg').src = `https://cdn.discordapp.com/embed/avatars/${defIdx}.png`;
+            // Use avatar_url from API (constructed server-side)
+            if (userData.avatar_url) {
+                document.getElementById('avatarImg').src = userData.avatar_url;
             }
             
             successView.classList.add('show');
