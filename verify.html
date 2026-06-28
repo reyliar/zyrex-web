@@ -70,12 +70,17 @@
 
         function showLoginScreen() {
             document.getElementById('verifyIcon').className = 'verify-icon pending';
-            document.getElementById('verifyIcon').innerHTML = '<i class="fab fa-discord"></i>';
-            document.getElementById('verifyTitle').textContent = 'Login Required';
-            document.getElementById('verifyDesc').textContent = 'You need to log in with Discord to verify your identity and access the server.';
+            document.getElementById('verifyIcon').innerHTML = '<i class="fas fa-shield-halved"></i>';
+            document.getElementById('verifyTitle').textContent = 'Verification Required';
+            document.getElementById('verifyDesc').textContent = 'Please log in with Discord to complete identity verification and access the Zyrex server.';
             const btn = document.getElementById('btnVerify');
             btn.innerHTML = '<i class="fab fa-discord"></i> Login with Discord';
             btn.onclick = () => { window.location.href = '/api/login?redirect=/verify'; };
+            btn.style.display = 'inline-flex';
+            btn.disabled = false;
+            const info = document.querySelector('.info-row');
+            if (info) info.style.display = 'flex';
+            document.getElementById('verifyResult').style.display = 'none';
         }
 
         function showVerifyScreen() {
