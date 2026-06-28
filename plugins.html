@@ -352,8 +352,20 @@
                 const localItems = JSON.parse(localStorage.getItem('zyrex_new_products') || '[]');
                 localItems.forEach(item => {
                     if (!allPlugins.some(p => p.id === item.id)) {
-                        allPlugins.unshift(item); // Add to beginning
+                        allPlugins.unshift(item);
                     }
+                });
+            } catch(e) {}
+            
+            // Apply admin edits from localStorage
+            try {
+                const edits = JSON.parse(localStorage.getItem('zyrex_edited_products') || '{}');
+                allPlugins = allPlugins.map(p => {
+                    if (edits[p.id]) {
+                        const e = edits[p.id];
+                        return { ...p, name: e.name || p.name, category: e.category || p.category, platform: e.platform || p.platform, desc: e.description || p.desc, password: e.password, links: e.links || p.links, notes: e.notes || p.notes };
+                    }
+                    return p;
                 });
             } catch(e) {}
             

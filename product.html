@@ -512,6 +512,22 @@
             return;
         }
 
+        // Apply any local edits from admin
+        try {
+            const edits = JSON.parse(localStorage.getItem('zyrex_edited_products') || '{}');
+            if (edits[productId]) {
+                const e = edits[productId];
+                product.name = e.name || product.name;
+                product.category = e.category || product.category;
+                product.platform = e.platform || product.platform;
+                product.description = e.description || product.description;
+                product.desc = e.description || product.desc;
+                product.password = e.password;
+                product.links = e.links || product.links;
+                product.notes = e.notes || product.notes;
+            }
+        } catch(e) {}
+
         renderProductDetail(product, isDbProduct);
 
         // ── ADMIN CONTROLS ──
@@ -583,7 +599,16 @@
                         method: 'POST', headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(data), credentials: 'include'
                     });
-                    if (resp.ok) { alert('Updated! Reloading...'); location.reload(); }
+                    if (resp.ok) {
+                        // Persist edit to localStorage so it survives static JS reload
+                        try {
+                            const key = 'zyrex_edited_products';
+                            const edits = JSON.parse(localStorage.getItem(key) || '{}');
+                            edits[productId] = data;
+                            localStorage.setItem(key, JSON.stringify(edits));
+                        } catch(e) {}
+                        alert('Updated! Reloading...'); location.reload();
+                    }
                     else alert('Update failed: ' + (await resp.text()));
                 } catch(e) { alert('Error: ' + e.message); }
             };

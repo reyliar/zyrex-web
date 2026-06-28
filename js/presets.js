@@ -29,6 +29,12 @@ function renderPresets(items) {
     try { deletedIds = JSON.parse(localStorage.getItem('zyrex_deleted_products') || '[]'); } catch(e) {}
     items = items.filter(p => !deletedIds.includes(p.id));
     
+    // Apply admin edits
+    try {
+        const edits = JSON.parse(localStorage.getItem('zyrex_edited_products') || '{}');
+        items = items.map(p => edits[p.id] ? { ...p, name: edits[p.id].name || p.name, category: edits[p.id].category || p.category, platform: edits[p.id].platform || p.platform, description: edits[p.id].description || p.description, desc: edits[p.id].description || p.desc, password: edits[p.id].password, links: edits[p.id].links || p.links, notes: edits[p.id].notes || p.notes } : p);
+    } catch(e) {}
+    
     const grid = document.getElementById('pg') || document.getElementById('presetsGrid');
     if (!grid) return;
     if (items.length === 0) {
