@@ -260,6 +260,7 @@
     <script src="js/presets-data.js?v=5"></script>
     <script>
         const params = new URLSearchParams(window.location.search);
+        const token = params.get('token');
         const productId = params.get('id');
 
         const loading = document.getElementById('dlLoading');
@@ -267,22 +268,52 @@
         const errorBox = document.getElementById('dlError');
 
         let product = null;
+        let downloadToken = null;
 
         document.addEventListener('DOMContentLoaded', async () => {
+            // Token-based flow (new)
+            if (token) {
+                try {
+                    const resp = await fetch('/api/downloads/validate?token=' + encodeURIComponent(token));
+                    const data = await resp.json();
+                    if (data.success) {
+                        downloadToken = token;
+                        // Now fetch product info
+                        const prodResp = await fetch('/api/products?id=' + data.product_id);
+                        if (prodResp.ok) {
+                            product = await prodResp.json();
+                        }
+                        if (!product) {
+                            // Use static data fallback
+                            const all = [...(window.presetsData || []), ...(window.pluginsData || [])];
+                            product = all.find(p => p.id === data.product_id);
+                        }
+                        if (product) {
+                            renderProduct(product);
+                            return;
+                        }
+                    }
+                    showError("Invalid Token", "This download link is invalid or has expired. Please generate a new one.");
+                } catch (e) {
+                    showError("Validation Failed", "Unable to validate the download token.");
+                }
+                return;
+            }
+
+            // Legacy ID-based flow
             if (!productId) {
                 showError("Link ID Missing", "No resource product ID was supplied in the address URL query parameters.");
                 return;
             }
 
             try {
-                const resp = await fetch(`/api/products?id=${productId}`);
+                const resp = await fetch('/api/products?id=' + productId);
                 if (resp.ok) {
                     product = await resp.json();
                 } else {
                     const staticPresets = window.presetsData || [];
                     product = staticPresets.find(p => p.id === productId);
                 }
-
                 if (!product) {
                     showError("Resource Not Found", "The secure file pack you are looking for does not exist in our database storage.");
                     return;
@@ -292,11 +323,8 @@
                 console.error("Load error:", e);
                 const staticPresets = window.presetsData || [];
                 product = staticPresets.find(p => p.id === productId);
-                if (product) {
-                    renderProduct(product);
-                } else {
-                    showError("Connection Failed", "Unable to establish communication with the secure backend file server.");
-                }
+                if (product) { renderProduct(product); }
+                else { showError("Connection Failed", "Unable to establish communication with the secure backend file server."); }
             }
         });
 
@@ -395,38 +423,47 @@
         }
 
         async function triggerDownload() {
-            if (!productId) return;
             const btn = document.getElementById('btnDownload');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Zipping Storage Packages...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing download...';
 
+            // If we already have a token, use it directly
+            if (downloadToken) {
+                btn.innerHTML = '<i class="fas fa-circle-check"></i> Starting download...';
+                window.location.href = '/api/downloads/download?token=' + downloadToken;
+                setTimeout(() => {
+                    btn.innerHTML = '<i class="fas fa-arrow-rotate-right"></i> Link Used - Refresh to regenerate';
+                }, 4000);
+                return;
+            }
+
+            // Legacy: request a new token
+            if (!productId) return;
             try {
-                const tokenResp = await fetch(`/api/downloads/request-token/${productId}`);
+                const tokenResp = await fetch('/api/downloads/request-token/' + productId);
                 if (!tokenResp.ok) {
                     const data = await tokenResp.json();
-                    alert(data.error || "Unable to acquire download ticket.");
+                    alert(data.error || 'Unable to acquire download ticket.');
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fas fa-cloud-arrow-down"></i> Download ZIP Package';
                     return;
                 }
-
                 const tokenData = await tokenResp.json();
                 if (tokenData.success && tokenData.token) {
-                    btn.innerHTML = '<i class="fas fa-circle-check"></i> Launching stream download...';
-                    window.location.href = `/api/downloads/download?token=${tokenData.token}`;
-
+                    btn.innerHTML = '<i class="fas fa-circle-check"></i> Launching download...';
+                    window.location.href = '/api/downloads/download?token=' + tokenData.token;
                     setTimeout(() => {
-                        btn.innerHTML = '<i class="fas fa-arrow-rotate-right"></i> Link Used - Refresh to regenerate';
+                        btn.innerHTML = '<i class="fas fa-arrow-rotate-right"></i> Link Used';
                         btn.disabled = true;
                     }, 4000);
                 } else {
-                    alert("Ticket generation failed.");
+                    alert('Ticket generation failed.');
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fas fa-cloud-arrow-down"></i> Download ZIP Package';
                 }
             } catch (e) {
-                console.error("Download fetch error:", e);
-                alert("Network communication error with the download packaging server.");
+                console.error('Download error:', e);
+                alert('Network error. Please try again.');
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-cloud-arrow-down"></i> Download ZIP Package';
             }
