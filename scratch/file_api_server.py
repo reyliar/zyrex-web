@@ -276,36 +276,58 @@ class FileAPIHandler(BaseHTTPRequestHandler):
                 self.send_error(404, "File not found on disk")
                 return
             
-            # If it's a directory, create a ZIP
+            # Everything becomes a ZIP with watermark files included
+            folder_name = os.path.basename(file_path.rstrip(os.sep))
+            if os.path.isfile(file_path):
+                folder_name = os.path.splitext(os.path.basename(file_path))[0]
+            
+            # Determine which files to include
+            selected_files = params.get("files", [None])[0]
+            selected_set = None
+            if selected_files:
+                selected_set = set(selected_files.split(","))
+            
+            # Build file list
+            files_to_zip = []  # (disk_path, zip_rel_path)
+            
             if os.path.isdir(file_path):
-                zip_buffer = io.BytesIO()
-                with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
-                    for root, dirs, files in os.walk(file_path):
-                        for f in files:
-                            full = os.path.join(root, f)
-                            rel = os.path.relpath(full, file_path)
-                            zf.write(full, rel)
-                zip_data = zip_buffer.getvalue()
-                filename = os.path.basename(file_path) + ".zip"
-                self.send_response(200)
-                self.send_header("Content-Type", "application/zip")
-                self.send_header("Content-Disposition", f'attachment; filename="{filename}"')
-                self.send_header("Content-Length", str(len(zip_data)))
-                self.send_header("Access-Control-Allow-Origin", "*")
-                self.end_headers()
-                self.wfile.write(zip_data)
+                for root, dirs, files in os.walk(file_path):
+                    for f in files:
+                        if selected_set and f not in selected_set:
+                            continue
+                        full = os.path.join(root, f)
+                        rel = os.path.relpath(full, file_path)
+                        # All files go inside the folder_name directory
+                        files_to_zip.append((full, f"{folder_name}/{rel}"))
             else:
                 # Single file
-                filename = os.path.basename(file_path)
-                with open(file_path, 'rb') as f:
-                    file_data = f.read()
-                self.send_response(200)
-                self.send_header("Content-Type", "application/octet-stream")
-                self.send_header("Content-Disposition", f'attachment; filename="{filename}"')
-                self.send_header("Content-Length", str(len(file_data)))
-                self.send_header("Access-Control-Allow-Origin", "*")
-                self.end_headers()
-                self.wfile.write(file_data)
+                if not selected_set or os.path.basename(file_path) in selected_set:
+                    files_to_zip.append((file_path, f"{folder_name}/{os.path.basename(file_path)}"))
+            
+            # Always inject watermark files into the folder
+            for wm_name, wm_content in WATERMARK_FILES_CONTENT.items():
+                files_to_zip.append((None, f"{folder_name}/{wm_name}", wm_content))
+            
+            # Create ZIP
+            zip_buffer = io.BytesIO()
+            with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
+                for item in files_to_zip:
+                    if len(item) == 3:
+                        # In-memory watermark: (None, arcname, content)
+                        zf.writestr(item[1], item[2])
+                    else:
+                        # Disk file: (disk_path, arcname)
+                        zf.write(item[0], item[1])
+            
+            zip_data = zip_buffer.getvalue()
+            zip_filename = f"{folder_name}.zip"
+            self.send_response(200)
+            self.send_header("Content-Type", "application/zip")
+            self.send_header("Content-Disposition", f'attachment; filename="{zip_filename}"')
+            self.send_header("Content-Length", str(len(zip_data)))
+            self.send_header("Access-Control-Allow-Origin", "*")
+            self.end_headers()
+            self.wfile.write(zip_data)
             return
         
         # Endpoints that DON'T require discord_id

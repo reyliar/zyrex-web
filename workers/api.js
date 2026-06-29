@@ -746,7 +746,9 @@ export default {
       if (path === "/api/downloads/download") {
         const token = url.searchParams.get("token");
         if (!token) return json({ error: "Token required" }, 400);
-        const apiUrl = `https://storage.zyrexediting.xyz/api/files/download?token=${encodeURIComponent(token)}`;
+        let apiUrl = `https://storage.zyrexediting.xyz/api/files/download?token=${encodeURIComponent(token)}`;
+        const selectedFiles = url.searchParams.get("files");
+        if (selectedFiles) apiUrl += `&files=${encodeURIComponent(selectedFiles)}`;
         const resp = await fetch(apiUrl, { headers: { "X-Auth-Token": "zyrex-files-api-2026" } });
         if (!resp.ok) return json({ success: false, error: "Download failed" }, resp.status);
         return new Response(resp.body, {

@@ -112,6 +112,10 @@
 
         /* Files */
         .files-block { width: 100%; margin-bottom: 20px }
+        .files-scroll { max-height: 260px; overflow-y: auto; border-radius: 10px; padding-right: 4px }
+        .files-scroll::-webkit-scrollbar { width: 4px }
+        .files-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,.06); border-radius: 2px }
+        .files-scroll::-webkit-scrollbar-track { background: transparent }
         .files-label { font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--gray-dark); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; justify-content: space-between }
         .files-label i { color: var(--cherry); font-size: .7rem }
         .files-label-right { display: flex; align-items: center; gap: 12px }
@@ -405,12 +409,14 @@
                 
                 if (realFiles.length > 0) {
                     html += '<div class="files-block"><div class="files-label"><div><i class="fas fa-folder-open"></i> Files in this pack (' + realFiles.length + ')</div><div class="files-label-right"><button class="select-all-btn" onclick="toggleSelectAll(this)">Select All</button></div></div>';
+                    html += '<div class="files-scroll">';
                     realFiles.forEach(function(f, idx) {
                         const sz = f.size ? (f.size > 1048576 ? (f.size/1048576).toFixed(1)+' MB' : (f.size/1024).toFixed(1)+' KB') : '--';
                         const fi = f.name.endsWith('.mp4')||f.name.endsWith('.mov')?'fa-file-video':f.name.endsWith('.mp3')||f.name.endsWith('.wav')?'fa-file-audio':f.name.endsWith('.png')||f.name.endsWith('.jpg')||f.name.endsWith('.jpeg')?'fa-file-image':'fa-file-lines';
                         html += '<div class="file-item"><div class="fl"><input type="checkbox" class="file-cb" checked onchange="updateSelectedCount()" data-filename="' + f.name.replace(/"/g, '&quot;') + '"><i class="fas ' + fi + '"></i><span title="' + f.name + '">' + f.name + '</span></div><span class="fs">' + sz + '</span><button class="file-dl-btn" onclick="triggerFileDownload(\'' + f.name + '\',this)" title="Download this file only"><i class="fas fa-download"></i></button></div>';
                     });
-                    html += '</div>';
+                    html += '</div>'; // close files-scroll
+                    html += '</div>'; // close files-block
                 }
 
             // Password
@@ -544,14 +550,27 @@
             }
         }
 
+        function getSelectedFiles() {
+            const cbs = document.querySelectorAll('.file-cb');
+            const allCbs = document.querySelectorAll('.file-cb');
+            if (allCbs.length === 0) return '';
+            const checked = document.querySelectorAll('.file-cb:checked');
+            // Only filter if some are unchecked (otherwise send all)
+            if (checked.length === allCbs.length) return '';
+            return Array.from(checked).map(function(cb) { return encodeURIComponent(cb.dataset.filename); }).join(',');
+        }
+
         async function triggerDownload() {
             const btn = document.getElementById('dlBtn');
             if (!btn) return;
             
+            const selectedFiles = getSelectedFiles();
+            const fileParam = selectedFiles ? '&files=' + selectedFiles : '';
+            
             if (downloadToken) {
                 btn.disabled = true;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Downloading...';
-                await downloadWithProgress('/api/downloads/download?token=' + downloadToken, (product ? product.name : 'download') + '.zip');
+                await downloadWithProgress('/api/downloads/download?token=' + downloadToken + fileParam, (product ? product.name : 'download') + '.zip');
                 btn.innerHTML = '<i class="fas fa-arrow-rotate-right"></i> Link Used';
                 btn.disabled = true;
                 return;
@@ -579,7 +598,7 @@
                     downloadToken = tokenData.token;
                     if (tokenData.expires_in) startCountdown(tokenData.expires_in);
                     btn.innerHTML = '<i class="fas fa-circle-check"></i> Starting download...';
-                    await downloadWithProgress('/api/downloads/download?token=' + tokenData.token, (product ? product.name : 'download') + '.zip');
+                    await downloadWithProgress('/api/downloads/download?token=' + tokenData.token + fileParam, (product ? product.name : 'download') + '.zip');
                     btn.innerHTML = '<i class="fas fa-arrow-rotate-right"></i> Link Used';
                     btn.disabled = true;
                 } else {
