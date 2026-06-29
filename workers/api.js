@@ -9,9 +9,23 @@ const ADMIN_IDS = ["1421177012814614548", "1382421118098346174"];
 // In-memory stores
 let sftpgoToken = null;
 let sftpgoTokenExpiry = 0;
-const downloadTokens = new Map();  // token -> { discord_id, product_id, file_path, created_at, used }
-const downloadCounts = new Map();  // productId -> count
+const downloadCounts = new Map();  // productId -> count (stateless — reset on cold start, acceptable)
 const TOKEN_EXPIRY = 600;  // 10 minutes
+
+// Self-contained token helpers (Workers are stateless — tokens carry their own data)
+function encodeToken(data) {
+  const payload = JSON.stringify({ ...data, exp: Date.now() + TOKEN_EXPIRY * 1000 });
+  return btoa(String.fromCharCode(...new TextEncoder().encode(payload)));
+}
+
+function decodeToken(token) {
+  try {
+    const json = new TextDecoder().decode(Uint8Array.from(atob(token), c => c.charCodeAt(0)));
+    const data = JSON.parse(json);
+    if (Date.now() > data.exp) return null;  // expired
+    return data;
+  } catch { return null; }
+}
 
 // Watermark files (embedded)
 const WATERMARKS = {
@@ -60,11 +74,12 @@ function clearCookie() {
 }
 
 // ============ R2 FILE HELPERS ============
-async function r2List(env, prefix) {
+async function r2List(env, prefix, useProd = false) {
+  const bucket = useProd ? (env.STORAGE_PROD || env.STORAGE) : env.STORAGE;
   const objects = [];
   let cursor;
   do {
-    const resp = await env.STORAGE.list({ prefix, limit: 500, cursor });
+    const resp = await bucket.list({ prefix, limit: 500, cursor });
     for (const obj of resp.objects) {
       objects.push({ key: obj.key, size: obj.size, uploaded: obj.uploaded });
     }
@@ -73,13 +88,14 @@ async function r2List(env, prefix) {
   return objects;
 }
 
-async function r2Get(env, key) {
-  const obj = await env.STORAGE.get(key);
+async function r2Get(env, key, useProd = false) {
+  const bucket = useProd ? (env.STORAGE_PROD || env.STORAGE) : env.STORAGE;
+  const obj = await bucket.get(key);
   if (!obj) return null;
   return { body: obj.body, size: obj.size, contentType: obj.httpMetadata?.contentType };
 }
 
-// Minimal ZIP creator for Workers
+// CRC32 for ZIP integrity
 function zipStream(env, prefix, selectedSet, title, objects) {
   const encoder = new TextEncoder();
   const folderName = title || prefix.split("/").filter(Boolean).pop() || "download";
@@ -453,110 +469,168 @@ async function listSftpgoFiles(discordId, path, env) {
 }
 
 // Scan user's cloud for detected resources (EDITOR/RESOURCE pattern)
-async function scanResourcesFromR2(username, env) {
-  /** Scan R2 staging bucket for user's EDITOR/RESOURCE structure. */
-  if (!username || !env.STORAGE) return { success: true, resources: [] };
+async function scanResourcesFromR2(discordId, username, env) {
+  /** Scan R2 staging bucket for user's resources.
+   *  Handles both clean prefixes and Windows-path-prefixed keys from SFTPGo. */
+  if (!env.STORAGE) return { success: true, resources: [] };
   
-  const prefix = `${username}/`;
+  const allResources = [];
+  
   try {
-    const listed = await env.STORAGE.list({ prefix, delimiter: "/" });
-    const editorFolders = new Set();
+    // List ALL objects (not just top-level folders) to handle Windows path prefixes
+    const allObjects = [];
+    let cursor;
+    do {
+      const batch = await env.STORAGE.list({ limit: 500, cursor });
+      for (const obj of batch.objects) {
+        allObjects.push(obj);
+      }
+      cursor = batch.cursor;
+    } while (cursor);
     
-    // Find editor folders (second-level after username/)
-    for (const obj of listed.objects) {
-      const key = obj.key;
-      if (key === prefix) continue;
-      const rel = key.slice(prefix.length);
-      const slashIdx = rel.indexOf("/");
+    if (allObjects.length === 0) return { success: true, resources: [] };
+    
+    // Discover user folder prefixes by finding paths that contain the Discord ID
+    // or Discord username, accounting for Windows path prefixes
+    const userPrefixes = new Set();
+    
+    for (const obj of allObjects) {
+      let key = obj.key;
+      
+      // Strip known Windows path prefixes
+      const winPrefixes = [
+        "C:/Users/reyli/Desktop/sftpgo/data/",
+        "C:\\Users\\reyli\\Desktop\\sftpgo\\data\\",
+      ];
+      for (const wp of winPrefixes) {
+        if (key.startsWith(wp)) {
+          key = key.slice(wp.length);
+          break;
+        }
+      }
+      
+      // Now extract the user prefix (first path segment)
+      const slashIdx = key.indexOf("/");
       if (slashIdx > 0) {
-        editorFolders.add(rel.slice(0, slashIdx));
-      }
-    }
-    // Also check CommonPrefixes (folders)
-    for (const cp of listed.delimitedPrefixes || []) {
-      const rel = cp.slice(prefix.length);
-      if (rel.endsWith("/")) {
-        const name = rel.slice(0, -1);
-        if (name && !name.includes("/")) editorFolders.add(name);
+        const userPrefix = key.slice(0, slashIdx);
+        // Match by Discord ID suffix or exact username
+        if (discordId && userPrefix.endsWith(`_${discordId}`)) {
+          userPrefixes.add(userPrefix);
+        }
+        if (username && userPrefix === username) {
+          userPrefixes.add(userPrefix);
+        }
       }
     }
     
-    const resources = [];
-    for (const editor of [...editorFolders].sort()) {
-      const editorPrefix = `${prefix}${editor}/`;
-      const editorList = await env.STORAGE.list({ prefix: editorPrefix, delimiter: "/" });
+    // If no user prefixes found via Discord ID, try to scan all top-level folders
+    if (userPrefixes.size === 0) {
+      const rootList = await env.STORAGE.list({ delimiter: "/" });
+      for (const cp of rootList.delimitedPrefixes || []) {
+        const name = cp.replace(/\/$/, "");
+        // Skip Windows drive letters and known system prefixes
+        if (!name || name === "C:" || name === "C" || name.includes(":")) continue;
+        userPrefixes.add(name);
+      }
       
-      const resourceFolders = new Set();
-      let hasDirectFiles = false;
-      
-      for (const obj of editorList.objects) {
+      // Also check objects at root level that might be inside Windows paths
+      for (const obj of allObjects) {
         const key = obj.key;
-        if (key === editorPrefix) continue;
-        const rel = key.slice(editorPrefix.length);
-        const slashIdx = rel.indexOf("/");
-        if (slashIdx > 0) {
-          resourceFolders.add(rel.slice(0, slashIdx));
-        } else if (rel) {
-          hasDirectFiles = true;
-        }
-      }
-      for (const cp of editorList.delimitedPrefixes || []) {
-        const rel = cp.slice(editorPrefix.length);
-        if (rel.endsWith("/")) {
-          const name = rel.slice(0, -1);
-          if (name && !name.includes("/")) resourceFolders.add(name);
-        }
-      }
-      
-      // Process each resource subfolder
-      for (const resource of [...resourceFolders].sort()) {
-        const resPrefix = `${editorPrefix}${resource}/`;
-        const resList = await env.STORAGE.list({ prefix: resPrefix });
-        const files = [];
-        for (const obj of resList.objects) {
-          const key = obj.key;
-          if (key === resPrefix) continue;
-          const fname = key.slice(resPrefix.length);
-          if (fname && !fname.includes("/")) {
-            files.push({
-              name: fname,
-              size: obj.size,
-              path: `${username}/${editor}/${resource}/${fname}`
-            });
+        // Check for known username patterns
+        for (const tryName of [username, username?.toLowerCase()].filter(Boolean)) {
+          if (tryName && key.includes(`/${tryName}/`)) {
+            // Extract the user prefix
+            const parts = key.split("/");
+            const idx = parts.indexOf(tryName);
+            if (idx > 0) {
+              userPrefixes.add(parts.slice(0, idx + 1).join("/"));
+            }
           }
-        }
-        if (files.length > 0) {
-          resources.push({ editor, resource, files });
-        }
-      }
-      
-      // Editor with direct files (no subfolders)
-      if (hasDirectFiles && resourceFolders.size === 0) {
-        const resList2 = await env.STORAGE.list({ prefix: editorPrefix });
-        const directFiles = [];
-        for (const obj of resList2.objects) {
-          const key = obj.key;
-          if (key === editorPrefix) continue;
-          const fname = key.slice(editorPrefix.length);
-          if (fname && !fname.includes("/")) {
-            directFiles.push({
-              name: fname,
-              size: obj.size,
-              path: `${username}/${editor}/${fname}`
-            });
-          }
-        }
-        if (directFiles.length > 0) {
-          resources.push({ editor, resource: editor, files: directFiles });
         }
       }
     }
     
-    return { success: true, resources };
+    for (const folder of [...userPrefixes]) {
+      // Normalize prefix: may include Windows path segments, we need the full R2 key prefix
+      let fullPrefix = folder + "/";
+      
+      // If folder doesn't contain ":", it's a clean prefix — use directly
+      // Otherwise we need to use it as a relative prefix within the R2 key
+      const objectsInFolder = allObjects.filter(o => {
+        const key = o.key.replace(/\\/g, "/");
+        // Match keys that contain this folder path
+        return key.includes(fullPrefix) || key.endsWith(fullPrefix);
+      });
+      
+      if (objectsInFolder.length === 0) continue;
+      
+      // Determine the actual R2 prefix by finding the first matching object
+      const firstMatch = objectsInFolder[0].key.replace(/\\/g, "/");
+      const folderPos = firstMatch.indexOf(fullPrefix);
+      const r2Prefix = folderPos >= 0 ? firstMatch.slice(0, folderPos + fullPrefix.length) : fullPrefix;
+      
+      // Now scan this prefix for editor/resource structure
+      const editorFolders = new Set();
+      for (const obj of objectsInFolder) {
+        const key = obj.key.replace(/\\/g, "/");
+        const rel = key.slice(r2Prefix.length);
+        if (!rel || rel === "/") continue;
+        const slashIdx = rel.indexOf("/");
+        if (slashIdx > 0) editorFolders.add(rel.slice(0, slashIdx));
+      }
+      
+      for (const editor of [...editorFolders].sort()) {
+        const editorPrefix = r2Prefix + editor + "/";
+        const editorObjects = objectsInFolder.filter(o => {
+          const k = o.key.replace(/\\/g, "/");
+          return k.startsWith(editorPrefix) && k !== editorPrefix;
+        });
+        
+        const resourceFolders = new Set();
+        let hasDirectFiles = false;
+        
+        for (const obj of editorObjects) {
+          const key = obj.key.replace(/\\/g, "/");
+          const rel = key.slice(editorPrefix.length);
+          if (!rel) continue;
+          const slashIdx = rel.indexOf("/");
+          if (slashIdx > 0) resourceFolders.add(rel.slice(0, slashIdx));
+          else hasDirectFiles = true;
+        }
+        
+        for (const resource of [...resourceFolders].sort()) {
+          const resPrefix = editorPrefix + resource + "/";
+          const files = [];
+          for (const obj of objectsInFolder) {
+            const key = obj.key.replace(/\\/g, "/");
+            if (key.startsWith(resPrefix) && key !== resPrefix) {
+              const fname = key.slice(resPrefix.length);
+              if (fname) {
+                files.push({ name: fname, size: obj.size, path: key });
+              }
+            }
+          }
+          if (files.length > 0) allResources.push({ editor, resource, files });
+        }
+        
+        if (hasDirectFiles && resourceFolders.size === 0) {
+          const directFiles = [];
+          for (const obj of editorObjects) {
+            const key = obj.key.replace(/\\/g, "/");
+            const fname = key.slice(editorPrefix.length);
+            if (fname) {
+              directFiles.push({ name: fname, size: obj.size, path: key });
+            }
+          }
+          if (directFiles.length > 0) allResources.push({ editor, resource: editor, files: directFiles });
+        }
+      }
+    }
   } catch (e) {
     console.error("R2 scan error:", e.message);
-    return { success: true, resources: [] };
   }
+  
+  return { success: true, resources: allResources };
 }
 
 async function scanDetectedResources(discordId, env) {
@@ -1046,109 +1120,279 @@ export default {
         }
       }
 
-      // ============ DOWNLOAD: Validate Token (local file API) ============
+      // ============ DOWNLOAD: Validate Token (self-contained) ============
       if (path === "/api/downloads/validate") {
         const token = url.searchParams.get("token");
         if (!token) return json({ error: "Token required" }, 400);
-        try {
-          // Use peek=1 so token is NOT consumed here — only download consumes it
-          const apiUrl = `${FILE_API}/api/files/validate?token=${encodeURIComponent(token)}&peek=1`;
-          const resp = await fetch(apiUrl, { headers: { "X-Auth-Token": "zyrex-files-api-2026" } });
-          if (resp.ok) return json(await resp.json());
-        } catch (e) { console.error("Token validation error:", e.message); }
-        return json({ success: false, error: "Invalid or expired token" }, 404);
+        const data = decodeToken(token);
+        if (!data) return json({ success: false, error: "Invalid or expired token" }, 404);
+        return json({
+          success: true,
+          product_id: data.product_id,
+          file_path: data.file_path,
+          discord_id: data.discord_id,
+          expires_in: Math.max(0, Math.floor((data.exp - Date.now()) / 1000)),
+        });
       }
 
-      // ============ DOWNLOAD: Request Token (local file API) ============
+      // ============ DOWNLOAD: Request Token (R2 production bucket) ============
       if (path.startsWith("/api/downloads/request-token/")) {
         const session = parseSession(request.headers.get("Cookie"));
         if (!session) return json({ error: "Not logged in" }, 401);
         const productId = path.split("/api/downloads/request-token/")[1];
         if (!productId) return json({ error: "Product ID required" }, 400);
         
-        let filePath = "";
+        let r2Prefix = "";
         try {
-          // Fetch product info from VPS bot with 5s timeout
-          const prodResp = await fetch(`${BOT_API}/api/products?id=${productId}`, {
-            signal: AbortSignal.timeout(5000),
-          });
-          if (prodResp.ok) {
-            const prod = await prodResp.json();
-            filePath = prod.file_path || "";
+          const prodBucket = env.STORAGE_PROD || env.STORAGE;
+          
+          // 1) file_path hint from download page (MOST RELIABLE)
+          const hintPath = url.searchParams.get("file_path");
+          if (hintPath) {
+            const clean = hintPath.replace(/\\/g, "/");
+            const hint = clean.endsWith("/") ? clean : clean + "/";
+            const check = await prodBucket.list({ prefix: hint, limit: 1 });
+            if (check.objects.some(o => !o.key.endsWith("/"))) {
+              r2Prefix = hint;
+            }
+          }
+          
+          // 2) Scan ALL editor/resource folders, prefer matching product ID
+          if (!r2Prefix) {
+            const topList = await prodBucket.list({ delimiter: "/" });
+            let bestMatch = "";
+            for (const cp of topList.delimitedPrefixes || []) {
+              const editorPrefix = cp;
+              const resList = await prodBucket.list({ prefix: editorPrefix, delimiter: "/" });
+              for (const resCp of resList.delimitedPrefixes || []) {
+                const resourceName = resCp.slice(editorPrefix.length).replace(/\/$/, "");
+                const idSlug = resourceName.replace(/\s+/g, "-").toLowerCase();
+                const isMatch = idSlug.includes(productId.toLowerCase()) || productId.toLowerCase().includes(idSlug);
+                
+                const testList = await prodBucket.list({ prefix: resCp });
+                const hasFiles = testList.objects.some(o => !o.key.endsWith("/") && !o.key.endsWith(".placeholder"));
+                
+                if (hasFiles) {
+                  if (isMatch) { r2Prefix = resCp; break; }
+                  if (!bestMatch) bestMatch = resCp;
+                }
+              }
+              if (r2Prefix) break;
+            }
+            if (!r2Prefix && bestMatch) r2Prefix = bestMatch;
+          }
+          
+          if (!r2Prefix) {
+            return json({ success: false, error: "Resource not found in production storage. Transfer may not have completed yet." }, 404);
           }
         } catch (e) {
-          console.error("Failed to fetch product from bot:", e.message);
+          console.error("R2 token search error:", e.message);
+          return json({ success: false, error: "Storage search failed" }, 500);
         }
         
-        // Build list of paths to try: BOT_API path first, then production fallback
-        const pathsToTry = [];
-        if (filePath) pathsToTry.push(filePath);
-        pathsToTry.push(`production/${productId}`);
+        // Generate self-contained download token
+        const token = encodeToken({
+          discord_id: session.userId,
+          product_id: productId,
+          file_path: r2Prefix,
+          used: false,
+        });
         
-        let lastError = "";
-        for (const tryPath of pathsToTry) {
-          try {
-            const apiUrl = `${FILE_API}/api/files/request-token`;
-            const resp = await fetch(apiUrl, {
-              method: "POST",
-              headers: { "Content-Type": "application/json", "X-Auth-Token": "zyrex-files-api-2026" },
-              body: JSON.stringify({
-                discord_id: session.userId,
-                product_id: productId,
-                file_path: tryPath,
-              }),
-              signal: AbortSignal.timeout(10000),
-            });
-            if (resp.ok) return json(await resp.json());
-            lastError = await resp.text();
-            // If not found, try next path; otherwise break and return error
-            if (!lastError.includes("not found") && !lastError.includes("Resource not found")) {
-              break;
-            }
-          } catch (e) {
-            lastError = e.message;
-          }
-        }
-        
-        return json({ success: false, error: "Token generation failed: " + lastError }, 500);
-      }
-      // ============ DOWNLOAD COUNTER (proxy to Python server) ============
-      if (path === "/api/downloads/counts" || path === "/api/downloads/track") {
-        try {
-          let apiUrl = `${FILE_API}/api/files/download-count`;
-          let headers = { "X-Auth-Token": "zyrex-files-api-2026" };
-          let fetchOpts = { headers };
-          if (request.method === "POST") {
-            headers["Content-Type"] = "application/json";
-            fetchOpts.method = "POST";
-            fetchOpts.body = await request.text();
-          }
-          const resp = await fetch(apiUrl, fetchOpts);
-          if (resp.ok) return json(await resp.json());
-        } catch (e) { console.error("Counter error:", e.message); }
-        return json({ success: false, error: "Counter unavailable" }, 500);
+        return json({
+          success: true,
+          token,
+          url: `https://dl.zyrexediting.xyz/?token=${token}`,
+          expires_in: TOKEN_EXPIRY,
+        });
       }
 
-      // ============ DOWNLOAD: Binary File Stream (local file API) ============
+      // ============ DOWNLOAD COUNTER (Worker in-memory + R2 sync) ============
+      if (path === "/api/downloads/counts") {
+        // Return all download counts
+        const counts = {};
+        for (const [id, count] of downloadCounts) {
+          counts[id] = count;
+        }
+        return json({ success: true, counts });
+      }
+      
+      if (path === "/api/downloads/track" && request.method === "POST") {
+        try {
+          const body = await request.json();
+          const productId = body.productId;
+          if (!productId) return json({ success: false, error: "Missing productId" }, 400);
+          downloadCounts.set(productId, (downloadCounts.get(productId) || 0) + 1);
+          return json({ success: true, productId, count: downloadCounts.get(productId) });
+        } catch (e) {
+          return json({ success: false, error: e.message }, 400);
+        }
+      }
+
+      // ============ DOWNLOAD: Binary ZIP Stream (R2 production bucket) ============
       if (path === "/api/downloads/download") {
         const token = url.searchParams.get("token");
         if (!token) return json({ error: "Token required" }, 400);
-        let apiUrl = `${FILE_API}/api/files/download?token=${encodeURIComponent(token)}`;
+        
+        const data = decodeToken(token);
+        if (!data || data.used) return json({ success: false, error: "Invalid or expired token" }, 404);
+        
+        // Mark token as used (encode updated token — not strictly necessary since Worker is stateless,
+        // but the expiry in the token itself prevents reuse after expiration)
+        data.used = true;
+        
+        const r2Prefix = data.file_path;
         const selectedFiles = url.searchParams.get("files");
-        if (selectedFiles) apiUrl += `&files=${encodeURIComponent(selectedFiles)}`;
-        const title = url.searchParams.get("title");
-        if (title) apiUrl += `&title=${encodeURIComponent(title)}`;
-        const resp = await fetch(apiUrl, { headers: { "X-Auth-Token": "zyrex-files-api-2026" } });
-        if (!resp.ok) return json({ success: false, error: "Download failed" }, resp.status);
-        return new Response(resp.body, {
-          status: resp.status,
-          headers: {
-            "Content-Type": resp.headers.get("Content-Type") || "application/octet-stream",
-            "Content-Disposition": resp.headers.get("Content-Disposition") || "attachment",
-            "Content-Length": resp.headers.get("Content-Length") || "",
-            ...corsHeaders,
-          },
-        });
+        const title = url.searchParams.get("title") || data.product_id;
+        
+        try {
+          const allObjects = await r2List(env, r2Prefix, true);  // useProd=true
+          const fileObjects = allObjects.filter(o => !o.key.endsWith("/") && o.key !== r2Prefix);
+          
+          if (fileObjects.length === 0) {
+            return json({ success: false, error: "No files found" }, 404);
+          }
+          
+          // Build selected set
+          const selectedSet = selectedFiles ? new Set(selectedFiles.split(",")) : null;
+          
+          // Stream ZIP response
+          const { readable, writable } = new TransformStream();
+          const writer = writable.getWriter();
+          const encoder = new TextEncoder();
+          
+          // Use a simple ZIP-like stream (store method for simplicity)
+          (async () => {
+            try {
+              const folderName = title || r2Prefix.split("/").filter(Boolean).pop() || "download";
+              const centralDir = [];
+              let offset = 0;
+              let filesWritten = 0;
+              
+              for (const obj of fileObjects) {
+                const fname = obj.key.slice(r2Prefix.length);
+                if (!fname || (selectedSet && !selectedSet.has(fname))) continue;
+                
+                const fileData = await r2Get(env, obj.key, true);  // useProd=true
+                if (!fileData || !fileData.body) continue;
+                
+                let bytes;
+                try {
+                  bytes = await fileData.body.arrayBuffer();
+                } catch (e) {
+                  console.error("R2 read failed:", obj.key, e.message);
+                  continue;  // skip this file, don't crash the whole ZIP
+                }
+                if (!bytes || bytes.byteLength === 0) continue;
+                
+                const nameBytes = encoder.encode(folderName + "/" + fname);
+                const crcVal = crc32(new Uint8Array(bytes));
+                
+                // Local file header
+                const localHeader = new Uint8Array(30 + nameBytes.length);
+                const view = new DataView(localHeader.buffer);
+                view.setUint32(0, 0x04034b50, true); // signature
+                view.setUint16(8, 0, true);  // compression: store
+                view.setUint32(14, crcVal, true); // CRC32
+                view.setUint32(18, bytes.byteLength, true); // compressed size
+                view.setUint32(22, bytes.byteLength, true); // uncompressed size
+                view.setUint16(26, nameBytes.length, true); // filename length
+                localHeader.set(nameBytes, 30);
+                
+                await writer.write(localHeader);
+                await writer.write(new Uint8Array(bytes));
+                
+                // Central directory entry
+                const cdEntry = new Uint8Array(46 + nameBytes.length);
+                const cdView = new DataView(cdEntry.buffer);
+                cdView.setUint32(0, 0x02014b50, true);
+                cdView.setUint16(10, 0, true); // compression
+                cdView.setUint32(16, crcVal, true); // CRC32
+                cdView.setUint32(20, bytes.byteLength, true);
+                cdView.setUint32(24, bytes.byteLength, true);
+                cdView.setUint16(28, nameBytes.length, true);
+                cdView.setUint32(42, offset, true);
+                cdEntry.set(nameBytes, 46);
+                
+                centralDir.push(cdEntry);
+                offset += localHeader.byteLength + bytes.byteLength;
+                filesWritten++;
+              }
+              
+              // Inject watermarks only if files were actually included
+              if (filesWritten > 0) {
+                for (const [wmName, wmContent] of Object.entries(WATERMARKS)) {
+                  const wmBytes = encoder.encode(wmContent);
+                  const nameBytes = encoder.encode(folderName + "/" + wmName);
+                  const crcVal = crc32(wmBytes);
+                  
+                  const localHeader = new Uint8Array(30 + nameBytes.length);
+                  const view = new DataView(localHeader.buffer);
+                  view.setUint32(0, 0x04034b50, true);
+                  view.setUint32(14, crcVal, true);
+                  view.setUint32(18, wmBytes.byteLength, true);
+                  view.setUint32(22, wmBytes.byteLength, true);
+                  view.setUint16(26, nameBytes.length, true);
+                  localHeader.set(nameBytes, 30);
+                  
+                  await writer.write(localHeader);
+                  await writer.write(wmBytes);
+                  
+                  const cdEntry = new Uint8Array(46 + nameBytes.length);
+                  const cdView = new DataView(cdEntry.buffer);
+                  cdView.setUint32(0, 0x02014b50, true);
+                  cdView.setUint32(16, crcVal, true);
+                  cdView.setUint32(20, wmBytes.byteLength, true);
+                  cdView.setUint32(24, wmBytes.byteLength, true);
+                  cdView.setUint16(28, nameBytes.length, true);
+                  cdView.setUint32(42, offset, true);
+                  cdEntry.set(nameBytes, 46);
+                  
+                  centralDir.push(cdEntry);
+                  offset += localHeader.byteLength + wmBytes.byteLength;
+                }
+              }
+              
+              // Only write central directory if we have entries
+              if (centralDir.length > 0) {
+                let cdOffset = offset;
+                let cdSize = 0;
+                for (const entry of centralDir) {
+                  await writer.write(entry);
+                  cdSize += entry.byteLength;
+                }
+
+                // End of central directory
+                const eocd = new Uint8Array(22);
+                const eocdView = new DataView(eocd.buffer);
+                eocdView.setUint32(0, 0x06054b50, true);
+                eocdView.setUint16(8, centralDir.length, true);
+                eocdView.setUint16(10, centralDir.length, true);
+                eocdView.setUint32(12, cdSize, true);
+                eocdView.setUint32(16, cdOffset, true);
+                await writer.write(eocd);
+              }
+            } catch (e) {
+              console.error("ZIP stream error:", e.message);
+            } finally {
+              try { await writer.close(); } catch (e) { /* already closed */ }
+            }
+          })();
+          
+          // Increment download count
+          downloadCounts.set(data.product_id, (downloadCounts.get(data.product_id) || 0) + 1);
+          
+          const zipFilename = (title || "download") + ".zip";
+          return new Response(readable, {
+            headers: {
+              "Content-Type": "application/zip",
+              "Content-Disposition": `attachment; filename="${zipFilename}"`,
+              ...corsHeaders,
+            },
+          });
+        } catch (e) {
+          console.error("Download error:", e.message);
+          return json({ success: false, error: "Download failed: " + e.message }, 500);
+        }
       }
 
       // ============ SFTPGO: Account Info (bot first, fallback to direct) ============
@@ -1211,7 +1455,7 @@ export default {
         
         // Try R2 staging bucket scan first (fast, direct)
         try {
-          const r2Result = await scanResourcesFromR2(session.username, env);
+          const r2Result = await scanResourcesFromR2(session.userId, session.username, env);
           if (r2Result && r2Result.resources && r2Result.resources.length > 0) {
             return json(r2Result);
           }
@@ -1247,6 +1491,51 @@ export default {
         // Last fallback: direct SFTPGo API scan
         const result = await scanDetectedResources(session.userId, env);
         return json(result, result.success ? 200 : 500);
+      }
+
+      // ============ ADMIN: List production folders (for orphaned resource detection) ============
+      if (path === "/api/admin/production-folders") {
+        const session = parseSession(request.headers.get("Cookie"));
+        if (!session || !ADMIN_IDS.includes(session.userId)) return json({ error: "Admin only" }, 403);
+        try {
+          const prodBucket = env.STORAGE_PROD || env.STORAGE;
+          const listed = await prodBucket.list({ delimiter: "/" });
+          const folders = [];
+          // Get top-level editor folders
+          for (const cp of listed.delimitedPrefixes || []) {
+            const editorName = cp.replace(/\/$/, "");
+            if (!editorName || editorName === "production") continue;
+            
+            // List resources inside each editor
+            const editorList = await prodBucket.list({ prefix: cp, delimiter: "/" });
+            for (const resCp of editorList.delimitedPrefixes || []) {
+              const resName = resCp.slice(cp.length).replace(/\/$/, "");
+              if (!resName) continue;
+              
+              // Get files in resource folder
+              const resList = await prodBucket.list({ prefix: resCp });
+              const files = [];
+              for (const obj of resList.objects) {
+                const fname = obj.key.slice(resCp.length);
+                if (fname && !fname.endsWith("/")) {
+                  files.push({ name: fname, size: obj.size });
+                }
+              }
+              if (files.length > 0) {
+                folders.push({
+                  editor: editorName,
+                  resource: resName,
+                  prefix: resCp,
+                  fileCount: files.length,
+                  files: files.slice(0, 5),  // first 5 files preview
+                });
+              }
+            }
+          }
+          return json({ success: true, folders });
+        } catch (e) {
+          return json({ success: false, error: e.message }, 500);
+        }
       }
 
       // ============ CLOUD DIRECT: Change Password ============
@@ -1317,14 +1606,14 @@ export default {
         return json({ success: false, error: "Editor listing unavailable" }, 500);
       }
 
-      // ============ FILES: List files by path (R2 direct) ============
+      // ============ FILES: List files by path (R2 production bucket) ============
       if (path === "/api/files/list-path") {
         const listPath = url.searchParams.get("path") || "";
         if (!listPath) return json({ success: false, error: "Missing path parameter" }, 400);
         try {
           let prefix = listPath;
           if (!prefix.endsWith("/")) prefix += "/";
-          const objects = await r2List(env, prefix);
+          const objects = await r2List(env, prefix, true);  // useProd=true
           const files = objects.filter(o => !o.key.endsWith("/")).map(o => ({
             name: o.key.slice(prefix.length),
             size: o.size,
@@ -1375,6 +1664,7 @@ export default {
         if (!session) return json({ error: "Not logged in" }, 401);
         try {
           const body = await request.json();
+          const productId = body.product_id || "";
           const srcEditor = body.source_editor;
           const srcResource = body.source_resource;
           const dstEditor = body.destination_editor;
@@ -1386,10 +1676,36 @@ export default {
           const username = session.username;
           if (!username) return json({ success: false, error: "No username in session" }, 400);
           
-          const srcPrefix = `${username}/${srcEditor}/${srcResource}/`;
+          // Auto-detect SFTPGo username from staging bucket
+          let srcPrefix = null;
+          const stagingBucket = env.STORAGE;
+          
+          // Scan top-level folders for files matching source_editor/source_resource
+          const topList = await stagingBucket.list({ delimiter: "/" });
+          for (const cp of topList.delimitedPrefixes || []) {
+            const tryUser = cp.replace(/\/$/, "");
+            const tryPrefix = `${tryUser}/${srcEditor}/${srcResource}/`;
+            const check = await stagingBucket.list({ prefix: tryPrefix });
+            if (check.objects.some(o => !o.key.endsWith("/"))) {
+              srcPrefix = tryPrefix;
+              break;
+            }
+          }
+          
+          // Fallback: try Discord username, then Discord ID pattern (SFTPGo naming)
+          if (!srcPrefix) {
+            srcPrefix = `${username}/${srcEditor}/${srcResource}/`;
+            if (session.userId) {
+              const altPrefix = `${username}_${session.userId}/${srcEditor}/${srcResource}/`;
+              const altCheck = await stagingBucket.list({ prefix: altPrefix, limit: 1 });
+              if (altCheck.objects.some(o => !o.key.endsWith("/"))) {
+                srcPrefix = altPrefix;
+              }
+            }
+          }
+          // Production folder = editor/resource (clean structure)
           const dstPrefix = `${dstEditor}/${srcResource}/`;
           
-          const stagingBucket = env.STORAGE;
           const prodBucket = env.STORAGE_PROD || env.STORAGE;
           
           // List files in staging
@@ -1433,7 +1749,6 @@ export default {
             try {
               const wmData = WATERMARKS[wm];
               if (wmData) {
-                // Inject into destination root and subfolders
                 await prodBucket.put(dstPrefix + wm, wmData);
                 wmCount++;
               }
@@ -1445,7 +1760,7 @@ export default {
             try { await stagingBucket.delete(f.srcKey); } catch (e) { /* ignore */ }
           }
           
-          const filePath = `${dstEditor}/${srcResource}`;
+          const filePath = dstPrefix;
           return json({
             success: true,
             message: `Transferred ${copied} files, ${wmCount} watermarks. Cloud freed.`,

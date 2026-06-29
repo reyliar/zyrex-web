@@ -145,11 +145,6 @@
         .file-dl-btn:hover { background: rgba(var(--cherry-rgb),.12); border-color: rgba(var(--cherry-rgb),.18) }
         .file-dl-btn:disabled { opacity:.4; cursor:not-allowed }
 
-        /* Password */
-        .pw-block { display: inline-flex; align-items: center; gap: 8px; padding: 8px 14px; background: rgba(var(--cherry-rgb),.03); border: 1px solid rgba(var(--cherry-rgb),.08); border-radius: 8px; font-size: .74rem; margin-bottom: 20px; cursor: pointer; user-select: all; color: var(--gray) }
-        .pw-block i { color: var(--cherry); font-size: .7rem }
-        .pw-block code { background: rgba(var(--cherry-rgb),.1); color: var(--cherry); padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: .78rem }
-
         /* Download Card */
         .dl-card { width: 100%; background: linear-gradient(135deg, rgba(var(--cherry-rgb),.1), rgba(var(--cherry-rgb),.03)); border: 1px solid rgba(var(--cherry-rgb),.15); border-radius: 18px; padding: 28px 24px; text-align: center; position: relative; overflow: hidden }
         .dl-card::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, rgba(var(--cherry-rgb),.06), transparent 70%); pointer-events: none }
@@ -356,7 +351,6 @@
             const av = p.creator_avatar || '';
             const nick = p.creator_nickname || p.author_name || 'Zyrex Creator';
             const desc = p.description || p.desc || '';
-            const password = p.password || '';
             const authorId = p.author_id || '';
             const uploaderName = p.uploader_name || '';
 
@@ -428,11 +422,6 @@
                     html += '</div>'; // close files-scroll
                     html += '</div>'; // close files-block
                 }
-
-            // Password
-            if (password) {
-                html += '<div class="pw-block" onclick="var c=this.querySelector(\'code\');c.textContent=\'Copied!\';setTimeout(function(){c.textContent=\'' + password + '\'},1500)"><i class="fas fa-key"></i> Password: <code>' + password + '</code></div>';
-            }
 
             // Download card
             if (productId || downloadToken) {
@@ -651,7 +640,8 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating token...';
             
             try {
-                const tokenResp = await fetch('/api/downloads/request-token/' + productId);
+                const tokenUrl = '/api/downloads/request-token/' + productId + (product && product.file_path ? '?file_path=' + encodeURIComponent(product.file_path) : '');
+                const tokenResp = await fetch(tokenUrl);
                 if (!tokenResp.ok) {
                     const d = await tokenResp.json();
                     if (tokenResp.status === 401) {
@@ -691,7 +681,8 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
             try {
-                const tokenResp = await fetch('/api/downloads/request-token/' + productId);
+                const tokenUrl = '/api/downloads/request-token/' + productId + (product && product.file_path ? '?file_path=' + encodeURIComponent(product.file_path) : '');
+                const tokenResp = await fetch(tokenUrl);
                 if (!tokenResp.ok) {
                     const d = await tokenResp.json();
                     alert(d.error || 'Unable to acquire download ticket.');
