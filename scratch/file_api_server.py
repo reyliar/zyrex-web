@@ -415,14 +415,36 @@ class FileAPIHandler(BaseHTTPRequestHandler):
             
             full_path = os.path.join(SFTPGO_DATA_DIR, file_path.replace("/", os.sep))
             
-            # Fallback: if exact path not found, try production/{product_id}
+            # Fallback: if exact path not found, search production folder
             if not os.path.exists(full_path):
+                found = False
+                # Try production/{product_id}
                 fallback_path = os.path.join(SFTPGO_DATA_DIR, "production", product_id)
                 if os.path.exists(fallback_path):
                     full_path = fallback_path
+                    found = True
                     print(f"Using fallback production path: {fallback_path}")
-                else:
-                    self._send_json({"success": False, "error": f"Resource not found on disk: {file_path} (also tried production/{product_id})"}, 404)
+                
+                # If still not found, search production/* for any folder containing files
+                if not found:
+                    prod_dir = os.path.join(SFTPGO_DATA_DIR, "production")
+                    if os.path.isdir(prod_dir):
+                        for entry in sorted(os.listdir(prod_dir)):
+                            entry_path = os.path.join(prod_dir, entry)
+                            if os.path.isdir(entry_path):
+                                # Check if this folder has files (not empty)
+                                try:
+                                    contents = os.listdir(entry_path)
+                                    if contents:
+                                        full_path = entry_path
+                                        found = True
+                                        print(f"Using first available production folder: {entry_path}")
+                                        break
+                                except:
+                                    pass
+                
+                if not found:
+                    self._send_json({"success": False, "error": f"Resource not found on disk: {file_path} (also tried production/{product_id} and production/*)"}, 404)
                     return
             
             token = generate_download_token(discord_id, product_id, full_path)
