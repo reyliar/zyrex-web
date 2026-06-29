@@ -43,7 +43,7 @@ s3_staging = boto3.client(
 
 SFTPGO_DATA_DIR = r"C:\Users\reyli\Desktop\sftpgo\data"
 BOT_DB_PATH = r"C:\Users\reyli\Desktop\zyrex-bot\data\zyrex.db"
-PORT = 8081
+PORT = 5001
 SECRET_TOKEN = "zyrex-files-api-2026"
 TOKEN_EXPIRY_SECONDS = 600  # 10 minutes
 DOWNLOAD_COUNTS_FILE = r"C:\Users\reyli\Desktop\zyrexweb\scratch\download_counts.json"
