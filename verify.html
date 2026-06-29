@@ -236,13 +236,23 @@
         } else if (result === 'error') {
             showErrorView(msg);
         } else {
-            // No result param — check if user is already logged in
+            // No result param — check if user is already logged in AND in guild
             showLoading();
             fetch('/api/me', { credentials: 'include' })
                 .then(r => r.json())
-                .then(data => {
+                .then(async data => {
                     if (data.id) {
-                        showPremiumSuccess(data);
+                        // Check if they're in the Discord server
+                        try {
+                            const checkResp = await fetch('/api/guild/check-membership', { credentials: 'include' });
+                            const checkData = await checkResp.json();
+                            if (checkData.in_guild) {
+                                showPremiumSuccess(data);
+                                return;
+                            }
+                        } catch(e) {}
+                        // Logged in but not in server
+                        showColdView();
                     } else {
                         showColdView();
                     }

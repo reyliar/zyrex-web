@@ -637,6 +637,18 @@ export default {
         return json({ uploaders: [] });
       }
 
+      // GUILD MEMBERSHIP CHECK - Proxy to Bot
+      if (path === "/api/guild/check-membership") {
+        const session = parseSession(request.headers.get("Cookie"));
+        if (!session) return json({ in_guild: false, error: "Not logged in" }, 401);
+        try {
+          const targetUrl = `${BOT_API}/api/guild/check-membership?userId=${session.userId}`;
+          const botResp = await fetch(targetUrl);
+          if (botResp.ok) return json(await botResp.json());
+        } catch(e) { console.error("Membership check error:", e.message); }
+        return json({ in_guild: false });
+      }
+
       // GUILD MEMBERS - Proxy to Bot
       if (path === "/api/guild/members") {
         const session = parseSession(request.headers.get("Cookie"));
