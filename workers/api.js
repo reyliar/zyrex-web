@@ -435,6 +435,36 @@ export default {
       return new Response(null, { headers: corsHeaders });
     }
 
+    // ============ AVATAR PROXY (bypass Discord CDN blocks) ============
+    if (path.startsWith("/api/avatar/")) {
+      const cacheTTL = 86400;
+      try {
+        let cdnUrl;
+        if (path.includes("/default/")) {
+          const idx = path.split("/default/")[1]?.replace(".png", "") || "0";
+          cdnUrl = `https://cdn.discordapp.com/embed/avatars/${idx}.png`;
+        } else {
+          const parts = path.replace("/api/avatar/", "").split("/");
+          const userId = parts[0];
+          const hash = parts[1]?.replace(/\?.*/, "") || "";
+          const size = url.searchParams.get("size") || "256";
+          cdnUrl = `https://cdn.discordapp.com/avatars/${userId}/${hash}?size=${size}`;
+        }
+        const imgResp = await fetch(cdnUrl);
+        if (imgResp.ok) {
+          return new Response(imgResp.body, {
+            status: 200,
+            headers: {
+              "Content-Type": imgResp.headers.get("Content-Type") || "image/png",
+              "Cache-Control": `public, max-age=${cacheTTL}`,
+              "Access-Control-Allow-Origin": "*",
+            },
+          });
+        }
+      } catch(e) { console.error("Avatar proxy error:", e.message); }
+      return new Response(null, { status: 404, headers: corsHeaders });
+    }
+
     try {
       // LOGIN
       if (path === "/api/login") {
@@ -488,15 +518,14 @@ export default {
           responseHeaders["Set-Cookie"] = setCookie(session);
         }
 
-        // Build avatar URL
+        // Build avatar URL (use our proxy to avoid CDN blocks)
         let avatarUrl = "";
         if (session.avatar) {
           const ext = session.avatar.startsWith("a_") ? "gif" : "png";
-          avatarUrl = `https://cdn.discordapp.com/avatars/${session.userId}/${session.avatar}.${ext}?size=256`;
+          avatarUrl = `/api/avatar/${session.userId}/${session.avatar}.${ext}?size=256`;
         } else if (session.userId) {
-          // Default Discord avatar
           const defIdx = (BigInt(session.userId) >> 22n) % 6n;
-          avatarUrl = `https://cdn.discordapp.com/embed/avatars/${defIdx}.png`;
+          avatarUrl = `/api/avatar/default/${defIdx}.png`;
         }
 
         return new Response(JSON.stringify({

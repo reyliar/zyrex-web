@@ -299,12 +299,12 @@
                 const data = await resp.json();
                 if (data.success && data.user && data.user.avatar) {
                     const ext = data.user.avatar.startsWith('a_') ? 'gif' : 'png';
-                    return 'https://cdn.discordapp.com/avatars/' + userId + '/' + data.user.avatar + '.' + ext + '?size=64';
+                    return '/api/avatar/' + userId + '/' + data.user.avatar + '.' + ext + '?size=64';
                 }
             } catch(e) {}
             let defIdx = 0;
             try { defIdx = Number((BigInt(userId) >> 22n) % 6n); } catch(e) { defIdx = parseInt(userId) % 5; }
-            return 'https://cdn.discordapp.com/embed/avatars/' + defIdx + '.png';
+            return '/api/avatar/default/' + defIdx + '.png';
         }
 
         // Init

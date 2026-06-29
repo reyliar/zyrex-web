@@ -152,13 +152,13 @@
             var data = await resp.json();
             if (data.success && data.user && data.user.avatar) {
                 var ext = data.user.avatar.startsWith('a_') ? 'gif' : 'png';
-                return 'https://cdn.discordapp.com/avatars/' + userId + '/' + data.user.avatar + '.' + ext + '?size=128';
+                return '/api/avatar/' + userId + '/' + data.user.avatar + '.' + ext + '?size=128';
             }
         } catch(e) {}
         // Fallback: default Discord avatar (works in all browsers)
         var defIdx = 0;
         try { defIdx = Number((BigInt(userId) >> 22n) % 6n); } catch(e) { defIdx = parseInt(userId) % 5; }
-        return 'https://cdn.discordapp.com/embed/avatars/' + defIdx + '.png';
+        return '/api/avatar/default/' + defIdx + '.png';
     }
     (async()=>{const p=new URLSearchParams(location.search);const id=p.get("id");if(!id)return E("Preset ID missing");let d=null;try{const r=await fetch("/api/products?id="+id);if(r.ok){const j=await r.json();if(j&&j.id)d=j}}catch(e){}if(!d&&window.presetsData)d=window.presetsData.find(x=>x.id===id);if(!d&&window.pluginsData)d=window.pluginsData.find(x=>x.id===id);if(!d)return E("Preset not found");await R(d)})();
     function E(m){document.getElementById("load").style.display="none";document.getElementById("err").style.display="block";document.getElementById("errMsg").textContent=m}
