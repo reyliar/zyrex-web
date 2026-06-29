@@ -593,9 +593,21 @@ export default {
           }
         }
 
-        // If this is a verify flow, redirect to verify page with token (bot handles verification)
+        // If this is a verify flow, call the verify bot API to auto-verify
         if (redirectTo === "/verify" && extraState) {
-          redirectTo = "/verify?token=" + encodeURIComponent(extraState);
+          try {
+            const userIp = request.headers.get("CF-Connecting-IP") || request.headers.get("X-Real-IP") || "";
+            const userCountry = request.headers.get("CF-IPCountry") || "";
+            const vResp = await fetch(`${VERIFY_BOT_API}/api/verify?userId=${du.id}&ip=${encodeURIComponent(userIp)}&country=${encodeURIComponent(userCountry)}`);
+            const vData = await vResp.json();
+            if (vData.success) {
+              redirectTo = "/verify?result=success&name=" + encodeURIComponent(vData.display_name || du.global_name || du.username);
+            } else {
+              redirectTo = "/verify?result=error&msg=" + encodeURIComponent(vData.error || "Verification failed");
+            }
+          } catch(e) {
+            redirectTo = "/verify?result=error&msg=Service+unavailable";
+          }
         }
 
         return new Response(null, {
