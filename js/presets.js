@@ -45,6 +45,14 @@ function renderPresets(items) {
     const shown = document.getElementById('shownCount');
     if (shown) shown.textContent = items.length;
 
+    // Load download counts and like counts
+    var downloadCounts = {};
+    var likeCounts = {};
+    var bookmarkCounts = {};
+    try { downloadCounts = JSON.parse(localStorage.getItem('zyrex_downloads') || '{}'); } catch(e) {}
+    try { likeCounts = JSON.parse(localStorage.getItem('zyrex_likes_count') || '{}'); } catch(e) {}
+    try { bookmarkCounts = JSON.parse(localStorage.getItem('zyrex_bookmarks_count') || '{}'); } catch(e) {}
+
     grid.innerHTML = items.map(item => {
         const cat = getCategoryLabel(item.category);
         const catClass = 'tag-' + item.category;
@@ -55,6 +63,8 @@ function renderPresets(items) {
         const avatarUrl = item.creator_avatar || '';
         const avatarHtml = avatarUrl ? `<img src="${avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : `<i class="fas fa-user" style="font-size:.6rem"></i>`;
         const nickname = item.creator_nickname || item.author_name || 'Zyrex';
+        const dlCount = downloadCounts[item.id] || item.downloads || 0;
+        const likeCount = likeCounts[item.id] || 0;
 
         const thumbHtml = item.thumbnail ? 
             `<img src="${item.thumbnail}" style="width:100%;height:100%;object-fit:cover">` : 
@@ -75,8 +85,8 @@ function renderPresets(items) {
             '<div class="rava-fb" style="overflow:hidden;display:flex;align-items:center;justify-content:center">' + avatarHtml + '</div>' +
             '<span class="rname">' + nickname + '</span></div>' +
             '<div class="rc-actions">' +
-            '<span><i class="fas fa-download"></i> 0</span>' +
-            '<span><i class="fas fa-heart"></i> 0</span>' +
+            '<span><i class="fas fa-download"></i> ' + dlCount + '</span>' +
+            '<span><i class="fas fa-heart"></i> ' + likeCount + '</span>' +
             '</div></div></div></a>';
     }).join('');
 
