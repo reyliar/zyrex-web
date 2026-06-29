@@ -506,6 +506,14 @@
             if (!product) {
                 product = window.presetsData ? window.presetsData.find(p => p.id === productId) : null;
             }
+            // 3. Fallback to newly published products (from admin-upload)
+            if (!product) {
+                try {
+                    const newProducts = JSON.parse(localStorage.getItem('zyrex_new_products') || '[]');
+                    product = newProducts.find(p => p.id === productId);
+                    if (product) isDbProduct = false; // local product, mark as non-DB
+                } catch(e) {}
+            }
         }
 
         if (!product) {
@@ -519,6 +527,7 @@
             if (edits[productId]) {
                 const e = edits[productId];
                 product.name = e.name || product.name;
+                product.type = e.type || product.type;
                 product.category = e.category || product.category;
                 product.platform = e.platform || product.platform;
                 product.description = e.description || product.description;
@@ -585,9 +594,11 @@
             };
 
             window.submitEdit = async function() {
+                const p = window._productData.product;
                 const data = {
                     id: productId,
                     name: document.getElementById('edName').value.trim(),
+                    type: p.type || 'plugin',
                     category: document.getElementById('edCat').value,
                     platform: document.getElementById('edPlat').value,
                     description: document.getElementById('edDesc').value.trim(),
@@ -648,8 +659,10 @@
 
         function renderProductDetail(p, isDb) {
             let backLink = 'plugins';
-            // Only DB presets with specific types go to resources
+            // Only DB presets go to resources
             if (isDb && p.type === 'preset') backLink = 'resources';
+            // Non-DB products without type default to plugins
+            if (!isDb && !p.type) backLink = 'plugins';
 
             const platformTags = [];
             if (p.platform === 'win' || p.platform === 'both') platformTags.push('<span class="tag-win"><i class="fab fa-windows"></i> WIN</span>');
