@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zyrex | Admin - Publish Resources</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="css/style.css?v=9">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{background:var(--dark);background-image:radial-gradient(circle at 50% 0%,rgba(var(--cherry-rgb),.06) 0%,transparent 60%);color:var(--light);font-family:Poppins,sans-serif;min-height:100vh;padding-top:100px}
+        .admin-header{background:rgba(12,2,4,0.6);backdrop-filter:blur(25px) saturate(210%);-webkit-backdrop-filter:blur(25px) saturate(210%);border-bottom:1px solid rgba(var(--cherry-rgb),.1);box-shadow:0 4px 30px rgba(0,0,0,0.5);padding:16px 30px;display:flex;align-items:center;justify-content:space-between;position:fixed;top:0;left:0;width:100%;z-index:10000}
+        .admin-header .logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--light)}
+        .admin-header .logo span{font-weight:800;font-size:1.1rem;letter-spacing:1px;color:var(--cherry-light)}
+        .admin-badge{font-size:.65rem;font-weight:700;background:var(--cherry);color:#fff;padding:3px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:1px}
+        .container{max-width:1100px;margin:40px auto;padding:40px;background:rgba(12,2,4,0.45);backdrop-filter:blur(25px) saturate(210%);-webkit-backdrop-filter:blur(25px) saturate(210%);border:1px solid rgba(var(--cherry-rgb),.12);border-radius:20px;box-shadow:0 25px 60px rgba(0,0,0,0.5),0 0 40px rgba(var(--cherry-rgb),.15)}
+        h2{font-size:1.4rem;font-weight:900;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+        h2 i{color:var(--cherry-light)}
+        .sub{font-size:.85rem;color:var(--gray-dark);margin-bottom:24px}
+        .btn{display:inline-flex;align-items:center;gap:8px;padding:10px 20px;border-radius:10px;font-size:.85rem;font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:all .3s;text-decoration:none}
+        .btn-primary{background:var(--gradient-accent);color:var(--light);box-shadow:0 4px 12px rgba(var(--cherry-rgb),.3)}
+        .btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(var(--cherry-rgb),.45)}
+        .btn-secondary{background:rgba(var(--cherry-rgb),.08);color:var(--light);border:1px solid rgba(var(--cherry-rgb),.15)}
+        .resource-card{background:rgba(12,2,4,0.3);border:1px solid rgba(var(--cherry-rgb),.08);border-radius:14px;padding:24px;margin-bottom:16px}
+        .resource-card h3{font-size:1rem;font-weight:700;color:var(--cherry-light);margin-bottom:4px}
+        .resource-card .meta{font-size:.78rem;color:var(--gray-dark);margin-bottom:14px}
+        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+        @media(max-width:700px){.form-row{grid-template-columns:1fr}}
+        .form-group{margin-bottom:12px}
+        .form-group label{display:block;font-size:.72rem;font-weight:700;margin-bottom:5px;color:var(--gray);text-transform:uppercase;letter-spacing:0.5px}
+        .form-group input,.form-group textarea,.form-group select{width:100%;padding:10px 14px;background:rgba(0,0,0,.25);border:1px solid rgba(var(--cherry-rgb),.1);border-radius:8px;color:var(--light);font-family:inherit;font-size:.85rem;outline:none;transition:all .3s}
+        .form-group input:focus,.form-group textarea:focus,.form-group select:focus{border-color:var(--cherry-light);box-shadow:0 0 0 3px rgba(var(--cherry-rgb),.15)}
+        .file-preview{font-size:.72rem;color:var(--gray-dark);margin-top:6px;max-height:80px;overflow-y:auto}
+        .published-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:rgba(0,200,100,.12);border:1px solid rgba(0,200,100,.2);border-radius:99px;font-size:.7rem;color:#00c864;font-weight:600}
+        .alert{background:rgba(var(--cherry-rgb),.1);border:1px solid rgba(var(--cherry-rgb),.2);border-radius:10px;padding:12px 18px;margin-bottom:16px;font-size:.82rem;color:var(--cherry-light);display:none;font-weight:600}
+        .alert.show{display:block}
+        .alert-success{background:rgba(0,200,100,.1);border-color:rgba(0,200,100,.2);color:#00c864}
+        .stats{display:flex;gap:16px;margin-bottom:24px;flex-wrap:wrap}
+        .stat-badge{background:rgba(12,2,4,0.4);border:1px solid rgba(var(--cherry-rgb),.1);border-radius:10px;padding:12px 18px;text-align:center;min-width:80px}
+        .stat-badge .num{font-size:1.4rem;font-weight:800;color:var(--cherry-light)}
+        .stat-badge .lbl{font-size:.7rem;color:var(--gray-dark);text-transform:uppercase;letter-spacing:0.5px}
+        .loading{text-align:center;padding:40px;color:var(--gray-dark)}
+        .loading i{font-size:2rem;color:var(--cherry);display:block;margin-bottom:12px}
+    </style>
+</head>
+<body>
+    <div class="admin-header">
+        <a href="/" class="logo"><span>⬡ ZYREX</span></a>
+        <span class="admin-badge"><i class="fas fa-shield-halved"></i> Admin</span>
+    </div>
+
+    <div class="container">
+        <h2><i class="fas fa-cloud-arrow-up"></i> Publish Orphaned Resources</h2>
+        <p class="sub">Production bucket'ta dosyaları olan ama resources sayfasında listede olmayan preset'leri yayınla.</p>
+
+        <div id="alertBox" class="alert"></div>
+
+        <div class="stats" id="statsRow" style="display:none">
+            <div class="stat-badge"><div class="num" id="statTotal">0</div><div class="lbl">Production Folders</div></div>
+            <div class="stat-badge"><div class="num" id="statOrphaned">0</div><div class="lbl">Orphaned</div></div>
+            <div class="stat-badge"><div class="num" id="statPublished">0</div><div class="lbl">Already Published</div></div>
+        </div>
+
+        <div style="margin-bottom:20px;display:flex;gap:10px">
+            <button class="btn btn-primary" onclick="scanProduction()"><i class="fas fa-search"></i> Scan Production</button>
+            <button class="btn btn-secondary" id="btnPublishAll" style="display:none" onclick="publishAll()"><i class="fas fa-check-double"></i> Publish All</button>
+        </div>
+
+        <div id="content">
+            <div class="loading"><i class="fas fa-cloud"></i> Click "Scan Production" to find orphaned resources in the production bucket.</div>
+        </div>
+    </div>
+
+    <script src="js/resources-data.js"></script>
+    <script>
+        let orphanedResources = [];
+        let knownIds = new Set();
+
+        function getKnownIds() {
+            const data = window.resourcesData || [];
+            data.forEach(r => knownIds.add(r.id));
+            // Also check localStorage published
+            try {
+                const pub = JSON.parse(localStorage.getItem('zyrex_published_resources') || '[]');
+                pub.forEach(r => knownIds.add(r.id));
+            } catch(e) {}
+        }
+
+        function showAlert(msg, isError) {
+            const el = document.getElementById('alertBox');
+            el.textContent = msg;
+            el.className = 'alert ' + (isError ? '' : 'alert-success') + ' show';
+            setTimeout(() => el.classList.remove('show'), 4000);
+        }
+
+        async function scanProduction() {
+            getKnownIds();
+            const content = document.getElementById('content');
+            content.innerHTML = '<div class="loading"><i class="fas fa-spinner fa-spin"></i> Scanning production bucket...</div>';
+
+            try {
+                const resp = await fetch('/api/admin/production-folders', { credentials: 'include' });
+                const data = await resp.json();
+                if (!data.success) {
+                    content.innerHTML = `<div class="loading"><i class="fas fa-circle-exclamation" style="color:#ff3860"></i> ${data.error || 'Failed'}</div>`;
+                    return;
+                }
+
+                const allFolders = data.folders || [];
+                orphanedResources = allFolders.filter(f => {
+                    // Generate potential IDs
+                    const idFromFolder = f.resource.replace(/\s+/g, '-').toLowerCase();
+                    return !knownIds.has(idFromFolder) && !knownIds.has(f.resource) && !knownIds.has(f.editor + '-' + f.resource);
+                });
+
+                const published = allFolders.length - orphanedResources.length;
+
+                // Update stats
+                document.getElementById('statsRow').style.display = 'flex';
+                document.getElementById('statTotal').textContent = allFolders.length;
+                document.getElementById('statOrphaned').textContent = orphanedResources.length;
+                document.getElementById('statPublished').textContent = published;
+
+                if (orphanedResources.length > 0) {
+                    document.getElementById('btnPublishAll').style.display = 'inline-flex';
+                }
+
+                renderOrphaned();
+            } catch(e) {
+                content.innerHTML = `<div class="loading"><i class="fas fa-circle-exclamation" style="color:#ff3860"></i> ${e.message}</div>`;
+            }
+        }
+
+        function renderOrphaned() {
+            const content = document.getElementById('content');
+            if (orphanedResources.length === 0) {
+                content.innerHTML = '<div class="loading"><i class="fas fa-circle-check" style="color:#00c864"></i> All production resources are already published! No orphaned resources found.</div>';
+                return;
+            }
+
+            content.innerHTML = orphanedResources.map((f, idx) => {
+                const suggestedId = f.resource.replace(/\s+/g, '-').toLowerCase();
+                const suggestedName = f.editor + ' - ' + f.resource;
+                return `
+                <div class="resource-card" id="card-${idx}">
+                    <h3>📁 ${f.editor} / ${f.resource}</h3>
+                    <div class="meta">${f.fileCount} files in production · prefix: <code style="font-size:.7rem;background:rgba(0,0,0,.2);padding:2px 6px;border-radius:4px">${f.prefix}</code></div>
+                    
+                    <div class="file-preview">📄 ${f.files.map(ff => ff.name).join(', ')}${f.fileCount > 5 ? ' +' + (f.fileCount - 5) + ' more' : ''}</div>
+                    
+                    <div style="margin-top:16px">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Resource ID</label>
+                                <input type="text" id="id-${idx}" value="${suggestedId}" placeholder="unique-id">
+                            </div>
+                            <div class="form-group">
+                                <label>Display Name</label>
+                                <input type="text" id="name-${idx}" value="${suggestedName}" placeholder="Resource display name">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Category</label>
+                                <select id="cat-${idx}">
+                                    <option value="after-effects">After Effects</option>
+                                    <option value="premiere-pro">Premiere Pro</option>
+                                    <option value="photoshop">Photoshop</option>
+                                    <option value="video-star">Video Star</option>
+                                    <option value="topaz-labs">Topaz Labs</option>
+                                    <option value="others">Others</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label>Platform</label>
+                                <select id="plat-${idx}">
+                                    <option value="">Any</option>
+                                    <option value="win">Windows</option>
+                                    <option value="mac">Mac</option>
+                                    <option value="both">Win+Mac</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Creator Nickname</label>
+                                <input type="text" id="creator-${idx}" value="${f.editor}" placeholder="Creator name">
+                            </div>
+                            <div class="form-group">
+                                <label>Creator Social URL</label>
+                                <input type="text" id="social-${idx}" placeholder="TikTok/Instagram URL">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea id="desc-${idx}" rows="2" placeholder="Brief description..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Download Links (one per line: url | label)</label>
+                            <textarea id="links-${idx}" rows="2" placeholder="https://... | Pixeldrain&#10;https://... | GoFile"></textarea>
+                        </div>
+                        <button class="btn btn-primary" onclick="publishOne(${idx})"><i class="fas fa-check"></i> Publish This Resource</button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        async function publishOne(idx) {
+            const resource = orphanedResources[idx];
+            const id = document.getElementById('id-' + idx).value.trim();
+            const name = document.getElementById('name-' + idx).value.trim();
+            const category = document.getElementById('cat-' + idx).value;
+            const platform = document.getElementById('plat-' + idx).value;
+            const creator = document.getElementById('creator-' + idx).value.trim();
+            const social = document.getElementById('social-' + idx).value.trim();
+            const desc = document.getElementById('desc-' + idx).value.trim();
+            const linksRaw = document.getElementById('links-' + idx).value.trim();
+
+            if (!id || !name) {
+                showAlert('Resource ID and Display Name are required', true);
+                return;
+            }
+
+            // Parse links
+            const links = [];
+            if (linksRaw) {
+                linksRaw.split('\n').forEach(line => {
+                    const parts = line.split('|');
+                    if (parts.length >= 1) {
+                        links.push({
+                            url: parts[0].trim(),
+                            label: (parts[1] || 'Download').trim()
+                        });
+                    }
+                });
+            }
+            if (links.length === 0) {
+                links.push({ url: '#', label: 'Coming Soon' });
+            }
+
+            const entry = {
+                id,
+                name,
+                category,
+                platform,
+                password: '',
+                desc: desc || name,
+                creator_nickname: creator || resource.editor,
+                creator_social_url: social || '',
+                links,
+                _published_from_prod: true,
+                _published_at: new Date().toISOString(),
+            };
+
+            // Save to localStorage
+            try {
+                const pub = JSON.parse(localStorage.getItem('zyrex_published_resources') || '[]');
+                // Remove existing with same id
+                const filtered = pub.filter(r => r.id !== id);
+                filtered.push(entry);
+                localStorage.setItem('zyrex_published_resources', JSON.stringify(filtered));
+                
+                knownIds.add(id);
+                showAlert(`"${name}" published! It will appear on the resources page.`, false);
+                
+                // Remove card
+                document.getElementById('card-' + idx).style.opacity = '0.3';
+                document.getElementById('card-' + idx).style.pointerEvents = 'none';
+                
+                // Update stats
+                orphanedResources = orphanedResources.filter((_, i) => i !== idx);
+                document.getElementById('statOrphaned').textContent = orphanedResources.length;
+                document.getElementById('statPublished').textContent = parseInt(document.getElementById('statPublished').textContent) + 1;
+                
+                if (orphanedResources.length === 0) {
+                    document.getElementById('btnPublishAll').style.display = 'none';
+                }
+            } catch(e) {
+                showAlert('Failed to save: ' + e.message, true);
+            }
+        }
+
+        function publishAll() {
+            if (!confirm(`Publish all ${orphanedResources.length} orphaned resources?`)) return;
+            orphanedResources.forEach((_, i) => publishOne(i));
+        }
+    </script>
+</body>
+</html>

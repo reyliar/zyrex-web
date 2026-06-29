@@ -1,5 +1,5 @@
 /* ===================== COMPLETE RESOURCES DATA ===================== */
-const PASSWORD = 'star';
+const PASSWORD = '';  // No ZIP password for presets
 
 function makeId(name) {
     return name.toLowerCase()

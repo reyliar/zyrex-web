@@ -4,7 +4,17 @@
 function initResources() {
     const data = window.resourcesData;
     if (!data) { setTimeout(initResources, 100); return; }
-    syncAndRender(data);
+    // Merge localStorage published resources (admin feature)
+    let mergedData = [...data];
+    try {
+        const pub = JSON.parse(localStorage.getItem('zyrex_published_resources') || '[]');
+        if (pub.length > 0) {
+            const existingIds = new Set(data.map(r => r.id));
+            const newEntries = pub.filter(r => !existingIds.has(r.id));
+            mergedData = [...data, ...newEntries];
+        }
+    } catch(e) {}
+    syncAndRender(mergedData);
 }
 
 async function syncAndRender(data) {
@@ -104,7 +114,14 @@ let currentPlatform = 'all';
 let currentCategory = 'all';
 
 function filterResources() {
-    const data = window.resourcesData || [];
+    let data = window.resourcesData || [];
+    // Merge localStorage published resources
+    try {
+        const pub = JSON.parse(localStorage.getItem('zyrex_published_resources') || '[]');
+        const existingIds = new Set(data.map(r => r.id));
+        const newEntries = pub.filter(r => !existingIds.has(r.id));
+        data = [...data, ...newEntries];
+    } catch(e) {}
     let filtered = data;
     if (currentPlatform !== 'all') filtered = filtered.filter(r => r.platform === currentPlatform || r.platform === 'both');
     if (currentCategory !== 'all') {
