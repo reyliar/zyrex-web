@@ -742,30 +742,21 @@ export default {
         
         return json({ success: false, error: "Token generation failed: " + lastError }, 500);
       }
-// In-memory download counters (reset on Worker restart, but good enough)
-const downloadCounts = new Map();
-
-      // ============ DOWNLOAD: Track Count ============
-      if (path === "/api/downloads/track" && request.method === "POST") {
+      // ============ DOWNLOAD COUNTER (proxy to Python server) ============
+      if (path === "/api/downloads/counts" || path === "/api/downloads/track") {
         try {
-          const body = await request.json();
-          const productId = body.productId;
-          if (!productId) return json({ success: false, error: "Missing productId" }, 400);
-          const count = (downloadCounts.get(productId) || 0) + 1;
-          downloadCounts.set(productId, count);
-          return json({ success: true, productId, count });
-        } catch(e) {
-          return json({ success: false, error: "Invalid request" }, 400);
-        }
-      }
-
-      // ============ DOWNLOAD: Get Counts ============
-      if (path === "/api/downloads/counts") {
-        const counts = {};
-        for (const [k, v] of downloadCounts) {
-          counts[k] = v;
-        }
-        return json({ success: true, counts });
+          let apiUrl = `https://storage.zyrexediting.xyz/api/files/download-count`;
+          let headers = { "X-Auth-Token": "zyrex-files-api-2026" };
+          let fetchOpts = { headers };
+          if (request.method === "POST") {
+            headers["Content-Type"] = "application/json";
+            fetchOpts.method = "POST";
+            fetchOpts.body = await request.text();
+          }
+          const resp = await fetch(apiUrl, fetchOpts);
+          if (resp.ok) return json(await resp.json());
+        } catch (e) { console.error("Counter error:", e.message); }
+        return json({ success: false, error: "Counter unavailable" }, 500);
       }
 
       // ============ DOWNLOAD: Binary File Stream (local file API) ============

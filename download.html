@@ -494,21 +494,21 @@
         // Download tracking
         function trackDownload() {
             if (!product || !product.id) return;
-            const pid = product.id;
-            // LocalStorage (for same-domain)
+            var pid = product.id;
+            // LocalStorage
             try {
-                const key = 'zyrex_downloads';
-                const downloads = JSON.parse(localStorage.getItem(key) || '{}');
+                var key = 'zyrex_downloads';
+                var downloads = JSON.parse(localStorage.getItem(key) || '{}');
                 downloads[pid] = (downloads[pid] || 0) + 1;
                 localStorage.setItem(key, JSON.stringify(downloads));
                 updateDownloadCount();
             } catch(e) {}
-            // Server-side counter (cross-domain reliable)
+            // Persistent API (cross-domain)
             try {
                 fetch('/api/downloads/track', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ productId: pid })
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({productId: pid})
                 }).catch(function(){});
             } catch(e) {}
         }

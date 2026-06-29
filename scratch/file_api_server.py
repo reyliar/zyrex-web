@@ -20,6 +20,7 @@ BOT_DB_PATH = r"C:\Users\reyli\Desktop\zyrex-bot\data\zyrex.db"
 PORT = 8081
 SECRET_TOKEN = "zyrex-files-api-2026"
 TOKEN_EXPIRY_SECONDS = 600  # 10 minutes
+DOWNLOAD_COUNTS_FILE = r"C:\Users\reyli\Desktop\zyrexweb\scratch\download_counts.json"
 
 # Watermark files injected into every production folder (embedded, no external files)
 WATERMARK_FILES_CONTENT = {
@@ -70,6 +71,27 @@ def inject_watermarks(target_dir):
                 except Exception as e:
                     print(f"Watermark failed: {filename} -> {dst}: {e}")
     return injected
+
+def get_download_counts():
+    """Read download counts from JSON file."""
+    try:
+        if os.path.exists(DOWNLOAD_COUNTS_FILE):
+            with open(DOWNLOAD_COUNTS_FILE, 'r') as f:
+                return json.load(f)
+    except:
+        pass
+    return {}
+
+def increment_download_count(product_id):
+    """Increment download count for a product, return new count."""
+    counts = get_download_counts()
+    counts[product_id] = counts.get(product_id, 0) + 1
+    try:
+        with open(DOWNLOAD_COUNTS_FILE, 'w') as f:
+            json.dump(counts, f)
+    except:
+        pass
+    return counts[product_id]
 
 def generate_download_token(discord_id, product_id, file_path):
     """Generate a one-time download token."""
@@ -247,6 +269,12 @@ class FileAPIHandler(BaseHTTPRequestHandler):
         
         if path == "/api/files/ping":
             self._send_json({"success": True, "message": "pong"})
+            return
+        
+        # === DOWNLOAD COUNTER: GET counts ===
+        if path == "/api/files/download-count":
+            counts = get_download_counts()
+            self._send_json({"success": True, "counts": counts})
             return
         
         # === DOWNLOAD TOKEN VALIDATION & FILE SERVING ===
@@ -432,6 +460,16 @@ class FileAPIHandler(BaseHTTPRequestHandler):
         
         content_length = int(self.headers.get("Content-Length", 0))
         body = json.loads(self.rfile.read(content_length)) if content_length > 0 else {}
+        
+        # === DOWNLOAD COUNTER: POST track ===
+        if path == "/api/files/download-count":
+            product_id = body.get("productId", "")
+            if not product_id:
+                self._send_json({"success": False, "error": "Missing productId"}, 400)
+                return
+            count = increment_download_count(product_id)
+            self._send_json({"success": True, "productId": product_id, "count": count})
+            return
         
         if path == "/api/files/transfer":
             discord_id = body.get("discord_id", "")

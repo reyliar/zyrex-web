@@ -4,18 +4,17 @@
 function initResources() {
     const data = window.resourcesData;
     if (!data) { setTimeout(initResources, 100); return; }
-    // Sync download counts from API before rendering
     syncAndRender(data);
 }
 
 async function syncAndRender(data) {
     try {
         var dl = JSON.parse(localStorage.getItem("zyrex_downloads") || "{}");
-        var resp = await fetch("/api/downloads/counts");
-        var apiData = await resp.json();
-        if (apiData.success && apiData.counts) {
-            for (var k in apiData.counts) {
-                if (apiData.counts[k] > (dl[k] || 0)) dl[k] = apiData.counts[k];
+        var r = await fetch("/api/downloads/counts");
+        var d = await r.json();
+        if (d.success && d.counts) {
+            for (var k in d.counts) {
+                if (d.counts[k] > (dl[k] || 0)) dl[k] = d.counts[k];
             }
             localStorage.setItem("zyrex_downloads", JSON.stringify(dl));
         }

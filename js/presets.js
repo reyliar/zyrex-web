@@ -1,14 +1,14 @@
 /* ===================== PRESETS GRID RENDERER ===================== */
 
 async function initPresets() {
-    // Sync download counts from API first
+    // Sync download counts from persistent API
     try {
         var dl = JSON.parse(localStorage.getItem("zyrex_downloads") || "{}");
-        var resp = await fetch("/api/downloads/counts");
-        var data = await resp.json();
-        if (data.success && data.counts) {
-            for (var k in data.counts) {
-                if (data.counts[k] > (dl[k] || 0)) dl[k] = data.counts[k];
+        var r = await fetch("/api/downloads/counts");
+        var d = await r.json();
+        if (d.success && d.counts) {
+            for (var k in d.counts) {
+                if (d.counts[k] > (dl[k] || 0)) dl[k] = d.counts[k];
             }
             localStorage.setItem("zyrex_downloads", JSON.stringify(dl));
         }
