@@ -1,4 +1,7 @@
 /* ===================== PRESETS GRID RENDERER ===================== */
+// Sync cross-domain download counts from cookie to localStorage
+(function(){try{var dl=JSON.parse(localStorage.getItem("zyrex_downloads")||"{}");var updated=false;var cookies=document.cookie.split("; ");for(var i=0;i<cookies.length;i++){var m=cookies[i].match(/^zyrex_dl_(.+)=(\d+)$/);if(m){var cid=m[1];var ccount=parseInt(m[2])||0;if(ccount>(dl[cid]||0)){dl[cid]=ccount;updated=true}}}if(updated)localStorage.setItem("zyrex_downloads",JSON.stringify(dl))}catch(e){}})();
+
 async function initPresets() {
     try {
         const resp = await fetch('/api/products');

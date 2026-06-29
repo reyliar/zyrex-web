@@ -499,6 +499,8 @@
                 const downloads = JSON.parse(localStorage.getItem(key) || '{}');
                 downloads[product.id] = (downloads[product.id] || 0) + 1;
                 localStorage.setItem(key, JSON.stringify(downloads));
+                // Also set cross-domain cookie so main site can read it
+                document.cookie = 'zyrex_dl_' + product.id + '=' + downloads[product.id] + ';path=/;domain=.zyrexediting.xyz;max-age=31536000;SameSite=Lax';
                 updateDownloadCount();
             } catch(e) {}
         }
@@ -510,6 +512,21 @@
                 const downloads = JSON.parse(localStorage.getItem('zyrex_downloads') || '{}');
                 el.textContent = downloads[product.id] || 0;
             } catch(e) {}
+        }
+
+        // Shared helper: read download count from localStorage or cross-domain cookie
+        function getDownloadCount(productId) {
+            // Try localStorage first
+            try {
+                const downloads = JSON.parse(localStorage.getItem('zyrex_downloads') || '{}');
+                if (downloads[productId]) return downloads[productId];
+            } catch(e) {}
+            // Fallback: read from cross-domain cookie
+            try {
+                const match = document.cookie.match(new RegExp('(?:^|; )zyrex_dl_' + productId + '=([^;]*)'));
+                if (match) return parseInt(match[1]) || 0;
+            } catch(e) {}
+            return 0;
         }
 
         // Progress UI
