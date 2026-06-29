@@ -2,7 +2,7 @@
 const DISCORD_API = "https://discord.com/api/v10";
 const BOT_API = "https://zyre.wispbyte.org";
 const VERIFY_BOT_API = "https://zyre.wispbyte.org";
-const FILE_API = "https://api.zyrexediting.xyz";  // Python file server via Cloudflare Tunnel (local)
+const FILE_API = "https://storage.zyrexediting.xyz";  // Python file server via Cloudflare Tunnel (local)
 const SFTPGO_API = "https://storage.zyrexediting.xyz/api/v2";  // SFTPGo via Cloudflare Tunnel (local)
 const ADMIN_IDS = ["1421177012814614548", "1382421118098346174"];
 
@@ -1369,28 +1369,92 @@ export default {
         return json({ success: false, error: "Create editor failed" }, 500);
       }
 
-      // ============ PRODUCTS: Transfer to Production (local file API) ============
+      // ============ PRODUCTS: Transfer to Production (R2 direct) ============
       if (path === "/api/products/transfer" && request.method === "POST") {
         const session = parseSession(request.headers.get("Cookie"));
         if (!session) return json({ error: "Not logged in" }, 401);
         try {
           const body = await request.json();
-          const payload = {
-            discord_id: session.userId,
-            source_editor: body.source_editor,
-            source_resource: body.source_resource,
-            destination_editor: body.destination_editor,
-          };
-          const apiUrl = `${FILE_API}/api/files/transfer?token=zyrex-files-api-2026`;
-          const resp = await fetch(apiUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
+          const srcEditor = body.source_editor;
+          const srcResource = body.source_resource;
+          const dstEditor = body.destination_editor;
+          if (!srcEditor || !srcResource || !dstEditor) {
+            return json({ success: false, error: "Missing required fields" }, 400);
+          }
+          
+          // SFTPGo username = Discord username (typical mapping)
+          const username = session.username;
+          if (!username) return json({ success: false, error: "No username in session" }, 400);
+          
+          const srcPrefix = `${username}/${srcEditor}/${srcResource}/`;
+          const dstPrefix = `${dstEditor}/${srcResource}/`;
+          
+          const stagingBucket = env.STORAGE;
+          const prodBucket = env.STORAGE_PROD || env.STORAGE;
+          
+          // List files in staging
+          const stagingList = await stagingBucket.list({ prefix: srcPrefix });
+          const files = [];
+          for (const obj of stagingList.objects) {
+            if (obj.key === srcPrefix) continue;
+            const rel = obj.key.slice(srcPrefix.length);
+            if (rel && !rel.endsWith("/")) files.push({ srcKey: obj.key, relPath: rel, size: obj.size });
+          }
+          
+          if (files.length === 0) {
+            return json({ success: false, error: `No files found in cloud: ${srcEditor}/${srcResource}` }, 404);
+          }
+          
+          // Copy each file from staging to production
+          let copied = 0;
+          const failed = [];
+          for (const f of files) {
+            try {
+              const data = await stagingBucket.get(f.srcKey);
+              if (data) {
+                const bytes = await data.arrayBuffer();
+                await prodBucket.put(dstPrefix + f.relPath, bytes);
+                copied++;
+              }
+            } catch (e) {
+              failed.push(f.srcKey);
+              console.error("R2 copy failed:", f.srcKey, e.message);
+            }
+          }
+          
+          if (failed.length > 0 && copied === 0) {
+            return json({ success: false, error: `Transfer failed: ${failed.length} files` }, 500);
+          }
+          
+          // Inject watermark files into production
+          const wmNames = ["LEAKED BY ZYREX.txt", "Visit for more resources!.url"];
+          let wmCount = 0;
+          for (const wm of wmNames) {
+            try {
+              const wmData = WATERMARKS[wm];
+              if (wmData) {
+                // Inject into destination root and subfolders
+                await prodBucket.put(dstPrefix + wm, wmData);
+                wmCount++;
+              }
+            } catch (e) { /* ignore */ }
+          }
+          
+          // Delete from staging
+          for (const f of files) {
+            try { await stagingBucket.delete(f.srcKey); } catch (e) { /* ignore */ }
+          }
+          
+          const filePath = `${dstEditor}/${srcResource}`;
+          return json({
+            success: true,
+            message: `Transferred ${copied} files, ${wmCount} watermarks. Cloud freed.`,
+            file_path: filePath,
+            files_copied: copied,
+            watermarks_injected: wmCount,
           });
-          if (resp.ok) return json(await resp.json());
-          const errText = await resp.text();
-          return json({ success: false, error: "Transfer failed: " + errText }, 500);
         } catch (e) {
+          console.error("R2 transfer error:", e.message);
           return json({ success: false, error: "Transfer error: " + e.message }, 500);
         }
       }
