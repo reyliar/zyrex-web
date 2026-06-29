@@ -710,28 +710,37 @@ export default {
           console.error("Failed to fetch product from bot:", e.message);
         }
         
-        if (!filePath) {
-          filePath = `production/${productId}`;
+        // Build list of paths to try: BOT_API path first, then production fallback
+        const pathsToTry = [];
+        if (filePath) pathsToTry.push(filePath);
+        pathsToTry.push(`production/${productId}`);
+        
+        let lastError = "";
+        for (const tryPath of pathsToTry) {
+          try {
+            const apiUrl = `https://storage.zyrexediting.xyz/api/files/request-token`;
+            const resp = await fetch(apiUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "X-Auth-Token": "zyrex-files-api-2026" },
+              body: JSON.stringify({
+                discord_id: session.userId,
+                product_id: productId,
+                file_path: tryPath,
+              }),
+              signal: AbortSignal.timeout(10000),
+            });
+            if (resp.ok) return json(await resp.json());
+            lastError = await resp.text();
+            // If not found, try next path; otherwise break and return error
+            if (!lastError.includes("not found") && !lastError.includes("Resource not found")) {
+              break;
+            }
+          } catch (e) {
+            lastError = e.message;
+          }
         }
         
-        try {
-          const apiUrl = `https://storage.zyrexediting.xyz/api/files/request-token`;
-          const resp = await fetch(apiUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "X-Auth-Token": "zyrex-files-api-2026" },
-            body: JSON.stringify({
-              discord_id: session.userId,
-              product_id: productId,
-              file_path: filePath,
-            }),
-            signal: AbortSignal.timeout(10000),
-          });
-          if (resp.ok) return json(await resp.json());
-          const errData = await resp.text();
-          return json({ success: false, error: "Token generation failed: " + errData }, 500);
-        } catch (e) {
-          return json({ success: false, error: "Token service unavailable: " + e.message }, 500);
-        }
+        return json({ success: false, error: "Token generation failed: " + lastError }, 500);
       }
       // ============ DOWNLOAD: Binary File Stream (local file API) ============
       if (path === "/api/downloads/download") {
