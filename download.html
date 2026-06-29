@@ -494,14 +494,22 @@
         // Download tracking
         function trackDownload() {
             if (!product || !product.id) return;
+            const pid = product.id;
+            // LocalStorage (for same-domain)
             try {
                 const key = 'zyrex_downloads';
                 const downloads = JSON.parse(localStorage.getItem(key) || '{}');
-                downloads[product.id] = (downloads[product.id] || 0) + 1;
+                downloads[pid] = (downloads[pid] || 0) + 1;
                 localStorage.setItem(key, JSON.stringify(downloads));
-                // Also set cross-domain cookie so main site can read it
-                document.cookie = 'zyrex_dl_' + product.id + '=' + downloads[product.id] + ';path=/;domain=.zyrexediting.xyz;max-age=31536000;SameSite=Lax';
                 updateDownloadCount();
+            } catch(e) {}
+            // Server-side counter (cross-domain reliable)
+            try {
+                fetch('/api/downloads/track', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ productId: pid })
+                }).catch(function(){});
             } catch(e) {}
         }
 

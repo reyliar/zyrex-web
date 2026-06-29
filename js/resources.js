@@ -1,12 +1,25 @@
 /* ===================== RESOURCES GRID RENDERER ===================== */
-// Sync cross-domain download counts from cookie to localStorage
-(function(){try{var dl=JSON.parse(localStorage.getItem("zyrex_downloads")||"{}");var updated=false;var cookies=document.cookie.split("; ");for(var i=0;i<cookies.length;i++){var m=cookies[i].match(/^zyrex_dl_(.+)=(\d+)$/);if(m){var cid=m[1];var ccount=parseInt(m[2])||0;if(ccount>(dl[cid]||0)){dl[cid]=ccount;updated=true}}}if(updated)localStorage.setItem("zyrex_downloads",JSON.stringify(dl))}catch(e){}})();
-
 // Data is loaded from resources-data.js via window.resourcesData
 
 function initResources() {
     const data = window.resourcesData;
     if (!data) { setTimeout(initResources, 100); return; }
+    // Sync download counts from API before rendering
+    syncAndRender(data);
+}
+
+async function syncAndRender(data) {
+    try {
+        var dl = JSON.parse(localStorage.getItem("zyrex_downloads") || "{}");
+        var resp = await fetch("/api/downloads/counts");
+        var apiData = await resp.json();
+        if (apiData.success && apiData.counts) {
+            for (var k in apiData.counts) {
+                if (apiData.counts[k] > (dl[k] || 0)) dl[k] = apiData.counts[k];
+            }
+            localStorage.setItem("zyrex_downloads", JSON.stringify(dl));
+        }
+    } catch(e) {}
     renderResources(data);
 }
 

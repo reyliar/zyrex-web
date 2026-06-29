@@ -1,8 +1,19 @@
 /* ===================== PRESETS GRID RENDERER ===================== */
-// Sync cross-domain download counts from cookie to localStorage
-(function(){try{var dl=JSON.parse(localStorage.getItem("zyrex_downloads")||"{}");var updated=false;var cookies=document.cookie.split("; ");for(var i=0;i<cookies.length;i++){var m=cookies[i].match(/^zyrex_dl_(.+)=(\d+)$/);if(m){var cid=m[1];var ccount=parseInt(m[2])||0;if(ccount>(dl[cid]||0)){dl[cid]=ccount;updated=true}}}if(updated)localStorage.setItem("zyrex_downloads",JSON.stringify(dl))}catch(e){}})();
 
 async function initPresets() {
+    // Sync download counts from API first
+    try {
+        var dl = JSON.parse(localStorage.getItem("zyrex_downloads") || "{}");
+        var resp = await fetch("/api/downloads/counts");
+        var data = await resp.json();
+        if (data.success && data.counts) {
+            for (var k in data.counts) {
+                if (data.counts[k] > (dl[k] || 0)) dl[k] = data.counts[k];
+            }
+            localStorage.setItem("zyrex_downloads", JSON.stringify(dl));
+        }
+    } catch(e) {}
+    
     try {
         const resp = await fetch('/api/products');
         const data = await resp.json();

@@ -742,6 +742,32 @@ export default {
         
         return json({ success: false, error: "Token generation failed: " + lastError }, 500);
       }
+// In-memory download counters (reset on Worker restart, but good enough)
+const downloadCounts = new Map();
+
+      // ============ DOWNLOAD: Track Count ============
+      if (path === "/api/downloads/track" && request.method === "POST") {
+        try {
+          const body = await request.json();
+          const productId = body.productId;
+          if (!productId) return json({ success: false, error: "Missing productId" }, 400);
+          const count = (downloadCounts.get(productId) || 0) + 1;
+          downloadCounts.set(productId, count);
+          return json({ success: true, productId, count });
+        } catch(e) {
+          return json({ success: false, error: "Invalid request" }, 400);
+        }
+      }
+
+      // ============ DOWNLOAD: Get Counts ============
+      if (path === "/api/downloads/counts") {
+        const counts = {};
+        for (const [k, v] of downloadCounts) {
+          counts[k] = v;
+        }
+        return json({ success: true, counts });
+      }
+
       // ============ DOWNLOAD: Binary File Stream (local file API) ============
       if (path === "/api/downloads/download") {
         const token = url.searchParams.get("token");
