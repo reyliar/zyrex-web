@@ -413,7 +413,7 @@
                     realFiles.forEach(function(f, idx) {
                         const sz = f.size ? (f.size > 1048576 ? (f.size/1048576).toFixed(1)+' MB' : (f.size/1024).toFixed(1)+' KB') : '--';
                         const fi = f.name.endsWith('.mp4')||f.name.endsWith('.mov')?'fa-file-video':f.name.endsWith('.mp3')||f.name.endsWith('.wav')?'fa-file-audio':f.name.endsWith('.png')||f.name.endsWith('.jpg')||f.name.endsWith('.jpeg')?'fa-file-image':'fa-file-lines';
-                        html += '<div class="file-item"><div class="fl"><input type="checkbox" class="file-cb" checked onchange="updateSelectedCount()" data-filename="' + f.name.replace(/"/g, '&quot;') + '"><i class="fas ' + fi + '"></i><span title="' + f.name + '">' + f.name + '</span></div><span class="fs">' + sz + '</span><button class="file-dl-btn" onclick="triggerFileDownload(\'' + f.name + '\',this)" title="Download this file only"><i class="fas fa-download"></i></button></div>';
+                        html += '<div class="file-item"><div class="fl"><input type="checkbox" class="file-cb" checked onchange="updateSelectedCount()" data-filename="' + f.name.replace(/"/g, '&quot;') + '"><i class="fas ' + fi + '"></i><span title="' + f.name + '">' + f.name + '</span></div><span class="fs">' + sz + '</span></div>';
                     });
                     html += '</div>'; // close files-scroll
                     html += '</div>'; // close files-block
@@ -460,6 +460,24 @@
             const selectAllBtn = document.querySelector('.select-all-btn');
             if (selectAllBtn && cbs.length > 0) {
                 selectAllBtn.textContent = checked.length === cbs.length ? 'Deselect All' : 'Select All';
+            }
+            updateButtonText();
+        }
+
+        function updateButtonText() {
+            const btn = document.getElementById('dlBtn');
+            if (!btn) return;
+            const allCbs = document.querySelectorAll('.file-cb');
+            const checked = document.querySelectorAll('.file-cb:checked');
+            const total = allCbs.length;
+            const sel = checked.length;
+            let icon = '<i class="fas fa-cloud-arrow-down"></i> ';
+            if (total === 0 || sel === total) {
+                btn.innerHTML = icon + 'Download Full Package (ZIP)';
+            } else if (sel === 1) {
+                btn.innerHTML = icon + 'Download Selected File';
+            } else {
+                btn.innerHTML = icon + 'Download Selected (' + sel + ' files)';
             }
         }
 
@@ -566,11 +584,12 @@
             
             const selectedFiles = getSelectedFiles();
             const fileParam = selectedFiles ? '&files=' + selectedFiles : '';
+            const titleParam = product ? '&title=' + encodeURIComponent(product.name) : '';
             
             if (downloadToken) {
                 btn.disabled = true;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Downloading...';
-                await downloadWithProgress('/api/downloads/download?token=' + downloadToken + fileParam, (product ? product.name : 'download') + '.zip');
+                await downloadWithProgress('/api/downloads/download?token=' + downloadToken + fileParam + titleParam, (product ? product.name : 'download') + '.zip');
                 btn.innerHTML = '<i class="fas fa-arrow-rotate-right"></i> Link Used';
                 btn.disabled = true;
                 return;
@@ -598,7 +617,7 @@
                     downloadToken = tokenData.token;
                     if (tokenData.expires_in) startCountdown(tokenData.expires_in);
                     btn.innerHTML = '<i class="fas fa-circle-check"></i> Starting download...';
-                    await downloadWithProgress('/api/downloads/download?token=' + tokenData.token + fileParam, (product ? product.name : 'download') + '.zip');
+                    await downloadWithProgress('/api/downloads/download?token=' + tokenData.token + fileParam + titleParam, (product ? product.name : 'download') + '.zip');
                     btn.innerHTML = '<i class="fas fa-arrow-rotate-right"></i> Link Used';
                     btn.disabled = true;
                 } else {

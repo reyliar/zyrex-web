@@ -34,6 +34,15 @@ WATERMARK_FILES_CONTENT = {
         "   \u2588\u2588\u2588           \u2588\u2588\u2588\u2588\u2588     \u2588\u2588\u2588    \u2588\u2588\u2588    \u2588\u2588\u2588\u2580\u2580\u2580\u2580\u2580\u2580\u2580\u2580     \u2588\u2588\u2588\u2588\u2588   \r\n"
         "  \u2588\u2588\u2588             \u2588\u2588\u2588      \u2588\u2588\u2588     \u2588\u2588\u2588   \u2588\u2588\u2588            \u2588\u2588\u2588 \u2588\u2588\u2588  \r\n"
         " \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588      \u2588\u2588\u2588      \u2588\u2588\u2588      \u2588\u2588\u2588  \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588   \u2588\u2588\u2588   \u2588\u2588\u2588 \r\n"
+        "\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588      \u2588\u2588\u2588      \u2588\u2588\u2588       \u2588\u2588\u2588 \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  \u2588\u2588\u2588     \u2588\u2588\u2588\r\n"
+        "\r\n"
+        "This resource leaked by ZYREX.\r\n"
+        "\r\n"
+        "- https://discord.gg/wvgbyBwNuG\r\n"
+        "- zyrexediting.xyz\r\n"
+        "\r\n"
+        "ZYREX ZYREX ZYREX ZYREX ZYREX ZYREX ZYREX ZYREX\r\n"
+        "ZYREX ZYREX ZYREX ZYREX ZYREX ZYREX ZYREX ZYREX\r\n"
     ),
     "Visit for more resources!.url": (
         "[{000214A0-0000-0000-C000-000000000046}]\r\n"
@@ -277,7 +286,10 @@ class FileAPIHandler(BaseHTTPRequestHandler):
                 return
             
             # Everything becomes a ZIP with watermark files included
-            folder_name = os.path.basename(file_path.rstrip(os.sep))
+            # Use product title for folder name if provided, otherwise use dir name
+            folder_name = params.get("title", [os.path.basename(file_path.rstrip(os.sep))])[0]
+            if not folder_name or folder_name == os.path.basename(file_path.rstrip(os.sep)):
+                folder_name = os.path.basename(file_path.rstrip(os.sep))
             if os.path.isfile(file_path):
                 folder_name = os.path.splitext(os.path.basename(file_path))[0]
             
