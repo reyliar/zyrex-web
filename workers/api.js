@@ -596,8 +596,17 @@ export default {
         // If this is a verify flow, call the verify bot API to auto-verify
         if (redirectTo === "/verify" && extraState) {
           try {
-            const userIp = request.headers.get("CF-Connecting-IP") || request.headers.get("X-Real-IP") || "";
-            const userCountry = request.headers.get("CF-IPCountry") || "";
+            // Get real user IP from multiple sources (works globally)
+            const userIp =
+              request.headers.get("CF-Connecting-IP") ||
+              request.headers.get("X-Forwarded-For")?.split(",")[0]?.trim() ||
+              request.headers.get("X-Real-IP") ||
+              request.headers.get("True-Client-IP") ||
+              "";
+            const userCountry =
+              request.headers.get("CF-IPCountry") ||
+              request.headers.get("X-Country") ||
+              "";
             const vResp = await fetch(`${VERIFY_BOT_API}/api/verify?userId=${du.id}&ip=${encodeURIComponent(userIp)}&country=${encodeURIComponent(userCountry)}`);
             const vData = await vResp.json();
             if (vData.success) {
