@@ -22,8 +22,8 @@ from urllib.parse import urlparse, parse_qs
 R2_ENDPOINT = "https://24871d1733baa733b470db9978234d96.r2.cloudflarestorage.com"
 R2_ACCESS_KEY = "77916e5274c99b5a80aeca3f36a60071"
 R2_SECRET_KEY = "9a815661086b43314b336cbf096ab07006ba585a831bb04e3509ca9aeb9ea580"
-R2_PROD_BUCKET = "zyrexediting"       # Production: published content served to website
-R2_STAGING_BUCKET = "zyrexediting-staging"  # Staging: user uploads, cleared after publish
+R2_PROD_BUCKET = "zyrexediting-staging"   # Production: published content served to website
+R2_STAGING_BUCKET = "zyrexediting"        # Staging: user SFTPGo uploads, cleared after publish
 
 s3_prod = boto3.client(
     "s3",
