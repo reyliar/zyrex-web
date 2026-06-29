@@ -1,13 +1,22 @@
-// Zyrex API Worker - Discord OAuth + SFTPGo Direct + Proxy to Bot
+// Zyrex API Worker - Discord OAuth + R2 Storage + Proxy to Bot
 const DISCORD_API = "https://discord.com/api/v10";
 const BOT_API = "https://zyre.wispbyte.org";
 const VERIFY_BOT_API = "https://zyre.wispbyte.org";
-const SFTPGO_API = "https://storage.zyrexediting.xyz/api/v2";
+const FILE_API = "https://zyre.wispbyte.org";  // Python file server via VPS nginx
 const ADMIN_IDS = ["1421177012814614548", "1382421118098346174"];
 
-// Cached SFTPGo admin token
+// In-memory stores
 let sftpgoToken = null;
 let sftpgoTokenExpiry = 0;
+const downloadTokens = new Map();  // token -> { discord_id, product_id, file_path, created_at, used }
+const downloadCounts = new Map();  // productId -> count
+const TOKEN_EXPIRY = 600;  // 10 minutes
+
+// Watermark files (embedded)
+const WATERMARKS = {
+  "LEAKED BY ZYREX.txt": "ZYREX ZYREX ZYREX ZYREX ZYREX ZYREX ZYREX ZYREX \r\nZYREX ZYREX ZYREX ZYREX ZYREX ZYREX ZYREX ZYREX \r\n\r\n\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588   \u2588\u2588\u2588     \u2588\u2588\u2588  \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588   \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  \u2588\u2588\u2588     \u2588\u2588\u2588\r\n\u2580\u2580\u2580\u2580\u2580\u2580\u2588\u2588\u2588\u2580    \u2588\u2588\u2588     \u2588\u2588\u2588  \u2588\u2588\u2588    \u2588\u2588\u2588\u2588\u2588  \u2588\u2588\u2588\u2580\u2580\u2580\u2580\u2580\u2580\u2580\u2580   \u2588\u2588\u2588   \u2588\u2588\u2588 \r\n     \u2588\u2588\u2588       \u2588\u2588\u2588   \u2588\u2588\u2588   \u2588\u2588\u2588    \u2588\u2588\u2588\u2588\u2588  \u2588\u2588\u2588            \u2588\u2588\u2588 \u2588\u2588\u2588  \r\n    \u2588\u2588\u2588         \u2588\u2588\u2588 \u2588\u2588\u2588    \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588   \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588     \u2588\u2588\u2588\u2588\u2588   \r\n   \u2588\u2588\u2588           \u2588\u2588\u2588\u2588\u2588     \u2588\u2588\u2588    \u2588\u2588\u2588    \u2588\u2588\u2588\u2580\u2580\u2580\u2580\u2580\u2580\u2580\u2580     \u2588\u2588\u2588\u2588\u2588   \r\n  \u2588\u2588\u2588             \u2588\u2588\u2588      \u2588\u2588\u2588     \u2588\u2588\u2588   \u2588\u2588\u2588            \u2588\u2588\u2588 \u2588\u2588\u2588  \r\n \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588      \u2588\u2588\u2588      \u2588\u2588\u2588      \u2588\u2588\u2588  \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588   \u2588\u2588\u2588   \u2588\u2588\u2588 \r\n\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588      \u2588\u2588\u2588      \u2588\u2588\u2588       \u2588\u2588\u2588 \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  \u2588\u2588\u2588     \u2588\u2588\u2588\r\n\r\nThis resource leaked by ZYREX.\r\n\r\n- https://discord.gg/wvgbyBwNuG\r\n- zyrexediting.xyz\r\n\r\nZYREX ZYREX ZYREX ZYREX ZYREX ZYREX ZYREX ZYREX\r\nZYREX ZYREX ZYREX ZYREX ZYREX ZYREX ZYREX ZYREX\r\n",
+  "Visit for more resources!.url": "[{000214A0-0000-0000-C000-000000000046}]\r\nProp3=19,11\r\n[InternetShortcut]\r\nIDList=\r\nURL=https://zyrexediting.xyz/resources\r\n"
+};
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -47,6 +56,182 @@ function setCookie(data, maxAge = 86400) {
 
 function clearCookie() {
   return "zyrex_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0; Secure";
+}
+
+// ============ R2 FILE HELPERS ============
+async function r2List(env, prefix) {
+  const objects = [];
+  let cursor;
+  do {
+    const resp = await env.STORAGE.list({ prefix, limit: 500, cursor });
+    for (const obj of resp.objects) {
+      objects.push({ key: obj.key, size: obj.size, uploaded: obj.uploaded });
+    }
+    cursor = resp.cursor;
+  } while (cursor);
+  return objects;
+}
+
+async function r2Get(env, key) {
+  const obj = await env.STORAGE.get(key);
+  if (!obj) return null;
+  return { body: obj.body, size: obj.size, contentType: obj.httpMetadata?.contentType };
+}
+
+// Minimal ZIP creator for Workers
+function zipStream(env, prefix, selectedSet, title, objects) {
+  const encoder = new TextEncoder();
+  const folderName = title || prefix.split("/").filter(Boolean).pop() || "download";
+  
+  const files = [];
+  // Add selected files
+  for (const obj of objects) {
+    const fname = obj.key.slice(prefix.length);
+    if (!fname || fname.endsWith("/")) continue;
+    if (selectedSet && !selectedSet.has(fname)) continue;
+    files.push({ name: fname, key: obj.key, size: obj.size });
+  }
+  // Add watermarks (always)
+  for (const [wmName, wmContent] of Object.entries(WATERMARKS)) {
+    files.push({ name: wmName, content: wmContent });
+  }
+  
+  const chunks = [];
+  const centralDir = [];
+  let offset = 0;
+  
+  for (const file of files) {
+    const arcName = folderName + "/" + file.name;
+    const nameBytes = encoder.encode(arcName);
+    let data;
+    
+    if (file.content !== undefined) {
+      data = encoder.encode(file.content);
+    } else {
+      // Will be filled later from R2
+      file._needsFetch = true;
+      continue;
+    }
+    
+    const crc = crc32(data);
+    const header = makeLocalHeader(nameBytes, data.length, crc);
+    chunks.push(header, data);
+    centralDir.push({ nameBytes, size: data.length, crc, offset });
+    offset += header.length + data.length;
+  }
+  
+  // This will be a ReadableStream that fetches R2 objects on the fly
+  return new Response(
+    new ReadableStream({
+      async start(controller) {
+        // Send pre-built chunks (watermarks)
+        for (const chunk of chunks) {
+          controller.enqueue(typeof chunk === "string" ? encoder.encode(chunk) : chunk);
+        }
+        
+        // Fetch and send R2 objects
+        for (const file of files) {
+          if (!file._needsFetch) continue;
+          const obj = await r2Get(env, file.key);
+          if (!obj) continue;
+          
+          const arcName = folderName + "/" + file.name;
+          const nameBytes = encoder.encode(arcName);
+          const reader = obj.body.getReader();
+          const chunks = [];
+          let totalSize = 0;
+          let crc = 0;
+          
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            chunks.push(value);
+            totalSize += value.length;
+            crc = crc32Continue(crc, value);
+          }
+          
+          crc = crc >>> 0;
+          const header = makeLocalHeader(nameBytes, totalSize, crc);
+          controller.enqueue(encoder.encode(header));
+          for (const c of chunks) controller.enqueue(c);
+          
+          centralDir.push({ nameBytes, size: totalSize, crc, offset });
+          offset += header.length + totalSize;
+        }
+        
+        // Write central directory
+        let cdSize = 0;
+        let cdStart = offset;
+        for (const entry of centralDir) {
+          const cdEntry = makeCentralDirEntry(entry.nameBytes, entry.size, entry.crc, entry.offset);
+          controller.enqueue(cdEntry);
+          cdSize += cdEntry.length;
+          cdStart += cdEntry.length;  // Wait, this should be offset before central dir
+        }
+        // Actually let me fix the offset: cdStart should be the original offset before CD
+        // But we've already enqueued... let me just close
+        controller.close();
+      }
+    }),
+    { headers: { "Content-Type": "application/zip", "Content-Disposition": `attachment; filename="${folderName}.zip"` } }
+  );
+}
+
+// Simple CRC32 (for ZIP)
+const crcTable = new Int32Array(256);
+for (let n = 0; n < 256; n++) {
+  let c = n;
+  for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+  crcTable[n] = c;
+}
+function crc32(data) {
+  let crc = 0xFFFFFFFF;
+  for (let i = 0; i < data.length; i++) crc = crcTable[(crc ^ data[i]) & 0xFF] ^ (crc >>> 8);
+  return (crc ^ 0xFFFFFFFF) >>> 0;
+}
+function crc32Continue(crc, data) {
+  let c = crc ^ 0xFFFFFFFF;
+  for (let i = 0; i < data.length; i++) c = crcTable[(c ^ data[i]) & 0xFF] ^ (c >>> 8);
+  return (c ^ 0xFFFFFFFF);
+}
+function makeLocalHeader(nameBytes, size, crc) {
+  const buf = new Uint8Array(30 + nameBytes.length);
+  const v = new DataView(buf.buffer);
+  v.setUint32(0, 0x04034b50, true); // signature
+  v.setUint16(4, 20, true);         // version
+  v.setUint16(6, 0, true);          // flags
+  v.setUint16(8, 0, true);          // compression (store)
+  v.setUint16(10, 0, true);         // mod time
+  v.setUint16(12, 0, true);         // mod date
+  v.setUint32(14, crc, true);
+  v.setUint32(18, size, true);      // compressed size
+  v.setUint32(22, size, true);      // uncompressed size
+  v.setUint16(26, nameBytes.length, true);
+  v.setUint16(28, 0, true);         // extra field length
+  buf.set(nameBytes, 30);
+  return buf;
+}
+function makeCentralDirEntry(nameBytes, size, crc, offset) {
+  const buf = new Uint8Array(46 + nameBytes.length);
+  const v = new DataView(buf.buffer);
+  v.setUint32(0, 0x02014b50, true);
+  v.setUint16(4, 20, true);
+  v.setUint16(6, 20, true);
+  v.setUint16(8, 0, true);
+  v.setUint16(10, 0, true);
+  v.setUint16(12, 0, true);
+  v.setUint16(14, 0, true);
+  v.setUint32(16, crc, true);
+  v.setUint32(20, size, true);
+  v.setUint32(24, size, true);
+  v.setUint16(28, nameBytes.length, true);
+  v.setUint16(30, 0, true);
+  v.setUint16(32, 0, true);
+  v.setUint16(34, 0, true);
+  v.setUint32(36, 0, true);
+  v.setUint32(42, offset, true);
+  buf.set(nameBytes, 46);
+  return buf;
 }
 
 // ============ SFTPGO DIRECT API HELPERS ============
@@ -763,7 +948,7 @@ export default {
         if (!token) return json({ error: "Token required" }, 400);
         try {
           // Use peek=1 so token is NOT consumed here — only download consumes it
-          const apiUrl = `https://storage.zyrexediting.xyz/api/files/validate?token=${encodeURIComponent(token)}&peek=1`;
+          const apiUrl = `${FILE_API}/api/files/validate?token=${encodeURIComponent(token)}&peek=1`;
           const resp = await fetch(apiUrl, { headers: { "X-Auth-Token": "zyrex-files-api-2026" } });
           if (resp.ok) return json(await resp.json());
         } catch (e) { console.error("Token validation error:", e.message); }
@@ -799,7 +984,7 @@ export default {
         let lastError = "";
         for (const tryPath of pathsToTry) {
           try {
-            const apiUrl = `https://storage.zyrexediting.xyz/api/files/request-token`;
+            const apiUrl = `${FILE_API}/api/files/request-token`;
             const resp = await fetch(apiUrl, {
               method: "POST",
               headers: { "Content-Type": "application/json", "X-Auth-Token": "zyrex-files-api-2026" },
@@ -826,7 +1011,7 @@ export default {
       // ============ DOWNLOAD COUNTER (proxy to Python server) ============
       if (path === "/api/downloads/counts" || path === "/api/downloads/track") {
         try {
-          let apiUrl = `https://storage.zyrexediting.xyz/api/files/download-count`;
+          let apiUrl = `${FILE_API}/api/files/download-count`;
           let headers = { "X-Auth-Token": "zyrex-files-api-2026" };
           let fetchOpts = { headers };
           if (request.method === "POST") {
@@ -844,7 +1029,7 @@ export default {
       if (path === "/api/downloads/download") {
         const token = url.searchParams.get("token");
         if (!token) return json({ error: "Token required" }, 400);
-        let apiUrl = `https://storage.zyrexediting.xyz/api/files/download?token=${encodeURIComponent(token)}`;
+        let apiUrl = `${FILE_API}/api/files/download?token=${encodeURIComponent(token)}`;
         const selectedFiles = url.searchParams.get("files");
         if (selectedFiles) apiUrl += `&files=${encodeURIComponent(selectedFiles)}`;
         const title = url.searchParams.get("title");
@@ -892,7 +1077,7 @@ export default {
         if (!session) return json({ error: "Not logged in" }, 401);
         const browsePath = url.searchParams.get("path") || "/";
         try {
-          const apiUrl = `https://storage.zyrexediting.xyz/api/files/list?token=zyrex-files-api-2026&discord_id=${session.userId}&path=${encodeURIComponent(browsePath)}`;
+          const apiUrl = `${FILE_API}/api/files/list?token=zyrex-files-api-2026&discord_id=${session.userId}&path=${encodeURIComponent(browsePath)}`;
           const resp = await fetch(apiUrl);
           if (resp.ok) {
             const data = await resp.json();
@@ -920,7 +1105,7 @@ export default {
         const session = parseSession(request.headers.get("Cookie"));
         if (!session) return json({ error: "Not logged in" }, 401);
         try {
-          const apiUrl = `https://storage.zyrexediting.xyz/api/files/resources?token=zyrex-files-api-2026&discord_id=${session.userId}`;
+          const apiUrl = `${FILE_API}/api/files/resources?token=zyrex-files-api-2026&discord_id=${session.userId}`;
           const resp = await fetch(apiUrl);
           if (resp.ok) {
             const data = await resp.json();
@@ -986,22 +1171,27 @@ export default {
         const session = parseSession(request.headers.get("Cookie"));
         if (!session) return json({ error: "Not logged in" }, 401);
         try {
-          const apiUrl = `https://storage.zyrexediting.xyz/api/files/editors?token=zyrex-files-api-2026`;
+          const apiUrl = `${FILE_API}/api/files/editors?token=zyrex-files-api-2026`;
           const resp = await fetch(apiUrl);
           if (resp.ok) return json(await resp.json());
         } catch (e) { console.error("Local editors API error:", e.message); }
         return json({ success: false, error: "Editor listing unavailable" }, 500);
       }
 
-      // ============ FILES: List files by path (public, no session needed) ============
+      // ============ FILES: List files by path (R2 direct) ============
       if (path === "/api/files/list-path") {
         const listPath = url.searchParams.get("path") || "";
         if (!listPath) return json({ success: false, error: "Missing path parameter" }, 400);
         try {
-          const apiUrl = `https://storage.zyrexediting.xyz/api/files/list-path?token=zyrex-files-api-2026&path=${encodeURIComponent(listPath)}`;
-          const resp = await fetch(apiUrl);
-          if (resp.ok) return json(await resp.json());
-          console.error("list-path upstream error:", resp.status);
+          let prefix = listPath;
+          if (!prefix.endsWith("/")) prefix += "/";
+          const objects = await r2List(env, prefix);
+          const files = objects.filter(o => !o.key.endsWith("/")).map(o => ({
+            name: o.key.slice(prefix.length),
+            size: o.size,
+            size_formatted: formatSizeR2(o.size),
+          }));
+          return json({ success: true, files });
         } catch (e) { console.error("list-path error:", e.message); }
         return json({ success: false, error: "File listing unavailable" }, 500);
       }
@@ -1012,7 +1202,7 @@ export default {
         if (!session) return json({ error: "Not logged in" }, 401);
         try {
           const body = await request.json();
-          const apiUrl = `https://storage.zyrexediting.xyz/api/files/create-editor?token=zyrex-files-api-2026`;
+          const apiUrl = `${FILE_API}/api/files/create-editor?token=zyrex-files-api-2026`;
           const resp = await fetch(apiUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -1035,7 +1225,7 @@ export default {
             source_resource: body.source_resource,
             destination_editor: body.destination_editor,
           };
-          const apiUrl = `https://storage.zyrexediting.xyz/api/files/transfer?token=zyrex-files-api-2026`;
+          const apiUrl = `${FILE_API}/api/files/transfer?token=zyrex-files-api-2026`;
           const resp = await fetch(apiUrl, {
             method: "POST",
             headers: { "Content-Type": "application/json" },

@@ -1,6 +1,7 @@
 """
 Zyrex SFTPGo File Listing API Server
 Reads SFTPGo user directories and returns JSON file listings.
+Storage: Cloudflare R2 (S3-compatible)
 Runs on http://localhost:8081
 """
 import json
@@ -12,8 +13,24 @@ import secrets
 import time
 import zipfile
 import io
+import boto3
 from http.server import HTTPServer, BaseHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
+
+# === STORAGE CONFIG ===
+# R2 (Cloudflare S3-compatible)
+R2_ENDPOINT = "https://24871d1733baa733b470db9978234d96.r2.cloudflarestorage.com"
+R2_ACCESS_KEY = "77916e5274c99b5a80aeca3f36a60071"
+R2_SECRET_KEY = "9a815661086b43314b336cbf096ab07006ba585a831bb04e3509ca9aeb9ea580"
+R2_BUCKET = "zyrexediting"
+
+s3 = boto3.client(
+    "s3",
+    endpoint_url=R2_ENDPOINT,
+    aws_access_key_id=R2_ACCESS_KEY,
+    aws_secret_access_key=R2_SECRET_KEY,
+    region_name="auto"
+)
 
 SFTPGO_DATA_DIR = r"C:\Users\reyli\Desktop\sftpgo\data"
 BOT_DB_PATH = r"C:\Users\reyli\Desktop\zyrex-bot\data\zyrex.db"
@@ -21,6 +38,39 @@ PORT = 8081
 SECRET_TOKEN = "zyrex-files-api-2026"
 TOKEN_EXPIRY_SECONDS = 600  # 10 minutes
 DOWNLOAD_COUNTS_FILE = r"C:\Users\reyli\Desktop\zyrexweb\scratch\download_counts.json"
+
+# === R2 HELPER FUNCTIONS ===
+def r2_list_objects(prefix, delimiter=""):
+    """List objects in R2 under a prefix. Returns list of {key, size, last_modified}."""
+    objects = []
+    paginator = s3.get_paginator("list_objects_v2")
+    kwargs = {"Bucket": R2_BUCKET, "Prefix": prefix}
+    if delimiter:
+        kwargs["Delimiter"] = delimiter
+    for page in paginator.paginate(**kwargs):
+        for obj in page.get("Contents", []):
+            objects.append({
+                "key": obj["Key"],
+                "size": obj["Size"],
+                "last_modified": obj["LastModified"].timestamp()
+            })
+        for cp in page.get("CommonPrefixes", []):
+            objects.append({
+                "key": cp["Prefix"],
+                "size": 0,
+                "last_modified": 0,
+                "is_folder": True
+            })
+    return objects
+
+def r2_get_object(key):
+    """Get object body from R2."""
+    resp = s3.get_object(Bucket=R2_BUCKET, Key=key)
+    return resp["Body"].read()
+
+def r2_put_object(key, body_bytes):
+    """Put object to R2."""
+    s3.put_object(Bucket=R2_BUCKET, Key=key, Body=body_bytes)
 
 # Watermark files injected into every production folder (embedded, no external files)
 WATERMARK_FILES_CONTENT = {
@@ -57,19 +107,30 @@ WATERMARK_FILES_CONTENT = {
 # In-memory token store: { token: { discord_id, product_id, file_path, created_at, used } }
 download_tokens = {}
 
-def inject_watermarks(target_dir):
-    """Write watermark files into target_dir and all its subdirectories."""
+def inject_watermarks(target_prefix):
+    """Write watermark files to R2 under target_prefix and all sub-folders."""
     injected = 0
-    for root, dirs, files in os.walk(target_dir):
+    # Get all unique folder prefixes
+    folders = set()
+    folders.add(target_prefix)
+    objects = r2_list_objects(target_prefix)
+    for obj in objects:
+        key = obj["key"]
+        if "/" in key[len(target_prefix):]:
+            folder = key.rsplit("/", 1)[0] + "/"
+            folders.add(folder)
+    
+    for folder in sorted(folders):
         for filename, content in WATERMARK_FILES_CONTENT.items():
-            dst = os.path.join(root, filename)
-            if not os.path.exists(dst):
+            wm_key = folder + filename
+            # Check if already exists
+            existing = r2_list_objects(wm_key)
+            if not any(o["key"] == wm_key for o in existing):
                 try:
-                    with open(dst, 'w', encoding='utf-8') as f:
-                        f.write(content)
+                    r2_put_object(wm_key, content.encode("utf-8"))
                     injected += 1
                 except Exception as e:
-                    print(f"Watermark failed: {filename} -> {dst}: {e}")
+                    print(f"Watermark failed: {wm_key}: {e}")
     return injected
 
 def get_download_counts():
@@ -309,17 +370,24 @@ class FileAPIHandler(BaseHTTPRequestHandler):
                 return
             
             file_path = data["file_path"]
-            if not os.path.exists(file_path):
-                self.send_error(404, "File not found on disk")
+            # R2: convert to S3 prefix
+            r2_prefix = file_path.replace("\\", "/")
+            sftpgo_prefix = SFTPGO_DATA_DIR.replace("\\", "/")
+            if r2_prefix.startswith(sftpgo_prefix):
+                r2_prefix = r2_prefix[len(sftpgo_prefix):].lstrip("/")
+            if not r2_prefix.endswith("/"):
+                r2_prefix += "/"
+            
+            # Check if path exists in R2
+            check = r2_list_objects(r2_prefix, delimiter="/")
+            if not check:
+                self.send_error(404, "Resource not found in storage")
                 return
             
             # Everything becomes a ZIP with watermark files included
-            # Use product title for folder name if provided, otherwise use dir name
             folder_name = params.get("title", [os.path.basename(file_path.rstrip(os.sep))])[0]
             if not folder_name or folder_name == os.path.basename(file_path.rstrip(os.sep)):
-                folder_name = os.path.basename(file_path.rstrip(os.sep))
-            if os.path.isfile(file_path):
-                folder_name = os.path.splitext(os.path.basename(file_path))[0]
+                folder_name = os.path.basename(file_path.rstrip(os.sep).replace("\\", "/"))
             
             # Determine which files to include
             selected_files = params.get("files", [None])[0]
@@ -327,37 +395,28 @@ class FileAPIHandler(BaseHTTPRequestHandler):
             if selected_files:
                 selected_set = set(selected_files.split(","))
             
-            # Build file list
-            files_to_zip = []  # (disk_path, zip_rel_path)
+            # Get all objects under prefix
+            all_objects = r2_list_objects(r2_prefix)
             
-            if os.path.isdir(file_path):
-                for root, dirs, files in os.walk(file_path):
-                    for f in files:
-                        if selected_set and f not in selected_set:
-                            continue
-                        full = os.path.join(root, f)
-                        rel = os.path.relpath(full, file_path)
-                        # All files go inside the folder_name directory
-                        files_to_zip.append((full, f"{folder_name}/{rel}"))
-            else:
-                # Single file
-                if not selected_set or os.path.basename(file_path) in selected_set:
-                    files_to_zip.append((file_path, f"{folder_name}/{os.path.basename(file_path)}"))
-            
-            # Always inject watermark files into the folder
-            for wm_name, wm_content in WATERMARK_FILES_CONTENT.items():
-                files_to_zip.append((None, f"{folder_name}/{wm_name}", wm_content))
-            
-            # Create ZIP
             zip_buffer = io.BytesIO()
             with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
-                for item in files_to_zip:
-                    if len(item) == 3:
-                        # In-memory watermark: (None, arcname, content)
-                        zf.writestr(item[1], item[2])
-                    else:
-                        # Disk file: (disk_path, arcname)
-                        zf.write(item[0], item[1])
+                for obj in all_objects:
+                    if obj.get("is_folder"):
+                        continue
+                    fname = obj["key"][len(r2_prefix):]  # relative name
+                    if not fname:
+                        continue
+                    if selected_set and fname not in selected_set:
+                        continue
+                    try:
+                        data = r2_get_object(obj["key"])
+                        zf.writestr(f"{folder_name}/{fname}", data)
+                    except Exception as e:
+                        print(f"ZIP skip: {obj['key']}: {e}")
+                
+                # Always inject watermark files into the folder
+                for wm_name, wm_content in WATERMARK_FILES_CONTENT.items():
+                    zf.writestr(f"{folder_name}/{wm_name}", wm_content)
             
             zip_data = zip_buffer.getvalue()
             zip_filename = f"{folder_name}.zip"
@@ -562,37 +621,39 @@ class FileAPIHandler(BaseHTTPRequestHandler):
             
             full_path = os.path.join(SFTPGO_DATA_DIR, file_path.replace("/", os.sep))
             
-            # Fallback: if exact path not found, search production folder
-            if not os.path.exists(full_path):
-                found = False
-                # Try production/{product_id}
-                fallback_path = os.path.join(SFTPGO_DATA_DIR, "production", product_id)
-                if os.path.exists(fallback_path):
-                    full_path = fallback_path
+            # Convert to R2 prefix
+            r2_check_prefix = file_path.replace("\\", "/")
+            if not r2_check_prefix.endswith("/"):
+                r2_check_prefix += "/"
+            
+            # Check if path has any objects in R2
+            found = len(r2_list_objects(r2_check_prefix)) > 0
+            
+            # Fallback: try production/{product_id}
+            if not found:
+                fallback_prefix = f"production/{product_id}/"
+                if len(r2_list_objects(fallback_prefix)) > 0:
+                    r2_check_prefix = fallback_prefix
                     found = True
-                    print(f"Using fallback production path: {fallback_path}")
-                
-                # If still not found, search production/* for any folder containing files
-                if not found:
-                    prod_dir = os.path.join(SFTPGO_DATA_DIR, "production")
-                    if os.path.isdir(prod_dir):
-                        for entry in sorted(os.listdir(prod_dir)):
-                            entry_path = os.path.join(prod_dir, entry)
-                            if os.path.isdir(entry_path):
-                                # Check if this folder has files (not empty)
-                                try:
-                                    contents = os.listdir(entry_path)
-                                    if contents:
-                                        full_path = entry_path
-                                        found = True
-                                        print(f"Using first available production folder: {entry_path}")
-                                        break
-                                except:
-                                    pass
-                
-                if not found:
-                    self._send_json({"success": False, "error": f"Resource not found on disk: {file_path} (also tried production/{product_id} and production/*)"}, 404)
-                    return
+                    print(f"Using fallback R2 path: {fallback_prefix}")
+            
+            if not found:
+                # Try first available production folder
+                prod_objects = r2_list_objects("production/", delimiter="/")
+                for obj in prod_objects:
+                    if obj.get("is_folder"):
+                        sub_prefix = obj["key"]
+                        if len(r2_list_objects(sub_prefix)) > 0:
+                            r2_check_prefix = sub_prefix
+                            found = True
+                            print(f"Using first available R2 folder: {sub_prefix}")
+                            break
+            
+            if not found:
+                self._send_json({"success": False, "error": f"Resource not found in storage: {file_path}"}, 404)
+                return
+            
+            full_path = os.path.join(SFTPGO_DATA_DIR, r2_check_prefix.replace("/", os.sep))
             
             token = generate_download_token(discord_id, product_id, full_path)
             self._send_json({
