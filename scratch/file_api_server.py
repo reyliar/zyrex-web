@@ -213,11 +213,13 @@ class FileAPIHandler(BaseHTTPRequestHandler):
             if not data:
                 self._send_json({"success": False, "error": "Invalid or expired token"}, 404)
                 return
+            remaining = max(0, int(TOKEN_EXPIRY_SECONDS - (time.time() - data["created_at"])))
             self._send_json({
                 "success": True,
                 "product_id": data["product_id"],
                 "file_path": data["file_path"],
                 "discord_id": data["discord_id"],
+                "expires_in": remaining,
             })
             return
         

@@ -53,10 +53,14 @@ function renderResources(items) {
         grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--gray-dark)"><i class="fas fa-search" style="font-size:2rem;margin-bottom:15px;display:block"></i>No resources found.</div>';
         return;
     }
+    // Load download counts from localStorage
+    var downloadCounts = {};
+    try { downloadCounts = JSON.parse(localStorage.getItem('zyrex_downloads') || '{}'); } catch(e) {}
+
     grid.innerHTML = items.map(item => {
         const faviconUrl = getFavicon(item.links[0].url);
         const platformBadge = getPlatformBadge(item.platform);
-        const downloads = item.downloads !== undefined ? item.downloads : 0;
+        const downloads = downloadCounts[item.id] || item.downloads || 0;
         const descriptionText = item.description || item.desc || '';
         const shortDesc = descriptionText ? descriptionText.substring(0, 100) + (descriptionText.length > 100 ? '...' : '') : '';
         return '<a href="/product?id=' + item.id + '" class="rc glass-card-enhanced shimmer-sweep">' +

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Not Found | Zyrex</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --cherry: #a80f2d;
+            --cherry-rgb: 168,15,45;
+            --dark: #060608;
+            --light: #e8e8ed;
+            --gray: #8888a0;
+        }
+        * { margin:0; padding:0; box-sizing:border-box }
+        body {
+            background: #060608;
+            background-image: radial-gradient(circle at 50% 30%, rgba(168,15,45,.04) 0%, transparent 60%);
+            color: #e8e8ed;
+            font-family: 'Poppins', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        .bg-grid {
+            position: fixed; inset:0; pointer-events: none; z-index:0;
+            background-image: linear-gradient(rgba(255,255,255,.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.015) 1px, transparent 1px);
+            background-size: 60px 60px;
+            mask-image: radial-gradient(ellipse at center, black 30%, transparent 70%);
+        }
+        .glow {
+            position: fixed;
+            width: 500px; height: 500px;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: .08;
+            pointer-events: none;
+        }
+        .glow-1 { background: var(--cherry); top: 20%; left: 50%; transform: translate(-50%,-50%) }
+        .glow-2 { background: #5865F2; bottom: 10%; left: 30%; transform: translate(-50%,50%); opacity: .05 }
+        
+        .wrap {
+            position: relative; z-index:1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .code {
+            font-size: clamp(6rem, 15vw, 10rem);
+            font-weight: 900;
+            letter-spacing: -4px;
+            background: linear-gradient(135deg, #a80f2d 0%, #e8456a 50%, #a80f2d 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+            margin-bottom: 8px;
+            animation: pulse 3s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { filter: brightness(1) }
+            50% { filter: brightness(1.3) }
+        }
+        
+        .tag {
+            font-size: .7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #a80f2d;
+            background: rgba(168,15,45,.08);
+            border: 1px solid rgba(168,15,45,.15);
+            padding: 5px 14px;
+            border-radius: 50px;
+            margin-bottom: 24px;
+        }
+        
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #e8e8ed;
+            margin-bottom: 8px;
+        }
+        
+        p {
+            color: #8888a0;
+            font-size: .9rem;
+            margin-bottom: 32px;
+            max-width: 420px;
+            line-height: 1.6;
+        }
+        
+        .btns {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: .85rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all .25s;
+            font-family: inherit;
+            cursor: pointer;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #8a0a22, #5a0614);
+            border: 1px solid rgba(168,15,45,.3);
+            color: #fff;
+            box-shadow: 0 4px 18px rgba(168,15,45,.25);
+        }
+        .btn-primary:hover {
+            box-shadow: 0 6px 28px rgba(168,15,45,.4);
+            transform: translateY(-1px);
+        }
+        .btn-ghost {
+            background: rgba(255,255,255,.03);
+            border: 1px solid rgba(255,255,255,.06);
+            color: #8888a0;
+        }
+        .btn-ghost:hover {
+            background: rgba(255,255,255,.06);
+            color: #e8e8ed;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-grid"></div>
+    <div class="glow glow-1"></div>
+    <div class="glow glow-2"></div>
+    
+    <div class="wrap">
+        <div class="code">404</div>
+        <div class="tag">Page Not Found</div>
+        <h1>This page doesn't exist</h1>
+        <p>The link you followed may be broken, expired, or the page may have been moved. Try heading back home.</p>
+        <div class="btns">
+            <a href="/" class="btn btn-primary"><i class="fas fa-home"></i> Back to Home</a>
+            <a href="/resources" class="btn btn-ghost"><i class="fas fa-cubes"></i> Browse Resources</a>
+        </div>
+    </div>
+</body>
+</html>
