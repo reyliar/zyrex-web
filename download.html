@@ -72,6 +72,10 @@
         .fi .fl i { color:var(--cherry); font-size:.8rem; flex-shrink:0 }
         .fi .fl span { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--light) }
         .fi .fs { color:var(--gray-dark); font-size:.72rem; flex-shrink:0; margin-left:8px }
+        .fi-meta { display:flex; align-items:center; gap:8px; flex-shrink:0 }
+        .fi-dl-btn { background:rgba(var(--cherry-rgb),.08); border:1px solid rgba(var(--cherry-rgb),.15); color:var(--cherry); cursor:pointer; padding:4px 8px; border-radius:6px; font-size:.75rem; transition:.2s; display:flex; align-items:center; gap:4px }
+        .fi-dl-btn:hover { background:rgba(var(--cherry-rgb),.15); border-color:rgba(var(--cherry-rgb),.25) }
+        .fi-dl-btn:disabled { opacity:0.5; cursor:not-allowed }
         
         /* Password */
         .pw { display:inline-flex; align-items:center; gap:8px; padding:8px 14px; background:rgba(var(--cherry-rgb),.04); border:1px solid rgba(var(--cherry-rgb),.1); border-radius:8px; font-size:.78rem; margin-bottom:var(--gap); cursor:pointer; user-select:all }
@@ -114,6 +118,15 @@
 
         const iconMap = {"after-effects":"fa-film","premiere-pro":"fa-video","photoshop":"fa-image","video-star":"fa-star","topaz-labs":"fa-gem","others":"fa-folder"};
         const catLabels = {"after-effects":"After Effects","premiere-pro":"Premiere Pro","photoshop":"Photoshop","video-star":"Video Star","topaz-labs":"Topaz Labs","others":"Others"};
+
+        function discordAvatar(authorId, existingUrl) {
+            if (existingUrl && (existingUrl.includes('discordapp.com') || existingUrl.includes('discord.com'))) {
+                return existingUrl;
+            }
+            if (!authorId) return '';
+            var idx = (BigInt(authorId) >> 22n) % 6n;
+            return 'https://cdn.discordapp.com/embed/avatars/' + idx + '.png';
+        }
 
         function E(m) { 
             document.getElementById("load").style.display="none"; 
@@ -162,18 +175,24 @@
             const ic = iconMap[p.category] || "fa-folder";
             const cat = catLabels[p.category] || "Others";
             const av = p.creator_avatar || "";
+            const upAv = p.uploader_avatar || p.creator_avatar || "";
             const nick = p.creator_nickname || p.author_name || "Zyrex Creator";
             const desc = p.description || p.desc || "";
             const password = p.password || "";
+            const authorId = p.author_id || "";
+
+            var displayCreatorAv = discordAvatar(authorId, av);
+            var displayUploaderAv = discordAvatar(authorId, upAv);
 
             const heroImg = p.thumbnail ? '<img src="'+p.thumbnail+'" alt="'+p.name+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' : '';
             const ph = '<div class="ph" style="'+(p.thumbnail?'display:none':'')+'"><i class="fas '+ic+'"></i></div>';
 
-            const creatorHtml = '<div class="cr a2">'+(av?'<img src="'+av+'" alt="">':'<div class="cfb"><i class="fas fa-user"></i></div>')+'<div><strong>'+nick+'</strong>'+(p.creator_social_url?'<a href="'+p.creator_social_url+'" target="_blank"><i class="fas fa-external-link-alt"></i> Profile</a>':'')+'</div></div>';
+            const creatorHtml = '<div class="cr a2">'+(displayCreatorAv?'<img src="'+displayCreatorAv+'" alt="">':'<div class="cfb"><i class="fas fa-user"></i></div>')+'<div><strong>'+nick+'</strong>'+(p.creator_social_url?'<a href="'+p.creator_social_url+'" target="_blank"><i class="fas fa-external-link-alt"></i> Profile</a>':'')+'</div></div>';
 
-            const upHtml = p.uploader_name ? '<div class="up a2">'+(p.uploader_avatar?'<img src="'+p.uploader_avatar+'" alt="">':'<div class="ufb"><i class="fab fa-discord"></i></div>')+'<div><strong>'+p.uploader_name+'</strong><span>Community Uploader</span></div></div>' : '';
+            const uploaderName = p.uploader_name || p.author_name || '';
+            const upHtml = uploaderName ? '<div class="up a2">'+(displayUploaderAv?'<img src="'+displayUploaderAv+'" alt="">':'<div class="ufb"><i class="fab fa-discord"></i></div>')+'<div><strong>'+uploaderName+'</strong><span>Community Uploader</span></div></div>' : '';
 
-            let filesHtml = '';
+            var filesHtml = '';
             if (p.files && p.files.length > 0) {
                 filesHtml = '<div class="card a3"><div class="ct"><i class="fas fa-folder-open"></i> Files in this pack ('+p.files.length+')</div><div class="files">'+
                     p.files.map(function(f) {
@@ -181,14 +200,14 @@
                         var fi = f.name.endsWith('.mp4')||f.name.endsWith('.mov')?'fa-file-video':
                                   f.name.endsWith('.mp3')||f.name.endsWith('.wav')?'fa-file-audio':
                                   f.name.endsWith('.png')||f.name.endsWith('.jpg')||f.name.endsWith('.jpeg')?'fa-file-image':'fa-file-lines';
-                        return '<div class="fi"><div class="fl"><i class="fas '+fi+'"></i><span title="'+f.name+'">'+f.name+'</span></div><span class="fs">'+sz+'</span></div>';
+                        return '<div class="fi"><div class="fl"><i class="fas '+fi+'"></i><span title="'+f.name+'">'+f.name+'</span></div><div class="fi-meta"><span class="fs">'+sz+'</span><button class="fi-dl-btn" onclick="triggerFileDownload(\''+f.name+'\',this)" title="Download this file"><i class="fas fa-download"></i></button></div></div>';
                     }).join("")+'</div></div>';
             }
 
             var pwHtml = password ? '<div class="pw a3" onclick="var c=this.querySelector(\'code\');c.textContent=\'Copied!\';setTimeout(function(){c.textContent=\''+password+'\'},1500)"><i class="fas fa-key"></i> Password: <code>'+password+'</code></div>' : '';
 
             var dlBtnHtml = productId 
-                ? '<button class="dlb a3" id="dlBtn" onclick="triggerDownload()"><i class="fas fa-cloud-arrow-down"></i> Download ZIP Package</button><div class="dls a3"><i class="fas fa-shield-halved"></i> One-time token &middot; 10 min expiry</div>'
+                ? '<button class="dlb a3" id="dlBtn" onclick="triggerDownload()"><i class="fas fa-cloud-arrow-down"></i> Download Full Package (ZIP)</button><div class="dls a3"><i class="fas fa-shield-halved"></i> One-time token &middot; 10 min expiry</div>'
                 : '';
 
             document.getElementById("root").innerHTML = 
@@ -225,7 +244,7 @@
                     }
                     alert(data.error || 'Unable to acquire download ticket.');
                     btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-cloud-arrow-down"></i> Download ZIP Package';
+                    btn.innerHTML = '<i class="fas fa-cloud-arrow-down"></i> Download Full Package (ZIP)';
                     return;
                 }
                 var tokenData = await tokenResp.json();
@@ -236,13 +255,45 @@
                 } else {
                     alert('Ticket generation failed.');
                     btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-cloud-arrow-down"></i> Download ZIP Package';
+                    btn.innerHTML = '<i class="fas fa-cloud-arrow-down"></i> Download Full Package (ZIP)';
                 }
             } catch (e) {
                 console.error('Download error:', e);
                 alert('Network error. Please try again.');
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-cloud-arrow-down"></i> Download ZIP Package';
+                btn.innerHTML = '<i class="fas fa-cloud-arrow-down"></i> Download Full Package (ZIP)';
+            }
+        }
+
+        async function triggerFileDownload(filePath, btn) {
+            if (!productId) return;
+            var origHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+            try {
+                var tokenResp = await fetch('/api/downloads/request-token/' + productId);
+                if (!tokenResp.ok) {
+                    var data = await tokenResp.json();
+                    alert(data.error || 'Unable to acquire download ticket.');
+                    btn.disabled = false;
+                    btn.innerHTML = origHtml;
+                    return;
+                }
+                var tokenData = await tokenResp.json();
+                if (tokenData.success && tokenData.token) {
+                    window.location.href = '/api/downloads/download?token=' + tokenData.token + '&file=' + encodeURIComponent(filePath);
+                    setTimeout(function() { btn.disabled = false; btn.innerHTML = origHtml; }, 3000);
+                } else {
+                    alert('Ticket generation failed.');
+                    btn.disabled = false;
+                    btn.innerHTML = origHtml;
+                }
+            } catch (e) {
+                console.error('File download error:', e);
+                alert('Network error. Please try again.');
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
             }
         }
     </script>
