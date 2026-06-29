@@ -453,6 +453,112 @@ async function listSftpgoFiles(discordId, path, env) {
 }
 
 // Scan user's cloud for detected resources (EDITOR/RESOURCE pattern)
+async function scanResourcesFromR2(username, env) {
+  /** Scan R2 staging bucket for user's EDITOR/RESOURCE structure. */
+  if (!username || !env.STORAGE) return { success: true, resources: [] };
+  
+  const prefix = `${username}/`;
+  try {
+    const listed = await env.STORAGE.list({ prefix, delimiter: "/" });
+    const editorFolders = new Set();
+    
+    // Find editor folders (second-level after username/)
+    for (const obj of listed.objects) {
+      const key = obj.key;
+      if (key === prefix) continue;
+      const rel = key.slice(prefix.length);
+      const slashIdx = rel.indexOf("/");
+      if (slashIdx > 0) {
+        editorFolders.add(rel.slice(0, slashIdx));
+      }
+    }
+    // Also check CommonPrefixes (folders)
+    for (const cp of listed.delimitedPrefixes || []) {
+      const rel = cp.slice(prefix.length);
+      if (rel.endsWith("/")) {
+        const name = rel.slice(0, -1);
+        if (name && !name.includes("/")) editorFolders.add(name);
+      }
+    }
+    
+    const resources = [];
+    for (const editor of [...editorFolders].sort()) {
+      const editorPrefix = `${prefix}${editor}/`;
+      const editorList = await env.STORAGE.list({ prefix: editorPrefix, delimiter: "/" });
+      
+      const resourceFolders = new Set();
+      let hasDirectFiles = false;
+      
+      for (const obj of editorList.objects) {
+        const key = obj.key;
+        if (key === editorPrefix) continue;
+        const rel = key.slice(editorPrefix.length);
+        const slashIdx = rel.indexOf("/");
+        if (slashIdx > 0) {
+          resourceFolders.add(rel.slice(0, slashIdx));
+        } else if (rel) {
+          hasDirectFiles = true;
+        }
+      }
+      for (const cp of editorList.delimitedPrefixes || []) {
+        const rel = cp.slice(editorPrefix.length);
+        if (rel.endsWith("/")) {
+          const name = rel.slice(0, -1);
+          if (name && !name.includes("/")) resourceFolders.add(name);
+        }
+      }
+      
+      // Process each resource subfolder
+      for (const resource of [...resourceFolders].sort()) {
+        const resPrefix = `${editorPrefix}${resource}/`;
+        const resList = await env.STORAGE.list({ prefix: resPrefix });
+        const files = [];
+        for (const obj of resList.objects) {
+          const key = obj.key;
+          if (key === resPrefix) continue;
+          const fname = key.slice(resPrefix.length);
+          if (fname && !fname.includes("/")) {
+            files.push({
+              name: fname,
+              size: obj.size,
+              path: `${username}/${editor}/${resource}/${fname}`
+            });
+          }
+        }
+        if (files.length > 0) {
+          resources.push({ editor, resource, files });
+        }
+      }
+      
+      // Editor with direct files (no subfolders)
+      if (hasDirectFiles && resourceFolders.size === 0) {
+        const resList2 = await env.STORAGE.list({ prefix: editorPrefix });
+        const directFiles = [];
+        for (const obj of resList2.objects) {
+          const key = obj.key;
+          if (key === editorPrefix) continue;
+          const fname = key.slice(editorPrefix.length);
+          if (fname && !fname.includes("/")) {
+            directFiles.push({
+              name: fname,
+              size: obj.size,
+              path: `${username}/${editor}/${fname}`
+            });
+          }
+        }
+        if (directFiles.length > 0) {
+          resources.push({ editor, resource: editor, files: directFiles });
+        }
+      }
+    }
+    
+    return { success: true, resources };
+  } catch (e) {
+    console.error("R2 scan error:", e.message);
+    return { success: true, resources: [] };
+  }
+}
+
 async function scanDetectedResources(discordId, env) {
   const user = await findSftpgoUserByDiscordId(discordId, env);
   if (!user) return { success: false, error: "No SFTPGo cloud account linked to your Discord profile." };
@@ -1098,19 +1204,30 @@ export default {
         return json({ success: false, error: "File listing service unavailable" }, 500);
       }
 
-      // ============ SFTPGO: Detected Resources (local file API server) ============
+      // ============ SFTPGO: Detected Resources (R2-first) ============
       if (path === "/api/sftpgo/detected-resources") {
         const session = parseSession(request.headers.get("Cookie"));
         if (!session) return json({ error: "Not logged in" }, 401);
+        
+        // Try R2 staging bucket scan first (fast, direct)
+        try {
+          const r2Result = await scanResourcesFromR2(session.username, env);
+          if (r2Result && r2Result.resources && r2Result.resources.length > 0) {
+            return json(r2Result);
+          }
+          console.log("R2 scan found no resources, trying file API...");
+        } catch (e) { console.error("R2 scan error:", e.message); }
+        
+        // Fallback: try FILE_API (VPS file server)
         try {
           const apiUrl = `${FILE_API}/api/files/resources?token=zyrex-files-api-2026&discord_id=${session.userId}`;
           const resp = await fetch(apiUrl);
           if (resp.ok) {
             const data = await resp.json();
-            return json(data);
+            if (data.resources && data.resources.length > 0) return json(data);
           }
-          console.log("Local resources API failed, status:", resp.status);
-        } catch (e) { console.error("Local resources API error:", e.message); }
+        } catch (e) { console.error("File API resources error:", e.message); }
+        
         // Fallback: try bot API
         try {
           const botResp = await fetch(`${BOT_API}/api/sftpgo/detected-resources`, {
@@ -1123,10 +1240,11 @@ export default {
           });
           if (botResp.ok) {
             const data = await botResp.json();
-            return json(data);
+            if (data.resources && data.resources.length > 0) return json(data);
           }
         } catch (e) { console.error("Bot detected-resources error:", e.message); }
-        // Fallback: direct SFTPGo scan
+        
+        // Last fallback: direct SFTPGo API scan
         const result = await scanDetectedResources(session.userId, env);
         return json(result, result.success ? 200 : 500);
       }
@@ -1164,15 +1282,38 @@ export default {
         }
       }
 
-      // ============ PRODUCTS: Destination Editors (local file API) ============
+      // ============ PRODUCTS: Destination Editors (R2 prod bucket) ============
       if (path === "/api/products/destination-editors") {
         const session = parseSession(request.headers.get("Cookie"));
         if (!session) return json({ error: "Not logged in" }, 401);
         try {
-          const apiUrl = `${FILE_API}/api/files/editors?token=zyrex-files-api-2026`;
-          const resp = await fetch(apiUrl);
-          if (resp.ok) return json(await resp.json());
-        } catch (e) { console.error("Local editors API error:", e.message); }
+          const prodBucket = env.STORAGE_PROD || env.STORAGE;
+          const listed = await prodBucket.list({ delimiter: "/" });
+          const editors = [];
+          for (const cp of listed.delimitedPrefixes || []) {
+            const name = cp.replace(/\/$/, "");
+            if (name && name !== "production") editors.push(name);
+          }
+          const seen = new Set(editors);
+          for (const obj of listed.objects) {
+            const parts = obj.key.split("/");
+            if (parts.length >= 2) {
+              const name = parts[0];
+              if (name && name !== "production" && !seen.has(name)) {
+                seen.add(name);
+                editors.push(name);
+              }
+            }
+          }
+          return json({ success: true, editors: editors.sort() });
+        } catch (e) {
+          console.error("R2 editors error:", e.message);
+          try {
+            const apiUrl = `${FILE_API}/api/files/editors?token=zyrex-files-api-2026`;
+            const resp = await fetch(apiUrl);
+            if (resp.ok) return json(await resp.json());
+          } catch (e2) { console.error("FILE_API editors fallback:", e2.message); }
+        }
         return json({ success: false, error: "Editor listing unavailable" }, 500);
       }
 
@@ -1194,20 +1335,37 @@ export default {
         return json({ success: false, error: "File listing unavailable" }, 500);
       }
 
-      // ============ PRODUCTS: Create Editor Folder (local file API) ============
+      // ============ PRODUCTS: Create Editor Folder (R2 prod bucket) ============
       if (path === "/api/products/create-editor" && request.method === "POST") {
         const session = parseSession(request.headers.get("Cookie"));
         if (!session) return json({ error: "Not logged in" }, 401);
         try {
           const body = await request.json();
-          const apiUrl = `${FILE_API}/api/files/create-editor?token=zyrex-files-api-2026`;
-          const resp = await fetch(apiUrl, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
-          });
-          if (resp.ok) return json(await resp.json());
-        } catch (e) { console.error("Local create-editor error:", e.message); }
+          const safeName = (body.name || "").replace(/[^a-zA-Z0-9 _\-.]/g, "").trim();
+          if (!safeName) return json({ success: false, error: "Invalid folder name" }, 400);
+          
+          const prodBucket = env.STORAGE_PROD || env.STORAGE;
+          // Check if folder already exists
+          const existing = await prodBucket.list({ prefix: `${safeName}/`, delimiter: "/" });
+          if ((existing.objects && existing.objects.length > 0) || (existing.delimitedPrefixes && existing.delimitedPrefixes.length > 0)) {
+            return json({ success: false, error: `Folder '${safeName}' already exists` }, 409);
+          }
+          // Create placeholder to ensure folder prefix
+          await prodBucket.put(`${safeName}/.placeholder`, "");
+          return json({ success: true, message: `Editor folder '${safeName}' created` });
+        } catch (e) {
+          console.error("R2 create-editor error:", e.message);
+          try {
+            const body = await request.clone().json();
+            const apiUrl = `${FILE_API}/api/files/create-editor?token=zyrex-files-api-2026`;
+            const resp = await fetch(apiUrl, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(body),
+            });
+            if (resp.ok) return json(await resp.json());
+          } catch (e2) { console.error("FILE_API create-editor fallback:", e2.message); }
+        }
         return json({ success: false, error: "Create editor failed" }, 500);
       }
 
