@@ -3,7 +3,7 @@ const DISCORD_API = "https://discord.com/api/v10";
 const BOT_API = "https://zyre.wispbyte.org";
 const VERIFY_BOT_API = "https://zyre.wispbyte.org";
 const FILE_API = "https://zyre.wispbyte.org";  // Python file server via VPS nginx
-const SFTPGO_API = "https://zyre.wispbyte.org/api/v2";  // SFTPGo via VPS nginx
+const SFTPGO_API = "https://storage.zyrexediting.xyz/api/v2";  // SFTPGo via Cloudflare Tunnel (local)
 const ADMIN_IDS = ["1421177012814614548", "1382421118098346174"];
 
 // In-memory stores
