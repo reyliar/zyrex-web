@@ -446,7 +446,23 @@
             html += '<a href="https://zyrexediting.xyz/resources" class="back-link"><i class="fas fa-arrow-left"></i> Back to Resources</a>';
 
             document.getElementById('st-main').innerHTML = html;
-            setTimeout(updateDownloadCount, 100);
+            setTimeout(function() {
+                // Sync from persistent API first, then update display
+                (async function() {
+                    try {
+                        var dl = JSON.parse(localStorage.getItem('zyrex_downloads') || '{}');
+                        var r = await fetch('/api/downloads/counts');
+                        var d = await r.json();
+                        if (d.success && d.counts) {
+                            for (var k in d.counts) {
+                                if (d.counts[k] > (dl[k] || 0)) dl[k] = d.counts[k];
+                            }
+                            localStorage.setItem('zyrex_downloads', JSON.stringify(dl));
+                        }
+                    } catch(e) {}
+                    updateDownloadCount();
+                })();
+            }, 100);
             setTimeout(updateSelectedCount, 150);
         }
 
