@@ -22,9 +22,18 @@ from urllib.parse import urlparse, parse_qs
 R2_ENDPOINT = "https://24871d1733baa733b470db9978234d96.r2.cloudflarestorage.com"
 R2_ACCESS_KEY = "77916e5274c99b5a80aeca3f36a60071"
 R2_SECRET_KEY = "9a815661086b43314b336cbf096ab07006ba585a831bb04e3509ca9aeb9ea580"
-R2_BUCKET = "zyrexediting"
+R2_PROD_BUCKET = "zyrexediting"       # Production: published content served to website
+R2_STAGING_BUCKET = "zyrexediting-staging"  # Staging: user uploads, cleared after publish
 
-s3 = boto3.client(
+s3_prod = boto3.client(
+    "s3",
+    endpoint_url=R2_ENDPOINT,
+    aws_access_key_id=R2_ACCESS_KEY,
+    aws_secret_access_key=R2_SECRET_KEY,
+    region_name="auto"
+)
+
+s3_staging = boto3.client(
     "s3",
     endpoint_url=R2_ENDPOINT,
     aws_access_key_id=R2_ACCESS_KEY,
@@ -40,11 +49,14 @@ TOKEN_EXPIRY_SECONDS = 600  # 10 minutes
 DOWNLOAD_COUNTS_FILE = r"C:\Users\reyli\Desktop\zyrexweb\scratch\download_counts.json"
 
 # === R2 HELPER FUNCTIONS ===
-def r2_list_objects(prefix, delimiter=""):
-    """List objects in R2 under a prefix. Returns list of {key, size, last_modified}."""
+def r2_list_objects(prefix, delimiter="", bucket=None):
+    """List objects in R2 under a prefix. Uses prod bucket by default."""
+    if bucket is None:
+        bucket = R2_PROD_BUCKET
+    s3_client = s3_prod if bucket == R2_PROD_BUCKET else s3_staging
     objects = []
-    paginator = s3.get_paginator("list_objects_v2")
-    kwargs = {"Bucket": R2_BUCKET, "Prefix": prefix}
+    paginator = s3_client.get_paginator("list_objects_v2")
+    kwargs = {"Bucket": bucket, "Prefix": prefix}
     if delimiter:
         kwargs["Delimiter"] = delimiter
     for page in paginator.paginate(**kwargs):
@@ -63,14 +75,51 @@ def r2_list_objects(prefix, delimiter=""):
             })
     return objects
 
-def r2_get_object(key):
-    """Get object body from R2."""
-    resp = s3.get_object(Bucket=R2_BUCKET, Key=key)
+def r2_get_object(key, bucket=None):
+    """Get object body from R2. Uses prod bucket by default."""
+    if bucket is None:
+        bucket = R2_PROD_BUCKET
+    s3_client = s3_prod if bucket == R2_PROD_BUCKET else s3_staging
+    resp = s3_client.get_object(Bucket=bucket, Key=key)
     return resp["Body"].read()
 
-def r2_put_object(key, body_bytes):
-    """Put object to R2."""
-    s3.put_object(Bucket=R2_BUCKET, Key=key, Body=body_bytes)
+def r2_put_object(key, body_bytes, bucket=None):
+    """Put object to R2. Uses prod bucket by default."""
+    if bucket is None:
+        bucket = R2_PROD_BUCKET
+    s3_client = s3_prod if bucket == R2_PROD_BUCKET else s3_staging
+    s3_client.put_object(Bucket=bucket, Key=key, Body=body_bytes)
+
+def r2_copy_object(src_key, dst_key, src_bucket, dst_bucket):
+    """Copy object between R2 buckets. Returns True on success."""
+    try:
+        copy_source = {"Bucket": src_bucket, "Key": src_key}
+        s3_prod.copy_object(
+            Bucket=dst_bucket,
+            Key=dst_key,
+            CopySource=copy_source
+        )
+        return True
+    except Exception as e:
+        print(f"R2 copy failed: {src_key} -> {dst_key}: {e}")
+        return False
+
+def r2_delete_object(key, bucket):
+    """Delete object from R2 bucket."""
+    s3_client = s3_prod if bucket == R2_PROD_BUCKET else s3_staging
+    s3_client.delete_object(Bucket=bucket, Key=key)
+
+def r2_delete_prefix(prefix, bucket):
+    """Delete all objects under a prefix in R2 bucket."""
+    s3_client = s3_prod if bucket == R2_PROD_BUCKET else s3_staging
+    paginator = s3_client.get_paginator("list_objects_v2")
+    for page in paginator.paginate(Bucket=bucket, Prefix=prefix):
+        objects = page.get("Contents", [])
+        if objects:
+            s3_client.delete_objects(
+                Bucket=bucket,
+                Delete={"Objects": [{"Key": obj["Key"]} for obj in objects]}
+            )
 
 # Watermark files injected into every production folder (embedded, no external files)
 WATERMARK_FILES_CONTENT = {
@@ -107,13 +156,15 @@ WATERMARK_FILES_CONTENT = {
 # In-memory token store: { token: { discord_id, product_id, file_path, created_at, used } }
 download_tokens = {}
 
-def inject_watermarks(target_prefix):
+def inject_watermarks(target_prefix, bucket=None):
     """Write watermark files to R2 under target_prefix and all sub-folders."""
+    if bucket is None:
+        bucket = R2_PROD_BUCKET
     injected = 0
     # Get all unique folder prefixes
     folders = set()
     folders.add(target_prefix)
-    objects = r2_list_objects(target_prefix)
+    objects = r2_list_objects(target_prefix, bucket=bucket)
     for obj in objects:
         key = obj["key"]
         if "/" in key[len(target_prefix):]:
@@ -124,10 +175,10 @@ def inject_watermarks(target_prefix):
         for filename, content in WATERMARK_FILES_CONTENT.items():
             wm_key = folder + filename
             # Check if already exists
-            existing = r2_list_objects(wm_key)
+            existing = r2_list_objects(wm_key, bucket=bucket)
             if not any(o["key"] == wm_key for o in existing):
                 try:
-                    r2_put_object(wm_key, content.encode("utf-8"))
+                    r2_put_object(wm_key, content.encode("utf-8"), bucket=bucket)
                     injected += 1
                 except Exception as e:
                     print(f"Watermark failed: {wm_key}: {e}")
@@ -528,6 +579,67 @@ class FileAPIHandler(BaseHTTPRequestHandler):
                 return
             count = increment_download_count(product_id)
             self._send_json({"success": True, "productId": product_id, "count": count})
+            return
+        
+        # === PUBLISH: Move from staging R2 → production R2 + delete from staging ===
+        if path == "/api/files/publish":
+            source_prefix = body.get("source_prefix", "").strip()
+            dest_prefix = body.get("dest_prefix", "").strip()
+            
+            if not source_prefix:
+                self._send_json({"success": False, "error": "Missing source_prefix"}, 400)
+                return
+            if not dest_prefix:
+                self._send_json({"success": False, "error": "Missing dest_prefix"}, 400)
+                return
+            
+            # Ensure trailing slash
+            if not source_prefix.endswith("/"):
+                source_prefix += "/"
+            if not dest_prefix.endswith("/"):
+                dest_prefix += "/"
+            
+            # List objects in staging
+            staging_objects = r2_list_objects(source_prefix, bucket=R2_STAGING_BUCKET)
+            file_objects = [o for o in staging_objects if not o.get("is_folder")]
+            if not file_objects:
+                self._send_json({"success": False, "error": f"No files found in staging: {source_prefix}"}, 404)
+                return
+            
+            # Copy each file from staging → production
+            copied = 0
+            failed = []
+            for obj in file_objects:
+                src_key = obj["key"]
+                # Map source prefix to dest prefix
+                rel_path = src_key[len(source_prefix):]
+                dst_key = dest_prefix + rel_path
+                if r2_copy_object(src_key, dst_key, R2_STAGING_BUCKET, R2_PROD_BUCKET):
+                    copied += 1
+                else:
+                    failed.append(src_key)
+            
+            if failed:
+                self._send_json({
+                    "success": False,
+                    "error": f"Copied {copied}/{len(file_objects)} files, {len(failed)} failed",
+                    "failed": failed,
+                }, 500)
+                return
+            
+            # Inject watermarks into production
+            wm_count = inject_watermarks(dest_prefix, bucket=R2_PROD_BUCKET)
+            
+            # Delete all objects from staging
+            r2_delete_prefix(source_prefix, R2_STAGING_BUCKET)
+            
+            self._send_json({
+                "success": True,
+                "message": f"Published {copied} files, {wm_count} watermarks injected. Staging cleared.",
+                "files_published": copied,
+                "watermarks_injected": wm_count,
+                "dest_prefix": dest_prefix,
+            })
             return
         
         if path == "/api/files/transfer":
