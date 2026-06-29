@@ -74,7 +74,7 @@ function renderPresets(items) {
             '<div class="rc-meta">' +
             '<div class="rava-fb" style="overflow:hidden;display:flex;align-items:center;justify-content:center">' + avatarHtml + '</div>' +
             '<span class="rname">' + nickname + '</span>' +
-            '<span class="rdate">Premium</span></div>' +
+            '<span class="rdate">Free</span></div>' +
             '<div class="rc-actions">' +
             '<span><i class="fas fa-download"></i> 0</span>' +
             '<span><i class="fas fa-heart"></i> 0</span>' +

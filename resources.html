@@ -104,14 +104,14 @@
     </div></nav>
 
     <section class="rh">
-        <h1>Premium Editing Resources</h1>
-        <p>Discover high-quality presets crafted for professional video editing.</p>
+        <h1>Free Editing Resources</h1>
+        <p>Discover high-quality presets crafted for professional video editing — all free, no passwords needed.</p>
     </section>
 
-    <div class="sb">
-        <div class="sc"><span class="sn">0</span><span class="sl">Presets</span></div>
-        <div class="sc"><span class="sn">86</span><span class="sl">Plugins</span></div>
-        <div class="sc"><span class="sn">716</span><span class="sl">Downloads</span></div>
+    <div class="sb" id="statsBar">
+        <div class="sc"><span class="sn" id="statPresets">—</span><span class="sl">Presets</span></div>
+        <div class="sc"><span class="sn" id="statPlugins">—</span><span class="sl">Plugins</span></div>
+        <div class="sc"><span class="sn" id="statDownloads">—</span><span class="sl">Downloads</span></div>
     </div>
 
     <div class="tb">
@@ -122,9 +122,8 @@
         </div>
         <div class="tb-r">
             <select id="accessFilter">
-                <option value="all">All</option>
-                <option value="free">Free</option>
-                <option value="premium">Premium</option>
+                <option value="all">All Resources</option>
+                <option value="free">Free Only</option>
             </select>
             <div class="tb-v">
                 <button class="active" data-view="grid" title="Grid View"><i class="fas fa-th"></i></button>
@@ -201,5 +200,44 @@
     <script src="js/auth.js"></script>
     <script src="js/presets-data.js?v=4"></script>
     <script src="js/presets.js?v=4"></script>
+    <script>
+        // Live stats — fetch real numbers from API
+        (async function loadStats() {
+            try {
+                const resp = await fetch('/api/products');
+                if (!resp.ok) return;
+                const products = await resp.json();
+                if (!Array.isArray(products)) return;
+                
+                // Count presets and plugins
+                const presets = products.filter(p => p.type === 'preset' || !p.type);
+                const plugins = products.filter(p => p.type === 'plugin');
+                const totalDownloads = products.reduce((sum, p) => sum + (p.downloads || 0), 0);
+                
+                document.getElementById('statPresets').textContent = presets.length;
+                document.getElementById('statPlugins').textContent = plugins.length;
+                document.getElementById('statDownloads').textContent = totalDownloads;
+                
+                // Update category counts
+                const catCounts = {};
+                products.forEach(p => {
+                    const cat = p.category || 'others';
+                    catCounts[cat] = (catCounts[cat] || 0) + 1;
+                });
+                document.querySelectorAll('.cp button').forEach(btn => {
+                    const c = btn.dataset.c;
+                    if (c === 'all') {
+                        const cntEl = btn.querySelector('.cnt');
+                        if (cntEl) cntEl.textContent = products.length;
+                    } else {
+                        const cntEl = btn.querySelector('.cnt');
+                        if (cntEl) cntEl.textContent = catCounts[c] || 0;
+                    }
+                });
+            } catch(e) {
+                console.error('Stats fetch error:', e);
+            }
+        })();
+    </script>
 </body>
 </html>

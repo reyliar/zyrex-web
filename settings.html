@@ -1191,14 +1191,13 @@
                                     <th>Product Name</th>
                                     <th>Type</th>
                                     <th>Category</th>
-                                    <th>Platform</th>
                                     <th>Creator</th>
                                     <th style="text-align:right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="productsTableBody">
                                 <tr>
-                                    <td colspan="6" style="text-align:center;color:var(--gray-dark)"><i class="fas fa-spinner fa-spin"></i> Fetching records...</td>
+                                    <td colspan="5" style="text-align:center;color:var(--gray-dark)"><i class="fas fa-spinner fa-spin"></i> Fetching records...</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -1303,18 +1302,7 @@
                     </div>
                 </div>
                 <div class="form-row">
-                    <div class="form-group">
-                        <label for="editProductPlatform">Platform</label>
-                        <select id="editProductPlatform">
-                            <option value="both">Both Platforms (WIN + MAC)</option>
-                            <option value="win">Windows only (WIN)</option>
-                            <option value="mac">Mac OS only (MAC)</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="editProductPassword">Star Password</label>
-                        <input type="text" id="editProductPassword" value="star">
-                    </div>
+
                 </div>
                 <div class="form-group">
                     <label for="editProductDesc">Description</label>
@@ -1760,23 +1748,16 @@
         function renderDbProducts(products) {
             const body = document.getElementById('productsTableBody');
             if (products.length === 0) {
-                body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--gray-dark);padding:30px">No items registered in the database.</td></tr>';
+                body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--gray-dark);padding:30px">No items registered in the database.</td></tr>';
                 return;
             }
 
             body.innerHTML = products.map(p => {
-                const platformIcon = p.platform === 'win' 
-                    ? '<i class="fab fa-windows" title="Windows"></i> WIN' 
-                    : p.platform === 'mac' 
-                    ? '<i class="fab fa-apple" title="Mac"></i> MAC' 
-                    : '<i class="fas fa-laptop" title="Both platforms"></i> BOTH';
-                
                 return `
                     <tr>
                         <td style="font-weight:600;color:var(--light)">${p.name}</td>
                         <td><span class="badge-type badge-${p.type}">${p.type}</span></td>
                         <td>${p.category}</td>
-                        <td style="font-size:0.75rem">${platformIcon}</td>
                         <td style="color:var(--gray-dark)">${p.author_name || 'System'}</td>
                         <td>
                             <div class="action-cell">
@@ -1828,8 +1809,6 @@
             document.getElementById('editProductName').value = product.name || '';
             document.getElementById('editProductType').value = product.type || 'preset';
             document.getElementById('editProductCategory').value = product.category || 'others';
-            document.getElementById('editProductPlatform').value = product.platform || 'both';
-            document.getElementById('editProductPassword').value = product.password || 'star';
             document.getElementById('editProductDesc').value = product.description || '';
             document.getElementById('editProductFilePath').value = product.file_path || '';
             document.getElementById('editProductThumbnail').value = product.thumbnail || '';
@@ -1848,8 +1827,6 @@
                 name: document.getElementById('editProductName').value,
                 type: document.getElementById('editProductType').value,
                 category: document.getElementById('editProductCategory').value,
-                platform: document.getElementById('editProductPlatform').value,
-                password: document.getElementById('editProductPassword').value,
                 description: document.getElementById('editProductDesc').value,
                 file_path: document.getElementById('editProductFilePath').value,
                 thumbnail: document.getElementById('editProductThumbnail').value
