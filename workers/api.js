@@ -30,11 +30,18 @@ function parseSession(cookie) {
   if (!cookie) return null;
   const m = cookie.match(/zyrex_session=([^;]+)/);
   if (!m) return null;
-  try { return JSON.parse(atob(m[1])); } catch { return null; }
+  try {
+    const decoded = atob(m[1]);
+    const bytes = Uint8Array.from(decoded, c => c.charCodeAt(0));
+    return JSON.parse(new TextDecoder().decode(bytes));
+  } catch { return null; }
 }
 
 function setCookie(data, maxAge = 86400) {
-  const val = btoa(JSON.stringify(data));
+  const json = JSON.stringify(data);
+  // btoa only handles ASCII; use TextEncoder for Unicode safety
+  const bytes = new TextEncoder().encode(json);
+  const val = btoa(String.fromCharCode(...bytes));
   return `zyrex_session=${val}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}; Secure`;
 }
 
