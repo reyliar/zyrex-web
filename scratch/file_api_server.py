@@ -462,9 +462,9 @@ class FileAPIHandler(BaseHTTPRequestHandler):
         print(f"[{self.client_address[0]}] {args[0]}")
 
 if __name__ == "__main__":
-    print(f"Zyrex File API Server starting on port {PORT}...")
+    print(f"Zyrex File API Server starting on port {PORT} (0.0.0.0)...")
     print(f"Serving SFTPGo data from: {SFTPGO_DATA_DIR}")
-    server = HTTPServer(("127.0.0.1", PORT), FileAPIHandler)
+    server = HTTPServer(("0.0.0.0", PORT), FileAPIHandler)
     try:
         server.serve_forever()
     except KeyboardInterrupt:
