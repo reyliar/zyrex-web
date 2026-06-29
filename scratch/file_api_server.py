@@ -420,25 +420,25 @@ class FileAPIHandler(BaseHTTPRequestHandler):
                 self.send_error(404, "Invalid or expired token")
                 return
             
-            file_path = data["file_path"]
-            # R2: convert to S3 prefix
-            r2_prefix = file_path.replace("\\", "/")
-            sftpgo_prefix = SFTPGO_DATA_DIR.replace("\\", "/")
-            if r2_prefix.startswith(sftpgo_prefix):
-                r2_prefix = r2_prefix[len(sftpgo_prefix):].lstrip("/")
+            # file_path is now an R2 prefix (like "After Effects/my-preset/")
+            r2_prefix = data["file_path"].replace("\\", "/")
             if not r2_prefix.endswith("/"):
                 r2_prefix += "/"
             
-            # Check if path exists in R2
-            check = r2_list_objects(r2_prefix, delimiter="/")
+            # Check in production R2 bucket first, fallback to staging
+            check = r2_list_objects(r2_prefix, delimiter="/", bucket=R2_PROD_BUCKET)
+            use_bucket = R2_PROD_BUCKET
+            if not check:
+                check = r2_list_objects(r2_prefix, delimiter="/", bucket=R2_STAGING_BUCKET)
+                use_bucket = R2_STAGING_BUCKET
             if not check:
                 self.send_error(404, "Resource not found in storage")
                 return
             
             # Everything becomes a ZIP with watermark files included
-            folder_name = params.get("title", [os.path.basename(file_path.rstrip(os.sep))])[0]
-            if not folder_name or folder_name == os.path.basename(file_path.rstrip(os.sep)):
-                folder_name = os.path.basename(file_path.rstrip(os.sep).replace("\\", "/"))
+            folder_name = params.get("title", [r2_prefix.rstrip("/").split("/")[-1]])[0]
+            if not folder_name:
+                folder_name = r2_prefix.rstrip("/").split("/")[-1]
             
             # Determine which files to include
             selected_files = params.get("files", [None])[0]
@@ -447,7 +447,7 @@ class FileAPIHandler(BaseHTTPRequestHandler):
                 selected_set = set(selected_files.split(","))
             
             # Get all objects under prefix
-            all_objects = r2_list_objects(r2_prefix)
+            all_objects = r2_list_objects(r2_prefix, bucket=use_bucket)
             
             zip_buffer = io.BytesIO()
             with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zf:
@@ -460,7 +460,7 @@ class FileAPIHandler(BaseHTTPRequestHandler):
                     if selected_set and fname not in selected_set:
                         continue
                     try:
-                        data = r2_get_object(obj["key"])
+                        data = r2_get_object(obj["key"], bucket=use_bucket)
                         zf.writestr(f"{folder_name}/{fname}", data)
                     except Exception as e:
                         print(f"ZIP skip: {obj['key']}: {e}")
@@ -643,6 +643,7 @@ class FileAPIHandler(BaseHTTPRequestHandler):
             return
         
         if path == "/api/files/transfer":
+            # R2-based transfer: copy from user's staging folder to production
             discord_id = body.get("discord_id", "")
             source_editor = body.get("source_editor", "")
             source_resource = body.get("source_resource", "")
@@ -657,44 +658,53 @@ class FileAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({"success": False, "error": "No SFTPGo account linked"}, 404)
                 return
             
-            # Source: SFTPGO_DATA_DIR/{username}/{source_editor}/{source_resource}/
-            source_dir = os.path.join(SFTPGO_DATA_DIR, username, source_editor, source_resource)
-            # Destination: SFTPGO_DATA_DIR/{dest_editor}/{source_resource}/
-            dest_dir = os.path.join(SFTPGO_DATA_DIR, dest_editor, source_resource)
+            # R2 staging prefix: username/source_editor/source_resource/
+            source_prefix = f"{username}/{source_editor}/{source_resource}/"
+            # R2 production prefix: dest_editor/source_resource/
+            dest_prefix = f"{dest_editor}/{source_resource}/"
             
-            if not os.path.isdir(source_dir):
-                self._send_json({"success": False, "error": f"Source directory not found: {source_editor}/{source_resource}"}, 404)
+            # Check source exists in staging R2
+            staging_objects = r2_list_objects(source_prefix, bucket=R2_STAGING_BUCKET)
+            file_objects = [o for o in staging_objects if not o.get("is_folder")]
+            if not file_objects:
+                self._send_json({"success": False, "error": f"Source not found in cloud: {source_editor}/{source_resource}"}, 404)
                 return
             
-            try:
-                # Create destination directory structure
-                os.makedirs(dest_dir, exist_ok=True)
-                # Copy all files
-                copied = []
-                for root, dirs, files in os.walk(source_dir):
-                    rel_path = os.path.relpath(root, source_dir)
-                    target_dir = os.path.join(dest_dir, rel_path) if rel_path != "." else dest_dir
-                    os.makedirs(target_dir, exist_ok=True)
-                    for f in files:
-                        src_file = os.path.join(root, f)
-                        dst_file = os.path.join(target_dir, f)
-                        shutil.copy2(src_file, dst_file)
-                        copied.append(f"{rel_path}/{f}" if rel_path != "." else f)
-                
-                # Inject watermark files into destination and all subdirs
-                wm_count = inject_watermarks(dest_dir)
-                
-                # Build the production file path
-                file_path = f"{dest_editor}/{source_resource}"
+            # Copy each file from staging → production R2
+            copied = 0
+            failed = []
+            for obj in file_objects:
+                src_key = obj["key"]
+                rel_path = src_key[len(source_prefix):]
+                dst_key = dest_prefix + rel_path
+                if r2_copy_object(src_key, dst_key, R2_STAGING_BUCKET, R2_PROD_BUCKET):
+                    copied += 1
+                else:
+                    failed.append(src_key)
+            
+            if failed:
                 self._send_json({
-                    "success": True,
-                    "message": f"Copied {len(copied)} files, injected {wm_count} watermarks",
-                    "file_path": file_path,
-                    "files_copied": len(copied),
-                    "watermarks_injected": wm_count,
-                })
-            except Exception as e:
-                self._send_json({"success": False, "error": f"Transfer failed: {str(e)}"}, 500)
+                    "success": False,
+                    "error": f"Copied {copied}/{len(file_objects)} files, {len(failed)} failed",
+                    "failed": failed,
+                }, 500)
+                return
+            
+            # Inject watermarks into production
+            wm_count = inject_watermarks(dest_prefix, bucket=R2_PROD_BUCKET)
+            
+            # Delete source files from staging (user cloud freed)
+            r2_delete_prefix(source_prefix, R2_STAGING_BUCKET)
+            
+            file_path = f"{dest_editor}/{source_resource}"
+            self._send_json({
+                "success": True,
+                "message": f"Transferred {copied} files to production, {wm_count} watermarks injected. Cloud space freed.",
+                "file_path": file_path,
+                "files_copied": copied,
+                "watermarks_injected": wm_count,
+            })
+            return
         
         elif path == "/api/files/create-editor":
             editor_name = body.get("name", "").strip()
@@ -720,7 +730,7 @@ class FileAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({"success": False, "error": f"Create failed: {str(e)}"}, 500)
         
         elif path == "/api/files/request-token":
-            # Generate a one-time download token
+            # Generate a one-time download token (R2-based)
             discord_id = body.get("discord_id", "")
             product_id = body.get("product_id", "")
             file_path = body.get("file_path", "")
@@ -731,43 +741,45 @@ class FileAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({"success": False, "error": "Missing file_path"}, 400)
                 return
             
-            full_path = os.path.join(SFTPGO_DATA_DIR, file_path.replace("/", os.sep))
+            # file_path is an R2 prefix like "After Effects/my-preset/"
+            r2_prefix = file_path.replace("\\", "/")
+            if not r2_prefix.endswith("/"):
+                r2_prefix += "/"
             
-            # Convert to R2 prefix
-            r2_check_prefix = file_path.replace("\\", "/")
-            if not r2_check_prefix.endswith("/"):
-                r2_check_prefix += "/"
+            # Search in production R2 bucket
+            found = len(r2_list_objects(r2_prefix, bucket=R2_PROD_BUCKET)) > 0
             
-            # Check if path has any objects in R2
-            found = len(r2_list_objects(r2_check_prefix)) > 0
-            
-            # Fallback: try production/{product_id}
+            # Fallback: try production/{product_id}/
             if not found:
-                fallback_prefix = f"production/{product_id}/"
-                if len(r2_list_objects(fallback_prefix)) > 0:
-                    r2_check_prefix = fallback_prefix
+                fallback = f"production/{product_id}/"
+                if len(r2_list_objects(fallback, bucket=R2_PROD_BUCKET)) > 0:
+                    r2_prefix = fallback
                     found = True
-                    print(f"Using fallback R2 path: {fallback_prefix}")
             
+            # Fallback: try any production/{product_id}* folder
             if not found:
-                # Try first available production folder
-                prod_objects = r2_list_objects("production/", delimiter="/")
+                prod_objects = r2_list_objects("production/", delimiter="/", bucket=R2_PROD_BUCKET)
                 for obj in prod_objects:
                     if obj.get("is_folder"):
                         sub_prefix = obj["key"]
-                        if len(r2_list_objects(sub_prefix)) > 0:
-                            r2_check_prefix = sub_prefix
+                        if len(r2_list_objects(sub_prefix, bucket=R2_PROD_BUCKET)) > 0:
+                            r2_prefix = sub_prefix
                             found = True
-                            print(f"Using first available R2 folder: {sub_prefix}")
                             break
             
+            # Last fallback: try in staging bucket
             if not found:
-                self._send_json({"success": False, "error": f"Resource not found in storage: {file_path}"}, 404)
+                if len(r2_list_objects(r2_prefix, bucket=R2_STAGING_BUCKET)) > 0:
+                    r2_prefix = r2_prefix  # same prefix, different bucket context
+                    found = True
+                    print(f"Found in staging: {r2_prefix}")
+            
+            if not found:
+                self._send_json({"success": False, "error": f"Resource not found: {file_path}"}, 404)
                 return
             
-            full_path = os.path.join(SFTPGO_DATA_DIR, r2_check_prefix.replace("/", os.sep))
-            
-            token = generate_download_token(discord_id, product_id, full_path)
+            # Store R2 prefix directly in token (not local filesystem path)
+            token = generate_download_token(discord_id, product_id, r2_prefix)
             self._send_json({
                 "success": True,
                 "token": token,
