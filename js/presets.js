@@ -11,8 +11,10 @@ async function initPresets() {
                     merged.push(sp);
                 }
             });
-            window.presetsData = merged;
-            renderPresets(merged);
+            // Filter: resources page shows presets only (no plugins/software)
+            const presetsOnly = merged.filter(p => !p.type || p.type === 'preset');
+            window.presetsData = presetsOnly;
+            renderPresets(presetsOnly);
         } else {
             console.error("Expected array from products endpoint, using fallback");
             renderPresets(window.presetsData || []);

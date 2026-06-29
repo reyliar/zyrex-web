@@ -194,9 +194,10 @@
                     var ext = data.user.avatar.startsWith('a_') ? 'gif' : 'png';
                     return 'https://cdn.discordapp.com/avatars/' + userId + '/' + data.user.avatar + '.' + ext + '?size=128';
                 }
-            } catch(e) { console.warn('Discord avatar fetch failed:', e); }
-            var idx = (BigInt(userId) >> 22n) % 6n;
-            return 'https://cdn.discordapp.com/embed/avatars/' + idx + '.png';
+            } catch(e) {}
+            var defIdx = 0;
+            try { defIdx = Number((BigInt(userId) >> 22n) % 6n); } catch(e) { defIdx = parseInt(userId) % 5; }
+            return 'https://cdn.discordapp.com/embed/avatars/' + defIdx + '.png';
         }
 
         (async function init() {
