@@ -4,459 +4,235 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Secure Download - Zyrex</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="css/style.css?v=9">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
     <style>
-        body {
-            font-family: 'Poppins', sans-serif;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            margin: 0;
-        }
-        .dl-container {
-            width: 100%;
-            max-width: 580px;
-            padding: 30px;
-            text-align: center;
-        }
-        .dl-logo {
-            font-size: 2.2rem;
-            font-weight: 800;
-            letter-spacing: -1px;
-            color: #fff;
-            margin-bottom: 25px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-        }
-        .dl-logo span {
-            background: linear-gradient(135deg, var(--cherry), var(--cherry));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .product-badge-group {
-            display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-        .dl-title {
-            font-size: 1.8rem;
-            font-weight: 800;
-            color: #fff;
-            margin-bottom: 12px;
-            line-height: 1.3;
-        }
-        .dl-desc {
-            color: var(--gray);
-            font-size: 0.92rem;
-            line-height: 1.6;
-            margin-bottom: 25px;
-        }
-        .dl-btn-container {
-            margin: 30px 0 20px;
-        }
-        .btn-download-action {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            width: 100%;
-            padding: 16px 30px;
-            font-size: 1.1rem;
-            font-weight: 700;
-            border-radius: 14px;
-            cursor: pointer;
-            color: #fff;
-            background: linear-gradient(180deg, var(--cherry) 0%, var(--cherry) 40%, var(--cherry-dark) 100%) !important;
-            border: 1px solid rgba(var(--cherry-rgb),0.15) !important;
-            box-shadow: 0 4px 15px rgba(var(--cherry-rgb), 0.35), inset 0 1px 1px rgba(var(--cherry-rgb),0.3) !important;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .btn-download-action:hover:not(:disabled) {
-            background: linear-gradient(180deg, var(--cherry) 0%, var(--cherry) 40%, var(--cherry) 100%) !important;
-            box-shadow: 0 6px 20px rgba(var(--cherry-rgb), 0.5), inset 0 1px 2px rgba(var(--cherry-rgb),0.4) !important;
-            transform: translateY(-1px);
-        }
-        .btn-download-action:disabled {
-            opacity: 0.6;
-            cursor: not-allowed;
-        }
-        .dl-password-box {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(var(--cherry-rgb),0.03);
-            border: 1px solid rgba(var(--cherry-rgb),0.06);
-            border-radius: 10px;
-            padding: 8px 16px;
-            font-size: 0.85rem;
-            color: var(--gray);
-            cursor: pointer;
-            margin-top: 15px;
-        }
-        .dl-password-box code {
-            font-family: monospace;
-            background: rgba(var(--cherry-rgb), 0.2);
-            color: var(--cherry);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-weight: 700;
-        }
-        .dl-error-box {
-            background: rgba(var(--cherry-rgb), 0.1);
-            border: 1px solid rgba(var(--cherry-rgb), 0.2);
-            border-radius: 12px;
-            padding: 20px;
-            margin-top: 20px;
-        }
-        .dl-error-box i {
-            font-size: 2rem;
-            color: #ff3860;
-            margin-bottom: 10px;
-            display: block;
-        }
-        .dl-loading {
-            padding: 40px;
-        }
-
-        /* Files list block */
-        .dl-files-card {
-            background: rgba(255, 255, 255, 0.02);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 14px;
-            padding: 20px;
-            margin: 25px 0;
-            text-align: left;
-        }
-        .dl-files-title {
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: #fff;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .dl-files-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            max-height: 250px;
-            overflow-y: auto;
-            padding-right: 5px;
-        }
-        .dl-files-list::-webkit-scrollbar { width: 6px; }
-        .dl-files-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
-        .dl-file-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px 14px;
-            background: rgba(255, 255, 255, 0.01);
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            border-radius: 10px;
-            transition: var(--transition);
-        }
-        .dl-file-item:hover {
-            background: rgba(var(--cherry-rgb), 0.03);
-            border-color: rgba(var(--cherry-rgb), 0.15);
-        }
-        .dl-file-info { display: flex; align-items: center; gap: 10px; min-width: 0; }
-        .dl-file-info i { color: var(--cherry); font-size: 1rem; flex-shrink: 0; }
-        .dl-file-name { color: var(--light); font-size: 0.88rem; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; user-select: all; }
-        .dl-file-meta { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
-        .dl-file-size { color: var(--gray-dark); font-size: 0.8rem; }
-        .dl-file-btn { background: none; border: none; color: var(--gray); cursor: pointer; padding: 4px; display: flex; align-items: center; justify-content: center; transition: var(--transition); }
-        .dl-file-btn:hover { color: var(--light); transform: scale(1.15); }
+        :root { --gap: 24px; --card-bg: rgba(12,4,6,0.55); --card-border: rgba(var(--cherry-rgb),0.1); }
+        * { margin:0; padding:0; box-sizing:border-box }
+        body { background:var(--dark); background-image:radial-gradient(circle at 50% 10%, rgba(var(--cherry-rgb),.06) 0%, transparent 60%); color:var(--light); font-family:Poppins,sans-serif; min-height:100vh }
+        .page { padding:100px 0 80px }
+        .wrap { max-width:800px; margin:0 auto; padding:0 24px }
+        .back { display:inline-flex; align-items:center; gap:8px; color:var(--gray); font-size:.85rem; text-decoration:none; margin-bottom:24px; transition:.2s }
+        .back:hover { color:var(--cherry) }
+        @keyframes up { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        .a1 { animation:up .5s ease forwards }
+        .a2 { animation:up .5s .1s ease both }
+        .a3 { animation:up .5s .2s ease both }
+        
+        /* Hero / Thumbnail */
+        .hero { position:relative; border-radius:20px; overflow:hidden; background:#0d0d15; border:1px solid rgba(var(--cherry-rgb),.12); box-shadow:0 15px 45px rgba(0,0,0,.45),0 0 35px rgba(var(--cherry-rgb),.06); margin-bottom:var(--gap) }
+        .hero-m { width:100%; aspect-ratio:16/9; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#14141e,#1a1a28,#14141e); position:relative; overflow:hidden }
+        .hero-m img { width:100%; height:100%; object-fit:contain; position:relative; z-index:1 }
+        .hero-m .ph { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:5rem; color:var(--cherry); opacity:.12; z-index:0 }
+        .hero-b { position:absolute; bottom:16px; left:20px; z-index:3; display:flex; gap:8px; flex-wrap:wrap }
+        .badge { padding:5px 12px; border-radius:50px; font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.8px; background:rgba(0,0,0,.6); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,.08); color:#fff; display:inline-flex; align-items:center; gap:5px }
+        .badge-f { background:rgba(0,200,100,.2); border-color:rgba(0,200,100,.35); color:#00e676 }
+        
+        /* Cards */
+        .card { background:var(--card-bg); border:1px solid var(--card-border); border-radius:16px; padding:24px; backdrop-filter:blur(15px); -webkit-backdrop-filter:blur(15px); box-shadow:0 8px 30px rgba(0,0,0,.25); margin-bottom:var(--gap) }
+        .ct { font-size:.72rem; font-weight:700; color:var(--gray-dark); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:16px; display:flex; align-items:center; gap:8px }
+        .ct i { color:var(--cherry); font-size:.8rem }
+        
+        /* Title row */
+        .ir { display:flex; align-items:flex-start; justify-content:space-between; gap:20px; flex-wrap:wrap; margin-bottom:var(--gap) }
+        .ir-l { flex:1; min-width:0 }
+        .ir-l h1 { font-size:1.8rem; font-weight:900; color:#fff; margin-bottom:6px; letter-spacing:-.5px }
+        
+        /* Creator card */
+        .cr { display:flex; align-items:center; gap:10px; background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.05); border-radius:12px; padding:10px 16px; margin-bottom:var(--gap) }
+        .cr img { width:36px; height:36px; border-radius:50%; border:1.5px solid rgba(var(--cherry-rgb),.2); object-fit:cover }
+        .cr .cfb { width:36px; height:36px; border-radius:50%; background:rgba(var(--cherry-rgb),.15); display:flex; align-items:center; justify-content:center; color:var(--cherry); font-size:.75rem }
+        .cr strong { display:block; font-size:.82rem; color:var(--light) }
+        .cr a { font-size:.7rem; color:var(--cherry); text-decoration:none }
+        .cr a:hover { text-decoration:underline }
+        
+        /* Uploader card */
+        .up { display:flex; align-items:center; gap:12px; padding:14px 16px; background:rgba(88,101,242,.05); border:1px solid rgba(88,101,242,.12); border-radius:12px; margin-bottom:var(--gap) }
+        .up img { width:34px; height:34px; border-radius:50%; border:1.5px solid rgba(88,101,242,.2); object-fit:cover }
+        .up .ufb { width:34px; height:34px; border-radius:50%; background:rgba(88,101,242,.15); display:flex; align-items:center; justify-content:center; color:#5865F2; font-size:.9rem }
+        .up strong { display:block; font-size:.8rem; color:var(--light) }
+        .up span { font-size:.7rem; color:var(--gray-dark) }
+        
+        /* Download button */
+        .dlb { display:flex; align-items:center; justify-content:center; gap:12px; padding:18px 24px; background:linear-gradient(135deg,#8a0a22,#5a0614,#3d020c); border:1px solid rgba(var(--cherry-rgb),.3); border-radius:14px; color:#fff; font-size:1.05rem; font-weight:700; cursor:pointer; text-decoration:none; transition:.3s; margin-bottom:8px; box-shadow:0 4px 18px rgba(var(--cherry-rgb),.3),inset 0 1px 1px rgba(255,255,255,.1); font-family:inherit; width:100%; border:none }
+        .dlb:hover { box-shadow:0 6px 25px rgba(var(--cherry-rgb),.5),inset 0 1px 2px rgba(255,255,255,.15); transform:translateY(-1px) }
+        .dlb:disabled { opacity:0.6; cursor:not-allowed; transform:none }
+        .dlb i { font-size:1.1rem }
+        .dls { text-align:center; font-size:.72rem; color:var(--gray-dark); margin-bottom:var(--gap) }
+        .desc { color:var(--gray); font-size:.9rem; line-height:1.7 }
+        
+        /* Files list */
+        .files { display:flex; flex-direction:column; gap:8px; max-height:350px; overflow-y:auto }
+        .files::-webkit-scrollbar { width:4px } .files::-webkit-scrollbar-thumb { background:rgba(255,255,255,.08); border-radius:2px }
+        .fi { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:rgba(255,255,255,.015); border:1px solid rgba(255,255,255,.03); border-radius:10px; font-size:.82rem; transition:.2s }
+        .fi:hover { background:rgba(var(--cherry-rgb),.03); border-color:rgba(var(--cherry-rgb),.1) }
+        .fi .fl { display:flex; align-items:center; gap:10px; min-width:0 }
+        .fi .fl i { color:var(--cherry); font-size:.8rem; flex-shrink:0 }
+        .fi .fl span { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--light) }
+        .fi .fs { color:var(--gray-dark); font-size:.72rem; flex-shrink:0; margin-left:8px }
+        
+        /* Password */
+        .pw { display:inline-flex; align-items:center; gap:8px; padding:8px 14px; background:rgba(var(--cherry-rgb),.04); border:1px solid rgba(var(--cherry-rgb),.1); border-radius:8px; font-size:.78rem; margin-bottom:var(--gap); cursor:pointer; user-select:all }
+        .pw i { color:var(--cherry) }
+        .pw code { background:rgba(var(--cherry-rgb),.15); color:var(--cherry); padding:2px 8px; border-radius:4px; font-weight:700; font-size:.82rem }
+        
+        /* Loading & Error */
+        .load { text-align:center; padding:80px 20px; color:var(--gray) }
+        .load i { font-size:2.5rem; color:var(--cherry); opacity:.3; display:block; margin-bottom:15px }
+        .err { text-align:center; padding:60px 20px; color:var(--gray) }
+        .err i { font-size:3rem; color:var(--cherry); opacity:.25; display:block; margin-bottom:15px }
+        .btn-b { display:inline-flex; align-items:center; gap:6px; padding:10px 22px; border-radius:10px; background:rgba(var(--cherry-rgb),.1); border:1px solid rgba(var(--cherry-rgb),.2); color:var(--cherry); text-decoration:none; font-size:.85rem; font-weight:600; transition:.2s; font-family:inherit }
+        .btn-b:hover { background:rgba(var(--cherry-rgb),.18) }
+        
+        @media(max-width:600px) { .ir { flex-direction:column } .ir-l h1 { font-size:1.4rem } .page { padding-top:80px } .wrap { padding:0 16px } }
     </style>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5438472060600560" crossorigin="anonymous"></script>
 </head>
 <body>
+    <nav class="navbar scrolled"><div class="container"><a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><ul class="nav-links"><li><a href="/">Home</a></li><li><a href="/resources">Resources</a></li><li><a href="/plugins">Plugins</a></li><li><a href="/#contact">Contact</a></li></ul><div class="nav-actions"><div id="authBtn"></div><a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord"><i class="fab fa-discord"></i> <span>Join Us</span></a><button class="hamburger" id="hamburger"><span></span><span></span><span></span></button></div></div></nav>
+    
+    <section class="page"><div class="wrap">
+        <a href="/resources" class="back"><i class="fas fa-arrow-left"></i> Back to Resources</a>
+        
+        <div class="load" id="load"><i class="fas fa-spinner fa-spin"></i><p>Loading download page...</p></div>
+        <div class="err" id="err" style="display:none"><i class="fas fa-exclamation-circle"></i><p id="errMsg">Download link invalid or expired.</p><a href="/resources" class="btn-b"><i class="fas fa-arrow-left"></i> Browse Resources</a></div>
+        <div id="root" style="display:none"></div>
+    </div></section>
+    
+    <footer class="footer"><div class="container"><div class="footer-content"><div class="footer-brand"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><h3 style="font-size:1.8rem;font-weight:900;margin:0;letter-spacing:2px;background:linear-gradient(135deg,#fff,#9090a0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Editing</h3></div><p>Premium editing community &amp; resources.</p></div><div class="footer-links"><h4>Quick Links</h4><ul><li><a href="/">Home</a></li><li><a href="/resources">Resources</a></li><li><a href="/plugins">Plugins</a></li><li><a href="/#contact">Contact</a></li></ul></div><div class="footer-links"><h4>Community</h4><ul><li><a href="https://discord.gg/fAydSzpafA">Discord</a></li><li><a href="/#contact">Contact</a></li></ul></div><div class="footer-newsletter"><h4>Newsletter</h4><p>Stay updated with Zyrex Editing.</p><div class="newsletter-form"><input type="email" placeholder="Your email"><button type="submit"><i class="fas fa-arrow-right"></i></button></div></div></div><div class="footer-bottom"><p>&copy; 2026 Zyrex Editing. All rights reserved.</p></div></div></footer>
 
-    <div class="dl-container card" id="downloadCard">
-        <div class="dl-loading" id="dlLoading">
-            <i class="fas fa-spinner fa-spin" style="font-size: 2.5rem; color: var(--cherry); margin-bottom: 15px;"></i>
-            <p style="color: var(--gray)">Loading secure download space...</p>
-        </div>
-
-        <div id="dlContent" style="display: none;">
-            <div class="dl-logo">
-                <i class="fas fa-shield-halved" style="color: var(--cherry);"></i> Zyrex<span>Download</span>
-            </div>
-
-            <div class="product-badge-group">
-                <span id="productCategory" class="tag-others" style="font-size: 0.7rem; font-weight: 700; text-transform: uppercase;">Category</span>
-                <span class="tag-free" style="font-size: 0.7rem; font-weight: 700; background: rgba(0, 200, 100, 0.1); color: #00c864; border: 1px solid rgba(0, 200, 100, 0.2); padding: 3px 8px; border-radius: 4px;">Free</span>
-            </div>
-
-            <h1 class="dl-title" id="productName">Resource File</h1>
-            <p class="dl-desc" id="productDesc">Loading details...</p>
-
-            <!-- Creator profile card -->
-            <div style="display:flex;align-items:center;gap:15px;background:rgba(var(--cherry-rgb),0.02);border:1px solid rgba(var(--cherry-rgb),0.05);border-radius:16px;padding:16px;margin:25px 0;text-align:left">
-                <div id="creatorAvatarWrapper" style="width:48px;height:48px;border-radius:50%;background:var(--cherry);overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2px solid rgba(255,56,96,0.2)">
-                    <i class="fas fa-user" style="color:var(--light);font-size:1.3rem"></i>
-                </div>
-                <div style="flex:1;min-width:0">
-                    <span style="font-size:0.75rem;color:var(--gray-dark);text-transform:uppercase;letter-spacing:1px;display:block">Created By</span>
-                    <strong id="creatorName" style="font-size:0.95rem;color:var(--light);display:block">Creator</strong>
-                    <div id="creatorSocialLinkContainer"></div>
-                </div>
-            </div>
-
-            <!-- Uploader profile card -->
-            <div id="uploaderCard" style="display:none;align-items:center;gap:15px;background:rgba(88,101,242,0.08);border:1px solid rgba(88,101,242,0.15);border-radius:16px;padding:16px;margin:0 0 25px;text-align:left">
-                <div id="uploaderAvatarWrapper" style="width:44px;height:44px;border-radius:50%;background:rgba(88,101,242,0.15);overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2px solid rgba(88,101,242,0.25)">
-                    <i class="fab fa-discord" style="color:var(--light);font-size:1.3rem"></i>
-                </div>
-                <div style="flex:1;min-width:0">
-                    <span style="font-size:0.75rem;color:var(--gray-dark);text-transform:uppercase;letter-spacing:1px;display:block">Shared by</span>
-                    <strong id="uploaderName" style="font-size:0.9rem;color:var(--light);display:flex;align-items:center;gap:6px"><i class="fab fa-discord" style="font-size:0.8rem;color:#5865F2"></i> Uploader</strong>
-                </div>
-            </div>
-
-            <!-- Files List Card -->
-            <div class="dl-files-card" id="dlFilesCard" style="display: none;">
-                <div class="dl-files-title">
-                    <i class="fas fa-folder-open"></i> Files inside this pack
-                </div>
-                <div class="dl-files-list" id="dlFilesList"></div>
-            </div>
-
-            <!-- Password check -->
-            <div class="dl-password-box" id="passwordBox" style="display: none;">
-                <i class="fas fa-key"></i> File Extraction Password: <code id="passwordCode">star</code>
-            </div>
-
-            <!-- Download Action Button -->
-            <div class="dl-btn-container">
-                <button class="btn-download-action" id="btnDownload" onclick="triggerDownload()">
-                    <i class="fas fa-cloud-arrow-down"></i> Download ZIP Package
-                </button>
-            </div>
-
-            <p style="font-size: 0.72rem; color: var(--gray-dark)">
-                <i class="fas fa-circle-exclamation"></i> Link is single-use and will expire in 10 minutes.
-            </p>
-        </div>
-
-        <div id="dlError" style="display: none;">
-            <div class="dl-error-box">
-                <i class="fas fa-triangle-exclamation"></i>
-                <h3 style="color: #fff;" id="errTitle">Secure link invalid</h3>
-                <p style="color: var(--gray); font-size: 0.85rem; margin-top: 8px;" id="errDesc">
-                    The requested file link could not be generated or has expired.
-                </p>
-                <a href="https://zyrexediting.xyz" class="btn btn-primary" style="margin-top:20px; display:inline-flex; width:auto; padding: 10px 24px;">Go back to home</a>
-            </div>
-        </div>
-    </div>
-
-    <script src="js/presets-data.js?v=5"></script>
+    <script src="/js/auth.js"></script>
+    <script src="/js/presets-data.js?v=5"></script>
     <script>
         const params = new URLSearchParams(window.location.search);
         const token = params.get('token');
         const productId = params.get('id');
-
-        const loading = document.getElementById('dlLoading');
-        const content = document.getElementById('dlContent');
-        const errorBox = document.getElementById('dlError');
-
-        let product = null;
         let downloadToken = null;
+        let product = null;
 
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Token-based flow (new)
+        const iconMap = {"after-effects":"fa-film","premiere-pro":"fa-video","photoshop":"fa-image","video-star":"fa-star","topaz-labs":"fa-gem","others":"fa-folder"};
+        const catLabels = {"after-effects":"After Effects","premiere-pro":"Premiere Pro","photoshop":"Photoshop","video-star":"Video Star","topaz-labs":"Topaz Labs","others":"Others"};
+
+        function E(m) { 
+            document.getElementById("load").style.display="none"; 
+            document.getElementById("err").style.display="block"; 
+            document.getElementById("errMsg").textContent=m;
+        }
+
+        (async function init() {
             if (token) {
                 try {
-                    const resp = await fetch('/api/downloads/validate?token=' + encodeURIComponent(token));
+                    const resp = await fetch('/api/downloads/validate?token=' + encodeURIComponent(token) + '&peek=1');
                     const data = await resp.json();
                     if (data.success) {
                         downloadToken = token;
-                        // Now fetch product info
-                        const prodResp = await fetch('/api/products?id=' + data.product_id);
-                        if (prodResp.ok) {
-                            product = await prodResp.json();
-                        }
-                        if (!product) {
-                            // Use static data fallback
-                            const all = [...(window.presetsData || []), ...(window.pluginsData || [])];
-                            product = all.find(p => p.id === data.product_id);
-                        }
-                        if (product) {
-                            renderProduct(product);
-                            return;
-                        }
+                        await loadProduct(data.product_id);
+                        if (product) { render(); return; }
                     }
-                    showError("Invalid Token", "This download link is invalid or has expired. Please generate a new one.");
-                } catch (e) {
-                    showError("Validation Failed", "Unable to validate the download token.");
-                }
+                    E("This download link is invalid or has expired. Please generate a new one.");
+                } catch (e) { E("Unable to validate download token."); }
                 return;
             }
 
-            // Legacy ID-based flow
-            if (!productId) {
-                showError("Link ID Missing", "No resource product ID was supplied in the address URL query parameters.");
-                return;
-            }
+            if (!productId) { E("No product ID provided."); return; }
+            await loadProduct(productId);
+            if (!product) { E("Product not found."); return; }
+            render();
+        })();
 
+        async function loadProduct(pid) {
             try {
-                const resp = await fetch('/api/products?id=' + productId);
-                if (resp.ok) {
-                    product = await resp.json();
-                } else {
-                    const staticPresets = window.presetsData || [];
-                    product = staticPresets.find(p => p.id === productId);
-                }
-                if (!product) {
-                    showError("Resource Not Found", "The secure file pack you are looking for does not exist in our database storage.");
-                    return;
-                }
-                renderProduct(product);
-            } catch (e) {
-                console.error("Load error:", e);
-                const staticPresets = window.presetsData || [];
-                product = staticPresets.find(p => p.id === productId);
-                if (product) { renderProduct(product); }
-                else { showError("Connection Failed", "Unable to establish communication with the secure backend file server."); }
+                const r = await fetch('/api/products?id=' + pid);
+                if (r.ok) { const j = await r.json(); if (j && j.id) product = j; }
+            } catch(e) {}
+            if (!product) {
+                const all = [...(window.presetsData || []), ...(window.pluginsData || [])];
+                product = all.find(p => p.id === pid);
             }
-        });
-
-        function renderProduct(p) {
-            document.getElementById('productName').textContent = p.name;
-            document.getElementById('productDesc').textContent = p.description || p.desc || "No description available for this package.";
-
-            const catBadge = document.getElementById('productCategory');
-            const categoryLabels = {
-                'after-effects': 'After Effects',
-                'premiere-pro': 'Premiere Pro',
-                'photoshop': 'Photoshop',
-                'video-star': 'Video Star',
-                'topaz-labs': 'Topaz Labs',
-                'others': 'Others'
-            };
-            catBadge.textContent = categoryLabels[p.category] || p.category || 'Others';
-            catBadge.className = 'tag-' + (p.category || 'others');
-
-            // Files Card Render
-            const filesCard = document.getElementById('dlFilesCard');
-            const filesList = document.getElementById('dlFilesList');
-            if (p.files && p.files.length > 0) {
-                filesList.innerHTML = p.files.map(f => {
-                    const fSize = f.size ? (f.size / 1024).toFixed(2) + ' KB' : 'Unknown';
-                    const isVid = f.name.endsWith('.mp4') || f.name.endsWith('.mov') || f.name.endsWith('.avi');
-                    const isAud = f.name.endsWith('.mp3') || f.name.endsWith('.wav');
-                    const isImg = f.name.endsWith('.png') || f.name.endsWith('.jpg') || f.name.endsWith('.jpeg') || f.name.endsWith('.gif');
-                    const fileIcon = isVid ? 'fa-file-video' : isAud ? 'fa-file-audio' : isImg ? 'fa-file-image' : 'fa-file-code';
-
-                    return `
-                        <div class="dl-file-item">
-                            <div class="dl-file-info">
-                                <i class="fas ${fileIcon}"></i>
-                                <span class="dl-file-name" title="${f.name}">${f.name}</span>
-                            </div>
-                            <div class="dl-file-meta">
-                                <span class="dl-file-size">${fSize}</span>
-                                <button class="dl-file-btn" onclick="triggerFileDownload('${f.name}', this)" title="Download file individually">
-                                    <i class="fas fa-download"></i>
-                                </button>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-                filesCard.style.display = 'block';
-            } else {
-                filesCard.style.display = 'none';
-            }
-
-            // Password
-            if (p.password) {
-                document.getElementById('passwordBox').style.display = 'inline-flex';
-                document.getElementById('passwordCode').textContent = p.password;
-                document.getElementById('passwordBox').onclick = () => {
-                    navigator.clipboard.writeText(p.password);
-                    document.getElementById('passwordCode').textContent = "Copied!";
-                    setTimeout(() => {
-                        document.getElementById('passwordCode').textContent = p.password;
-                    }, 1500);
-                };
-            }
-
-            // Creator Details
-            document.getElementById('creatorName').textContent = p.creator_nickname || p.author_name || 'Zyrex';
-            if (p.creator_avatar) {
-                document.getElementById('creatorAvatarWrapper').innerHTML = `<img src="${p.creator_avatar}" style="width:100%;height:100%;object-fit:cover">`;
-            }
-            if (p.creator_social_url) {
-                document.getElementById('creatorSocialLinkContainer').innerHTML = `
-                    <a href="${p.creator_social_url}" target="_blank" style="font-size:0.75rem;color:var(--cherry);text-decoration:underline;display:inline-flex;align-items:center;gap:4px;margin-top:2px">
-                        <i class="fas fa-external-link-alt" style="font-size:0.65rem"></i> View Creator Profile
-                    </a>
-                `;
-            }
-
-            // Uploader Details
-            if (p.uploader_name) {
-                document.getElementById('uploaderCard').style.display = 'flex';
-                document.getElementById('uploaderName').innerHTML = `<i class="fab fa-discord" style="font-size:0.8rem;color:#5865F2"></i> ${p.uploader_name}`;
-                if (p.uploader_avatar) {
-                    document.getElementById('uploaderAvatarWrapper').innerHTML = `<img src="${p.uploader_avatar}" style="width:100%;height:100%;object-fit:cover">`;
-                }
-            }
-
-            loading.style.display = 'none';
-            content.style.display = 'block';
         }
 
-        function showError(title, desc) {
-            loading.style.display = 'none';
-            content.style.display = 'none';
-            errorBox.style.display = 'block';
-            document.getElementById('errTitle').textContent = title;
-            document.getElementById('errDesc').textContent = desc;
+        function render() {
+            document.getElementById("load").style.display="none";
+            document.getElementById("root").style.display="block";
+            document.title = (product.name || "Download") + " - Zyrex";
+
+            const p = product;
+            const ic = iconMap[p.category] || "fa-folder";
+            const cat = catLabels[p.category] || "Others";
+            const av = p.creator_avatar || "";
+            const nick = p.creator_nickname || p.author_name || "Zyrex Creator";
+            const desc = p.description || p.desc || "";
+            const password = p.password || "";
+
+            const heroImg = p.thumbnail ? '<img src="'+p.thumbnail+'" alt="'+p.name+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' : '';
+            const ph = '<div class="ph" style="'+(p.thumbnail?'display:none':'')+'"><i class="fas '+ic+'"></i></div>';
+
+            const creatorHtml = '<div class="cr a2">'+(av?'<img src="'+av+'" alt="">':'<div class="cfb"><i class="fas fa-user"></i></div>')+'<div><strong>'+nick+'</strong>'+(p.creator_social_url?'<a href="'+p.creator_social_url+'" target="_blank"><i class="fas fa-external-link-alt"></i> Profile</a>':'')+'</div></div>';
+
+            const upHtml = p.uploader_name ? '<div class="up a2">'+(p.uploader_avatar?'<img src="'+p.uploader_avatar+'" alt="">':'<div class="ufb"><i class="fab fa-discord"></i></div>')+'<div><strong>'+p.uploader_name+'</strong><span>Community Uploader</span></div></div>' : '';
+
+            let filesHtml = '';
+            if (p.files && p.files.length > 0) {
+                filesHtml = '<div class="card a3"><div class="ct"><i class="fas fa-folder-open"></i> Files in this pack ('+p.files.length+')</div><div class="files">'+
+                    p.files.map(function(f) {
+                        var sz = f.size ? (f.size>1048576?(f.size/1048576).toFixed(1)+" MB":(f.size/1024).toFixed(1)+" KB") : "--";
+                        var fi = f.name.endsWith('.mp4')||f.name.endsWith('.mov')?'fa-file-video':
+                                  f.name.endsWith('.mp3')||f.name.endsWith('.wav')?'fa-file-audio':
+                                  f.name.endsWith('.png')||f.name.endsWith('.jpg')||f.name.endsWith('.jpeg')?'fa-file-image':'fa-file-lines';
+                        return '<div class="fi"><div class="fl"><i class="fas '+fi+'"></i><span title="'+f.name+'">'+f.name+'</span></div><span class="fs">'+sz+'</span></div>';
+                    }).join("")+'</div></div>';
+            }
+
+            var pwHtml = password ? '<div class="pw a3" onclick="var c=this.querySelector(\'code\');c.textContent=\'Copied!\';setTimeout(function(){c.textContent=\''+password+'\'},1500)"><i class="fas fa-key"></i> Password: <code>'+password+'</code></div>' : '';
+
+            var dlBtnHtml = productId 
+                ? '<button class="dlb a3" id="dlBtn" onclick="triggerDownload()"><i class="fas fa-cloud-arrow-down"></i> Download ZIP Package</button><div class="dls a3"><i class="fas fa-shield-halved"></i> One-time token &middot; 10 min expiry</div>'
+                : '';
+
+            document.getElementById("root").innerHTML = 
+                '<div class="hero a1"><div class="hero-m">'+heroImg+ph+'</div><div class="hero-b"><span class="badge"><i class="fas '+ic+'"></i> '+cat+'</span><span class="badge badge-f"><i class="fas fa-circle-check"></i> Free</span></div></div>'+
+                '<div class="ir a2"><div class="ir-l"><h1>'+p.name+'</h1></div></div>'+
+                creatorHtml + upHtml +
+                (desc ? '<div class="card a3"><div class="ct"><i class="fas fa-align-left"></i> Description</div><div class="desc">'+desc.replace(/\n/g,"<br>")+'</div></div>' : '')+
+                filesHtml + pwHtml + dlBtnHtml;
         }
 
         async function triggerDownload() {
-            const btn = document.getElementById('btnDownload');
+            var btn = document.getElementById('dlBtn');
+            if (!btn) return;
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing download...';
 
-            // If we already have a token, use it directly
             if (downloadToken) {
                 btn.innerHTML = '<i class="fas fa-circle-check"></i> Starting download...';
                 window.location.href = '/api/downloads/download?token=' + downloadToken;
-                setTimeout(() => {
-                    btn.innerHTML = '<i class="fas fa-arrow-rotate-right"></i> Link Used - Refresh to regenerate';
-                }, 4000);
+                setTimeout(function() { btn.innerHTML = '<i class="fas fa-arrow-rotate-right"></i> Link Used'; }, 4000);
                 return;
             }
 
-            // Legacy: request a new token
             if (!productId) return;
             try {
-                const tokenResp = await fetch('/api/downloads/request-token/' + productId);
+                var tokenResp = await fetch('/api/downloads/request-token/' + productId);
                 if (!tokenResp.ok) {
-                    const data = await tokenResp.json();
+                    var data = await tokenResp.json();
+                    if (tokenResp.status === 401) {
+                        btn.innerHTML = '<i class="fas fa-lock"></i> Login Required';
+                        btn.disabled = false;
+                        window.location.href = '/api/login?redirect=' + encodeURIComponent(location.pathname + location.search);
+                        return;
+                    }
                     alert(data.error || 'Unable to acquire download ticket.');
                     btn.disabled = false;
                     btn.innerHTML = '<i class="fas fa-cloud-arrow-down"></i> Download ZIP Package';
                     return;
                 }
-                const tokenData = await tokenResp.json();
+                var tokenData = await tokenResp.json();
                 if (tokenData.success && tokenData.token) {
                     btn.innerHTML = '<i class="fas fa-circle-check"></i> Launching download...';
                     window.location.href = '/api/downloads/download?token=' + tokenData.token;
-                    setTimeout(() => {
-                        btn.innerHTML = '<i class="fas fa-arrow-rotate-right"></i> Link Used';
-                        btn.disabled = true;
-                    }, 4000);
+                    setTimeout(function() { btn.innerHTML = '<i class="fas fa-arrow-rotate-right"></i> Link Used'; btn.disabled = true; }, 4000);
                 } else {
                     alert('Ticket generation failed.');
                     btn.disabled = false;
@@ -467,43 +243,6 @@
                 alert('Network error. Please try again.');
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-cloud-arrow-down"></i> Download ZIP Package';
-            }
-        }
-
-        async function triggerFileDownload(filePath, btn) {
-            if (!productId) return;
-            const origHtml = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-
-            try {
-                const tokenResp = await fetch(`/api/downloads/request-token/${productId}`);
-                if (!tokenResp.ok) {
-                    const data = await tokenResp.json();
-                    alert(data.error || "Unable to acquire download ticket.");
-                    btn.disabled = false;
-                    btn.innerHTML = origHtml;
-                    return;
-                }
-
-                const tokenData = await tokenResp.json();
-                if (tokenData.success && tokenData.token) {
-                    window.location.href = `/api/downloads/download?token=${tokenData.token}&file=${encodeURIComponent(filePath)}`;
-
-                    setTimeout(() => {
-                        btn.disabled = false;
-                        btn.innerHTML = origHtml;
-                    }, 3000);
-                } else {
-                    alert("Ticket generation failed.");
-                    btn.disabled = false;
-                    btn.innerHTML = origHtml;
-                }
-            } catch (e) {
-                console.error("Individual download error:", e);
-                alert("Network communication error with the download packaging server.");
-                btn.disabled = false;
-                btn.innerHTML = origHtml;
             }
         }
     </script>
