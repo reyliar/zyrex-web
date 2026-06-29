@@ -414,9 +414,16 @@ class FileAPIHandler(BaseHTTPRequestHandler):
                 return
             
             full_path = os.path.join(SFTPGO_DATA_DIR, file_path.replace("/", os.sep))
+            
+            # Fallback: if exact path not found, try production/{product_id}
             if not os.path.exists(full_path):
-                self._send_json({"success": False, "error": f"Resource not found on disk: {file_path}"}, 404)
-                return
+                fallback_path = os.path.join(SFTPGO_DATA_DIR, "production", product_id)
+                if os.path.exists(fallback_path):
+                    full_path = fallback_path
+                    print(f"Using fallback production path: {fallback_path}")
+                else:
+                    self._send_json({"success": False, "error": f"Resource not found on disk: {file_path} (also tried production/{product_id})"}, 404)
+                    return
             
             token = generate_download_token(discord_id, product_id, full_path)
             self._send_json({
