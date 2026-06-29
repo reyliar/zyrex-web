@@ -112,14 +112,21 @@
 
         /* Files */
         .files-block { width: 100%; margin-bottom: 20px }
-        .files-label { font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--gray-dark); margin-bottom: 10px; display: flex; align-items: center; gap: 6px }
+        .files-label { font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.2px; color: var(--gray-dark); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; justify-content: space-between }
         .files-label i { color: var(--cherry); font-size: .7rem }
+        .files-label-right { display: flex; align-items: center; gap: 12px }
+        .select-all-btn { font-size: .62rem; color: var(--cherry); cursor: pointer; background: none; border: 1px solid rgba(var(--cherry-rgb),.12); padding: 3px 8px; border-radius: 4px; font-family: inherit; transition: .15s }
+        .select-all-btn:hover { background: rgba(var(--cherry-rgb),.08) }
         .file-item { display: flex; align-items: center; justify-content: space-between; padding: 9px 12px; background: rgba(255,255,255,.01); border: 1px solid rgba(255,255,255,.02); border-radius: 8px; margin-bottom: 4px; font-size: .78rem; transition: .15s }
         .file-item:hover { background: rgba(var(--cherry-rgb),.02); border-color: rgba(var(--cherry-rgb),.06) }
-        .file-item .fl { display:flex; align-items:center; gap:8px; min-width:0 }
+        .file-item .fl { display:flex; align-items:center; gap:8px; min-width:0; flex:1 }
+        .file-item .fl .file-cb { appearance: none; -webkit-appearance: none; width: 14px; height: 14px; border: 1.5px solid rgba(255,255,255,.12); border-radius: 3px; background: transparent; cursor: pointer; flex-shrink: 0; position: relative; transition: .15s }
+        .file-item .fl .file-cb:checked { background: var(--cherry); border-color: var(--cherry) }
+        .file-item .fl .file-cb:checked::after { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; font-size: .5rem; color: #fff; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%) }
         .file-item .fl i { color:var(--cherry); font-size:.7rem; flex-shrink:0 }
         .file-item .fl span { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--light) }
         .file-item .fs { color:var(--gray-dark); font-size:.7rem; flex-shrink:0; margin-left:8px }
+        .file-item.file-watermark { opacity: .0; height: 0; padding: 0; margin: 0; border: none; overflow: hidden; pointer-events: none }
         .file-dl-btn { background: rgba(var(--cherry-rgb),.06); border:1px solid rgba(var(--cherry-rgb),.1); color: var(--cherry); cursor: pointer; padding: 3px 7px; border-radius: 5px; font-size: .7rem; transition: .15s; display: flex; align-items: center; gap: 3px; flex-shrink: 0; margin-left: 8px }
         .file-dl-btn:hover { background: rgba(var(--cherry-rgb),.12); border-color: rgba(var(--cherry-rgb),.18) }
         .file-dl-btn:disabled { opacity:.4; cursor:not-allowed }
@@ -130,11 +137,11 @@
         .pw-block code { background: rgba(var(--cherry-rgb),.1); color: var(--cherry); padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: .78rem }
 
         /* Download Card */
-        .dl-card { width: 100%; background: linear-gradient(135deg, rgba(var(--blurple-rgb),.12), rgba(var(--blurple-rgb),.04)); border: 1px solid rgba(var(--blurple-rgb),.18); border-radius: 18px; padding: 28px 24px; text-align: center; position: relative; overflow: hidden }
-        .dl-card::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, rgba(var(--blurple-rgb),.08), transparent 70%); pointer-events: none }
-        .dl-btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 16px 20px; background: var(--blurple); border: none; border-radius: 12px; color: #fff; font-size: .95rem; font-weight: 700; font-family: inherit; cursor: pointer; transition: all .2s; box-shadow: 0 6px 24px rgba(var(--blurple-rgb),.3); position: relative; z-index: 1 }
-        .dl-btn:hover { background: #4752c4; box-shadow: 0 8px 32px rgba(var(--blurple-rgb),.45); transform: translateY(-1px) }
-        .dl-btn:disabled { opacity: .55; cursor: not-allowed; transform: none; box-shadow: 0 3px 12px rgba(var(--blurple-rgb),.15) }
+        .dl-card { width: 100%; background: linear-gradient(135deg, rgba(var(--cherry-rgb),.1), rgba(var(--cherry-rgb),.03)); border: 1px solid rgba(var(--cherry-rgb),.15); border-radius: 18px; padding: 28px 24px; text-align: center; position: relative; overflow: hidden }
+        .dl-card::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, rgba(var(--cherry-rgb),.06), transparent 70%); pointer-events: none }
+        .dl-btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 16px 20px; background: linear-gradient(135deg, #8a0a22, #5a0614, #3d020c); border: 1px solid rgba(var(--cherry-rgb),.25); border-radius: 12px; color: #fff; font-size: .95rem; font-weight: 700; font-family: inherit; cursor: pointer; transition: all .2s; box-shadow: 0 6px 24px rgba(var(--cherry-rgb),.35), inset 0 1px 1px rgba(255,255,255,.08); position: relative; z-index: 1 }
+        .dl-btn:hover { background: linear-gradient(135deg, #9c0b26, #6a0718, #4a030f); box-shadow: 0 8px 32px rgba(var(--cherry-rgb),.5), inset 0 1px 2px rgba(255,255,255,.12); transform: translateY(-1px) }
+        .dl-btn:disabled { opacity: .55; cursor: not-allowed; transform: none; box-shadow: 0 3px 12px rgba(var(--cherry-rgb),.15) }
         .dl-btn i { font-size: 1rem }
 
         /* Countdown */
@@ -150,10 +157,10 @@
         /* Progress overlay */
         .prog-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.85); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; gap: 14px }
         .prog-overlay.active { display: flex }
-        .prog-ring { width: 70px; height: 70px; border-radius: 50%; border: 3px solid rgba(255,255,255,.06); border-top-color: var(--blurple); animation: spin .8s linear infinite }
+        .prog-ring { width: 70px; height: 70px; border-radius: 50%; border: 3px solid rgba(255,255,255,.06); border-top-color: var(--cherry); animation: spin .8s linear infinite }
         .prog-text { color: var(--light); font-size: .85rem; font-weight: 600 }
         .prog-bar-wrap { width: 280px; height: 5px; background: rgba(255,255,255,.06); border-radius: 3px; overflow: hidden }
-        .prog-bar-fill { height: 100%; background: var(--blurple); border-radius: 3px; transition: width .3s; width: 0% }
+        .prog-bar-fill { height: 100%; background: var(--cherry); border-radius: 3px; transition: width .3s; width: 0% }
         .prog-detail { color: var(--gray-dark); font-size: .7rem }
 
         /* Back link */
@@ -379,16 +386,32 @@
                 html += '<div class="desc-block"><div class="desc-label"><i class="fas fa-align-left"></i> Description</div>' + desc.replace(/\n/g, '<br>') + '</div>';
             }
 
-            // Files
-            if (p.files && p.files.length > 0) {
-                html += '<div class="files-block"><div class="files-label"><i class="fas fa-folder-open"></i> Files (' + p.files.length + ')</div>';
-                p.files.forEach(function(f) {
-                    const sz = f.size ? (f.size > 1048576 ? (f.size/1048576).toFixed(1)+' MB' : (f.size/1024).toFixed(1)+' KB') : '--';
-                    const fi = f.name.endsWith('.mp4')||f.name.endsWith('.mov')?'fa-file-video':f.name.endsWith('.mp3')||f.name.endsWith('.wav')?'fa-file-audio':f.name.endsWith('.png')||f.name.endsWith('.jpg')||f.name.endsWith('.jpeg')?'fa-file-image':'fa-file-lines';
-                    html += '<div class="file-item"><div class="fl"><i class="fas ' + fi + '"></i><span title="' + f.name + '">' + f.name + '</span></div><span class="fs">' + sz + '</span><button class="file-dl-btn" onclick="triggerFileDownload(\'' + f.name + '\',this)" title="Download this file"><i class="fas fa-download"></i></button></div>';
-                });
-                html += '</div>';
+            // Files (exclude watermarks) - fetch from API if not in product data
+            const watermarkNames = ['LEAKED BY ZYREX.txt', 'Visit for more resources!.url'];
+            let fileList = p.files || [];
+            
+            if (fileList.length === 0 && (p.id || p.file_path)) {
+                try {
+                    const fp = p.file_path || ('production/' + p.id);
+                    const filesResp = await fetch('/api/files/list-path?path=' + encodeURIComponent(fp));
+                    const filesData = await filesResp.json();
+                    if (filesData.success && filesData.files) {
+                        fileList = filesData.files;
+                    }
+                } catch(e) {}
             }
+            
+            const realFiles = fileList.filter(function(f) { return !watermarkNames.includes(f.name); });
+                
+                if (realFiles.length > 0) {
+                    html += '<div class="files-block"><div class="files-label"><div><i class="fas fa-folder-open"></i> Files in this pack (' + realFiles.length + ')</div><div class="files-label-right"><button class="select-all-btn" onclick="toggleSelectAll(this)">Select All</button></div></div>';
+                    realFiles.forEach(function(f, idx) {
+                        const sz = f.size ? (f.size > 1048576 ? (f.size/1048576).toFixed(1)+' MB' : (f.size/1024).toFixed(1)+' KB') : '--';
+                        const fi = f.name.endsWith('.mp4')||f.name.endsWith('.mov')?'fa-file-video':f.name.endsWith('.mp3')||f.name.endsWith('.wav')?'fa-file-audio':f.name.endsWith('.png')||f.name.endsWith('.jpg')||f.name.endsWith('.jpeg')?'fa-file-image':'fa-file-lines';
+                        html += '<div class="file-item"><div class="fl"><input type="checkbox" class="file-cb" checked onchange="updateSelectedCount()" data-filename="' + f.name.replace(/"/g, '&quot;') + '"><i class="fas ' + fi + '"></i><span title="' + f.name + '">' + f.name + '</span></div><span class="fs">' + sz + '</span><button class="file-dl-btn" onclick="triggerFileDownload(\'' + f.name + '\',this)" title="Download this file only"><i class="fas fa-download"></i></button></div>';
+                    });
+                    html += '</div>';
+                }
 
             // Password
             if (password) {
@@ -408,6 +431,30 @@
 
             document.getElementById('st-main').innerHTML = html;
             setTimeout(updateDownloadCount, 100);
+            setTimeout(updateSelectedCount, 150);
+        }
+
+        // File selection helpers
+        function toggleSelectAll(btn) {
+            const cbs = document.querySelectorAll('.file-cb');
+            const allChecked = Array.from(cbs).every(function(cb) { return cb.checked; });
+            cbs.forEach(function(cb) { cb.checked = !allChecked; });
+            btn.textContent = allChecked ? 'Select All' : 'Deselect All';
+            updateSelectedCount();
+        }
+
+        function updateSelectedCount() {
+            const cbs = document.querySelectorAll('.file-cb');
+            const checked = document.querySelectorAll('.file-cb:checked');
+            const label = document.querySelector('.files-label div:first-child');
+            if (label && cbs.length > 0) {
+                const iconHtml = '<i class="fas fa-folder-open"></i> ';
+                label.innerHTML = iconHtml + 'Files selected (' + checked.length + '/' + cbs.length + ')';
+            }
+            const selectAllBtn = document.querySelector('.select-all-btn');
+            if (selectAllBtn && cbs.length > 0) {
+                selectAllBtn.textContent = checked.length === cbs.length ? 'Deselect All' : 'Select All';
+            }
         }
 
         // Download tracking

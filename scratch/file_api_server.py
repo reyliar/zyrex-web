@@ -21,8 +21,46 @@ PORT = 8081
 SECRET_TOKEN = "zyrex-files-api-2026"
 TOKEN_EXPIRY_SECONDS = 600  # 10 minutes
 
+# Watermark files injected into every production folder (embedded, no external files)
+WATERMARK_FILES_CONTENT = {
+    "LEAKED BY ZYREX.txt": (
+        "ZYREX ZYREX ZYREX ZYREX ZYREX ZYREX ZYREX ZYREX \r\n"
+        "ZYREX ZYREX ZYREX ZYREX ZYREX ZYREX ZYREX ZYREX \r\n"
+        "\r\n"
+        "\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588   \u2588\u2588\u2588     \u2588\u2588\u2588  \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588   \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  \u2588\u2588\u2588     \u2588\u2588\u2588\r\n"
+        "\u2580\u2580\u2580\u2580\u2580\u2580\u2588\u2588\u2588\u2580    \u2588\u2588\u2588     \u2588\u2588\u2588  \u2588\u2588\u2588    \u2588\u2588\u2588\u2588\u2588  \u2588\u2588\u2588\u2580\u2580\u2580\u2580\u2580\u2580\u2580\u2580   \u2588\u2588\u2588   \u2588\u2588\u2588 \r\n"
+        "     \u2588\u2588\u2588       \u2588\u2588\u2588   \u2588\u2588\u2588   \u2588\u2588\u2588    \u2588\u2588\u2588\u2588\u2588  \u2588\u2588\u2588            \u2588\u2588\u2588 \u2588\u2588\u2588  \r\n"
+        "    \u2588\u2588\u2588         \u2588\u2588\u2588 \u2588\u2588\u2588    \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588   \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588     \u2588\u2588\u2588\u2588\u2588   \r\n"
+        "   \u2588\u2588\u2588           \u2588\u2588\u2588\u2588\u2588     \u2588\u2588\u2588    \u2588\u2588\u2588    \u2588\u2588\u2588\u2580\u2580\u2580\u2580\u2580\u2580\u2580\u2580     \u2588\u2588\u2588\u2588\u2588   \r\n"
+        "  \u2588\u2588\u2588             \u2588\u2588\u2588      \u2588\u2588\u2588     \u2588\u2588\u2588   \u2588\u2588\u2588            \u2588\u2588\u2588 \u2588\u2588\u2588  \r\n"
+        " \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588      \u2588\u2588\u2588      \u2588\u2588\u2588      \u2588\u2588\u2588  \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588   \u2588\u2588\u2588   \u2588\u2588\u2588 \r\n"
+    ),
+    "Visit for more resources!.url": (
+        "[{000214A0-0000-0000-C000-000000000046}]\r\n"
+        "Prop3=19,11\r\n"
+        "[InternetShortcut]\r\n"
+        "IDList=\r\n"
+        "URL=https://zyrexediting.xyz/resources\r\n"
+    ),
+}
+
 # In-memory token store: { token: { discord_id, product_id, file_path, created_at, used } }
 download_tokens = {}
+
+def inject_watermarks(target_dir):
+    """Write watermark files into target_dir and all its subdirectories."""
+    injected = 0
+    for root, dirs, files in os.walk(target_dir):
+        for filename, content in WATERMARK_FILES_CONTENT.items():
+            dst = os.path.join(root, filename)
+            if not os.path.exists(dst):
+                try:
+                    with open(dst, 'w', encoding='utf-8') as f:
+                        f.write(content)
+                    injected += 1
+                except Exception as e:
+                    print(f"Watermark failed: {filename} -> {dst}: {e}")
+    return injected
 
 def generate_download_token(discord_id, product_id, file_path):
     """Generate a one-time download token."""
@@ -281,6 +319,37 @@ class FileAPIHandler(BaseHTTPRequestHandler):
             self._send_json({"success": True, "editors": editors})
             return
         
+        if path == "/api/files/list-path":
+            # List files in a given path (no discord_id needed)
+            list_path = params.get("path", [""])[0]
+            if not list_path:
+                self._send_json({"success": False, "error": "Missing path parameter"}, 400)
+                return
+            full_path = os.path.join(SFTPGO_DATA_DIR, list_path.replace("/", os.sep))
+            if not os.path.isdir(full_path):
+                # Try production folder fallback
+                fallback = os.path.join(SFTPGO_DATA_DIR, "production", list_path)
+                if os.path.isdir(fallback):
+                    full_path = fallback
+                else:
+                    self._send_json({"success": False, "error": f"Path not found: {list_path}"}, 404)
+                    return
+            result = {"success": True, "files": []}
+            try:
+                for entry in sorted(os.listdir(full_path)):
+                    entry_path = os.path.join(full_path, entry)
+                    if os.path.isfile(entry_path):
+                        size = os.path.getsize(entry_path)
+                        result["files"].append({
+                            "name": entry,
+                            "size": size,
+                            "size_formatted": format_size(size),
+                        })
+                self._send_json(result)
+            except PermissionError:
+                self._send_json({"success": False, "error": "Permission denied"}, 403)
+            return
+        
         # Endpoints that DO require discord_id
         discord_id = params.get("discord_id", [None])[0]
         if not discord_id:
@@ -369,13 +438,17 @@ class FileAPIHandler(BaseHTTPRequestHandler):
                         shutil.copy2(src_file, dst_file)
                         copied.append(f"{rel_path}/{f}" if rel_path != "." else f)
                 
+                # Inject watermark files into destination and all subdirs
+                wm_count = inject_watermarks(dest_dir)
+                
                 # Build the production file path
                 file_path = f"{dest_editor}/{source_resource}"
                 self._send_json({
                     "success": True,
-                    "message": f"Copied {len(copied)} files",
+                    "message": f"Copied {len(copied)} files, injected {wm_count} watermarks",
                     "file_path": file_path,
                     "files_copied": len(copied),
+                    "watermarks_injected": wm_count,
                 })
             except Exception as e:
                 self._send_json({"success": False, "error": f"Transfer failed: {str(e)}"}, 500)

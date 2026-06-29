@@ -891,6 +891,19 @@ export default {
         return json({ success: false, error: "Editor listing unavailable" }, 500);
       }
 
+      // ============ FILES: List files by path (public, no session needed) ============
+      if (path === "/api/files/list-path") {
+        const listPath = url.searchParams.get("path") || "";
+        if (!listPath) return json({ success: false, error: "Missing path parameter" }, 400);
+        try {
+          const apiUrl = `https://storage.zyrexediting.xyz/api/files/list-path?token=zyrex-files-api-2026&path=${encodeURIComponent(listPath)}`;
+          const resp = await fetch(apiUrl);
+          if (resp.ok) return json(await resp.json());
+          console.error("list-path upstream error:", resp.status);
+        } catch (e) { console.error("list-path error:", e.message); }
+        return json({ success: false, error: "File listing unavailable" }, 500);
+      }
+
       // ============ PRODUCTS: Create Editor Folder (local file API) ============
       if (path === "/api/products/create-editor" && request.method === "POST") {
         const session = parseSession(request.headers.get("Cookie"));
