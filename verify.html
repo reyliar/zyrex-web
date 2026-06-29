@@ -61,14 +61,35 @@
 </head>
 <body>
     <div class="verify-container" id="verifyContainer">
-        <!-- No params: redirect info -->
+        <!-- No params: manual guide -->
         <div id="coldView">
             <div class="verify-icon pending" id="verifyIcon"><i class="fas fa-shield-halved"></i></div>
-            <h1 id="verifyTitle">Verification</h1>
-            <p id="verifyDesc">Verification is handled inside Discord. Click the <strong style="color:var(--cherry-light)">Verify</strong> button in the server to get started.</p>
+            <h1 id="verifyTitle">Server Verification</h1>
+            <p id="verifyDesc">Join our Discord server and follow the steps to get verified.</p>
+            
+            <div style="text-align:left;margin:20px 0">
+                <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+                    <div style="width:32px;height:32px;border-radius:50%;background:rgba(var(--cherry-rgb),.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--cherry-light);font-weight:700;font-size:.85rem">1</div>
+                    <div><strong style="font-size:.85rem;color:var(--light);display:block;margin-bottom:3px">Join the Discord Server</strong><span style="font-size:.78rem;color:var(--gray)">Click the button below to join our server.</span></div>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+                    <div style="width:32px;height:32px;border-radius:50%;background:rgba(var(--cherry-rgb),.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--cherry-light);font-weight:700;font-size:.85rem">2</div>
+                    <div><strong style="font-size:.85rem;color:var(--light);display:block;margin-bottom:3px">Go to #verify Channel</strong><span style="font-size:.78rem;color:var(--gray)">Look for the <code style="background:rgba(255,255,255,.04);padding:1px 6px;border-radius:3px;font-size:.75rem">#verify</code> channel.</span></div>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+                    <div style="width:32px;height:32px;border-radius:50%;background:rgba(var(--cherry-rgb),.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--cherry-light);font-weight:700;font-size:.85rem">3</div>
+                    <div><strong style="font-size:.85rem;color:var(--light);display:block;margin-bottom:3px">Click the Verify Button</strong><span style="font-size:.78rem;color:var(--gray)">Press the <strong style="color:var(--cherry-light)">Verify</strong> button in the channel.</span></div>
+                </div>
+                <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 0">
+                    <div style="width:32px;height:32px;border-radius:50%;background:rgba(var(--cherry-rgb),.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--cherry-light);font-weight:700;font-size:.85rem">4</div>
+                    <div><strong style="font-size:.85rem;color:var(--light);display:block;margin-bottom:3px">Complete Verification</strong><span style="font-size:.78rem;color:var(--gray)">Follow the instructions and you'll get access automatically.</span></div>
+                </div>
+            </div>
+
             <a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord" style="display:inline-flex;align-items:center;gap:10px;padding:14px 32px;border-radius:12px;font-size:.9rem;font-weight:700;text-decoration:none;background:#5865F2;color:#fff;transition:.2s;margin-top:8px">
                 <i class="fab fa-discord"></i> Join Discord Server
             </a>
+            <p style="font-size:.7rem;color:var(--gray-dark);margin-top:16px">Already verified? <a href="/api/login?redirect=/verify&state=verify" style="color:var(--cherry-light)">Click here to login</a></p>
         </div>
 
         <!-- Success / Premium View -->
@@ -203,9 +224,49 @@
             fetchAndShowSuccess(name);
         } else if (result === 'error') {
             showErrorView(msg);
+        } else if (verifyToken) {
+            // Bot-generated one-time token: login + complete verification via bot API
+            fetch('/api/me', { credentials: 'include' })
+                .then(r => r.json())
+                .then(async data => {
+                    if (data.id) {
+                        try {
+                            const vResp = await fetch('/api/verify/complete', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ token: verifyToken, userId: data.id }),
+                                credentials: 'include'
+                            });
+                            const vData = await vResp.json();
+                            if (vData.success) { showPremiumSuccess(data); return; }
+                            else { showErrorView(vData.error || 'Verification failed'); return; }
+                        } catch(e) { showErrorView('Service unavailable.'); return; }
+                    }
+                    showColdView();
+                })
+                .catch(() => showColdView());
         } else {
-            // No params — just show simple info (verification is done via Discord button)
-            showColdView();
+            // No result param — check if user is already logged in AND in guild
+            showLoading();
+            fetch('/api/me', { credentials: 'include' })
+                .then(r => r.json())
+                .then(async data => {
+                    if (data.id) {
+                        try {
+                            const checkResp = await fetch('/api/guild/check-membership', { credentials: 'include' });
+                            const checkData = await checkResp.json();
+                            if (checkData.in_guild) { showPremiumSuccess(data); return; }
+                        } catch(e) {}
+                        showColdView();
+                    } else {
+                        showColdView();
+                    }
+                })
+                .catch(() => showColdView());
+        }
+
+        function startVerification() {
+            window.location.href = '/api/login?redirect=/verify&state=verify';
         }
     </script>
 </body>
