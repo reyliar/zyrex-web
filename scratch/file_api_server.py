@@ -289,67 +289,93 @@ def list_directory(user_dir, relative_path=""):
     
     return {"success": True, "path": relative_path or "/", **result}
 
-def detect_resources(username):
-    """Scan user's directory for EDITOR/RESOURCE structure."""
-    user_dir = os.path.join(SFTPGO_DATA_DIR, username)
-    if not os.path.isdir(user_dir):
-        return {"success": True, "resources": []}
+def detect_resources_r2(username):
+    """Scan R2 staging bucket for user's EDITOR/RESOURCE structure."""
+    prefix = f"{username}/"
+    objects = r2_list_objects(prefix, delimiter="/", bucket=R2_STAGING_BUCKET)
+    
+    # Find editor folders (second level)
+    editor_folders = set()
+    for obj in objects:
+        key = obj["key"]
+        if key == prefix:
+            continue
+        rel = key[len(prefix):]
+        if "/" in rel:
+            editor = rel.split("/")[0]
+            editor_folders.add(editor)
     
     resources = []
-    try:
-        editors = sorted(os.listdir(user_dir))
-    except PermissionError:
-        return {"success": False, "error": "Permission denied"}
-    
-    for editor in editors:
-        editor_path = os.path.join(user_dir, editor)
-        if not os.path.isdir(editor_path):
-            continue
-        try:
-            subs = sorted(os.listdir(editor_path))
-        except PermissionError:
-            continue
+    for editor in sorted(editor_folders):
+        editor_prefix = f"{prefix}{editor}/"
+        editor_objects = r2_list_objects(editor_prefix, bucket=R2_STAGING_BUCKET)
         
+        # Find resource subfolders
+        resource_folders = set()
         has_files = False
-        for sub in subs:
-            sub_path = os.path.join(editor_path, sub)
-            if os.path.isdir(sub_path):
-                # Subfolder = resource
-                try:
-                    res_files = []
-                    for f in sorted(os.listdir(sub_path)):
-                        fp = os.path.join(sub_path, f)
-                        if os.path.isfile(fp):
-                            res_files.append({
-                                "name": f,
-                                "size": os.path.getsize(fp),
-                                "path": f"{username}/{editor}/{sub}/{f}"
-                            })
-                    resources.append({
-                        "editor": editor,
-                        "resource": sub,
-                        "files": res_files
-                    })
-                except PermissionError:
-                    pass
-            elif os.path.isfile(sub_path):
+        for obj in editor_objects:
+            key = obj["key"]
+            if key == editor_prefix:
+                continue
+            rel = key[len(editor_prefix):]
+            if "/" in rel:
+                resource = rel.split("/")[0]
+                resource_folders.add(resource)
+            elif rel:  # direct file in editor folder
                 has_files = True
         
-        # If editor has files directly (no subfolders), treat editor as resource
-        if has_files and not any(os.path.isdir(os.path.join(editor_path, s)) for s in subs):
-            files = []
-            for f in subs:
-                fp = os.path.join(editor_path, f)
-                if os.path.isfile(fp):
-                    files.append({
-                        "name": f,
-                        "size": os.path.getsize(fp),
-                        "path": f"{username}/{editor}/{f}"
+        # Process each resource subfolder
+        for resource in sorted(resource_folders):
+            res_prefix = f"{editor_prefix}{resource}/"
+            res_objects = r2_list_objects(res_prefix, bucket=R2_STAGING_BUCKET)
+            res_files = []
+            for obj in res_objects:
+                key = obj["key"]
+                if key == res_prefix or obj.get("is_folder"):
+                    continue
+                fname = key[len(res_prefix):]
+                if fname:
+                    res_files.append({
+                        "name": fname,
+                        "size": obj["size"],
+                        "path": f"{username}/{editor}/{resource}/{fname}"
                     })
-            if files:
-                resources.append({"editor": editor, "resource": editor, "files": files})
+            if res_files:
+                resources.append({
+                    "editor": editor,
+                    "resource": resource,
+                    "files": res_files
+                })
+        
+        # If editor has files directly (no subfolders), treat editor as resource
+        if has_files and not resource_folders:
+            direct_files = []
+            for obj in editor_objects:
+                key = obj["key"]
+                if key == editor_prefix or obj.get("is_folder"):
+                    continue
+                fname = key[len(editor_prefix):]
+                if fname and "/" not in fname:
+                    direct_files.append({
+                        "name": fname,
+                        "size": obj["size"],
+                        "path": f"{username}/{editor}/{fname}"
+                    })
+            if direct_files:
+                resources.append({"editor": editor, "resource": editor, "files": direct_files})
     
     return {"success": True, "resources": resources}
+
+def list_production_editors():
+    """List top-level editor folders in R2 production bucket."""
+    objects = r2_list_objects("", delimiter="/", bucket=R2_PROD_BUCKET)
+    editors = set()
+    for obj in objects:
+        if obj.get("is_folder"):
+            name = obj["key"].rstrip("/")
+            if name and name != "production":  # skip legacy production prefix
+                editors.add(name)
+    return sorted(editors)
 
 class FileAPIHandler(BaseHTTPRequestHandler):
     def _auth_check(self, params):
@@ -482,13 +508,23 @@ class FileAPIHandler(BaseHTTPRequestHandler):
         
         # Endpoints that DON'T require discord_id
         if path == "/api/files/editors":
-            editors = []
-            if os.path.isdir(SFTPGO_DATA_DIR):
-                for entry in sorted(os.listdir(SFTPGO_DATA_DIR)):
-                    entry_path = os.path.join(SFTPGO_DATA_DIR, entry)
-                    if os.path.isdir(entry_path):
-                        editors.append(entry)
+            # List top-level editor folders from R2 production bucket
+            editors = list_production_editors()
             self._send_json({"success": True, "editors": editors})
+            return
+        
+        # === SFTPGo detected resources (R2 staging bucket) ===
+        if path == "/api/files/sftpgo-resources":
+            discord_id = params.get("discord_id", [None])[0]
+            if not discord_id:
+                self._send_json({"success": False, "error": "Missing discord_id"}, 400)
+                return
+            username = get_sftpgo_username(discord_id)
+            if not username:
+                self._send_json({"success": False, "error": "No SFTPGo account linked"}, 404)
+                return
+            result = detect_resources_r2(username)
+            self._send_json(result)
             return
         
         if path == "/api/files/list-path":
@@ -540,7 +576,7 @@ class FileAPIHandler(BaseHTTPRequestHandler):
             result = list_directory(user_dir, browse_path)
             self._send_json(result)
         elif path == "/api/files/resources":
-            result = detect_resources(username)
+            result = detect_resources_r2(username)
             self._send_json(result)
         elif path == "/api/files/account":
             total_size, file_count = 0, 0
@@ -718,13 +754,15 @@ class FileAPIHandler(BaseHTTPRequestHandler):
                 self._send_json({"success": False, "error": "Invalid folder name"}, 400)
                 return
             
-            editor_path = os.path.join(SFTPGO_DATA_DIR, safe_name)
-            if os.path.exists(editor_path):
+            # Check if editor folder already exists in R2 production bucket
+            existing = r2_list_objects(f"{safe_name}/", delimiter="/", bucket=R2_PROD_BUCKET)
+            if existing:
                 self._send_json({"success": False, "error": f"Folder '{safe_name}' already exists"}, 409)
                 return
             
+            # Create a placeholder to ensure the folder prefix exists in R2
             try:
-                os.makedirs(editor_path, exist_ok=True)
+                r2_put_object(f"{safe_name}/.placeholder", b"", bucket=R2_PROD_BUCKET)
                 self._send_json({"success": True, "message": f"Editor folder '{safe_name}' created"})
             except Exception as e:
                 self._send_json({"success": False, "error": f"Create failed: {str(e)}"}, 500)
