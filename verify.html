@@ -101,7 +101,7 @@
             <a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord" style="display:inline-flex;align-items:center;gap:10px;padding:14px 32px;border-radius:12px;font-size:.9rem;font-weight:700;text-decoration:none;background:#5865F2;color:#fff;transition:.2s;margin-top:8px">
                 <i class="fab fa-discord"></i> Join Discord Server
             </a>
-            <p style="font-size:.7rem;color:var(--gray-dark);margin-top:16px">Already verified? <a href="/api/login?redirect=/verify&state=verify" style="color:var(--cherry-light)">Click here to login</a></p>
+            <p style="font-size:.7rem;color:var(--gray-dark);margin-top:16px">Verification is handled inside Discord. Join and use /verify.</p>
         </div>
 
         <!-- Success / Premium View -->
@@ -159,6 +159,7 @@
         const result = getParam('result');
         const name = getParam('name') || '';
         const msg = getParam('msg') || '';
+        const verifyToken = getParam('token') || '';
 
         const coldView = document.getElementById('coldView');
         const successView = document.getElementById('successView');
@@ -235,6 +236,36 @@
             fetchAndShowSuccess(name);
         } else if (result === 'error') {
             showErrorView(msg);
+        } else if (verifyToken) {
+            // Bot-generated one-time token: login + complete verification via bot API
+            fetch('/api/me', { credentials: 'include' })
+                .then(r => r.json())
+                .then(async data => {
+                    if (data.id) {
+                        // Complete verification via bot API
+                        try {
+                            const vResp = await fetch('/api/verify/complete', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ token: verifyToken, userId: data.id }),
+                                credentials: 'include'
+                            });
+                            const vData = await vResp.json();
+                            if (vData.success) {
+                                showPremiumSuccess(data);
+                                return;
+                            } else {
+                                showErrorView(vData.error || 'Verification failed');
+                                return;
+                            }
+                        } catch(e) {
+                            showErrorView('Service unavailable. Please try again.');
+                            return;
+                        }
+                    }
+                    showColdView();
+                })
+                .catch(() => showColdView());
         } else {
             // No result param — check if user is already logged in AND in guild
             showLoading();

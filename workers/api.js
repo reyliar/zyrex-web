@@ -593,21 +593,9 @@ export default {
           }
         }
 
-        // If this is a verify flow, call the verify bot API directly with real user IP
+        // If this is a verify flow, redirect to verify page with token (bot handles verification)
         if (redirectTo === "/verify" && extraState) {
-          try {
-            const userIp = request.headers.get("CF-Connecting-IP") || request.headers.get("X-Real-IP") || "";
-            const userCountry = request.headers.get("CF-IPCountry") || "";
-            const vResp = await fetch(`${VERIFY_BOT_API}/api/verify?userId=${du.id}&token=${encodeURIComponent(extraState)}&ip=${encodeURIComponent(userIp)}&country=${encodeURIComponent(userCountry)}`);
-            const vData = await vResp.json();
-            if (vData.success) {
-              redirectTo = "/verify?result=success&name=" + encodeURIComponent(vData.display_name || du.global_name || du.username);
-            } else {
-              redirectTo = "/verify?result=error&msg=" + encodeURIComponent(vData.error || "Verification failed");
-            }
-          } catch(e) {
-            redirectTo = "/verify?result=error&msg=Service+unavailable";
-          }
+          redirectTo = "/verify?token=" + encodeURIComponent(extraState);
         }
 
         return new Response(null, {
@@ -647,6 +635,30 @@ export default {
           if (botResp.ok) return json(await botResp.json());
         } catch(e) { console.error("Membership check error:", e.message); }
         return json({ in_guild: false });
+      }
+
+      // VERIFY COMPLETE - Proxy to Bot (one-time token verification)
+      if (path === "/api/verify/complete" && request.method === "POST") {
+        const session = parseSession(request.headers.get("Cookie"));
+        if (!session) return json({ success: false, error: "Not logged in" }, 401);
+        try {
+          const body = await request.json();
+          const targetUrl = `${VERIFY_BOT_API}/api/verify/complete`;
+          const botResp = await fetch(targetUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              token: body.token,
+              userId: session.userId,
+              username: session.username,
+              displayName: session.displayName,
+            }),
+          });
+          if (botResp.ok) return json(await botResp.json());
+          const errText = await botResp.text();
+          try { return json(JSON.parse(errText), botResp.status); } catch { return json({ success: false, error: "Verification failed" }, 500); }
+        } catch(e) { console.error("Verify complete error:", e.message); }
+        return json({ success: false, error: "Service unavailable" }, 500);
       }
 
       // GUILD MEMBERS - Proxy to Bot
