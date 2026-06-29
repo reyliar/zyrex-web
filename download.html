@@ -274,7 +274,8 @@
 
             var pwHtml = password ? '<div class="pw a3" onclick="var c=this.querySelector(\'code\');c.textContent=\'Copied!\';setTimeout(function(){c.textContent=\''+password+'\'},1500)"><i class="fas fa-key"></i> Password: <code>'+password+'</code></div>' : '';
 
-            var dlBtnHtml = productId 
+            var hasDownload = productId || downloadToken;
+            var dlBtnHtml = hasDownload
                 ? '<button class="dlb a3" id="dlBtn" onclick="triggerDownload()"><i class="fas fa-cloud-arrow-down"></i> Download Full Package (ZIP)</button><div class="countdown a3" id="countdownBox"><i class="fas fa-hourglass-half"></i> <span>Expires in</span> <span class="timer" id="countdownTimer">--:--</span></div><div class="dls a3" style="margin-top:4px"><i class="fas fa-download"></i> <span id="downloadCount">0</span> downloads</div>'
                 : '';
 
