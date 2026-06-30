@@ -584,23 +584,13 @@ async function scanResourcesFromR2(discordId, username, env) {
       }
     }
     
-    // If no user prefixes found via Discord ID, try to scan all top-level folders
+    // If no user prefixes found via Discord ID, try matching by username in paths
     if (userPrefixes.size === 0) {
-      const rootList = await env.STORAGE.list({ delimiter: "/" });
-      for (const cp of rootList.delimitedPrefixes || []) {
-        const name = cp.replace(/\/$/, "");
-        // Skip Windows drive letters and known system prefixes
-        if (!name || name === "C:" || name === "C" || name.includes(":")) continue;
-        userPrefixes.add(name);
-      }
-      
-      // Also check objects at root level that might be inside Windows paths
+      // Check objects for known username patterns (NOT scan all folders!)
       for (const obj of allObjects) {
         const key = obj.key;
-        // Check for known username patterns
         for (const tryName of [username, username?.toLowerCase()].filter(Boolean)) {
           if (tryName && key.includes(`/${tryName}/`)) {
-            // Extract the user prefix
             const parts = key.split("/");
             const idx = parts.indexOf(tryName);
             if (idx > 0) {
@@ -609,6 +599,11 @@ async function scanResourcesFromR2(discordId, username, env) {
           }
         }
       }
+    }
+    
+    // If still no user prefix found, return empty (don't leak other users' data)
+    if (userPrefixes.size === 0) {
+      return { success: true, resources: [] };
     }
     
     for (const folder of [...userPrefixes]) {
