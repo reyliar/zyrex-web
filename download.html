@@ -503,8 +503,16 @@
         }
 
         function trackDownload() {
-            // Just re-fetch from API after download
-            updateDownloadCount();
+            // Single source of truth: Bot VPS via API
+            if (!product || !product.id) return;
+            fetch('/api/downloads/track', {
+                method: 'POST',
+                credentials: 'include',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({productId: product.id})
+            }).then(function() {
+                updateDownloadCount();  // re-fetch from API to show updated count
+            }).catch(function(){});
         }
 
         // Progress UI

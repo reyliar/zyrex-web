@@ -1299,15 +1299,8 @@ export default {
           const writer = writable.getWriter();
           const encoder = new TextEncoder();
           
-          // Track download on Bot VPS BEFORE streaming (reliable, awaited)
-          downloadCounts.set(data.product_id, (downloadCounts.get(data.product_id) || 0) + 1);
-          try {
-            await fetch(`${BOT_API}/api/downloads/track`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ productId: data.product_id }),
-            });
-          } catch (e) { console.error("Bot track error:", e.message); }
+          // Note: download tracking is done client-side (download.html calls /api/downloads/track after save)
+          // This avoids double-counting from Worker fire-and-forget
           
           // Use a simple ZIP-like stream (store method for simplicity)
           (async () => {
