@@ -165,7 +165,7 @@ window.pluginsData = [
     {
         id: makeId('Maxon Red Giant 2026.4.1'),
         name: 'Maxon Red Giant 2026.4.1',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'Maxon Red Giant Complete 2026.4.1 — includes Trapcode Suite, Magic Bullet Suite, Universe, VFX Suite. The essential plugin collection for AE.',
         notes: 'Compatible with AE 2025+. Includes Trapcode Particular, Magic Bullet Looks, Universe transitions.',
         links: [{ url: 'https://fuckingfast.net/m8xfkjlm24lr', label: 'FuckingFast' }]
@@ -173,7 +173,7 @@ window.pluginsData = [
     {
         id: makeId('BorisFX Continuum 2026.5 AE'),
         name: 'BorisFX Continuum 2026.5 (AE)',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'BorisFX Continuum 2026.5 v19.5.4 — comprehensive VFX plugin suite with 300+ effects, transitions, and tools for After Effects.',
         notes: 'Industry standard VFX suite. Includes Particle Illusion, Title Studio, and more.',
         links: [{ url: 'https://fuckingfast.net/g33mdvvv0oxx', label: 'FuckingFast' }]
@@ -181,7 +181,7 @@ window.pluginsData = [
     {
         id: makeId('BorisFX Sapphire AE 2026.5'),
         name: 'BorisFX Sapphire AE 2026.5',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'BorisFX Sapphire 2026.5 for After Effects — 270+ visual effects and presets. Industry-standard glow, blur, and lighting effects.',
         notes: 'Essential for professional editors. S_Glow, S_Blur, S_Shake are staples.',
         links: [{ url: 'https://clicknupload.click/ndxiptqjlnl7/BorisFX.Sapphire.AE.2026.5.rar', label: 'ClicknUpload' }]
@@ -189,7 +189,7 @@ window.pluginsData = [
     {
         id: makeId('BorisFX Mocha Pro AE 2026.5'),
         name: 'BorisFX Mocha Pro AE 2026.5',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'BorisFX Mocha Pro 2026.5 for Adobe — award-winning planar tracking, rotoscoping, and object removal.',
         notes: 'Industry standard for tracking and rotoscoping.',
         links: [{ url: 'https://clicknupload.click/ma53cjej2biz/BorisFX.Mocha.Pro.Adobe.2026.5.0.rar', label: 'ClicknUpload' }]
@@ -197,7 +197,7 @@ window.pluginsData = [
     {
         id: makeId('VideoCopilot Element 3D v2.2.2'),
         name: 'VideoCopilot Element 3D v2.2.2',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'VideoCopilot Element 3D v2.2.2 — advanced 3D object rendering and animation inside After Effects. Import OBJ/C4D models.',
         notes: 'One of the most popular AE plugins ever. 3D engine inside AE.',
         links: [{ url: 'https://depositfiles.com/files/4g85m464s', label: 'DepositFiles' }]
@@ -205,7 +205,7 @@ window.pluginsData = [
     {
         id: makeId('VideoCopilot Optical Flares Pro v1.3.5'),
         name: 'VideoCopilot Optical Flares Pro v1.3.5',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'VideoCopilot Optical Flares Pro v1.3.5 — realistic lens flare plugin with 3D occlusion, custom flare editor.',
         notes: 'The go-to lens flare plugin for AE.',
         links: [{ url: 'https://depositfiles.com/files/d980ysxep', label: 'DepositFiles' }]
@@ -213,21 +213,21 @@ window.pluginsData = [
     {
         id: makeId('VideoCopilot Twitch v1.1'),
         name: 'VideoCopilot Twitch v1.1',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'VideoCopilot Twitch v1.1 — glitch and distortion effects plugin for AE. Create analog-style glitches.',
         links: [{ url: 'https://depositfiles.com/files/pmdg73mzl', label: 'DepositFiles' }]
     },
     {
         id: makeId('VideoCopilot Heat Distortion v1.0.31'),
         name: 'VideoCopilot Heat Distortion v1.0.31',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'VideoCopilot Heat Distortion v1.0.31 — realistic heat haze and distortion effects for After Effects.',
         links: [{ url: 'https://depositfiles.com/files/sq2pce2mu', label: 'DepositFiles' }]
     },
     {
         id: makeId('Red Giant Universe 2026.0.1'),
         name: 'Red Giant Universe 2026.0.1',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'Red Giant Universe 2026.0.1 — 80+ GPU-accelerated transitions, effects, and text tools. Now included in Maxon Red Giant.',
         notes: 'Universe transitions and glows are editor favorites.',
         links: [{ url: 'https://fuckingfast.net/si9i0iz1c49t', label: 'FuckingFast' }]
@@ -235,7 +235,7 @@ window.pluginsData = [
     {
         id: makeId('Dehancer Pro Ae/Pr v7.4.0'),
         name: 'Dehancer Pro Ae/Pr v7.4.0',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'Dehancer Pro v7.4.0 for AE & Premiere Pro — film emulation, grain, halation, bloom, and color grading tools.',
         notes: 'Excellent film emulation plugin.',
         links: [{ url: 'https://clicknupload.click/gs3rvfqd6hc0/Dehancer.Pro.Ae.Pr.v7.4.0.rar', label: 'ClicknUpload' }]
@@ -243,7 +243,7 @@ window.pluginsData = [
     {
         id: makeId('Neat Video Pro AE v6.0.0'),
         name: 'Neat Video Pro AE v6.0.0',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'Neat Video Pro v6.0.0 for AE — best-in-class video noise reduction. Remove noise and grain while preserving detail.',
         notes: 'Best video denoiser on the market.',
         links: [{ url: 'https://clicknupload.site/nk5fa5p4lwcm', label: 'ClicknUpload' }]
@@ -251,7 +251,7 @@ window.pluginsData = [
     {
         id: makeId('Topaz Video Pro v1.6.2'),
         name: 'Topaz Video Pro v1.6.2',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'Topaz Video Pro v1.6.2 — AI-powered video enhancement. Upscale, denoise, deinterlace, and restore video quality.',
         notes: 'AI upscaling up to 8K. Excellent for restoring old footage.',
         links: [{ url: 'https://clicknupload.click/vek70t73fi0b/Topaz.Video.Pro.v1.6.2.rar', label: 'ClicknUpload' }]
@@ -259,7 +259,7 @@ window.pluginsData = [
     {
         id: makeId('RE:VisionFX Effections Plus v25.08'),
         name: 'RE:VisionFX Effections Plus v25.08',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'RE:VisionFX Effections Plus v25.08 — includes Twixtor (slow motion), ReelSmart Motion Blur, DE:Noise, and more.',
         notes: 'Twixtor is the industry standard for slow-motion.',
         links: [{ url: 'https://katfile.com/5fb1hgoc0he4/REVisionFX.Effections.Plus.v25.8.rar.html', label: 'KatFile' }]
@@ -267,7 +267,7 @@ window.pluginsData = [
     {
         id: makeId('Rowbyte bundle v2025.8'),
         name: 'Rowbyte Bundle v2025.8',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'Rowbyte plugin bundle v2025.8 — includes Plexus, Newton, and other creative AE plugins.',
         notes: 'Plexus is great for data visualization and particle effects.',
         links: [{ url: 'https://rapidgator.net/file/8612741086acce3aa76ec06e33f4ece8/Rowbyte.bundle.rar.html', label: 'RapidGator' }]
@@ -275,21 +275,21 @@ window.pluginsData = [
     {
         id: makeId('aescripts Paint & Stick v2.1.2'),
         name: 'aescripts Paint & Stick v2.1.2',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'aescripts Paint & Stick v2.1.2 — paint and track objects in After Effects with realistic results.',
         links: [{ url: 'https://rg.to/file/349310412017e738e6316b5d8ae4892d/Paint&Stick.v2.1.2.CE.rar.html', label: 'RapidGator' }]
     },
     {
         id: makeId('DigiEffects Suite v3.0.2'),
         name: 'DigiEffects Suite v3.0.2',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'DigiEffects Suite v3.0.2 — collection of creative plugins including Damage, Delirium, and more.',
         links: [{ url: 'https://depositfiles.com/files/s96zeyjti', label: 'DepositFiles' }]
     },
     {
         id: makeId('Digital Anarchy bundle 2025.5'),
         name: 'Digital Anarchy Bundle 2025.5',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'Digital Anarchy bundle 2025.5 — includes Beauty Box, Flicker Free, and other video enhancement plugins.',
         notes: 'Flicker Free is excellent for removing flicker from timelapse and slow-motion.',
         links: [{ url: 'https://clicknupload.cfd/sqs8ljy6f1fv', label: 'ClicknUpload' }]
@@ -297,42 +297,42 @@ window.pluginsData = [
     {
         id: makeId('FXhome Ignite Pro v4.0'),
         name: 'FXhome Ignite Pro v4.0',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'FXhome Ignite Pro v4.0 — 170+ VFX plugins for After Effects including glows, grading, and keying.',
         links: [{ url: 'https://depositfiles.com/files/n3ejq5q2x', label: 'DepositFiles' }]
     },
     {
         id: makeId('GraniteBay GBDeflicker v4.5.0'),
         name: 'GraniteBay GBDeflicker v4.5.0',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'GraniteBay GBDeflicker v4.5.0 — remove flicker from video footage. Essential for timelapse and slow-motion.',
         links: [{ url: 'https://depositfiles.com/files/4r86s4c2b', label: 'DepositFiles' }]
     },
     {
         id: makeId('Motion Boutique Newton v3.0'),
         name: 'Motion Boutique Newton v3.0',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'Motion Boutique Newton v3.0 — 2D physics simulator for After Effects.',
         links: [{ url: 'https://depositfiles.com/files/eovosxgzt', label: 'DepositFiles' }]
     },
     {
         id: makeId('proDAD Mercalli v6.0.671'),
         name: 'proDAD Mercalli v6.0.671',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'proDAD Mercalli v6.0.671 — professional video stabilization plugin.',
         links: [{ url: 'https://clicknupload.space/v64pfdhy1k09', label: 'ClicknUpload' }]
     },
     {
         id: makeId('Rubber Monkey FilmConvert Nitrate AE v3.47'),
         name: 'Rubber Monkey FilmConvert Nitrate AE v3.47',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'Rubber Monkey FilmConvert Nitrate v3.47 — film grain and color grading emulation for AE.',
         links: [{ url: 'https://katfile.com/axle3nmjit85', label: 'KatFile' }]
     },
     {
         id: makeId('SuperLuminal StarDust v1.3.1'),
         name: 'SuperLuminal StarDust v1.3.1',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'SuperLuminal StarDust v1.3.1 — 3D particle system plugin for After Effects.',
         links: [{ url: 'https://depositfiles.com/files/ntgw0ah78', label: 'DepositFiles' }]
     },
@@ -344,126 +344,126 @@ window.pluginsData = [
     {
         id: makeId('BorisFX Silhouette 2026.0.2'),
         name: 'BorisFX Silhouette 2026.0.2',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'BorisFX Silhouette 2026.0.2 — GPU-accelerated rotoscoping and paint tool. Industry standard for visual effects.',
         links: [{ url: 'https://fuckingfast.net/a87gozlaya2w', label: 'FuckingFast' }]
     },
     {
         id: makeId('BorisFX SynthEyes Pro 2026.0.3'),
         name: 'BorisFX SynthEyes Pro 2026.0.3',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'BorisFX SynthEyes Pro 2026.0.3 — 3D camera tracking and match moving. Solve 3D cameras from video footage.',
         links: [{ url: 'https://fuckingfast.net/t3cfes1hk896', label: 'FuckingFast' }]
     },
     {
         id: makeId('Autocroma bundle 2025.7'),
         name: 'Autocroma Bundle 2025.7',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'Autocroma bundle 2025.7 — chromatic aberration and color fringe plugins.',
         links: [{ url: 'https://rapidgator.net/file/916b99f20c7c9d05e57adc46c4fae2a6/Autocroma.bundle.2025.7.rar.html', label: 'RapidGator' }]
     },
     {
         id: makeId('BAO plugins bundle 2025.5'),
         name: 'BAO Plugins Bundle 2025.5',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'BAO plugins bundle 2025.5 — masking and rotoscoping plugins for AE.',
         links: [{ url: 'https://clicknupload.cfd/9p3y70qrwlz8', label: 'ClicknUpload' }]
     },
     {
         id: makeId('CROSSPHERE bundle 2025'),
         name: 'CROSSPHERE Bundle 2025',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'CROSSPHERE plugins bundle 2025 — creative effects and transitions.',
         links: [{ url: 'https://rg.to/file/1f48d60aebfaa3e5f309bdc728f3bbef/CROSSPHERE.rar.html', label: 'RapidGator' }]
     },
     {
         id: makeId('CycoreFX bundle v1.3.2'),
         name: 'CycoreFX Bundle v1.3.2',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'CycoreFX bundle v1.3.2 — classic AE plugin collection.',
         links: [{ url: 'https://clicknupload.click/28n9ax31v010/CycoreFX.bundle.v1.3.2.rar', label: 'ClicknUpload' }]
     },
     {
         id: makeId('DataClay Templater v2.8.4'),
         name: 'DataClay Templater v2.8.4',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'DataClay Templater v2.8.4 — batch rendering and data-driven automation for AE.',
         links: [{ url: 'https://depositfiles.com/files/h2mq4qywc', label: 'DepositFiles' }]
     },
     {
         id: makeId('DFT FilmStocks v3.0.2'),
         name: 'DFT FilmStocks v3.0.2',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'DFT FilmStocks v3.0.2 — film stock emulation plugins.',
         links: [{ url: 'https://depositfiles.com/files/5wcrf60q2', label: 'DepositFiles' }]
     },
     {
         id: makeId('DFT Rays v2.1'),
         name: 'DFT Rays v2.1',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'DFT Rays v2.1 — volumetric light ray effects.',
         links: [{ url: 'https://depositfiles.com/files/l1tvauofc', label: 'DepositFiles' }]
     },
     {
         id: makeId('FanDev bundle 2025'),
         name: 'FanDev Bundle 2025',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'FanDev bundle 2025 — community-developed AE plugins and scripts.',
         links: [{ url: 'https://clicknupload.click/9xloatfyfiwy/Fandev.bundle.rar', label: 'ClicknUpload' }]
     },
     {
         id: makeId('Filmworkz Adobe DVO v1.0.1'),
         name: 'Filmworkz Adobe DVO v1.0.1',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'Filmworkz Adobe DVO v1.0.1 — professional film restoration and enhancement.',
         links: [{ url: 'https://clicknupload.space/fwf2kzsdj6xi', label: 'ClicknUpload' }]
     },
     {
         id: makeId('Fixel Algorithms bundle v2.0.3'),
         name: 'Fixel Algorithms Bundle v2.0.3',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'Fixel Algorithms bundle v2.0.3 — AI-powered image enhancement plugins.',
         links: [{ url: 'https://depositfiles.com/files/woqke257d', label: 'DepositFiles' }]
     },
     {
         id: makeId('frischluft AEX bundle'),
         name: 'frischluft AEX Bundle',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'frischluft.com AEX bundle — Lenscare and depth of field plugins.',
         links: [{ url: 'https://www.filefactory.com/file/5h7g47aqc42m/Frischluft.com.rar', label: 'FileFactory' }]
     },
     {
         id: makeId('GenArts Monsters GT v7.0.5'),
         name: 'GenArts Monsters GT v7.0.5',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'GenArts Monsters GT v7.0.5 — creative effects plugin collection.',
         links: [{ url: 'https://depositfiles.com/files/0cdxlup9d', label: 'DepositFiles' }]
     },
     {
         id: makeId('Imagenomic Video Plugin Suite'),
         name: 'Imagenomic Video Plugin Suite',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'Imagenomic Video Plugin Suite build 1007 — Portraiture for video, skin smoothing.',
         links: [{ url: 'https://depositfiles.com/files/n5jcqbiht', label: 'DepositFiles' }]
     },
     {
         id: makeId('RE:VisionFX Color Genius Plus v25.11'),
         name: 'RE:VisionFX Color Genius Plus v25.11',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'RE:VisionFX Color Genius Plus v25.11 — color correction and grading tools.',
         links: [{ url: 'https://rg.to/file/35eeed3101deee60bfd28b534f210096', label: 'RapidGator' }]
     },
     {
         id: makeId('Pixel Sorter Studio bundle 2025.7'),
         name: 'Pixel Sorter Studio Bundle 2025.7',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'Pixel Sorter Studio bundle 2025.7 — glitch and pixel sorting effects.',
         links: [{ url: 'https://rg.to/file/fbe33a3e786b1f810a04b6b52357aa11/GG.PixelSorter.rar.html', label: 'RapidGator' }]
     },
     {
         id: makeId('ProductionCrate LaForge Suite v1.5.07'),
         name: 'ProductionCrate LaForge Suite v1.5.07',
-        category: 'after-effects', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'ProductionCrate LaForge Suite v1.5.07 — VFX and compositing plugins from ProductionCrate.',
         links: [{ url: 'https://fuckingfast.net/qyg3k2w431p1', label: 'FuckingFast' }]
     },    // ═══════════════════════════════════════════
@@ -472,14 +472,14 @@ window.pluginsData = [
     {
         id: makeId('Neat Video Pro v6.0.5 for Premiere'),
         name: 'Neat Video Pro v6.0.5 (Premiere)',
-        category: 'premiere-pro', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'Neat Video Pro v6.0.5 for Premiere Pro — professional video noise reduction plugin.',
         links: [{ url: 'https://clicknupload.cfd/dphcrh14z6vi', label: 'ClicknUpload' }]
     },
     {
         id: makeId('NewBlue TotalFX 360 build 250207'),
         name: 'NewBlue TotalFX 360 (build 250207)',
-        category: 'premiere-pro', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'NewBlue TotalFX 360 — comprehensive plugin bundle with 1500+ presets, transitions, titles, and effects for Premiere Pro.',
         notes: 'Massive bundle. Includes Titler Pro, transitions, filters.',
         links: [{ url: 'https://clicknupload.site/jwdwefoae91p', label: 'ClicknUpload' }]
@@ -487,14 +487,14 @@ window.pluginsData = [
     {
         id: makeId('FilmImpact Premium Video Effects v25.2.5'),
         name: 'FilmImpact Premium Video Effects v25.2.5',
-        category: 'premiere-pro', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'FilmImpact Premium Video Effects v25.2.5 — professional transitions and effects for Premiere Pro.',
         links: [{ url: 'https://clicknupload.cfd/2da270liv52d', label: 'ClicknUpload' }]
     },
     {
         id: makeId('Colourlab Ai Pro v3.5.0'),
         name: 'Colourlab Ai Pro v3.5.0',
-        category: 'premiere-pro', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'Colourlab Ai Pro v3.5.0 — AI-powered color grading. Auto-match colors between shots with one click.',
         notes: 'Game-changer for color grading workflow.',
         links: [{ url: 'https://clicknupload.click/b0546bm65qbj/Colourlab.Pro.V3.5.0.rar', label: 'ClicknUpload' }]
@@ -502,7 +502,7 @@ window.pluginsData = [
     {
         id: makeId('Red Giant PluralEyes 2023.0.0'),
         name: 'Red Giant PluralEyes 2023.0.0',
-        category: 'premiere-pro', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'Red Giant PluralEyes 2023.0.0 — automatic audio/video sync tool. Sync multiple cameras and audio tracks instantly.',
         notes: 'Essential for multi-camera shoots.',
         links: [{ url: 'https://clicknupload.name/vhfqa7v6cyuf', label: 'ClicknUpload' }]
@@ -510,14 +510,14 @@ window.pluginsData = [
     {
         id: makeId('Rubber Monkey CineMatch v1.24'),
         name: 'Rubber Monkey CineMatch v1.24',
-        category: 'premiere-pro', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'Rubber Monkey CineMatch v1.24 — sensor-based color matching. Match any camera to any other camera.',
         links: [{ url: 'https://clicknupload.click/nujsfbvco6ij', label: 'ClicknUpload' }]
     },
     {
         id: makeId('FanDev CuteDCP Pr v1.5.11'),
         name: 'FanDev CuteDCP Pr v1.5.11',
-        category: 'premiere-pro', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'FanDev CuteDCP v1.5.11 for Premiere — DCP (Digital Cinema Package) export plugin.',
         notes: 'Export DCP directly from Premiere Pro.',
         links: [{ url: 'https://depositfiles.com/files/l3k9x5kbo', label: 'DepositFiles' }]
@@ -525,7 +525,7 @@ window.pluginsData = [
     {
         id: makeId('Sorenson Squeeze Pro v11.1.0.9'),
         name: 'Sorenson Squeeze Pro v11.1.0.9',
-        category: 'premiere-pro', platform: 'win', password: null,
+        category: 'adobe-plugins', platform: 'win', password: null,
         desc: 'Sorenson Squeeze Pro v11.1.0.9 — video encoding and compression tool with SendTo plugin for Premiere.',
         links: [{ url: 'https://depositfiles.com/files/cfwfjp8ba', label: 'DepositFiles' }]
     },
