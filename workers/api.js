@@ -815,7 +815,13 @@ async function scrapePayhip(url) {
 
     // Thumbnails (product images)
     const thumbnails = new Set();
-    const imgRegex = /<img[^>]+src="(https:\/\/[^"]*(?:payhip|pe56d)[^"]*\.(?:png|jpg|jpeg|gif|webp)[^"]*)"/gi;
+    
+    // 1. Primary: target Payhip's main product image element
+    const sectionImg = (html.match(/<img[^>]*class="[^"]*section-image[^"]*"[^>]*src="(https:\/\/[^"]+)"/i) || [])[1];
+    if (sectionImg) thumbnails.add(sectionImg);
+    
+    // 2. Fallback: capture all product images from any domain (not just payhip/pe56d)
+    const imgRegex = /<img[^>]+src="(https:\/\/[^"]*\.(?:png|jpg|jpeg|gif|webp)[^"]*)"/gi;
     let m;
     while ((m = imgRegex.exec(html)) !== null) {
       if (!m[1].includes("logo") && !m[1].includes("favicon") && !m[1].includes("avatar")) {
@@ -823,9 +829,12 @@ async function scrapePayhip(url) {
       }
     }
     
-    // Also try meta tags for images
+    // 3. Also try og:image meta tags
     const metaImg = (html.match(/<meta\s+property="og:image:secure_url"\s+content="([^"]+)"/i) || [])[1];
     if (metaImg) thumbnails.add(metaImg);
+    
+    const ogImgMeta = (html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i) || [])[1];
+    if (ogImgMeta) thumbnails.add(ogImgMeta);
 
     return {
       success: true,
