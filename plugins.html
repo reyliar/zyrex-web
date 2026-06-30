@@ -199,6 +199,16 @@
         .no-results i { font-size:2.5rem; margin-bottom:16px; opacity:.4; }
         .no-results p { font-size:.9rem; }
 
+        /* Stats Section */
+        .stats-row { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:30px; }
+        .stat-card { background:rgba(12,2,4,0.45); border:1px solid rgba(var(--cherry-rgb),.1); border-radius:14px; padding:24px 20px; text-align:center; backdrop-filter:blur(10px); transition:.3s }
+        .stat-card:hover { border-color:rgba(var(--cherry-rgb),.25); transform:translateY(-2px) }
+        .stat-card .stat-num { font-size:2.2rem; font-weight:900; color:var(--cherry-light); line-height:1; margin-bottom:6px }
+        .stat-card .stat-label { font-size:.72rem; color:var(--muted-dark); text-transform:uppercase; letter-spacing:1px; font-weight:600 }
+        @keyframes countUp { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+        .stat-card .stat-num { animation:countUp .6s ease forwards }
+        @media(max-width:768px){ .stats-row{grid-template-columns:repeat(2,1fr)} }
+
         @media(max-width:600px) {
             .plugins-hero h1 { font-size: 2rem; }
             .plugins-grid { grid-template-columns:1fr; }
@@ -252,6 +262,21 @@
     </section>
 
     <div class="container">
+        <!-- Stats -->
+        <div class="stats-row" id="pluginsStats">
+            <div class="stat-card"><div class="stat-num" id="statTotalPlugins">0</div><div class="stat-label">Total Software</div></div>
+            <div class="stat-card"><div class="stat-num" id="statAdobePlugins">0</div><div class="stat-label">Adobe Plugins</div></div>
+            <div class="stat-card"><div class="stat-num" id="statOfxPlugins">0</div><div class="stat-label">OFX Plugins</div></div>
+            <div class="stat-card"><div class="stat-num" id="statOtherPlugins">0</div><div class="stat-label">Others</div></div>
+        </div>
+        <!-- Category Tabs -->
+        <div class="cat-tabs">
+            <button class="cat-tab active" onclick="filterCategory('all',this)">All</button>
+            <button class="cat-tab" onclick="filterCategory('software',this)"><i class="fas fa-laptop-code"></i> Software</button>
+            <button class="cat-tab" onclick="filterCategory('adobe-plugins',this)"><i class="fas fa-video"></i> Adobe Plugin</button>
+            <button class="cat-tab" onclick="filterCategory('ofx-plugins',this)"><i class="fas fa-plug"></i> OFX Plugin</button>
+            <button class="cat-tab" onclick="filterCategory('others',this)"><i class="fas fa-puzzle-piece"></i> Others</button>
+        </div>
         <!-- VERIFIED NOTICE -->
         <div class="glass-card-enhanced" style="text-align:center;padding:18px 24px;margin-bottom:30px;display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap">
             <i class="fas fa-shield-check" style="color:#00c864;font-size:1.2rem"></i>
@@ -326,6 +351,7 @@
         // ===== DATA =====
         let allPlugins = [];
         let currentPlatform = 'all';
+        let currentCat = 'all';
 
         function getCategoryIcon(cat) {
             if (cat === 'ofx-plugins') return 'fa-plug';
@@ -334,13 +360,38 @@
         }
 
         function getCategoryLabel(cat) {
-            const labels = {
-                'ofx-plugins': 'OFX Plugin',
-                'adobe-plugins': 'Adobe Plugin',
-                'ae-plugins': 'After Effects Plugin',
-                'pr-plugins': 'Premiere Pro Plugin'
+            var labels = {
+                'software':'Software',
+                'ofx-plugins':'OFX Plugin',
+                'adobe-plugins':'Adobe Plugin',
+                'ae-plugins':'Adobe Plugin',
+                'pr-plugins':'Adobe Plugin',
+                'others':'Others'
             };
-            return labels[cat] || cat;
+            return labels[cat]||cat;
+        }
+
+        function filterCategory(cat,btn){
+            document.querySelectorAll('.cat-tab').forEach(b=>b.classList.remove('active'));
+            if(btn)btn.classList.add('active');
+            currentCat=cat;
+            renderPlugins();
+        }
+
+        function updatePluginStats(filtered){
+            var total=filtered.length;
+            var adobe=0,ofx=0,other=0,sw=0;
+            filtered.forEach(function(p){
+                var c=p.category||'';
+                if(c==='software')sw++;
+                else if(c==='adobe-plugins'||c==='ae-plugins'||c==='pr-plugins')adobe++;
+                else if(c==='ofx-plugins')ofx++;
+                else other++;
+            });
+            document.getElementById('statTotalPlugins').textContent=total;
+            document.getElementById('statAdobePlugins').textContent=adobe;
+            document.getElementById('statOfxPlugins').textContent=ofx;
+            document.getElementById('statOtherPlugins').textContent=other;
         }
 
         function initPlugins() {
@@ -375,6 +426,7 @@
                 });
             } catch(e) {}
             
+            updatePluginStats(allPlugins);
             renderPlugins();
         }
 
@@ -395,13 +447,20 @@
 
             let filtered = allPlugins.filter(p => {
                 if (currentPlatform !== 'all') {
-                    const plat = (p.platform || '').toLowerCase();
+                    var plat = (p.platform || '').toLowerCase();
                     if (currentPlatform === 'windows' && plat !== 'win' && plat !== 'both') return false;
                     if (currentPlatform === 'apple' && plat !== 'mac' && plat !== 'both') return false;
+                }
+                if (currentCat !== 'all') {
+                    var c=(p.category||'').toLowerCase();
+                    if (currentCat==='adobe-plugins'&&c!=='adobe-plugins'&&c!=='ae-plugins'&&c!=='pr-plugins')return false;
+                    else if(c!==currentCat)return false;
                 }
                 if (q && !(p.name||'').toLowerCase().includes(q) && !(p.desc||'').toLowerCase().includes(q) && !(p.description||'').toLowerCase().includes(q) && !(p.creator_nickname||'').toLowerCase().includes(q) && !(p.author_name||'').toLowerCase().includes(q)) return false;
                 return true;
             });
+
+            updatePluginStats(filtered);
 
             if (!filtered.length) {
                 grid.innerHTML = '<div class="no-results"><i class="fas fa-search"></i><p>No plugins match your filters.</p></div>';

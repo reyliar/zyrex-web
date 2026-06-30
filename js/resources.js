@@ -25,7 +25,25 @@ async function syncAndRender(data) {
             localStorage.setItem("zyrex_downloads", JSON.stringify(d.counts));
         }
     } catch(e) {}
+    // Update stats
+    updateResourceStats(data);
     renderResources(data);
+}
+
+function updateResourceStats(data){
+    var total=data.length;
+    var creators=new Set();
+    var totalDl=0;
+    var dl={};
+    try{dl=JSON.parse(localStorage.getItem('zyrex_downloads')||'{}')}catch(e){}
+    data.forEach(function(r){
+        if(r.creator_nickname)creators.add(r.creator_nickname.toLowerCase());
+        else if(r.author_name)creators.add(r.author_name.toLowerCase());
+        totalDl+=dl[r.id]||0;
+    });
+    document.getElementById('statPresets').textContent=total||0;
+    document.getElementById('statCreators').textContent=creators.size||0;
+    document.getElementById('statDownloads').textContent=totalDl||0;
 }
 
 function getDomain(url) {
