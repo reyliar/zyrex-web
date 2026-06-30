@@ -3,1162 +3,229 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zyrex | Upload</title>
+    <title>Upload — Zyrex</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="stylesheet" href="css/style.css?v=9">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
+        :root{--cherry:#a80f2d;--cherry-rgb:168,15,45;--cherry-light:#e8456a;--dark:#060608;--card-bg:rgba(12,4,8,0.55);--border:rgba(168,15,45,0.12);--text:#e8e8ed;--muted:#8888a0;--muted-dark:#55556a;--glass:rgba(12,4,8,0.65);--radius:18px;--radius-sm:12px}
         *{margin:0;padding:0;box-sizing:border-box}
-        body{
-            background:var(--dark);
-            background-image:radial-gradient(circle at 50% 0%, rgba(var(--cherry-rgb),.06) 0%, transparent 60%);
-            color:var(--light);
-            font-family:Poppins,sans-serif;
-            min-height:100vh;
-            padding-top:100px; /* offset for fixed header */
-        }
-        
-        .upload-header{
-            background:rgba(12, 2, 4, 0.6) !important;
-            backdrop-filter:blur(25px) saturate(210%) !important;
-            -webkit-backdrop-filter:blur(25px) saturate(210%) !important;
-            border-bottom:1px solid rgba(var(--cherry-rgb),.05) !important;
-            box-shadow:0 4px 30px rgba(0, 0, 0, 0.5) !important;
-            padding:16px 30px;
-            display:flex;
-            align-items:center;
-            justify-content:space-between;
-            position:fixed;
-            top:0;
-            left:0;
-            width:100%;
-            z-index:10000;
-        }
-        .upload-header .logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--light)}
-        .upload-header .logo img{height:36px}
-        .upload-header .logo span {
-            font-weight:800;
-            font-size:1.1rem;
-            letter-spacing:1px;
-            color: var(--cherry-light);
-        }
-        
-        .upload-container{
-            max-width:800px;
-            margin:40px auto;
-            padding:45px;
-            background:rgba(12, 2, 4, 0.45) !important;
-            backdrop-filter:blur(25px) saturate(210%) !important;
-            -webkit-backdrop-filter:blur(25px) saturate(210%) !important;
-            border:1px solid rgba(var(--cherry-rgb), 0.12) !important;
-            border-radius:20px;
-            box-shadow:0 25px 60px rgba(0, 0, 0, 0.5), 0 0 40px rgba(var(--cherry-rgb), 0.15) !important;
-            position:relative;
-            overflow:hidden;
-        }
-        .upload-container::before {
-            content:'';
-            position:absolute;
-            top:0;
-            left:0;
-            right:0;
-            height:1px;
-            background:linear-gradient(90deg, rgba(var(--cherry-rgb),0) 0%, rgba(var(--cherry-rgb),0.35) 50%, rgba(var(--cherry-rgb),0) 100%);
-            z-index:2;
-        }
-        
-        /* Steps indicator */
-        .steps-indicator{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:45px}
-        .step-dot{
-            width:46px;
-            height:46px;
-            border-radius:50%;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            font-weight:700;
-            font-size:1rem;
-            transition:all .4s cubic-bezier(0.16, 1, 0.3, 1);
-            background:rgba(var(--cherry-rgb),.04);
-            border:1px solid rgba(var(--cherry-rgb),.2);
-            color:var(--gray-dark);
-            position:relative;
-        }
-        .step-dot.active{
-            background: var(--gradient-accent) !important;
-            border-color: var(--cherry-light) !important;
-            color:#fff !important;
-            box-shadow:0 0 25px rgba(var(--cherry-rgb),.5), inset 0 1px 1px rgba(255,255,255,0.2);
-            transform:scale(1.08);
-        }
-        .step-dot.done{background:rgba(var(--cherry-rgb),.12);border-color: var(--cherry);color: var(--cherry-light)}
-        .step-line{width:80px;height:2px;background:rgba(var(--cherry-rgb),.15);transition:all .4s cubic-bezier(0.16, 1, 0.3, 1)}
-        .step-line.done{background: var(--cherry-light);box-shadow:0 0 10px rgba(var(--cherry-rgb),.4)}
-        .step-label{text-align:center;font-size:.78rem;font-weight:600;color:var(--gray-dark);margin-top:8px;letter-spacing:.5px}
-        
-        /* Form styles */
-        .form-section{display:none}
-        .form-section.active{display:block}
-        .form-group{margin-bottom:20px}
-        .form-group label{display:block;font-size:.8rem;font-weight:700;margin-bottom:8px;color:var(--gray);text-transform:uppercase;letter-spacing:1px}
-        .form-group input, .form-group textarea, .form-group select{
-            width:100%;padding:14px 18px;background:rgba(12, 2, 4, 0.45);border:1px solid rgba(var(--cherry-rgb),.15);
-            border-radius:12px;color:var(--light);font-family:inherit;font-size:.88rem;outline:none;transition:all .3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .form-group input:focus, .form-group textarea:focus, .form-group select:focus{
-            border-color:var(--cherry-light);background:rgba(var(--cherry-rgb),.05);box-shadow:0 0 0 3px rgba(var(--cherry-rgb),.25);
-        }
-        .form-group textarea{min-height:100px;resize:vertical}
-        .form-group select{appearance:none;cursor:pointer}
-        .form-group select option{background:#0e0e12;color:var(--light)}
-        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-        @media(max-width:600px){.form-row{grid-template-columns:1fr}}
-        
-        /* Payhip scraper */
+        body{background:var(--dark);color:var(--text);font-family:'Poppins',sans-serif;min-height:100vh;overflow-x:hidden}
+        .bg-aura{position:fixed;inset:0;pointer-events:none;z-index:0}
+        .bg-aura .orb{position:absolute;border-radius:50%;filter:blur(120px);opacity:.06}
+        .orb-1{width:600px;height:600px;background:var(--cherry);top:-20%;left:-10%}
+        .orb-2{width:400px;height:400px;background:#5865F2;bottom:10%;right:-5%;opacity:.04}
+        .orb-3{width:300px;height:300px;background:var(--cherry-light);top:60%;left:40%;opacity:.03}
+        .grid-bg{position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(255,255,255,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.012) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse at 50% 30%,black 20%,transparent 70%)}
+        .topbar{position:fixed;top:0;left:0;right:0;z-index:1000;padding:16px 32px;display:flex;align-items:center;justify-content:space-between;background:rgba(6,4,8,0.7);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid rgba(255,255,255,.04)}
+        .topbar-logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text)}
+        .topbar-logo img{height:34px}
+        .topbar-logo span{font-weight:800;font-size:1rem;letter-spacing:1px;color:var(--cherry-light)}
+        .topbar-actions{display:flex;align-items:center;gap:16px}
+        .topbar-actions a{color:var(--muted-dark);font-size:.78rem;text-decoration:none;transition:.2s}
+        .topbar-actions a:hover{color:var(--cherry-light)}
+        .main-wrap{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:100px 20px 60px}
+        .wizard{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:50px}
+        .wz-step{display:flex;align-items:center;gap:14px;position:relative}
+        .wz-dot{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.05rem;background:rgba(var(--cherry-rgb),.05);border:2px solid rgba(var(--cherry-rgb),.15);color:var(--muted-dark);transition:all .5s cubic-bezier(.16,1,.3,1);position:relative;z-index:1;flex-shrink:0}
+        .wz-dot.active{background:linear-gradient(135deg,var(--cherry),var(--cherry-light));border-color:var(--cherry-light);color:#fff;box-shadow:0 0 30px rgba(var(--cherry-rgb),.5),inset 0 1px 1px rgba(255,255,255,.15);animation:wzPulse 2.5s ease-in-out infinite}
+        .wz-dot.done{background:rgba(var(--cherry-rgb),.15);border-color:var(--cherry);color:var(--cherry-light)}
+        @keyframes wzPulse{0%,100%{box-shadow:0 0 20px rgba(var(--cherry-rgb),.4)}50%{box-shadow:0 0 40px rgba(var(--cherry-rgb),.7)}}
+        .wz-info{display:flex;flex-direction:column}
+        .wz-label{font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted-dark);transition:.3s}
+        .wz-label.active{color:var(--cherry-light)}
+        .wz-title{font-size:.85rem;font-weight:700;color:var(--text)}
+        .wz-line{width:100px;height:2px;background:rgba(var(--cherry-rgb),.1);margin:0 8px;transition:all .5s;flex-shrink:0}
+        .wz-line.done{background:var(--cherry);box-shadow:0 0 8px rgba(var(--cherry-rgb),.4)}
+        .card{background:var(--glass);border:1px solid var(--border);border-radius:var(--radius);padding:44px;box-shadow:0 20px 60px rgba(0,0,0,.4),0 0 40px rgba(var(--cherry-rgb),.06);position:relative;overflow:hidden}
+        .card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(var(--cherry-rgb),.3) 50%,transparent);z-index:2}
+        .card::after{content:'';position:absolute;top:-100px;right:-100px;width:250px;height:250px;background:radial-gradient(circle,rgba(var(--cherry-rgb),.04),transparent 70%);pointer-events:none}
+        .section{display:none}
+        .section.active{display:block}
+        .field{margin-bottom:22px}
+        .field label{display:block;font-size:.72rem;font-weight:700;margin-bottom:8px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+        .field label i{color:var(--cherry);margin-right:4px;font-size:.65rem}
+        .field input,.field textarea,.field select{width:100%;padding:14px 18px;background:rgba(0,0,0,.3);border:1px solid rgba(var(--cherry-rgb),.1);border-radius:var(--radius-sm);color:var(--text);font-family:inherit;font-size:.88rem;outline:none;transition:all .3s cubic-bezier(.16,1,.3,1)}
+        .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--cherry-light);background:rgba(var(--cherry-rgb),.04);box-shadow:0 0 0 4px rgba(var(--cherry-rgb),.1)}
+        .field textarea{min-height:110px;resize:vertical}
+        .field select{appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M6 8L1 3h10z' fill='%238888a0'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;padding-right:40px}
+        .field select option{background:#0e0e12;color:var(--text)}
+        .row{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+        @media(max-width:600px){.row{grid-template-columns:1fr}}
+        .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 28px;border-radius:var(--radius-sm);font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit;border:none;transition:all .3s cubic-bezier(.16,1,.3,1);text-decoration:none}
+        .btn-primary{background:linear-gradient(135deg,var(--cherry),#7a081e);color:#fff;border:1px solid rgba(var(--cherry-rgb),.3);box-shadow:0 4px 20px rgba(var(--cherry-rgb),.35)}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(var(--cherry-rgb),.5)}
+        .btn-primary:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+        .btn-ghost{background:rgba(var(--cherry-rgb),.05);color:var(--text);border:1px solid rgba(var(--cherry-rgb),.1)}
+        .btn-ghost:hover{background:rgba(var(--cherry-rgb),.1);border-color:rgba(var(--cherry-rgb),.2)}
+        .btn-sm{padding:8px 18px;font-size:.78rem}
+        .btn-icon{width:40px;height:40px;border-radius:50%;padding:0;background:rgba(var(--cherry-rgb),.08);border:1px solid rgba(var(--cherry-rgb),.2);color:var(--cherry-light);cursor:pointer;transition:.3s;display:inline-flex;align-items:center;justify-content:center;font-size:1rem}
+        .btn-icon:hover{background:rgba(var(--cherry-rgb),.15);border-color:var(--cherry-light)}
+        .btn-icon.active{background:rgba(var(--cherry-rgb),.15);border-color:var(--cherry-light);box-shadow:0 0 15px rgba(var(--cherry-rgb),.3)}
+        .actions{display:flex;justify-content:flex-end;gap:12px;margin-top:32px;padding-top:24px;border-top:1px solid rgba(255,255,255,.04)}
+        .alert{padding:14px 20px;border-radius:var(--radius-sm);margin-bottom:24px;font-size:.82rem;font-weight:600;display:none;align-items:center;gap:10px}
+        .alert.show{display:flex}
+        .alert-error{background:rgba(var(--cherry-rgb),.12);border:1px solid rgba(var(--cherry-rgb),.25);color:var(--cherry-light)}
+        .alert-success{background:rgba(0,200,100,.1);border:1px solid rgba(0,200,100,.2);color:#00c864}
+        .social-field{position:relative}
+        .social-field input{padding-right:50px!important}
+        .social-field .lookup-btn{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;background:rgba(var(--cherry-rgb),.08);border:1px solid rgba(var(--cherry-rgb),.2);color:var(--cherry-light);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.3s;z-index:5;font-size:.85rem}
+        .social-field .lookup-btn:hover{background:rgba(var(--cherry-rgb),.16)}
         .payhip-row{display:flex;gap:10px}
         .payhip-row input{flex:1}
-        .btn-scrape{padding:12px 24px;border-radius:12px;background:rgba(var(--cherry-rgb),.08);border:1px solid rgba(var(--cherry-rgb),.2);color: var(--light);cursor:pointer;font-family:inherit;font-size:.82rem;font-weight:700;white-space:nowrap;transition:all .3s cubic-bezier(0.16, 1, 0.3, 1)}
-        .btn-scrape:hover{background: var(--gradient-accent) !important;border-color:var(--cherry-light) !important;color:#fff !important;box-shadow:0 4px 15px rgba(var(--cherry-rgb), 0.4)}
-        .btn-scrape:disabled{opacity:.4;cursor:not-allowed}
-        .scrape-preview{background:rgba(var(--cherry-rgb),.03);border:1px solid rgba(var(--cherry-rgb),.08);border-radius:12px;padding:20px;margin-top:12px;display:none}
-        .scrape-preview.active{display:block}
-        .scrape-preview .preview-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
-        .scrape-preview .preview-header span{font-size:.78rem;color:var(--gray-dark)}
-        .scrape-preview .btn-apply{font-size:.78rem;padding:6px 14px;border-radius:8px;background: var(--gradient-accent);color:#fff;border:none;cursor:pointer;font-weight:600;transition:all .2s}
-        .scrape-preview .btn-apply:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(var(--cherry-rgb),0.3)}
-        .scrape-preview img{max-width:120px;border-radius:8px;margin-right:12px}
-        .scrape-preview .preview-info{display:flex;gap:12px}
-        .scrape-preview .preview-info h4{font-size:.9rem;margin-bottom:4px;font-weight:700}
-        .scrape-preview .preview-info p{font-size:.78rem;color:var(--gray-dark)}
-        
-        /* Thumbnail - URL */
-        .thumbnail-urls{display:flex;flex-wrap:wrap;gap:8px}
-        .thumbnail-urls input{flex:1;min-width:200px;padding:12px 16px;background:rgba(12, 2, 4, 0.45);border:1px solid rgba(var(--cherry-rgb),.15);border-radius:12px;color:var(--light);font-family:inherit;font-size:.88rem;outline:none}
-        .thumbnail-urls input:focus{border-color:var(--cherry-light)}
-        .thumbnail-urls .add-btn{padding:12px 20px;border-radius:12px;background:rgba(var(--cherry-rgb),.1);border:1px solid rgba(var(--cherry-rgb),.2);color: var(--light);cursor:pointer;transition:all .3s;font-weight:700}
-        .thumbnail-urls .add-btn:hover{background: var(--gradient-accent) !important;border-color:var(--cherry-light) !important;box-shadow:0 4px 12px rgba(var(--cherry-rgb),0.3)}
-        .thumb-preview{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
-        .thumb-preview .tp-item{position:relative;width:100px;height:60px;border-radius:8px;overflow:hidden;border:1px solid rgba(var(--cherry-rgb),.15)}
-        .thumb-preview .tp-item img{width:100%;height:100%;object-fit:cover}
-        .thumb-preview .tp-item .tp-remove{position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;background:rgba(var(--cherry-rgb),0.85);color:var(--light);display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.65rem;border:1px solid rgba(255,255,255,0.1)}
-        
-        .scraped-data{display:none;background:rgba(0,200,100,.05);border:1px solid rgba(0,200,100,.15);border-radius:10px;padding:16px;margin-top:12px}
-        .scraped-data.active{display:block}
-        
-        /* File browser */
-        .panel-box {
-            background: rgba(12, 2, 4, 0.3) !important;
-            border: 1px solid rgba(var(--cherry-rgb), 0.1) !important;
-            border-radius: 14px !important;
-            backdrop-filter: blur(10px);
-        }
-        .btn-download-action {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 14px 28px;
-            border-radius: 12px;
-            background: linear-gradient(180deg, #7a081e 0%, #42020d 50%, #300109 100%) !important;
-            border: 1px solid rgba(var(--cherry-rgb),0.25) !important;
-            box-shadow: 0 4px 15px rgba(122, 8, 30, 0.35), inset 0 1px 1px rgba(var(--cherry-rgb),0.25) !important;
-            color: #fff;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            font-family: inherit;
-        }
-        .btn-download-action:hover {
-            box-shadow: 0 6px 20px rgba(122, 8, 30, 0.5), inset 0 1px 2px rgba(var(--cherry-rgb),0.35) !important;
-            transform: translateY(-1px);
-        }
-        .btn-download-action:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none !important;
-        }
-
-        .file-browser{background:rgba(12, 2, 4, 0.35);border:1px solid rgba(var(--cherry-rgb),.06);border-radius:14px;min-height:300px;display:flex}
-        .file-tree{width:280px;border-right:1px solid rgba(var(--cherry-rgb),.06);padding:12px;overflow-y:auto;max-height:400px}
-        .file-tree .tree-item{padding:10px 14px;border-radius:8px;cursor:pointer;font-size:.82rem;display:flex;align-items:center;gap:10px;transition:all .2s;color:var(--gray-dark)}
-        .file-tree .tree-item:hover{background:rgba(var(--cherry-rgb),.06);color:var(--light)}
-        .file-tree .tree-item i{width:18px;text-align:center;font-size:.8rem}
-        .file-list{flex:1;padding:12px;overflow-y:auto;max-height:400px}
-        .file-item{display:flex;align-items:center;gap:12px;padding:10px 14px;border-radius:8px;cursor:pointer;transition:all .2s;font-size:.82rem}
-        .file-item:hover{background:rgba(var(--cherry-rgb),.06)}
-        .file-item.selected{background:rgba(var(--cherry-rgb),.08);border:1px solid rgba(var(--cherry-rgb),.18)}
-        .file-item input[type=checkbox]{accent-color: var(--cherry-light)}
-        
-        /* Selected files */
-        .selected-files{background:rgba(12, 2, 4, 0.35);border:1px solid rgba(var(--cherry-rgb),.06);border-radius:14px;padding:16px;margin-top:12px;min-height:60px}
-        .selected-files h4{font-size:.85rem;margin-bottom:10px;color:var(--gray-dark);text-transform:uppercase;letter-spacing:0.5px}
-        .selected-files .sf-item{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;border-radius:8px;font-size:.8rem;margin-bottom:6px;background:rgba(var(--cherry-rgb),.03);border:1px solid rgba(var(--cherry-rgb),0.06)}
-        .selected-files .sf-item .remove{color: var(--cherry-light);cursor:pointer;font-size:.75rem;transition:opacity 0.2s}
-        .selected-files .sf-item .remove:hover{opacity:0.8}
-        
-        /* Buttons */
-        .btn{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:10px;font-size:.85rem;font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:all .3s;text-decoration:none}
-        .btn-primary{background: var(--gradient-accent);color:var(--light);border:1px solid rgba(var(--cherry-rgb),0.25);box-shadow:0 4px 12px rgba(var(--cherry-rgb),0.3)}
-        .btn-primary:hover{background:var(--gradient-accent);transform:translateY(-1px);box-shadow:0 6px 18px rgba(var(--cherry-rgb), 0.45)}
-        .btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none;box-shadow:none}
-        .btn-secondary{background:rgba(var(--cherry-rgb),.06);color:var(--light);border:1px solid rgba(var(--cherry-rgb),0.12)}
-        .btn-secondary:hover{background:rgba(var(--cherry-rgb),.12)}
-        .form-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:30px;padding-top:20px;border-top:1px solid rgba(var(--cherry-rgb),.08)}
-        
-        /* Confirmation */
-        .confirm-card{background:rgba(12, 2, 4, 0.3);border:1px solid rgba(var(--cherry-rgb),.1);border-radius:16px;padding:40px;text-align:center}
-        .confirm-card .check-icon{width:80px;height:80px;border-radius:50%;background:rgba(0,200,100,.12);border:1px solid rgba(0,200,100,.25);display:flex;align-items:center;justify-content:center;margin:0 auto 24px;box-shadow:0 0 20px rgba(0,200,100,0.1)}
-        .confirm-card .check-icon i{font-size:2.2rem;color:#00c864}
-        .confirm-card h2{font-size:1.5rem;margin-bottom:12px;font-weight:800}
-        .confirm-card .summary{text-align:left;padding:20px;background:rgba(12, 2, 4, 0.25);border:1px solid rgba(var(--cherry-rgb),.08);border-radius:12px;margin-top:24px}
-        .confirm-card .summary .row{display:flex;justify-content:space-between;padding:10px 0;font-size:.85rem;border-bottom:1px solid rgba(255,255,255,0.04)}
-        .confirm-card .summary .row span:first-child{color:var(--gray-dark)}
-        
-        .alert{background:rgba(var(--cherry-rgb),.1);border:1px solid rgba(var(--cherry-rgb),.2);border-radius:12px;padding:14px 20px;margin-bottom:20px;font-size:.85rem;color: var(--cherry-light);display:none;font-weight:600}
-        .alert.show{display:block}
-        .alert-success{background:rgba(0,200,100,.1);border-color:rgba(0,200,100,.2);color:#00c864}
-        
-        /* HLX Lookup Overlay */
-        .hlx-lookup-overlay{
-            position:absolute;top:100%;left:0;right:0;margin-top:8px;
-            background:rgba(12,2,4,0.92);backdrop-filter:blur(30px) saturate(220%);
-            -webkit-backdrop-filter:blur(30px) saturate(220%);
-            border:1px solid rgba(var(--cherry-rgb),0.15);border-radius:14px;
-            padding:20px;z-index:100;box-shadow:0 20px 50px rgba(0,0,0,0.6),0 0 30px rgba(var(--cherry-rgb),0.12);
-            animation:fadeInUp .3s ease forwards;
-        }
-        .hlx-overlay-header{
-            display:flex;justify-content:space-between;align-items:center;
-            margin-bottom:16px;font-size:.82rem;font-weight:700;color:var(--gray);
-        }
-        .hlx-overlay-header i{color:var(--cherry-light);margin-right:6px}
-        .hlx-platform-picker{
-            display:flex;gap:10px;justify-content:center;margin-bottom:16px;
-        }
-        .hlx-platform-btn{
-            width:48px;height:48px;border-radius:50%;background:rgba(28,4,9,0.4);
-            border:1px solid rgba(var(--cherry-rgb),0.1);color:var(--gray-dark);
-            cursor:pointer;display:flex;align-items:center;justify-content:center;
-            font-size:1.1rem;transition:all .3s cubic-bezier(0.16,1,0.3,1);
-        }
-        .hlx-platform-btn:hover{border-color:rgba(var(--cherry-rgb),0.3);color:var(--light)}
-        .hlx-platform-btn.active{
-            background:rgba(var(--cherry-rgb),0.12);border-color:var(--cherry-light);
-            color:var(--cherry-light);box-shadow:0 0 15px rgba(var(--cherry-rgb),0.3);
-        }
-        .hlx-platform-btn[data-platform="tiktok"].active{color:#ff0050;border-color:#ff0050;box-shadow:0 0 15px rgba(255,0,80,0.3)}
-        .hlx-platform-btn[data-platform="instagram"].active{color:#e1306c;border-color:#e1306c;box-shadow:0 0 15px rgba(225,48,108,0.3)}
-        .hlx-platform-btn[data-platform="youtube"].active{color:#ff0000;border-color:#ff0000;box-shadow:0 0 15px rgba(255,0,0,0.3)}
-        .hlx-platform-btn[data-platform="x"].active{color:#fff;border-color:#fff;box-shadow:0 0 15px rgba(255,255,255,0.2)}
-        .hlx-input-row{
-            display:flex;align-items:center;gap:0;margin-bottom:16px;
-            background:rgba(0,0,0,0.3);border:1px solid rgba(var(--cherry-rgb),0.15);border-radius:10px;overflow:hidden;
-        }
-        .hlx-at-prefix{
-            padding:12px 0 12px 16px;color:var(--gray-dark);font-size:.9rem;font-weight:600;
-        }
-        .hlx-input-row input{
-            flex:1;padding:12px 14px;background:transparent;border:none;color:var(--light);
-            font-family:inherit;font-size:.85rem;outline:none;
-        }
-        .hlx-fetch-btn{
-            width:100%;padding:12px;border-radius:10px;
-            background:linear-gradient(180deg,#7a081e 0%,#42020d 50%,#300109 100%);
-            border:1px solid rgba(var(--cherry-rgb),0.2);color:#fff;font-weight:700;
-            cursor:pointer;font-family:inherit;font-size:.85rem;
-            display:flex;align-items:center;justify-content:center;gap:8px;
-            transition:all .3s cubic-bezier(0.16,1,0.3,1);
-            box-shadow:0 4px 15px rgba(122,8,30,0.35),inset 0 1px 1px rgba(255,255,255,0.1);
-        }
-        .hlx-fetch-btn:hover{box-shadow:0 6px 20px rgba(122,8,30,0.5);transform:translateY(-1px)}
-        .hlx-status{
-            margin-top:12px;padding:12px;border-radius:10px;
-            background:rgba(var(--cherry-rgb),0.05);border:1px solid rgba(var(--cherry-rgb),0.08);
-            font-size:.78rem;text-align:center;color:var(--gray);
-        }
-        .hlx-status .hlx-result{display:flex;align-items:center;gap:10px;justify-content:center}
-        .hlx-status .hlx-result img{width:36px;height:36px;border-radius:50%;border:1px solid rgba(var(--cherry-rgb),0.2)}
-        .hlx-status .hlx-result .hlx-name{font-weight:700;color:var(--light)}
-        .hlx-status .hlx-result .hlx-platform-tag{font-size:.65rem;color:var(--gray-dark);text-transform:uppercase}
-        .hlx-status.error{color:#ff3860;border-color:rgba(255,56,96,0.2);background:rgba(255,56,96,0.05)}
-        .hlx-status.success{color:#00c864;border-color:rgba(0,200,100,0.2);background:rgba(0,200,100,0.05)}
-        
-        /* Glowing step dots */
-        .step-dot.active.dot-pulse{animation:dotPulse 2s ease-in-out infinite}
-        @keyframes dotPulse{0%,100%{box-shadow:0 0 0 0 rgba(var(--cherry-rgb),0.5)}50%{box-shadow:0 0 0 12px rgba(var(--cherry-rgb),0)}}
+        .scraped-badge{display:none;align-items:center;gap:6px;margin-top:10px;padding:10px 14px;border-radius:8px;font-size:.78rem;background:rgba(0,200,100,.06);border:1px solid rgba(0,200,100,.15);color:#00c864}
+        .scraped-badge.show{display:flex}
+        .thumb-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+        .thumb-row input{flex:1;min-width:200px}
+        .thumb-previews{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+        .tp-item{position:relative;width:80px;height:50px;border-radius:8px;overflow:hidden;border:1px solid rgba(var(--cherry-rgb),.1)}
+        .tp-item img{width:100%;height:100%;object-fit:cover}
+        .tp-item .tp-rm{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(var(--cherry-rgb),.8);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.55rem}
+        .panel{background:rgba(0,0,0,.25);border:1px solid rgba(var(--cherry-rgb),.08);border-radius:var(--radius-sm);padding:24px;margin-bottom:20px}
+        .panel h3{font-size:.9rem;font-weight:800;color:#fff;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
+        .panel p{font-size:.78rem;color:var(--muted-dark);margin-bottom:16px}
+        .res-list{background:rgba(0,0,0,.2);border:1px dashed rgba(var(--cherry-rgb),.06);border-radius:10px;min-height:80px;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:24px}
+        .res-list .empty{color:var(--muted-dark);text-align:center;font-size:.82rem}
+        .res-list .empty i{font-size:2rem;color:var(--cherry);display:block;margin-bottom:10px;opacity:.3}
+        .res-card{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-radius:10px;cursor:pointer;transition:.2s;border:1px solid transparent;width:100%;margin-bottom:6px;background:rgba(var(--cherry-rgb),.02)}
+        .res-card:hover{background:rgba(var(--cherry-rgb),.05);border-color:rgba(var(--cherry-rgb),.1)}
+        .res-card.selected{background:rgba(var(--cherry-rgb),.08);border-color:rgba(var(--cherry-rgb),.2)}
+        .res-card .rc-icon{width:38px;height:38px;border-radius:10px;background:rgba(var(--cherry-rgb),.1);display:flex;align-items:center;justify-content:center;color:var(--cherry-light);flex-shrink:0}
+        .res-card .rc-info{flex:1;margin-left:12px;min-width:0}
+        .res-card .rc-info strong{display:block;font-size:.82rem;color:var(--text)}
+        .res-card .rc-info span{font-size:.7rem;color:var(--muted-dark)}
+        .review-card{text-align:center;padding:30px}
+        .review-card .check{width:80px;height:80px;border-radius:50%;background:rgba(0,200,100,.1);border:1px solid rgba(0,200,100,.2);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 0 30px rgba(0,200,100,.08)}
+        .review-card .check i{font-size:2rem;color:#00c864}
+        .review-card h2{font-size:1.4rem;margin-bottom:8px}
+        .review-summary{text-align:left;padding:20px;border-radius:var(--radius-sm);background:rgba(0,0,0,.2);border:1px solid rgba(var(--cherry-rgb),.06);margin-top:20px}
+        .review-summary .rs-row{display:flex;justify-content:space-between;padding:9px 0;font-size:.82rem;border-bottom:1px solid rgba(255,255,255,.03)}
+        .review-summary .rs-row span:first-child{color:var(--muted-dark)}
+        .review-summary .rs-row:last-child{border:none}
+        .info-banner{display:flex;gap:14px;align-items:flex-start;padding:18px;border-radius:var(--radius-sm);margin-bottom:24px;background:rgba(var(--cherry-rgb),.08);border:1px solid rgba(var(--cherry-rgb),.18)}
+        .info-banner .ib-icon{width:34px;height:34px;border-radius:8px;background:rgba(var(--cherry-rgb),.15);display:flex;align-items:center;justify-content:center;color:var(--cherry-light);flex-shrink:0}
+        .info-banner h4{font-size:.88rem;font-weight:700;color:#fff;margin-bottom:2px}
+        .info-banner p{font-size:.76rem;color:var(--muted);margin:0}
+        .live-card-wrap{margin-top:30px;padding-top:24px;border-top:1px solid rgba(255,255,255,.04)}
+        .live-card-wrap h4{font-size:.85rem;color:var(--muted);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+        .live-card-wrap h4 i{color:var(--cherry)}
+        .live-card{width:260px;border-radius:16px;overflow:hidden;border:1px solid rgba(var(--cherry-rgb),.1);background:rgba(22,6,10,.6);pointer-events:none;margin:0 auto}
+        .live-card .lc-img{aspect-ratio:16/10;background:#1c1c24;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+        .live-card .lc-img i{font-size:2.2rem;color:var(--cherry);opacity:.25}
+        .live-card .lc-img img{width:100%;height:100%;object-fit:cover}
+        .live-card .lc-badge{position:absolute;bottom:8px;left:8px;display:flex;gap:4px}
+        .live-card .lc-badge span{padding:3px 8px;border-radius:4px;font-size:.55rem;font-weight:700;text-transform:uppercase;background:rgba(255,180,0,.15);color:#ffb400}
+        .live-card .lc-body{padding:12px 14px}
+        .live-card .lc-body h3{font-size:.78rem;font-weight:700;color:var(--text);margin-bottom:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .live-card .lc-body p{font-size:.65rem;color:var(--muted-dark);margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .live-card .lc-foot{display:flex;align-items:center;justify-content:space-between}
+        .live-card .lc-foot .lc-author{display:flex;align-items:center;gap:5px}
+        .live-card .lc-foot .lc-av{width:20px;height:20px;border-radius:50%;background:var(--cherry);display:flex;align-items:center;justify-content:center;font-size:.45rem;color:#fff;overflow:hidden}
+        .live-card .lc-foot .lc-av img{width:100%;height:100%;object-fit:cover}
+        .live-card .lc-foot .lc-name{font-size:.65rem;color:var(--muted)}
+        .live-card .lc-foot .lc-stats{font-size:.6rem;color:var(--muted-dark)}
+        @media(max-width:600px){.card{padding:24px}.wz-line{width:40px}.btn{padding:12px 20px;font-size:.8rem}}
     </style>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5438472060600560" crossorigin="anonymous"></script>
 </head>
 <body>
-    <div class="upload-header">
-        <a href="/" class="logo">
-            <img src="assets/content.png" alt="">
-            <span>Upload</span>
-        </a>
-        <a href="/api/logout" style="color:var(--gray-dark);font-size:.8rem;text-decoration:none"><i class="fas fa-sign-out-alt"></i> Logout</a>
+    <div class="bg-aura"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
+    <div class="grid-bg"></div>
+    <div class="topbar">
+        <a href="/" class="topbar-logo"><img src="assets/content.png" alt=""><span>Upload</span></a>
+        <div class="topbar-actions">
+            <a href="/settings"><i class="fas fa-cog"></i> Settings</a>
+            <a href="/api/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
     </div>
-
-    <div class="upload-container">
-        <div id="alertBox" class="alert"></div>
-        
-        <!-- Steps indicator -->
-        <div class="steps-indicator" id="stepsIndicator">
-            <div><div class="step-dot active dot-pulse" id="stepDot1">1</div><div class="step-label" style="color:var(--cherry-light)">Details</div></div>
-            <div class="step-line" id="stepLine1"></div>
-            <div><div class="step-dot" id="stepDot2">2</div><div class="step-label">Files</div></div>
-            <div class="step-line" id="stepLine2"></div>
-            <div><div class="step-dot" id="stepDot3">3</div><div class="step-label">Review</div></div>
+    <div class="main-wrap">
+        <div class="wizard">
+            <div class="wz-step"><div class="wz-dot active" id="wzDot1">1</div><div class="wz-info"><span class="wz-label active">Step 1</span><span class="wz-title">Details</span></div></div>
+            <div class="wz-line" id="wzLine1"></div>
+            <div class="wz-step"><div class="wz-dot" id="wzDot2">2</div><div class="wz-info"><span class="wz-label">Step 2</span><span class="wz-title">Files</span></div></div>
+            <div class="wz-line" id="wzLine2"></div>
+            <div class="wz-step"><div class="wz-dot" id="wzDot3">3</div><div class="wz-info"><span class="wz-label">Step 3</span><span class="wz-title">Review</span></div></div>
         </div>
-
-        <!-- Step 1: Product Details -->
-        <div class="form-section active" id="step1">
-            <input type="hidden" id="resourceId">
-            <div class="form-group">
-                <label>Product Name *</label>
-                <input type="text" id="productName" placeholder="e.g. Hyper Pop Preset Pack" oninput="updateLiveCardPreview()">
-            </div>
-            <div class="form-row">
-                <div class="form-group" style="position:relative">
-                    <label>Creator Social Media URL *</label>
-                    <div style="position:relative;display:flex;align-items:center">
-                        <input type="url" id="creatorSocialUrl" placeholder="e.g. https://www.tiktok.com/@reyli" onblur="resolveCreatorSocial()" oninput="updateLiveCardPreview()" style="padding-right:48px !important">
-                        <button id="hlxAssistantBtn" type="button" onclick="toggleHlxOverlay()" title="Social Lookup Assistant" style="position:absolute;right:6px;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:50%;background:rgba(var(--cherry-rgb),0.08);border:1px solid rgba(var(--cherry-rgb),0.2);color:var(--cherry-light);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.3s cubic-bezier(0.16,1,0.3,1);font-size:0.9rem;z-index:5">
-                            <i class="fas fa-magic"></i>
-                        </button>
-                    </div>
-                    <input type="hidden" id="creatorName" value="">
-                    <input type="hidden" id="creatorAvatar" value="">
-                    
-                    <!-- HLX Lookup Overlay -->
-                    <div id="hlxOverlay" class="hlx-lookup-overlay" style="display:none">
-                        <div class="hlx-overlay-header">
-                            <span><i class="fas fa-magic"></i> Social Lookup Assistant</span>
-                            <button onclick="toggleHlxOverlay()" style="background:none;border:none;color:var(--gray-dark);cursor:pointer;font-size:1rem">&times;</button>
-                        </div>
-                        <div class="hlx-platform-picker" id="hlxPlatformPicker">
-                            <button class="hlx-platform-btn active" data-platform="tiktok" onclick="selectHlxPlatform(this,'tiktok')" title="TikTok"><i class="fab fa-tiktok"></i></button>
-                            <button class="hlx-platform-btn" data-platform="instagram" onclick="selectHlxPlatform(this,'instagram')" title="Instagram"><i class="fab fa-instagram"></i></button>
-                            <button class="hlx-platform-btn" data-platform="youtube" onclick="selectHlxPlatform(this,'youtube')" title="YouTube"><i class="fab fa-youtube"></i></button>
-                            <button class="hlx-platform-btn" data-platform="x" onclick="selectHlxPlatform(this,'x')" title="X / Twitter"><i class="fab fa-x-twitter"></i></button>
-                        </div>
-                        <div class="hlx-input-row">
-                            <span class="hlx-at-prefix" id="hlxAtPrefix">@</span>
-                            <input type="text" id="hlxUsernameInput" placeholder="Enter username..." onkeydown="if(event.key==='Enter')hlxLookupAndFill()">
-                        </div>
-                        <button class="hlx-fetch-btn" id="hlxFetchBtn" onclick="hlxLookupAndFill()">
-                            <i class="fas fa-search"></i> Fetch & Fill
-                        </button>
-                        <div id="hlxStatus" class="hlx-status" style="display:none"></div>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Category *</label>
-                    <select id="productCategory" onchange="updateLiveCardPreview()">
-                        <option value="">Select category...</option>
-                        <option value="after-effects">After Effects</option>
-                        <option value="premiere-pro">Premiere Pro</option>
-                        <option value="photoshop">Photoshop</option>
-                        <option value="video-star">Video Star</option>
-                        <option value="topaz-labs">Topaz Labs</option>
-                        <option value="others">Others</option>
-                    </select>
-                </div>
-            </div>
-            <div class="form-group">
-                <label>Tags</label>
-                <input type="text" id="productTags" placeholder="e.g. premiere pro, after effects, cinematic, warm">
-            </div>
-            <div class="form-group">
-                <label>Description *</label>
-                <textarea id="productDesc" placeholder="Describe what this resource includes and how editors can use it..." oninput="updateLiveCardPreview()"></textarea>
-            </div>
-            <div class="form-group">
-                <label>Payhip Link</label>
-                <div class="payhip-row">
-                    <input type="url" id="payhipLink" placeholder="https://payhip.com/b/xxxxx" onblur="autoScrape()">
-                    <button class="btn-scrape" id="btnScrape" onclick="scrapePayhip()"><i class="fas fa-magic"></i> Scrape</button>
-                </div>
-                <div class="scraped-data" id="scrapePreview">
-                    <i class="fas fa-check-circle" style="color:#00c864"></i>
-                    <span style="font-size:.8rem;color:#00c864" id="scrapeStatus">Data auto-filled</span>
-                </div>
-            </div>
-            <div class="form-group">
-                <label>Thumbnail URLs</label>
-                <div class="thumbnail-urls" id="thumbnailUrls">
-                    <input type="url" placeholder="https://...image.png" class="thumb-input" oninput="updateThumbPreview(); updateLiveCardPreview()">
-                    <button class="add-btn" onclick="addThumbnailField()">+</button>
-                </div>
-                <div class="thumb-preview" id="thumbPreview"></div>
-            </div>
-
-            <!-- Live Card Preview -->
-            <div style="margin-top:35px;padding-top:20px;border-top:1px solid rgba(var(--cherry-rgb),0.06)">
-                <h4 style="font-size:0.9rem;color:var(--gray);margin-bottom:15px;display:flex;align-items:center;gap:8px"><i class="fas fa-eye" style="color: var(--cherry)"></i> Live Card Preview</h4>
-                <div style="display:flex;justify-content:center">
-                    <div id="livePreviewCard" class="rc" style="width:260px;pointer-events:none;opacity:0.9;border:1px solid rgba(var(--cherry-rgb),0.08);background:rgba(22,6,10,0.6);border-radius:16px;overflow:hidden">
-                        <div class="rc-img" style="width:100%;aspect-ratio:16/10;position:relative;background:#1c1c24;display:flex;align-items:center;justify-content:center;overflow:hidden">
-                            <div id="previewThumbContainer" style="width:100%;height:100%;display:flex;align-items:center;justify-content:center">
-                                <i class="fas fa-sliders" style="font-size:2.5rem;color:var(--cherry);opacity:.3"></i>
+        <div class="card">
+            <div id="alertBox" class="alert"></div>
+            <!-- STEP 1 -->
+            <div class="section active" id="sec1">
+                <input type="hidden" id="resourceId">
+                <div class="field"><label><i class="fas fa-tag"></i> Product Name *</label><input type="text" id="productName" placeholder="Hyper Pop Preset Pack" oninput="updateLivePreview()"></div>
+                <div class="row">
+                    <div class="field social-field">
+                        <label><i class="fas fa-link"></i> Creator Social URL *</label>
+                        <input type="url" id="creatorSocialUrl" placeholder="https://tiktok.com/@creator" onblur="resolveSocial()" oninput="updateLivePreview()">
+                        <button class="lookup-btn" onclick="toggleHlx()" title="Social Lookup"><i class="fas fa-magic"></i></button>
+                        <input type="hidden" id="creatorName"><input type="hidden" id="creatorAvatar">
+                        <div id="hlxOverlay" style="display:none;position:absolute;top:100%;left:0;right:0;margin-top:8px;background:rgba(12,4,8,.95);border:1px solid rgba(var(--cherry-rgb),.15);border-radius:14px;padding:20px;z-index:100;box-shadow:0 20px 50px rgba(0,0,0,.6)">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px"><span style="font-size:.8rem;font-weight:700;color:var(--muted)"><i class="fas fa-magic" style="color:var(--cherry-light);margin-right:6px"></i>Social Lookup</span><button onclick="toggleHlx()" style="background:none;border:none;color:var(--muted-dark);cursor:pointer;font-size:1.1rem">&times;</button></div>
+                            <div style="display:flex;gap:10px;justify-content:center;margin-bottom:14px" id="hlxPlatforms">
+                                <button class="btn-icon active" data-plat="tiktok" onclick="selHlxPlat(this,'tiktok')"><i class="fab fa-tiktok"></i></button>
+                                <button class="btn-icon" data-plat="instagram" onclick="selHlxPlat(this,'instagram')"><i class="fab fa-instagram"></i></button>
+                                <button class="btn-icon" data-plat="youtube" onclick="selHlxPlat(this,'youtube')"><i class="fab fa-youtube"></i></button>
+                                <button class="btn-icon" data-plat="x" onclick="selHlxPlat(this,'x')"><i class="fab fa-x-twitter"></i></button>
                             </div>
-                            <div class="rbadge" style="position:absolute;bottom:8px;left:8px;display:flex;gap:4px">
-                                <span id="previewCategoryBadge" class="tag-others" style="padding:3px 8px;border-radius:4px;font-size:.58rem;font-weight:700;text-transform:uppercase;background:rgba(255,180,0,.15);color:#ffb400">Others</span>
-                            </div>
-                        </div>
-                        <div class="rc-content" style="padding:12px 14px">
-                            <h3 id="previewTitle" class="rc-title" style="font-size:.82rem;font-weight:700;margin:0 0 4px;color:var(--light);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">Untitled Resource</h3>
-                            <p id="previewDesc" class="rc-desc" style="font-size:.68rem;color:var(--gray-dark);margin:0 0 10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">No description provided</p>
-                            <div class="rc-footer" style="display:flex;align-items:center;justify-content:space-between;gap:6px">
-                                <div class="rc-meta" style="display:flex;align-items:center;gap:5px">
-                                    <div id="previewAvatarWrapper" class="rava-fb" style="width:20px;height:20px;border-radius:50%;background:var(--cherry);display:flex;align-items:center;justify-content:center;color:var(--light);font-size:.5rem;overflow:hidden">
-                                        <i class="fas fa-user" style="font-size:0.6rem"></i>
-                                    </div>
-                                    <span id="previewCreatorName" class="rname" style="font-size:.68rem;color:var(--gray)">Zyrex</span>
-                                </div>
-                                <div class="rc-actions" style="display:flex;gap:8px">
-                                    <span style="font-size:.6rem;color:var(--gray-dark)"><i class="fas fa-download"></i> 0</span>
-                                </div>
-                            </div>
+                            <div style="display:flex;background:rgba(0,0,0,.3);border:1px solid rgba(var(--cherry-rgb),.1);border-radius:10px;overflow:hidden;margin-bottom:12px"><span style="padding:12px 0 12px 16px;color:var(--muted-dark);font-size:.85rem" id="hlxPrefix">@</span><input id="hlxUser" placeholder="username..." style="flex:1;padding:12px;background:transparent;border:none;color:var(--text);font-family:inherit;font-size:.85rem;outline:none" onkeydown="if(event.key==='Enter')hlxLookup()"></div>
+                            <button class="btn btn-primary" style="width:100%;font-size:.82rem" onclick="hlxLookup()"><i class="fas fa-search"></i> Fetch & Fill</button>
+                            <div id="hlxStatus" style="display:none;margin-top:10px;padding:10px;border-radius:8px;font-size:.75rem;text-align:center"></div>
                         </div>
                     </div>
+                    <div class="field"><label><i class="fas fa-folder"></i> Category *</label><select id="productCategory" onchange="updateLivePreview()"><option value="">Select...</option><option value="after-effects">After Effects</option><option value="premiere-pro">Premiere Pro</option><option value="photoshop">Photoshop</option><option value="video-star">Video Star</option><option value="topaz-labs">Topaz Labs</option><option value="others">Others</option></select></div>
                 </div>
-            </div>
-
-            <div class="form-actions">
-                <a href="/" class="btn btn-secondary">Cancel</a>
-                <button class="btn btn-primary" onclick="nextStep(2)">Save & Next <i class="fas fa-arrow-right"></i></button>
-            </div>
-        </div>
-
-        <!-- Step 2: Files -->
-        <div class="form-section" id="step2">
-            <!-- Cloud Resource Selection Banner -->
-            <div style="background: rgba(var(--cherry-rgb), 0.15); border: 1px solid rgba(var(--cherry-rgb), 0.3); border-radius: 12px; padding: 18px; display: flex; gap: 14px; align-items: flex-start; margin-bottom: 25px;">
-                <div style="background: rgba(var(--cherry-rgb), 0.2); width: 36px; height: 36px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: var(--cherry);">
-                    <i class="fas fa-info-circle" style="font-size: 1.1rem;"></i>
-                </div>
-                <div>
-                    <h4 style="font-size: 0.95rem; font-weight: 700; color: #fff; margin: 0 0 4px;">Cloud Resource Selection</h4>
-                    <p style="font-size: 0.8rem; color: var(--gray); margin: 0; line-height: 1.4;">Select a detected resource from your private cloud and choose the destination editor in production storage.</p>
-                </div>
-            </div>
-
-            <!-- Panel 1: Select resource from your cloud -->
-            <div class="panel-box" style="padding: 24px; margin-bottom: 25px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                    <h3 style="font-size: 0.95rem; font-weight: 800; color: #fff; margin: 0; text-transform: uppercase; letter-spacing: 0.5px;">1. Select resource from your cloud</h3>
-                    <button type="button" class="btn" style="padding: 6px 14px; font-size: 0.78rem; width: auto; display: inline-flex; align-items: center; gap: 6px; background: rgba(var(--cherry-rgb),0.05); border: 1px solid rgba(var(--cherry-rgb),0.1);" onclick="scanCloudResources()">
-                        <i class="fas fa-arrows-rotate"></i> Refresh
-                    </button>
-                </div>
-                <p style="font-size: 0.78rem; color: var(--gray-dark); margin: 0 0 16px;">Only second-level folders in your personal cloud are selectable: <strong style="color: var(--gray);">EDITOR &rarr; RESOURCE</strong>.</p>
-                
-                <div id="detectedResourcesList" style="background: rgba(0,0,0,0.2); border: 1px dashed rgba(var(--cherry-rgb),0.08); border-radius: 10px; min-height: 100px; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px;">
-                    <div style="color: var(--gray-dark); text-align: center; font-size: 0.82rem;">
-                        <i class="fas fa-spinner fa-spin" style="font-size: 1.8rem; color: var(--cherry); display: block; margin-bottom: 12px;"></i>
-                        Scanning your personal cloud space...
+                <div class="field"><label><i class="fas fa-hashtag"></i> Tags</label><input type="text" id="productTags" placeholder="premiere, cinematic, warm"></div>
+                <div class="field"><label><i class="fas fa-align-left"></i> Description *</label><textarea id="productDesc" placeholder="Describe what this resource includes..." oninput="updateLivePreview()"></textarea></div>
+                <div class="field"><label><i class="fas fa-shopping-cart"></i> Payhip Link</label><div class="payhip-row"><input type="url" id="payhipLink" placeholder="https://payhip.com/b/xxxxx" onblur="autoScrape()"><button class="btn btn-ghost btn-sm" id="btnScrape" onclick="scrapePayhip()"><i class="fas fa-magic"></i> Scrape</button></div><div class="scraped-badge" id="scrapedBadge"><i class="fas fa-check-circle"></i> Data auto-filled</div></div>
+                <div class="field"><label><i class="fas fa-image"></i> Thumbnail URLs</label><div class="thumb-row" id="thumbInputs"><input type="url" placeholder="https://...image.png" class="thumb-url" oninput="updateThumbPreviews();updateLivePreview()"><button class="btn btn-ghost btn-sm" onclick="addThumbField()"><i class="fas fa-plus"></i></button></div><div class="thumb-previews" id="thumbPreviews"></div></div>
+                <div class="live-card-wrap"><h4><i class="fas fa-eye"></i> Live Card Preview</h4>
+                    <div class="live-card">
+                        <div class="lc-img" id="lcImg"><i class="fas fa-sliders"></i></div>
+                        <div style="position:absolute;bottom:8px;left:8px" class="lc-badge"><span id="lcCatBadge">Others</span></div>
+                        <div class="lc-body"><h3 id="lcTitle">Untitled</h3><p id="lcDesc">No description</p>
+                            <div class="lc-foot"><div class="lc-author"><div class="lc-av" id="lcAv"><i class="fas fa-user"></i></div><span class="lc-name" id="lcName">Zyrex</span></div><span class="lc-stats"><i class="fas fa-download"></i> 0</span></div>
+                        </div>
                     </div>
                 </div>
+                <div class="actions"><a href="/" class="btn btn-ghost">Cancel</a><button class="btn btn-primary" onclick="goStep(2)">Next <i class="fas fa-arrow-right"></i></button></div>
             </div>
-
-            <!-- Panel 2: Select destination editor -->
-            <div class="panel-box" style="padding: 24px; margin-bottom: 25px;">
-                <h3 style="font-size: 0.95rem; font-weight: 800; color: #fff; margin: 0 0 6px; text-transform: uppercase; letter-spacing: 0.5px;">2. Select destination editor</h3>
-                <p style="font-size: 0.78rem; color: var(--gray-dark); margin: 0 0 18px;">This is the production editor folder under the main cloud. It can differ from the source editor folder.</p>
-                
-                <div class="form-row" style="margin-bottom: 15px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray-dark);">Search Existing Editor Folder *</label>
-                        <select id="destinationEditorSelect" onchange="updateCheckConflict()" style="background: rgba(0,0,0,0.25); border: 1px solid rgba(var(--cherry-rgb),0.08); color: #fff; border-radius: 8px; padding: 10px; font-size: 0.88rem; width: 100%;">
-                            <option value="">Select destination editor...</option>
-                        </select>
-                    </div>
-                </div>
-
-                <div class="form-row" style="align-items: flex-end;">
-                    <div class="form-group" style="flex: 1; margin: 0;">
-                        <label style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray-dark);">Create New Folder</label>
-                        <input type="text" id="newEditorInput" placeholder="e.g. REYLIFFX" style="background: rgba(0,0,0,0.25); border: 1px solid rgba(var(--cherry-rgb),0.08); color: #fff; border-radius: 8px; padding: 10px; font-size: 0.88rem; width: 100%;">
-                    </div>
-                    <button type="button" class="btn" style="padding: 10px 20px; font-size: 0.85rem; width: auto; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; background: var(--gradient-fire); border: none; height: 42px; border-radius: 8px; color:var(--light)" onclick="createNewDestinationFolder()">
-                        <i class="fas fa-folder-plus"></i> Create Folder
-                    </button>
-                </div>
+            <!-- STEP 2 -->
+            <div class="section" id="sec2">
+                <div class="info-banner"><div class="ib-icon"><i class="fas fa-info-circle"></i></div><div><h4>Cloud Resource Selection</h4><p>Select a detected resource from your private cloud and choose the destination editor.</p></div></div>
+                <div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="margin:0">1. Select Resource from Your Cloud</h3><button class="btn btn-ghost btn-sm" onclick="scanCloud()"><i class="fas fa-arrows-rotate"></i> Refresh</button></div><p>Only EDITOR → RESOURCE folders are selectable.</p><div class="res-list" id="resList"><div class="empty"><i class="fas fa-spinner fa-spin"></i>Scanning cloud...</div></div></div>
+                <div class="panel"><h3>2. Destination Editor</h3><p>Production folder where files will be published.</p><div class="row"><div class="field" style="margin:0"><label>Existing Folder *</label><select id="dstEditor" onchange="checkConflict()"><option value="">Select editor...</option></select></div><div class="field" style="margin:0"><label>Or Create New</label><div style="display:flex;gap:8px"><input type="text" id="newEditor" placeholder="e.g. REYLIFFX" style="flex:1"><button class="btn btn-primary btn-sm" onclick="createEditor()" style="white-space:nowrap"><i class="fas fa-folder-plus"></i> Create</button></div></div></div></div>
+                <div class="panel"><h3>3. Transfer</h3><p id="destPath">Destination: <strong>--</strong></p><div class="field"><label>Cloud File Path</label><input type="text" id="cloudPath" readonly placeholder="e.g. CINEFTY/AMERICANO CC" style="cursor:not-allowed;opacity:.7"></div><button class="btn btn-primary" style="width:100%;justify-content:center;padding:16px" id="btnTransfer" disabled onclick="transfer()"><i class="fas fa-cloud-arrow-up"></i> Transfer to Production</button></div>
+                <div class="actions"><button class="btn btn-ghost" onclick="goStep(1)"><i class="fas fa-arrow-left"></i> Back</button><button class="btn btn-primary" id="btnToStep3" disabled onclick="goStep(3)">Next <i class="fas fa-arrow-right"></i></button></div>
             </div>
-
-            <!-- Panel 3: Check conflict -->
-            <div class="panel-box" style="padding: 24px; margin-bottom: 30px;">
-                <h3 style="font-size: 0.95rem; font-weight: 800; color: #fff; margin: 0 0 6px; text-transform: uppercase; letter-spacing: 0.5px;">3. Check conflict</h3>
-                <p id="destinationPathText" style="font-size: 0.78rem; color: var(--gray-dark); margin: 0 0 16px;">Destination: <strong style="color: var(--gray);">EDITOR/RESOURCE</strong></p>
-                
-                <div class="form-group" style="margin-bottom: 20px;">
-                    <label style="font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--gray-dark);">Cloud File Path *</label>
-                    <input type="text" id="cloudFilePathDisplay" readonly placeholder="e.g. CINEFTY/AMERICANO CC" style="background: rgba(0,0,0,0.4); border: 1px solid rgba(var(--cherry-rgb),0.04); color: var(--gray); border-radius: 8px; padding: 10px; font-size: 0.88rem; width: 100%; cursor: not-allowed;">
-                </div>
-
-                <button type="button" class="btn-download-action" id="btnTransferCloud" style="width: 100%; justify-content: center; height: 50px; font-size: 0.95rem;" onclick="transferToProduction()">
-                    <i class="fas fa-cloud-arrow-up"></i> Transfer to Production Storage
-                </button>
-            </div>
-
-            <div class="form-actions">
-                <button class="btn btn-secondary" onclick="prevStep(1)"><i class="fas fa-arrow-left"></i> Back</button>
-                <button class="btn btn-primary" id="btnNextStep3" disabled onclick="nextStep(3)">Next <i class="fas fa-arrow-right"></i></button>
-            </div>
-        </div>
-
-        <!-- Step 3: Confirmation -->
-        <div class="form-section" id="step3">
-            <div class="confirm-card">
-                <div class="check-icon"><i class="fas fa-check"></i></div>
-                <h2>Ready to Submit</h2>
-                <p style="color:var(--gray-dark);margin-bottom:20px">Review your resource before submitting</p>
-                
-                <div class="summary" id="reviewSummary"></div>
-                
-                <div style="display:flex;gap:12px;justify-content:center;margin-top:24px">
-                    <button class="btn btn-secondary" onclick="prevStep(2)"><i class="fas fa-arrow-left"></i> Back</button>
-                    <button class="btn btn-primary" id="btnSubmit" onclick="submitProduct()">
-                        <i class="fas fa-paper-plane"></i> Submit for Review
-                    </button>
-                </div>
+            <!-- STEP 3 -->
+            <div class="section" id="sec3">
+                <div class="review-card"><div class="check"><i class="fas fa-check"></i></div><h2>Ready to Submit</h2><p style="color:var(--muted-dark);margin-bottom:16px">Review your resource before submitting</p><div class="review-summary" id="reviewSummary"></div><div style="display:flex;gap:12px;justify-content:center;margin-top:24px"><button class="btn btn-ghost" onclick="goStep(2)"><i class="fas fa-arrow-left"></i> Back</button><button class="btn btn-primary" id="btnSubmit" onclick="submitProduct()"><i class="fas fa-paper-plane"></i> Submit for Review</button></div></div>
             </div>
         </div>
     </div>
-
     <script src="js/auth.js"></script>
     <script>
-        let currentStep = 1;
-        let productData = {};
-        let selectedFiles = [];
-        let scrapedData = null;
-        let cloudConnected = false;
-        let cloudFiles = [];
-        let currentUser = null;
-
-        // Init
-        document.addEventListener('DOMContentLoaded', async () => {
-            productData.id = `preset-${Date.now().toString(36)}`;
-            document.getElementById('resourceId').value = productData.id;
-
-            // Check user permissions & capture uploader Discord info
-            try {
-                const resp = await fetch('/api/me', { credentials: 'include' });
-                if (!resp.ok) { window.location.href = '/'; return; }
-                const user = await resp.json();
-                currentUser = user;
-                if (!user.is_admin && !user.can_upload) {
-                    showAlert('You need the Uploader role on Discord to access this page. Please request the role from an admin.', true);
-                    document.getElementById('step1').innerHTML = `
-                        <div style="text-align:center;padding:60px 20px">
-                            <i class="fas fa-lock" style="font-size:3rem;color: var(--cherry);opacity:.3;display:block;margin-bottom:16px"></i>
-                            <h2>Access Restricted</h2>
-                            <p style="color:var(--gray-dark);margin-top:8px">Only Discord members with the Uploader role can upload resources.</p>
-                            <a href="/" class="btn btn-primary" style="margin-top:20px">Go Home</a>
-                        </div>`;
-                }
-            } catch(e) {
-                window.location.href = '/';
-            }
-        });
-
-        // Step navigation
-        function nextStep(step) {
-            if (step === 2 && !validateStep1()) return;
-            showStep(step);
-        }
-        function prevStep(step) { showStep(step); }
-
-        function showStep(step) {
-            currentStep = step;
-            document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
-            document.getElementById(`step${step}`).classList.add('active');
-            
-            // Update step indicators
-            for (let i = 1; i <= 3; i++) {
-                const dot = document.getElementById(`stepDot${i}`);
-                const line = document.getElementById(`stepLine${i}`);
-                dot.classList.remove('active', 'done', 'dot-pulse');
-                if (line) line.classList.remove('done', 'line-flow');
-                
-                if (i < step) {
-                    dot.classList.add('done');
-                    dot.innerHTML = '<i class="fas fa-check"></i>';
-                    if (line) line.classList.add('done');
-                } else if (i === step) {
-                    dot.classList.add('active', 'dot-pulse');
-                    dot.innerHTML = i;
-                }
-            }
-            
-            // Update step labels
-            document.querySelectorAll('.step-label').forEach((label, idx) => {
-                label.style.color = (idx + 1 === step) ? 'var(--cherry-light)' : '';
-                label.style.textShadow = (idx + 1 === step) ? '0 0 10px rgba(var(--cherry-rgb),0.3)' : '';
-            });
-
-            if (step === 3) buildReview();
-            if (step === 2) {
-                scanCloudResources();
-                loadDestinationEditors();
-            }
-        }
-
-        // Resolve creator profile via HLX API Proxy
-        async function resolveCreatorSocial() {
-            const url = document.getElementById('creatorSocialUrl').value.trim();
-            if (!url) return;
-            
-            const loader = document.getElementById('previewCreatorName');
-            const originalText = loader.textContent;
-            loader.textContent = "Resolving...";
-            
-            try {
-                const resp = await fetch(`/api/hlx/resolve?url=${encodeURIComponent(url)}`);
-                const data = await resp.json();
-                if (data.success) {
-                    document.getElementById('creatorName').value = data.nickname;
-                    document.getElementById('creatorAvatar').value = data.avatar;
-                    
-                    // Update preview card
-                    document.getElementById('previewCreatorName').textContent = data.nickname;
-                    const wrapper = document.getElementById('previewAvatarWrapper');
-                    if (data.avatar) {
-                        wrapper.innerHTML = `<img src="${data.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
-                    } else {
-                        wrapper.innerHTML = `<i class="fas fa-user" style="font-size:0.6rem"></i>`;
-                    }
-                    showAlert(`Social profile resolved: ${data.nickname}`, false);
-                    return data; // Return data for HLX assistant
-                } else {
-                    showAlert('Could not resolve social media profile. Please check the URL.', true);
-                    loader.textContent = "Unresolved";
-                    document.getElementById('creatorName').value = "";
-                    document.getElementById('creatorAvatar').value = "";
-                    return null;
-                }
-            } catch(e) {
-                console.error("Resolve error:", e);
-                loader.textContent = "Error";
-                document.getElementById('creatorName').value = "";
-                document.getElementById('creatorAvatar').value = "";
-                return null;
-            }
-            updateLiveCardPreview();
-        }
-
-        // ── HLX Social Lookup Assistant ──
-        let hlxSelectedPlatform = 'tiktok';
-        const hlxUrlPatterns = {
-            tiktok: u => `https://www.tiktok.com/@${u}`,
-            instagram: u => `https://www.instagram.com/${u}`,
-            youtube: u => `https://www.youtube.com/@${u}`,
-            x: u => `https://x.com/${u}`
-        };
-        const hlxPlatformLabels = {
-            tiktok: 'TikTok', instagram: 'Instagram', youtube: 'YouTube', x: 'X/Twitter'
-        };
-
-        function toggleHlxOverlay() {
-            const overlay = document.getElementById('hlxOverlay');
-            const isOpen = overlay.style.display === 'block';
-            overlay.style.display = isOpen ? 'none' : 'block';
-            if (!isOpen) {
-                document.getElementById('hlxUsernameInput').focus();
-                document.getElementById('hlxStatus').style.display = 'none';
-            }
-        }
-
-        function selectHlxPlatform(btn, platform) {
-            hlxSelectedPlatform = platform;
-            document.querySelectorAll('#hlxPlatformPicker .hlx-platform-btn').forEach(b => b.classList.remove('active'));
-            btn.classList.add('active');
-            document.getElementById('hlxAtPrefix').textContent = platform === 'x' ? '' : '@';
-            document.getElementById('hlxStatus').style.display = 'none';
-            document.getElementById('hlxUsernameInput').focus();
-        }
-
-        async function hlxLookupAndFill() {
-            const username = document.getElementById('hlxUsernameInput').value.trim();
-            if (!username) {
-                document.getElementById('hlxStatus').style.display = 'block';
-                document.getElementById('hlxStatus').className = 'hlx-status error';
-                document.getElementById('hlxStatus').innerHTML = '<i class="fas fa-exclamation-circle"></i> Please enter a username';
-                return;
-            }
-
-            const url = hlxUrlPatterns[hlxSelectedPlatform](username);
-            const statusEl = document.getElementById('hlxStatus');
-            statusEl.style.display = 'block';
-            statusEl.className = 'hlx-status';
-            statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Resolving profile...';
-
-            // Set the main URL field
-            document.getElementById('creatorSocialUrl').value = url;
-
-            try {
-                const resp = await fetch(`/api/hlx/resolve?url=${encodeURIComponent(url)}`);
-                const data = await resp.json();
-                if (data.success) {
-                    document.getElementById('creatorName').value = data.nickname;
-                    document.getElementById('creatorAvatar').value = data.avatar;
-
-                    document.getElementById('previewCreatorName').textContent = data.nickname;
-                    const wrapper = document.getElementById('previewAvatarWrapper');
-                    if (data.avatar) {
-                        wrapper.innerHTML = `<img src="${data.avatar}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
-                    } else {
-                        wrapper.innerHTML = `<i class="fas fa-user" style="font-size:0.6rem"></i>`;
-                    }
-
-                    statusEl.className = 'hlx-status success';
-                    statusEl.innerHTML = `
-                        <div class="hlx-result">
-                            ${data.avatar ? `<img src="${data.avatar}" alt="">` : '<i class="fas fa-user" style="font-size:1.2rem;color:var(--cherry)"></i>'}
-                            <div>
-                                <div class="hlx-name">${data.nickname}</div>
-                                <div class="hlx-platform-tag">${hlxPlatformLabels[hlxSelectedPlatform]}</div>
-                            </div>
-                        </div>`;
-                    
-                    updateLiveCardPreview();
-                    
-                    // Auto-close after success
-                    setTimeout(() => { document.getElementById('hlxOverlay').style.display = 'none'; }, 1800);
-                } else {
-                    statusEl.className = 'hlx-status error';
-                    statusEl.innerHTML = `<i class="fas fa-exclamation-circle"></i> ${data.error || 'Could not resolve profile. Check the username.'}`;
-                }
-            } catch(e) {
-                statusEl.className = 'hlx-status error';
-                statusEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> Network error. Please try again.';
-            }
-        }
-
-        // Close overlay on click outside
-        document.addEventListener('click', function(e) {
-            const overlay = document.getElementById('hlxOverlay');
-            const btn = document.getElementById('hlxAssistantBtn');
-            if (overlay.style.display === 'block' && !overlay.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
-                overlay.style.display = 'none';
-            }
-        });
-
-        // Close overlay on Escape
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                document.getElementById('hlxOverlay').style.display = 'none';
-            }
-        });
-
-        // Live preview of preset/plugin card
-        function updateLiveCardPreview() {
-            const title = document.getElementById('productName').value.trim() || "Untitled Resource";
-            const category = document.getElementById('productCategory').value || "others";
-            const desc = document.getElementById('productDesc').value.trim() || "No description provided";
-            
-            document.getElementById('previewTitle').textContent = title;
-            document.getElementById('previewDesc').textContent = desc;
-            
-            const catBadge = document.getElementById('previewCategoryBadge');
-            const catLabels = {
-                'after-effects': 'After Effects',
-                'premiere-pro': 'Premiere Pro',
-                'photoshop': 'Photoshop',
-                'video-star': 'Video Star',
-                'topaz-labs': 'Topaz Labs',
-                'others': 'Others'
-            };
-            catBadge.textContent = catLabels[category] || 'Others';
-            catBadge.className = 'tag-' + category;
-            
-            const inputs = document.querySelectorAll('.thumb-input');
-            let firstThumb = '';
-            inputs.forEach(i => { if (i.value.trim() && !firstThumb) firstThumb = i.value.trim(); });
-            
-            const thumbContainer = document.getElementById('previewThumbContainer');
-            if (firstThumb) {
-                thumbContainer.innerHTML = `<img src="${firstThumb}" style="width:100%;height:100%;object-fit:cover">`;
-            } else {
-                thumbContainer.innerHTML = `<i class="fas fa-sliders" style="font-size:2.5rem;color:var(--cherry);opacity:.3"></i>`;
-            }
-        }
-
-        // Validation
-        function validateStep1() {
-            const name = document.getElementById('productName').value.trim();
-            const creator = document.getElementById('creatorName').value.trim();
-            const category = document.getElementById('productCategory').value;
-            const desc = document.getElementById('productDesc').value.trim();
-            const socialUrl = document.getElementById('creatorSocialUrl').value.trim();
-            
-            if (!socialUrl) {
-                showAlert('Please enter your Creator Social Media URL', true);
-                return false;
-            }
-            if (!creator) {
-                showAlert('Creator name must be resolved. Please make sure the Creator Social Media URL is valid.', true);
-                return false;
-            }
-            if (!name || !category || !desc) {
-                showAlert('Please fill all required fields (*)', true);
-                return false;
-            }
-
-            productData = {
-                ...productData,
-                name,
-                author: creator,
-                category,
-                tags: document.getElementById('productTags').value.split(',').map(t => t.trim()).filter(Boolean),
-                description: desc,
-                payhip_link: document.getElementById('payhipLink').value.trim(),
-                creator_social_url: socialUrl,
-                creator_nickname: creator,
-                creator_avatar: document.getElementById('creatorAvatar').value.trim(),
-                uploader_id: currentUser?.id || '',
-                uploader_name: currentUser?.global_name || currentUser?.username || '',
-                uploader_avatar: currentUser?.avatar
-                    ? `https://cdn.discordapp.com/avatars/${currentUser.id}/${currentUser.avatar}.png?size=64`
-                    : ''
-            };
-            return true;
-        }
-
-        // Payhip scraper - auto-fills form
-        async function scrapePayhip() {
-            const link = document.getElementById('payhipLink').value.trim();
-            if (!link) { showAlert('Enter a Payhip link first', true); return; }
-            if (!link.includes('payhip.com')) { showAlert('Not a Payhip URL', true); return; }
-            
-            const btn = document.getElementById('btnScrape');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-
-            try {
-                const resp = await fetch(`/api/payhip/scrape?url=${encodeURIComponent(link)}`);
-                const data = await resp.json();
-                if (data.success) {
-                    scrapedData = data;
-                    // AUTO-FILL all fields
-                    if (data.title) document.getElementById('productName').value = data.title;
-                    if (data.description) document.getElementById('productDesc').value = data.description;
-                    
-                    // Auto-fill thumbnails
-                    if (data.thumbnails?.length) {
-                        const container = document.getElementById('thumbnailUrls');
-                        const thumbs = data.thumbnails;
-                        // Fill first input with first thumbnail
-                        const inputs = container.querySelectorAll('.thumb-input');
-                        inputs[0]?.value !== undefined && (inputs[0].value = thumbs[0] || '');
-                        // Add more fields for remaining
-                        for (let i = 1; i < thumbs.length; i++) {
-                            const div = document.createElement('div');
-                            div.style.display = 'contents';
-                            div.innerHTML = `<input type="url" class="thumb-input" value="${thumbs[i]}" placeholder="https://...image.png" oninput="updateThumbPreview(); updateLiveCardPreview()">`;
-                            container.insertBefore(div, container.lastElementChild);
-                        }
-                    }
-                    
-                    document.getElementById('scrapePreview').classList.add('active');
-                    document.getElementById('scrapeStatus').textContent = `Auto-filled: ${data.title || 'product'} (${data.thumbnails?.length || 0} images)`;
-                    showAlert('Form auto-filled from Payhip!', false);
-                } else {
-                    showAlert('Scrape failed: ' + (data.error || 'Unknown'), true);
-                }
-            } catch(e) {
-                showAlert('Scrape error: ' + e.message, true);
-            }
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fas fa-magic"></i> Scrape';
-            updateThumbPreview();
-            updateLiveCardPreview();
-        }
-        
-        function autoScrape() {
-            const link = document.getElementById('payhipLink').value.trim();
-            if (link.includes('payhip.com') && !document.getElementById('productName').value) {
-                scrapePayhip();
-            }
-        }
-
-        function addThumbnailField() {
-            const container = document.getElementById('thumbnailUrls');
-            const div = document.createElement('div');
-            div.style.display = 'contents';
-            div.innerHTML = `<input type="url" class="thumb-input" placeholder="https://...image.png" oninput="updateThumbPreview(); updateLiveCardPreview()">`;
-            container.insertBefore(div, container.lastElementChild);
-        }
-        
-        function updateThumbPreview() {
-            const preview = document.getElementById('thumbPreview');
-            const inputs = document.querySelectorAll('.thumb-input');
-            const urls = [];
-            inputs.forEach(i => { if (i.value.trim()) urls.push(i.value.trim()); });
-            productData.thumbnails = urls;
-            productData.thumbnail = urls[0] || '';  // main thumbnail for resource cards
-            
-            preview.innerHTML = urls.map((u, idx) => `
-                <div class="tp-item">
-                    <img src="${u}" onerror="this.parentElement.style.opacity='0.3'">
-                    <div class="tp-remove" onclick="this.parentElement.remove(); updateThumbPreview()">×</div>
-                </div>
-            `).join('');
-        }
-
-        // Cloud storage
-        let userResources = [];
-        let selectedSourceResource = null;
-
-        async function scanCloudResources() {
-            const container = document.getElementById('detectedResourcesList');
-            container.innerHTML = `
-                <div style="color: var(--gray-dark); text-align: center; font-size: 0.82rem;">
-                    <i class="fas fa-spinner fa-spin" style="font-size: 1.8rem; color: var(--cherry); display: block; margin-bottom: 12px;"></i>
-                    Scanning your personal cloud space...
-                </div>
-            `;
-            
-            try {
-                const resp = await fetch('/api/sftpgo/detected-resources', { credentials: 'include' });
-                const data = await resp.json();
-                if (data.success) {
-                    userResources = data.resources || [];
-                    renderDetectedResources();
-                } else {
-                    container.innerHTML = `<div style="color:#ff3860;font-size:0.8rem;text-align:center;"><i class="fas fa-circle-exclamation" style="font-size:1.5rem;display:block;margin-bottom:8px"></i>Failed to fetch: ${data.error || 'Unknown'}</div>`;
-                }
-            } catch(e) {
-                container.innerHTML = `<div style="color:#ff3860;font-size:0.8rem;text-align:center;"><i class="fas fa-circle-exclamation" style="font-size:1.5rem;display:block;margin-bottom:8px"></i>Scan failed: ${e.message}</div>`;
-            }
-        }
-
-        function renderDetectedResources() {
-            const container = document.getElementById('detectedResourcesList');
-            if (userResources.length === 0) {
-                container.innerHTML = `
-                    <div style="color: var(--gray-dark); text-align: center; font-size: 0.8rem; max-width: 320px; padding: 10px 0;">
-                        <i class="fas fa-folder-open" style="font-size: 1.8rem; display: block; margin-bottom: 10px; opacity: .25;"></i>
-                        No valid resources were detected yet. Upload folders to your SFTPGo personal cloud as <strong style="color:var(--gray)">EDITOR/RESOURCE/files</strong>.
-                    </div>
-                `;
-                return;
-            }
-
-            container.innerHTML = `
-                <div style="width: 100%; display: flex; flex-direction: column; gap: 8px; text-align: left;">
-                    ${userResources.map((res, index) => {
-                        const isSelected = selectedSourceResource && selectedSourceResource.editor === res.editor && selectedSourceResource.resource === res.resource;
-                        return `
-                            <div class="file-item ${isSelected ? 'selected' : ''}" onclick="selectSourceFolder(${index}, this)" style="border: 1px solid ${isSelected ? 'var(--cherry)' : 'rgba(var(--cherry-rgb),0.06)'}; padding: 12px 14px; border-radius: 8px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; gap: 12px; background: ${isSelected ? 'rgba(var(--cherry-rgb),0.1)' : 'rgba(0,0,0,0.15)'};">
-                                <i class="fas fa-folder-open" style="color: ${isSelected ? 'var(--cherry)' : '#88616a'}; font-size: 1.2rem;"></i>
-                                <div style="flex: 1; min-width: 0;">
-                                    <div style="font-weight: 700; color: #fff; font-size: 0.88rem;">${res.editor} &rarr; ${res.resource}</div>
-                                    <div style="font-size: 0.72rem; color: var(--gray-dark); margin-top: 2px;">Contains ${res.files.length} file(s)</div>
-                                </div>
-                                <i class="fas fa-circle-check" style="color: var(--cherry); display: ${isSelected ? 'block' : 'none'};"></i>
-                            </div>
-                        `;
-                    }).join('')}
-                </div>
-            `;
-        }
-
-        function selectSourceFolder(idx, element) {
-            selectedSourceResource = userResources[idx];
-            
-            renderDetectedResources();
-            
-            const select = document.getElementById('destinationEditorSelect');
-            let found = false;
-            for(let i=0; i<select.options.length; i++) {
-                if (select.options[i].value === selectedSourceResource.editor) {
-                    select.selectedIndex = i;
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                document.getElementById('newEditorInput').value = selectedSourceResource.editor;
-            }
-            
-            updateCheckConflict();
-        }
-
-        async function loadDestinationEditors() {
-            const select = document.getElementById('destinationEditorSelect');
-            select.innerHTML = '<option value="">Loading editors...</option>';
-            try {
-                const resp = await fetch('/api/products/destination-editors', { credentials: 'include' });
-                const data = await resp.json();
-                if (data.success) {
-                    select.innerHTML = '<option value="">Select destination editor...</option>' + 
-                        data.editors.map(e => `<option value="${e}">${e}</option>`).join('');
-                } else {
-                    select.innerHTML = '<option value="">Failed to load editors</option>';
-                }
-            } catch(e) {
-                select.innerHTML = '<option value="">Connection error</option>';
-            }
-            updateCheckConflict();
-        }
-
-        async function createNewDestinationFolder() {
-            const input = document.getElementById('newEditorInput');
-            const folderName = input.value.trim();
-            if (!folderName) {
-                showAlert('Please enter an editor folder name', true);
-                return;
-            }
-            
-            try {
-                const resp = await fetch('/api/products/create-editor', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ name: folderName })
-                });
-                const data = await resp.json();
-                if (data.success) {
-                    showAlert(`Editor folder '${folderName}' created successfully!`, false);
-                    input.value = '';
-                    await loadDestinationEditors();
-                    const select = document.getElementById('destinationEditorSelect');
-                    for(let i=0; i<select.options.length; i++) {
-                        if (select.options[i].value === folderName) {
-                            select.selectedIndex = i;
-                            break;
-                        }
-                    }
-                    updateCheckConflict();
-                } else {
-                    showAlert(data.error || 'Failed to create folder', true);
-                }
-            } catch(e) {
-                showAlert('Failed to create folder: ' + e.message, true);
-            }
-        }
-
-        function updateCheckConflict() {
-            const destEditor = document.getElementById('destinationEditorSelect').value;
-            const textEl = document.getElementById('destinationPathText');
-            const displayEl = document.getElementById('cloudFilePathDisplay');
-            
-            if (selectedSourceResource && destEditor) {
-                textEl.innerHTML = `Destination: <strong style="color: var(--cherry);">${destEditor}/${selectedSourceResource.resource}</strong>`;
-                displayEl.value = `${destEditor}/${selectedSourceResource.resource}`;
-            } else {
-                textEl.innerHTML = 'Destination: <strong style="color: var(--gray-dark);">EDITOR/RESOURCE</strong>';
-                displayEl.value = '';
-            }
-        }
-
-        async function transferToProduction() {
-            if (!selectedSourceResource) {
-                showAlert('Please select a source resource first (Section 1)', true);
-                return;
-            }
-            const destEditor = document.getElementById('destinationEditorSelect').value;
-            if (!destEditor) {
-                showAlert('Please select or create a destination editor (Section 2)', true);
-                return;
-            }
-            
-            const btn = document.getElementById('btnTransferCloud');
-            const originalHtml = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Copying files on disk...';
-            
-            try {
-                const resp = await fetch('/api/products/transfer', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        product_id: productData.id,
-                        source_editor: selectedSourceResource.editor,
-                        source_resource: selectedSourceResource.resource,
-                        destination_editor: destEditor
-                    })
-                });
-                const data = await resp.json();
-                if (data.success) {
-                    showAlert('Files transferred to production storage successfully!', false);
-                    productData.file_path = data.file_path;
-                    
-                    document.getElementById('btnNextStep3').disabled = false;
-                    btn.innerHTML = '<i class="fas fa-circle-check"></i> Transfer Completed';
-                } else {
-                    showAlert(data.error || 'Transfer failed', true);
-                    btn.disabled = false;
-                    btn.innerHTML = originalHtml;
-                }
-            } catch(e) {
-                showAlert('Transfer connection error: ' + e.message, true);
-                btn.disabled = false;
-                btn.innerHTML = originalHtml;
-            }
-        }
-
-        // Review
-        function buildReview() {
-            const summary = document.getElementById('reviewSummary');
-            summary.innerHTML = `
-                <div class="row"><span>Resource ID</span><span>${productData.id}</span></div>
-                <div class="row"><span>Product Name</span><span>${productData.name || '-'}</span></div>
-                <div class="row"><span>Creator</span><span>${productData.author || '-'}</span></div>
-                <div class="row"><span>Category</span><span>${productData.category || '-'}</span></div>
-                <div class="row"><span>Tags</span><span>${(productData.tags || []).join(', ') || '-'}</span></div>
-                <div class="row"><span>Cloud Path</span><span style="font-family:monospace;color: var(--cherry)">${productData.file_path || 'None'}</span></div>
-                <div class="row"><span>Status</span><span style="color: var(--cherry)">Pending Review</span></div>
-            `;
-        }
-
-        // Submit
-        async function submitProduct() {
-            const btn = document.getElementById('btnSubmit');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
-
-            try {
-                const resp = await fetch('/api/products/submit', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({ ...productData, files: selectedFiles }),
-                });
-                const data = await resp.json();
-                if (data.success) {
-                    document.getElementById('step3').innerHTML = `
-                        <div class="confirm-card">
-                            <div class="check-icon"><i class="fas fa-check"></i></div>
-                            <h2>Submitted!</h2>
-                            <p style="color:var(--gray-dark);margin:10px 0">Your resource has been submitted for review.</p>
-                            <p style="font-size:.8rem;color:var(--gray-dark)">ID: ${data.id}</p>
-                            <a href="/" class="btn btn-primary" style="margin-top:20px">Go Home</a>
-                        </div>`;
-                } else {
-                    showAlert('Failed: ' + (data.error || 'Unknown'), true);
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit for Review';
-                }
-            } catch(e) {
-                showAlert('Submit failed: ' + e.message, true);
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit for Review';
-            }
-        }
-
-        function showAlert(msg, isError) {
-            const el = document.getElementById('alertBox');
-            el.textContent = msg;
-            el.classList.add('show');
-            if (!isError) el.classList.add('alert-success');
-            else el.classList.remove('alert-success');
-            setTimeout(() => el.classList.remove('show'), 4000);
-        }
+        let step=1,prod={},selRes=null,selDstEditor='',transferred='',cloudOk=false,cloudFiles=[],currentUser=null,hlxPlatform='tiktok';
+        document.addEventListener('DOMContentLoaded',async()=>{prod.id='preset-'+Date.now().toString(36);document.getElementById('resourceId').value=prod.id;try{const r=await fetch('/api/me',{credentials:'include'});if(!r.ok){window.location.href='/';return}const u=await r.json();currentUser=u;if(!u.is_admin&&!u.can_upload){document.getElementById('sec1').innerHTML='<div style="text-align:center;padding:60px 20px"><i class="fas fa-lock" style="font-size:3rem;color:var(--cherry);opacity:.3;display:block;margin-bottom:16px"></i><h2>Access Restricted</h2><p style="color:var(--muted-dark);margin-top:8px">Uploader role required.</p><a href="/" class="btn btn-primary" style="margin-top:16px">Go Home</a></div>'}}catch(e){window.location.href='/'}});
+        function goStep(s){step=s;document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));document.getElementById('sec'+s).classList.add('active');for(let i=1;i<=3;i++){const d=document.getElementById('wzDot'+i),l=document.getElementById('wzLine'+i),info=d.parentElement.querySelector('.wz-label');d.classList.remove('active','done');info.classList.remove('active');if(l)l.classList.remove('done');if(i<s){d.classList.add('done');d.innerHTML='<i class="fas fa-check"></i>';if(l)l.classList.add('done')}else if(i===s){d.classList.add('active');d.innerHTML=i;info.classList.add('active')}else{d.innerHTML=i}}if(s===2){scanCloud();loadEditors()}if(s===3)buildReview()}
+        function alert(msg,err){const b=document.getElementById('alertBox');b.textContent=msg;b.className='alert show '+(err?'alert-error':'alert-success');setTimeout(()=>b.classList.remove('show'),4000)}
+        async function resolveSocial(){const url=document.getElementById('creatorSocialUrl').value.trim();if(!url)return;try{const r=await fetch('/api/hlx/resolve?url='+encodeURIComponent(url));const d=await r.json();if(d.success){document.getElementById('creatorName').value=d.nickname;document.getElementById('creatorAvatar').value=d.avatar;updateLivePreview()}}catch(e){}}
+        function toggleHlx(){document.getElementById('hlxOverlay').style.display=document.getElementById('hlxOverlay').style.display==='none'?'block':'none'}
+        function selHlxPlat(btn,p){hlxPlatform=p;document.querySelectorAll('#hlxPlatforms .btn-icon').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}
+        async function hlxLookup(){const user=document.getElementById('hlxUser').value.trim();if(!user)return;const st=document.getElementById('hlxStatus');st.style.display='block';st.textContent='Searching...';st.className='';try{const r=await fetch('/api/hlx/resolve?platform='+hlxPlatform+'&username='+encodeURIComponent(user));const d=await r.json();if(d.success){document.getElementById('creatorSocialUrl').value=d.url||'';document.getElementById('creatorName').value=d.nickname;document.getElementById('creatorAvatar').value=d.avatar;st.className='alert-success';st.innerHTML='<i class="fas fa-check-circle"></i> Found: '+d.nickname;updateLivePreview();toggleHlx()}else{st.className='alert-error';st.textContent=d.error||'Not found'}}catch(e){st.className='alert-error';st.textContent='Network error'}}
+        async function autoScrape(){const url=document.getElementById('payhipLink').value.trim();if(url&&url.includes('payhip.com'))scrapePayhip()}
+        async function scrapePayhip(){const url=document.getElementById('payhipLink').value.trim();if(!url)return;const btn=document.getElementById('btnScrape');btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i>';try{const r=await fetch('/api/payhip/scrape?url='+encodeURIComponent(url));const d=await r.json();if(d.success){if(d.title)document.getElementById('productName').value=d.title;if(d.description)document.getElementById('productDesc').value=d.description;if(d.thumbnails&&d.thumbnails.length){document.querySelector('#thumbInputs .thumb-url').value=d.thumbnails[0];updateThumbPreviews()}document.getElementById('scrapedBadge').classList.add('show')}}catch(e){}btn.disabled=false;btn.innerHTML='<i class="fas fa-magic"></i> Scrape'}
+        function addThumbField(){const div=document.createElement('div');div.className='thumb-row';div.style.marginTop='6px';div.innerHTML='<input type="url" placeholder="https://...image.png" class="thumb-url" oninput="updateThumbPreviews();updateLivePreview()"><button class="btn btn-ghost btn-sm" onclick="this.parentElement.remove();updateThumbPreviews();updateLivePreview()"><i class="fas fa-times"></i></button>';document.getElementById('thumbInputs').appendChild(div)}
+        function updateThumbPreviews(){const urls=[...document.querySelectorAll('.thumb-url')].map(x=>x.value.trim()).filter(Boolean);const c=document.getElementById('thumbPreviews');c.innerHTML=urls.map((u,i)=>'<div class="tp-item"><img src="'+u+'" onerror="this.parentElement.remove()"><div class="tp-rm" onclick="this.parentElement.remove();updateThumbPreviews();updateLivePreview()">&times;</div></div>').join('')}
+        function updateLivePreview(){const n=document.getElementById('productName').value.trim()||'Untitled',d=document.getElementById('productDesc').value.trim()||'No description',cat=document.getElementById('productCategory').value||'others',cats={afterEffects:'After Effects','premiere-pro':'Premiere Pro',photoshop:'Photoshop','video-star':'Video Star','topaz-labs':'Topaz Labs',others:'Others'},cn=document.getElementById('creatorName').value||'Zyrex',av=document.getElementById('creatorAvatar').value;document.getElementById('lcTitle').textContent=n;document.getElementById('lcDesc').textContent=d.length>60?d.slice(0,60)+'...':d;document.getElementById('lcCatBadge').textContent=cats[cat]||'Others';document.getElementById('lcName').textContent=cn;document.getElementById('lcAv').innerHTML=av?'<img src="'+av+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">':'<i class="fas fa-user"></i>';const thumbs=[...document.querySelectorAll('.thumb-url')].map(x=>x.value.trim()).filter(Boolean);const lcImg=document.getElementById('lcImg');if(thumbs[0])lcImg.innerHTML='<img src="'+thumbs[0]+'" style="width:100%;height:100%;object-fit:cover" onerror="this.parentElement.innerHTML=\\'<i class=\\\\'fas fa-sliders\\\\'></i>\\'">';else lcImg.innerHTML='<i class="fas fa-sliders"></i>'}
+        async function scanCloud(){const list=document.getElementById('resList');list.innerHTML='<div class="empty"><i class="fas fa-spinner fa-spin"></i>Scanning cloud...</div>';try{const r=await fetch('/api/sftpgo/detected-resources',{credentials:'include'});const d=await r.json();if(d.success&&d.resources&&d.resources.length){cloudOk=true;cloudFiles=d.resources;list.innerHTML=d.resources.map((res,i)=>'<div class="res-card'+(selRes===i?' selected':'')+'" onclick="selectResource('+i+')"><div class="rc-icon"><i class="fas fa-folder"></i></div><div class="rc-info"><strong>'+res.editor+' / '+res.resource+'</strong><span>'+(res.files||[]).length+' files</span></div><i class="fas fa-chevron-right" style="color:var(--muted-dark)"></i></div>').join('')}else{cloudOk=false;list.innerHTML='<div class="empty"><i class="fas fa-cloud-upload-alt"></i>No resources detected in your cloud</div>'}}catch(e){list.innerHTML='<div class="empty"><i class="fas fa-exclamation-triangle"></i>Failed to scan cloud</div>'}}
+        function selectResource(i){selRes=i;document.querySelectorAll('.res-card').forEach((c,idx)=>c.classList.toggle('selected',idx===i));const res=cloudFiles[i];document.getElementById('cloudPath').value=res.editor+'/'+res.resource;document.getElementById('destPath').innerHTML='Destination: <strong>'+res.editor+'/'+res.resource+'</strong>';checkConflict()}
+        async function loadEditors(){try{const r=await fetch('/api/products/destination-editors',{credentials:'include'});const d=await r.json();if(d.success&&d.editors){const sel=document.getElementById('dstEditor');sel.innerHTML='<option value="">Select editor...</option>'+d.editors.map(e=>'<option value="'+e+'">'+e+'</option>').join('')}}catch(e){}}
+        function checkConflict(){const editor=document.getElementById('dstEditor').value||document.getElementById('newEditor').value.trim();if(editor&&selRes!==null){document.getElementById('btnTransfer').disabled=false;selDstEditor=editor;document.getElementById('destPath').innerHTML='Destination: <strong>'+editor+'/'+(cloudFiles[selRes]?.resource||'')+'</strong>'}else{document.getElementById('btnTransfer').disabled=true}}
+        async function createEditor(){const name=document.getElementById('newEditor').value.trim();if(!name){alert('Enter a folder name',true);return}try{const r=await fetch('/api/products/create-editor',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name}),credentials:'include'});const d=await r.json();if(d.success){alert('Folder created!',false);loadEditors();document.getElementById('dstEditor').value=name;checkConflict()}else alert(d.error||'Failed',true)}catch(e){alert('Network error',true)}}
+        async function transfer(){if(selRes===null||!selDstEditor)return;const res=cloudFiles[selRes],btn=document.getElementById('btnTransfer');btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Transferring...';try{const r=await fetch('/api/products/transfer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({product_id:prod.id,source_editor:res.editor,source_resource:res.resource,destination_editor:selDstEditor}),credentials:'include'});const d=await r.json();if(d.success){transferred=d.file_path||'';alert('Transfer complete!',false);document.getElementById('btnToStep3').disabled=false}else alert(d.error||'Transfer failed',true)}catch(e){alert('Network error',true)}btn.disabled=false;btn.innerHTML='<i class="fas fa-cloud-arrow-up"></i> Transfer to Production'}
+        function buildReview(){const n=document.getElementById('productName').value.trim()||'Untitled',cat=document.getElementById('productCategory').value||'others',tags=document.getElementById('productTags').value.trim(),desc=document.getElementById('productDesc').value.trim(),cn=document.getElementById('creatorName').value||'N/A',fp=transferred||'Not transferred';document.getElementById('reviewSummary').innerHTML='<div class="rs-row"><span>Name</span><strong>'+n+'</strong></div><div class="rs-row"><span>Category</span><strong>'+cat+'</strong></div>'+(tags?'<div class="rs-row"><span>Tags</span><strong>'+tags+'</strong></div>':'')+'<div class="rs-row"><span>Creator</span><strong>'+cn+'</strong></div><div class="rs-row"><span>File Path</span><strong style="font-size:.7rem;color:var(--muted)">'+fp+'</strong></div>'}
+        async function submitProduct(){const btn=document.getElementById('btnSubmit');btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Submitting...';const payload={id:prod.id,name:document.getElementById('productName').value.trim(),category:document.getElementById('productCategory').value,tags:document.getElementById('productTags').value.trim(),description:document.getElementById('productDesc').value.trim(),creator_nickname:document.getElementById('creatorName').value||'',creator_social_url:document.getElementById('creatorSocialUrl').value.trim(),creator_avatar:document.getElementById('creatorAvatar').value||'',thumbnails:[...document.querySelectorAll('.thumb-url')].map(x=>x.value.trim()).filter(Boolean),file_path:transferred||'',type:'preset'};if(!payload.name||!payload.category||!payload.description){alert('Fill required fields',true);btn.disabled=false;btn.innerHTML='<i class="fas fa-paper-plane"></i> Submit for Review';return}try{const r=await fetch('/api/products/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),credentials:'include'});const d=await r.json();if(r.ok&&d.success){document.getElementById('sec3').innerHTML='<div class="review-card"><div class="check"><i class="fas fa-check"></i></div><h2>Submitted!</h2><p style="color:var(--muted-dark)">Your resource is under review.</p><a href="/product?id='+(d.id||prod.id)+'" class="btn btn-primary" style="margin-top:20px">View Product</a></div>'}else alert(d.error||'Submit failed',true)}catch(e){alert('Network error',true)}btn.disabled=false;btn.innerHTML='<i class="fas fa-paper-plane"></i> Submit for Review'}
+        updateLivePreview();
     </script>
 </body>
 </html>
