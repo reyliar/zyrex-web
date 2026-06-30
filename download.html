@@ -502,16 +502,17 @@
         // Download tracking
         function trackDownload() {
             if (!product || !product.id) return;
-            var pid = product.id;
-            // LocalStorage
+            // Re-sync from Bot VPS API (single source of truth)
             try {
-                var key = 'zyrex_downloads';
-                var downloads = JSON.parse(localStorage.getItem(key) || '{}');
-                downloads[pid] = (downloads[pid] || 0) + 1;
-                localStorage.setItem(key, JSON.stringify(downloads));
-                updateDownloadCount();
+                fetch('/api/downloads/counts', {credentials: 'include'})
+                    .then(function(r) { return r.json(); })
+                    .then(function(d) {
+                        if (d.success && d.counts) {
+                            localStorage.setItem('zyrex_downloads', JSON.stringify(d.counts));
+                            updateDownloadCount();
+                        }
+                    }).catch(function(){});
             } catch(e) {}
-            // Note: Worker's /api/downloads/download handler tracks to Bot VPS (server-side, reliable)
         }
 
         function updateDownloadCount() {
