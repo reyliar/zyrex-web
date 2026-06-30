@@ -115,8 +115,9 @@
         .live-card-wrap{margin:0}
         .live-card-wrap h4{font-size:.78rem;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:8px}
         .live-card-wrap h4 i{color:var(--cherry)}
-        .live-card{width:100%;border-radius:14px;overflow:hidden;border:1px solid rgba(var(--cherry-rgb),.12);background:rgba(14,6,10,.7);pointer-events:none;transition:all .3s}
+        .live-card{width:100%;border-radius:14px;overflow:hidden;border:1px solid rgba(var(--cherry-rgb),.12);background:rgba(14,6,10,.7);pointer-events:none;transition:all .3s;position:relative}
         .live-card .lc-img{aspect-ratio:16/10;background:#1a1a22;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+        .live-card .lc-img span{display:flex;align-items:center;justify-content:center;width:100%;height:100%}
         .live-card .lc-img i{font-size:2rem;color:var(--cherry);opacity:.2}
         .live-card .lc-img img{width:100%;height:100%;object-fit:cover}
         .live-card .lc-badge{position:absolute;bottom:8px;left:8px;display:flex;gap:4px}
@@ -186,8 +187,9 @@
                     <div class="live-card-wrap">
                         <h4><i class="fas fa-eye"></i> Live Preview</h4>
                         <div class="live-card">
-                            <div class="lc-img" id="lcImg"><i class="fas fa-sliders"></i>
-                            <div class="lc-badge" style="position:absolute;bottom:8px;left:8px"><span id="lcCatBadge">Others</span></div>
+                            <div class="lc-img" id="lcImg">
+                                <span id="lcThumb"><i class="fas fa-sliders"></i></span>
+                                <div class="lc-badge"><span id="lcCatBadge">Others</span></div>
                             </div>
                             <div class="lc-body"><h3 id="lcTitle">Untitled</h3><p id="lcDesc">No description</p>
                                 <div class="lc-foot"><div class="lc-author"><div class="lc-av" id="lcAv"><i class="fas fa-user"></i></div><span class="lc-name" id="lcName">Zyrex</span></div><span class="lc-stats"><i class="fas fa-download"></i> 0</span></div>
@@ -278,9 +280,9 @@
             var thumbs=document.querySelectorAll('.thumb-url');
             var urls=[];
             for(var i=0;i<thumbs.length;i++){var v=thumbs[i].value.trim();if(v)urls.push(v)}
-            var lcImg=document.getElementById('lcImg');
-            if(urls[0]){lcImg.innerHTML='<img src="'+urls[0]+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">'}
-            else{lcImg.innerHTML='<i class="fas fa-sliders"></i>'}
+            var lcThumb=document.getElementById('lcThumb');
+            if(urls[0]){lcThumb.innerHTML='<img src="'+urls[0]+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">'}
+            else{lcThumb.innerHTML='<i class="fas fa-sliders"></i>'}
         }
         async function scanCloud(){const list=document.getElementById('resList');list.innerHTML='<div class="empty"><i class="fas fa-spinner fa-spin"></i>Scanning cloud...</div>';try{const r=await fetch('/api/sftpgo/detected-resources',{credentials:'include'});const d=await r.json();if(d.success&&d.resources&&d.resources.length){cloudOk=true;cloudFiles=d.resources;list.innerHTML=d.resources.map((res,i)=>'<div class="res-card'+(selRes===i?' selected':'')+'" onclick="selectResource('+i+')"><div class="rc-icon"><i class="fas fa-folder"></i></div><div class="rc-info"><strong>'+res.editor+' / '+res.resource+'</strong><span>'+(res.files||[]).length+' files</span></div><i class="fas fa-chevron-right" style="color:var(--muted-dark)"></i></div>').join('')}else{cloudOk=false;list.innerHTML='<div class="empty"><i class="fas fa-cloud-upload-alt"></i>No resources detected in your cloud</div>'}}catch(e){list.innerHTML='<div class="empty"><i class="fas fa-exclamation-triangle"></i>Failed to scan cloud</div>'}}
         function selectResource(i){selRes=i;document.querySelectorAll('.res-card').forEach((c,idx)=>c.classList.toggle('selected',idx===i));const res=cloudFiles[i];document.getElementById('cloudPath').value=res.editor+'/'+res.resource;document.getElementById('destPath').innerHTML='Destination: <strong>'+res.editor+'/'+res.resource+'</strong>';checkConflict()}
