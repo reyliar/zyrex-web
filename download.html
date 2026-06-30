@@ -446,15 +446,11 @@
                 // Sync from persistent API first, then update display
                 (async function() {
                     try {
-                        var dl = JSON.parse(localStorage.getItem('zyrex_downloads') || '{}');
                         var r = await fetch('/api/downloads/counts', {credentials: 'include'});
                         var d = await r.json();
                         if (d.success && d.counts) {
-                            for (var k in d.counts) {
-                                if (d.counts[k] > (dl[k] || 0)) dl[k] = d.counts[k];
-                            }
+                            localStorage.setItem('zyrex_downloads', JSON.stringify(d.counts));
                         }
-                        localStorage.setItem('zyrex_downloads', JSON.stringify(dl));
                     } catch(e) {}
                     updateDownloadCount();
                 })();
