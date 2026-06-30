@@ -1,45 +1,46 @@
 /* ===================== RESOURCES GRID RENDERER ===================== */
 // Data is loaded from resources-data.js via window.resourcesData
 
+let _mergedData = null;
+
 function initResources() {
     const data = window.resourcesData;
     if (!data) { setTimeout(initResources, 100); return; }
-    // Merge localStorage published resources (admin feature)
-    let mergedData = [...data];
+    _mergedData = [...data];
     try {
         const pub = JSON.parse(localStorage.getItem('zyrex_published_resources') || '[]');
         if (pub.length > 0) {
             const existingIds = new Set(data.map(r => r.id));
             const newEntries = pub.filter(r => !existingIds.has(r.id));
-            mergedData = [...data, ...newEntries];
+            _mergedData = [...data, ...newEntries];
         }
     } catch(e) {}
-    syncAndRender(mergedData);
+    syncAndRender(_mergedData);
 }
 
 async function syncAndRender(data) {
+    var apiCounts = {};
     try {
         var r = await fetch("/api/downloads/counts", {credentials: 'include'});
         var d = await r.json();
         if (d.success && d.counts) {
+            apiCounts = d.counts;
             localStorage.setItem("zyrex_downloads", JSON.stringify(d.counts));
         }
     } catch(e) {}
-    // Update stats
-    updateResourceStats(data);
+    // Update stats from API data
+    updateResourceStats(data, apiCounts);
     renderResources(data);
 }
 
-function updateResourceStats(data){
+function updateResourceStats(data, apiCounts){
     var total=data.length;
     var creators=new Set();
     var totalDl=0;
-    var dl={};
-    try{dl=JSON.parse(localStorage.getItem('zyrex_downloads')||'{}')}catch(e){}
     data.forEach(function(r){
         if(r.creator_nickname)creators.add(r.creator_nickname.toLowerCase());
         else if(r.author_name)creators.add(r.author_name.toLowerCase());
-        totalDl+=dl[r.id]||0;
+        totalDl+=(apiCounts[r.id]||0);
     });
     animateRes('statPresets',total);
     animateRes('statCreators',creators.size);
@@ -149,14 +150,8 @@ function resSearch(){
 }
 
 function filterResources() {
-    let data = window.resourcesData || [];
-    // Merge localStorage published resources
-    try {
-        const pub = JSON.parse(localStorage.getItem('zyrex_published_resources') || '[]');
-        const existingIds = new Set(data.map(r => r.id));
-        const newEntries = pub.filter(r => !existingIds.has(r.id));
-        data = [...data, ...newEntries];
-    } catch(e) {}
+    let data = _mergedData || window.resourcesData || [];
+    if (!data.length) return;
     let filtered = data;
     if (currentPlatform !== 'all') filtered = filtered.filter(r => r.platform === currentPlatform || r.platform === 'both');
     if (currentCategory !== 'all') {
