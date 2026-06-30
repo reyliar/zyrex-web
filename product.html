@@ -666,10 +666,13 @@
 
         function renderProductDetail(p, isDb) {
             let backLink = 'plugins';
-            // Only DB presets go to resources
-            if (isDb && p.type === 'preset') backLink = 'resources';
-            // Non-DB products without type default to plugins
-            if (!isDb && !p.type) backLink = 'plugins';
+            // DB presets → resources, DB plugins → plugins
+            if (isDb && p.type === 'plugin') backLink = 'plugins';
+            if (isDb && p.type === 'software') backLink = 'plugins';
+            // Non-DB products with explicit type
+            if (!isDb && p.type === 'plugin') backLink = 'plugins';
+            if (!isDb && p.type === 'software') backLink = 'plugins';
+            // Default (no type or preset type) → resources
 
             const platformTags = [];
             if (p.platform === 'win' || p.platform === 'both') platformTags.push('<span class="tag-win"><i class="fab fa-windows"></i> WIN</span>');
@@ -679,11 +682,6 @@
                 'software': 'Software',
                 'adobe-plugins': 'Adobe Plugin',
                 'ofx-plugins': 'OFX Plugin',
-                'after-effects': 'After Effects',
-                'premiere-pro': 'Premiere Pro',
-                'photoshop': 'Photoshop',
-                'video-star': 'Video Star',
-                'topaz-labs': 'Topaz Labs',
                 'others': 'Others'
             };
 
