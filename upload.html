@@ -172,6 +172,20 @@
                 <input type="hidden" id="resourceId">
                 <div class="field"><label><i class="fas fa-tag"></i> Product Name *</label><input type="text" id="productName" placeholder="Hyper Pop Preset Pack" oninput="updateLivePreview()"></div>
                 <div class="row">
+                    <div class="field">
+                        <label><i class="fas fa-folder"></i> Category *</label>
+                        <select id="productCategory" onchange="updateLivePreview()" style="width:100%;padding:14px 18px;background:rgba(0,0,0,.3);border:1px solid rgba(var(--cherry-rgb),.1);border-radius:var(--radius-sm);color:var(--text);font-family:inherit;font-size:.88rem;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none">
+                            <option value="">Select category...</option>
+                            <option value="after-effects">After Effects</option>
+                            <option value="premiere-pro">Premiere Pro</option>
+                            <option value="photoshop">Photoshop</option>
+                            <option value="video-star">Video Star</option>
+                            <option value="topaz-labs">Topaz Labs</option>
+                            <option value="others">Others</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row">
                     <div class="field social-field">
                         <label><i class="fas fa-link"></i> Creator Social URL *</label>
                         <div class="social-input-wrap">
@@ -245,7 +259,7 @@
             // Validate step 1 before proceeding
             if(s>step&&step===1){
                 var n=document.getElementById('productName').value.trim();
-                var c=document.getElementById('productCategory').value;
+                var c=(document.getElementById('productCategory')||{}).value;
                 var d=document.getElementById('productDesc').value.trim();
                 if(!n){alert('Product Name is required',true);return}
                 if(!c){alert('Category is required',true);return}
@@ -329,23 +343,23 @@
         async function autoScrape(){const url=document.getElementById('payhipLink').value.trim();if(url&&url.includes('payhip.com'))scrapePayhip()}
         async function scrapePayhip(){const url=document.getElementById('payhipLink').value.trim();if(!url)return;const btn=document.getElementById('btnScrape');btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i>';try{const r=await fetch('/api/payhip/scrape?url='+encodeURIComponent(url));const d=await r.json();if(d.success){if(d.title)document.getElementById('productName').value=d.title;if(d.description)document.getElementById('productDesc').value=d.description;if(d.thumbnails&&d.thumbnails.length){document.querySelector('#thumbInputs .thumb-url').value=d.thumbnails[0];updateThumbPreviews()}document.getElementById('scrapedBadge').classList.add('show')}}catch(e){}btn.disabled=false;btn.innerHTML='<i class="fas fa-magic"></i> Scrape'}
         function updateLivePreview(){
-            var n=document.getElementById('productName').value.trim()||'Untitled';
-            var d=document.getElementById('productDesc').value.trim()||'No description';
-            var cat=document.getElementById('productCategory').value||'others';
+            var n=(document.getElementById('productName')||{}).value||'Untitled';n=n.trim()||'Untitled';
+            var d=(document.getElementById('productDesc')||{}).value||'No description';d=d.trim()||'No description';
+            var cat=((document.getElementById('productCategory')||{}).value||'others');
             var labels={'after-effects':'After Effects','premiere-pro':'Premiere Pro','photoshop':'Photoshop','video-star':'Video Star','topaz-labs':'Topaz Labs','others':'Others'};
-            var cn=document.getElementById('creatorName').value||'Zyrex';
-            var av=document.getElementById('creatorAvatar').value;
-            document.getElementById('lcTitle').textContent=n;
-            document.getElementById('lcDesc').textContent=d.length>60?d.slice(0,60)+'...':d;
-            document.getElementById('lcCatBadge').textContent=labels[cat]||'Others';
-            document.getElementById('lcName').textContent=cn;
+            var cn=(document.getElementById('creatorName')||{}).value||'Zyrex';
+            var av=(document.getElementById('creatorAvatar')||{}).value;
+            var lcTitle=document.getElementById('lcTitle');if(lcTitle)lcTitle.textContent=n;
+            var lcDesc=document.getElementById('lcDesc');if(lcDesc)lcDesc.textContent=d.length>60?d.slice(0,60)+'...':d;
+            var lcCatBadge=document.getElementById('lcCatBadge');if(lcCatBadge)lcCatBadge.textContent=labels[cat]||'Others';
+            var lcName=document.getElementById('lcName');if(lcName)lcName.textContent=cn;
             var avEl=document.getElementById('lcAv');
-            if(av){avEl.innerHTML='<img src="'+av+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display=\'none\'">';
-            }else{avEl.innerHTML='<i class="fas fa-user"></i>'}
+            if(avEl){if(av){avEl.innerHTML='<img src="'+av+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display=\'none\'">';
+            }else{avEl.innerHTML='<i class="fas fa-user"></i>'}}
             var thumbUrl=document.getElementById('thumbUrl');
             var lcThumb=document.getElementById('lcThumb');
-            if(thumbUrl&&thumbUrl.value.trim()){lcThumb.innerHTML='<img src="'+thumbUrl.value.trim()+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">'}
-            else{lcThumb.innerHTML='<i class="fas fa-sliders"></i>'}
+            if(lcThumb){if(thumbUrl&&thumbUrl.value.trim()){lcThumb.innerHTML='<img src="'+thumbUrl.value.trim()+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">'}
+            else{lcThumb.innerHTML='<i class="fas fa-sliders"></i>'}}
         }
         async function scanCloud(){const list=document.getElementById('resList');list.innerHTML='<div class="empty"><i class="fas fa-spinner fa-spin"></i>Scanning cloud...</div>';try{const r=await fetch('/api/sftpgo/detected-resources',{credentials:'include'});const d=await r.json();if(d.success&&d.resources&&d.resources.length){cloudOk=true;cloudFiles=d.resources;list.innerHTML=d.resources.map((res,i)=>'<div class="res-card'+(selRes===i?' selected':'')+'" onclick="selectResource('+i+')"><div class="rc-icon"><i class="fas fa-folder"></i></div><div class="rc-info"><strong>'+res.editor+' / '+res.resource+'</strong><span>'+(res.files||[]).length+' files</span></div><i class="fas fa-chevron-right" style="color:var(--muted-dark)"></i></div>').join('')}else{cloudOk=false;list.innerHTML='<div class="empty"><i class="fas fa-cloud-upload-alt"></i>No resources detected in your cloud</div>'}}catch(e){list.innerHTML='<div class="empty"><i class="fas fa-exclamation-triangle"></i>Failed to scan cloud</div>'}}
         function selectResource(i){selRes=i;document.querySelectorAll('.res-card').forEach((c,idx)=>c.classList.toggle('selected',idx===i));const res=cloudFiles[i];document.getElementById('cloudPath').value=res.editor+'/'+res.resource;document.getElementById('destPath').innerHTML='Destination: <strong>'+res.editor+'/'+res.resource+'</strong>';checkConflict()}
@@ -353,8 +367,8 @@
         function checkConflict(){const editor=document.getElementById('dstEditor').value||document.getElementById('newEditor').value.trim();if(editor&&selRes!==null){document.getElementById('btnTransfer').disabled=false;selDstEditor=editor;document.getElementById('destPath').innerHTML='Destination: <strong>'+editor+'/'+(cloudFiles[selRes]?.resource||'')+'</strong>'}else{document.getElementById('btnTransfer').disabled=true}}
         async function createEditor(){const name=document.getElementById('newEditor').value.trim();if(!name){alert('Enter a folder name',true);return}try{const r=await fetch('/api/products/create-editor',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name}),credentials:'include'});const d=await r.json();if(d.success){alert('Folder created!',false);loadEditors();document.getElementById('dstEditor').value=name;checkConflict()}else alert(d.error||'Failed',true)}catch(e){alert('Network error',true)}}
         async function transfer(){if(selRes===null||!selDstEditor)return;const res=cloudFiles[selRes],btn=document.getElementById('btnTransfer');btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Transferring...';try{const r=await fetch('/api/products/transfer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({product_id:prod.id,source_editor:res.editor,source_resource:res.resource,destination_editor:selDstEditor}),credentials:'include'});const d=await r.json();if(d.success){transferred=d.file_path||'';btn.innerHTML='<i class="fas fa-check-circle"></i> Transfer Completed';btn.className='btn btn-ghost';btn.style.opacity='0.7';btn.disabled=true;alert('Transfer complete!',false);document.getElementById('btnToStep3').disabled=false}else alert(d.error||'Transfer failed',true)}catch(e){alert('Network error',true);btn.disabled=false;btn.innerHTML='<i class="fas fa-cloud-arrow-up"></i> Transfer to Production'}}
-        function buildReview(){const n=document.getElementById('productName').value.trim()||'Untitled',cat=document.getElementById('productCategory').value||'others',tags=document.getElementById('productTags').value.trim(),desc=document.getElementById('productDesc').value.trim(),cn=document.getElementById('creatorName').value||'N/A',fp=transferred||'Not transferred';document.getElementById('reviewSummary').innerHTML='<div class="rs-row"><span>Name</span><strong>'+n+'</strong></div><div class="rs-row"><span>Category</span><strong>'+cat+'</strong></div>'+(tags?'<div class="rs-row"><span>Tags</span><strong>'+tags+'</strong></div>':'')+'<div class="rs-row"><span>Creator</span><strong>'+cn+'</strong></div><div class="rs-row"><span>File Path</span><strong style="font-size:.7rem;color:var(--muted)">'+fp+'</strong></div>'}
-        async function submitProduct(){const btn=document.getElementById('btnSubmit');btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Submitting...';var thumbVal=document.getElementById('thumbUrl')?document.getElementById('thumbUrl').value.trim():'';const payload={id:prod.id,name:document.getElementById('productName').value.trim(),category:document.getElementById('productCategory').value,tags:document.getElementById('productTags').value.trim(),description:document.getElementById('productDesc').value.trim(),creator_nickname:document.getElementById('creatorName').value||'',creator_username:document.getElementById('creatorUsername').value||'',creator_social_url:document.getElementById('creatorSocialUrl').value.trim(),creator_avatar:document.getElementById('creatorAvatar').value||'',thumbnail:thumbVal,file_path:transferred||'',type:'preset'};if(!payload.name||!payload.category||!payload.description){alert('Fill required fields',true);btn.disabled=false;btn.innerHTML='<i class="fas fa-paper-plane"></i> Submit for Review';return}try{const r=await fetch('/api/products/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),credentials:'include'});const d=await r.json();if(r.ok&&d.success){document.getElementById('sec3').innerHTML='<div class="review-card"><div class="check"><i class="fas fa-check"></i></div><h2>Published!</h2><p style="color:var(--muted-dark);margin-bottom:8px">Your preset is now live on the resources page.</p><p style="font-size:.75rem;color:var(--muted-dark)"><i class="fas fa-info-circle"></i> Admin approval is not required — presets are published instantly.</p><a href="/preset?id='+(d.id||prod.id)+'" class="btn btn-primary" style="margin-top:20px">View Preset</a> <a href="/resources" class="btn btn-ghost" style="margin-top:20px">Browse Resources</a></div>'}else alert(d.error||'Submit failed',true)}catch(e){alert('Network error',true)}btn.disabled=false;btn.innerHTML='<i class="fas fa-paper-plane"></i> Submit for Review'}
+        function buildReview(){const n=document.getElementById('productName').value.trim()||'Untitled',cat=(document.getElementById('productCategory')||{}).value||'others',tags=document.getElementById('productTags').value.trim(),desc=document.getElementById('productDesc').value.trim(),cn=document.getElementById('creatorName').value||'N/A',fp=transferred||'Not transferred';document.getElementById('reviewSummary').innerHTML='<div class="rs-row"><span>Name</span><strong>'+n+'</strong></div><div class="rs-row"><span>Category</span><strong>'+cat+'</strong></div>'+(tags?'<div class="rs-row"><span>Tags</span><strong>'+tags+'</strong></div>':'')+'<div class="rs-row"><span>Creator</span><strong>'+cn+'</strong></div><div class="rs-row"><span>File Path</span><strong style="font-size:.7rem;color:var(--muted)">'+fp+'</strong></div>'}
+        async function submitProduct(){const btn=document.getElementById('btnSubmit');btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Submitting...';var thumbVal=document.getElementById('thumbUrl')?document.getElementById('thumbUrl').value.trim():'';const payload={id:prod.id,name:document.getElementById('productName').value.trim(),category:(document.getElementById('productCategory')||{}).value||'others',tags:document.getElementById('productTags').value.trim(),description:document.getElementById('productDesc').value.trim(),creator_nickname:document.getElementById('creatorName').value||'',creator_username:document.getElementById('creatorUsername').value||'',creator_social_url:document.getElementById('creatorSocialUrl').value.trim(),creator_avatar:document.getElementById('creatorAvatar').value||'',thumbnail:thumbVal,file_path:transferred||'',type:'preset'};if(!payload.name||!payload.category||!payload.description){alert('Fill required fields',true);btn.disabled=false;btn.innerHTML='<i class="fas fa-paper-plane"></i> Submit for Review';return}try{const r=await fetch('/api/products/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),credentials:'include'});const d=await r.json();if(r.ok&&d.success){document.getElementById('sec3').innerHTML='<div class="review-card"><div class="check"><i class="fas fa-check"></i></div><h2>Published!</h2><p style="color:var(--muted-dark);margin-bottom:8px">Your preset is now live on the resources page.</p><p style="font-size:.75rem;color:var(--muted-dark)"><i class="fas fa-info-circle"></i> Admin approval is not required — presets are published instantly.</p><a href="/preset?id='+(d.id||prod.id)+'" class="btn btn-primary" style="margin-top:20px">View Preset</a> <a href="/resources" class="btn btn-ghost" style="margin-top:20px">Browse Resources</a></div>'}else alert(d.error||'Submit failed',true)}catch(e){alert('Network error',true)}btn.disabled=false;btn.innerHTML='<i class="fas fa-paper-plane"></i> Submit for Review'}
         updateLivePreview();
     </script>
 </body>
