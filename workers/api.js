@@ -843,15 +843,19 @@ async function scrapePayhip(url) {
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    // Bypass: dl subdomain serves static download page from Pages
     if (url.hostname === "dl.zyrexediting.xyz") {
       const newUrl = new URL(request.url);
       if (!newUrl.pathname.startsWith("/api/")) {
         if (newUrl.pathname === "/") {
           newUrl.pathname = "/download.html";
         }
-        // Fetch from Pages deployment (ASSETS binding not available in standalone Worker)
         return fetch(`https://main.zyrexweb.pages.dev${newUrl.pathname}${newUrl.search}`);
       }
+    }
+    // Bypass: storage subdomain handled by Cloudflare Tunnel (SFTPGo on local machine)
+    if (url.hostname === "storage.zyrexediting.xyz") {
+      return fetch(request);
     }
     const path = url.pathname;
 
