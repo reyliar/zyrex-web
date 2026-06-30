@@ -178,7 +178,7 @@
                             <input type="url" id="creatorSocialUrl" placeholder="https://tiktok.com/@creator" onblur="resolveSocial()" oninput="updateLivePreview()">
                             <button class="lookup-btn" onclick="toggleHlx()" title="Social Lookup"><i class="fas fa-magic"></i></button>
                         </div>
-                        <input type="hidden" id="creatorName"><input type="hidden" id="creatorAvatar">
+                        <input type="hidden" id="creatorName"><input type="hidden" id="creatorAvatar"><input type="hidden" id="creatorUsername">
                     </div>
                     <div class="field">
                         <label><i class="fas fa-user"></i> Creator Name</label>
@@ -280,16 +280,24 @@
         async function resolveSocial(){
             var url=document.getElementById('creatorSocialUrl').value.trim();
             if(!url||!url.includes('.'))return;
+            // Extract raw username from URL
+            var rawUser='';
+            try{var parts=url.replace(/\/$/,'').split('/');rawUser=parts[parts.length-1].replace('@','')}catch(e){}
+            document.getElementById('creatorUsername').value=rawUser;
             try{
                 var r=await fetch('/api/hlx/resolve?url='+encodeURIComponent(url),{credentials:'include'});
                 var d=await r.json();
                 if(d.success&&d.nickname){
                     document.getElementById('creatorName').value=d.nickname;
+                    document.getElementById('creatorNameInput').value=d.nickname;
                     document.getElementById('creatorAvatar').value=d.avatar||'';
                     updateLivePreview();
                     alert('Profile found: '+d.nickname,false);
                 }else if(d.success&&!d.nickname){
-                    alert('Profile found but username could not be resolved. Try the Social Lookup tool.',true);
+                    document.getElementById('creatorNameInput').value=rawUser;
+                    document.getElementById('creatorName').value=rawUser;
+                    updateLivePreview();
+                    alert('Profile found but username could not be resolved. Using URL username.',true);
                 }else{
                     alert(d.error||'Could not fetch profile. Check the URL or use Social Lookup.',true);
                 }
@@ -346,7 +354,7 @@
         async function createEditor(){const name=document.getElementById('newEditor').value.trim();if(!name){alert('Enter a folder name',true);return}try{const r=await fetch('/api/products/create-editor',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name}),credentials:'include'});const d=await r.json();if(d.success){alert('Folder created!',false);loadEditors();document.getElementById('dstEditor').value=name;checkConflict()}else alert(d.error||'Failed',true)}catch(e){alert('Network error',true)}}
         async function transfer(){if(selRes===null||!selDstEditor)return;const res=cloudFiles[selRes],btn=document.getElementById('btnTransfer');btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Transferring...';try{const r=await fetch('/api/products/transfer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({product_id:prod.id,source_editor:res.editor,source_resource:res.resource,destination_editor:selDstEditor}),credentials:'include'});const d=await r.json();if(d.success){transferred=d.file_path||'';btn.innerHTML='<i class="fas fa-check-circle"></i> Transfer Completed';btn.className='btn btn-ghost';btn.style.opacity='0.7';btn.disabled=true;alert('Transfer complete!',false);document.getElementById('btnToStep3').disabled=false}else alert(d.error||'Transfer failed',true)}catch(e){alert('Network error',true);btn.disabled=false;btn.innerHTML='<i class="fas fa-cloud-arrow-up"></i> Transfer to Production'}}
         function buildReview(){const n=document.getElementById('productName').value.trim()||'Untitled',cat=document.getElementById('productCategory').value||'others',tags=document.getElementById('productTags').value.trim(),desc=document.getElementById('productDesc').value.trim(),cn=document.getElementById('creatorName').value||'N/A',fp=transferred||'Not transferred';document.getElementById('reviewSummary').innerHTML='<div class="rs-row"><span>Name</span><strong>'+n+'</strong></div><div class="rs-row"><span>Category</span><strong>'+cat+'</strong></div>'+(tags?'<div class="rs-row"><span>Tags</span><strong>'+tags+'</strong></div>':'')+'<div class="rs-row"><span>Creator</span><strong>'+cn+'</strong></div><div class="rs-row"><span>File Path</span><strong style="font-size:.7rem;color:var(--muted)">'+fp+'</strong></div>'}
-        async function submitProduct(){const btn=document.getElementById('btnSubmit');btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Submitting...';var thumbVal=document.getElementById('thumbUrl')?document.getElementById('thumbUrl').value.trim():'';const payload={id:prod.id,name:document.getElementById('productName').value.trim(),category:document.getElementById('productCategory').value,tags:document.getElementById('productTags').value.trim(),description:document.getElementById('productDesc').value.trim(),creator_nickname:document.getElementById('creatorName').value||'',creator_social_url:document.getElementById('creatorSocialUrl').value.trim(),creator_avatar:document.getElementById('creatorAvatar').value||'',thumbnail:thumbVal,file_path:transferred||'',type:'preset'};if(!payload.name||!payload.category||!payload.description){alert('Fill required fields',true);btn.disabled=false;btn.innerHTML='<i class="fas fa-paper-plane"></i> Submit for Review';return}try{const r=await fetch('/api/products/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),credentials:'include'});const d=await r.json();if(r.ok&&d.success){document.getElementById('sec3').innerHTML='<div class="review-card"><div class="check"><i class="fas fa-check"></i></div><h2>Published!</h2><p style="color:var(--muted-dark);margin-bottom:8px">Your preset is now live on the resources page.</p><p style="font-size:.75rem;color:var(--muted-dark)"><i class="fas fa-info-circle"></i> Admin approval is not required — presets are published instantly.</p><a href="/preset?id='+(d.id||prod.id)+'" class="btn btn-primary" style="margin-top:20px">View Preset</a> <a href="/resources" class="btn btn-ghost" style="margin-top:20px">Browse Resources</a></div>'}else alert(d.error||'Submit failed',true)}catch(e){alert('Network error',true)}btn.disabled=false;btn.innerHTML='<i class="fas fa-paper-plane"></i> Submit for Review'}
+        async function submitProduct(){const btn=document.getElementById('btnSubmit');btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Submitting...';var thumbVal=document.getElementById('thumbUrl')?document.getElementById('thumbUrl').value.trim():'';const payload={id:prod.id,name:document.getElementById('productName').value.trim(),category:document.getElementById('productCategory').value,tags:document.getElementById('productTags').value.trim(),description:document.getElementById('productDesc').value.trim(),creator_nickname:document.getElementById('creatorName').value||'',creator_username:document.getElementById('creatorUsername').value||'',creator_social_url:document.getElementById('creatorSocialUrl').value.trim(),creator_avatar:document.getElementById('creatorAvatar').value||'',thumbnail:thumbVal,file_path:transferred||'',type:'preset'};if(!payload.name||!payload.category||!payload.description){alert('Fill required fields',true);btn.disabled=false;btn.innerHTML='<i class="fas fa-paper-plane"></i> Submit for Review';return}try{const r=await fetch('/api/products/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),credentials:'include'});const d=await r.json();if(r.ok&&d.success){document.getElementById('sec3').innerHTML='<div class="review-card"><div class="check"><i class="fas fa-check"></i></div><h2>Published!</h2><p style="color:var(--muted-dark);margin-bottom:8px">Your preset is now live on the resources page.</p><p style="font-size:.75rem;color:var(--muted-dark)"><i class="fas fa-info-circle"></i> Admin approval is not required — presets are published instantly.</p><a href="/preset?id='+(d.id||prod.id)+'" class="btn btn-primary" style="margin-top:20px">View Preset</a> <a href="/resources" class="btn btn-ghost" style="margin-top:20px">Browse Resources</a></div>'}else alert(d.error||'Submit failed',true)}catch(e){alert('Network error',true)}btn.disabled=false;btn.innerHTML='<i class="fas fa-paper-plane"></i> Submit for Review'}
         updateLivePreview();
     </script>
 </body>
