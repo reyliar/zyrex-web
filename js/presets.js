@@ -87,6 +87,8 @@ function renderPresets(items) {
     if (!grid) return;
     if (items.length === 0) {
         grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#606070"><i class="fas fa-search" style="font-size:2rem;margin-bottom:15px;display:block"></i>No presets found.</div>';
+        const shown = document.getElementById('shownCount');
+        if (shown) shown.textContent = '0';
         return;
     }
 
