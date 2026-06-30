@@ -41,9 +41,23 @@ function updateResourceStats(data){
         else if(r.author_name)creators.add(r.author_name.toLowerCase());
         totalDl+=dl[r.id]||0;
     });
-    document.getElementById('statPresets').textContent=total||0;
-    document.getElementById('statCreators').textContent=creators.size||0;
-    document.getElementById('statDownloads').textContent=totalDl||0;
+    animateRes('statPresets',total);
+    animateRes('statCreators',creators.size);
+    animateRes('statDownloads',totalDl);
+}
+function animateRes(id,target){
+    var el=document.getElementById(id);
+    if(!el)return;
+    var start=parseInt(el.textContent)||0;
+    if(start===target)return;
+    var dur=600,step=(target-start)/(dur/16),cur=start;
+    function tick(){
+        cur+=step;
+        if((step>0&&cur>=target)||(step<0&&cur<=target)){el.textContent=target;return}
+        el.textContent=Math.round(cur);
+        requestAnimationFrame(tick);
+    }
+    tick();
 }
 
 function getDomain(url) {
