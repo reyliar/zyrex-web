@@ -1629,7 +1629,13 @@ export default {
             prefix = await resolveProductionPrefix(env, productIdForList, "", null);
           }
           if (!prefix) return json({ success: true, files: [], prefix: "" });
-          const objects = await r2List(env, prefix, true);  // useProd=true
+          let objects;
+          try {
+            objects = await r2List(env, prefix, true);  // useProd=true
+          } catch (listErr) {
+            console.error("r2List failed:", listErr.message);
+            return json({ success: true, files: [], prefix, note: "Storage unavailable" });
+          }
           let files = objects.filter(o => isDownloadableR2Object(o, prefix)).map(o => ({
             name: relativeR2Name(o.key, prefix),
             size: o.size,
@@ -1648,8 +1654,7 @@ export default {
             }
           }
           return json({ success: true, files, prefix });
-        } catch (e) { console.error("list-path error:", e.message); }
-        return json({ success: false, error: "File listing unavailable" }, 500);
+        } catch (e) { console.error("list-path error:", e.message); return json({ success: false, error: "File listing failed: " + e.message }, 500); }
       }
 
       // ============ PRODUCTS: Create Editor Folder (R2 prod bucket) ============
@@ -1871,10 +1876,105 @@ export default {
         });
         const data = await botResp.text();
         try {
-          return json(JSON.parse(data), botResp.status);
+          let parsed = JSON.parse(data);
+          // Enrich product data with uploader_is_admin badge flag
+          if (path === "/api/products" && botResp.ok) {
+            if (url.searchParams.has("id")) {
+              if (parsed && parsed.author_id) {
+                parsed.uploader_is_admin = ADMIN_IDS.includes(parsed.author_id);
+              }
+            } else if (Array.isArray(parsed)) {
+              parsed.forEach(p => {
+                if (p && p.author_id) {
+                  p.uploader_is_admin = ADMIN_IDS.includes(p.author_id);
+                }
+              });
+            }
+          }
+          return json(parsed, botResp.status);
         } catch {
           return new Response(data, { status: botResp.status, headers: corsHeaders });
         }
+      }
+
+      // ============ PRESET PAGE: Inject OG meta tags for social sharing ============
+      if (path === "/preset" || path === "/preset.html") {
+        const presetId = url.searchParams.get("id") || "";
+        const userAgent = (request.headers.get("User-Agent") || "").toLowerCase();
+        const isCrawler = userAgent.includes("discordbot") || userAgent.includes("twitterbot") || userAgent.includes("facebookexternalhit") || userAgent.includes("whatsapp") || userAgent.includes("telegrambot") || userAgent.includes("slackbot") || userAgent.includes("linkedinbot");
+        
+        // Fetch product data from bot
+        let product = null;
+        if (presetId) {
+          try {
+            const resp = await fetch(`${BOT_API}/api/products?id=${encodeURIComponent(presetId)}`);
+            if (resp.ok) {
+              const data = await resp.json();
+              product = (Array.isArray(data) ? data[0] : data) || null;
+            }
+          } catch(e) {}
+        }
+        
+        // Build OG values
+        const ogTitle = product ? `${product.name} — Zyrex` : "Zyrex | Preset";
+        const ogDesc = (product?.description || product?.desc || "Premium editing preset on Zyrex").substring(0, 200);
+        const ogImage = product?.thumbnail || "https://zyrexediting.xyz/assets/banner.png";
+        const ogUrl = `https://zyrexediting.xyz/preset?id=${encodeURIComponent(presetId)}`;
+        
+        // If it's a crawler, return a minimal HTML page with OG tags
+        if (isCrawler) {
+          const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${ogTitle}</title>
+<meta property="og:type" content="website">
+<meta property="og:url" content="${ogUrl}">
+<meta property="og:title" content="${ogTitle.replace(/"/g, '&quot;')}">
+<meta property="og:description" content="${ogDesc.replace(/"/g, '&quot;')}">
+<meta property="og:image" content="${ogImage}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="${ogImage}">
+<meta name="description" content="${ogDesc.replace(/"/g, '&quot;')}">
+<link rel="icon" type="image/x-icon" href="/favicon.ico">
+</head>
+<body>
+<h1>${ogTitle.replace(/"/g, '&quot;')}</h1>
+<p>${ogDesc.replace(/"/g, '&quot;')}</p>
+<img src="${ogImage}" alt="Preview" style="max-width:100%;height:auto">
+<p><a href="${ogUrl}">View on Zyrex</a></p>
+</body>
+</html>`;
+          return new Response(html, {
+            status: 200,
+            headers: { "Content-Type": "text/html;charset=UTF-8", "Cache-Control": "public, max-age=60" },
+          });
+        }
+        
+        // For normal browsers, fetch the actual preset.html from Pages and inject OG tags
+        try {
+          const pagesResp = await fetch(`https://main.zyrexweb.pages.dev/preset.html`);
+          if (pagesResp.ok) {
+            const html = await pagesResp.text();
+            const injected = html
+              .replace(/<title>.*?<\/title>/, `<title>${ogTitle}</title>`)
+              .replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${ogDesc.replace(/"/g, '&quot;')}">`)
+              .replace('</head>', `
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="${ogUrl}">
+    <meta property="og:title" content="${ogTitle.replace(/"/g, '&quot;')}">
+    <meta property="og:description" content="${ogDesc.replace(/"/g, '&quot;')}">
+    <meta property="og:image" content="${ogImage}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="${ogImage}">
+</head>`);
+            return new Response(injected, {
+              status: 200,
+              headers: { "Content-Type": "text/html;charset=UTF-8", "Cache-Control": "public, max-age=60" },
+            });
+          }
+        } catch(e) { console.error("Preset OG inject error:", e.message); }
       }
 
       return json({ error: "Not found" }, 404);
