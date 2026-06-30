@@ -1825,6 +1825,34 @@ export default {
         }
       }
 
+      // ============ SFTPGO ADMIN & CLOUD (direct bot proxy with auth) ============
+      if (path.startsWith("/api/admin/sftpgo") || path.startsWith("/api/cloud/")) {
+        const session = parseSession(request.headers.get("Cookie"));
+        if (!session) return json({ error: "Not logged in" }, 401);
+        if (!ADMIN_IDS.includes(session.userId)) return json({ error: "Admin only" }, 403);
+        
+        const targetUrl = `${BOT_API}${path}${url.search}`;
+        try {
+          const proxyResp = await fetch(targetUrl, {
+            method: request.method,
+            headers: {
+              "Content-Type": "application/json",
+              "X-User-ID": session.userId,
+              "X-User-Name": session.username,
+              "X-User-Can-Upload": session.canUpload ? "true" : "false",
+              "X-User-Is-Admin": "true",
+            },
+            body: request.method !== "GET" && request.method !== "HEAD" ? await request.text() : undefined,
+          });
+          const text = await proxyResp.text();
+          try { return json(JSON.parse(text), proxyResp.status); }
+          catch { return new Response(text, { status: proxyResp.status, headers: corsHeaders }); }
+        } catch (e) {
+          console.error("SFTPGo admin proxy error:", e.message);
+          return json({ success: false, error: "Bot VPS unreachable" }, 502);
+        }
+      }
+
       // ============ BOT PROXY (admin, cloud link/unlink, downloads, hlx, verify, products) ============
       if (path.startsWith("/api/products") || path.startsWith("/api/admin/") || path.startsWith("/api/cloud/") || path.startsWith("/api/downloads/") || path.startsWith("/api/hlx/") || path.startsWith("/api/verify") || path.startsWith("/api/sftpgo/")) {
         const session = parseSession(request.headers.get("Cookie"));
