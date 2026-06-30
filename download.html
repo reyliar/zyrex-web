@@ -515,15 +515,7 @@
                 localStorage.setItem(key, JSON.stringify(downloads));
                 updateDownloadCount();
             } catch(e) {}
-            // Persistent API (sets cross-domain cookie via Set-Cookie header)
-            try {
-                fetch('/api/downloads/track', {
-                    method: 'POST',
-                    credentials: 'include',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({productId: pid})
-                }).catch(function(){});
-            } catch(e) {}
+            // Note: Worker's /api/downloads/download handler tracks to Bot VPS (server-side, reliable)
         }
 
         function updateDownloadCount() {

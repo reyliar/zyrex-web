@@ -1295,6 +1295,16 @@ export default {
           const writer = writable.getWriter();
           const encoder = new TextEncoder();
           
+          // Track download on Bot VPS BEFORE streaming (reliable, awaited)
+          downloadCounts.set(data.product_id, (downloadCounts.get(data.product_id) || 0) + 1);
+          try {
+            await fetch(`${BOT_API}/api/downloads/track`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ productId: data.product_id }),
+            });
+          } catch (e) { console.error("Bot track error:", e.message); }
+          
           // Use a simple ZIP-like stream (store method for simplicity)
           (async () => {
             let aborted = false;
@@ -1381,14 +1391,6 @@ export default {
               }
             }
           })();
-          
-          // Increment download count (proxy to Bot VPS)
-          downloadCounts.set(data.product_id, (downloadCounts.get(data.product_id) || 0) + 1);
-          fetch(`${BOT_API}/api/downloads/track`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ productId: data.product_id }),
-          }).catch(e => console.error("Bot track error:", e.message));
           
           const zipFilename = safeZipFilename(title || "download") + ".zip";
           return new Response(readable, {
