@@ -69,7 +69,7 @@ function renderResources(items) {
     // Apply admin edits
     try {
         const edits = JSON.parse(localStorage.getItem('zyrex_edited_products') || '{}');
-        items = items.map(p => edits[p.id] ? { ...p, name: edits[p.id].name || p.name, category: edits[p.id].category || p.category, platform: edits[p.id].platform || p.platform, description: edits[p.id].description || p.description, desc: edits[p.id].description || p.desc, password: edits[p.id].password, links: edits[p.id].links || p.links, notes: edits[p.id].notes || p.notes } : p);
+        items = items.map(p => edits[p.id] ? { ...p, name: edits[p.id].name || p.name, category: edits[p.id].category || p.category, platform: edits[p.id].platform || p.platform, description: edits[p.id].description || p.description, desc: edits[p.id].description || p.desc, password: edits[p.id].password !== undefined ? edits[p.id].password : p.password, links: edits[p.id].links || p.links, notes: edits[p.id].notes || p.notes } : p);
     } catch(e) {}
     
     const grid = document.getElementById('resourcesGrid');

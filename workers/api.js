@@ -92,106 +92,172 @@ async function r2Get(env, key, useProd = false) {
   const bucket = useProd ? (env.STORAGE_PROD || env.STORAGE) : env.STORAGE;
   const obj = await bucket.get(key);
   if (!obj) return null;
-  return { body: obj.body, size: obj.size, contentType: obj.httpMetadata?.contentType };
+  return obj;
 }
 
-// CRC32 for ZIP integrity
-function zipStream(env, prefix, selectedSet, title, objects) {
-  const encoder = new TextEncoder();
-  const folderName = title || prefix.split("/").filter(Boolean).pop() || "download";
-  
-  const files = [];
-  // Add selected files
-  for (const obj of objects) {
-    const fname = obj.key.slice(prefix.length);
-    if (!fname || fname.endsWith("/")) continue;
-    if (selectedSet && !selectedSet.has(fname)) continue;
-    files.push({ name: fname, key: obj.key, size: obj.size });
+function normalizeR2Prefix(value) {
+  let prefix = String(value || "").replace(/\\/g, "/").trim();
+  prefix = prefix.replace(/^\/+/, "");
+  if (prefix && !prefix.endsWith("/")) prefix += "/";
+  return prefix;
+}
+
+function relativeR2Name(key, prefix) {
+  return key.slice(prefix.length).replace(/\\/g, "/").replace(/^\/+/, "");
+}
+
+function isWatermarkName(name) {
+  const base = String(name || "").split("/").pop();
+  return Object.prototype.hasOwnProperty.call(WATERMARKS, base);
+}
+
+function isDownloadableR2Object(obj, prefix) {
+  if (!obj || !obj.key || obj.key.endsWith("/") || obj.key === prefix) return false;
+  const name = relativeR2Name(obj.key, prefix);
+  if (!name || name.endsWith("/") || name === ".placeholder" || name.endsWith("/.placeholder")) return false;
+  return !isWatermarkName(name);
+}
+
+function safeDecode(value) {
+  try { return decodeURIComponent(value); } catch { return value; }
+}
+
+function normalizeSelectedName(value) {
+  return safeDecode(String(value || "")).replace(/\\/g, "/").replace(/^\/+/, "");
+}
+
+function getRequestedFileSet(url) {
+  const selected = new Set();
+  const add = value => {
+    const clean = normalizeSelectedName(value);
+    if (clean) selected.add(clean);
+  };
+
+  for (const value of url.searchParams.getAll("file")) add(value);
+  for (const value of url.searchParams.getAll("files")) {
+    for (const part of String(value || "").split(",")) add(part);
   }
-  // Add watermarks (always)
-  for (const [wmName, wmContent] of Object.entries(WATERMARKS)) {
-    files.push({ name: wmName, content: wmContent });
+
+  return selected.size > 0 ? selected : null;
+}
+
+function slugify(value) {
+  return String(value || "")
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+function scorePrefixMatch(prefix, resourceName, productId, product) {
+  const resourceSlug = slugify(resourceName || prefix);
+  const prefixSlug = slugify(prefix);
+  const targets = [productId, product?.id, product?.name, product?.title]
+    .map(slugify)
+    .filter(Boolean);
+
+  let best = 0;
+  for (const target of targets) {
+    if (!target) continue;
+    if (resourceSlug === target) best = Math.max(best, 100);
+    else if (prefixSlug === target) best = Math.max(best, 95);
+    else if (resourceSlug.includes(target) || target.includes(resourceSlug)) best = Math.max(best, 80);
+    else if (prefixSlug.includes(target) || target.includes(prefixSlug)) best = Math.max(best, 60);
   }
-  
-  const chunks = [];
-  const centralDir = [];
-  let offset = 0;
-  
-  for (const file of files) {
-    const arcName = folderName + "/" + file.name;
-    const nameBytes = encoder.encode(arcName);
-    let data;
-    
-    if (file.content !== undefined) {
-      data = encoder.encode(file.content);
-    } else {
-      // Will be filled later from R2
-      file._needsFetch = true;
-      continue;
+  return best;
+}
+
+async function prefixHasDownloadableFiles(bucket, prefix) {
+  if (!prefix) return false;
+  const listed = await bucket.list({ prefix, limit: 100 });
+  return (listed.objects || []).some(obj => isDownloadableR2Object(obj, prefix));
+}
+
+async function fetchProductHint(productId, session) {
+  if (!productId) return null;
+  try {
+    const headers = {};
+    if (session) {
+      headers["X-User-ID"] = session.userId || "";
+      headers["X-User-Name"] = session.username || "";
+      headers["X-User-Can-Upload"] = session.canUpload ? "true" : "false";
+      headers["X-User-Is-Admin"] = ADMIN_IDS.includes(session.userId) ? "true" : "false";
     }
-    
-    const crc = crc32(data);
-    const header = makeLocalHeader(nameBytes, data.length, crc);
-    chunks.push(header, data);
-    centralDir.push({ nameBytes, size: data.length, crc, offset });
-    offset += header.length + data.length;
+    const resp = await fetch(`${BOT_API}/api/products?id=${encodeURIComponent(productId)}`, { headers });
+    if (!resp.ok) return null;
+    const data = await resp.json();
+    return data && data.id ? data : null;
+  } catch (e) {
+    console.error("Product hint lookup failed:", e.message);
+    return null;
   }
-  
-  // This will be a ReadableStream that fetches R2 objects on the fly
-  return new Response(
-    new ReadableStream({
-      async start(controller) {
-        // Send pre-built chunks (watermarks)
-        for (const chunk of chunks) {
-          controller.enqueue(typeof chunk === "string" ? encoder.encode(chunk) : chunk);
-        }
-        
-        // Fetch and send R2 objects
-        for (const file of files) {
-          if (!file._needsFetch) continue;
-          const obj = await r2Get(env, file.key);
-          if (!obj) continue;
-          
-          const arcName = folderName + "/" + file.name;
-          const nameBytes = encoder.encode(arcName);
-          const reader = obj.body.getReader();
-          const chunks = [];
-          let totalSize = 0;
-          let crc = 0;
-          
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            chunks.push(value);
-            totalSize += value.length;
-            crc = crc32Continue(crc, value);
-          }
-          
-          crc = crc >>> 0;
-          const header = makeLocalHeader(nameBytes, totalSize, crc);
-          controller.enqueue(encoder.encode(header));
-          for (const c of chunks) controller.enqueue(c);
-          
-          centralDir.push({ nameBytes, size: totalSize, crc, offset });
-          offset += header.length + totalSize;
-        }
-        
-        // Write central directory
-        let cdSize = 0;
-        let cdStart = offset;
-        for (const entry of centralDir) {
-          const cdEntry = makeCentralDirEntry(entry.nameBytes, entry.size, entry.crc, entry.offset);
-          controller.enqueue(cdEntry);
-          cdSize += cdEntry.length;
-          cdStart += cdEntry.length;  // Wait, this should be offset before central dir
-        }
-        // Actually let me fix the offset: cdStart should be the original offset before CD
-        // But we've already enqueued... let me just close
-        controller.close();
-      }
-    }),
-    { headers: { "Content-Type": "application/zip", "Content-Disposition": `attachment; filename="${folderName}.zip"` } }
-  );
+}
+
+async function resolveProductionPrefix(env, productId, hintPath, product = null) {
+  const prodBucket = env.STORAGE_PROD || env.STORAGE;
+  const candidates = [];
+  const seenCandidates = new Set();
+  const addCandidate = value => {
+    const prefix = normalizeR2Prefix(value);
+    if (prefix && !seenCandidates.has(prefix)) {
+      seenCandidates.add(prefix);
+      candidates.push(prefix);
+    }
+  };
+
+  addCandidate(hintPath);
+  addCandidate(product?.file_path);
+  addCandidate(product?.cloud_path);
+  addCandidate(product?.path);
+  if (productId) {
+    addCandidate(`production/${productId}`);
+    addCandidate(productId);
+  }
+
+  for (const prefix of candidates) {
+    if (await prefixHasDownloadableFiles(prodBucket, prefix)) return prefix;
+  }
+
+  const matches = [];
+  const topList = await prodBucket.list({ delimiter: "/" });
+  for (const topPrefix of topList.delimitedPrefixes || []) {
+    const topName = topPrefix.replace(/\/$/, "");
+
+    if (await prefixHasDownloadableFiles(prodBucket, topPrefix)) {
+      matches.push({
+        prefix: topPrefix,
+        score: scorePrefixMatch(topPrefix, topName, productId, product),
+      });
+    }
+
+    const resourceList = await prodBucket.list({ prefix: topPrefix, delimiter: "/" });
+    for (const resourcePrefix of resourceList.delimitedPrefixes || []) {
+      const resourceName = resourcePrefix.slice(topPrefix.length).replace(/\/$/, "");
+      if (!(await prefixHasDownloadableFiles(prodBucket, resourcePrefix))) continue;
+      matches.push({
+        prefix: resourcePrefix,
+        score: scorePrefixMatch(resourcePrefix, resourceName, productId, product),
+      });
+    }
+  }
+
+  matches.sort((a, b) => b.score - a.score);
+  if (matches.length > 0 && matches[0].score > 0) return matches[0].prefix;
+  if (matches.length === 1) return matches[0].prefix;
+  return "";
+}
+
+function safeZipFilename(name) {
+  const clean = String(name || "download").replace(/[\\/:*?"<>|\r\n]+/g, "_").trim();
+  return (clean || "download").slice(0, 140);
+}
+
+function formatSizeR2(bytes) {
+  if (!bytes || bytes === 0) return "0 B";
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1048576) return (bytes / 1024).toFixed(1) + " KB";
+  return (bytes / 1048576).toFixed(1) + " MB";
 }
 
 // Simple CRC32 (for ZIP)
@@ -205,11 +271,6 @@ function crc32(data) {
   let crc = 0xFFFFFFFF;
   for (let i = 0; i < data.length; i++) crc = crcTable[(crc ^ data[i]) & 0xFF] ^ (crc >>> 8);
   return (crc ^ 0xFFFFFFFF) >>> 0;
-}
-function crc32Continue(crc, data) {
-  let c = crc ^ 0xFFFFFFFF;
-  for (let i = 0; i < data.length; i++) c = crcTable[(c ^ data[i]) & 0xFF] ^ (c >>> 8);
-  return (c ^ 0xFFFFFFFF);
 }
 function makeLocalHeader(nameBytes, size, crc) {
   const buf = new Uint8Array(30 + nameBytes.length);
@@ -1143,44 +1204,11 @@ export default {
         if (!productId) return json({ error: "Product ID required" }, 400);
         
         let r2Prefix = "";
+        let productHint = null;
         try {
-          const prodBucket = env.STORAGE_PROD || env.STORAGE;
-          
-          // 1) file_path hint from download page (MOST RELIABLE)
           const hintPath = url.searchParams.get("file_path");
-          if (hintPath) {
-            const clean = hintPath.replace(/\\/g, "/");
-            const hint = clean.endsWith("/") ? clean : clean + "/";
-            const check = await prodBucket.list({ prefix: hint, limit: 1 });
-            if (check.objects.some(o => !o.key.endsWith("/"))) {
-              r2Prefix = hint;
-            }
-          }
-          
-          // 2) Scan ALL editor/resource folders, prefer matching product ID
-          if (!r2Prefix) {
-            const topList = await prodBucket.list({ delimiter: "/" });
-            let bestMatch = "";
-            for (const cp of topList.delimitedPrefixes || []) {
-              const editorPrefix = cp;
-              const resList = await prodBucket.list({ prefix: editorPrefix, delimiter: "/" });
-              for (const resCp of resList.delimitedPrefixes || []) {
-                const resourceName = resCp.slice(editorPrefix.length).replace(/\/$/, "");
-                const idSlug = resourceName.replace(/\s+/g, "-").toLowerCase();
-                const isMatch = idSlug.includes(productId.toLowerCase()) || productId.toLowerCase().includes(idSlug);
-                
-                const testList = await prodBucket.list({ prefix: resCp });
-                const hasFiles = testList.objects.some(o => !o.key.endsWith("/") && !o.key.endsWith(".placeholder"));
-                
-                if (hasFiles) {
-                  if (isMatch) { r2Prefix = resCp; break; }
-                  if (!bestMatch) bestMatch = resCp;
-                }
-              }
-              if (r2Prefix) break;
-            }
-            if (!r2Prefix && bestMatch) r2Prefix = bestMatch;
-          }
+          productHint = await fetchProductHint(productId, session);
+          r2Prefix = await resolveProductionPrefix(env, productId, hintPath, productHint);
           
           if (!r2Prefix) {
             return json({ success: false, error: "Resource not found in production storage. Transfer may not have completed yet." }, 404);
@@ -1203,6 +1231,7 @@ export default {
           token,
           url: `https://dl.zyrexediting.xyz/?token=${token}`,
           expires_in: TOKEN_EXPIRY,
+          file_path: r2Prefix,
         });
       }
 
@@ -1240,20 +1269,26 @@ export default {
         // but the expiry in the token itself prevents reuse after expiration)
         data.used = true;
         
-        const r2Prefix = data.file_path;
-        const selectedFiles = url.searchParams.get("files");
+        const r2Prefix = normalizeR2Prefix(data.file_path);
+        const selectedSet = getRequestedFileSet(url);
         const title = url.searchParams.get("title") || data.product_id;
+        if (!r2Prefix) return json({ success: false, error: "Token does not contain a storage path" }, 400);
         
         try {
           const allObjects = await r2List(env, r2Prefix, true);  // useProd=true
-          const fileObjects = allObjects.filter(o => !o.key.endsWith("/") && o.key !== r2Prefix);
+          const fileObjects = allObjects.filter(o => isDownloadableR2Object(o, r2Prefix));
           
           if (fileObjects.length === 0) {
             return json({ success: false, error: "No files found" }, 404);
           }
           
-          // Build selected set
-          const selectedSet = selectedFiles ? new Set(selectedFiles.split(",")) : null;
+          const selectedObjects = selectedSet
+            ? fileObjects.filter(o => selectedSet.has(relativeR2Name(o.key, r2Prefix)))
+            : fileObjects;
+          
+          if (selectedObjects.length === 0) {
+            return json({ success: false, error: "Selected files were not found in storage" }, 404);
+          }
           
           // Stream ZIP response
           const { readable, writable } = new TransformStream();
@@ -1262,59 +1297,38 @@ export default {
           
           // Use a simple ZIP-like stream (store method for simplicity)
           (async () => {
+            let aborted = false;
             try {
-              const folderName = title || r2Prefix.split("/").filter(Boolean).pop() || "download";
+              const folderName = safeZipFilename(title || r2Prefix.split("/").filter(Boolean).pop() || "download");
               const centralDir = [];
               let offset = 0;
               let filesWritten = 0;
               
-              for (const obj of fileObjects) {
-                const fname = obj.key.slice(r2Prefix.length);
-                if (!fname || (selectedSet && !selectedSet.has(fname))) continue;
+              for (const obj of selectedObjects) {
+                const fname = relativeR2Name(obj.key, r2Prefix);
+                if (!fname) continue;
                 
                 const fileData = await r2Get(env, obj.key, true);  // useProd=true
-                if (!fileData || !fileData.body) continue;
+                if (!fileData) continue;
                 
-                let bytes;
+                let fileBytes;
                 try {
-                  bytes = await fileData.body.arrayBuffer();
+                  const bytes = await fileData.arrayBuffer();
+                  fileBytes = new Uint8Array(bytes);
                 } catch (e) {
                   console.error("R2 read failed:", obj.key, e.message);
                   continue;  // skip this file, don't crash the whole ZIP
                 }
-                if (!bytes || bytes.byteLength === 0) continue;
                 
                 const nameBytes = encoder.encode(folderName + "/" + fname);
-                const crcVal = crc32(new Uint8Array(bytes));
+                const crcVal = crc32(fileBytes);
                 
-                // Local file header
-                const localHeader = new Uint8Array(30 + nameBytes.length);
-                const view = new DataView(localHeader.buffer);
-                view.setUint32(0, 0x04034b50, true); // signature
-                view.setUint16(8, 0, true);  // compression: store
-                view.setUint32(14, crcVal, true); // CRC32
-                view.setUint32(18, bytes.byteLength, true); // compressed size
-                view.setUint32(22, bytes.byteLength, true); // uncompressed size
-                view.setUint16(26, nameBytes.length, true); // filename length
-                localHeader.set(nameBytes, 30);
-                
+                const localHeader = makeLocalHeader(nameBytes, fileBytes.byteLength, crcVal);
                 await writer.write(localHeader);
-                await writer.write(new Uint8Array(bytes));
+                await writer.write(fileBytes);
                 
-                // Central directory entry
-                const cdEntry = new Uint8Array(46 + nameBytes.length);
-                const cdView = new DataView(cdEntry.buffer);
-                cdView.setUint32(0, 0x02014b50, true);
-                cdView.setUint16(10, 0, true); // compression
-                cdView.setUint32(16, crcVal, true); // CRC32
-                cdView.setUint32(20, bytes.byteLength, true);
-                cdView.setUint32(24, bytes.byteLength, true);
-                cdView.setUint16(28, nameBytes.length, true);
-                cdView.setUint32(42, offset, true);
-                cdEntry.set(nameBytes, 46);
-                
-                centralDir.push(cdEntry);
-                offset += localHeader.byteLength + bytes.byteLength;
+                centralDir.push(makeCentralDirEntry(nameBytes, fileBytes.byteLength, crcVal, offset));
+                offset += localHeader.byteLength + fileBytes.byteLength;
                 filesWritten++;
               }
               
@@ -1325,31 +1339,17 @@ export default {
                   const nameBytes = encoder.encode(folderName + "/" + wmName);
                   const crcVal = crc32(wmBytes);
                   
-                  const localHeader = new Uint8Array(30 + nameBytes.length);
-                  const view = new DataView(localHeader.buffer);
-                  view.setUint32(0, 0x04034b50, true);
-                  view.setUint32(14, crcVal, true);
-                  view.setUint32(18, wmBytes.byteLength, true);
-                  view.setUint32(22, wmBytes.byteLength, true);
-                  view.setUint16(26, nameBytes.length, true);
-                  localHeader.set(nameBytes, 30);
-                  
+                  const localHeader = makeLocalHeader(nameBytes, wmBytes.byteLength, crcVal);
                   await writer.write(localHeader);
                   await writer.write(wmBytes);
                   
-                  const cdEntry = new Uint8Array(46 + nameBytes.length);
-                  const cdView = new DataView(cdEntry.buffer);
-                  cdView.setUint32(0, 0x02014b50, true);
-                  cdView.setUint32(16, crcVal, true);
-                  cdView.setUint32(20, wmBytes.byteLength, true);
-                  cdView.setUint32(24, wmBytes.byteLength, true);
-                  cdView.setUint16(28, nameBytes.length, true);
-                  cdView.setUint32(42, offset, true);
-                  cdEntry.set(nameBytes, 46);
-                  
-                  centralDir.push(cdEntry);
+                  centralDir.push(makeCentralDirEntry(nameBytes, wmBytes.byteLength, crcVal, offset));
                   offset += localHeader.byteLength + wmBytes.byteLength;
                 }
+              }
+              
+              if (filesWritten === 0) {
+                throw new Error("No files could be read from R2");
               }
               
               // Only write central directory if we have entries
@@ -1373,15 +1373,19 @@ export default {
               }
             } catch (e) {
               console.error("ZIP stream error:", e.message);
+              aborted = true;
+              try { await writer.abort(e); } catch (_) {}
             } finally {
-              try { await writer.close(); } catch (e) { /* already closed */ }
+              if (!aborted) {
+                try { await writer.close(); } catch (e) { /* already closed */ }
+              }
             }
           })();
           
           // Increment download count
           downloadCounts.set(data.product_id, (downloadCounts.get(data.product_id) || 0) + 1);
           
-          const zipFilename = (title || "download") + ".zip";
+          const zipFilename = safeZipFilename(title || "download") + ".zip";
           return new Response(readable, {
             headers: {
               "Content-Type": "application/zip",
@@ -1609,17 +1613,33 @@ export default {
       // ============ FILES: List files by path (R2 production bucket) ============
       if (path === "/api/files/list-path") {
         const listPath = url.searchParams.get("path") || "";
-        if (!listPath) return json({ success: false, error: "Missing path parameter" }, 400);
+        const productIdForList = url.searchParams.get("product_id") || "";
+        if (!listPath && !productIdForList) return json({ success: false, error: "Missing path parameter" }, 400);
         try {
-          let prefix = listPath;
-          if (!prefix.endsWith("/")) prefix += "/";
+          let prefix = normalizeR2Prefix(listPath);
+          if (!prefix && productIdForList) {
+            prefix = await resolveProductionPrefix(env, productIdForList, "", null);
+          }
+          if (!prefix) return json({ success: true, files: [], prefix: "" });
           const objects = await r2List(env, prefix, true);  // useProd=true
-          const files = objects.filter(o => !o.key.endsWith("/")).map(o => ({
-            name: o.key.slice(prefix.length),
+          let files = objects.filter(o => isDownloadableR2Object(o, prefix)).map(o => ({
+            name: relativeR2Name(o.key, prefix),
             size: o.size,
             size_formatted: formatSizeR2(o.size),
           }));
-          return json({ success: true, files });
+          if (files.length === 0 && productIdForList) {
+            const resolvedPrefix = await resolveProductionPrefix(env, productIdForList, prefix, null);
+            if (resolvedPrefix && resolvedPrefix !== prefix) {
+              prefix = resolvedPrefix;
+              const resolvedObjects = await r2List(env, prefix, true);
+              files = resolvedObjects.filter(o => isDownloadableR2Object(o, prefix)).map(o => ({
+                name: relativeR2Name(o.key, prefix),
+                size: o.size,
+                size_formatted: formatSizeR2(o.size),
+              }));
+            }
+          }
+          return json({ success: true, files, prefix });
         } catch (e) { console.error("list-path error:", e.message); }
         return json({ success: false, error: "File listing unavailable" }, 500);
       }
@@ -1828,4 +1848,3 @@ export default {
     }
   },
 };
-

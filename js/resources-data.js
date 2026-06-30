@@ -1136,6 +1136,7 @@ const resourcesData = [
             { url: 'https://gofile.io/d/ROPafq', label: 'GoFile' },
             { url: 'https://www.mediafire.com/file_premium/mieqgz1qzwrkxy8/FilmConvert.OFX.v2.20.CE_Win_VEGAS_-_satvrn.zip/file', label: 'MediaFire' }
         ]
+    }
 ];
 
 // Make available globally
