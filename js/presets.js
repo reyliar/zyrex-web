@@ -1,15 +1,17 @@
 /* ===================== PRESETS GRID RENDERER ===================== */
 
 async function initPresets() {
-    // Sync download counts from persistent API + stats
-    var apiCounts = {};
+    // Sync download counts + resource stats from API
+    var apiCounts = {}, statsData = {};
     try {
-        var r = await fetch("/api/downloads/counts", {credentials: 'include'});
-        var d = await r.json();
-        if (d.success && d.counts) {
-            apiCounts = d.counts;
-            localStorage.setItem("zyrex_downloads", JSON.stringify(d.counts));
-        }
+        var r1 = await fetch("/api/downloads/counts", {credentials: 'include'});
+        var d1 = await r1.json();
+        if (d1.success && d1.counts) { apiCounts = d1.counts; localStorage.setItem("zyrex_downloads", JSON.stringify(d1.counts)); }
+    } catch(e) {}
+    try {
+        var r2 = await fetch("/api/resource-stats", {credentials: 'include'});
+        var d2 = await r2.json();
+        if (d2.success) statsData = d2;
     } catch(e) {}
     
     try {
@@ -19,13 +21,11 @@ async function initPresets() {
             const staticPresets = window.presetsData || [];
             const merged = [...data];
             staticPresets.forEach(sp => {
-                if (!merged.some(p => p.id === sp.id)) {
-                    merged.push(sp);
-                }
+                if (!merged.some(p => p.id === sp.id)) merged.push(sp);
             });
             const presetsOnly = merged.filter(p => !p.type || p.type === 'preset');
             window.presetsData = presetsOnly;
-            updatePresetStats(presetsOnly, apiCounts);
+            updatePresetStats(presetsOnly, apiCounts, statsData);
             renderPresets(presetsOnly);
         } else {
             renderPresets(window.presetsData || []);
@@ -35,18 +35,26 @@ async function initPresets() {
     }
 }
 
-function updatePresetStats(data, apiCounts){
-    var total=data.length;
-    var creators=new Set();
-    var totalDl=0;
-    data.forEach(function(r){
-        if(r.creator_nickname)creators.add(r.creator_nickname.toLowerCase());
-        else if(r.author_name)creators.add(r.author_name.toLowerCase());
-        totalDl+=(apiCounts[r.id]||0);
+function updatePresetStats(data, apiCounts, statsData){
+    var total = statsData.total_resources || data.length;
+    var creators = statsData.unique_creators || new Set(data.map(function(r){return (r.creator_nickname||r.author_name||'').toLowerCase()}).filter(Boolean)).size;
+    var totalDl = statsData.total_downloads || 0;
+    if(!statsData.total_downloads){ data.forEach(function(r){ totalDl += (apiCounts[r.id]||0); }); }
+    animateRes('statPresets', total);
+    animateRes('statCreators', creators);
+    animateRes('statDownloads', totalDl);
+    // Update category pill counts
+    var cats = {};
+    data.forEach(function(r){ var c = r.category || 'others'; cats[c] = (cats[c]||0)+1; });
+    var allCount = data.length;
+    document.querySelectorAll('.cp button').forEach(function(btn){
+        var c = btn.dataset.c;
+        var cnt = btn.querySelector('.cnt');
+        if(cnt){
+            if(c === 'all') cnt.textContent = allCount;
+            else cnt.textContent = cats[c] || 0;
+        }
     });
-    animateRes('statPresets',total);
-    animateRes('statCreators',creators.size);
-    animateRes('statDownloads',totalDl);
 }
 function animateRes(id,target){
     var el=document.getElementById(id);
