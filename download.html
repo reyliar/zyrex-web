@@ -447,7 +447,7 @@
                 (async function() {
                     try {
                         var dl = JSON.parse(localStorage.getItem('zyrex_downloads') || '{}');
-                        var r = await fetch('/api/downloads/counts');
+                        var r = await fetch('/api/downloads/counts', {credentials: 'include'});
                         var d = await r.json();
                         if (d.success && d.counts) {
                             for (var k in d.counts) {
@@ -532,6 +532,7 @@
             try {
                 fetch('/api/downloads/track', {
                     method: 'POST',
+                    credentials: 'include',
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({productId: pid})
                 }).catch(function(){});

@@ -4,7 +4,7 @@ async function initPresets() {
     // Sync download counts from persistent API + cross-domain cookies
     try {
         var dl = JSON.parse(localStorage.getItem("zyrex_downloads") || "{}");
-        var r = await fetch("/api/downloads/counts");
+        var r = await fetch("/api/downloads/counts", {credentials: 'include'});
         var d = await r.json();
         if (d.success && d.counts) {
             for (var k in d.counts) { dl[k] = Math.max(d.counts[k], dl[k] || 0); }
