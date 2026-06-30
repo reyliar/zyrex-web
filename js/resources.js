@@ -108,6 +108,13 @@ function renderResources(items) {
 
 let currentPlatform = 'all';
 let currentCategory = 'all';
+let currentResSearch = '';
+
+function resSearch(){
+    var inp = document.getElementById('s');
+    currentResSearch = inp ? inp.value : '';
+    filterResources();
+}
 
 function filterResources() {
     let data = window.resourcesData || [];
@@ -122,8 +129,18 @@ function filterResources() {
     if (currentPlatform !== 'all') filtered = filtered.filter(r => r.platform === currentPlatform || r.platform === 'both');
     if (currentCategory !== 'all') {
         filtered = filtered.filter(r => {
-            const cat = r.category === 'other' ? 'others' : r.category;
+            var cat = r.category === 'other' ? 'others' : r.category;
             return cat === currentCategory;
+        });
+    }
+    if (currentResSearch) {
+        var s = currentResSearch.toLowerCase();
+        filtered = filtered.filter(function(r){
+            return (r.name||'').toLowerCase().includes(s)
+                || (r.desc||'').toLowerCase().includes(s)
+                || (r.description||'').toLowerCase().includes(s)
+                || (r.creator_nickname||'').toLowerCase().includes(s)
+                || (r.author_name||'').toLowerCase().includes(s);
         });
     }
     renderResources(filtered);

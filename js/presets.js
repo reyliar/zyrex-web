@@ -149,8 +149,15 @@ function filterPresets() {
         });
     }
     if (currentSearch) {
-        const s = currentSearch.toLowerCase();
-        filtered = filtered.filter(r => r.name.toLowerCase().includes(s) || r.desc.toLowerCase().includes(s));
+        var s = currentSearch.toLowerCase();
+        filtered = filtered.filter(function(r){
+            return (r.name||'').toLowerCase().includes(s)
+                || (r.desc||'').toLowerCase().includes(s)
+                || (r.description||'').toLowerCase().includes(s)
+                || (r.creator_nickname||'').toLowerCase().includes(s)
+                || (r.author_name||'').toLowerCase().includes(s)
+                || (r.tags||'').toLowerCase().includes(s);
+        });
     }
     renderPresets(filtered);
 }
