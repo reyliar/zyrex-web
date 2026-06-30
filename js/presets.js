@@ -1,20 +1,13 @@
 /* ===================== PRESETS GRID RENDERER ===================== */
 
 async function initPresets() {
-    // Sync download counts from persistent API + cross-domain cookies
+    // Sync download counts from persistent API (R2-backed)
     try {
         var dl = JSON.parse(localStorage.getItem("zyrex_downloads") || "{}");
         var r = await fetch("/api/downloads/counts", {credentials: 'include'});
         var d = await r.json();
         if (d.success && d.counts) {
             for (var k in d.counts) { dl[k] = Math.max(d.counts[k], dl[k] || 0); }
-        }
-        // Merge cross-domain cookies (set by dl.zyrexediting.xyz)
-        var cookies = document.cookie.split(';');
-        for (var i = 0; i < cookies.length; i++) {
-            var c = cookies[i].trim();
-            var m = c.match(/^zyrex_dl_(.+?)=(.+)$/);
-            if (m) { var cid = m[1]; var cv = parseInt(m[2]) || 0; dl[cid] = Math.max(cv, dl[cid] || 0); }
         }
         localStorage.setItem("zyrex_downloads", JSON.stringify(dl));
     } catch(e) {}

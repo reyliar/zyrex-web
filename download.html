@@ -454,13 +454,6 @@
                                 if (d.counts[k] > (dl[k] || 0)) dl[k] = d.counts[k];
                             }
                         }
-                        // Merge cross-domain cookies
-                        var cookies = document.cookie.split(';');
-                        for (var i = 0; i < cookies.length; i++) {
-                            var c = cookies[i].trim();
-                            var m = c.match(/^zyrex_dl_(.+?)=(.+)$/);
-                            if (m) { var cid = m[1]; var cv = parseInt(m[2]) || 0; dl[cid] = Math.max(cv, dl[cid] || 0); }
-                        }
                         localStorage.setItem('zyrex_downloads', JSON.stringify(dl));
                     } catch(e) {}
                     updateDownloadCount();
@@ -508,12 +501,6 @@
             } else {
                 btn.innerHTML = icon + 'Download Selected (' + sel + ' files)';
             }
-        }
-
-        // Helper: read a specific cookie by name
-        function getCookie(name) {
-            var match = document.cookie.match(new RegExp('(?:^|; )' + name.replace(/([.$?*|{}()\[\]\\\/+^])/g, '\\$1') + '=([^;]*)'));
-            return match ? decodeURIComponent(match[1]) : null;
         }
 
         // Download tracking

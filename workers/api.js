@@ -1235,27 +1235,24 @@ export default {
         });
       }
 
-      // ============ DOWNLOAD COUNTER (Worker in-memory + cookie merge) ============
+      // ============ DOWNLOAD COUNTER (R2 persistent — shared across all Worker instances) ============
       if (path === "/api/downloads/counts") {
-        // Merge in-memory Map with cookie values (cookie is cross-domain ground truth)
-        const counts = {};
-        for (const [id, count] of downloadCounts) {
-          counts[id] = count;
-        }
-        // Also read zyrex_dl_* cookies from the request (set by /api/downloads/track on any subdomain)
         try {
-          const cookieHeader = request.headers.get("Cookie") || "";
-          const cookies = cookieHeader.split(";");
-          for (const c of cookies) {
-            const m = c.trim().match(/^zyrex_dl_(.+?)=(.+)$/);
-            if (m) {
-              const cid = decodeURIComponent(m[1]);
-              const cv = parseInt(m[2]) || 0;
-              counts[cid] = Math.max(cv, counts[cid] || 0);
-            }
+          const bucket = env.STORAGE_PROD || env.STORAGE;
+          const obj = await bucket.get("__download_counts.json");
+          let counts = {};
+          if (obj) {
+            const text = await obj.text();
+            try { counts = JSON.parse(text); } catch (e) {}
           }
-        } catch (e) { /* cookie parse error, ignore */ }
-        return json({ success: true, counts });
+          // Also merge in-memory Map (which may have recent uncached counts)
+          for (const [id, count] of downloadCounts) {
+            counts[id] = Math.max(count, counts[id] || 0);
+          }
+          return json({ success: true, counts });
+        } catch (e) {
+          return json({ success: false, error: e.message }, 500);
+        }
       }
       
       if (path === "/api/downloads/track" && request.method === "POST") {
@@ -1263,19 +1260,27 @@ export default {
           const body = await request.json();
           const productId = body.productId;
           if (!productId) return json({ success: false, error: "Missing productId" }, 400);
+          
+          // Increment in-memory
           const newCount = (downloadCounts.get(productId) || 0) + 1;
           downloadCounts.set(productId, newCount);
           
-          // Set cross-domain cookie so all *.zyrexediting.xyz pages see the same count
-          const cookieVal = `zyrex_dl_${productId}=${newCount}; Domain=.zyrexediting.xyz; Path=/; Max-Age=31536000; SameSite=Lax; Secure`;
-          return new Response(JSON.stringify({ success: true, productId, count: newCount }), {
-            status: 200,
-            headers: {
-              ...corsHeaders,
-              "Content-Type": "application/json",
-              "Set-Cookie": cookieVal,
-            },
-          });
+          // Persist to R2 (fire-and-forget for speed)
+          const bucket = env.STORAGE_PROD || env.STORAGE;
+          (async () => {
+            try {
+              const obj = await bucket.get("__download_counts.json");
+              let counts = {};
+              if (obj) {
+                const text = await obj.text();
+                try { counts = JSON.parse(text); } catch (e) {}
+              }
+              counts[productId] = Math.max(newCount, counts[productId] || 0);
+              await bucket.put("__download_counts.json", JSON.stringify(counts));
+            } catch (e) { console.error("R2 count persist error:", e.message); }
+          })();
+          
+          return json({ success: true, productId, count: newCount });
         } catch (e) {
           return json({ success: false, error: e.message }, 400);
         }
@@ -1406,19 +1411,26 @@ export default {
             }
           })();
           
-          // Increment download count
+          // Increment download count + persist to R2
           const newCount = (downloadCounts.get(data.product_id) || 0) + 1;
           downloadCounts.set(data.product_id, newCount);
-          
-          // Cross-domain cookie so all *.zyrexediting.xyz pages sync
-          const dlCookie = `zyrex_dl_${data.product_id}=${newCount}; Domain=.zyrexediting.xyz; Path=/; Max-Age=31536000; SameSite=Lax; Secure`;
+          // Persist to R2 (fire-and-forget)
+          const r2Bucket = env.STORAGE_PROD || env.STORAGE;
+          (async () => {
+            try {
+              const obj = await r2Bucket.get("__download_counts.json");
+              let counts = {};
+              if (obj) { const t = await obj.text(); try { counts = JSON.parse(t); } catch(e) {} }
+              counts[data.product_id] = Math.max(newCount, counts[data.product_id] || 0);
+              await r2Bucket.put("__download_counts.json", JSON.stringify(counts));
+            } catch(e) { console.error("R2 count persist error:", e.message); }
+          })();
           
           const zipFilename = safeZipFilename(title || "download") + ".zip";
           return new Response(readable, {
             headers: {
               "Content-Type": "application/zip",
               "Content-Disposition": `attachment; filename="${zipFilename}"`,
-              "Set-Cookie": dlCookie,
               ...corsHeaders,
             },
           });
