@@ -1,11 +1,13 @@
 /* ===================== PRESETS GRID RENDERER ===================== */
 
 async function initPresets() {
-    // Sync download counts from persistent API (R2-backed)
+    // Sync download counts from persistent API + stats
+    var apiCounts = {};
     try {
         var r = await fetch("/api/downloads/counts", {credentials: 'include'});
         var d = await r.json();
         if (d.success && d.counts) {
+            apiCounts = d.counts;
             localStorage.setItem("zyrex_downloads", JSON.stringify(d.counts));
         }
     } catch(e) {}
@@ -21,18 +23,44 @@ async function initPresets() {
                     merged.push(sp);
                 }
             });
-            // Filter: resources page shows presets only (no plugins/software)
             const presetsOnly = merged.filter(p => !p.type || p.type === 'preset');
             window.presetsData = presetsOnly;
+            updatePresetStats(presetsOnly, apiCounts);
             renderPresets(presetsOnly);
         } else {
-            console.error("Expected array from products endpoint, using fallback");
             renderPresets(window.presetsData || []);
         }
     } catch(e) {
-        console.error("Failed to load presets, using fallback:", e);
         renderPresets(window.presetsData || []);
     }
+}
+
+function updatePresetStats(data, apiCounts){
+    var total=data.length;
+    var creators=new Set();
+    var totalDl=0;
+    data.forEach(function(r){
+        if(r.creator_nickname)creators.add(r.creator_nickname.toLowerCase());
+        else if(r.author_name)creators.add(r.author_name.toLowerCase());
+        totalDl+=(apiCounts[r.id]||0);
+    });
+    animateRes('statPresets',total);
+    animateRes('statCreators',creators.size);
+    animateRes('statDownloads',totalDl);
+}
+function animateRes(id,target){
+    var el=document.getElementById(id);
+    if(!el)return;
+    var start=parseInt(el.textContent)||0;
+    if(start===target)return;
+    var dur=600,step=(target-start)/(dur/16),cur=start;
+    function tick(){
+        cur+=step;
+        if((step>0&&cur>=target)||(step<0&&cur<=target)){el.textContent=target;return}
+        el.textContent=Math.round(cur);
+        requestAnimationFrame(tick);
+    }
+    tick();
 }
 
 function renderPresets(items) {
