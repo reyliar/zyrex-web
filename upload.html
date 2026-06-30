@@ -274,7 +274,20 @@
             if(s===3)buildReview()
         }
         function alert(msg,err){const b=document.getElementById('alertBox');b.textContent=msg;b.className='alert show '+(err?'alert-error':'alert-success');setTimeout(()=>b.classList.remove('show'),4000)}
-        async function resolveSocial(){const url=document.getElementById('creatorSocialUrl').value.trim();if(!url)return;try{const r=await fetch('/api/hlx/resolve?url='+encodeURIComponent(url));const d=await r.json();if(d.success){document.getElementById('creatorName').value=d.nickname;document.getElementById('creatorAvatar').value=d.avatar;updateLivePreview()}}catch(e){}}
+        async function resolveSocial(){
+            var url=document.getElementById('creatorSocialUrl').value.trim();
+            if(!url||!url.includes('.'))return;
+            try{
+                var r=await fetch('/api/hlx/resolve?url='+encodeURIComponent(url),{credentials:'include'});
+                var d=await r.json();
+                if(d.success){
+                    document.getElementById('creatorName').value=d.nickname||'';
+                    document.getElementById('creatorAvatar').value=d.avatar||'';
+                    updateLivePreview();
+                    alert('Profile resolved: '+(d.nickname||'Unknown'),false);
+                }
+            }catch(e){console.error('HLX resolve error:',e)}
+        }
         function toggleHlx(){var o=document.getElementById('hlxOverlay');o.style.display=(o.style.display==='flex')?'none':'flex'}
         function selHlxPlat(btn,p){hlxPlatform=p;document.querySelectorAll('#hlxPlatforms .btn-icon').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}
         async function hlxLookup(){
@@ -285,7 +298,7 @@
             var platforms={tiktok:'https://www.tiktok.com/@'+user,instagram:'https://www.instagram.com/'+user,youtube:'https://www.youtube.com/@'+user,x:'https://x.com/'+user};
             var lookupUrl=platforms[hlxPlatform]||('https://www.tiktok.com/@'+user);
             try{
-                var r=await fetch('/api/hlx/resolve?url='+encodeURIComponent(lookupUrl));
+                var r=await fetch('/api/hlx/resolve?url='+encodeURIComponent(lookupUrl),{credentials:'include'});
                 var d=await r.json();
                 if(d.success){
                     document.getElementById('creatorSocialUrl').value=lookupUrl;
