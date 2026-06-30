@@ -1235,13 +1235,26 @@ export default {
         });
       }
 
-      // ============ DOWNLOAD COUNTER (Worker in-memory + R2 sync) ============
+      // ============ DOWNLOAD COUNTER (Worker in-memory + cookie merge) ============
       if (path === "/api/downloads/counts") {
-        // Return all download counts
+        // Merge in-memory Map with cookie values (cookie is cross-domain ground truth)
         const counts = {};
         for (const [id, count] of downloadCounts) {
           counts[id] = count;
         }
+        // Also read zyrex_dl_* cookies from the request (set by /api/downloads/track on any subdomain)
+        try {
+          const cookieHeader = request.headers.get("Cookie") || "";
+          const cookies = cookieHeader.split(";");
+          for (const c of cookies) {
+            const m = c.trim().match(/^zyrex_dl_(.+?)=(.+)$/);
+            if (m) {
+              const cid = decodeURIComponent(m[1]);
+              const cv = parseInt(m[2]) || 0;
+              counts[cid] = Math.max(cv, counts[cid] || 0);
+            }
+          }
+        } catch (e) { /* cookie parse error, ignore */ }
         return json({ success: true, counts });
       }
       
