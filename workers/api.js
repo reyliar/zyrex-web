@@ -1250,8 +1250,19 @@ export default {
           const body = await request.json();
           const productId = body.productId;
           if (!productId) return json({ success: false, error: "Missing productId" }, 400);
-          downloadCounts.set(productId, (downloadCounts.get(productId) || 0) + 1);
-          return json({ success: true, productId, count: downloadCounts.get(productId) });
+          const newCount = (downloadCounts.get(productId) || 0) + 1;
+          downloadCounts.set(productId, newCount);
+          
+          // Set cross-domain cookie so all *.zyrexediting.xyz pages see the same count
+          const cookieVal = `zyrex_dl_${productId}=${newCount}; Domain=.zyrexediting.xyz; Path=/; Max-Age=31536000; SameSite=Lax; Secure`;
+          return new Response(JSON.stringify({ success: true, productId, count: newCount }), {
+            status: 200,
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json",
+              "Set-Cookie": cookieVal,
+            },
+          });
         } catch (e) {
           return json({ success: false, error: e.message }, 400);
         }
@@ -1383,13 +1394,18 @@ export default {
           })();
           
           // Increment download count
-          downloadCounts.set(data.product_id, (downloadCounts.get(data.product_id) || 0) + 1);
+          const newCount = (downloadCounts.get(data.product_id) || 0) + 1;
+          downloadCounts.set(data.product_id, newCount);
+          
+          // Cross-domain cookie so all *.zyrexediting.xyz pages sync
+          const dlCookie = `zyrex_dl_${data.product_id}=${newCount}; Domain=.zyrexediting.xyz; Path=/; Max-Age=31536000; SameSite=Lax; Secure`;
           
           const zipFilename = safeZipFilename(title || "download") + ".zip";
           return new Response(readable, {
             headers: {
               "Content-Type": "application/zip",
               "Content-Disposition": `attachment; filename="${zipFilename}"`,
+              "Set-Cookie": dlCookie,
               ...corsHeaders,
             },
           });

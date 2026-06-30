@@ -528,13 +528,7 @@
                 localStorage.setItem(key, JSON.stringify(downloads));
                 updateDownloadCount();
             } catch(e) {}
-            // Cross-domain cookie (shared across zyrexediting.xyz + dl.zyrexediting.xyz)
-            try {
-                var ckey = 'zyrex_dl_' + pid;
-                var curr = parseInt(getCookie(ckey)) || 0;
-                document.cookie = ckey + '=' + (curr + 1) + ';domain=.zyrexediting.xyz;path=/;max-age=31536000;SameSite=Lax';
-            } catch(e) {}
-            // Persistent API (cross-domain)
+            // Persistent API (sets cross-domain cookie via Set-Cookie header)
             try {
                 fetch('/api/downloads/track', {
                     method: 'POST',
