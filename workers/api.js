@@ -25,11 +25,25 @@ async function sendDiscordNotification(env, product, uploaderName) {
 
   try {
     const cat = CATEGORY_INFO[product.category] || CATEGORY_INFO["others"];
-    const color = 0xe8456a;  // pink/cherry-light
+    const color = 0x7a081e;  // dark cherry
     const siteUrl = "https://zyrexediting.xyz";
     const presetUrl = `${siteUrl}/preset?id=${encodeURIComponent(product.id || "")}`;
 
     const authorName = product.creator_nickname || product.creator_username || uploaderName || "Zyrex Community";
+
+    // Compute total file size
+    let sizeStr = product.size_str || "";
+    if (!sizeStr) {
+      const files = product.files || [];
+      if (files.length > 0) {
+        let totalBytes = files.reduce((s, f) => s + (f.size || 0), 0);
+        if (totalBytes > 1048576) sizeStr = (totalBytes / 1048576).toFixed(1) + " MB";
+        else if (totalBytes > 1024) sizeStr = (totalBytes / 1024).toFixed(1) + " KB";
+        else sizeStr = totalBytes + " B";
+      } else {
+        sizeStr = "Unknown";
+      }
+    }
 
     const embed = {
       color: color,
@@ -48,27 +62,18 @@ async function sendDiscordNotification(env, product, uploaderName) {
           value: cat.label,
           inline: true,
         },
+        {
+          name: "📦 Total Size",
+          value: sizeStr,
+          inline: true,
+        },
       ],
       footer: {
-        text: "Delivered by Zyrex",
+        text: "Zyrex™Resources",
         icon_url: "https://zyrexediting.xyz/assets/content.png",
       },
       timestamp: new Date().toISOString(),
     };
-
-    // Tags
-    if (product.tags) {
-      const tags = typeof product.tags === "string" 
-        ? product.tags.split(",").map(t => t.trim()).filter(Boolean).slice(0, 8)
-        : (Array.isArray(product.tags) ? product.tags.slice(0, 8) : []);
-      if (tags.length > 0) {
-        embed.fields.push({
-          name: "🏷️ Tags",
-          value: tags.join(", "),
-          inline: true,
-        });
-      }
-    }
 
     // Links
     const downloadUrl = `https://dl.zyrexediting.xyz/?id=${encodeURIComponent(product.id || "")}`;
