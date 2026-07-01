@@ -950,7 +950,7 @@ export default {
         if (newUrl.pathname === "/") {
           newUrl.pathname = "/download.html";
         }
-        return fetch(`https://main.zyrexweb.pages.dev${newUrl.pathname}${newUrl.search}`);
+        return fetch(`https://zyrexediting.xyz${newUrl.pathname}${newUrl.search}`);
       }
     }
     // Bypass: storage subdomain handled by Cloudflare Tunnel (SFTPGo on local machine)
@@ -2009,7 +2009,7 @@ export default {
         const userAgent = (request.headers.get("User-Agent") || "").toLowerCase();
         const isCrawler = userAgent.includes("discordbot") || userAgent.includes("twitterbot") || userAgent.includes("facebookexternalhit") || userAgent.includes("whatsapp") || userAgent.includes("telegrambot") || userAgent.includes("slackbot") || userAgent.includes("linkedinbot");
         
-        // Fetch product data from bot
+        // Fetch product data from bot for OG tags
         let product = null;
         if (presetId) {
           try {
@@ -2021,13 +2021,12 @@ export default {
           } catch(e) {}
         }
         
-        // Build OG values
         const ogTitle = product ? `${product.name} — Zyrex` : "Zyrex | Preset";
         const ogDesc = (product?.description || product?.desc || "Premium editing preset on Zyrex").substring(0, 200);
         const ogImage = product?.thumbnail || "https://zyrexediting.xyz/assets/banner.png";
         const ogUrl = `https://zyrexediting.xyz/preset?id=${encodeURIComponent(presetId)}`;
         
-        // If it's a crawler, return a minimal HTML page with OG tags
+        // If it's a crawler, return a minimal HTML page with dynamic OG tags
         if (isCrawler) {
           const html = `<!DOCTYPE html>
 <html lang="en">
@@ -2058,29 +2057,14 @@ export default {
           });
         }
         
-        // For normal browsers, fetch the actual preset.html from Pages and inject OG tags
-        try {
-          const pagesResp = await fetch(`https://main.zyrexweb.pages.dev/preset.html`);
-          if (pagesResp.ok) {
-            const html = await pagesResp.text();
-            const injected = html
-              .replace(/<title>.*?<\/title>/, `<title>${ogTitle}</title>`)
-              .replace(/<meta name="description" content="[^"]*">/, `<meta name="description" content="${ogDesc.replace(/"/g, '&quot;')}">`)
-              .replace('</head>', `
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="${ogUrl}">
-    <meta property="og:title" content="${ogTitle.replace(/"/g, '&quot;')}">
-    <meta property="og:description" content="${ogDesc.replace(/"/g, '&quot;')}">
-    <meta property="og:image" content="${ogImage}">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:image" content="${ogImage}">
-</head>`);
-            return new Response(injected, {
-              status: 200,
-              headers: { "Content-Type": "text/html;charset=UTF-8", "Cache-Control": "public, max-age=60" },
-            });
-          }
-        } catch(e) { console.error("Preset OG inject error:", e.message); }
+        // For normal browsers: pass through to Pages
+        // /preset → redirect to /preset.html (keeping query params)
+        // /preset.html → serve directly via Pages (pass through subrequest)
+        if (path === "/preset") {
+          return Response.redirect(`/preset.html${url.search}`, 302);
+        }
+        // path === "/preset.html" → let Cloudflare serve from Pages
+        return fetch(request);
       }
 
       return json({ error: "Not found" }, 404);
