@@ -1299,7 +1299,9 @@
                     </div>
                     <div class="form-group">
                         <label for="editProductCategory">Category *</label>
-                        <input type="text" id="editProductCategory" placeholder="others, overlays, transitions" required>
+                        <select id="editProductCategory" required>
+                            <option value="">Select...</option>
+                        </select>
                     </div>
                 </div>
                 <div class="form-row">
@@ -1809,7 +1811,19 @@
             document.getElementById('editProductId').value = product.id;
             document.getElementById('editProductName').value = product.name || '';
             document.getElementById('editProductType').value = product.type || 'preset';
-            document.getElementById('editProductCategory').value = product.category || 'others';
+            // Populate category dropdown based on product type
+            var catSelect = document.getElementById('editProductCategory');
+            catSelect.innerHTML = '';
+            var isPlugin = (product.type === 'plugin');
+            var catOptions = isPlugin
+                ? [['software','Software'],['adobe-plugin','Adobe Plugin'],['ofx-plugin','OFX Plugin'],['others','Others']]
+                : [['after-effects','After Effects'],['premiere-pro','Premiere Pro'],['photoshop','Photoshop'],['video-star','Video Star'],['topaz-labs','Topaz Labs'],['others','Others']];
+            catOptions.forEach(function(opt) {
+                var o = document.createElement('option');
+                o.value = opt[0]; o.textContent = opt[1];
+                if (opt[0] === (product.category || 'others')) o.selected = true;
+                catSelect.appendChild(o);
+            });
             document.getElementById('editProductDesc').value = product.description || '';
             document.getElementById('editProductFilePath').value = product.file_path || '';
             document.getElementById('editProductThumbnail').value = product.thumbnail || '';

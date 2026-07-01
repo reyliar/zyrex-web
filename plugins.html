@@ -273,8 +273,8 @@
         <div class="cat-tabs">
             <button class="cat-tab active" onclick="filterCategory('all',this)">All</button>
             <button class="cat-tab" onclick="filterCategory('software',this)"><i class="fas fa-laptop-code"></i> Software</button>
-            <button class="cat-tab" onclick="filterCategory('adobe-plugins',this)"><i class="fas fa-video"></i> Adobe Plugin</button>
-            <button class="cat-tab" onclick="filterCategory('ofx-plugins',this)"><i class="fas fa-plug"></i> OFX Plugin</button>
+            <button class="cat-tab" onclick="filterCategory('adobe-plugin',this)"><i class="fas fa-video"></i> Adobe Plugin</button>
+            <button class="cat-tab" onclick="filterCategory('ofx-plugin',this)"><i class="fas fa-plug"></i> OFX Plugin</button>
             <button class="cat-tab" onclick="filterCategory('others',this)"><i class="fas fa-puzzle-piece"></i> Others</button>
         </div>
         <!-- VERIFIED NOTICE -->
@@ -354,16 +354,16 @@
         let currentCat = 'all';
 
         function getCategoryIcon(cat) {
-            if (cat === 'ofx-plugins') return 'fa-plug';
-            if (cat === 'adobe-plugins' || cat === 'ae-plugins' || cat === 'pr-plugins') return 'fa-video';
+            if (cat === 'ofx-plugin') return 'fa-plug';
+            if (cat === 'adobe-plugin' || cat === 'ae-plugins' || cat === 'pr-plugins') return 'fa-video';
             return 'fa-puzzle-piece';
         }
 
         function getCategoryLabel(cat) {
             var labels = {
                 'software':'Software',
-                'ofx-plugins':'OFX Plugin',
-                'adobe-plugins':'Adobe Plugin',
+                'ofx-plugin':'OFX Plugin',
+                'adobe-plugin':'Adobe Plugin',
                 'ae-plugins':'Adobe Plugin',
                 'pr-plugins':'Adobe Plugin',
                 'others':'Others'
@@ -384,8 +384,8 @@
             allPlugins.forEach(function(p){
                 var c=p.category||'';
                 if(c==='software')sw++;
-                else if(c==='adobe-plugins'||c==='ae-plugins'||c==='pr-plugins')adobe++;
-                else if(c==='ofx-plugins')ofx++;
+                else if(c==='adobe-plugin'||c==='ae-plugins'||c==='pr-plugins')adobe++;
+                else if(c==='ofx-plugin')ofx++;
                 else other++;
             });
             animateNum('statTotalPlugins',total);
@@ -468,7 +468,7 @@
                 }
                 if (currentCat !== 'all') {
                     var c=(p.category||'').toLowerCase();
-                    if (currentCat==='adobe-plugins'&&c!=='adobe-plugins'&&c!=='ae-plugins'&&c!=='pr-plugins')return false;
+                    if (currentCat==='adobe-plugin'&&c!=='adobe-plugin'&&c!=='ae-plugins'&&c!=='pr-plugins')return false;
                     else if(c!==currentCat)return false;
                 }
                 if (q && !(p.name||'').toLowerCase().includes(q)) return false;

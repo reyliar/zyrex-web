@@ -99,10 +99,9 @@
                         <div class="form-group"><label>Name</label><input id="edName" value="${(p.name||'').replace(/"/g,'&quot;')}"></div>
                         <div class="form-group"><label>Category</label><select id="edCat">
                             <option value="software" ${p.category==='software'?'selected':''}>Software</option>
-                            <option value="after-effects" ${p.category==='after-effects'?'selected':''}>After Effects Plugin</option>
-                            <option value="premiere-pro" ${p.category==='premiere-pro'?'selected':''}>Premiere Pro Plugin</option>
-                            <option value="photoshop" ${p.category==='photoshop'?'selected':''}>Photoshop Plugin</option>
-                            <option value="others" ${p.category==='others'?'selected':''}>Other</option>
+                            <option value="adobe-plugin" ${p.category==='adobe-plugin'||p.category==='after-effects'||p.category==='premiere-pro'||p.category==='photoshop'?'selected':''}>Adobe Plugin</option>
+                            <option value="ofx-plugin" ${p.category==='ofx-plugin'?'selected':''}>OFX Plugin</option>
+                            <option value="others" ${p.category==='others'?'selected':''}>Others</option>
                         </select></div>
                         <div class="form-group"><label>Platform</label><select id="edPlat">
                             <option value="win" ${p.platform==='win'?'selected':''}>Windows</option>

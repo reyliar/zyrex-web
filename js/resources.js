@@ -81,8 +81,8 @@ function getPlatformBadge(platform) {
 function getCategoryLabel(category) {
     const labels = { 
         'software': 'Software', 
-        'adobe-plugins': 'Adobe Plugin', 
-        'ofx-plugins': 'OFX Plugin',
+        'adobe-plugin': 'Adobe Plugin', 
+        'ofx-plugin': 'OFX Plugin',
         'others': 'Others',
         'other': 'Others'
     };

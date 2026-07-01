@@ -1173,13 +1173,14 @@ export default {
         return json({ success: true, message: `Product ${id} deleted` });
       }
 
-      // ============ PAYHIP SCRAPER (Proxied to Bot) ============
-      if (path === "/api/payhip/scrape") {
-        const payhipUrl = url.searchParams.get("url");
-        if (!payhipUrl || !payhipUrl.includes("payhip.com")) {
-          return json({ success: false, error: "Invalid Payhip URL" }, 400);
+      // ============ SCRAPER (Unified — Proxied to Bot) ============
+      if (path === "/api/scrape" || path === "/api/payhip/scrape" || path === "/api/patreon/scrape" || path === "/api/boosty/scrape") {
+        const scrapeUrl = url.searchParams.get("url");
+        if (!scrapeUrl) {
+          return json({ success: false, error: "URL parameter required" }, 400);
         }
-        const targetUrl = `${BOT_API}/api/payhip/scrape?url=${encodeURIComponent(payhipUrl)}`;
+        // Route to the bot's unified scraper (bot handles platform detection)
+        const targetUrl = `${BOT_API}/api/scrape?url=${encodeURIComponent(scrapeUrl)}`;
         const botResp = await fetch(targetUrl);
         const data = await botResp.text();
         try {
