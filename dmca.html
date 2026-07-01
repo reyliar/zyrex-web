@@ -17,24 +17,36 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:image" content="https://zyrexediting.xyz/assets/banner.png">
     <style>
-        body { background: var(--dark); color: var(--light); font-family: 'Poppins',sans-serif; min-height:100vh }
-        .page-wrap { max-width:800px; margin:0 auto; padding:120px 24px 80px }
-        h1 { font-size:2rem; font-weight:900; margin-bottom:8px; color:#fff }
-        .updated { color:var(--gray-dark); font-size:.8rem; margin-bottom:32px }
-        h2 { font-size:1.2rem; font-weight:700; color:var(--cherry); margin:28px 0 10px }
-        p, li { color:var(--gray); font-size:.9rem; line-height:1.8 }
-        ul, ol { padding-left:20px; margin-bottom:16px }
-        a { color:var(--cherry); text-decoration:none }
-        a:hover { text-decoration:underline }
+        body { background: var(--dark); background-image: radial-gradient(circle at 50% 10%, rgba(var(--cherry-rgb),.06) 0%, transparent 60%); color: var(--light); font-family: 'Poppins',sans-serif; min-height:100vh }
+        .page-wrap { max-width:820px; margin:0 auto; padding:120px 24px 80px }
+        .legal-card { background: rgba(12,2,4,0.45); border: 1px solid rgba(var(--cherry-rgb),.12); border-radius: 20px; padding: 50px 44px; backdrop-filter: blur(25px) saturate(210%); -webkit-backdrop-filter: blur(25px) saturate(210%); box-shadow: 0 20px 60px rgba(0,0,0,.4), 0 0 40px rgba(var(--cherry-rgb),.08); position: relative; overflow: hidden }
+        .legal-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background: var(--gradient); z-index:2 }
+        .legal-card::after { content:''; position:absolute; top:0; left:0; right:0; height:40%; background: linear-gradient(180deg, rgba(var(--cherry-rgb),.03) 0%, transparent 100%); pointer-events:none; z-index:1 }
+        .legal-badge { display: inline-flex; align-items:center; gap:6px; padding:5px 16px; background: rgba(var(--cherry-rgb),.1); border:1px solid rgba(var(--cherry-rgb),.2); border-radius:50px; font-size:.7rem; font-weight:700; color:var(--cherry-light); text-transform:uppercase; letter-spacing:1px; margin-bottom:20px }
+        h1 { font-size:2.2rem; font-weight:900; margin-bottom:6px; color:#fff; letter-spacing:-.5px }
+        .updated { color:var(--gray-dark); font-size:.78rem; margin-bottom:36px; display:flex; align-items:center; gap:8px }
+        .updated i { color:var(--cherry); font-size:.7rem }
+        .intro { color:var(--gray); font-size:.92rem; line-height:1.9; margin-bottom:28px; padding:16px 20px; background: rgba(var(--cherry-rgb),.03); border:1px solid rgba(var(--cherry-rgb),.06); border-radius:12px }
+        h2 { font-size:1.15rem; font-weight:700; color:var(--cherry-light); margin:32px 0 10px; padding-left:14px; border-left:3px solid var(--cherry); display:flex; align-items:center; gap:10px }
+        h2 i { font-size:.85rem; opacity:.7 }
+        p, li { color:var(--gray); font-size:.9rem; line-height:1.85 }
+        ul, ol { padding-left:22px; margin-bottom:16px }
+        ul li, ol li { margin-bottom:6px }
+        a { color:var(--cherry-light); text-decoration:none; font-weight:500; transition:.2s }
+        a:hover { text-decoration:underline; color:#fff }
         @media(max-width:768px) {
-            .page-wrap { padding: 100px 16px 60px }
+            .page-wrap { padding: 100px 14px 60px }
+            .legal-card { padding: 32px 20px; border-radius:16px }
             h1 { font-size: 1.5rem }
-            h2 { font-size: 1rem; margin: 22px 0 8px }
+            h2 { font-size: 1rem; margin: 24px 0 8px }
             p, li { font-size: .82rem; line-height: 1.7 }
+            .intro { font-size:.82rem; padding:12px 14px }
         }
         @media(max-width:480px) {
-            .page-wrap { padding: 90px 14px 50px }
+            .page-wrap { padding: 90px 10px 50px }
+            .legal-card { padding: 24px 14px }
             h1 { font-size: 1.3rem }
+            h2 { font-size: .92rem }
             .updated { font-size: .7rem }
         }
     </style>
@@ -42,21 +54,21 @@
 <body>
     <nav class="navbar scrolled"><div class="container"><a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><ul class="nav-links"><li><a href="/">Home</a></li><li><a href="/resources">Resources</a></li><li><a href="/plugins">Plugins</a></li><li><a href="/#contact">Contact</a></li></ul><div class="nav-actions"><div id="authBtn"></div><a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord"><i class="fab fa-discord"></i> <span>Join Us</span></a><button class="hamburger" id="hamburger"><span></span><span></span><span></span></button></div></div></nav>
 
-    <section class="page" style="padding-top:100px"><div class="wrap">
+    <section class="page" style="padding-top:100px"><div class="wrap"><div class="legal-card">
+        <div class="legal-badge"><i class="fas fa-scale-balanced"></i> Legal</div>
         <h1>DMCA & Copyright</h1>
-        <p class="updated">Last updated: July 2, 2026</p>
+        <p class="updated"><i class="fas fa-clock"></i> Last updated: July 2, 2026</p>
+        <div class="intro">Zyrex respects intellectual property rights. We respond to valid notices under the U.S. Digital Millennium Copyright Act ("DMCA") and similar laws. If you believe content on any Zyrex platform — including presets, plugins, resources hosted on our website or Discord server — infringes your copyright, you may send a takedown notice. If your content was removed and you believe it was mistaken or misidentified, you may send a counter-notice.</div>
 
-        <p>Zyrex respects intellectual property rights. We respond to valid notices under the U.S. Digital Millennium Copyright Act ("DMCA") and similar laws. If you believe content on any Zyrex platform — including presets, plugins, resources hosted on our website or Discord server — infringes your copyright, you may send a takedown notice. If your content was removed and you believe it was mistaken or misidentified, you may send a counter-notice.</p>
-
-        <h2>1. Scope</h2>
+        <h2><i class="fas fa-globe"></i> 1. Scope</h2>
         <p>This policy applies to all Zyrex platforms, including: the Zyrex website (zyrexediting.xyz), the Zyrex Resources platform, preset and plugin pages, and our Discord server. Content covered includes but is not limited to: resource file downloads, presets, plugins, software, comments, and materials shared via our platforms. For content hosted on Discord, copyright holders may also submit notices directly to Discord; we encourage contacting us first at <a href="mailto:contact@zyrexediting.xyz">contact@zyrexediting.xyz</a> so we can address concerns promptly.</p>
 
-        <h2>2. Designated Agent</h2>
+        <h2><i class="fas fa-user-tie"></i> 2. Designated Agent</h2>
         <p>We have designated an agent to receive DMCA notices and counter-notices. Send all copyright-related communications to:</p>
         <p>Email: <a href="mailto:contact@zyrexediting.xyz">contact@zyrexediting.xyz</a><br>
         Use the subject line "<strong>DMCA Takedown Notice</strong>" or "<strong>DMCA Counter-Notice</strong>" so we can process your message promptly.</p>
 
-        <h2>3. Filing a DMCA Takedown Notice</h2>
+        <h2><i class="fas fa-file-pen"></i> 3. Filing a DMCA Takedown Notice</h2>
         <p>If you are a copyright owner (or authorised to act on their behalf) and believe that content on any Zyrex platform infringes your copyright — including presets, plugins, resources, or other materials — please send a written notice that includes all of the following, as required by 17 U.S.C. § 512(c)(3):</p>
         <ol>
             <li>Your physical or electronic signature.</li>
@@ -68,7 +80,7 @@
         </ol>
         <p>Send the notice to <a href="mailto:contact@zyrexediting.xyz">contact@zyrexediting.xyz</a>. We will review it and, if it is valid and complete, we may remove or disable access to the allegedly infringing content and may notify the user who posted it. We aim to process valid notices within 24–48 hours where practicable.</p>
 
-        <h2>4. Counter-Notice</h2>
+        <h2><i class="fas fa-rotate-left"></i> 4. Counter-Notice</h2>
         <p>If your content was removed or disabled as a result of a DMCA notice and you believe the removal was mistaken (e.g. you have rights to use the work, it was misidentified, or it is not infringing), you may send a counter-notice. The counter-notice must include, as required by 17 U.S.C. § 512(g)(3):</p>
         <ol>
             <li>Your physical or electronic signature.</li>
@@ -78,15 +90,15 @@
         </ol>
         <p>Send the counter-notice to <a href="mailto:contact@zyrexediting.xyz">contact@zyrexediting.xyz</a>. We may forward it to the person who submitted the original takedown notice. If that person does not file a court action against you within a period required by law (typically 10–14 business days), we may restore the content.</p>
 
-        <h2>5. Repeat Infringers</h2>
+        <h2><i class="fas fa-ban"></i> 5. Repeat Infringers</h2>
         <p>In appropriate circumstances we may terminate the accounts of users who are repeat infringers. We may also remove content and take other measures we deem necessary to comply with the DMCA and to protect the platform and rights holders.</p>
 
-        <h2>6. Misrepresentation</h2>
+        <h2><i class="fas fa-triangle-exclamation"></i> 6. Misrepresentation</h2>
         <p>Under the DMCA, anyone who knowingly materially misrepresents that material is infringing, or that material was removed or disabled by mistake or misidentification, may be liable for damages (including costs and attorneys' fees). Do not submit a takedown notice or counter-notice unless you have a good-faith basis. If you are unsure, consider consulting a lawyer before sending a notice.</p>
 
-        <h2>7. Contact</h2>
+        <h2><i class="fas fa-envelope"></i> 7. Contact</h2>
         <p>For all DMCA-related communications (takedown notices, counter-notices, and questions), contact our designated agent at <a href="mailto:contact@zyrexediting.xyz">contact@zyrexediting.xyz</a>. For other legal matters, see our <a href="/privacy">Privacy Policy</a> and <a href="/terms">Terms of Service</a>. You can also reach us via our <a href="https://discord.gg/fAydSzpafA">Discord server</a>.</p>
-    </div></section>
+</div></div></section>
 
     <footer class="footer"><div class="container"><div class="footer-content"><div class="footer-brand"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><h3 style="font-size:1.8rem;font-weight:900;margin:0;letter-spacing:2px;background:linear-gradient(135deg,#fff,#9090a0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Editing</h3></div><p>Premium editing community &amp; resources.</p></div><div class="footer-links"><h4>Quick Links</h4><ul><li><a href="/">Home</a></li><li><a href="/resources">Resources</a></li><li><a href="/plugins">Plugins</a></li><li><a href="/dmca">DMCA</a></li><li><a href="/#contact">Contact</a></li></ul></div><div class="footer-links"><h4>Legal</h4><ul><li><a href="/terms">Terms</a></li><li><a href="/privacy">Privacy</a></li></ul></div><div class="footer-links"><h4>Community</h4><ul><li><a href="https://discord.gg/fAydSzpafA">Discord</a></li></ul></div></div><div class="footer-bottom"><p>&copy; 2026 Zyrex Editing. All rights reserved. | <a href="/terms">Terms</a> | <a href="/privacy">Privacy</a> | <a href="/dmca">DMCA</a></p></div></div></footer>
 

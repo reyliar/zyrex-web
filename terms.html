@@ -17,24 +17,36 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:image" content="https://zyrexediting.xyz/assets/banner.png">
     <style>
-        body { background: var(--dark); color: var(--light); font-family: 'Poppins',sans-serif; min-height:100vh }
-        .page-wrap { max-width:800px; margin:0 auto; padding:120px 24px 80px }
-        h1 { font-size:2rem; font-weight:900; margin-bottom:8px; color:#fff }
-        .updated { color:var(--gray-dark); font-size:.8rem; margin-bottom:32px }
-        h2 { font-size:1.2rem; font-weight:700; color:var(--cherry); margin:28px 0 10px }
-        p, li { color:var(--gray); font-size:.9rem; line-height:1.8 }
-        ul { padding-left:20px; margin-bottom:16px }
-        a { color:var(--cherry); text-decoration:none }
-        a:hover { text-decoration:underline }
+        body { background: var(--dark); background-image: radial-gradient(circle at 50% 10%, rgba(var(--cherry-rgb),.06) 0%, transparent 60%); color: var(--light); font-family: 'Poppins',sans-serif; min-height:100vh }
+        .page-wrap { max-width:820px; margin:0 auto; padding:120px 24px 80px }
+        .legal-card { background: rgba(12,2,4,0.45); border: 1px solid rgba(var(--cherry-rgb),.12); border-radius: 20px; padding: 50px 44px; backdrop-filter: blur(25px) saturate(210%); -webkit-backdrop-filter: blur(25px) saturate(210%); box-shadow: 0 20px 60px rgba(0,0,0,.4), 0 0 40px rgba(var(--cherry-rgb),.08); position: relative; overflow: hidden }
+        .legal-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background: var(--gradient); z-index:2 }
+        .legal-card::after { content:''; position:absolute; top:0; left:0; right:0; height:40%; background: linear-gradient(180deg, rgba(var(--cherry-rgb),.03) 0%, transparent 100%); pointer-events:none; z-index:1 }
+        .legal-badge { display: inline-flex; align-items:center; gap:6px; padding:5px 16px; background: rgba(var(--cherry-rgb),.1); border:1px solid rgba(var(--cherry-rgb),.2); border-radius:50px; font-size:.7rem; font-weight:700; color:var(--cherry-light); text-transform:uppercase; letter-spacing:1px; margin-bottom:20px }
+        h1 { font-size:2.2rem; font-weight:900; margin-bottom:6px; color:#fff; letter-spacing:-.5px }
+        .updated { color:var(--gray-dark); font-size:.78rem; margin-bottom:36px; display:flex; align-items:center; gap:8px }
+        .updated i { color:var(--cherry); font-size:.7rem }
+        .intro { color:var(--gray); font-size:.92rem; line-height:1.9; margin-bottom:28px; padding:16px 20px; background: rgba(var(--cherry-rgb),.03); border:1px solid rgba(var(--cherry-rgb),.06); border-radius:12px }
+        h2 { font-size:1.15rem; font-weight:700; color:var(--cherry-light); margin:32px 0 10px; padding-left:14px; border-left:3px solid var(--cherry); display:flex; align-items:center; gap:10px }
+        h2 i { font-size:.85rem; opacity:.7 }
+        p, li { color:var(--gray); font-size:.9rem; line-height:1.85 }
+        ul, ol { padding-left:22px; margin-bottom:16px }
+        ul li, ol li { margin-bottom:6px }
+        a { color:var(--cherry-light); text-decoration:none; font-weight:500; transition:.2s }
+        a:hover { text-decoration:underline; color:#fff }
         @media(max-width:768px) {
-            .page-wrap { padding: 100px 16px 60px }
+            .page-wrap { padding: 100px 14px 60px }
+            .legal-card { padding: 32px 20px; border-radius:16px }
             h1 { font-size: 1.5rem }
-            h2 { font-size: 1rem; margin: 22px 0 8px }
+            h2 { font-size: 1rem; margin: 24px 0 8px }
             p, li { font-size: .82rem; line-height: 1.7 }
+            .intro { font-size:.82rem; padding:12px 14px }
         }
         @media(max-width:480px) {
-            .page-wrap { padding: 90px 14px 50px }
+            .page-wrap { padding: 90px 10px 50px }
+            .legal-card { padding: 24px 14px }
             h1 { font-size: 1.3rem }
+            h2 { font-size: .92rem }
             .updated { font-size: .7rem }
         }
     </style>
@@ -42,38 +54,40 @@
 <body>
     <nav class="navbar scrolled"><div class="container"><a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><ul class="nav-links"><li><a href="/">Home</a></li><li><a href="/resources">Resources</a></li><li><a href="/plugins">Plugins</a></li><li><a href="/#contact">Contact</a></li></ul><div class="nav-actions"><div id="authBtn"></div><a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord"><i class="fab fa-discord"></i> <span>Join Us</span></a><button class="hamburger" id="hamburger"><span></span><span></span><span></span></button></div></div></nav>
 
-    <section class="page" style="padding-top:100px"><div class="wrap">
+    <section class="page" style="padding-top:100px"><div class="wrap"><div class="legal-card">
+        <div class="legal-badge"><i class="fas fa-file-contract"></i> Legal</div>
         <h1>Terms of Service</h1>
-        <p class="updated">Last updated: June 29, 2026</p>
+        <p class="updated"><i class="fas fa-clock"></i> Last updated: June 29, 2026</p>
+        <div class="intro">By using Zyrex, you agree to these Terms of Service. Please read them carefully before accessing our website, downloading resources, or joining our Discord server.</div>
 
-        <h2>1. Acceptance of Terms</h2>
+        <h2><i class="fas fa-check-circle"></i> 1. Acceptance of Terms</h2>
         <p>By accessing or using Zyrex Editing ("Zyrex", "we", "us"), you agree to be bound by these Terms of Service. If you do not agree, do not use our services.</p>
 
-        <h2>2. Description of Service</h2>
+        <h2><i class="fas fa-sliders"></i> 2. Description of Service</h2>
         <p>Zyrex provides a platform for sharing and downloading editing resources including presets, plugins, and software. We also operate a Discord community server.</p>
 
-        <h2>3. User Responsibilities</h2>
+        <h2><i class="fas fa-users"></i> 3. User Responsibilities</h2>
         <ul>
             <li>You are responsible for maintaining the confidentiality of your account credentials.</li>
             <li>You agree not to misuse, resell, or redistribute resources obtained from Zyrex without permission.</li>
             <li>You agree to comply with Discord's Terms of Service when using our Discord server.</li>
         </ul>
 
-        <h2>4. Intellectual Property</h2>
+        <h2><i class="fas fa-copyright"></i> 4. Intellectual Property</h2>
         <p>Resources shared on Zyrex are provided by community members. Respective creators retain their rights. Zyrex does not claim ownership of user-uploaded content.</p>
 
-        <h2>5. Limitation of Liability</h2>
+        <h2><i class="fas fa-scale-balanced"></i> 5. Limitation of Liability</h2>
         <p>Zyrex provides resources "as is" without any warranty. We are not responsible for any damages arising from the use of our services or downloaded content.</p>
 
-        <h2>6. Termination</h2>
+        <h2><i class="fas fa-door-open"></i> 6. Termination</h2>
         <p>We reserve the right to suspend or terminate access to our services at any time, for any reason, without notice.</p>
 
-        <h2>7. Changes to Terms</h2>
+        <h2><i class="fas fa-pen-to-square"></i> 7. Changes to Terms</h2>
         <p>We may update these terms at any time. Continued use of the service after changes constitutes acceptance of the new terms.</p>
 
-        <h2>8. Contact</h2>
+        <h2><i class="fas fa-envelope"></i> 8. Contact</h2>
         <p>For questions about these terms, contact us via our <a href="https://discord.gg/fAydSzpafA">Discord server</a>.</p>
-    </div></section>
+</div></div></section>
 
     <footer class="footer"><div class="container"><div class="footer-content"><div class="footer-brand"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><h3 style="font-size:1.8rem;font-weight:900;margin:0;letter-spacing:2px;background:linear-gradient(135deg,#fff,#9090a0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Editing</h3></div><p>Premium editing community &amp; resources.</p></div><div class="footer-links"><h4>Quick Links</h4><ul><li><a href="/">Home</a></li><li><a href="/resources">Resources</a></li><li><a href="/plugins">Plugins</a></li><li><a href="/dmca">DMCA</a></li><li><a href="/#contact">Contact</a></li></ul></div><div class="footer-links"><h4>Legal</h4><ul><li><a href="/terms">Terms</a></li><li><a href="/privacy">Privacy</a></li></ul></div><div class="footer-links"><h4>Community</h4><ul><li><a href="https://discord.gg/fAydSzpafA">Discord</a></li></ul></div></div><div class="footer-bottom"><p>&copy; 2026 Zyrex Editing. All rights reserved. | <a href="/terms">Terms</a> | <a href="/privacy">Privacy</a> | <a href="/dmca">DMCA</a></p></div></div></footer>
 

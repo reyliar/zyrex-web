@@ -17,24 +17,36 @@
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:image" content="https://zyrexediting.xyz/assets/banner.png">
     <style>
-        body { background: var(--dark); color: var(--light); font-family: 'Poppins',sans-serif; min-height:100vh }
-        .page-wrap { max-width:800px; margin:0 auto; padding:120px 24px 80px }
-        h1 { font-size:2rem; font-weight:900; margin-bottom:8px; color:#fff }
-        .updated { color:var(--gray-dark); font-size:.8rem; margin-bottom:32px }
-        h2 { font-size:1.2rem; font-weight:700; color:var(--cherry); margin:28px 0 10px }
-        p, li { color:var(--gray); font-size:.9rem; line-height:1.8 }
-        ul { padding-left:20px; margin-bottom:16px }
-        a { color:var(--cherry); text-decoration:none }
-        a:hover { text-decoration:underline }
+        body { background: var(--dark); background-image: radial-gradient(circle at 50% 10%, rgba(var(--cherry-rgb),.06) 0%, transparent 60%); color: var(--light); font-family: 'Poppins',sans-serif; min-height:100vh }
+        .page-wrap { max-width:820px; margin:0 auto; padding:120px 24px 80px }
+        .legal-card { background: rgba(12,2,4,0.45); border: 1px solid rgba(var(--cherry-rgb),.12); border-radius: 20px; padding: 50px 44px; backdrop-filter: blur(25px) saturate(210%); -webkit-backdrop-filter: blur(25px) saturate(210%); box-shadow: 0 20px 60px rgba(0,0,0,.4), 0 0 40px rgba(var(--cherry-rgb),.08); position: relative; overflow: hidden }
+        .legal-card::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background: var(--gradient); z-index:2 }
+        .legal-card::after { content:''; position:absolute; top:0; left:0; right:0; height:40%; background: linear-gradient(180deg, rgba(var(--cherry-rgb),.03) 0%, transparent 100%); pointer-events:none; z-index:1 }
+        .legal-badge { display: inline-flex; align-items:center; gap:6px; padding:5px 16px; background: rgba(var(--cherry-rgb),.1); border:1px solid rgba(var(--cherry-rgb),.2); border-radius:50px; font-size:.7rem; font-weight:700; color:var(--cherry-light); text-transform:uppercase; letter-spacing:1px; margin-bottom:20px }
+        h1 { font-size:2.2rem; font-weight:900; margin-bottom:6px; color:#fff; letter-spacing:-.5px }
+        .updated { color:var(--gray-dark); font-size:.78rem; margin-bottom:36px; display:flex; align-items:center; gap:8px }
+        .updated i { color:var(--cherry); font-size:.7rem }
+        .intro { color:var(--gray); font-size:.92rem; line-height:1.9; margin-bottom:28px; padding:16px 20px; background: rgba(var(--cherry-rgb),.03); border:1px solid rgba(var(--cherry-rgb),.06); border-radius:12px }
+        h2 { font-size:1.15rem; font-weight:700; color:var(--cherry-light); margin:32px 0 10px; padding-left:14px; border-left:3px solid var(--cherry); display:flex; align-items:center; gap:10px }
+        h2 i { font-size:.85rem; opacity:.7 }
+        p, li { color:var(--gray); font-size:.9rem; line-height:1.85 }
+        ul, ol { padding-left:22px; margin-bottom:16px }
+        ul li, ol li { margin-bottom:6px }
+        a { color:var(--cherry-light); text-decoration:none; font-weight:500; transition:.2s }
+        a:hover { text-decoration:underline; color:#fff }
         @media(max-width:768px) {
-            .page-wrap { padding: 100px 16px 60px }
+            .page-wrap { padding: 100px 14px 60px }
+            .legal-card { padding: 32px 20px; border-radius:16px }
             h1 { font-size: 1.5rem }
-            h2 { font-size: 1rem; margin: 22px 0 8px }
+            h2 { font-size: 1rem; margin: 24px 0 8px }
             p, li { font-size: .82rem; line-height: 1.7 }
+            .intro { font-size:.82rem; padding:12px 14px }
         }
         @media(max-width:480px) {
-            .page-wrap { padding: 90px 14px 50px }
+            .page-wrap { padding: 90px 10px 50px }
+            .legal-card { padding: 24px 14px }
             h1 { font-size: 1.3rem }
+            h2 { font-size: .92rem }
             .updated { font-size: .7rem }
         }
     </style>
@@ -42,11 +54,13 @@
 <body>
     <nav class="navbar scrolled"><div class="container"><a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><ul class="nav-links"><li><a href="/">Home</a></li><li><a href="/resources">Resources</a></li><li><a href="/plugins">Plugins</a></li><li><a href="/#contact">Contact</a></li></ul><div class="nav-actions"><div id="authBtn"></div><a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord"><i class="fab fa-discord"></i> <span>Join Us</span></a><button class="hamburger" id="hamburger"><span></span><span></span><span></span></button></div></div></nav>
 
-    <section class="page" style="padding-top:100px"><div class="wrap">
+    <section class="page" style="padding-top:100px"><div class="wrap"><div class="legal-card">
+        <div class="legal-badge"><i class="fas fa-shield-halved"></i> Legal</div>
         <h1>Privacy Policy</h1>
-        <p class="updated">Last updated: June 29, 2026</p>
+        <p class="updated"><i class="fas fa-clock"></i> Last updated: June 29, 2026</p>
+        <div class="intro">This Privacy Policy explains how Zyrex collects, uses, and protects your information when you use our website and Discord server.</div>
 
-        <h2>1. Information We Collect</h2>
+        <h2><i class="fas fa-database"></i> 1. Information We Collect</h2>
         <p>When you use Zyrex Editing, we may collect:</p>
         <ul>
             <li><strong>Discord Account Information:</strong> When you log in via Discord OAuth, we receive your Discord ID, username, and avatar.</li>
@@ -54,7 +68,7 @@
             <li><strong>Usage Data:</strong> Download counts and interactions are stored to improve our services.</li>
         </ul>
 
-        <h2>2. How We Use Information</h2>
+        <h2><i class="fas fa-gear"></i> 2. How We Use Information</h2>
         <ul>
             <li>To provide and maintain our services</li>
             <li>To verify your identity for Discord server access</li>
@@ -62,28 +76,28 @@
             <li>To improve user experience</li>
         </ul>
 
-        <h2>3. Data Storage</h2>
+        <h2><i class="fas fa-server"></i> 3. Data Storage</h2>
         <p>Verification logs and download counts are stored on our secure servers. Discord account data is stored in session cookies only and is not permanently retained.</p>
 
-        <h2>4. Cookies</h2>
+        <h2><i class="fas fa-cookie-bite"></i> 4. Cookies</h2>
         <p>We use essential session cookies for authentication. We do not use tracking cookies or third-party analytics cookies beyond Cloudflare's standard services.</p>
 
-        <h2>5. Third-Party Services</h2>
+        <h2><i class="fas fa-puzzle-piece"></i> 5. Third-Party Services</h2>
         <ul>
             <li><strong>Discord:</strong> Authentication is handled via Discord OAuth. See <a href="https://discord.com/privacy">Discord's Privacy Policy</a>.</li>
             <li><strong>Cloudflare:</strong> Our site is hosted on Cloudflare Pages. Cloudflare may collect standard web traffic data. See <a href="https://www.cloudflare.com/privacypolicy/">Cloudflare's Privacy Policy</a>.</li>
             <li><strong>Google AdSense:</strong> We may display advertisements. See <a href="https://policies.google.com/privacy">Google's Privacy Policy</a>.</li>
         </ul>
 
-        <h2>6. Data Security</h2>
+        <h2><i class="fas fa-lock"></i> 6. Data Security</h2>
         <p>We take reasonable measures to protect your information. However, no method of transmission over the internet is 100% secure.</p>
 
-        <h2>7. Your Rights</h2>
+        <h2><i class="fas fa-user-check"></i> 7. Your Rights</h2>
         <p>You may request deletion of your verification data by contacting us via our Discord server. Session data is automatically cleared when you log out.</p>
 
-        <h2>8. Contact</h2>
+        <h2><i class="fas fa-envelope"></i> 8. Contact</h2>
         <p>For privacy concerns, contact us via our <a href="https://discord.gg/fAydSzpafA">Discord server</a>.</p>
-    </div></section>
+</div></div></section>
 
     <footer class="footer"><div class="container"><div class="footer-content"><div class="footer-brand"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><h3 style="font-size:1.8rem;font-weight:900;margin:0;letter-spacing:2px;background:linear-gradient(135deg,#fff,#9090a0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Editing</h3></div><p>Premium editing community &amp; resources.</p></div><div class="footer-links"><h4>Quick Links</h4><ul><li><a href="/">Home</a></li><li><a href="/resources">Resources</a></li><li><a href="/plugins">Plugins</a></li><li><a href="/dmca">DMCA</a></li><li><a href="/#contact">Contact</a></li></ul></div><div class="footer-links"><h4>Legal</h4><ul><li><a href="/terms">Terms</a></li><li><a href="/privacy">Privacy</a></li></ul></div><div class="footer-links"><h4>Community</h4><ul><li><a href="https://discord.gg/fAydSzpafA">Discord</a></li></ul></div></div><div class="footer-bottom"><p>&copy; 2026 Zyrex Editing. All rights reserved. | <a href="/terms">Terms</a> | <a href="/privacy">Privacy</a> | <a href="/dmca">DMCA</a></p></div></div></footer>
 
