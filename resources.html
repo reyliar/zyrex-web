@@ -221,11 +221,11 @@
     <script src="js/presets.js?v=4"></script>
     <script>
         // Init presets grid + stats from API
-        (async function(){
-            if (typeof initPresets === 'function') {
-                await initPresets();
-            }
-        })();
+        if (typeof initPresets === 'function') {
+            initPresets().catch(function(e){ console.error('initPresets error:', e); });
+        } else {
+            console.error('initPresets not defined');
+        }
     </script>
 </body>
 </html>
