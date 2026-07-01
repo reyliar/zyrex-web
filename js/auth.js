@@ -78,7 +78,7 @@ function initCookieConsent() {
             background: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
-            z-index: 99999;
+            z-index: 99998;
             opacity: 0;
             pointer-events: none;
             transition: opacity 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -88,37 +88,37 @@ function initCookieConsent() {
             pointer-events: auto;
         }
         
-        /* Bottom Consent Banner (horizontal rectangle overlay) */
+        /* Bottom Consent Banner (fixed overlay at viewport bottom) */
         .cookie-banner {
-            position: fixed;
-            bottom: 24px;
-            left: 50%;
-            transform: translate(-50%, 40px);
-            width: 90%;
-            max-width: 950px;
-            background: rgba(12, 2, 4, 0.95);
-            backdrop-filter: blur(25px) saturate(210%);
-            -webkit-backdrop-filter: blur(25px) saturate(210%);
-            border: 1px solid rgba(var(--cherry-rgb), 0.15);
-            border-radius: 16px;
-            padding: 20px 28px;
-            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6), 0 0 30px rgba(var(--cherry-rgb), 0.08);
-            z-index: 99998;
+            position: fixed !important;
+            bottom: 0 !important;
+            left: 0 !important;
+            right: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            transform: translateY(100%) !important;
+            background: rgba(12, 2, 4, 0.97) !important;
+            backdrop-filter: blur(25px) saturate(210%) !important;
+            -webkit-backdrop-filter: blur(25px) saturate(210%) !important;
+            border: none !important;
+            border-top: 1px solid rgba(var(--cherry-rgb), 0.2) !important;
+            border-radius: 16px 16px 0 0 !important;
+            padding: 20px 28px !important;
+            box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.7), 0 0 30px rgba(var(--cherry-rgb), 0.1) !important;
+            z-index: 99999 !important;
             font-family: inherit;
             color: #fff;
-            display: flex;
+            display: flex !important;
             align-items: center;
             justify-content: space-between;
             gap: 24px;
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-            opacity: 0;
-            pointer-events: none;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            opacity: 1 !important;
             box-sizing: border-box;
+            margin: 0 !important;
         }
         .cookie-banner.show {
-            transform: translate(-50%, 0);
-            opacity: 1;
-            pointer-events: auto;
+            transform: translateY(0) !important;
         }
         .cookie-banner.hidden {
             display: none !important;
@@ -273,20 +273,26 @@ function initCookieConsent() {
         
         @media (max-width: 768px) {
             .cookie-banner {
-                flex-direction: column;
-                align-items: stretch;
-                padding: 20px;
-                bottom: 16px;
-                gap: 16px;
+                flex-direction: column !important;
+                align-items: stretch !important;
+                padding: 16px 16px 20px !important;
+                gap: 14px !important;
+                border-radius: 14px 14px 0 0 !important;
             }
             .cookie-actions {
                 justify-content: flex-end;
+                flex-wrap: wrap;
             }
         }
     `;
     document.head.appendChild(style);
 
-    // Inject Cookie Consent Banner HTML (the bottom rectangle)
+    // Inject Cookie Consent Banner HTML + Backdrop overlay
+    const backdrop = document.createElement('div');
+    backdrop.id = 'cookieBackdrop';
+    backdrop.className = 'cookie-backdrop';
+    document.body.appendChild(backdrop);
+
     const banner = document.createElement('div');
     banner.id = 'cookieConsentBanner';
     banner.className = 'cookie-banner hidden';
@@ -310,6 +316,7 @@ function initCookieConsent() {
     // Show popup after short delay if no preference saved
     if (!consent) {
         setTimeout(() => {
+            backdrop.classList.add('show');
             banner.classList.remove('hidden');
             setTimeout(() => {
                 banner.classList.add('show');
@@ -331,9 +338,13 @@ function saveConsent(analytics, personalization) {
     localStorage.setItem('zyrex_cookie_consent', JSON.stringify(preferences));
     
     const banner = document.getElementById('cookieConsentBanner');
+    const backdrop = document.getElementById('cookieBackdrop');
     if (banner) {
         banner.classList.remove('show');
         setTimeout(() => banner.classList.add('hidden'), 400);
+    }
+    if (backdrop) {
+        backdrop.classList.remove('show');
     }
 }
 

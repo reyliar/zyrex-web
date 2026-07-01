@@ -1146,12 +1146,44 @@ img {
 }
 
 @media (max-width: 768px) {
+    /* --- Typography --- */
     .section-title {
         font-size: 2rem;
     }
 
+    .section-subtitle {
+        font-size: 0.78rem;
+        letter-spacing: 2px;
+    }
+
+    .section-header {
+        margin-bottom: 40px;
+    }
+
+    /* --- Spacing --- */
     .section-padding {
         padding: 80px 0;
+    }
+
+    .container {
+        padding: 0 16px;
+    }
+
+    /* --- Navbar --- */
+    .navbar {
+        padding: 14px 0;
+    }
+
+    .navbar .container {
+        padding: 0 16px;
+    }
+
+    .logo {
+        font-size: 1.4rem;
+    }
+
+    .logo-img {
+        height: 42px;
     }
 
     .nav-links {
@@ -1160,81 +1192,425 @@ img {
         right: -100%;
         width: 280px;
         height: 100vh;
-        background: var(--dark-2);
+        background: rgba(12, 2, 4, 0.95);
+        backdrop-filter: blur(25px) saturate(210%);
+        -webkit-backdrop-filter: blur(25px) saturate(210%);
         flex-direction: column;
         padding: 80px 30px 30px;
         gap: 25px;
         transition: var(--transition);
         border-left: 1px solid rgba(220, 20, 60, 0.1);
         z-index: 999;
+        box-shadow: -10px 0 40px rgba(0, 0, 0, 0.6);
     }
 
     .nav-links.open {
         right: 0;
     }
 
+    .nav-links a {
+        font-size: 1rem;
+    }
+
     .hamburger {
         display: flex;
+        z-index: 1000;
+    }
+
+    .nav-actions {
+        gap: 10px;
+    }
+
+    .nav-actions .btn-discord {
+        padding: 8px 14px;
+        font-size: 0.78rem;
     }
 
     .nav-actions .btn-discord span {
         display: none;
     }
 
+    /* Mobile nav overlay */
+    .nav-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 998;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+    }
+
+    .nav-overlay.show {
+        opacity: 1;
+        pointer-events: all;
+    }
+
+    /* --- Hero --- */
+    .hero {
+        min-height: 90vh;
+        padding: 120px 0 60px;
+        text-align: center;
+    }
+
+    .hero-content {
+        max-width: 100%;
+    }
+
+    .hero-badge {
+        font-size: 0.72rem;
+        padding: 6px 16px;
+        margin-bottom: 18px;
+    }
+
     .hero-title {
-        font-size: 2.8rem;
+        font-size: 2.4rem;
+        line-height: 1.15;
     }
 
     .hero-subtitle {
-        font-size: 1.1rem;
+        font-size: 1rem;
+        margin-bottom: 10px;
     }
 
-    .about-intro-grid {
-        grid-template-columns: 1fr;
-        max-width: 450px;
-        margin: 0 auto;
-    }
-
-    .resources-grid {
-        grid-template-columns: 1fr;
-        max-width: 400px;
-        margin: 0 auto;
-    }
-
-    .stats-grid {
-        grid-template-columns: repeat(2, 1fr);
-        gap: 15px;
-    }
-
-    .stats-item:last-child {
-        grid-column: 1 / -1;
-        max-width: 200px;
-        margin: 0 auto;
-    }
-
-    .team-grid {
-        grid-template-columns: 1fr;
-        max-width: 350px;
-    }
-
-    .contact-grid {
-        grid-template-columns: 1fr;
-        gap: 40px;
-    }
-
-    .footer-content {
-        grid-template-columns: 1fr;
-        gap: 30px;
-    }
-}
-
-@media (max-width: 480px) {
-    .hero-title {
-        font-size: 2.2rem;
+    .hero-desc {
+        font-size: 0.9rem;
+        max-width: 100%;
+        margin-bottom: 25px;
     }
 
     .hero-buttons {
         flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .hero-buttons .btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .scroll-indicator {
+        bottom: 20px;
+        font-size: 0.68rem;
+    }
+
+    .hero-accent-1 {
+        width: 180px;
+        height: 180px;
+        top: 5%;
+        right: -15%;
+        opacity: 0.04;
+    }
+
+    .hero-accent-2 {
+        width: 130px;
+        height: 130px;
+        bottom: 10%;
+        left: -10%;
+        opacity: 0.04;
+    }
+
+    /* --- About Intro --- */
+    .about-intro-grid {
+        grid-template-columns: 1fr;
+        max-width: 450px;
+        margin: 0 auto;
+        gap: 18px;
+    }
+
+    .about-intro-card {
+        padding: 28px 22px;
+    }
+
+    .about-intro-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 1.2rem;
+        margin-bottom: 14px;
+    }
+
+    .about-intro-card h3 {
+        font-size: 1.05rem;
+    }
+
+    .about-intro-card p {
+        font-size: 0.82rem;
+    }
+
+    /* --- Stats --- */
+    .stats-card {
+        padding: 35px 20px;
+    }
+
+    .stats-title {
+        font-size: 1.5rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+        margin: 25px 0;
+    }
+
+    .stats-item {
+        padding: 16px 8px;
+    }
+
+    .stats-item:last-child {
+        grid-column: 1 / -1;
+        max-width: 180px;
+        margin: 0 auto;
+    }
+
+    .stats-number {
+        font-size: 1.4rem;
+    }
+
+    .stats-icon {
+        width: 38px;
+        height: 38px;
+        font-size: 0.9rem;
+        margin-bottom: 8px;
+    }
+
+    .stats-label {
+        font-size: 0.68rem;
+    }
+
+    .stats-badge {
+        font-size: 0.68rem;
+        padding: 5px 14px;
+    }
+
+    /* --- Resources --- */
+    .resources-grid {
+        grid-template-columns: 1fr;
+        max-width: 400px;
+        margin: 0 auto;
+        gap: 20px;
+    }
+
+    .resource-card {
+        padding: 30px 22px;
+    }
+
+    .resource-icon {
+        width: 56px;
+        height: 56px;
+        font-size: 1.4rem;
+        margin-bottom: 18px;
+    }
+
+    .resource-card h3 {
+        font-size: 1.05rem;
+    }
+
+    .resource-card p {
+        font-size: 0.82rem;
+    }
+
+    /* --- Team --- */
+    .team-grid {
+        grid-template-columns: 1fr;
+        max-width: 350px;
+        gap: 20px;
+    }
+
+    .team-card {
+        padding: 28px 20px;
+    }
+
+    .team-avatar {
+        width: 80px;
+        height: 80px;
+        margin-bottom: 14px;
+    }
+
+    .team-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .team-card h4 {
+        font-size: 0.95rem;
+    }
+
+    .team-role {
+        font-size: 0.78rem;
+    }
+
+    .team-discord-tag {
+        font-size: 0.72rem;
+    }
+
+    /* --- Contact --- */
+    .contact-grid {
+        grid-template-columns: 1fr;
+        gap: 35px;
+    }
+
+    .contact-item {
+        gap: 14px;
+        margin-bottom: 22px;
+    }
+
+    .contact-item i {
+        font-size: 1.3rem;
+    }
+
+    .contact-item h4 {
+        font-size: 0.9rem;
+    }
+
+    .contact-item p {
+        font-size: 0.82rem;
+    }
+
+    .contact-form input,
+    .contact-form textarea {
+        padding: 14px 16px;
+        font-size: 0.85rem;
+    }
+
+    .contact-form textarea {
+        min-height: 100px;
+    }
+
+    .contact-social a {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+    }
+
+    .contact-cta {
+        padding: 22px 18px;
+        margin-top: 25px;
+    }
+
+    .contact-cta h3 {
+        font-size: 1.1rem;
+    }
+
+    .contact-cta p {
+        font-size: 0.82rem;
+    }
+
+    /* --- Footer --- */
+    .footer {
+        padding: 60px 0 0;
+    }
+
+    .footer-content {
+        grid-template-columns: 1fr;
+        gap: 28px;
+        padding-bottom: 40px;
+    }
+
+    .footer-brand h3 {
+        font-size: 1.3rem;
+    }
+
+    .footer-brand p {
+        font-size: 0.82rem;
+        max-width: 100%;
+    }
+
+    .footer-links h4 {
+        font-size: 0.9rem;
+        margin-bottom: 14px;
+    }
+
+    .footer-links ul li {
+        margin-bottom: 8px;
+    }
+
+    .footer-links ul li a {
+        font-size: 0.82rem;
+    }
+
+    .footer-newsletter h4 {
+        font-size: 0.9rem;
+    }
+
+    .footer-newsletter p {
+        font-size: 0.82rem;
+        margin-bottom: 14px;
+    }
+
+    .newsletter-form input {
+        padding: 12px 14px;
+        font-size: 0.8rem;
+    }
+
+    .newsletter-form button {
+        padding: 12px 16px;
+    }
+
+    .footer-bottom {
+        padding: 20px 0;
+        font-size: 0.75rem;
+    }
+
+    /* --- Buttons --- */
+    .btn {
+        padding: 12px 24px;
+        font-size: 0.88rem;
+    }
+
+    .btn-discord {
+        padding: 8px 16px;
+        font-size: 0.78rem;
+    }
+
+    /* --- Glass cards --- */
+    .glass-card-enhanced,
+    .glass-card {
+        padding: 20px 16px;
+    }
+}
+
+@media (max-width: 480px) {
+    .container {
+        padding: 0 14px;
+    }
+
+    .section-padding {
+        padding: 60px 0;
+    }
+
+    .section-title {
+        font-size: 1.7rem;
+    }
+
+    .hero-title {
+        font-size: 2rem;
+    }
+
+    .hero-subtitle {
+        font-size: 0.9rem;
+    }
+
+    .hero-desc {
+        font-size: 0.82rem;
+    }
+
+    .hero-badge {
+        font-size: 0.65rem;
+        padding: 5px 14px;
+    }
+
+    .hero-buttons {
+        flex-direction: column;
+        gap: 8px;
+    }
+
+    .hero-buttons .btn {
+        width: 100%;
+        justify-content: center;
+        padding: 12px 20px;
+        font-size: 0.82rem;
     }
 
     .btn {
@@ -1242,6 +1618,69 @@ img {
         justify-content: center;
     }
 
+    .stats-card {
+        padding: 28px 14px;
+    }
+
+    .stats-title {
+        font-size: 1.3rem;
+    }
+
+    .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .stats-number {
+        font-size: 1.2rem;
+    }
+
+    .stats-label {
+        font-size: 0.62rem;
+        letter-spacing: 0.5px;
+    }
+
+    .logo-img {
+        height: 36px;
+    }
+
+    .navbar .container {
+        padding: 0 10px;
+    }
+
+    .nav-actions .btn-discord {
+        padding: 6px 12px;
+        font-size: 0.7rem;
+    }
+
+    .about-intro-card {
+        padding: 22px 16px;
+    }
+
+    .about-intro-card h3 {
+        font-size: 0.95rem;
+    }
+
+    .about-intro-card p {
+        font-size: 0.78rem;
+    }
+
+    .resource-card {
+        padding: 24px 16px;
+    }
+
+    .team-card {
+        padding: 22px 16px;
+    }
+
+    .team-avatar {
+        width: 70px;
+        height: 70px;
+    }
+
+    .footer-content {
+        gap: 22px;
+    }
 }
 
 /* ===================== PHASE 1: ENHANCED UTILITIES ===================== */
@@ -1469,7 +1908,7 @@ body {
 }
 
 /* Make cards and containers glassmorphic */
-.card, .panel-box, .product-card, .upload-container, .sc, .rc, .cookie-banner, .confirm-card, .selected-files, .file-browser {
+.card, .panel-box, .product-card, .upload-container, .sc, .rc, .confirm-card, .selected-files, .file-browser {
     background: rgba(12, 2, 4, 0.55) !important;
     backdrop-filter: blur(25px) saturate(210%) !important;
     -webkit-backdrop-filter: blur(25px) saturate(210%) !important;
@@ -1477,6 +1916,15 @@ body {
     box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.55) !important;
     position: relative;
     overflow: hidden;
+}
+
+/* Cookie banner — keep glass style but DON'T force position/overflow (needs position:fixed) */
+.cookie-banner {
+    background: rgba(12, 2, 4, 0.55) !important;
+    backdrop-filter: blur(25px) saturate(210%) !important;
+    -webkit-backdrop-filter: blur(25px) saturate(210%) !important;
+    border: 1px solid rgba(var(--cherry-rgb),0.05) !important;
+    box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.55) !important;
 }
 
 /* Style navbar separately without forcing overflow: hidden */

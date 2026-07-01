@@ -6,6 +6,102 @@ const FILE_API = "https://storage.zyrexediting.xyz";  // Python file server via 
 const SFTPGO_API = "https://storage.zyrexediting.xyz/api/v2";  // SFTPGo via Cloudflare Tunnel (local)
 const ADMIN_IDS = ["1421177012814614548", "1382421118098346174"];
 
+// Category display names & emojis
+const CATEGORY_INFO = {
+  "after-effects": { label: "After Effects", emoji: "🎬" },
+  "premiere-pro": { label: "Premiere Pro", emoji: "🎞️" },
+  "photoshop": { label: "Photoshop", emoji: "🖼️" },
+  "video-star": { label: "Video Star", emoji: "⭐" },
+  "topaz-labs": { label: "Topaz Labs", emoji: "💎" },
+  "software": { label: "Software", emoji: "💻" },
+  "adobe-plugin": { label: "Adobe Plugin", emoji: "🧩" },
+  "ofx-plugin": { label: "OFX Plugin", emoji: "🔌" },
+  "others": { label: "Others", emoji: "📁" },
+};
+
+async function sendDiscordNotification(env, product, uploaderName) {
+  const webhookUrl = env.NOTIFICATION_WEBHOOK;
+  if (!webhookUrl) return;  // silently skip if not configured
+
+  try {
+    const cat = CATEGORY_INFO[product.category] || CATEGORY_INFO["others"];
+    const color = 0xa80f2d;  // cherry red
+    const siteUrl = "https://zyrexediting.xyz";
+    const presetUrl = `${siteUrl}/preset?id=${encodeURIComponent(product.id || "")}`;
+
+    const embed = {
+      color: color,
+      title: `📦 ${product.name || "New Resource"}`,
+      url: presetUrl,
+      description: product.description 
+        ? (product.description.length > 200 ? product.description.substring(0, 197) + "..." : product.description)
+        : "A new resource has been uploaded to Zyrex.",
+      fields: [
+        {
+          name: "📂 Category",
+          value: `${cat.emoji} ${cat.label}`,
+          inline: true,
+        },
+        {
+          name: "👤 Uploaded by",
+          value: uploaderName || "Community Member",
+          inline: true,
+        },
+      ],
+      footer: {
+        text: "Zyrex Editing",
+        icon_url: "https://zyrexediting.xyz/assets/content.png",
+      },
+      timestamp: new Date().toISOString(),
+    };
+
+    // Add optional fields
+    if (product.creator_nickname) {
+      embed.fields.push({
+        name: "🎨 Creator",
+        value: product.creator_nickname,
+        inline: true,
+      });
+    }
+
+    if (product.tags) {
+      const tags = typeof product.tags === "string" 
+        ? product.tags.split(",").map(t => t.trim()).filter(Boolean).slice(0, 4)
+        : (Array.isArray(product.tags) ? product.tags.slice(0, 4) : []);
+      if (tags.length > 0) {
+        embed.fields.push({
+          name: "🏷️ Tags",
+          value: tags.map(t => `\`${t}\``).join(" "),
+          inline: false,
+        });
+      }
+    }
+
+    // Thumbnail
+    if (product.thumbnail) {
+      embed.thumbnail = { url: product.thumbnail };
+    }
+
+    // Author (uploader)
+    embed.author = {
+      name: uploaderName || "Zyrex Community",
+      url: presetUrl,
+    };
+
+    const payload = {
+      embeds: [embed],
+    };
+
+    await fetch(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+  } catch (e) {
+    console.error("Discord notification error:", e.message);
+  }
+}
+
 // In-memory stores
 let sftpgoToken = null;
 let sftpgoTokenExpiry = 0;
@@ -845,7 +941,7 @@ async function scrapePayhip(url) {
 }
 
 export default {
-  async fetch(request, env) {
+  async fetch(request, env, ctx) {
     const url = new URL(request.url);
     // Bypass: dl subdomain serves static download page from Pages
     if (url.hostname === "dl.zyrexediting.xyz") {
@@ -1892,6 +1988,15 @@ export default {
               });
             }
           }
+
+          // 🔔 Discord notification on successful product submit
+          if (path === "/api/products/submit" && request.method === "POST" && botResp.ok && parsed && parsed.success) {
+            try {
+              const submitBody = JSON.parse(body || "{}");
+              ctx.waitUntil(sendDiscordNotification(env, submitBody, session ? session.username : "Unknown"));
+            } catch (e) { console.error("Notification trigger error:", e.message); }
+          }
+
           return json(parsed, botResp.status);
         } catch {
           return new Response(data, { status: botResp.status, headers: corsHeaders });
