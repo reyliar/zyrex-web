@@ -25,68 +25,76 @@ async function sendDiscordNotification(env, product, uploaderName) {
 
   try {
     const cat = CATEGORY_INFO[product.category] || CATEGORY_INFO["others"];
-    const color = 0xa80f2d;  // cherry red
+    const color = 0xe8456a;  // pink/cherry-light
     const siteUrl = "https://zyrexediting.xyz";
     const presetUrl = `${siteUrl}/preset?id=${encodeURIComponent(product.id || "")}`;
 
+    const authorName = product.creator_nickname || product.creator_username || uploaderName || "Zyrex Community";
+
     const embed = {
       color: color,
-      title: `📦 ${product.name || "New Resource"}`,
+      title: product.name || "New Resource",
       url: presetUrl,
       description: product.description 
-        ? (product.description.length > 200 ? product.description.substring(0, 197) + "..." : product.description)
+        ? (product.description.length > 350 ? product.description.substring(0, 347) + "..." : product.description)
         : "A new resource has been uploaded to Zyrex.",
+      author: {
+        name: authorName,
+        url: presetUrl,
+      },
       fields: [
         {
-          name: "📂 Category",
-          value: `${cat.emoji} ${cat.label}`,
-          inline: true,
-        },
-        {
-          name: "👤 Uploaded by",
-          value: uploaderName || "Community Member",
+          name: "📁 Category",
+          value: cat.label,
           inline: true,
         },
       ],
       footer: {
-        text: "Zyrex Editing",
+        text: "Delivered by Zyrex",
         icon_url: "https://zyrexediting.xyz/assets/content.png",
       },
       timestamp: new Date().toISOString(),
     };
 
-    // Add optional fields
-    if (product.creator_nickname) {
-      embed.fields.push({
-        name: "🎨 Creator",
-        value: product.creator_nickname,
-        inline: true,
-      });
-    }
-
+    // Tags
     if (product.tags) {
       const tags = typeof product.tags === "string" 
-        ? product.tags.split(",").map(t => t.trim()).filter(Boolean).slice(0, 4)
-        : (Array.isArray(product.tags) ? product.tags.slice(0, 4) : []);
+        ? product.tags.split(",").map(t => t.trim()).filter(Boolean).slice(0, 8)
+        : (Array.isArray(product.tags) ? product.tags.slice(0, 8) : []);
       if (tags.length > 0) {
         embed.fields.push({
           name: "🏷️ Tags",
-          value: tags.map(t => `\`${t}\``).join(" "),
-          inline: false,
+          value: tags.join(", "),
+          inline: true,
         });
       }
     }
+
+    // Links
+    const downloadUrl = `https://dl.zyrexediting.xyz/?id=${encodeURIComponent(product.id || "")}`;
+    const social = product.creator_social_url || "";
+    const linksParts = [`[View on Zyrex](${presetUrl})`];
+    if (product.id) {
+      linksParts.push(`[Direct Download](${downloadUrl})`);
+    }
+    if (social) {
+      try {
+        const host = social.split("://")[1].split("/")[0].replace("www.", "");
+        linksParts.push(`[${host}](${social})`);
+      } catch {
+        linksParts.push(`[Creator](${social})`);
+      }
+    }
+    embed.fields.push({
+      name: "🔗 Links",
+      value: linksParts.join(" • "),
+      inline: false,
+    });
 
     // Thumbnail
     if (product.thumbnail) {
       embed.thumbnail = { url: product.thumbnail };
     }
-
-    // Author (uploader)
-    embed.author = {
-      name: uploaderName || "Zyrex Community",
-      url: presetUrl,
-    };
 
     const payload = {
       embeds: [embed],
