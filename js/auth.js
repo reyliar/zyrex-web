@@ -88,7 +88,7 @@ function initCookieConsent() {
             pointer-events: auto;
         }
         
-        /* Bottom Consent Banner (fixed overlay at viewport bottom) */
+        /* Bottom Consent Banner — fixed overlay at viewport bottom, follows scroll */
         .cookie-banner {
             position: fixed !important;
             bottom: 0 !important;
@@ -96,7 +96,6 @@ function initCookieConsent() {
             right: 0 !important;
             width: 100% !important;
             max-width: 100% !important;
-            transform: translateY(100%) !important;
             background: rgba(12, 2, 4, 0.97) !important;
             backdrop-filter: blur(25px) saturate(210%) !important;
             -webkit-backdrop-filter: blur(25px) saturate(210%) !important;
@@ -112,13 +111,16 @@ function initCookieConsent() {
             align-items: center;
             justify-content: space-between;
             gap: 24px;
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
-            opacity: 1 !important;
             box-sizing: border-box;
             margin: 0 !important;
+            overflow: visible !important;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
         }
         .cookie-banner.show {
-            transform: translateY(0) !important;
+            opacity: 1;
+            pointer-events: auto;
         }
         .cookie-banner.hidden {
             display: none !important;
