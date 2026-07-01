@@ -220,41 +220,10 @@
     <script src="js/presets-data.js?v=4"></script>
     <script src="js/presets.js?v=4"></script>
     <script>
-        // Live stats — fetch real numbers from API
-        (async function loadStats() {
-            try {
-                const resp = await fetch('/api/products');
-                if (!resp.ok) return;
-                const products = await resp.json();
-                if (!Array.isArray(products)) return;
-                
-                // Count presets and plugins separately
-                const presets = products.filter(p => !p.type || p.type === 'preset');
-                const plugins = products.filter(p => p.type === 'plugin' || p.type === 'software');
-                const totalDownloads = products.reduce((sum, p) => sum + (p.downloads || 0), 0);
-                
-                document.getElementById('statPresets').textContent = presets.length;
-                document.getElementById('statPlugins').textContent = plugins.length;
-                document.getElementById('statDownloads').textContent = totalDownloads;
-                
-                // Update category counts (only for presets)
-                const catCounts = {};
-                presets.forEach(p => {
-                    const cat = p.category || 'others';
-                    catCounts[cat] = (catCounts[cat] || 0) + 1;
-                });
-                document.querySelectorAll('.cp button').forEach(btn => {
-                    const c = btn.dataset.c;
-                    if (c === 'all') {
-                        const cntEl = btn.querySelector('.cnt');
-                        if (cntEl) cntEl.textContent = presets.length;
-                    } else {
-                        const cntEl = btn.querySelector('.cnt');
-                        if (cntEl) cntEl.textContent = catCounts[c] || 0;
-                    }
-                });
-            } catch(e) {
-                console.error('Stats fetch error:', e);
+        // Init presets grid + stats from API
+        (async function(){
+            if (typeof initPresets === 'function') {
+                await initPresets();
             }
         })();
     </script>
