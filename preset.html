@@ -210,99 +210,63 @@
     function injectGridLayout(p) {
       var root = document.getElementById('root');
       if (!root || root.querySelector('.grid')) return;
-      
-      var allChildren = Array.from(root.children);
+
       var heroEl = root.querySelector('.hero');
-      var heroBEl = root.querySelector('.hero-b');
       var irEl = root.querySelector('.ir');
       var upEl = root.querySelector('.up');
       var descCard = root.querySelector('.card');
-      var tabsEl = root.querySelector('.tabs');
-      var filesEl = root.querySelector('.files');
-      var stEls = root.querySelectorAll('.st');
       var dlBtnEl = root.querySelector('.dlb');
       var dlsEl = root.querySelector('.dls');
       var mirrorEl = root.querySelector('.dlg');
       var actionsEl = root.querySelector('.actions');
-      
-      // Build files tab content (read-only)
+      var stEls = root.querySelectorAll('.st');
+
       var filesHtml = '';
       if (p.files && p.files.length > 0) {
         filesHtml += '<div class="files" style="max-height:400px">';
         p.files.forEach(function(f) {
           var sz = f.size ? (f.size > 1048576 ? (f.size/1048576).toFixed(1)+' MB' : (f.size/1024).toFixed(1)+' KB') : '--';
-          var fi = f.name && (f.name.endsWith('.mp4')||f.name.endsWith('.mov')) ? 'fa-file-video' :
-                   f.name && (f.name.endsWith('.mp3')||f.name.endsWith('.wav')) ? 'fa-file-audio' :
-                   f.name && (f.name.endsWith('.png')||f.name.endsWith('.jpg')||f.name.endsWith('.jpeg')) ? 'fa-file-image' : 'fa-file-lines';
+          var fi = 'fa-file-lines';
+          if (f.name) {
+            if (/\.(mp4|mov|webm)$/i.test(f.name)) fi = 'fa-file-video';
+            else if (/\.(mp3|wav|flac|aac)$/i.test(f.name)) fi = 'fa-file-audio';
+            else if (/\.(png|jpg|jpeg|gif|webp)$/i.test(f.name)) fi = 'fa-file-image';
+          }
           filesHtml += '<div class="fi"><div class="fl"><i class="fas '+fi+'"></i><span title="'+(f.name||'')+'">'+(f.name||'')+'</span></div><span class="fs">'+sz+'</span></div>';
         });
         filesHtml += '</div>';
       } else {
         filesHtml = '<div class="card" style="text-align:center;padding:40px;color:var(--gray-dark)"><i class="fas fa-folder-open" style="font-size:2rem;color:var(--cherry);opacity:.3;display:block;margin-bottom:12px"></i>No files available</div>';
       }
-      
-      // Build the grid layout
-      var gridHtml = '<div class="grid">';
-      
-      // LEFT: tabs + content
-      gridHtml += '<div class="grid-left">';
-      gridHtml += '<div class="tabs">';
-      gridHtml += '<button class="tab active" onclick="switchTab(\'overview\')">Overview</button>';
-      gridHtml += '<button class="tab" onclick="switchTab(\'files\')"><i class="fas fa-folder-tree"></i> Files</button>';
-      gridHtml += '</div>';
-      
-      // Overview content
-      gridHtml += '<div class="tab-content active" id="tab-overview">';
-      if (heroEl) { gridHtml += '<div class="hero">'+heroEl.innerHTML+'</div>'; heroEl.remove(); }
-      if (irEl) { gridHtml += irEl.outerHTML; irEl.remove(); }
-      if (upEl) { gridHtml += upEl.outerHTML; upEl.remove(); }
-      if (descCard) { 
-        // Reclassify desc card so it's just a card, not a sidebar card
-        var cardClone = descCard.cloneNode(true);
-        cardClone.classList.remove('sidebar');
-        gridHtml += cardClone.outerHTML;
-        descCard.remove();
-      }
-      gridHtml += '</div>';
-      
-      // Files content
-      gridHtml += '<div class="tab-content" id="tab-files">'+filesHtml+'</div>';
-      gridHtml += '</div>'; // close grid-left
-      
-      // RIGHT: sidebar
-      gridHtml += '<div class="grid-right sidebar"><div class="card">';
-      if (dlBtnEl) { gridHtml += dlBtnEl.outerHTML; dlBtnEl.remove(); }
-      if (dlsEl) { gridHtml += dlsEl.outerHTML; dlsEl.remove(); }
-      if (mirrorEl) { gridHtml += mirrorEl.outerHTML; mirrorEl.remove(); }
-      if (actionsEl) { gridHtml += actionsEl.outerHTML; actionsEl.remove(); }
-      
-      // Stats
-      if (stEls.length > 0) {
-        gridHtml += '<div style="margin-top:12px">';
-        stEls.forEach(function(el) { gridHtml += el.outerHTML; el.remove(); });
-        gridHtml += '</div>';
-      }
-      gridHtml += '</div></div>'; // close card + grid-right
-      
-      gridHtml += '</div>'; // close grid
-      
-      root.innerHTML = gridHtml;
-      
-      // Re-bind event listeners
-      var newDlBtn = document.getElementById('dlBtn');
-      if (newDlBtn && p.id) {
-        newDlBtn.onclick = function(e) { window.genToken(e, p.id, p.file_path||''); };
-      }
-      
-      // Restore liked/bookmarked state
-      if (p.id) {
-        if (localStorage.getItem('zyrex_like_'+p.id)==='1') {
-          var lb = document.getElementById('btnLike'); if (lb) { lb.classList.add('liked'); lb.innerHTML='<i class="fas fa-heart"></i> <span>Liked</span>'; }
-        }
-        if (localStorage.getItem('zyrex_bookmark_'+p.id)==='1') {
-          var bb = document.getElementById('btnBookmark'); if (bb) { bb.classList.add('bookmarked'); bb.innerHTML='<i class="fas fa-bookmark"></i> <span>Saved</span>'; }
-        }
-      }
+
+      var h = '';
+      h += '<div class="grid">';
+      h += '<div class="grid-left">';
+      h += '<div class="tabs">';
+      h += '<button class="tab active" onclick="switchTab(\'overview\')">Overview</button>';
+      h += '<button class="tab" onclick="switchTab(\'files\')"><i class="fas fa-folder-tree"></i> Files</button>';
+      h += '</div>';
+      h += '<div class="tab-content active" id="tab-overview">';
+      if (heroEl) { h += '<div class="hero">'+heroEl.innerHTML+'</div>'; heroEl.remove(); }
+      if (irEl) { h += irEl.outerHTML; irEl.remove(); }
+      if (upEl) { h += upEl.outerHTML; upEl.remove(); }
+      if (descCard) { h += descCard.outerHTML; descCard.remove(); }
+      h += '</div>';
+      h += '<div class="tab-content" id="tab-files">'+filesHtml+'</div>';
+      h += '</div>';
+      h += '<div class="grid-right sidebar"><div class="card">';
+      if (dlBtnEl) { h += dlBtnEl.outerHTML; dlBtnEl.remove(); }
+      if (dlsEl) { h += dlsEl.outerHTML; dlsEl.remove(); }
+      if (mirrorEl) { h += mirrorEl.outerHTML; mirrorEl.remove(); }
+      if (actionsEl) { h += actionsEl.outerHTML; actionsEl.remove(); }
+      if (stEls.length) { h += '<div style="margin-top:12px">'; stEls.forEach(function(el){ h += el.outerHTML; el.remove(); }); h += '</div>'; }
+      h += '</div></div>';
+      h += '</div>';
+
+      root.innerHTML = h;
+
+      var nd = document.getElementById('dlBtn');
+      if (nd && p.id) nd.onclick = function(e) { window.genToken(e, p.id, p.file_path||''); };
     }
     </script>
 </body>
