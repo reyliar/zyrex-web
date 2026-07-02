@@ -98,13 +98,17 @@
         .pw i { color:var(--cherry) }
         .pw code { background:rgba(var(--cherry-rgb),.15); color:var(--cherry); padding:2px 8px; border-radius:4px; font-weight:700; cursor:pointer; font-size:.8rem }
         
-        /* Grid */
-        .grid { display:grid; grid-template-columns:1fr 320px; gap:var(--gap); align-items:start }
+        /* Grid — 3 columns: Overview | Files | Sidebar */
+        .grid { display:grid; grid-template-columns:1fr 280px 320px; gap:var(--gap); align-items:start }
         .grid-left { min-width:0 }
+        .grid-files { min-width:0 }
+        .grid-files .card { padding:18px }
+        .grid-files .files-header { font-size:.72rem; font-weight:700; color:var(--gray-dark); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:14px; display:flex; align-items:center; gap:8px }
+        .grid-files .files-header i { color:var(--cherry); font-size:.8rem }
         .grid-right { position:sticky; top:100px }
         
-        /* Files */
-        .files { display:flex; flex-direction:column; gap:6px; max-height:350px; overflow-y:auto }
+        /* Files (also used in grid-files middle column) */
+        .files { display:flex; flex-direction:column; gap:6px; max-height:450px; overflow-y:auto }
         .files::-webkit-scrollbar { width:4px } .files::-webkit-scrollbar-thumb { background:rgba(255,255,255,.08); border-radius:2px }
         .fi { display:flex; align-items:center; justify-content:space-between; padding:10px 14px; background:rgba(255,255,255,.015); border:1px solid rgba(255,255,255,.04); border-radius:10px; font-size:.82rem; transition:.2s }
         .fi:hover { background:rgba(var(--cherry-rgb),.03); border-color:rgba(var(--cherry-rgb),.1) }
@@ -120,12 +124,10 @@
         .st .l i { color:var(--cherry); width:16px; text-align:center }
         .st .v { color:var(--light); font-weight:600 }
         
-        /* Tabs */
-        .tabs { display:flex; gap:0; margin-bottom:var(--gap); border-bottom:2px solid rgba(255,255,255,.04) }
-        .tab { padding:12px 24px; font-size:.82rem; font-weight:600; color:var(--gray-dark); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; transition:.2s; background:none; border-top:none; border-left:none; border-right:none; font-family:inherit; letter-spacing:.3px }
-        .tab:hover { color:var(--light) }
-        .tab.active { color:var(--cherry); border-bottom-color:var(--cherry) }
-        .tab-content { display:none }
+        /* Tabs (deprecated — side-by-side layout, no tabs needed) */
+        .tabs { display:none }
+        .tab { display:none }
+        .tab-content { display:block }
         .tab-content.active { display:block }
         
         .load { text-align:center; padding:80px 20px; color:var(--gray) }
@@ -135,8 +137,16 @@
         .btn-b { display:inline-flex; align-items:center; gap:6px; padding:10px 22px; border-radius:10px; background:rgba(var(--cherry-rgb),.1); border:1px solid rgba(var(--cherry-rgb),.2); color:var(--cherry); text-decoration:none; font-size:.85rem; font-weight:600; transition:.2s; font-family:inherit }
         .btn-b:hover { background:rgba(var(--cherry-rgb),.18) }
         
+        @media(max-width:1024px) {
+            .grid { grid-template-columns:1fr 320px }
+            .grid-files { display:none }
+            .grid-right { position:static }
+            .sidebar { position:static }
+            .hero-m { max-width:100%; border-radius:12px }
+        }
         @media(max-width:900px) {
             .grid { grid-template-columns:1fr }
+            .grid-files { display:none }
             .grid-right { position:static }
             .sidebar { position:static }
             .hero-m { max-width:100%; border-radius:12px }
@@ -199,7 +209,7 @@
     function E(m){document.getElementById("load").style.display="none";document.getElementById("err").style.display="block";document.getElementById("errMsg").textContent=m}
     function R(p){return (async function(){document.getElementById("load").style.display="none";document.getElementById("root").style.display="block";document.title=(p.name||"Preset")+" - Zyrex";var L={"after-effects":"After Effects","premiere-pro":"Premiere Pro","photoshop":"Photoshop","video-star":"Video Star","topaz-labs":"Topaz Labs","others":"Others"};var I={"after-effects":"fa-film","premiere-pro":"fa-video","photoshop":"fa-image","video-star":"fa-star","topaz-labs":"fa-gem","others":"fa-folder"};var cat=L[p.category]||"Preset";var ic=I[p.category]||"fa-sliders";var av=p.creator_avatar||"";var nick=p.creator_nickname||p.author_name||"Zyrex Creator";var desc=p.description||p.desc||"";var tags=Array.isArray(p.tags)?p.tags:(typeof p.tags==="string"?p.tags.split(",").map(function(t){return t.trim()}).filter(Boolean):[]);var platform="both";var hasFile=p.file_path&&p.file_path.length>0;var dlToken=p.id?'<a href="#" id="dlBtn" class="dlb a3" onclick="genToken(event,\''+p.id+'\',\''+(p.file_path||'')+'\')"><i class="fas fa-cloud-arrow-down"></i> Generate Secure Download Link</a><div class="dls a3"><i class="fas fa-shield-halved"></i> One-time token &middot; 10 min expiry</div>':(p.links&&p.links.length>0?'<a href="'+p.links[0].url+'" target="_blank" class="dlb a3"><i class="fas fa-cloud-arrow-down"></i> Download Now</a>':"");var links=[];if(Array.isArray(p.links))links=links.concat(p.links);else{if(p.link)links.push({url:p.link,label:"Mirror"});if(p.link_2)links.push({url:p.link_2,label:"Mirror"});if(p.link_3)links.push({url:p.link_3,label:"Mirror"})}var mirrorHtml=links.length>0?'<div class="dlg a3">'+links.map(function(l){return'<a href="'+(l.url||l)+'" target="_blank" class="dll"><i class="fas fa-external-link-alt"></i> '+(l.label||"Mirror")+' <span>'+new URL(l.url||l).hostname+"</span></a>"}).join("")+"</div>":"";var filesHtml=p.files&&p.files.length>0?p.files.map(function(f){var sz=f.size?(f.size>1048576?(f.size/1048576).toFixed(1)+" MB":(f.size/1024).toFixed(1)+" KB"):"--";var fi=f.name.endsWith('.mp4')||f.name.endsWith('.mov')?'fa-file-video':f.name.endsWith('.mp3')||f.name.endsWith('.wav')?'fa-file-audio':f.name.endsWith('.png')||f.name.endsWith('.jpg')||f.name.endsWith('.jpeg')?'fa-file-image':'fa-file-lines';return'<div class="fi"><div class="fl"><i class="fas '+fi+'"></i><span title="'+f.name+'">'+f.name+'</span></div><span class="fs">'+sz+"</span></div>"}).join(""):"";var upAv=await fetchDiscordAvatar(p.author_id||"");if(p.uploader_avatar&&(p.uploader_avatar.includes('discordapp.com')||p.uploader_avatar.includes('discord.com')))upAv=p.uploader_avatar;var upHtml=(p.uploader_name||p.author_name)?'<div class="up a3">'+(upAv?'<img src="'+upAv+'" alt="">':'<div class="ufb"><i class="fab fa-discord"></i></div>')+"<div><strong>"+(p.uploader_name||p.author_name)+(p.uploader_is_admin?' <i class="fas fa-circle-check" style="color:#0095F6;font-size:0.85rem" title="Verified Admin"></i>':'')+"</strong><span>Community Uploader</span></div></div>":"";var heroImg=p.thumbnail?'<img src="'+p.thumbnail+'" alt="'+p.name+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">':"";var ph='<div class="ph" style="'+(p.thumbnail?"display:none":"")+'"><i class="fas '+ic+'"></i></div>';var hasTabs=(p.files&&p.files.length>0)||desc;var tabsHtml=hasTabs?'<div class="tabs a3"><button class="tab active" onclick="switchTab(\'overview\')">Overview</button>'+(p.files&&p.files.length>0?'<button class="tab" onclick="switchTab(\'files\')">Files ('+p.files.length+')</button>':'')+'</div>':'';var overviewHtml=(desc?'<div class="card"><div class="ct"><i class="fas fa-align-left"></i> Description</div><div class="desc">'+desc.replace(/\n/g,"<br>")+"</div></div>":"")+'<div class="card"><div class="ct"><i class="fas fa-circle-info"></i> Details</div><div class="st"><span class="l"><i class="fas fa-tag"></i> Category</span><span class="v">'+cat+'</span></div>'+'<div class="st"><span class="l"><i class="fas fa-download"></i> Downloads</span><span class="v" id="dlCountOverview">0</span></div>'+(p.created_at?'<div class="st"><span class="l"><i class="fas fa-calendar"></i> Added</span><span class="v">'+new Date(p.created_at).toLocaleDateString("en-US",{year:"numeric",month:"short",day:"numeric"})+"</span></div>":"")+"</div>";var filesTabHtml=p.files&&p.files.length>0?'<div class="card"><div class="ct"><i class="fas fa-folder-open"></i> Files ('+p.files.length+')</div><div class="files">'+filesHtml+"</div></div>":"";var tabContentHtml='';if(hasTabs){tabContentHtml='<div class="tab-content active" id="tab-overview">'+overviewHtml+"</div>";if(p.files&&p.files.length>0){tabContentHtml+='<div class="tab-content" id="tab-files">'+filesTabHtml+"</div>"}}else{tabContentHtml=overviewHtml}var likeKey="zyrex_like_"+p.id;var bookKey="zyrex_bookmark_"+p.id;var liked=localStorage.getItem(likeKey)==="1";var bookmarked=localStorage.getItem(bookKey)==="1";var likeCounts=JSON.parse(localStorage.getItem("zyrex_likes_count")||"{}");var bookCounts=JSON.parse(localStorage.getItem("zyrex_bookmarks_count")||"{}");var likeCount=likeCounts[p.id]||0;var bookCount=bookCounts[p.id]||0;var dlCounts=JSON.parse(localStorage.getItem("zyrex_downloads")||"{}");var dlCount=dlCounts[p.id]||0;document.getElementById("root").innerHTML='<div class="hero a1"><div class="hero-m">'+heroImg+ph+'</div><div class="hero-b"><span class="badge"><i class="fas '+ic+'"></i> '+cat+'</span><span class="badge badge-f"><i class="fas fa-circle-check"></i> Free</span></div></div><div class="ir a2"><div class="ir-l"><h1>'+p.name+'</h1>'+(tags.length?'<div class="tags">'+tags.map(function(t){return"<span>"+t+"</span>"}).join("")+"</div>":"")+'</div><div class="cr">'+(av?'<img src="'+av+'" alt="">':'<div class="cfb"><i class="fas fa-user"></i></div>')+"<div><strong>"+nick+"</strong>"+(p.creator_social_url?'<a href="'+p.creator_social_url+'" target="_blank"><i class="fas fa-external-link-alt"></i> Profile</a>':'<span style="font-size:.7rem;color:var(--gray-dark)">Creator</span>')+"</div></div></div>"+upHtml+tabsHtml+'<div class="grid a3"><div class="grid-left">'+tabContentHtml+"</div><div class=\"grid-right\"><div class=\"sidebar\"><div class=\"card\">"+dlToken+mirrorHtml+'<div class="actions">'+'<button class="act'+(liked?' liked':'')+'" id="btnLike" onclick="toggleLike(\''+p.id+'\')"><i class="'+(liked?'fas':'far')+' fa-heart"></i> <span>'+(liked?'Liked':'Like')+'</span> <span id="likeCount" style="font-size:.7rem;opacity:.7">'+(likeCount>0?likeCount:'')+'</span></button><button class="act'+(bookmarked?' bookmarked':'')+'" id="btnBookmark" onclick="toggleBookmark(\''+p.id+'\')"><i class="'+(bookmarked?'fas':'far')+' fa-bookmark"></i> <span>'+(bookmarked?'Saved':'Bookmark')+'</span> <span id="bookmarkCount" style="font-size:.7rem;opacity:.7">'+(bookCount>0?bookCount:'')+'</span></button></div>'+'<div class="dls" style="margin-top:8px"><i class="fas fa-download"></i> <span id="dlCountSidebar">'+dlCount+'</span> downloads</div>'+"</div></div></div></div>";var dlo=document.getElementById("dlCountOverview");if(dlo)dlo.textContent=dlCount;})()}
     window.genToken=async function(e,pid,fp){e.preventDefault();var b=document.getElementById("dlBtn");if(!b)return;b.style.pointerEvents="none";b.style.opacity="0.6";b.innerHTML='<i class="fas fa-spinner fa-spin"></i> Generating...';var reset=function(){b.innerHTML='<i class="fas fa-cloud-arrow-down"></i> Generate Secure Download Link';b.style.opacity="1";b.style.pointerEvents="auto";b.href="#";b.removeAttribute("target")};try{var url="/api/downloads/request-token/"+pid;if(fp)url+="?file_path="+encodeURIComponent(fp);var r=await fetch(url);var d=await r.json();if(d.success&&d.token){b.style.opacity="1";b.style.pointerEvents="auto";b.innerHTML='<i class="fas fa-circle-check"></i> Opening download...';setTimeout(reset,3000);window.open(d.url,"_blank")}else if(r.status===401){b.innerHTML='<i class="fas fa-lock"></i> Login Required';b.style.opacity="1";b.href="/api/login?redirect="+encodeURIComponent(location.pathname+location.search);b.removeAttribute("onclick");b.style.pointerEvents="auto";b.target="_self";setTimeout(reset,4000)}else{b.innerHTML='<i class="fas fa-triangle-exclamation"></i> '+(d.error||"Failed");b.style.opacity="1";b.style.pointerEvents="auto";b.href="#";setTimeout(reset,3000)}}catch(e){b.innerHTML='<i class="fas fa-triangle-exclamation"></i> Error';b.style.opacity="1";b.style.pointerEvents="auto";b.href="#";setTimeout(reset,3000)}};
-    function switchTab(tab){var tabs=document.querySelectorAll(".tab");var contents=document.querySelectorAll(".tab-content");tabs.forEach(function(t){t.classList.remove("active")});contents.forEach(function(c){c.classList.remove("active")});var targetTab=document.querySelector(".tab[onclick*=\""+tab+"\"]");if(targetTab)targetTab.classList.add("active");var targetContent=document.getElementById("tab-"+tab);if(targetContent)targetContent.classList.add("active")}
+    function switchTab(tab){/* deprecated — side-by-side layout, no tabs needed */}
     function toggleLike(pid){var key="zyrex_like_"+pid;var liked=localStorage.getItem(key)==="1";var btn=document.getElementById("btnLike");if(!btn)return;var countKey="zyrex_likes_count";var counts=JSON.parse(localStorage.getItem(countKey)||"{}");if(liked){localStorage.removeItem(key);btn.classList.remove("liked");btn.innerHTML='<i class="far fa-heart"></i> <span>Like</span>';counts[pid]=Math.max(0,(counts[pid]||0)-1)}else{localStorage.setItem(key,"1");btn.classList.add("liked");btn.innerHTML='<i class="fas fa-heart"></i> <span>Liked</span>';counts[pid]=(counts[pid]||0)+1}localStorage.setItem(countKey,JSON.stringify(counts));updateLikeCount(pid)}
     function toggleBookmark(pid){var key="zyrex_bookmark_"+pid;var bookmarked=localStorage.getItem(key)==="1";var btn=document.getElementById("btnBookmark");if(!btn)return;var countKey="zyrex_bookmarks_count";var counts=JSON.parse(localStorage.getItem(countKey)||"{}");if(bookmarked){localStorage.removeItem(key);btn.classList.remove("bookmarked");btn.innerHTML='<i class="far fa-bookmark"></i> <span>Bookmark</span>';counts[pid]=Math.max(0,(counts[pid]||0)-1)}else{localStorage.setItem(key,"1");btn.classList.add("bookmarked");btn.innerHTML='<i class="fas fa-bookmark"></i> <span>Saved</span>';counts[pid]=(counts[pid]||0)+1}localStorage.setItem(countKey,JSON.stringify(counts))}
     function updateLikeCount(pid){var el=document.getElementById("likeCount");if(el){var counts=JSON.parse(localStorage.getItem("zyrex_likes_count")||"{}");el.textContent=counts[pid]||0}}
@@ -244,27 +254,41 @@
           filesHtml = '<div class="card" style="text-align:center;padding:40px;color:var(--gray-dark)"><i class="fas fa-folder-open" style="font-size:2rem;color:var(--cherry);opacity:.3;display:block;margin-bottom:12px"></i>No files available</div>';
         }
 
+        // Source link for stats
+        var sourceLinkHtml = '';
+        if (p.creator_social_url) {
+          var domain = '';
+          try { domain = new URL(p.creator_social_url).hostname.replace('www.', ''); } catch(e) {}
+          var platformIcon = 'fa-arrow-up-right-from-square';
+          var platformLabel = 'Source';
+          if (domain.indexOf('payhip.com') !== -1) { platformIcon = 'fa-cart-shopping'; platformLabel = 'Payhip'; }
+          else if (domain.indexOf('patreon.com') !== -1) { platformIcon = 'fa-paintbrush'; platformLabel = 'Patreon'; }
+          else if (domain.indexOf('boosty.to') !== -1) { platformIcon = 'fa-rocket'; platformLabel = 'Boosty'; }
+          else if (domain.indexOf('gumroad.com') !== -1) { platformIcon = 'fa-shop'; platformLabel = 'Gumroad'; }
+          sourceLinkHtml = '<div class="st"><span class="l"><i class="fas '+platformIcon+'"></i> '+platformLabel+'</span><a href="'+p.creator_social_url+'" target="_blank" class="v" style="text-decoration:none;color:var(--cherry);font-weight:600"><i class="fas fa-external-link-alt" style="font-size:.65rem;margin-right:4px"></i>Visit</a></div>';
+        }
+
         var h = '';
         h += '<div class="grid">';
+        // Left: Overview
         h += '<div class="grid-left">';
-        h += '<div class="tabs">';
-        h += '<button class="tab active" onclick="switchTab(\'overview\')">Overview</button>';
-        h += '<button class="tab" onclick="switchTab(\'files\')"><i class="fas fa-folder-tree"></i> Files</button>';
-        h += '</div>';
-        h += '<div class="tab-content active" id="tab-overview">';
         if (heroEl) { h += '<div class="hero">'+heroEl.innerHTML+'</div>'; heroEl.remove(); }
         if (irEl) { h += irEl.outerHTML; irEl.remove(); }
         if (upEl) { h += upEl.outerHTML; upEl.remove(); }
         if (descCard) { h += descCard.outerHTML; descCard.remove(); }
         h += '</div>';
-        h += '<div class="tab-content" id="tab-files">'+filesHtml+'</div>';
-        h += '</div>';
+        // Middle: Files (read-only, side-by-side with overview)
+        h += '<div class="grid-files"><div class="card">';
+        h += '<div class="files-header"><i class="fas fa-folder-tree"></i> Files'+(p.files&&p.files.length?' ('+p.files.length+')':'')+'</div>';
+        h += filesHtml;
+        h += '</div></div>';
+        // Right: Sidebar
         h += '<div class="grid-right sidebar"><div class="card">';
         if (dlBtnEl) { h += dlBtnEl.outerHTML; dlBtnEl.remove(); }
         if (dlsEl) { h += dlsEl.outerHTML; dlsEl.remove(); }
         if (mirrorEl) { h += mirrorEl.outerHTML; mirrorEl.remove(); }
         if (actionsEl) { h += actionsEl.outerHTML; actionsEl.remove(); }
-        if (stEls.length) { h += '<div style="margin-top:12px">'; stEls.forEach(function(el){ h += el.outerHTML; el.remove(); }); h += '</div>'; }
+        if (stEls.length || sourceLinkHtml) { h += '<div style="margin-top:12px">'; stEls.forEach(function(el){ h += el.outerHTML; el.remove(); }); h += sourceLinkHtml; h += '</div>'; }
         h += '</div></div>';
         h += '</div>';
 

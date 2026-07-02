@@ -866,9 +866,6 @@ async function scrapePayhip(url) {
     // Description
     let description = (html.match(/<meta\s+name="description"\s+content="([^"]+)"/i) || [])[1] || "";
 
-    // OG Image
-    const ogImage = (html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i) || [])[1] || "";
-
     // Price
     let price = "";
     const priceMatches = [
@@ -880,34 +877,106 @@ async function scrapePayhip(url) {
       if (m?.[1]) { price = "$" + m[1]; break; }
     }
 
-    // Thumbnails (product images)
+    // --- Image extraction: smarter priority-based selection ---
+    let primaryImage = "";
     const thumbnails = new Set();
-    
-    // 1. Primary: target Payhip's main product image element
-    const sectionImg = (html.match(/<img[^>]*class="[^"]*section-image[^"]*"[^>]*src="(https:\/\/[^"]+)"/i) || [])[1];
-    if (sectionImg) thumbnails.add(sectionImg);
-    
-    // 2. Fallback: capture all product images from any domain (not just payhip/pe56d)
+
+    // Helper: check if image URL belongs to an icon/avatar/small element
+    function isExcludedImage(imgUrl) {
+      const lower = imgUrl.toLowerCase();
+      return lower.includes("logo") || lower.includes("favicon") || lower.includes("avatar")
+          || lower.includes("/icon/") || lower.includes("_icon");
+    }
+
+    // Helper: extract width from Payhip CDN URL or img tag
+    function getWidthFromUrl(url) {
+      const m = url.match(/width=(\d+)/);
+      return m ? parseInt(m[1]) : 0;
+    }
+
+    // 1. Try section-image class (word boundary match — handles multi-class)
+    let sectionMatch = html.match(/<img[^>]*class="[^"]*\bsection-image\b[^"]*"[^>]*src="(https:\/\/[^"]+)"/i);
+    if (!sectionMatch) {
+      // Try without class attr ordering: img with section-image anywhere
+      sectionMatch = html.match(/<img[^>]*\bsection-image\b[^>]*src="(https:\/\/[^"]+)"/i);
+    }
+    if (sectionMatch?.[1] && !isExcludedImage(sectionMatch[1])) {
+      primaryImage = sectionMatch[1];
+      thumbnails.add(sectionMatch[1]);
+    }
+
+    // 2. Try product-image, product-gallery classes
+    if (!primaryImage) {
+      const productImg = html.match(/<img[^>]*class="[^"]*\bproduct-image\b[^"]*"[^>]*src="(https:\/\/[^"]+)"/i)
+                      || html.match(/<img[^>]*\bproduct-image\b[^>]*src="(https:\/\/[^"]+)"/i);
+      if (productImg?.[1] && !isExcludedImage(productImg[1])) {
+        primaryImage = productImg[1];
+        thumbnails.add(productImg[1]);
+      }
+    }
+
+    // 3. OG image meta (most reliable — Payhip sets this to the product thumbnail)
+    const ogSecure = (html.match(/<meta\s+property="og:image:secure_url"\s+content="([^"]+)"/i) || [])[1];
+    const ogImage = (html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i) || [])[1];
+    const bestOg = ogSecure || ogImage;
+    if (bestOg && !isExcludedImage(bestOg)) {
+      if (!primaryImage) primaryImage = bestOg;
+      thumbnails.add(bestOg);
+    }
+
+    // 4. Scored fallback: all img tags, excluding header/nav/author/profile containers
+    //    Prefer images with larger width parameter, exclude tiny icons
+    const scoredImages = [];
     const imgRegex = /<img[^>]+src="(https:\/\/[^"]*\.(?:png|jpg|jpeg|gif|webp)[^"]*)"/gi;
     let m;
     while ((m = imgRegex.exec(html)) !== null) {
-      if (!m[1].includes("logo") && !m[1].includes("favicon") && !m[1].includes("avatar")) {
-        thumbnails.add(m[1]);
+      const imgUrl = m[1];
+      if (isExcludedImage(imgUrl)) continue;
+
+      // Get surrounding context (~200 chars before this img)
+      const pos = m.index;
+      const context = html.substring(Math.max(0, pos - 300), pos).toLowerCase();
+
+      // Exclude images in author/creator/profile/header/nav containers
+      if (/class="[^"]*\b(?:author|creator|profile|avatar|user|header|navbar|sidebar)[^"]*\b/i.test(context)) continue;
+      if (/<(?:header|nav|aside)[^>]*>/i.test(context) && !/<(?:main|article|section)[^>]*>/i.test(context)) continue;
+
+      let score = 0;
+      const w = getWidthFromUrl(imgUrl);
+      if (w >= 1200) score += 30;
+      else if (w >= 800) score += 20;
+      else if (w >= 400) score += 10;
+      else if (w > 0 && w < 200) score -= 50;  // tiny icon
+
+      // Prefer images inside product/section containers
+      if (/class="[^"]*\b(?:product|section|gallery)[^"]*\b/i.test(context)) score += 25;
+      if (/<(?:main|article)[^>]*>/i.test(context)) score += 10;
+
+      // JPEG tends to be product photos, PNG may be icons/logos (slight preference)
+      if (/\.jpg|jpeg/i.test(imgUrl)) score += 5;
+
+      scoredImages.push({ url: imgUrl, score });
+    }
+
+    // Sort by score descending, add to thumbnails
+    scoredImages.sort((a, b) => b.score - a.score);
+    for (const img of scoredImages) {
+      if (img.score > 0) {
+        if (!primaryImage) primaryImage = img.url;
+        thumbnails.add(img.url);
       }
     }
-    
-    // 3. Also try og:image meta tags
-    const metaImg = (html.match(/<meta\s+property="og:image:secure_url"\s+content="([^"]+)"/i) || [])[1];
-    if (metaImg) thumbnails.add(metaImg);
-    
-    const ogImgMeta = (html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i) || [])[1];
-    if (ogImgMeta) thumbnails.add(ogImgMeta);
+
+    // If still no primary image, use first thumbnail
+    if (!primaryImage && thumbnails.size > 0) {
+      primaryImage = [...thumbnails][0];
+    }
 
     return {
       success: true,
       title,
       description,
-      image: ogImage,
+      image: primaryImage,
       price,
       thumbnails: [...thumbnails].slice(0, 8),
     };
