@@ -79,6 +79,28 @@
         .state-404 .code-404 { font-size:6rem; font-weight:900; letter-spacing:-3px; background:linear-gradient(135deg,#a80f2d,#e8456a,#a80f2d); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; line-height:1 }
         .state-404 .badge-404 { display:inline-block; font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:2px; color:var(--cherry); background:rgba(var(--cherry-rgb),.08); border:1px solid rgba(var(--cherry-rgb),.12); padding:4px 12px; border-radius:50px; margin:8px 0 20px }
 
+        /* Login Required */
+        .state-login .login-icon { font-size:3.5rem; color:var(--blurple); opacity:.25; margin-bottom:16px; display:block }
+        .state-login h2 { font-size:1.25rem; font-weight:700; color:var(--light); margin-bottom:6px }
+        .state-login p { color:var(--gray); font-size:.82rem; margin-bottom:20px }
+        .btn-discord-login { display:inline-flex; align-items:center; gap:8px; padding:14px 32px; border-radius:10px; font-size:.9rem; font-weight:700; text-decoration:none; background:linear-gradient(180deg,#5865F2,#4752c4); color:#fff; border:1px solid rgba(88,101,242,.3); transition:.2s }
+        .btn-discord-login:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(88,101,242,.4) }
+
+        /* Verify Required */
+        .state-verify .verify-icon { font-size:3.5rem; color:var(--cherry); opacity:.25; margin-bottom:14px; display:block }
+        .state-verify h2 { font-size:1.25rem; font-weight:700; color:var(--light); margin-bottom:6px }
+        .state-verify .verify-desc { color:var(--gray); font-size:.82rem; margin-bottom:6px; line-height:1.5 }
+        .state-verify .verify-desc strong { color:var(--cherry-light); font-weight:700 }
+        .verify-steps { text-align:left; margin:18px 0; padding:0; list-style:none }
+        .verify-steps li { display:flex; align-items:flex-start; gap:12px; padding:12px 0; border-bottom:1px solid rgba(255,255,255,.03); font-size:.8rem; color:var(--gray) }
+        .verify-steps li:last-child { border-bottom:none }
+        .verify-steps .step-num { width:28px; height:28px; border-radius:50%; background:rgba(var(--cherry-rgb),.12); display:flex; align-items:center; justify-content:center; flex-shrink:0; color:var(--cherry-light); font-weight:700; font-size:.75rem }
+        .verify-steps .step-text strong { display:block; color:var(--light); font-size:.8rem; margin-bottom:2px }
+        .verify-status { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:50px; font-size:.7rem; font-weight:600; margin-bottom:16px }
+        .verify-status.not-verified { background:rgba(255,56,96,.1); border:1px solid rgba(255,56,96,.2); color:#ff3860 }
+        .verify-status.checking { background:rgba(255,180,0,.1); border:1px solid rgba(255,180,0,.2); color:#ffb700 }
+        .verify-status.verified { background:rgba(0,200,100,.1); border:1px solid rgba(0,200,100,.2); color:#00e676 }
+
         /* Thumbnail */
         .thumb-wrap {
             width: 100%; aspect-ratio: 16/9;
@@ -242,6 +264,32 @@
             </div>
         </div>
 
+        <!-- Login Required -->
+        <div class="state state-login state-err" id="st-login">
+            <i class="fab fa-discord login-icon"></i>
+            <h2>Giriş Gerekli</h2>
+            <p>İndirme sayfasına erişmek için Discord hesabınla giriş yapmalısın.</p>
+            <a href="/api/login?redirect=" class="btn-discord-login" id="loginBtn"><i class="fab fa-discord"></i> Discord ile Giriş Yap</a>
+        </div>
+
+        <!-- Verify Required -->
+        <div class="state state-verify state-err" id="st-verify">
+            <i class="fas fa-shield-halved verify-icon"></i>
+            <h2>Doğrulama Gerekli</h2>
+            <p class="verify-desc">İndirme yapabilmek için Discord sunucumuzda <strong>Verified</strong> rolüne sahip olman gerekiyor.</p>
+            <div class="verify-status not-verified" id="verifyStatus"><i class="fas fa-circle-xmark"></i> Doğrulanmadı</div>
+            <ol class="verify-steps">
+                <li><span class="step-num">1</span><span class="step-text"><strong>Discord Sunucusuna Katıl</strong>Aşağıdaki butona tıklayarak sunucuya katıl.</span></li>
+                <li><span class="step-num">2</span><span class="step-text"><strong>#verify Kanalına Git</strong>Sunucudaki <code style="background:rgba(255,255,255,.04);padding:1px 6px;border-radius:3px;font-size:.72rem">#verify</code> kanalını bul.</span></li>
+                <li><span class="step-num">3</span><span class="step-text"><strong>Verify Butonuna Tıkla</strong>Kanaldaki <strong style="color:var(--cherry-light)">Verify</strong> butonuna bas.</span></li>
+                <li><span class="step-num">4</span><span class="step-text"><strong>Geri Dön ve Kontrol Et</strong>Doğrulandıktan sonra aşağıdaki butona tıkla.</span></li>
+            </ol>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
+                <a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord-login"><i class="fab fa-discord"></i> Discord'a Katıl</a>
+                <button class="btn-cherry-sm" id="recheckBtn" onclick="recheckAccess()"><i class="fas fa-arrows-rotate"></i> Doğrulandım — Tekrar Kontrol Et</button>
+            </div>
+        </div>
+
         <!-- Main content -->
         <div class="state" id="st-main"></div>
     </div>
@@ -329,33 +377,82 @@
 
         // Init
         (async function init() {
-            if (!token && !productId) {
+            // Set login redirect URL
+            var loginBtn = document.getElementById('loginBtn');
+            if (loginBtn) {
+                loginBtn.href = '/api/login?redirect=' + encodeURIComponent(location.pathname + location.search);
+            }
+
+            // If has a valid pre-generated token, validate and show directly (skip role check)
+            if (token) {
+                try {
+                    var validateResp = await fetch('/api/downloads/validate?token=' + encodeURIComponent(token) + '&peek=1');
+                    var validateData = await validateResp.json();
+                    if (validateData.success) {
+                        downloadToken = token;
+                        resolvedFilePath = validateData.file_path || '';
+                        var expiresIn = validateData.expires_in || 0;
+                        await loadProduct(validateData.product_id);
+                        if (product && resolvedFilePath && !product.file_path) product.file_path = resolvedFilePath;
+                        if (product) { await render(); if (expiresIn > 0) startCountdown(expiresIn); return; }
+                    }
+                    // Token invalid/expired — fall through to auth check
+                } catch (e) { /* fall through */ }
+            }
+
+            if (!productId) {
                 showState('st-404');
                 return;
             }
 
-            if (token) {
-                try {
-                    const resp = await fetch('/api/downloads/validate?token=' + encodeURIComponent(token) + '&peek=1');
-                    const data = await resp.json();
-                    if (data.success) {
-                        downloadToken = token;
-                        resolvedFilePath = data.file_path || '';
-                        const expiresIn = data.expires_in || 0;
-                        await loadProduct(data.product_id);
-                        if (product && resolvedFilePath && !product.file_path) product.file_path = resolvedFilePath;
-                        if (product) { await render(); if (expiresIn > 0) startCountdown(expiresIn); return; }
-                    }
-                    showError("This download link is invalid or has expired. Please generate a new one.");
-                } catch (e) { showError("Unable to validate download token."); }
-                return;
-            }
+            // Check auth + verified role
+            try {
+                // Step 1: Check if logged in
+                var meResp = await fetch('/api/me', { credentials: 'include' });
+                if (!meResp.ok) {
+                    showState('st-login');
+                    return;
+                }
 
-            if (!productId) { showState('st-404'); return; }
-            await loadProduct(productId);
-            if (!product) { showError("Product not found."); return; }
-            await render();
+                // Step 2: Check verified role
+                var accessResp = await fetch('/api/downloads/check-access', { credentials: 'include' });
+                var accessData = await accessResp.json();
+                if (accessData.can_download) {
+                    // Verified — proceed to load product
+                    await loadProduct(productId);
+                    if (!product) { showError("Product not found."); return; }
+                    await render();
+                } else {
+                    // Not verified — show verification guide
+                    showState('st-verify');
+                }
+            } catch (e) {
+                showState('st-login');
+            }
         })();
+
+        async function recheckAccess() {
+            var btn = document.getElementById('recheckBtn');
+            var status = document.getElementById('verifyStatus');
+            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Kontrol ediliyor...'; }
+            if (status) { status.className = 'verify-status checking'; status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Kontrol ediliyor...'; }
+
+            try {
+                var resp = await fetch('/api/downloads/check-access', { credentials: 'include' });
+                var data = await resp.json();
+                if (data.can_download) {
+                    if (status) { status.className = 'verify-status verified'; status.innerHTML = '<i class="fas fa-circle-check"></i> Doğrulandı!'; }
+                    // Reload page after short delay to show success
+                    setTimeout(function() { location.reload(); }, 1200);
+                } else {
+                    if (status) { status.className = 'verify-status not-verified'; status.innerHTML = '<i class="fas fa-circle-xmark"></i> Henüz doğrulanmadı'; }
+                    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-arrows-rotate"></i> Doğrulandım — Tekrar Kontrol Et'; }
+                }
+            } catch (e) {
+                if (status) { status.className = 'verify-status not-verified'; status.innerHTML = '<i class="fas fa-circle-xmark"></i> Bağlantı hatası'; }
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-arrows-rotate"></i> Doğrulandım — Tekrar Kontrol Et'; }
+            }
+        }
 
         async function loadProduct(pid) {
             try {

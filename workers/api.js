@@ -19,107 +19,26 @@ const CATEGORY_INFO = {
   "others": { label: "Others", emoji: "📁" },
 };
 
-async function sendDiscordNotification(env, product, uploaderName) {
-  const webhookUrl = env.NOTIFICATION_WEBHOOK;
-  if (!webhookUrl) return;  // silently skip if not configured
-
-  try {
-    const cat = CATEGORY_INFO[product.category] || CATEGORY_INFO["others"];
-    const color = 0x7a081e;  // dark cherry
-    const siteUrl = "https://zyrexediting.xyz";
-    const presetUrl = `${siteUrl}/preset?id=${encodeURIComponent(product.id || "")}`;
-
-    const authorName = product.creator_nickname || product.creator_username || uploaderName || "Zyrex Community";
-
-    // Compute total file size
-    let sizeStr = product.size_str || "";
-    if (!sizeStr) {
-      const files = product.files || [];
-      if (files.length > 0) {
-        let totalBytes = files.reduce((s, f) => s + (f.size || 0), 0);
-        if (totalBytes > 1048576) sizeStr = (totalBytes / 1048576).toFixed(1) + " MB";
-        else if (totalBytes > 1024) sizeStr = (totalBytes / 1024).toFixed(1) + " KB";
-        else sizeStr = totalBytes + " B";
-      } else {
-        sizeStr = "Unknown";
-      }
-    }
-
-    const embed = {
-      color: color,
-      title: product.name || "New Resource",
-      url: presetUrl,
-      description: product.description 
-        ? (product.description.length > 350 ? product.description.substring(0, 347) + "..." : product.description)
-        : "A new resource has been uploaded to Zyrex.",
-      author: {
-        name: authorName,
-        url: presetUrl,
-      },
-      fields: [
-        {
-          name: "📁 Category",
-          value: cat.label,
-          inline: true,
-        },
-        {
-          name: "📦 Total Size",
-          value: sizeStr,
-          inline: true,
-        },
-      ],
-      footer: {
-        text: "Zyrex™Resources",
-        icon_url: "https://zyrexediting.xyz/assets/content.png",
-      },
-      timestamp: new Date().toISOString(),
-    };
-
-    // Links
-    const downloadUrl = `https://dl.zyrexediting.xyz/?id=${encodeURIComponent(product.id || "")}`;
-    const social = product.creator_social_url || "";
-    const linksParts = [`[View on Zyrex](${presetUrl})`];
-    if (product.id) {
-      linksParts.push(`[Direct Download](${downloadUrl})`);
-    }
-    if (social) {
-      try {
-        const host = social.split("://")[1].split("/")[0].replace("www.", "");
-        linksParts.push(`[${host}](${social})`);
-      } catch {
-        linksParts.push(`[Creator](${social})`);
-      }
-    }
-    embed.fields.push({
-      name: "🔗 Links",
-      value: linksParts.join(" • "),
-      inline: false,
-    });
-
-    // Thumbnail
-    if (product.thumbnail) {
-      embed.thumbnail = { url: product.thumbnail };
-    }
-
-    const payload = {
-      embeds: [embed],
-    };
-
-    await fetch(webhookUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
-  } catch (e) {
-    console.error("Discord notification error:", e.message);
-  }
-}
+// No separate notification needed — the bot announces directly to Discord channel during submit
+// See C:\Users\reyli\Desktop\zyrex-bot\bot.py → announce_product()
 
 // In-memory stores
 let sftpgoToken = null;
 let sftpgoTokenExpiry = 0;
 const downloadCounts = new Map();  // productId -> count (stateless — reset on cold start, acceptable)
+const usedTokens = new Set();  // single-use token enforcement
 const TOKEN_EXPIRY = 600;  // 10 minutes
+
+// Periodic cleanup of used tokens (every 15 minutes)
+setInterval(() => {
+  const now = Date.now();
+  for (const entry of usedTokens) {
+    try {
+      const [hash, ts] = entry.split(':');
+      if (now - parseInt(ts) > 900000) usedTokens.delete(entry);  // 15 min TTL
+    } catch { usedTokens.delete(entry); }
+  }
+}, 900000);
 
 // Self-contained token helpers (Workers are stateless — tokens carry their own data)
 function encodeToken(data) {
@@ -134,6 +53,50 @@ function decodeToken(token) {
     if (Date.now() > data.exp) return null;  // expired
     return data;
   } catch { return null; }
+}
+
+function hashToken(token) {
+  // Simple hash for Set lookup — use last 32 chars as fingerprint
+  return token.length > 32 ? token.slice(-32) : token;
+}
+
+// Role check cache (simple in-memory, 30s TTL)
+const roleCheckCache = new Map();
+
+async function checkVerifiedRole(userId, env) {
+  if (!userId) return false;
+  
+  // Check cache
+  const cached = roleCheckCache.get(userId);
+  if (cached && Date.now() < cached.expiry) return cached.hasRole;
+  
+  try {
+    // Primary: bot API
+    const botResp = await fetch(`${BOT_API}/api/guild/check-role?userId=${encodeURIComponent(userId)}&roleId=1519246304163659858`);
+    if (botResp.ok) {
+      const data = await botResp.json();
+      const result = !!(data && data.has_role);
+      roleCheckCache.set(userId, { hasRole: result, expiry: Date.now() + 30000 });
+      return result;
+    }
+  } catch (e) { console.error("Bot role check failed:", e.message); }
+  
+  // Fallback: Discord REST API
+  try {
+    const discordResp = await fetch(`${DISCORD_API}/guilds/${env.GUILD_ID || "1518954946110685184"}/members/${userId}`, {
+      headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` },
+    });
+    if (discordResp.ok) {
+      const member = await discordResp.json();
+      const result = !!(member.roles && member.roles.includes("1519246304163659858"));
+      roleCheckCache.set(userId, { hasRole: result, expiry: Date.now() + 30000 });
+      return result;
+    }
+  } catch (e) { console.error("Discord REST role check failed:", e.message); }
+  
+  // Default deny on all errors
+  roleCheckCache.set(userId, { hasRole: false, expiry: Date.now() + 15000 });
+  return false;
 }
 
 // Watermark files (embedded)
@@ -1315,9 +1278,26 @@ export default {
       }
 
       // ============ DOWNLOAD: Request Token (R2 production bucket) ============
+      if (path === "/api/downloads/check-access") {
+        const session = parseSession(request.headers.get("Cookie"));
+        if (!session) return json({ can_download: false, reason: "not_logged_in" });
+        const hasRole = await checkVerifiedRole(session.userId, env);
+        return json({
+          can_download: hasRole,
+          reason: hasRole ? "ok" : "not_verified",
+          discord_id: session.userId,
+          username: session.username,
+        });
+      }
+
       if (path.startsWith("/api/downloads/request-token/")) {
         const session = parseSession(request.headers.get("Cookie"));
         if (!session) return json({ error: "Not logged in" }, 401);
+        
+        // Verified role gate
+        const isVerified = await checkVerifiedRole(session.userId, env);
+        if (!isVerified) return json({ error: "Doğrulama gerekli. İndirme yapabilmek için Discord sunucumuzda Verified rolüne sahip olmanız gerekiyor.", code: "NOT_VERIFIED" }, 403);
+        
         const productId = path.split("/api/downloads/request-token/")[1];
         if (!productId) return json({ error: "Product ID required" }, 400);
         
@@ -1381,11 +1361,14 @@ export default {
         if (!token) return json({ error: "Token required" }, 400);
         
         const data = decodeToken(token);
-        if (!data || data.used) return json({ success: false, error: "Invalid or expired token" }, 404);
+        if (!data) return json({ success: false, error: "Invalid or expired token" }, 404);
         
-        // Mark token as used (encode updated token — not strictly necessary since Worker is stateless,
-        // but the expiry in the token itself prevents reuse after expiration)
-        data.used = true;
+        // Single-use token enforcement
+        const tokenFingerprint = hashToken(token);
+        if (usedTokens.has(tokenFingerprint)) return json({ success: false, error: "Bu token zaten kullanıldı. Lütfen yeni bir indirme bağlantısı oluşturun." }, 403);
+        
+        // Mark token as used immediately (before streaming starts)
+        usedTokens.add(tokenFingerprint + ':' + Date.now());
         
         const r2Prefix = normalizeR2Prefix(data.file_path);
         const selectedSet = getRequestedFileSet(url);
@@ -1730,6 +1713,11 @@ export default {
 
       // ============ FILES: List files by path (R2 production bucket) ============
       if (path === "/api/files/list-path") {
+        const session = parseSession(request.headers.get("Cookie"));
+        if (!session) return json({ success: false, error: "Not logged in" }, 401);
+        const isVerified = await checkVerifiedRole(session.userId, env);
+        if (!isVerified) return json({ success: false, error: "Verified role required" }, 403);
+        
         const listPath = url.searchParams.get("path") || "";
         const productIdForList = url.searchParams.get("product_id") || "";
         if (!listPath && !productIdForList) return json({ success: false, error: "Missing path parameter" }, 400);
@@ -2000,14 +1988,6 @@ export default {
                 }
               });
             }
-          }
-
-          // 🔔 Discord notification on successful product submit
-          if (path === "/api/products/submit" && request.method === "POST" && botResp.ok && parsed && parsed.success) {
-            try {
-              const submitBody = JSON.parse(body || "{}");
-              ctx.waitUntil(sendDiscordNotification(env, submitBody, session ? session.username : "Unknown"));
-            } catch (e) { console.error("Notification trigger error:", e.message); }
           }
 
           return json(parsed, botResp.status);

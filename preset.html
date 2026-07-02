@@ -208,65 +208,73 @@
 
     // Post-render: inject grid layout + tabs + Files tab (read-only file viewer)
     function injectGridLayout(p) {
-      var root = document.getElementById('root');
-      if (!root || root.querySelector('.grid')) return;
+      try {
+        var root = document.getElementById('root');
+        if (!root) return;
+        
+        // Remove any existing grid to allow re-running
+        var existingGrid = root.querySelector('.grid');
+        if (existingGrid) return;
 
-      var heroEl = root.querySelector('.hero');
-      var irEl = root.querySelector('.ir');
-      var upEl = root.querySelector('.up');
-      var descCard = root.querySelector('.card');
-      var dlBtnEl = root.querySelector('.dlb');
-      var dlsEl = root.querySelector('.dls');
-      var mirrorEl = root.querySelector('.dlg');
-      var actionsEl = root.querySelector('.actions');
-      var stEls = root.querySelectorAll('.st');
+        var heroEl = root.querySelector('.hero');
+        var irEl = root.querySelector('.ir');
+        var upEl = root.querySelector('.up');
+        var descCard = root.querySelector('.card');
+        var dlBtnEl = root.querySelector('.dlb');
+        var dlsEl = root.querySelector('.dls');
+        var mirrorEl = root.querySelector('.dlg');
+        var actionsEl = root.querySelector('.actions');
+        var stEls = root.querySelectorAll('.st');
 
-      var filesHtml = '';
-      if (p.files && p.files.length > 0) {
-        filesHtml += '<div class="files" style="max-height:400px">';
-        p.files.forEach(function(f) {
-          var sz = f.size ? (f.size > 1048576 ? (f.size/1048576).toFixed(1)+' MB' : (f.size/1024).toFixed(1)+' KB') : '--';
-          var fi = 'fa-file-lines';
-          if (f.name) {
-            if (/\.(mp4|mov|webm)$/i.test(f.name)) fi = 'fa-file-video';
-            else if (/\.(mp3|wav|flac|aac)$/i.test(f.name)) fi = 'fa-file-audio';
-            else if (/\.(png|jpg|jpeg|gif|webp)$/i.test(f.name)) fi = 'fa-file-image';
-          }
-          filesHtml += '<div class="fi"><div class="fl"><i class="fas '+fi+'"></i><span title="'+(f.name||'')+'">'+(f.name||'')+'</span></div><span class="fs">'+sz+'</span></div>';
-        });
-        filesHtml += '</div>';
-      } else {
-        filesHtml = '<div class="card" style="text-align:center;padding:40px;color:var(--gray-dark)"><i class="fas fa-folder-open" style="font-size:2rem;color:var(--cherry);opacity:.3;display:block;margin-bottom:12px"></i>No files available</div>';
+        var filesHtml = '';
+        if (p.files && p.files.length > 0) {
+          filesHtml += '<div class="files" style="max-height:400px">';
+          p.files.forEach(function(f) {
+            var sz = f.size ? (f.size > 1048576 ? (f.size/1048576).toFixed(1)+' MB' : (f.size/1024).toFixed(1)+' KB') : '--';
+            var fi = 'fa-file-lines';
+            if (f.name) {
+              if (f.name.match(/\.(mp4|mov|webm)$/i)) fi = 'fa-file-video';
+              else if (f.name.match(/\.(mp3|wav|flac|aac)$/i)) fi = 'fa-file-audio';
+              else if (f.name.match(/\.(png|jpg|jpeg|gif|webp)$/i)) fi = 'fa-file-image';
+            }
+            filesHtml += '<div class="fi"><div class="fl"><i class="fas '+fi+'"></i><span title="'+(f.name||'')+'">'+(f.name||'')+'</span></div><span class="fs">'+sz+'</span></div>';
+          });
+          filesHtml += '</div>';
+        } else {
+          filesHtml = '<div class="card" style="text-align:center;padding:40px;color:var(--gray-dark)"><i class="fas fa-folder-open" style="font-size:2rem;color:var(--cherry);opacity:.3;display:block;margin-bottom:12px"></i>No files available</div>';
+        }
+
+        var h = '';
+        h += '<div class="grid">';
+        h += '<div class="grid-left">';
+        h += '<div class="tabs">';
+        h += '<button class="tab active" onclick="switchTab(\'overview\')">Overview</button>';
+        h += '<button class="tab" onclick="switchTab(\'files\')"><i class="fas fa-folder-tree"></i> Files</button>';
+        h += '</div>';
+        h += '<div class="tab-content active" id="tab-overview">';
+        if (heroEl) { h += '<div class="hero">'+heroEl.innerHTML+'</div>'; heroEl.remove(); }
+        if (irEl) { h += irEl.outerHTML; irEl.remove(); }
+        if (upEl) { h += upEl.outerHTML; upEl.remove(); }
+        if (descCard) { h += descCard.outerHTML; descCard.remove(); }
+        h += '</div>';
+        h += '<div class="tab-content" id="tab-files">'+filesHtml+'</div>';
+        h += '</div>';
+        h += '<div class="grid-right sidebar"><div class="card">';
+        if (dlBtnEl) { h += dlBtnEl.outerHTML; dlBtnEl.remove(); }
+        if (dlsEl) { h += dlsEl.outerHTML; dlsEl.remove(); }
+        if (mirrorEl) { h += mirrorEl.outerHTML; mirrorEl.remove(); }
+        if (actionsEl) { h += actionsEl.outerHTML; actionsEl.remove(); }
+        if (stEls.length) { h += '<div style="margin-top:12px">'; stEls.forEach(function(el){ h += el.outerHTML; el.remove(); }); h += '</div>'; }
+        h += '</div></div>';
+        h += '</div>';
+
+        root.innerHTML = h;
+
+        var nd = document.getElementById('dlBtn');
+        if (nd && p.id) nd.onclick = function(e) { window.genToken(e, p.id, p.file_path||''); };
+      } catch(e) {
+        console.error('injectGridLayout error:', e);
       }
-
-      var h = '';
-      h += '<div class="grid">';
-      h += '<div class="grid-left">';
-      h += '<div class="tabs">';
-      h += '<button class="tab active" onclick="switchTab(\'overview\')">Overview</button>';
-      h += '<button class="tab" onclick="switchTab(\'files\')"><i class="fas fa-folder-tree"></i> Files</button>';
-      h += '</div>';
-      h += '<div class="tab-content active" id="tab-overview">';
-      if (heroEl) { h += '<div class="hero">'+heroEl.innerHTML+'</div>'; heroEl.remove(); }
-      if (irEl) { h += irEl.outerHTML; irEl.remove(); }
-      if (upEl) { h += upEl.outerHTML; upEl.remove(); }
-      if (descCard) { h += descCard.outerHTML; descCard.remove(); }
-      h += '</div>';
-      h += '<div class="tab-content" id="tab-files">'+filesHtml+'</div>';
-      h += '</div>';
-      h += '<div class="grid-right sidebar"><div class="card">';
-      if (dlBtnEl) { h += dlBtnEl.outerHTML; dlBtnEl.remove(); }
-      if (dlsEl) { h += dlsEl.outerHTML; dlsEl.remove(); }
-      if (mirrorEl) { h += mirrorEl.outerHTML; mirrorEl.remove(); }
-      if (actionsEl) { h += actionsEl.outerHTML; actionsEl.remove(); }
-      if (stEls.length) { h += '<div style="margin-top:12px">'; stEls.forEach(function(el){ h += el.outerHTML; el.remove(); }); h += '</div>'; }
-      h += '</div></div>';
-      h += '</div>';
-
-      root.innerHTML = h;
-
-      var nd = document.getElementById('dlBtn');
-      if (nd && p.id) nd.onclick = function(e) { window.genToken(e, p.id, p.file_path||''); };
     }
     </script>
 </body>
