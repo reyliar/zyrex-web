@@ -223,19 +223,16 @@
         var root = document.getElementById('root');
         if (!root) return;
         
-        // R(p) already built a grid with tabs — query elements from inside it
-        var existingGrid = root.querySelector('.grid');
-        var searchRoot = existingGrid || root;
-        
-        var heroEl = searchRoot.querySelector('.hero');
-        var irEl = searchRoot.querySelector('.ir');
-        var upEl = searchRoot.querySelector('.up');
-        var descCard = searchRoot.querySelector('.card');
-        var dlBtnEl = searchRoot.querySelector('.dlb');
-        var dlsEl = searchRoot.querySelector('.dls');
-        var mirrorEl = searchRoot.querySelector('.dlg');
-        var actionsEl = searchRoot.querySelector('.actions');
-        var stEls = searchRoot.querySelectorAll('.st');
+        // Query ALL elements from root (some may be inside R(p)'s grid, some outside)
+        var heroEl = root.querySelector('.hero');
+        var irEl = root.querySelector('.ir');
+        var upEl = root.querySelector('.up');
+        var descCard = root.querySelector('.card');
+        var dlBtnEl = root.querySelector('.dlb');
+        var dlsEl = root.querySelector('.dls');
+        var mirrorEl = root.querySelector('.dlg');
+        var actionsEl = root.querySelector('.actions');
+        var stEls = root.querySelectorAll('.st');
 
         // Normalize files: API returns array of {name,size} objects, static data may differ
         var normalizedFiles = [];
