@@ -234,13 +234,22 @@
         var actionsEl = root.querySelector('.actions');
         var stEls = root.querySelectorAll('.st');
 
-        // Normalize files: API returns array of {name,size} objects, static data may differ
+        // Normalize files: API returns array of {name,size} objects
         var normalizedFiles = [];
         if (Array.isArray(p.files) && p.files.length > 0) {
+          // Filter out directory entries (entries that are just folder names)
+          normalizedFiles = p.files.filter(function(f) {
+            var n = f.name || '';
+            return n && !n.endsWith('/') && n.indexOf('/.') === -1;
+          });
+        }
+        // If only folders found, try to use them anyway  
+        if (normalizedFiles.length === 0 && Array.isArray(p.files) && p.files.length > 0) {
           normalizedFiles = p.files;
-        } else if (p.file_path) {
-          // Fallback: show file_path as a single entry
-          normalizedFiles = [{ name: p.file_path.split('/').pop() || p.file_path, size: p.size_bytes || 0 }];
+        }
+        // Fallback: show file_path info
+        if (normalizedFiles.length === 0 && p.file_path) {
+          normalizedFiles = [{ name: '📁 ' + p.file_path.replace(/\\/g, '/'), size: p.size_bytes || 0, isDir: true }];
         }
         
         var filesHtml = '';
@@ -260,8 +269,8 @@
           filesHtml = '<div style="text-align:center;padding:30px 20px;color:var(--gray-dark)"><i class="fas fa-folder-open" style="font-size:1.8rem;color:var(--cherry);opacity:.25;display:block;margin-bottom:10px"></i><span style="font-size:.75rem">No files available</span></div>';
         }
 
-        // Source link for stats — check both creator_social_url and direct URL fields
-        var sourceUrl = p.creator_social_url || p.source_url || p.product_url || '';
+        // Source link — product purchase URL first, then creator social
+        var sourceUrl = p.product_url || p.source_url || p.creator_social_url || '';
         var sourceLinkHtml = '';
         if (sourceUrl) {
           var domain = '';
@@ -272,7 +281,7 @@
           else if (domain.indexOf('patreon.com') !== -1) { platformIcon = 'fa-paintbrush'; platformLabel = 'Patreon'; }
           else if (domain.indexOf('boosty.to') !== -1) { platformIcon = 'fa-rocket'; platformLabel = 'Boosty'; }
           else if (domain.indexOf('gumroad.com') !== -1) { platformIcon = 'fa-shop'; platformLabel = 'Gumroad'; }
-          sourceLinkHtml = '<div class="st"><span class="l"><i class="fas '+platformIcon+'"></i> '+platformLabel+'</span><a href="'+sourceUrl+'" target="_blank" class="v" style="text-decoration:none;color:var(--cherry);font-weight:600"><i class="fas fa-external-link-alt" style="font-size:.65rem;margin-right:4px"></i>Visit</a></div>';
+          sourceLinkHtml = '<div class=\"st\"><span class=\"l\"><i class=\"fas '+platformIcon+'\"></i> '+platformLabel+'</span><a href=\"'+sourceUrl+'\" target=\"_blank\" class=\"v\" style=\"text-decoration:none;color:var(--cherry);font-weight:600\"><i class=\"fas fa-external-link-alt\" style=\"font-size:.65rem;margin-right:4px\"></i>Visit</a></div>';
         }
 
         var h = '';
