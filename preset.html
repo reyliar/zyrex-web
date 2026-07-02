@@ -236,36 +236,45 @@
         var actionsEl = root.querySelector('.actions');
         var stEls = root.querySelectorAll('.st');
 
+        // Normalize files: API returns array of {name,size} objects, static data may differ
+        var normalizedFiles = [];
+        if (Array.isArray(p.files) && p.files.length > 0) {
+          normalizedFiles = p.files;
+        } else if (p.file_path) {
+          // Fallback: show file_path as a single entry
+          normalizedFiles = [{ name: p.file_path.split('/').pop() || p.file_path, size: p.size_bytes || 0 }];
+        }
+        
         var filesHtml = '';
-        if (p.files && p.files.length > 0) {
+        if (normalizedFiles.length > 0) {
           filesHtml += '<div class="files" style="max-height:400px">';
-          p.files.forEach(function(f) {
+          normalizedFiles.forEach(function(f) {
             var sz = f.size ? (f.size > 1048576 ? (f.size/1048576).toFixed(1)+' MB' : (f.size/1024).toFixed(1)+' KB') : '--';
             var fi = 'fa-file-lines';
-            if (f.name) {
-              if (f.name.match(/\.(mp4|mov|webm)$/i)) fi = 'fa-file-video';
-              else if (f.name.match(/\.(mp3|wav|flac|aac)$/i)) fi = 'fa-file-audio';
-              else if (f.name.match(/\.(png|jpg|jpeg|gif|webp)$/i)) fi = 'fa-file-image';
-            }
-            filesHtml += '<div class="fi"><div class="fl"><i class="fas '+fi+'"></i><span title="'+(f.name||'')+'">'+(f.name||'')+'</span></div><span class="fs">'+sz+'</span></div>';
+            var fname = f.name || '';
+            if (fname.match(/\.(mp4|mov|webm)$/i)) fi = 'fa-file-video';
+            else if (fname.match(/\.(mp3|wav|flac|aac)$/i)) fi = 'fa-file-audio';
+            else if (fname.match(/\.(png|jpg|jpeg|gif|webp)$/i)) fi = 'fa-file-image';
+            filesHtml += '<div class="fi"><div class="fl"><i class="fas '+fi+'"></i><span title="'+fname+'">'+fname+'</span></div><span class="fs">'+sz+'</span></div>';
           });
           filesHtml += '</div>';
         } else {
-          filesHtml = '<div class="card" style="text-align:center;padding:40px;color:var(--gray-dark)"><i class="fas fa-folder-open" style="font-size:2rem;color:var(--cherry);opacity:.3;display:block;margin-bottom:12px"></i>No files available</div>';
+          filesHtml = '<div style="text-align:center;padding:30px 20px;color:var(--gray-dark)"><i class="fas fa-folder-open" style="font-size:1.8rem;color:var(--cherry);opacity:.25;display:block;margin-bottom:10px"></i><span style="font-size:.75rem">No files available</span></div>';
         }
 
-        // Source link for stats
+        // Source link for stats — check both creator_social_url and direct URL fields
+        var sourceUrl = p.creator_social_url || p.source_url || p.product_url || '';
         var sourceLinkHtml = '';
-        if (p.creator_social_url) {
+        if (sourceUrl) {
           var domain = '';
-          try { domain = new URL(p.creator_social_url).hostname.replace('www.', ''); } catch(e) {}
+          try { domain = new URL(sourceUrl).hostname.replace('www.', ''); } catch(e) {}
           var platformIcon = 'fa-arrow-up-right-from-square';
           var platformLabel = 'Source';
           if (domain.indexOf('payhip.com') !== -1) { platformIcon = 'fa-cart-shopping'; platformLabel = 'Payhip'; }
           else if (domain.indexOf('patreon.com') !== -1) { platformIcon = 'fa-paintbrush'; platformLabel = 'Patreon'; }
           else if (domain.indexOf('boosty.to') !== -1) { platformIcon = 'fa-rocket'; platformLabel = 'Boosty'; }
           else if (domain.indexOf('gumroad.com') !== -1) { platformIcon = 'fa-shop'; platformLabel = 'Gumroad'; }
-          sourceLinkHtml = '<div class="st"><span class="l"><i class="fas '+platformIcon+'"></i> '+platformLabel+'</span><a href="'+p.creator_social_url+'" target="_blank" class="v" style="text-decoration:none;color:var(--cherry);font-weight:600"><i class="fas fa-external-link-alt" style="font-size:.65rem;margin-right:4px"></i>Visit</a></div>';
+          sourceLinkHtml = '<div class="st"><span class="l"><i class="fas '+platformIcon+'"></i> '+platformLabel+'</span><a href="'+sourceUrl+'" target="_blank" class="v" style="text-decoration:none;color:var(--cherry);font-weight:600"><i class="fas fa-external-link-alt" style="font-size:.65rem;margin-right:4px"></i>Visit</a></div>';
         }
 
         var h = '';
