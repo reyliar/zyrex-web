@@ -2031,6 +2031,8 @@ export default {
         if (session) {
           proxyHeaders["X-User-ID"] = session.userId || "";
           proxyHeaders["X-User-Name"] = session.username || "";
+          proxyHeaders["X-User-Display-Name"] = session.displayName || session.username || "";
+          proxyHeaders["X-User-Avatar"] = session.avatar || "";
           proxyHeaders["X-User-Can-Upload"] = session.canUpload ? "true" : "false";
           proxyHeaders["X-User-Is-Admin"] = ADMIN_IDS.includes(session.userId) ? "true" : "false";
         }
