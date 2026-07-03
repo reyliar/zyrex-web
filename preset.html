@@ -234,22 +234,21 @@
         var actionsEl = root.querySelector('.actions');
         var stEls = root.querySelectorAll('.st');
 
-        // Normalize files: API returns array of {name,size} objects
+        // Normalize files: show all files including those in subdirectories
         var normalizedFiles = [];
         if (Array.isArray(p.files) && p.files.length > 0) {
-          // Filter out directory entries (entries that are just folder names)
+          // Show all entries that have actual filenames (filter out pure directory markers)
           normalizedFiles = p.files.filter(function(f) {
-            var n = f.name || '';
-            return n && !n.endsWith('/') && n.indexOf('/.') === -1;
+            var n = (f.name || '').replace(/\\/g, '/');
+            // Keep files in subfolders (contain /), skip pure directory entries (end with /)
+            return n && !n.endsWith('/');
           });
         }
-        // If only folders found, try to use them anyway  
-        if (normalizedFiles.length === 0 && Array.isArray(p.files) && p.files.length > 0) {
-          normalizedFiles = p.files;
-        }
-        // Fallback: show file_path info
+        // Fallback: show file_path info if no files
         if (normalizedFiles.length === 0 && p.file_path) {
-          normalizedFiles = [{ name: '📁 ' + p.file_path.replace(/\\/g, '/'), size: p.size_bytes || 0, isDir: true }];
+          var fp = p.file_path.replace(/\\/g, '/');
+          var fpName = fp.split('/').filter(Boolean).pop() || fp;
+          normalizedFiles = [{ name: '📁 ' + fpName, size: p.size_bytes || 0, isDir: true }];
         }
         
         var filesHtml = '';
