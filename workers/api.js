@@ -988,14 +988,36 @@ async function uploadThumbnailToCDN(env, imageUrl, productId) {
     const bytes = new Uint8Array(buffer);
     const ext = (imageUrl.split('.').pop()?.split('?')[0] || 'jpg').toLowerCase();
     const filename = `${productId}.${ext}`;
-    const base64 = btoa(String.fromCharCode(...bytes));
     
-    // Upload via internal API (same worker)
     await env.STORAGE.put(`thumbnails/${filename}`, bytes);
     return `https://thumbnail.zyrexediting.xyz/${filename}`;
   } catch(e) {
     console.error("Thumbnail upload error:", e.message);
-    return imageUrl; // fallback to original
+    return imageUrl;
+  }
+}
+
+// Simple hash for image URL → short filename
+async function hashImageUrl(url) {
+  const data = new TextEncoder().encode(url);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, "0")).join("").slice(0, 16);
+}
+
+// Download + cache thumbnail to R2 (fire-and-forget)
+async function cacheThumbnail(env, imageUrl, filename) {
+  try {
+    // Check if already cached
+    const existing = await env.STORAGE.get(`thumbnails/${filename}`);
+    if (existing) return;
+    
+    const resp = await fetch(imageUrl);
+    if (!resp.ok) return;
+    const buffer = await resp.arrayBuffer();
+    await env.STORAGE.put(`thumbnails/${filename}`, new Uint8Array(buffer));
+  } catch(e) {
+    console.error("Cache thumbnail error:", e.message);
   }
 }
 
@@ -1371,18 +1393,30 @@ export default {
         return json({ success: true, message: `Product ${id} deleted` });
       }
 
-      // ============ SCRAPER (Unified — Proxied to Bot) ============
+      // ============ SCRAPER (Unified — Proxied to Bot, with thumbnail CDN) ============
       if (path === "/api/scrape" || path === "/api/payhip/scrape" || path === "/api/patreon/scrape" || path === "/api/boosty/scrape") {
         const scrapeUrl = url.searchParams.get("url");
         if (!scrapeUrl) {
           return json({ success: false, error: "URL parameter required" }, 400);
         }
-        // Route to the bot's unified scraper (bot handles platform detection)
         const targetUrl = `${BOT_API}/api/scrape?url=${encodeURIComponent(scrapeUrl)}`;
         const botResp = await fetch(targetUrl);
         const data = await botResp.text();
         try {
-          return json(JSON.parse(data), botResp.status);
+          let parsed = JSON.parse(data);
+          // Upload thumbnail to R2 CDN in background
+          if (parsed.success && parsed.image && !parsed.image.includes("thumbnail.zyrexediting.xyz")) {
+            const hash = await hashImageUrl(parsed.image);
+            const ext = (parsed.image.split('.').pop()?.split('?')[0] || 'jpg').toLowerCase();
+            const cdnUrl = `https://thumbnail.zyrexediting.xyz/${hash}.${ext}`;
+            // Fire-and-forget: download + upload to R2
+            ctx.waitUntil(cacheThumbnail(env, parsed.image, `${hash}.${ext}`));
+            parsed.image = cdnUrl;
+            if (parsed.thumbnails && parsed.thumbnails.length > 0) {
+              parsed.thumbnails[0] = cdnUrl;
+            }
+          }
+          return json(parsed, botResp.status);
         } catch {
           return new Response(data, { status: botResp.status, headers: corsHeaders });
         }
