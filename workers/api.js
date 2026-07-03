@@ -971,8 +971,13 @@ async function scrapePayhip(url) {
 async function uploadThumbnailToCDN(env, imageUrl, productId) {
   if (!imageUrl || !productId) return imageUrl;
   try {
-    const resp = await fetch(imageUrl);
-    if (!resp.ok) return imageUrl;
+    const resp = await fetch(imageUrl, {
+      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" },
+    });
+    if (!resp.ok) {
+      console.error("Thumbnail download failed:", resp.status, imageUrl.substring(0, 80));
+      return imageUrl;
+    }
     const buffer = await resp.arrayBuffer();
     const bytes = new Uint8Array(buffer);
     const ext = (imageUrl.split('.').pop()?.split('?')[0] || 'jpg').toLowerCase();
@@ -2136,18 +2141,18 @@ export default {
         if (path === "/api/products/submit" && request.method === "POST" && body) {
           try {
             const submitData = JSON.parse(body);
+            // Prefer CDN thumbnail from scraper (already cached in R2)
+            if (submitData.cdn_thumbnail && submitData.cdn_thumbnail.includes("thumbnail.zyrexediting.xyz")) {
+              submitData.thumbnail = submitData.cdn_thumbnail;
+            }
+            // Otherwise, upload the original thumbnail to CDN
             if (submitData.thumbnail && !submitData.thumbnail.includes("thumbnail.zyrexediting.xyz")) {
               const cdnUrl = await uploadThumbnailToCDN(env, submitData.thumbnail, submitData.id || ("submit-" + Date.now().toString(36)));
               if (cdnUrl && cdnUrl.includes("thumbnail.zyrexediting.xyz")) {
                 submitData.thumbnail = cdnUrl;
-                body = JSON.stringify(submitData);
               }
             }
-            // Also convert cdn_thumbnail if present (from scraper)
-            if (submitData.cdn_thumbnail && !submitData.thumbnail) {
-              submitData.thumbnail = submitData.cdn_thumbnail;
-              body = JSON.stringify(submitData);
-            }
+            body = JSON.stringify(submitData);
           } catch(e) {}
         }
         const botResp = await fetch(targetUrl, {
