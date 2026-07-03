@@ -12,7 +12,7 @@ import requests
 from urllib.parse import urlparse
 
 DB_PATH = "data/zyrex.db"
-THUMBNAIL_API = "https://thumbnail.zyrexediting.xyz/upload"
+THUMBNAIL_API = "https://zyrexediting.xyz/api/thumbnails/upload"
 CDN_BASE = "https://thumbnail.zyrexediting.xyz"
 
 def get_all_products():

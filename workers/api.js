@@ -26,19 +26,8 @@ const CATEGORY_INFO = {
 let sftpgoToken = null;
 let sftpgoTokenExpiry = 0;
 const downloadCounts = new Map();  // productId -> count (stateless — reset on cold start, acceptable)
-const usedTokens = new Set();  // single-use token enforcement
+const usedTokens = new Set();  // single-use token enforcement (cleaned on Worker recycle)
 const TOKEN_EXPIRY = 600;  // 10 minutes
-
-// Periodic cleanup of used tokens (every 15 minutes)
-setInterval(() => {
-  const now = Date.now();
-  for (const entry of usedTokens) {
-    try {
-      const [hash, ts] = entry.split(':');
-      if (now - parseInt(ts) > 900000) usedTokens.delete(entry);  // 15 min TTL
-    } catch { usedTokens.delete(entry); }
-  }
-}, 900000);
 
 // Self-contained token helpers (Workers are stateless — tokens carry their own data)
 function encodeToken(data) {
@@ -1087,6 +1076,23 @@ export default {
       return new Response(null, { headers: corsHeaders });
     }
 
+    // ============ THUMBNAIL UPLOAD (internal API for migration/scraper) ============
+    if (path === "/api/thumbnails/upload" && request.method === "POST") {
+      try {
+        const body = await request.json();
+        const { filename, data: base64Data } = body;
+        if (!filename || !base64Data) return json({ error: "filename and data required" }, 400);
+        
+        // Validate filename (prevent path traversal)
+        const safeName = filename.replace(/[^a-zA-Z0-9_.\-]/g, "_");
+        const binary = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+        await env.STORAGE.put(`thumbnails/${safeName}`, binary);
+        return json({ success: true, url: `https://thumbnail.zyrexediting.xyz/${safeName}` });
+      } catch(e) {
+        return json({ error: e.message }, 500);
+      }
+    }
+
     // ============ AVATAR PROXY (bypass Discord CDN blocks) ============
     if (path.startsWith("/api/avatar/")) {
       const cacheTTL = 86400;
@@ -1393,7 +1399,7 @@ export default {
         return json({ success: true, message: `Product ${id} deleted` });
       }
 
-      // ============ SCRAPER (Unified — Proxied to Bot, with thumbnail CDN) ============
+      // ============ SCRAPER (Unified — Proxied to Bot) ============
       if (path === "/api/scrape" || path === "/api/payhip/scrape" || path === "/api/patreon/scrape" || path === "/api/boosty/scrape") {
         const scrapeUrl = url.searchParams.get("url");
         if (!scrapeUrl) {
@@ -1404,17 +1410,13 @@ export default {
         const data = await botResp.text();
         try {
           let parsed = JSON.parse(data);
-          // Upload thumbnail to R2 CDN in background
+          // Cache thumbnail to R2 in background (but keep original URL in response)
           if (parsed.success && parsed.image && !parsed.image.includes("thumbnail.zyrexediting.xyz")) {
             const hash = await hashImageUrl(parsed.image);
             const ext = (parsed.image.split('.').pop()?.split('?')[0] || 'jpg').toLowerCase();
-            const cdnUrl = `https://thumbnail.zyrexediting.xyz/${hash}.${ext}`;
-            // Fire-and-forget: download + upload to R2
             ctx.waitUntil(cacheThumbnail(env, parsed.image, `${hash}.${ext}`));
-            parsed.image = cdnUrl;
-            if (parsed.thumbnails && parsed.thumbnails.length > 0) {
-              parsed.thumbnails[0] = cdnUrl;
-            }
+            // Also store CDN URL so frontend can use it on submit
+            parsed.cdn_thumbnail = `https://thumbnail.zyrexediting.xyz/${hash}.${ext}`;
           }
           return json(parsed, botResp.status);
         } catch {
@@ -2128,7 +2130,26 @@ export default {
           proxyHeaders["X-User-Is-Admin"] = ADMIN_IDS.includes(session.userId) ? "true" : "false";
         }
         const targetUrl = `${BOT_API}${path}${url.search}`;
-        const body = request.method !== "GET" && request.method !== "HEAD" ? await request.text() : undefined;
+        let body = request.method !== "GET" && request.method !== "HEAD" ? await request.text() : undefined;
+        
+        // Convert thumbnail to CDN on product submit
+        if (path === "/api/products/submit" && request.method === "POST" && body) {
+          try {
+            const submitData = JSON.parse(body);
+            if (submitData.thumbnail && !submitData.thumbnail.includes("thumbnail.zyrexediting.xyz")) {
+              const cdnUrl = await uploadThumbnailToCDN(env, submitData.thumbnail, submitData.id || ("submit-" + Date.now().toString(36)));
+              if (cdnUrl && cdnUrl.includes("thumbnail.zyrexediting.xyz")) {
+                submitData.thumbnail = cdnUrl;
+                body = JSON.stringify(submitData);
+              }
+            }
+            // Also convert cdn_thumbnail if present (from scraper)
+            if (submitData.cdn_thumbnail && !submitData.thumbnail) {
+              submitData.thumbnail = submitData.cdn_thumbnail;
+              body = JSON.stringify(submitData);
+            }
+          } catch(e) {}
+        }
         const botResp = await fetch(targetUrl, {
           method: request.method,
           headers: proxyHeaders,
