@@ -897,7 +897,6 @@ async function scrapePayhip(url) {
     // 1. Try section-image class (word boundary match — handles multi-class)
     let sectionMatch = html.match(/<img[^>]*class="[^"]*\bsection-image\b[^"]*"[^>]*src="(https:\/\/[^"]+)"/i);
     if (!sectionMatch) {
-      // Try without class attr ordering: img with section-image anywhere
       sectionMatch = html.match(/<img[^>]*\bsection-image\b[^>]*src="(https:\/\/[^"]+)"/i);
     }
     if (sectionMatch?.[1] && !isExcludedImage(sectionMatch[1])) {
@@ -925,19 +924,18 @@ async function scrapePayhip(url) {
     }
 
     // 4. Scored fallback: all img tags, excluding header/nav/author/profile containers
-    //    Prefer images with larger width parameter, exclude tiny icons
     const scoredImages = [];
     const imgRegex = /<img[^>]+src="(https:\/\/[^"]*\.(?:png|jpg|jpeg|gif|webp)[^"]*)"/gi;
     let m;
+    let pos = 0;
     while ((m = imgRegex.exec(html)) !== null) {
       const imgUrl = m[1];
       if (isExcludedImage(imgUrl)) continue;
+      const currentPos = pos++;
 
-      // Get surrounding context (~200 chars before this img)
-      const pos = m.index;
-      const context = html.substring(Math.max(0, pos - 300), pos).toLowerCase();
+      const contextPos = m.index;
+      const context = html.substring(Math.max(0, contextPos - 300), contextPos).toLowerCase();
 
-      // Exclude images in author/creator/profile/header/nav containers
       if (/class="[^"]*\b(?:author|creator|profile|avatar|user|header|navbar|sidebar)[^"]*\b/i.test(context)) continue;
       if (/<(?:header|nav|aside)[^>]*>/i.test(context) && !/<(?:main|article|section)[^>]*>/i.test(context)) continue;
 
@@ -946,20 +944,16 @@ async function scrapePayhip(url) {
       if (w >= 1200) score += 30;
       else if (w >= 800) score += 20;
       else if (w >= 400) score += 10;
-      else if (w > 0 && w < 200) score -= 50;  // tiny icon
+      else if (w > 0 && w < 200) score -= 50;
 
-      // Prefer images inside product/section containers
       if (/class="[^"]*\b(?:product|section|gallery)[^"]*\b/i.test(context)) score += 25;
       if (/<(?:main|article)[^>]*>/i.test(context)) score += 10;
-
-      // JPEG tends to be product photos, PNG may be icons/logos (slight preference)
       if (/\.jpg|jpeg/i.test(imgUrl)) score += 5;
 
-      scoredImages.push({ url: imgUrl, score });
+      scoredImages.push({ url: imgUrl, score, pos: currentPos });
     }
 
-    // Sort by score descending, add to thumbnails
-    scoredImages.sort((a, b) => b.score - a.score);
+    scoredImages.sort((a, b) => b.score - a.score || a.pos - b.pos);
     for (const img of scoredImages) {
       if (img.score > 0) {
         if (!primaryImage) primaryImage = img.url;
@@ -967,7 +961,6 @@ async function scrapePayhip(url) {
       }
     }
 
-    // If still no primary image, use first thumbnail
     if (!primaryImage && thumbnails.size > 0) {
       primaryImage = [...thumbnails][0];
     }
@@ -985,6 +978,27 @@ async function scrapePayhip(url) {
   }
 }
 
+// Upload thumbnail to R2 CDN (called after scraping)
+async function uploadThumbnailToCDN(env, imageUrl, productId) {
+  if (!imageUrl || !productId) return imageUrl;
+  try {
+    const resp = await fetch(imageUrl);
+    if (!resp.ok) return imageUrl;
+    const buffer = await resp.arrayBuffer();
+    const bytes = new Uint8Array(buffer);
+    const ext = (imageUrl.split('.').pop()?.split('?')[0] || 'jpg').toLowerCase();
+    const filename = `${productId}.${ext}`;
+    const base64 = btoa(String.fromCharCode(...bytes));
+    
+    // Upload via internal API (same worker)
+    await env.STORAGE.put(`thumbnails/${filename}`, bytes);
+    return `https://thumbnail.zyrexediting.xyz/${filename}`;
+  } catch(e) {
+    console.error("Thumbnail upload error:", e.message);
+    return imageUrl; // fallback to original
+  }
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -997,6 +1011,49 @@ export default {
         }
         return fetch(`https://zyrexediting.xyz${newUrl.pathname}${newUrl.search}`);
       }
+    }
+    // Thumbnail CDN: serve images from R2 via thumbnail.zyrexediting.xyz
+    if (url.hostname === "thumbnail.zyrexediting.xyz") {
+      const THUMB_PREFIX = "thumbnails/";
+      const filename = url.pathname.replace(/^\/+/, "");
+      if (!filename) return new Response("thumbnail.zyrexediting.xyz", { headers: { "content-type": "text/plain" } });
+      
+      // GET: serve thumbnail from R2
+      if (request.method === "GET") {
+        const cacheTTL = 31536000; // 1 year
+        try {
+          const obj = await env.STORAGE.get(THUMB_PREFIX + filename);
+          if (obj) {
+            const ext = filename.split('.').pop().toLowerCase();
+            const mimeMap = { jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", gif: "image/gif", webp: "image/webp" };
+            return new Response(obj.body, {
+              headers: {
+                "Content-Type": mimeMap[ext] || "image/jpeg",
+                "Cache-Control": `public, max-age=${cacheTTL}`,
+                "Access-Control-Allow-Origin": "*",
+              },
+            });
+          }
+        } catch(e) { console.error("Thumbnail fetch error:", e.message); }
+        return new Response(null, { status: 404 });
+      }
+      
+      // POST /upload: upload thumbnail to R2
+      if (request.method === "POST" && url.pathname === "/upload") {
+        try {
+          const body = await request.json();
+          const { filename: upName, data: base64Data } = body;
+          if (!upName || !base64Data) return json({ error: "filename and data required" }, 400);
+          
+          const binary = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+          await env.STORAGE.put(THUMB_PREFIX + upName, binary);
+          return json({ success: true, url: `https://thumbnail.zyrexediting.xyz/${upName}` });
+        } catch(e) {
+          return json({ error: e.message }, 500);
+        }
+      }
+      
+      return new Response(null, { status: 405 });
     }
     // Bypass: storage subdomain handled by Cloudflare Tunnel (SFTPGo on local machine)
     if (url.hostname === "storage.zyrexediting.xyz") {
