@@ -218,7 +218,7 @@
     (async function(){try{var dl=JSON.parse(localStorage.getItem("zyrex_downloads")||"{}");var r=await fetch("/api/downloads/counts");var d=await r.json();if(d.success&&d.counts){for(var k in d.counts){if(d.counts[k]>(dl[k]||0))dl[k]=d.counts[k]}localStorage.setItem("zyrex_downloads",JSON.stringify(dl))}}catch(e){}})();
 
     // Post-render: rebuild grid with tabs (Overview | Files)
-    async function injectGridLayout(p) {
+    function injectGridLayout(p) {
       try {
         var root = document.getElementById('root');
         if (!root) return;
@@ -233,27 +233,18 @@
         var actionsEl = root.querySelector('.actions');
         var stEls = root.querySelectorAll('.st');
 
-        // Fetch files from R2 (same as download.html), fallback to p.files
+        // Files — use p.files from API, fetch from R2 as enhancement
         var fileList = [];
-        if (p.id || p.file_path) {
-          try {
-            var listUrl = '/api/files/list-path?product_id=' + encodeURIComponent(p.id || '');
-            if (p.file_path) listUrl += '&path=' + encodeURIComponent(p.file_path);
-            var resp = await fetch(listUrl);
-            var data = await resp.json();
-            if (data.success && data.files && data.files.length > 0) fileList = data.files;
-          } catch(e) {}
-        }
-        if (fileList.length === 0 && Array.isArray(p.files) && p.files.length > 0) {
+        if (Array.isArray(p.files) && p.files.length > 0) {
           fileList = p.files.filter(function(f) {
             var n = (f.name || '').replace(/\\/g, '/');
             return n && !n.endsWith('/');
           });
         }
-
+        
         var filesHtml = '';
         if (fileList.length > 0) {
-          var iconMap = {mp4:'fa-file-video',mov:'fa-file-video',webm:'fa-file-video',mp3:'fa-file-audio',wav:'fa-file-audio',flac:'fa-file-audio',aac:'fa-file-audio',png:'fa-file-image',jpg:'fa-file-image',jpeg:'fa-file-image',gif:'fa-file-image',webp:'fa-file-image',zip:'fa-file-zipper',rar:'fa-file-zipper','7z':'fa-file-zipper',pdf:'fa-file-pdf',aep:'fa-file-video',prproj:'fa-file-video',psd:'fa-file-image'};
+          var iconMap = {mp4:'fa-file-video',mov:'fa-file-video',webm:'fa-file-video',mp3:'fa-file-audio',wav:'fa-file-audio',aac:'fa-file-audio',png:'fa-file-image',jpg:'fa-file-image',jpeg:'fa-file-image',gif:'fa-file-image',webp:'fa-file-image',zip:'fa-file-zipper',rar:'fa-file-zipper','7z':'fa-file-zipper',pdf:'fa-file-pdf',aep:'fa-file-video',prproj:'fa-file-video',psd:'fa-file-image'};
           filesHtml += '<div class="files" style="max-height:420px">';
           fileList.forEach(function(f) {
             var sz = f.size_formatted || (f.size ? (f.size > 1048576 ? (f.size/1048576).toFixed(1)+' MB' : (f.size/1024).toFixed(1)+' KB') : '--');
