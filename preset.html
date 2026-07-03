@@ -217,13 +217,12 @@
     // Sync download counts from persistent API
     (async function(){try{var dl=JSON.parse(localStorage.getItem("zyrex_downloads")||"{}");var r=await fetch("/api/downloads/counts");var d=await r.json();if(d.success&&d.counts){for(var k in d.counts){if(d.counts[k]>(dl[k]||0))dl[k]=d.counts[k]}localStorage.setItem("zyrex_downloads",JSON.stringify(dl))}}catch(e){}})();
 
-    // Post-render: rebuild grid with side-by-side Overview + Files + Sidebar
-    function injectGridLayout(p) {
+    // Post-render: rebuild grid with tabs (Overview | Files)
+    async function injectGridLayout(p) {
       try {
         var root = document.getElementById('root');
         if (!root) return;
         
-        // Query ALL elements from root (some may be inside R(p)'s grid, some outside)
         var heroEl = root.querySelector('.hero');
         var irEl = root.querySelector('.ir');
         var upEl = root.querySelector('.up');
@@ -234,107 +233,85 @@
         var actionsEl = root.querySelector('.actions');
         var stEls = root.querySelectorAll('.st');
 
-        // Build files HTML first, then render grid
-        buildGrid();
-
-        async function buildGrid() {
-          var filesHtml = await buildFilesHtml(p);
-          
-          // Source link — product purchase URL first, then creator social
-          var sourceUrl = p.product_url || p.source_url || p.creator_social_url || '';
-          var sourceLinkHtml = '';
-          if (sourceUrl) {
-            var domain = '';
-            try { domain = new URL(sourceUrl).hostname.replace('www.', ''); } catch(e) {}
-            var platformIcon = 'fa-arrow-up-right-from-square';
-            var platformLabel = 'Source';
-            if (domain.indexOf('payhip.com') !== -1) { platformIcon = 'fa-cart-shopping'; platformLabel = 'Payhip'; }
-            else if (domain.indexOf('patreon.com') !== -1) { platformIcon = 'fa-paintbrush'; platformLabel = 'Patreon'; }
-            else if (domain.indexOf('boosty.to') !== -1) { platformIcon = 'fa-rocket'; platformLabel = 'Boosty'; }
-            else if (domain.indexOf('gumroad.com') !== -1) { platformIcon = 'fa-shop'; platformLabel = 'Gumroad'; }
-            sourceLinkHtml = '<div class=\"st\"><span class=\"l\"><i class=\"fas '+platformIcon+'\"></i> '+platformLabel+'</span><a href=\"'+sourceUrl+'\" target=\"_blank\" class=\"v\" style=\"text-decoration:none;color:var(--cherry);font-weight:600\"><i class=\"fas fa-external-link-alt\" style=\"font-size:.65rem;margin-right:4px\"></i>Visit</a></div>';
-          }
-
-          var h = '';
-          h += '<div class=\"grid\">';
-          h += '<div class=\"grid-left\">';
-          if (heroEl) { h += '<div class=\"hero\">'+heroEl.innerHTML+'</div>'; heroEl.remove(); }
-          if (irEl) { h += irEl.outerHTML; irEl.remove(); }
-          if (upEl) { h += upEl.outerHTML; upEl.remove(); }
-          // Tabs
-          h += '<div class=\"tabs\">';
-          h += '<button class=\"tab active\" data-tab=\"overview\" onclick=\"switchTab(\\'overview\\')\">Overview</button>';
-          h += '<button class=\"tab\" data-tab=\"files\" onclick=\"switchTab(\\'files\\')\"><i class=\"fas fa-folder-tree\"></i> Files</button>';
-          h += '</div>';
-          h += '<div class=\"tab-content active\" id=\"tab-overview\">';
-          if (descCard) { h += descCard.outerHTML; descCard.remove(); }
-          h += '</div>';
-          h += '<div class=\"tab-content\" id=\"tab-files\"><div class=\"card\">';
-          h += filesHtml;
-          h += '</div></div>';
-          h += '</div>';
-          h += '<div class=\"grid-right sidebar\"><div class=\"card\">';
-          if (dlBtnEl) { h += dlBtnEl.outerHTML; dlBtnEl.remove(); }
-          if (dlsEl) { h += dlsEl.outerHTML; dlsEl.remove(); }
-          if (mirrorEl) { h += mirrorEl.outerHTML; mirrorEl.remove(); }
-          if (actionsEl) { h += actionsEl.outerHTML; actionsEl.remove(); }
-          if (stEls.length || sourceLinkHtml) { h += '<div style=\"margin-top:12px\">'; stEls.forEach(function(el){ h += el.outerHTML; el.remove(); }); h += sourceLinkHtml; h += '</div>'; }
-          h += '</div></div>';
-          h += '</div>';
-
-          root.innerHTML = h;
-
-          var nd = document.getElementById('dlBtn');
-          if (nd && p.id) nd.onclick = function(e) { window.genToken(e, p.id, p.file_path||''); };
+        // Fetch files from R2 (same as download.html), fallback to p.files
+        var fileList = [];
+        if (p.id || p.file_path) {
+          try {
+            var listUrl = '/api/files/list-path?product_id=' + encodeURIComponent(p.id || '');
+            if (p.file_path) listUrl += '&path=' + encodeURIComponent(p.file_path);
+            var resp = await fetch(listUrl);
+            var data = await resp.json();
+            if (data.success && data.files && data.files.length > 0) fileList = data.files;
+          } catch(e) {}
+        }
+        if (fileList.length === 0 && Array.isArray(p.files) && p.files.length > 0) {
+          fileList = p.files.filter(function(f) {
+            var n = (f.name || '').replace(/\\/g, '/');
+            return n && !n.endsWith('/');
+          });
         }
 
-        // Fetch files from R2 (same as download.html), fallback to p.files
-        async function buildFilesHtml(p) {
-          var fileList = [];
-          
-          // Try R2 endpoint first (same source as download.html)
-          if (p.id || p.file_path) {
-            try {
-              var listUrl = '/api/files/list-path?product_id=' + encodeURIComponent(p.id || '');
-              if (p.file_path) listUrl += '&path=' + encodeURIComponent(p.file_path);
-              var resp = await fetch(listUrl);
-              var data = await resp.json();
-              if (data.success && data.files && data.files.length > 0) {
-                fileList = data.files;
-              }
-            } catch(e) {}
-          }
-          
-          // Fallback to p.files from API
-          if (fileList.length === 0 && Array.isArray(p.files) && p.files.length > 0) {
-            fileList = p.files.filter(function(f) {
-              var n = (f.name || '').replace(/\\/g, '/');
-              return n && !n.endsWith('/');  // skip pure directory markers
-            });
-          }
-          
-          if (fileList.length === 0) {
-            return '<div style=\"text-align:center;padding:40px 20px;color:var(--gray-dark)\"><i class=\"fas fa-folder-open\" style=\"font-size:2rem;color:var(--cherry);opacity:.25;display:block;margin-bottom:12px\"></i><span style=\"font-size:.78rem\">No files available</span></div>';
-          }
-          
-          var html = '<div class=\"files\" style=\"max-height:420px\">';
-          var iconMap = {
-            mp4:'fa-file-video', mov:'fa-file-video', webm:'fa-file-video',
-            mp3:'fa-file-audio', wav:'fa-file-audio', flac:'fa-file-audio', aac:'fa-file-audio',
-            png:'fa-file-image', jpg:'fa-file-image', jpeg:'fa-file-image', gif:'fa-file-image', webp:'fa-file-image',
-            zip:'fa-file-zipper', rar:'fa-file-zipper', '7z':'fa-file-zipper',
-            pdf:'fa-file-pdf', aep:'fa-file-video', prproj:'fa-file-video', psd:'fa-file-image',
-          };
+        var filesHtml = '';
+        if (fileList.length > 0) {
+          var iconMap = {mp4:'fa-file-video',mov:'fa-file-video',webm:'fa-file-video',mp3:'fa-file-audio',wav:'fa-file-audio',flac:'fa-file-audio',aac:'fa-file-audio',png:'fa-file-image',jpg:'fa-file-image',jpeg:'fa-file-image',gif:'fa-file-image',webp:'fa-file-image',zip:'fa-file-zipper',rar:'fa-file-zipper','7z':'fa-file-zipper',pdf:'fa-file-pdf',aep:'fa-file-video',prproj:'fa-file-video',psd:'fa-file-image'};
+          filesHtml += '<div class="files" style="max-height:420px">';
           fileList.forEach(function(f) {
-            var sz = f.size ? (f.size > 1048576 ? (f.size/1048576).toFixed(1)+' MB' : (f.size/1024).toFixed(1)+' KB') : (f.size_formatted || '--');
+            var sz = f.size_formatted || (f.size ? (f.size > 1048576 ? (f.size/1048576).toFixed(1)+' MB' : (f.size/1024).toFixed(1)+' KB') : '--');
             var ext = (f.name || '').split('.').pop().toLowerCase();
             var fi = iconMap[ext] || 'fa-file-lines';
             var fname = f.name || '';
-            html += '<div class=\"fi\"><div class=\"fl\"><i class=\"fas '+fi+'\"></i><span title=\"'+fname+'\">'+fname+'</span></div><span class=\"fs\">'+sz+'</span></div>';
+            filesHtml += '<div class="fi"><div class="fl"><i class="fas '+fi+'"></i><span title="'+fname+'">'+fname+'</span></div><span class="fs">'+sz+'</span></div>';
           });
-          html += '</div>';
-          return html;
+          filesHtml += '</div>';
+        } else {
+          filesHtml = '<div style="text-align:center;padding:40px 20px;color:var(--gray-dark)"><i class="fas fa-folder-open" style="font-size:2rem;color:var(--cherry);opacity:.25;display:block;margin-bottom:12px"></i><span style="font-size:.78rem">No files available</span></div>';
         }
+
+        // Source link
+        var sourceUrl = p.product_url || p.source_url || p.creator_social_url || '';
+        var sourceLinkHtml = '';
+        if (sourceUrl) {
+          var domain = '';
+          try { domain = new URL(sourceUrl).hostname.replace('www.', ''); } catch(e) {}
+          var pIcon = 'fa-arrow-up-right-from-square', pLabel = 'Source';
+          if (domain.indexOf('payhip.com') !== -1) { pIcon = 'fa-cart-shopping'; pLabel = 'Payhip'; }
+          else if (domain.indexOf('patreon.com') !== -1) { pIcon = 'fa-paintbrush'; pLabel = 'Patreon'; }
+          else if (domain.indexOf('boosty.to') !== -1) { pIcon = 'fa-rocket'; pLabel = 'Boosty'; }
+          else if (domain.indexOf('gumroad.com') !== -1) { pIcon = 'fa-shop'; pLabel = 'Gumroad'; }
+          sourceLinkHtml = '<div class="st"><span class="l"><i class="fas '+pIcon+'"></i> '+pLabel+'</span><a href="'+sourceUrl+'" target="_blank" class="v" style="text-decoration:none;color:var(--cherry);font-weight:600"><i class="fas fa-external-link-alt" style="font-size:.65rem;margin-right:4px"></i>Visit</a></div>';
+        }
+
+        var OC = function(t) { return "switchTab('"+t+"')"; };
+        var h = '';
+        h += '<div class="grid">';
+        h += '<div class="grid-left">';
+        if (heroEl) { h += '<div class="hero">'+heroEl.innerHTML+'</div>'; heroEl.remove(); }
+        if (irEl) { h += irEl.outerHTML; irEl.remove(); }
+        if (upEl) { h += upEl.outerHTML; upEl.remove(); }
+        h += '<div class="tabs">';
+        h += '<button class="tab active" data-tab="overview" onclick="'+OC('overview')+'">Overview</button>';
+        h += '<button class="tab" data-tab="files" onclick="'+OC('files')+'"><i class="fas fa-folder-tree"></i> Files</button>';
+        h += '</div>';
+        h += '<div class="tab-content active" id="tab-overview">';
+        if (descCard) { h += descCard.outerHTML; descCard.remove(); }
+        h += '</div>';
+        h += '<div class="tab-content" id="tab-files"><div class="card">';
+        h += filesHtml;
+        h += '</div></div>';
+        h += '</div>';
+        h += '<div class="grid-right sidebar"><div class="card">';
+        if (dlBtnEl) { h += dlBtnEl.outerHTML; dlBtnEl.remove(); }
+        if (dlsEl) { h += dlsEl.outerHTML; dlsEl.remove(); }
+        if (mirrorEl) { h += mirrorEl.outerHTML; mirrorEl.remove(); }
+        if (actionsEl) { h += actionsEl.outerHTML; actionsEl.remove(); }
+        if (stEls.length || sourceLinkHtml) { h += '<div style="margin-top:12px">'; stEls.forEach(function(el){ h += el.outerHTML; el.remove(); }); h += sourceLinkHtml; h += '</div>'; }
+        h += '</div></div>';
+        h += '</div>';
+
+        root.innerHTML = h;
+
+        var nd = document.getElementById('dlBtn');
+        if (nd && p.id) nd.onclick = function(e) { window.genToken(e, p.id, p.file_path||''); };
       } catch(e) {
         console.error('injectGridLayout error:', e);
       }
