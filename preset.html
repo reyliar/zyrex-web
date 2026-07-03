@@ -234,89 +234,107 @@
         var actionsEl = root.querySelector('.actions');
         var stEls = root.querySelectorAll('.st');
 
-        // Normalize files: show all files including those in subdirectories
-        var normalizedFiles = [];
-        if (Array.isArray(p.files) && p.files.length > 0) {
-          // Show all entries that have actual filenames (filter out pure directory markers)
-          normalizedFiles = p.files.filter(function(f) {
-            var n = (f.name || '').replace(/\\/g, '/');
-            // Keep files in subfolders (contain /), skip pure directory entries (end with /)
-            return n && !n.endsWith('/');
-          });
+        // Build files HTML first, then render grid
+        buildGrid();
+
+        async function buildGrid() {
+          var filesHtml = await buildFilesHtml(p);
+          
+          // Source link — product purchase URL first, then creator social
+          var sourceUrl = p.product_url || p.source_url || p.creator_social_url || '';
+          var sourceLinkHtml = '';
+          if (sourceUrl) {
+            var domain = '';
+            try { domain = new URL(sourceUrl).hostname.replace('www.', ''); } catch(e) {}
+            var platformIcon = 'fa-arrow-up-right-from-square';
+            var platformLabel = 'Source';
+            if (domain.indexOf('payhip.com') !== -1) { platformIcon = 'fa-cart-shopping'; platformLabel = 'Payhip'; }
+            else if (domain.indexOf('patreon.com') !== -1) { platformIcon = 'fa-paintbrush'; platformLabel = 'Patreon'; }
+            else if (domain.indexOf('boosty.to') !== -1) { platformIcon = 'fa-rocket'; platformLabel = 'Boosty'; }
+            else if (domain.indexOf('gumroad.com') !== -1) { platformIcon = 'fa-shop'; platformLabel = 'Gumroad'; }
+            sourceLinkHtml = '<div class=\"st\"><span class=\"l\"><i class=\"fas '+platformIcon+'\"></i> '+platformLabel+'</span><a href=\"'+sourceUrl+'\" target=\"_blank\" class=\"v\" style=\"text-decoration:none;color:var(--cherry);font-weight:600\"><i class=\"fas fa-external-link-alt\" style=\"font-size:.65rem;margin-right:4px\"></i>Visit</a></div>';
+          }
+
+          var h = '';
+          h += '<div class=\"grid\">';
+          h += '<div class=\"grid-left\">';
+          if (heroEl) { h += '<div class=\"hero\">'+heroEl.innerHTML+'</div>'; heroEl.remove(); }
+          if (irEl) { h += irEl.outerHTML; irEl.remove(); }
+          if (upEl) { h += upEl.outerHTML; upEl.remove(); }
+          // Tabs
+          h += '<div class=\"tabs\">';
+          h += '<button class=\"tab active\" data-tab=\"overview\" onclick=\"switchTab(\\'overview\\')\">Overview</button>';
+          h += '<button class=\"tab\" data-tab=\"files\" onclick=\"switchTab(\\'files\\')\"><i class=\"fas fa-folder-tree\"></i> Files</button>';
+          h += '</div>';
+          h += '<div class=\"tab-content active\" id=\"tab-overview\">';
+          if (descCard) { h += descCard.outerHTML; descCard.remove(); }
+          h += '</div>';
+          h += '<div class=\"tab-content\" id=\"tab-files\"><div class=\"card\">';
+          h += filesHtml;
+          h += '</div></div>';
+          h += '</div>';
+          h += '<div class=\"grid-right sidebar\"><div class=\"card\">';
+          if (dlBtnEl) { h += dlBtnEl.outerHTML; dlBtnEl.remove(); }
+          if (dlsEl) { h += dlsEl.outerHTML; dlsEl.remove(); }
+          if (mirrorEl) { h += mirrorEl.outerHTML; mirrorEl.remove(); }
+          if (actionsEl) { h += actionsEl.outerHTML; actionsEl.remove(); }
+          if (stEls.length || sourceLinkHtml) { h += '<div style=\"margin-top:12px\">'; stEls.forEach(function(el){ h += el.outerHTML; el.remove(); }); h += sourceLinkHtml; h += '</div>'; }
+          h += '</div></div>';
+          h += '</div>';
+
+          root.innerHTML = h;
+
+          var nd = document.getElementById('dlBtn');
+          if (nd && p.id) nd.onclick = function(e) { window.genToken(e, p.id, p.file_path||''); };
         }
-        // Fallback: show file_path info if no files
-        if (normalizedFiles.length === 0 && p.file_path) {
-          var fp = p.file_path.replace(/\\/g, '/');
-          var fpName = fp.split('/').filter(Boolean).pop() || fp;
-          normalizedFiles = [{ name: '📁 ' + fpName, size: p.size_bytes || 0, isDir: true }];
-        }
-        
-        var filesHtml = '';
-        if (normalizedFiles.length > 0) {
-          filesHtml += '<div class="files" style="max-height:400px">';
-          normalizedFiles.forEach(function(f) {
-            var sz = f.size ? (f.size > 1048576 ? (f.size/1048576).toFixed(1)+' MB' : (f.size/1024).toFixed(1)+' KB') : '--';
-            var fi = 'fa-file-lines';
+
+        // Fetch files from R2 (same as download.html), fallback to p.files
+        async function buildFilesHtml(p) {
+          var fileList = [];
+          
+          // Try R2 endpoint first (same source as download.html)
+          if (p.id || p.file_path) {
+            try {
+              var listUrl = '/api/files/list-path?product_id=' + encodeURIComponent(p.id || '');
+              if (p.file_path) listUrl += '&path=' + encodeURIComponent(p.file_path);
+              var resp = await fetch(listUrl);
+              var data = await resp.json();
+              if (data.success && data.files && data.files.length > 0) {
+                fileList = data.files;
+              }
+            } catch(e) {}
+          }
+          
+          // Fallback to p.files from API
+          if (fileList.length === 0 && Array.isArray(p.files) && p.files.length > 0) {
+            fileList = p.files.filter(function(f) {
+              var n = (f.name || '').replace(/\\/g, '/');
+              return n && !n.endsWith('/');  // skip pure directory markers
+            });
+          }
+          
+          if (fileList.length === 0) {
+            return '<div style=\"text-align:center;padding:40px 20px;color:var(--gray-dark)\"><i class=\"fas fa-folder-open\" style=\"font-size:2rem;color:var(--cherry);opacity:.25;display:block;margin-bottom:12px\"></i><span style=\"font-size:.78rem\">No files available</span></div>';
+          }
+          
+          var html = '<div class=\"files\" style=\"max-height:420px\">';
+          var iconMap = {
+            mp4:'fa-file-video', mov:'fa-file-video', webm:'fa-file-video',
+            mp3:'fa-file-audio', wav:'fa-file-audio', flac:'fa-file-audio', aac:'fa-file-audio',
+            png:'fa-file-image', jpg:'fa-file-image', jpeg:'fa-file-image', gif:'fa-file-image', webp:'fa-file-image',
+            zip:'fa-file-zipper', rar:'fa-file-zipper', '7z':'fa-file-zipper',
+            pdf:'fa-file-pdf', aep:'fa-file-video', prproj:'fa-file-video', psd:'fa-file-image',
+          };
+          fileList.forEach(function(f) {
+            var sz = f.size ? (f.size > 1048576 ? (f.size/1048576).toFixed(1)+' MB' : (f.size/1024).toFixed(1)+' KB') : (f.size_formatted || '--');
+            var ext = (f.name || '').split('.').pop().toLowerCase();
+            var fi = iconMap[ext] || 'fa-file-lines';
             var fname = f.name || '';
-            if (fname.match(/\.(mp4|mov|webm)$/i)) fi = 'fa-file-video';
-            else if (fname.match(/\.(mp3|wav|flac|aac)$/i)) fi = 'fa-file-audio';
-            else if (fname.match(/\.(png|jpg|jpeg|gif|webp)$/i)) fi = 'fa-file-image';
-            filesHtml += '<div class="fi"><div class="fl"><i class="fas '+fi+'"></i><span title="'+fname+'">'+fname+'</span></div><span class="fs">'+sz+'</span></div>';
+            html += '<div class=\"fi\"><div class=\"fl\"><i class=\"fas '+fi+'\"></i><span title=\"'+fname+'\">'+fname+'</span></div><span class=\"fs\">'+sz+'</span></div>';
           });
-          filesHtml += '</div>';
-        } else {
-          filesHtml = '<div style="text-align:center;padding:30px 20px;color:var(--gray-dark)"><i class="fas fa-folder-open" style="font-size:1.8rem;color:var(--cherry);opacity:.25;display:block;margin-bottom:10px"></i><span style="font-size:.75rem">No files available</span></div>';
+          html += '</div>';
+          return html;
         }
-
-        // Source link — product purchase URL first, then creator social
-        var sourceUrl = p.product_url || p.source_url || p.creator_social_url || '';
-        var sourceLinkHtml = '';
-        if (sourceUrl) {
-          var domain = '';
-          try { domain = new URL(sourceUrl).hostname.replace('www.', ''); } catch(e) {}
-          var platformIcon = 'fa-arrow-up-right-from-square';
-          var platformLabel = 'Source';
-          if (domain.indexOf('payhip.com') !== -1) { platformIcon = 'fa-cart-shopping'; platformLabel = 'Payhip'; }
-          else if (domain.indexOf('patreon.com') !== -1) { platformIcon = 'fa-paintbrush'; platformLabel = 'Patreon'; }
-          else if (domain.indexOf('boosty.to') !== -1) { platformIcon = 'fa-rocket'; platformLabel = 'Boosty'; }
-          else if (domain.indexOf('gumroad.com') !== -1) { platformIcon = 'fa-shop'; platformLabel = 'Gumroad'; }
-          sourceLinkHtml = '<div class=\"st\"><span class=\"l\"><i class=\"fas '+platformIcon+'\"></i> '+platformLabel+'</span><a href=\"'+sourceUrl+'\" target=\"_blank\" class=\"v\" style=\"text-decoration:none;color:var(--cherry);font-weight:600\"><i class=\"fas fa-external-link-alt\" style=\"font-size:.65rem;margin-right:4px\"></i>Visit</a></div>';
-        }
-
-        var h = '';
-        h += '<div class="grid">';
-        // Left: Main content with tabs
-        h += '<div class="grid-left">';
-        if (heroEl) { h += '<div class="hero">'+heroEl.innerHTML+'</div>'; heroEl.remove(); }
-        if (irEl) { h += irEl.outerHTML; irEl.remove(); }
-        if (upEl) { h += upEl.outerHTML; upEl.remove(); }
-        // Tabs
-        h += '<div class="tabs">';
-        h += '<button class="tab active" data-tab="overview" onclick="switchTab(\'overview\')">Overview</button>';
-        h += '<button class="tab" data-tab="files" onclick="switchTab(\'files\')"><i class="fas fa-folder-tree"></i> Files'+(normalizedFiles.length?' ('+normalizedFiles.length+')':'')+'</button>';
-        h += '</div>';
-        // Tab content
-        h += '<div class="tab-content active" id="tab-overview">';
-        if (descCard) { h += descCard.outerHTML; descCard.remove(); }
-        h += '</div>';
-        h += '<div class="tab-content" id="tab-files"><div class="card">';
-        h += filesHtml;
-        h += '</div></div>';
-        h += '</div>';
-        // Right: Sidebar
-        h += '<div class="grid-right sidebar"><div class="card">';
-        if (dlBtnEl) { h += dlBtnEl.outerHTML; dlBtnEl.remove(); }
-        if (dlsEl) { h += dlsEl.outerHTML; dlsEl.remove(); }
-        if (mirrorEl) { h += mirrorEl.outerHTML; mirrorEl.remove(); }
-        if (actionsEl) { h += actionsEl.outerHTML; actionsEl.remove(); }
-        if (stEls.length || sourceLinkHtml) { h += '<div style="margin-top:12px">'; stEls.forEach(function(el){ h += el.outerHTML; el.remove(); }); h += sourceLinkHtml; h += '</div>'; }
-        h += '</div></div>';
-        h += '</div>';
-
-        root.innerHTML = h;
-
-        var nd = document.getElementById('dlBtn');
-        if (nd && p.id) nd.onclick = function(e) { window.genToken(e, p.id, p.file_path||''); };
       } catch(e) {
         console.error('injectGridLayout error:', e);
       }
