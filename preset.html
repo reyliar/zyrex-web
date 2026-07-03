@@ -303,9 +303,46 @@
 
         var nd = document.getElementById('dlBtn');
         if (nd && p.id) nd.onclick = function(e) { window.genToken(e, p.id, p.file_path||''); };
+
+        // After grid is built, try fetching real files from R2
+        if ((!fileList || fileList.length === 0) && (p.id || p.file_path)) {
+          fetchFilesFromR2(p);
+        }
       } catch(e) {
         console.error('injectGridLayout error:', e);
       }
+    }
+
+    async function fetchFilesFromR2(p) {
+      try {
+        var listUrl = '/api/files/list-path?product_id=' + encodeURIComponent(p.id || '');
+        if (p.file_path) listUrl += '&path=' + encodeURIComponent(p.file_path);
+        var resp = await fetch(listUrl);
+        var data = await resp.json();
+        if (data.success && data.files && data.files.length > 0) {
+          var iconMap = {mp4:'fa-file-video',mov:'fa-file-video',webm:'fa-file-video',mp3:'fa-file-audio',wav:'fa-file-audio',aac:'fa-file-audio',png:'fa-file-image',jpg:'fa-file-image',jpeg:'fa-file-image',gif:'fa-file-image',webp:'fa-file-image',zip:'fa-file-zipper',rar:'fa-file-zipper','7z':'fa-file-zipper',pdf:'fa-file-pdf',aep:'fa-file-video',prproj:'fa-file-video',psd:'fa-file-image'};
+          var html = '<div class="files" style="max-height:420px">';
+          var filtered = data.files.filter(function(f) {
+            var n = (f.name || '').replace(/\\/g, '/');
+            return n && !n.endsWith('/');
+          });
+          filtered.forEach(function(f) {
+            var sz = f.size_formatted || (f.size ? (f.size > 1048576 ? (f.size/1048576).toFixed(1)+' MB' : (f.size/1024).toFixed(1)+' KB') : '--');
+            var ext = (f.name || '').split('.').pop().toLowerCase();
+            var fi = iconMap[ext] || 'fa-file-lines';
+            html += '<div class="fi"><div class="fl"><i class="fas '+fi+'"></i><span title="'+f.name+'">'+f.name+'</span></div><span class="fs">'+sz+'</span></div>';
+          });
+          html += '</div>';
+          var tabFiles = document.getElementById('tab-files');
+          if (tabFiles) {
+            var card = tabFiles.querySelector('.card');
+            if (card) card.innerHTML = html;
+          }
+          // Update tab count
+          var filesTab = document.querySelector('.tab[data-tab="files"]');
+          if (filesTab) filesTab.innerHTML = '<i class="fas fa-folder-tree"></i> Files ('+filtered.length+')';
+        }
+      } catch(e) {}
     }
     </script>
 </body>
