@@ -28,6 +28,9 @@
         .field input,.field textarea,.field select{width:100%;padding:12px 16px;background:rgba(0,0,0,.3);border:1px solid rgba(var(--cherry-rgb),.1);border-radius:var(--radius-sm);color:var(--light);font-family:inherit;font-size:.85rem;outline:none;transition:.3s}
         .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--cherry-light);box-shadow:0 0 0 3px rgba(var(--cherry-rgb),.1)}
         .field textarea{min-height:80px;resize:vertical}
+        .cat-chip{display:inline-flex;align-items:center;gap:4px;padding:8px 14px;border-radius:50px;border:1px solid rgba(var(--cherry-rgb),.15);background:rgba(var(--cherry-rgb),.03);font-size:.75rem;color:var(--gray);cursor:pointer;transition:.2s;user-select:none}
+        .cat-chip:has(input:checked){background:rgba(var(--cherry-rgb),.15);border-color:var(--cherry-light);color:var(--cherry-light)}
+        .cat-chip input{display:none}
         .file-upload-area{border:2px dashed rgba(var(--cherry-rgb),.15);border-radius:var(--radius-sm);padding:40px;text-align:center;cursor:pointer;transition:.3s;background:rgba(0,0,0,.2)}
         .file-upload-area:hover{border-color:var(--cherry-light);background:rgba(var(--cherry-rgb),.04)}
         .file-upload-area .fu-icon{font-size:2.5rem;color:var(--cherry);opacity:.4;margin-bottom:10px}
@@ -52,12 +55,20 @@
 
     <div class="main-wrap">
         <div class="card">
-            <h2>🎵 Upload Audio</h2>
+            <h2><i class="fas fa-music"></i> Upload Audio</h2>
             <p class="sub">Share sound effects, music packs, and audio resources with the community.</p>
             <div class="alert" id="alertBox"></div>
             
             <div class="field"><label>Audio Name *</label><input type="text" id="audioName" placeholder="Cinematic Boom Sound Effect"></div>
-            <div class="field"><label>Category</label><select id="audioCat"><option value="sfx">Sound Effects</option><option value="music">Music Pack</option><option value="vocals">Vocals</option><option value="ambient">Ambient</option><option value="others">Others</option></select></div>
+            <div class="field"><label>Categories</label>
+                <div style="display:flex;flex-wrap:wrap;gap:8px" id="catTags">
+                    <label class="cat-chip"><input type="checkbox" value="hot" onchange="updateCats()"> Hot</label>
+                    <label class="cat-chip"><input type="checkbox" value="soft" onchange="updateCats()"> Soft</label>
+                    <label class="cat-chip"><input type="checkbox" value="aesthetic" onchange="updateCats()"> Aesthetic</label>
+                    <label class="cat-chip"><input type="checkbox" value="cinematic" onchange="updateCats()"> Cinematic</label>
+                    <label class="cat-chip"><input type="checkbox" value="velocity" onchange="updateCats()"> Velocity</label>
+                </div>
+            </div>
             <div class="field"><label>Description</label><textarea id="audioDesc" placeholder="Describe the audio..."></textarea></div>
             
             <div class="field"><label>Audio File *</label>
@@ -77,6 +88,11 @@
     <script>
         var audioFile = null, audioBase64 = null;
         
+        var selectedCats = [];
+        function updateCats(){
+            selectedCats = [];
+            document.querySelectorAll('#catTags input:checked').forEach(function(cb){ selectedCats.push(cb.value); });
+        }
         function handleFile(file) {
             if (!file) return;
             if (file.size > 50*1024*1024) { alert('File too large. Max 50MB.'); return; }
@@ -131,7 +147,7 @@
                 var payload = {
                     type: 'audio',
                     name: name,
-                    category: document.getElementById('audioCat').value,
+                    category: selectedCats.join(',') || 'others',
                     description: document.getElementById('audioDesc').value.trim(),
                     file_url: upData.url,
                     thumbnail: ''
