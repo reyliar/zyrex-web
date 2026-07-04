@@ -1433,6 +1433,19 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
         return json({ in_guild: false });
       }
 
+      // GUILD ROLE CHECK - Proxy to Bot (checks if user has a specific role)
+      if (path === "/api/guild/check-role") {
+        const userId = url.searchParams.get("userId");
+        const roleId = url.searchParams.get("roleId");
+        if (!userId || !roleId) return json({ has_role: false, error: "userId and roleId required" }, 400);
+        try {
+          const targetUrl = `${BOT_API}/api/guild/check-role?userId=${encodeURIComponent(userId)}&roleId=${encodeURIComponent(roleId)}`;
+          const botResp = await fetch(targetUrl);
+          if (botResp.ok) return json(await botResp.json());
+        } catch(e) { console.error("Role check error:", e.message); }
+        return json({ has_role: false });
+      }
+
       // VERIFY COMPLETE - Proxy to Bot (one-time token verification)
       if (path === "/api/verify/complete" && request.method === "POST") {
         const session = parseSession(request.headers.get("Cookie"));
