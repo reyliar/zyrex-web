@@ -26,7 +26,7 @@ const CATEGORY_INFO = {
 let sftpgoToken = null;
 let sftpgoTokenExpiry = 0;
 const downloadCounts = new Map();  // productId -> count (stateless — reset on cold start, acceptable)
-const usedTokens = new Set();  // single-use token enforcement (cleaned on Worker recycle)
+const usedTokens = new Set();  // single-use token enforcement (in-memory cache, backed by R2)
 const TOKEN_EXPIRY = 600;  // 10 minutes
 
 // Self-contained token helpers (Workers are stateless — tokens carry their own data)
@@ -45,8 +45,30 @@ function decodeToken(token) {
 }
 
 function hashToken(token) {
-  // Simple hash for Set lookup — use last 32 chars as fingerprint
   return token.length > 32 ? token.slice(-32) : token;
+}
+
+// Check if token was used (in-memory cache + R2 persistent)
+async function checkTokenUsed(env, tokenFingerprint) {
+  if (usedTokens.has(tokenFingerprint)) return true;
+  try {
+    const marker = await env.STORAGE.get("tokens/used/" + tokenFingerprint);
+    if (marker) {
+      usedTokens.add(tokenFingerprint); // cache for this isolate
+      return true;
+    }
+  } catch(e) {}
+  return false;
+}
+
+// Mark token as used (in-memory + R2 persistent)
+async function markTokenUsed(env, tokenFingerprint) {
+  usedTokens.add(tokenFingerprint);
+  try {
+    // Store a small marker in R2 so token stays used across Worker recycles
+    const markerData = new TextEncoder().encode(JSON.stringify({ used_at: Date.now() }));
+    await env.STORAGE.put("tokens/used/" + tokenFingerprint, markerData);
+  } catch(e) { console.error("markTokenUsed R2 error:", e.message); }
 }
 
 // Role check cache (simple in-memory, 30s TTL)
@@ -883,70 +905,87 @@ async function scrapePayhip(url) {
       return m ? parseInt(m[1]) : 0;
     }
 
-    // 1. Try section-image class (word boundary match — handles multi-class)
-    let sectionMatch = html.match(/<img[^>]*class="[^"]*\bsection-image\b[^"]*"[^>]*src="(https:\/\/[^"]+)"/i);
-    if (!sectionMatch) {
-      sectionMatch = html.match(/<img[^>]*\bsection-image\b[^>]*src="(https:\/\/[^"]+)"/i);
-    }
-    if (sectionMatch?.[1] && !isExcludedImage(sectionMatch[1])) {
-      primaryImage = sectionMatch[1];
-      thumbnails.add(sectionMatch[1]);
+    // Find cutoff: everything after "You might also like" or similar is NOT the product
+    const alsoLikeMatch = html.match(/you might also like|related products|recommended for you|similar items/i);
+    const cutoffIndex = alsoLikeMatch ? alsoLikeMatch.index : html.length;
+
+    // 1. OG image meta — MOST RELIABLE, always the product thumbnail on Payhip
+    const ogSecure = (html.match(/<meta\s+property="og:image:secure_url"\s+content="([^"]+)"/i) || [])[1];
+    const ogImage = (html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i) || [])[1];
+    const bestOg = ogSecure || ogImage;
+    if (bestOg && !isExcludedImage(bestOg)) {
+      primaryImage = bestOg;
+      thumbnails.add(bestOg);
     }
 
-    // 2. Try product-image, product-gallery classes
+    // 2. Try section-image class (Payhip main product image)
     if (!primaryImage) {
-      const productImg = html.match(/<img[^>]*class="[^"]*\bproduct-image\b[^"]*"[^>]*src="(https:\/\/[^"]+)"/i)
-                      || html.match(/<img[^>]*\bproduct-image\b[^>]*src="(https:\/\/[^"]+)"/i);
+      let sectionMatch = html.match(/<img[^>]*class="[^"]*\bsection-image\b[^"]*"[^>]*src="(https:\/\/[^"]+)"/i);
+      if (!sectionMatch) {
+        sectionMatch = html.match(/<img[^>]*\bsection-image\b[^>]*src="(https:\/\/[^"]+)"/i);
+      }
+      if (sectionMatch?.[1] && !isExcludedImage(sectionMatch[1])) {
+        primaryImage = sectionMatch[1];
+        thumbnails.add(sectionMatch[1]);
+      }
+    }
+
+    // 3. Try product-image, product-gallery classes (before cutoff only)
+    if (!primaryImage) {
+      const beforeCutoff = html.substring(0, cutoffIndex);
+      const productImg = beforeCutoff.match(/<img[^>]*class="[^"]*\bproduct-image\b[^"]*"[^>]*src="(https:\/\/[^"]+)"/i)
+                      || beforeCutoff.match(/<img[^>]*\bproduct-image\b[^>]*src="(https:\/\/[^"]+)"/i);
       if (productImg?.[1] && !isExcludedImage(productImg[1])) {
         primaryImage = productImg[1];
         thumbnails.add(productImg[1]);
       }
     }
 
-    // 3. OG image meta (most reliable — Payhip sets this to the product thumbnail)
-    const ogSecure = (html.match(/<meta\s+property="og:image:secure_url"\s+content="([^"]+)"/i) || [])[1];
-    const ogImage = (html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i) || [])[1];
-    const bestOg = ogSecure || ogImage;
-    if (bestOg && !isExcludedImage(bestOg)) {
-      if (!primaryImage) primaryImage = bestOg;
-      thumbnails.add(bestOg);
-    }
+    // 4. Scored fallback: all img tags BEFORE cutoff, excluding header/nav/author/profile containers
+    if (!primaryImage) {
+      const scoredImages = [];
+      const imgRegex = /<img[^>]+src="(https:\/\/[^"]*\.(?:png|jpg|jpeg|gif|webp)[^"]*)"/gi;
+      let imgMatch;
+      let pos = 0;
+      while ((imgMatch = imgRegex.exec(html)) !== null) {
+        // Skip images after "You might also like" cutoff
+        if (imgMatch.index > cutoffIndex) continue;
+        
+        const imgUrl = imgMatch[1];
+        if (isExcludedImage(imgUrl)) continue;
+        const currentPos = pos++;
 
-    // 4. Scored fallback: all img tags, excluding header/nav/author/profile containers
-    const scoredImages = [];
-    const imgRegex = /<img[^>]+src="(https:\/\/[^"]*\.(?:png|jpg|jpeg|gif|webp)[^"]*)"/gi;
-    let m;
-    let pos = 0;
-    while ((m = imgRegex.exec(html)) !== null) {
-      const imgUrl = m[1];
-      if (isExcludedImage(imgUrl)) continue;
-      const currentPos = pos++;
+        const contextPos = imgMatch.index;
+        const context = html.substring(Math.max(0, contextPos - 400), contextPos).toLowerCase();
 
-      const contextPos = m.index;
-      const context = html.substring(Math.max(0, contextPos - 300), contextPos).toLowerCase();
+        // Exclude images inside author/creator/profile/avatar/header/nav/sidebar containers
+        if (/class="[^"]*\b(?:author|creator|profile|avatar|user|header|navbar|sidebar|footer)[^"]*\b/i.test(context)) continue;
+        if (/<(?:header|nav|aside|footer)[^>]*>/i.test(context) && !/<(?:main|article|section)[^>]*>/i.test(context)) continue;
 
-      if (/class="[^"]*\b(?:author|creator|profile|avatar|user|header|navbar|sidebar)[^"]*\b/i.test(context)) continue;
-      if (/<(?:header|nav|aside)[^>]*>/i.test(context) && !/<(?:main|article|section)[^>]*>/i.test(context)) continue;
+        let score = 0;
+        const w = getWidthFromUrl(imgUrl);
+        if (w >= 1200) score += 30;
+        else if (w >= 800) score += 20;
+        else if (w >= 400) score += 10;
+        else if (w > 0 && w < 200) score -= 50;
 
-      let score = 0;
-      const w = getWidthFromUrl(imgUrl);
-      if (w >= 1200) score += 30;
-      else if (w >= 800) score += 20;
-      else if (w >= 400) score += 10;
-      else if (w > 0 && w < 200) score -= 50;
+        // Boost score for images in product/section/gallery context
+        if (/class="[^"]*\b(?:product|section|gallery|featured)[^"]*\b/i.test(context)) score += 25;
+        if (/<(?:main|article)[^>]*>/i.test(context)) score += 10;
+        // JPEG typically used for product photos (PNG more often for logos/icons)
+        if (/\.jpg|jpeg/i.test(imgUrl)) score += 5;
+        // Earlier position = more likely to be the product image
+        score += Math.max(0, 10 - currentPos);
 
-      if (/class="[^"]*\b(?:product|section|gallery)[^"]*\b/i.test(context)) score += 25;
-      if (/<(?:main|article)[^>]*>/i.test(context)) score += 10;
-      if (/\.jpg|jpeg/i.test(imgUrl)) score += 5;
+        scoredImages.push({ url: imgUrl, score, pos: currentPos });
+      }
 
-      scoredImages.push({ url: imgUrl, score, pos: currentPos });
-    }
-
-    scoredImages.sort((a, b) => b.score - a.score || a.pos - b.pos);
-    for (const img of scoredImages) {
-      if (img.score > 0) {
-        if (!primaryImage) primaryImage = img.url;
-        thumbnails.add(img.url);
+      scoredImages.sort((a, b) => b.score - a.score || a.pos - b.pos);
+      for (const img of scoredImages) {
+        if (img.score > 5) {
+          if (!primaryImage) primaryImage = img.url;
+          thumbnails.add(img.url);
+        }
       }
     }
 
@@ -1018,6 +1057,23 @@ async function cacheThumbnail(env, imageUrl, filename) {
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+    
+    // Inject search script into resources page (bypasses Cloudflare cache)
+    if ((url.pathname === "/resources" || url.pathname === "/resources.html") && request.method === "GET") {
+      try {
+        const pageResp = await fetch(`https://main.zyrexweb.pages.dev/resources.html`);
+        let html = await pageResp.text();
+        // Inject inline search script before </body>
+        const searchScript = `<script>
+(function(){var si={};fetch('/api/search/creator-index').then(function(r){return r.json()}).then(function(d){if(d&&d.success&&d.index)si=d.index}).catch(function(){});
+document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=='s')return;var s=inp.value.toLowerCase().trim();var data=window.presetsData||[];if(!s){if(typeof renderPresets==='function')renderPresets(data);return}var mi=null;if(Object.keys(si).length>0){if(si[s]){mi={};(Array.isArray(si[s])?si[s]:String(si[s]).split(' ')).forEach(function(id){mi[id]=true})}else{mi={};var found=false;for(var k in si){if(k.indexOf(s)!==-1){found=true;var r2=si[k];(Array.isArray(r2)?r2:String(r2).split(' ')).forEach(function(id){mi[id]=true})}}if(!found)mi=null}}var filtered=data.filter(function(r){if(mi&&mi[r.id])return true;var txt=[r.name,r.creator_nickname,r.author_name,r.creator_username,r.creator_social_url,r.tags,r.desc,r.description].join(' ').toLowerCase();return txt.indexOf(s)!==-1});if(typeof renderPresets==='function')renderPresets(filtered)})})();<\/script>`;
+        html = html.replace('</body>', searchScript + '</body>');
+        return new Response(html, {
+          headers: { "Content-Type": "text/html;charset=UTF-8", "Cache-Control": "no-cache, no-store, must-revalidate" }
+        });
+      } catch(e) { /* fall through to Pages */ }
+    }
+    
     // Bypass: dl subdomain serves static download page from Pages
     if (url.hostname === "dl.zyrexediting.xyz") {
       const newUrl = new URL(request.url);
@@ -1025,7 +1081,9 @@ export default {
         if (newUrl.pathname === "/") {
           newUrl.pathname = "/download.html";
         }
-        return fetch(`https://zyrexediting.xyz${newUrl.pathname}${newUrl.search}`);
+        // Fetch directly from Pages.dev deployment to bypass custom domain cache
+        const pageUrl = `https://main.zyrexweb.pages.dev${newUrl.pathname}`;
+        return fetch(pageUrl, { cf: { cacheTtl: 0 } });
       }
     }
     // Thumbnail CDN: serve images from R2 via thumbnail.zyrexediting.xyz
@@ -1095,6 +1153,60 @@ export default {
         return json({ success: true, url: `https://thumbnail.zyrexediting.xyz/${safeName}` });
       } catch(e) {
         return json({ error: e.message }, 500);
+      }
+    }
+
+    // ============ AUDIO UPLOAD: direct file upload to R2 ============
+    if (path === "/api/audio/upload" && request.method === "POST") {
+      try {
+        const body = await request.json();
+        const { filename, data: base64Data } = body;
+        if (!filename || !base64Data) return json({ error: "filename and data required" }, 400);
+        const safeName = filename.replace(/[^a-zA-Z0-9_.\-]/g, "_");
+        const binary = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
+        await env.STORAGE.put(`audio/${safeName}`, binary);
+        return json({ success: true, url: `https://zyrexediting.xyz/api/audio/stream/${safeName}` });
+      } catch(e) { return json({ error: e.message }, 500); }
+    }
+    // Audio streaming
+    if (path.startsWith("/api/audio/stream/") && request.method === "GET") {
+      try {
+        const fname = path.replace("/api/audio/stream/", "").split("?")[0];
+        const obj = await env.STORAGE.get(`audio/${fname}`);
+        if (obj) {
+          const ext = fname.split('.').pop().toLowerCase();
+          const mime = { mp3: 'audio/mpeg', wav: 'audio/wav', flac: 'audio/flac', ogg: 'audio/ogg', m4a: 'audio/mp4', aac: 'audio/aac' };
+          return new Response(obj.body, {
+            headers: { "Content-Type": mime[ext] || 'audio/mpeg', "Accept-Ranges": "bytes", "Access-Control-Allow-Origin": "*" }
+          });
+        }
+        return new Response(null, { status: 404 });
+      } catch(e) { return new Response(null, { status: 500 }); }
+    }
+
+    // ============ CREATOR INDEX: serve + upload from R2 ============
+    if (path === "/api/data/creators.json") {
+      if (request.method === "GET") {
+        try {
+          const obj = await env.STORAGE.get("creators/index.json");
+          if (obj) {
+            return new Response(obj.body, {
+              headers: { "Content-Type": "application/json", "Cache-Control": "public, max-age=300", "Access-Control-Allow-Origin": "*" }
+            });
+          }
+          return json({ index: {}, count: 0 });
+        } catch(e) { return json({ index: {}, count: 0 }); }
+      }
+      if (request.method === "POST") {
+        try {
+          const body = await request.json();
+          const jsonStr = JSON.stringify(body);
+          const binary = new TextEncoder().encode(jsonStr);
+          await env.STORAGE.put("creators/index.json", binary);
+          return json({ success: true, message: "Creator index updated" });
+        } catch(e) {
+          return json({ error: e.message }, 500);
+        }
       }
     }
 
@@ -1435,6 +1547,11 @@ export default {
         if (!token) return json({ error: "Token required" }, 400);
         const data = decodeToken(token);
         if (!data) return json({ success: false, error: "Invalid or expired token" }, 404);
+        // Check if token was already used (skip R2 on peek for speed — download endpoint enforces)
+        const fingerprint = hashToken(token);
+        const isPeek = url.searchParams.get("peek") === "1";
+        if (!isPeek && await checkTokenUsed(env, fingerprint)) return json({ success: false, error: "This token has already been used.", code: "TOKEN_USED" }, 403);
+        if (isPeek && usedTokens.has(fingerprint)) return json({ success: false, error: "This token has already been used.", code: "TOKEN_USED" }, 403);
         return json({
           success: true,
           product_id: data.product_id,
@@ -1463,7 +1580,7 @@ export default {
         
         // Verified role gate
         const isVerified = await checkVerifiedRole(session.userId, env);
-        if (!isVerified) return json({ error: "Doğrulama gerekli. İndirme yapabilmek için Discord sunucumuzda Verified rolüne sahip olmanız gerekiyor.", code: "NOT_VERIFIED" }, 403);
+        if (!isVerified) return json({ error: "Verification required. You need the Verified role in our Discord server to download.", code: "NOT_VERIFIED" }, 403);
         
         const productId = path.split("/api/downloads/request-token/")[1];
         if (!productId) return json({ error: "Product ID required" }, 400);
@@ -1530,12 +1647,12 @@ export default {
         const data = decodeToken(token);
         if (!data) return json({ success: false, error: "Invalid or expired token" }, 404);
         
-        // Single-use token enforcement
+        // Single-use token enforcement (in-memory + R2 persistent)
         const tokenFingerprint = hashToken(token);
-        if (usedTokens.has(tokenFingerprint)) return json({ success: false, error: "Bu token zaten kullanıldı. Lütfen yeni bir indirme bağlantısı oluşturun." }, 403);
+        if (await checkTokenUsed(env, tokenFingerprint)) return json({ success: false, error: "This token has already been used. Please generate a new download link." }, 403);
         
-        // Mark token as used immediately (before streaming starts)
-        usedTokens.add(tokenFingerprint + ':' + Date.now());
+        // Mark token as used immediately (persistent, survives Worker recycles)
+        await markTokenUsed(env, tokenFingerprint);
         
         const r2Prefix = normalizeR2Prefix(data.file_path);
         const selectedSet = getRequestedFileSet(url);
@@ -1880,12 +1997,26 @@ export default {
 
       // ============ FILES: List files by path (R2 production bucket) ============
       if (path === "/api/files/list-path") {
-        const session = parseSession(request.headers.get("Cookie"));
-        if (!session) return json({ success: false, error: "Not logged in" }, 401);
-        const isVerified = await checkVerifiedRole(session.userId, env);
-        if (!isVerified) return json({ success: false, error: "Verified role required" }, 403);
+        // Accept either session cookie OR valid download token
+        let userId = null;
+        let tokenFilePath = null;
+        const tokenParam = url.searchParams.get("token") || "";
+        if (tokenParam) {
+          const tokenData = decodeToken(tokenParam);
+          if (!tokenData) return json({ success: false, error: "Invalid or expired token" }, 401);
+          const tfp = hashToken(tokenParam);
+          if (await checkTokenUsed(env, tfp)) return json({ success: false, error: "Token already used" }, 403);
+          userId = tokenData.discord_id;
+          tokenFilePath = tokenData.file_path || "";
+        } else {
+          const session = parseSession(request.headers.get("Cookie"));
+          if (!session) return json({ success: false, error: "Not logged in" }, 401);
+          const isVerified = await checkVerifiedRole(session.userId, env);
+          if (!isVerified) return json({ success: false, error: "Verified role required" }, 403);
+          userId = session.userId;
+        }
         
-        const listPath = url.searchParams.get("path") || "";
+        const listPath = url.searchParams.get("path") || tokenFilePath || "";
         const productIdForList = url.searchParams.get("product_id") || "";
         if (!listPath && !productIdForList) return json({ success: false, error: "Missing path parameter" }, 400);
         try {
@@ -2121,7 +2252,7 @@ export default {
       }
 
       // ============ BOT PROXY (admin, cloud link/unlink, downloads, hlx, verify, products) ============
-      if (path.startsWith("/api/products") || path.startsWith("/api/admin/") || path.startsWith("/api/cloud/") || path.startsWith("/api/downloads/") || path.startsWith("/api/hlx/") || path.startsWith("/api/verify") || path.startsWith("/api/sftpgo/") || path === "/api/resource-stats") {
+      if (path.startsWith("/api/products") || path.startsWith("/api/admin/") || path.startsWith("/api/cloud/") || path.startsWith("/api/downloads/") || path.startsWith("/api/hlx/") || path.startsWith("/api/verify") || path.startsWith("/api/sftpgo/") || path.startsWith("/api/search/") || path === "/api/resource-stats") {
         const session = parseSession(request.headers.get("Cookie"));
         const proxyHeaders = {
           "Content-Type": "application/json",
@@ -2141,9 +2272,23 @@ export default {
         if (path === "/api/products/submit" && request.method === "POST" && body) {
           try {
             const submitData = JSON.parse(body);
-            // Prefer CDN thumbnail from scraper (already cached in R2)
+            const originalThumb = submitData.thumbnail || ""; // preserve original before any conversion
+            // Prefer CDN thumbnail from scraper if already cached in R2
             if (submitData.cdn_thumbnail && submitData.cdn_thumbnail.includes("thumbnail.zyrexediting.xyz")) {
-              submitData.thumbnail = submitData.cdn_thumbnail;
+              const cdnFilename = submitData.cdn_thumbnail.split('/').pop();
+              const existing = await env.STORAGE.get("thumbnails/" + cdnFilename);
+              if (existing) {
+                // CDN cached — safe to use
+                submitData.thumbnail = submitData.cdn_thumbnail;
+              } else if (originalThumb && !originalThumb.includes("thumbnail.zyrexediting.xyz")) {
+                // CDN cache missing — try to upload original now
+                const cdnUrl = await uploadThumbnailToCDN(env, originalThumb, submitData.id || ("submit-" + Date.now().toString(36)));
+                if (cdnUrl && cdnUrl.includes("thumbnail.zyrexediting.xyz")) {
+                  submitData.thumbnail = cdnUrl;
+                }
+                // else: keep originalThumb as-is (don't use broken CDN URL)
+              }
+              // else: no original thumb either, drop thumbnail
             }
             // Otherwise, upload the original thumbnail to CDN
             if (submitData.thumbnail && !submitData.thumbnail.includes("thumbnail.zyrexediting.xyz")) {

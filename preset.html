@@ -170,7 +170,7 @@
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5438472060600560" crossorigin="anonymous"></script>
 </head>
 <body>
-    <nav class="navbar scrolled"><div class="container"><a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><ul class="nav-links"><li><a href="/">Home</a></li><li><a href="/resources">Resources</a></li><li><a href="/plugins">Plugins</a></li><li><a href="/#contact">Contact</a></li></ul><div class="nav-actions"><div id="authBtn"></div><a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord"><i class="fab fa-discord"></i> <span>Join Us</span></a><button class="hamburger" id="hamburger"><span></span><span></span><span></span></button></div></div></nav>
+    <nav class="navbar"><div class="container"><a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><ul class="nav-links" id="navLinks"><li><a href="/">Home</a></li><li><a href="/resources">Resources</a></li><li><a href="/plugins">Plugins</a></li><li><a href="/#contact">Contact</a></li></ul><div class="nav-actions"><div id="authBtn"></div><a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord"><i class="fab fa-discord"></i> <span>Join Us</span></a><button class="hamburger" id="hamburger"><span></span><span></span><span></span></button></div></div></nav>
     <section class="page"><div class="wrap">
         <a href="/resources" class="back"><i class="fas fa-arrow-left"></i> Back to Resources</a>
         <div class="load" id="load"><i class="fas fa-spinner fa-spin"></i><p>Loading preset...</p></div>
@@ -180,6 +180,7 @@
     <footer class="footer"><div class="container"><div class="footer-content"><div class="footer-brand"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><h3 style="font-size:1.8rem;font-weight:900;margin:0;letter-spacing:2px;background:linear-gradient(135deg,#fff,#9090a0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Editing</h3></div><p>Premium editing community &amp; resources.</p></div><div class="footer-links"><h4>Quick Links</h4><ul><li><a href="/">Home</a></li><li><a href="/resources">Resources</a></li><li><a href="/plugins">Plugins</a></li></ul></div><div class="footer-links"><h4>Legal</h4><ul><li><a href="/terms">Terms</a></li><li><a href="/privacy">Privacy</a></li><li><a href="/dmca">DMCA</a></li></ul></div><div class="footer-links"><h4>Community</h4><ul><li><a href="https://discord.gg/fAydSzpafA">Discord</a></li><li><a href="/#contact">Contact</a></li></ul></div><div class="footer-newsletter"><h4>Newsletter</h4><p>Stay updated with Zyrex Editing.</p><div class="newsletter-form"><input type="email" placeholder="Your email"><button type="submit"><i class="fas fa-arrow-right"></i></button></div></div></div><div class="footer-bottom"><p>&copy; 2026 Zyrex Editing. All rights reserved.</p></div></div></footer>
     <script>window.__PRESET_VER='v4-20260703-'+Date.now()</script>
     <script src="/js/auth.js"></script>
+    <script src="/js/script.js?v=2"></script>
     <script src="/js/presets-data.js?v=5"></script>
     <script>
     async function fetchDiscordAvatar(userId) {
@@ -197,6 +198,38 @@
         try { defIdx = Number((BigInt(userId) >> 22n) % 6n); } catch(e) { defIdx = parseInt(userId) % 5; }
         return '/api/avatar/default/' + defIdx + '.png';
     }
+    window.refreshBrokenAvatar = async function(img) {
+      var socialUrl = img.getAttribute('data-social-url');
+      var productId = img.getAttribute('data-product-id');
+      if (!socialUrl) { showFallback(img); return; }
+      // Prevent infinite loop
+      img.onerror = null;
+      try {
+        var r = await fetch('/api/hlx/resolve?url=' + encodeURIComponent(socialUrl));
+        var d = await r.json();
+        if (d.success && d.avatar) {
+          img.src = d.avatar;
+          // Optionally persist the new avatar to DB
+          if (productId) {
+            fetch('/api/products/update-avatar', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ id: productId, creator_avatar: d.avatar }),
+              credentials: 'include'
+            }).catch(function(){});
+          }
+        } else {
+          showFallback(img);
+        }
+      } catch(e) { showFallback(img); }
+      function showFallback(el) {
+        el.style.display = 'none';
+        var fb = document.createElement('div');
+        fb.className = 'cfb';
+        fb.innerHTML = '<i class="fas fa-user"></i>';
+        el.parentNode.insertBefore(fb, el);
+      }
+    };
     (async()=>{const p=new URLSearchParams(location.search);const id=p.get("id");if(!id)return E("Preset ID missing");let d=null;try{const r=await fetch("/api/products?id="+id);if(r.ok){const j=await r.json();if(j&&j.id)d=j}}catch(e){}if(!d&&window.presetsData)d=window.presetsData.find(x=>x.id===id);if(!d&&window.pluginsData)d=window.pluginsData.find(x=>x.id===id);if(!d)return E("Preset not found");await R(d);setTimeout(function(){injectGridLayout(d)},50)})();
     function E(m){document.getElementById("load").style.display="none";document.getElementById("err").style.display="block";document.getElementById("errMsg").textContent=m}
     function R(p){return (async function(){document.getElementById("load").style.display="none";document.getElementById("root").style.display="block";document.title=(p.name||"Preset")+" - Zyrex";var L={"after-effects":"After Effects","premiere-pro":"Premiere Pro","photoshop":"Photoshop","video-star":"Video Star","topaz-labs":"Topaz Labs","others":"Others"};var I={"after-effects":"fa-film","premiere-pro":"fa-video","photoshop":"fa-image","video-star":"fa-star","topaz-labs":"fa-gem","others":"fa-folder"};var cat=L[p.category]||"Preset";var ic=I[p.category]||"fa-sliders";var av=p.creator_avatar||"";var nick=p.creator_nickname||p.author_name||"Zyrex Creator";var desc=p.description||p.desc||"";var tags=Array.isArray(p.tags)?p.tags:(typeof p.tags==="string"?p.tags.split(",").map(function(t){return t.trim()}).filter(Boolean):[]);var platform="both";var hasFile=p.file_path&&p.file_path.length>0;var dlToken=p.id?'<a href="#" id="dlBtn" class="dlb a3" onclick="genToken(event,\''+p.id+'\',\''+(p.file_path||'')+'\')"><i class="fas fa-cloud-arrow-down"></i> Generate Secure Download Link</a><div class="dls a3"><i class="fas fa-shield-halved"></i> One-time token &middot; 10 min expiry</div>':(p.links&&p.links.length>0?'<a href="'+p.links[0].url+'" target="_blank" class="dlb a3"><i class="fas fa-cloud-arrow-down"></i> Download Now</a>':"");var links=[];if(Array.isArray(p.links))links=links.concat(p.links);else{if(p.link)links.push({url:p.link,label:"Mirror"});if(p.link_2)links.push({url:p.link_2,label:"Mirror"});if(p.link_3)links.push({url:p.link_3,label:"Mirror"})}var mirrorHtml=links.length>0?'<div class="dlg a3">'+links.map(function(l){return'<a href="'+(l.url||l)+'" target="_blank" class="dll"><i class="fas fa-external-link-alt"></i> '+(l.label||"Mirror")+' <span>'+new URL(l.url||l).hostname+"</span></a>"}).join("")+"</div>":"";var filesHtml=p.files&&p.files.length>0?p.files.map(function(f){var sz=f.size?(f.size>1048576?(f.size/1048576).toFixed(1)+" MB":(f.size/1024).toFixed(1)+" KB"):"--";var fi=f.name.endsWith('.mp4')||f.name.endsWith('.mov')?'fa-file-video':f.name.endsWith('.mp3')||f.name.endsWith('.wav')?'fa-file-audio':f.name.endsWith('.png')||f.name.endsWith('.jpg')||f.name.endsWith('.jpeg')?'fa-file-image':'fa-file-lines';return'<div class="fi"><div class="fl"><i class="fas '+fi+'"></i><span title="'+f.name+'">'+f.name+'</span></div><span class="fs">'+sz+"</span></div>"}).join(""):"";var upAv=await fetchDiscordAvatar(p.author_id||"");if(p.uploader_avatar&&(p.uploader_avatar.includes('discordapp.com')||p.uploader_avatar.includes('discord.com')))upAv=p.uploader_avatar;var upHtml=(p.uploader_name||p.author_name)?'<div class="up a3">'+(upAv?'<img src="'+upAv+'" alt="">':'<div class="ufb"><i class="fab fa-discord"></i></div>')+"<div><strong>"+(p.uploader_name||p.author_name)+(p.uploader_is_admin?' <i class="fas fa-circle-check" style="color:#0095F6;font-size:0.85rem" title="Verified Admin"></i>':'')+"</strong><span>Community Uploader</span></div></div>":"";var heroImg=p.thumbnail?'<img src="'+p.thumbnail+'" alt="'+p.name+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">':"";var ph='<div class="ph" style="'+(p.thumbnail?"display:none":"")+'"><i class="fas '+ic+'"></i></div>';var hasTabs=(p.files&&p.files.length>0)||desc;var tabsHtml=hasTabs?'<div class="tabs a3"><button class="tab active" onclick="switchTab(\'overview\')">Overview</button>'+(p.files&&p.files.length>0?'<button class="tab" onclick="switchTab(\'files\')">Files ('+p.files.length+')</button>':'')+'</div>':'';var overviewHtml=(desc?'<div class="card"><div class="ct"><i class="fas fa-align-left"></i> Description</div><div class="desc">'+desc.replace(/\n/g,"<br>")+"</div></div>":"")+'<div class="card"><div class="ct"><i class="fas fa-circle-info"></i> Details</div><div class="st"><span class="l"><i class="fas fa-tag"></i> Category</span><span class="v">'+cat+'</span></div>'+'<div class="st"><span class="l"><i class="fas fa-download"></i> Downloads</span><span class="v" id="dlCountOverview">0</span></div>'+(p.created_at?'<div class="st"><span class="l"><i class="fas fa-calendar"></i> Added</span><span class="v">'+new Date(p.created_at).toLocaleDateString("en-US",{year:"numeric",month:"short",day:"numeric"})+"</span></div>":"")+"</div>";var filesTabHtml=p.files&&p.files.length>0?'<div class="card"><div class="ct"><i class="fas fa-folder-open"></i> Files ('+p.files.length+')</div><div class="files">'+filesHtml+"</div></div>":"";var tabContentHtml='';if(hasTabs){tabContentHtml='<div class="tab-content active" id="tab-overview">'+overviewHtml+"</div>";if(p.files&&p.files.length>0){tabContentHtml+='<div class="tab-content" id="tab-files">'+filesTabHtml+"</div>"}}else{tabContentHtml=overviewHtml}var likeKey="zyrex_like_"+p.id;var bookKey="zyrex_bookmark_"+p.id;var liked=localStorage.getItem(likeKey)==="1";var bookmarked=localStorage.getItem(bookKey)==="1";var likeCounts=JSON.parse(localStorage.getItem("zyrex_likes_count")||"{}");var bookCounts=JSON.parse(localStorage.getItem("zyrex_bookmarks_count")||"{}");var likeCount=likeCounts[p.id]||0;var bookCount=bookCounts[p.id]||0;var dlCounts=JSON.parse(localStorage.getItem("zyrex_downloads")||"{}");var dlCount=dlCounts[p.id]||0;document.getElementById("root").innerHTML='<div class="hero a1"><div class="hero-m">'+heroImg+ph+'</div><div class="hero-b"><span class="badge"><i class="fas '+ic+'"></i> '+cat+'</span><span class="badge badge-f"><i class="fas fa-circle-check"></i> Free</span></div></div><div class="ir a2"><div class="ir-l"><h1>'+p.name+'</h1>'+(tags.length?'<div class="tags">'+tags.map(function(t){return"<span>"+t+"</span>"}).join("")+"</div>":"")+'</div><div class="cr">'+(av?'<img src="'+av+'" alt="">':'<div class="cfb"><i class="fas fa-user"></i></div>')+"<div><strong>"+nick+"</strong>"+(p.creator_social_url?'<a href="'+p.creator_social_url+'" target="_blank"><i class="fas fa-external-link-alt"></i> Profile</a>':'<span style="font-size:.7rem;color:var(--gray-dark)">Creator</span>')+"</div></div></div>"+upHtml+tabsHtml+'<div class="grid a3"><div class="grid-left">'+tabContentHtml+"</div><div class=\"grid-right\"><div class=\"sidebar\"><div class=\"card\">"+dlToken+mirrorHtml+'<div class="actions">'+'<button class="act'+(liked?' liked':'')+'" id="btnLike" onclick="toggleLike(\''+p.id+'\')"><i class="'+(liked?'fas':'far')+' fa-heart"></i> <span>'+(liked?'Liked':'Like')+'</span> <span id="likeCount" style="font-size:.7rem;opacity:.7">'+(likeCount>0?likeCount:'')+'</span></button><button class="act'+(bookmarked?' bookmarked':'')+'" id="btnBookmark" onclick="toggleBookmark(\''+p.id+'\')"><i class="'+(bookmarked?'fas':'far')+' fa-bookmark"></i> <span>'+(bookmarked?'Saved':'Bookmark')+'</span> <span id="bookmarkCount" style="font-size:.7rem;opacity:.7">'+(bookCount>0?bookCount:'')+'</span></button></div>'+'<div class="dls" style="margin-top:8px"><i class="fas fa-download"></i> <span id="dlCountSidebar">'+dlCount+'</span> downloads</div>'+"</div></div></div></div>";var dlo=document.getElementById("dlCountOverview");if(dlo)dlo.textContent=dlCount;})()}
@@ -264,12 +297,41 @@
         if (sourceUrl) {
           var domain = '';
           try { domain = new URL(sourceUrl).hostname.replace('www.', ''); } catch(e) {}
-          var pIcon = 'fa-arrow-up-right-from-square', pLabel = 'Source';
-          if (domain.indexOf('payhip.com') !== -1) { pIcon = 'fa-cart-shopping'; pLabel = 'Payhip'; }
-          else if (domain.indexOf('patreon.com') !== -1) { pIcon = 'fa-paintbrush'; pLabel = 'Patreon'; }
-          else if (domain.indexOf('boosty.to') !== -1) { pIcon = 'fa-rocket'; pLabel = 'Boosty'; }
-          else if (domain.indexOf('gumroad.com') !== -1) { pIcon = 'fa-shop'; pLabel = 'Gumroad'; }
-          sourceLinkHtml = '<div class="st"><span class="l"><i class="fas '+pIcon+'"></i> '+pLabel+'</span><a href="'+sourceUrl+'" target="_blank" class="v" style="text-decoration:none;color:var(--cherry);font-weight:600"><i class="fas fa-external-link-alt" style="font-size:.65rem;margin-right:4px"></i>Visit</a></div>';
+          var iconHtml = '<i class="fas fa-arrow-up-right-from-square"></i>';
+          var pLabel = 'Source';
+          
+          // Platform-specific brand icons (fab where available, favicon fallback)
+          var brandIcon = '';
+          if (domain.indexOf('payhip.com') !== -1) { brandIcon = 'payhip'; pLabel = 'Payhip'; }
+          else if (domain.indexOf('patreon.com') !== -1) { brandIcon = 'patreon'; pLabel = 'Patreon'; }
+          else if (domain.indexOf('boosty.to') !== -1) { brandIcon = 'boosty'; pLabel = 'Boosty'; }
+          else if (domain.indexOf('gumroad.com') !== -1) { brandIcon = 'gumroad'; pLabel = 'Gumroad'; }
+          else if (domain.indexOf('sellfy.com') !== -1) { brandIcon = 'sellfy'; pLabel = 'Sellfy'; }
+          else if (domain.indexOf('sellix.io') !== -1) { brandIcon = 'sellix'; pLabel = 'Sellix'; }
+          else if (domain.indexOf('tiktok.com') !== -1) { brandIcon = 'tiktok'; pLabel = 'TikTok'; }
+          else if (domain.indexOf('instagram.com') !== -1) { brandIcon = 'instagram'; pLabel = 'Instagram'; }
+          else if (domain.indexOf('youtube.com') !== -1 || domain.indexOf('youtu.be') !== -1) { brandIcon = 'youtube'; pLabel = 'YouTube'; }
+          else if (domain.indexOf('x.com') !== -1 || domain.indexOf('twitter.com') !== -1) { brandIcon = 'twitter'; pLabel = 'X / Twitter'; }
+          else if (domain.indexOf('twitch.tv') !== -1) { brandIcon = 'twitch'; pLabel = 'Twitch'; }
+          else if (domain.indexOf('discord.gg') !== -1 || domain.indexOf('discord.com') !== -1) { brandIcon = 'discord'; pLabel = 'Discord'; }
+          else if (domain.indexOf('t.me') !== -1 || domain.indexOf('telegram') !== -1) { brandIcon = 'telegram'; pLabel = 'Telegram'; }
+          
+          // FA brand icons map
+          var faBrands = { patreon: 'fa-patreon', tiktok: 'fa-tiktok', instagram: 'fa-instagram', youtube: 'fa-youtube', twitter: 'fa-x-twitter', twitch: 'fa-twitch', discord: 'fa-discord', telegram: 'fa-telegram' };
+          // Platforms needing favicon fallback (no FA brand icon)
+          var faviconPlatforms = { payhip: 'payhip.com', boosty: 'boosty.to', gumroad: 'gumroad.com', sellfy: 'sellfy.com', sellix: 'sellix.io' };
+          
+          if (brandIcon && faBrands[brandIcon]) {
+            iconHtml = '<i class="fab '+faBrands[brandIcon]+'"></i>';
+          } else if (brandIcon && faviconPlatforms[brandIcon]) {
+            var favDomain = faviconPlatforms[brandIcon];
+            iconHtml = '<img src="https://www.google.com/s2/favicons?domain='+favDomain+'&sz=32" alt="'+pLabel+'" style="width:16px;height:16px;vertical-align:middle;border-radius:2px">';
+          } else if (brandIcon) {
+            // Unknown brand — use first letter on colored circle
+            iconHtml = '<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--cherry);color:#fff;font-size:.6rem;font-weight:800;vertical-align:middle">'+pLabel.charAt(0)+'</span>';
+          }
+          
+          sourceLinkHtml = '<div class="st"><span class="l">'+iconHtml+' '+pLabel+'</span><a href="'+sourceUrl+'" target="_blank" class="v" style="text-decoration:none;color:var(--cherry);font-weight:600"><i class="fas fa-external-link-alt" style="font-size:.65rem;margin-right:4px"></i>Visit</a></div>';
         }
 
         var OC = function(t) { return "switchTab('"+t+"')"; };
@@ -303,6 +365,14 @@
 
         var nd = document.getElementById('dlBtn');
         if (nd && p.id) nd.onclick = function(e) { window.genToken(e, p.id, p.file_path||''); };
+
+        // Fix broken creator avatars — add onerror handler
+        var crImg = root.querySelector('.cr img');
+        if (crImg && p.creator_social_url) {
+          crImg.setAttribute('data-social-url', p.creator_social_url);
+          crImg.setAttribute('data-product-id', p.id || '');
+          crImg.onerror = function() { window.refreshBrokenAvatar(this); };
+        }
 
         // After grid is built, try fetching real files from R2
         if ((!fileList || fileList.length === 0) && (p.id || p.file_path)) {

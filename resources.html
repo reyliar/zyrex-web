@@ -119,7 +119,7 @@
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5438472060600560" crossorigin="anonymous"></script>
 </head>
 <body>
-    <nav class="navbar scrolled"><div class="container">
+    <nav class="navbar"><div class="container">
         <a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a>
         <ul class="nav-links" id="navLinks">
             <li><a href="/">Home</a></li>
@@ -146,7 +146,7 @@
     </div>
 
     <div class="tb">
-        <div class="search-wrap"><i class="fas fa-search"></i><input type="text" id="s" placeholder="Search presets..." oninput="gs()"></div>
+        <div class="search-wrap"><i class="fas fa-search"></i><input type="text" id="s" placeholder="Search presets..."></div>
         <div class="st" id="st">
             <button class="active" data-sort="recent">Recent</button>
             <button data-sort="name">Name</button>
@@ -236,15 +236,77 @@
     </footer>
 
     <script src="js/auth.js"></script>
+    <script src="js/script.js?v=2"></script>
     <script src="js/presets-data.js?v=4"></script>
-    <script src="js/presets.js?v=4"></script>
+    <script src="js/presets.js?v=7"></script>
     <script>
-        // Init presets grid + stats from API
+    (function() {
+        var searchIndex = {};
+        
+        // Load creator index from bot API
+        fetch('/api/search/creator-index').then(function(r){ return r.json(); }).then(function(d){
+            if (d && d.success && d.index) searchIndex = d.index;
+        }).catch(function(){});
+        
+        // Use event delegation on document (DOM might be rebuilt by presets.js)
+        document.addEventListener('input', function(e) {
+            var inp = e.target;
+            if (!inp || inp.id !== 's') return;
+            
+            var s = inp.value.toLowerCase().trim();
+            var data = window.presetsData || [];
+            console.log('🔍 Search:', s, '| Data items:', data.length, '| Index keys:', Object.keys(searchIndex).length);
+            
+            if (!s) { 
+                if (typeof renderPresets === 'function') renderPresets(data);
+                return; 
+            }
+            
+            // Build matched IDs from creator index
+            var matchIds = null;
+            if (Object.keys(searchIndex).length > 0) {
+                if (searchIndex[s]) {
+                    var raw = searchIndex[s];
+                    matchIds = {};
+                    (Array.isArray(raw) ? raw : String(raw).split(' ')).forEach(function(id){ matchIds[id] = true; });
+                } else {
+                    matchIds = {};
+                    var found = false;
+                    for (var k in searchIndex) {
+                        if (k.indexOf(s) !== -1) {
+                            found = true;
+                            var raw2 = searchIndex[k];
+                            (Array.isArray(raw2) ? raw2 : String(raw2).split(' ')).forEach(function(id){ matchIds[id] = true; });
+                        }
+                    }
+                    if (!found) matchIds = null;
+                }
+            }
+            
+            // Filter
+            var filtered = data.filter(function(r){
+                if (matchIds && matchIds[r.id]) return true;
+                var txt = [
+                    r.name, r.creator_nickname, r.author_name, 
+                    r.creator_username, r.creator_social_url, r.tags,
+                    r.desc, r.description
+                ].join(' ').toLowerCase();
+                return txt.indexOf(s) !== -1;
+            });
+            
+            if (typeof renderPresets === 'function') {
+                console.log('📊 Filtered:', filtered.length, 'results. matchIds size:', matchIds ? Object.keys(matchIds).length : 'none');
+                renderPresets(filtered);
+            } else {
+                console.log('❌ renderPresets not available');
+            }
+        });
+        
+        // Init presets
         if (typeof initPresets === 'function') {
-            initPresets().catch(function(e){ console.error('initPresets error:', e); });
-        } else {
-            console.error('initPresets not defined');
+            initPresets().catch(function(e){ console.error(e); });
         }
+    })();
     </script>
 </body>
 </html>

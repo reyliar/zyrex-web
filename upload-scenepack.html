@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Scenepack — Zyrex</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="css/style.css?v=9">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root{--cherry:#a80f2d;--cherry-rgb:168,15,45;--cherry-light:#e8456a;--dark:#060608;--light:#e8e8ed;--gray:#8888a0;--gray-dark:#55556a;--radius:18px;--radius-sm:12px}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{background:var(--dark);color:var(--light);font-family:'Poppins',sans-serif;min-height:100vh}
+        .topbar{position:fixed;top:0;left:0;right:0;z-index:1000;padding:16px 32px;display:flex;align-items:center;justify-content:space-between;background:rgba(6,4,8,0.7);backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid rgba(255,255,255,.04)}
+        .topbar-logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--light)}
+        .topbar-logo img{height:34px}
+        .topbar-logo span{font-weight:800;font-size:1rem;letter-spacing:1px;color:var(--cherry-light)}
+        .topbar-actions{display:flex;align-items:center;gap:16px}
+        .topbar-actions a{color:var(--gray-dark);font-size:.78rem;text-decoration:none;transition:.2s}
+        .topbar-actions a:hover{color:var(--cherry-light)}
+        .main-wrap{max-width:600px;margin:0 auto;padding:100px 24px 60px}
+        .card{background:rgba(12,4,8,0.55);border:1px solid rgba(var(--cherry-rgb),.12);border-radius:var(--radius);padding:36px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+        .card h2{font-size:1.4rem;font-weight:800;margin-bottom:6px}
+        .card .sub{color:var(--gray);font-size:.82rem;margin-bottom:24px}
+        .field{margin-bottom:20px}
+        .field label{display:block;font-size:.72rem;font-weight:700;margin-bottom:6px;color:var(--gray);text-transform:uppercase;letter-spacing:1px}
+        .field input,.field textarea,.field select{width:100%;padding:12px 16px;background:rgba(0,0,0,.3);border:1px solid rgba(var(--cherry-rgb),.1);border-radius:var(--radius-sm);color:var(--light);font-family:inherit;font-size:.85rem;outline:none;transition:.3s}
+        .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--cherry-light);box-shadow:0 0 0 3px rgba(var(--cherry-rgb),.1)}
+        .field textarea{min-height:80px;resize:vertical}
+        .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 28px;border-radius:var(--radius-sm);font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit;border:none;transition:.3s;width:100%}
+        .btn-primary{background:linear-gradient(135deg,#8a0a22,#5a0614);color:#fff;border:1px solid rgba(var(--cherry-rgb),.25);box-shadow:0 4px 20px rgba(var(--cherry-rgb),.35)}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(var(--cherry-rgb),.5)}
+        .btn-primary:disabled{opacity:.45;cursor:not-allowed;transform:none}
+        .alert{padding:12px 16px;border-radius:8px;font-size:.8rem;font-weight:600;margin-bottom:16px;display:none}
+        .alert.show{display:block}
+        .alert-error{background:rgba(var(--cherry-rgb),.1);border:1px solid rgba(var(--cherry-rgb),.2);color:var(--cherry-light)}
+        .alert-success{background:rgba(0,200,100,.1);border:1px solid rgba(0,200,100,.2);color:#00c864}
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <a href="/" class="topbar-logo"><img src="assets/content.png" alt=""><span>Upload Scenepack</span></a>
+        <div class="topbar-actions"><a href="/upload">← Back to Upload</a><a href="/settings">Settings</a><a href="/api/logout">Logout</a></div>
+    </div>
+
+    <div class="main-wrap">
+        <div class="card">
+            <h2>🎬 Upload Scenepack</h2>
+            <p class="sub">Share scene packs, project files, and editing templates.</p>
+            <div class="alert" id="alertBox"></div>
+            
+            <div class="field"><label>Scenepack Name *</label><input type="text" id="spName" placeholder="Cinematic Scene Pack V2"></div>
+            <div class="field"><label>Category</label><select id="spCat"><option value="after-effects">After Effects</option><option value="premiere-pro">Premiere Pro</option><option value="photoshop">Photoshop</option><option value="video-star">Video Star</option><option value="others">Others</option></select></div>
+            <div class="field"><label>Description</label><textarea id="spDesc" placeholder="Describe the scenepack..."></textarea></div>
+            <div class="field"><label>Download Link * (Mega, Drive, Dropbox)</label><input type="url" id="spLink" placeholder="https://mega.nz/file/... or https://drive.google.com/..."></div>
+            <div class="field"><label>Thumbnail URL (optional)</label><input type="url" id="spThumb" placeholder="https://i.imgur.com/..."></div>
+            
+            <div class="field"><label>Creator Social URL (optional)</label><input type="url" id="socialUrl" placeholder="https://tiktok.com/@creator" onblur="resolveCreator()"></div>
+            <div class="field"><label>Creator Name (optional)</label><input type="text" id="creatorName" placeholder="Auto-filled from social URL" readonly style="background:rgba(0,0,0,.2)"></div>
+            
+            <button class="btn btn-primary" id="btnSubmit" onclick="submitSP()"><i class="fas fa-upload"></i> Submit Scenepack</button>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script>
+        async function resolveCreator(){
+            var url = document.getElementById('socialUrl').value.trim();
+            if (!url || !url.includes('.')) return;
+            try {
+                var r = await fetch('/api/hlx/resolve?url='+encodeURIComponent(url),{credentials:'include'});
+                var d = await r.json();
+                if (d.success && d.nickname) {
+                    document.getElementById('creatorName').value = d.nickname;
+                }
+            } catch(e) {}
+        }
+        
+        async function submitSP(){
+            var btn = document.getElementById('btnSubmit');
+            var name = document.getElementById('spName').value.trim();
+            var link = document.getElementById('spLink').value.trim();
+            if (!name) return alertMsg('Name is required', true);
+            if (!link) return alertMsg('Download link is required', true);
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+            
+            try {
+                var payload = {
+                    type: 'scenepack',
+                    name: name,
+                    category: document.getElementById('spCat').value,
+                    description: document.getElementById('spDesc').value.trim(),
+                    source_url: link,
+                    thumbnail: document.getElementById('spThumb').value.trim(),
+                    creator_nickname: document.getElementById('creatorName').value,
+                    creator_social_url: document.getElementById('socialUrl').value.trim(),
+                    file_path: '',
+                    file_url: ''
+                };
+                
+                var resp = await fetch('/api/products/submit', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify(payload),
+                    credentials: 'include'
+                });
+                var data = await resp.json();
+                if (resp.ok && data.success) {
+                    alertMsg('Published! Redirecting...', false);
+                    setTimeout(function(){ window.location.href = '/product?id='+data.id; }, 1500);
+                } else {
+                    throw new Error(data.error || 'Submit failed');
+                }
+            } catch(e) {
+                alertMsg(e.message, true);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-upload"></i> Submit Scenepack';
+            }
+        }
+        
+        function alertMsg(msg, err) {
+            var b = document.getElementById('alertBox');
+            b.textContent = msg;
+            b.className = 'alert show ' + (err ? 'alert-error' : 'alert-success');
+            setTimeout(function(){ b.classList.remove('show'); }, 5000);
+        }
+    </script>
+</body>
+</html>

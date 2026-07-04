@@ -163,9 +163,22 @@
         .file-item .fl span { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--light) }
         .file-item .fs { color:var(--gray-dark); font-size:.7rem; flex-shrink:0; margin-left:8px }
         .file-item.file-watermark { opacity: .0; height: 0; padding: 0; margin: 0; border: none; overflow: hidden; pointer-events: none }
-        .file-dl-btn { background: rgba(var(--cherry-rgb),.06); border:1px solid rgba(var(--cherry-rgb),.1); color: var(--cherry); cursor: pointer; padding: 3px 7px; border-radius: 5px; font-size: .7rem; transition: .15s; display: flex; align-items: center; gap: 3px; flex-shrink: 0; margin-left: 8px }
-        .file-dl-btn:hover { background: rgba(var(--cherry-rgb),.12); border-color: rgba(var(--cherry-rgb),.18) }
-        .file-dl-btn:disabled { opacity:.4; cursor:not-allowed }
+
+        /* File Preview Panel */
+        .file-preview-panel { width: 100%; background: rgba(var(--cherry-rgb),.04); border: 1px solid rgba(var(--cherry-rgb),.15); border-radius: 12px; overflow: hidden; margin-bottom: 16px }
+        .file-preview-panel .fp-header { padding: 10px 18px; background: rgba(var(--cherry-rgb),.08); border-bottom: 1px solid rgba(var(--cherry-rgb),.1); display: flex; align-items: center; gap: 8px }
+        .file-preview-panel .fp-header i { color: var(--cherry-light); font-size: .7rem }
+        .file-preview-panel .fp-header span { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--cherry-light) }
+        .file-preview-panel .fp-body { display: flex; gap: 16px; align-items: flex-start; padding: 18px }
+        .file-preview-thumb { width: 100px; height: 70px; border-radius: 8px; background: rgba(0,0,0,.3); border: 1px solid rgba(255,255,255,.05); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0 }
+        .file-preview-thumb img { width: 100%; height: 100%; object-fit: cover }
+        .file-preview-thumb .fp-icon { font-size: 2rem; color: var(--cherry); opacity: .3 }
+        .file-preview-info { flex: 1; min-width: 0 }
+        .file-preview-info .fp-name { font-size: .85rem; font-weight: 700; color: var(--light); margin-bottom: 4px; text-align: left; overflow-wrap: break-word }
+        .file-preview-info .fp-meta { font-size: .7rem; color: var(--gray-dark); display: flex; gap: 12px; flex-wrap: wrap }
+        .file-preview-info .fp-meta span { display: inline-flex; align-items: center; gap: 4px }
+        .file-preview-info .fp-meta i { color: var(--cherry); font-size: .6rem }
+        .file-item.file-selected { background: rgba(var(--cherry-rgb),.06); border-color: rgba(var(--cherry-rgb),.15) }
 
         /* Download Card */
         .dl-card { width: 100%; background: linear-gradient(135deg, rgba(var(--cherry-rgb),.1), rgba(var(--cherry-rgb),.03)); border: 1px solid rgba(var(--cherry-rgb),.15); border-radius: 18px; padding: 28px 24px; text-align: center; position: relative; overflow: hidden }
@@ -194,6 +207,18 @@
         .prog-bar-fill { height: 100%; background: var(--cherry); border-radius: 3px; transition: width .3s; width: 0% }
         .prog-detail { color: var(--gray-dark); font-size: .7rem }
 
+        /* Ad overlay */
+        .ad-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.9); z-index: 10000; align-items: center; justify-content: center; flex-direction: column; gap: 20px }
+        .ad-overlay.active { display: flex }
+        .ad-container { width: 100%; max-width: 400px; padding: 30px; background: var(--card); border: 1px solid rgba(var(--cherry-rgb),.12); border-radius: 16px; text-align: center }
+        .ad-label { font-size: .65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--gray-dark); margin-bottom: 16px }
+        .ad-placeholder { width: 100%; height: 250px; background: rgba(255,255,255,.02); border: 1px dashed rgba(255,255,255,.08); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--gray-dark); font-size: .85rem; margin-bottom: 16px }
+        .ad-countdown { color: var(--cherry-light); font-size: 2.5rem; font-weight: 900; font-variant-numeric: tabular-nums }
+        .ad-info { color: var(--gray); font-size: .78rem; margin-bottom: 16px }
+        .ad-skip-btn { padding: 12px 32px; border-radius: 8px; font-size: .85rem; font-weight: 700; cursor: pointer; border: 1px solid rgba(var(--cherry-rgb),.2); background: rgba(var(--cherry-rgb),.08); color: var(--cherry-light); transition: .2s; font-family: inherit }
+        .ad-skip-btn:hover { background: rgba(var(--cherry-rgb),.15) }
+        .ad-skip-btn:disabled { opacity: .4; cursor: not-allowed }
+
         /* Back link */
         .back-link { display: inline-flex; align-items: center; gap: 5px; color: var(--gray-dark); font-size: .72rem; text-decoration: none; margin-top: 28px; transition: .2s }
         .back-link:hover { color: var(--cherry) }
@@ -221,7 +246,6 @@
             .btn-cherry-sm, .btn-ghost-sm { font-size: .72rem; padding: 6px 14px }
             .file-item { padding: 7px 10px; font-size: .72rem }
             .file-item .fl .file-cb { width: 12px; height: 12px }
-            .file-dl-btn { font-size: .62rem; padding: 2px 6px }
         }
         @media(max-width:480px) {
             .page-wrap { padding: 18px 10px }
@@ -234,6 +258,7 @@
             .prog-text { font-size: .72rem }
         }
     </style>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5438472060600560" crossorigin="anonymous"></script>
 </head>
 <body>
     <div class="bg-grid"></div>
@@ -267,26 +292,26 @@
         <!-- Login Required -->
         <div class="state state-login state-err" id="st-login">
             <i class="fab fa-discord login-icon"></i>
-            <h2>Giriş Gerekli</h2>
-            <p>İndirme sayfasına erişmek için Discord hesabınla giriş yapmalısın.</p>
-            <a href="/api/login?redirect=" class="btn-discord-login" id="loginBtn"><i class="fab fa-discord"></i> Discord ile Giriş Yap</a>
+            <h2>Login Required</h2>
+            <p>You need to log in with your Discord account to access the download page.</p>
+            <a href="/api/login?redirect=" class="btn-discord-login" id="loginBtn"><i class="fab fa-discord"></i> Login with Discord</a>
         </div>
 
         <!-- Verify Required -->
         <div class="state state-verify state-err" id="st-verify">
             <i class="fas fa-shield-halved verify-icon"></i>
-            <h2>Doğrulama Gerekli</h2>
-            <p class="verify-desc">İndirme yapabilmek için Discord sunucumuzda <strong>Verified</strong> rolüne sahip olman gerekiyor.</p>
-            <div class="verify-status not-verified" id="verifyStatus"><i class="fas fa-circle-xmark"></i> Doğrulanmadı</div>
+            <h2>Verification Required</h2>
+            <p class="verify-desc">You need the <strong>Verified</strong> role in our Discord server to download.</p>
+            <div class="verify-status not-verified" id="verifyStatus"><i class="fas fa-circle-xmark"></i> Not Verified</div>
             <ol class="verify-steps">
-                <li><span class="step-num">1</span><span class="step-text"><strong>Discord Sunucusuna Katıl</strong>Aşağıdaki butona tıklayarak sunucuya katıl.</span></li>
-                <li><span class="step-num">2</span><span class="step-text"><strong>#verify Kanalına Git</strong>Sunucudaki <code style="background:rgba(255,255,255,.04);padding:1px 6px;border-radius:3px;font-size:.72rem">#verify</code> kanalını bul.</span></li>
-                <li><span class="step-num">3</span><span class="step-text"><strong>Verify Butonuna Tıkla</strong>Kanaldaki <strong style="color:var(--cherry-light)">Verify</strong> butonuna bas.</span></li>
-                <li><span class="step-num">4</span><span class="step-text"><strong>Geri Dön ve Kontrol Et</strong>Doğrulandıktan sonra aşağıdaki butona tıkla.</span></li>
+                <li><span class="step-num">1</span><span class="step-text"><strong>Join the Discord Server</strong>Click the button below to join the server.</span></li>
+                <li><span class="step-num">2</span><span class="step-text"><strong>Go to #verify Channel</strong>Find the <code style="background:rgba(255,255,255,.04);padding:1px 6px;border-radius:3px;font-size:.72rem">#verify</code> channel in the server.</span></li>
+                <li><span class="step-num">3</span><span class="step-text"><strong>Click the Verify Button</strong>Press the <strong style="color:var(--cherry-light)">Verify</strong> button in the channel.</span></li>
+                <li><span class="step-num">4</span><span class="step-text"><strong>Come Back &amp; Check</strong>Once verified, click the button below.</span></li>
             </ol>
             <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
-                <a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord-login"><i class="fab fa-discord"></i> Discord'a Katıl</a>
-                <button class="btn-cherry-sm" id="recheckBtn" onclick="recheckAccess()"><i class="fas fa-arrows-rotate"></i> Doğrulandım — Tekrar Kontrol Et</button>
+                <a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord-login"><i class="fab fa-discord"></i> Join Discord</a>
+                <button class="btn-cherry-sm" id="recheckBtn" onclick="recheckAccess()"><i class="fas fa-arrows-rotate"></i> Verified — Check Again</button>
             </div>
         </div>
 
@@ -300,6 +325,24 @@
         <div class="prog-text" id="progText">Preparing download...</div>
         <div class="prog-bar-wrap"><div class="prog-bar-fill" id="progBar"></div></div>
         <div class="prog-detail" id="progDetail"></div>
+    </div>
+
+    <!-- Ad overlay -->
+    <div class="ad-overlay" id="adOverlay">
+        <div class="ad-container">
+            <div class="ad-label">Advertisement</div>
+            <div class="ad-placeholder" id="adUnit">
+                <ins class="adsbygoogle"
+                    style="display:block;width:100%;height:250px"
+                    data-ad-client="ca-pub-5438472060600560"
+                    data-ad-slot="auto"
+                    data-ad-format="auto"
+                    data-full-width-responsive="true"></ins>
+            </div>
+            <div class="ad-countdown" id="adCountdown">5</div>
+            <div class="ad-info">Download starts automatically after countdown</div>
+            <button class="ad-skip-btn" id="adSkipBtn" disabled onclick="skipAd()">Skip in <span id="adSkipTimer">5</span>s</button>
+        </div>
     </div>
 
     <script src="/js/auth.js"></script>
@@ -386,7 +429,10 @@
             // If has a valid pre-generated token, validate and show directly (skip role check)
             if (token) {
                 try {
-                    var validateResp = await fetch('/api/downloads/validate?token=' + encodeURIComponent(token) + '&peek=1');
+                    var controller = new AbortController();
+                    var timeoutId = setTimeout(function() { controller.abort(); }, 8000);
+                    var validateResp = await fetch('/api/downloads/validate?token=' + encodeURIComponent(token) + '&peek=1', { signal: controller.signal });
+                    clearTimeout(timeoutId);
                     var validateData = await validateResp.json();
                     if (validateData.success) {
                         downloadToken = token;
@@ -434,23 +480,23 @@
         async function recheckAccess() {
             var btn = document.getElementById('recheckBtn');
             var status = document.getElementById('verifyStatus');
-            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Kontrol ediliyor...'; }
-            if (status) { status.className = 'verify-status checking'; status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Kontrol ediliyor...'; }
+            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...'; }
+            if (status) { status.className = 'verify-status checking'; status.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking...'; }
 
             try {
                 var resp = await fetch('/api/downloads/check-access', { credentials: 'include' });
                 var data = await resp.json();
                 if (data.can_download) {
-                    if (status) { status.className = 'verify-status verified'; status.innerHTML = '<i class="fas fa-circle-check"></i> Doğrulandı!'; }
+                    if (status) { status.className = 'verify-status verified'; status.innerHTML = '<i class="fas fa-circle-check"></i> Verified!'; }
                     // Reload page after short delay to show success
                     setTimeout(function() { location.reload(); }, 1200);
                 } else {
-                    if (status) { status.className = 'verify-status not-verified'; status.innerHTML = '<i class="fas fa-circle-xmark"></i> Henüz doğrulanmadı'; }
-                    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-arrows-rotate"></i> Doğrulandım — Tekrar Kontrol Et'; }
+                    if (status) { status.className = 'verify-status not-verified'; status.innerHTML = '<i class="fas fa-circle-xmark"></i> Not verified yet'; }
+                    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-arrows-rotate"></i> Verified — Check Again'; }
                 }
             } catch (e) {
-                if (status) { status.className = 'verify-status not-verified'; status.innerHTML = '<i class="fas fa-circle-xmark"></i> Bağlantı hatası'; }
-                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-arrows-rotate"></i> Doğrulandım — Tekrar Kontrol Et'; }
+                if (status) { status.className = 'verify-status not-verified'; status.innerHTML = '<i class="fas fa-circle-xmark"></i> Connection error'; }
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-arrows-rotate"></i> Verified — Check Again'; }
             }
         }
 
@@ -527,7 +573,8 @@
                     const fp = resolvedFilePath || p.file_path || '';
                     let listUrl = '/api/files/list-path?product_id=' + encodeURIComponent(p.id || '');
                     if (fp) listUrl += '&path=' + encodeURIComponent(fp);
-                    const filesResp = await fetch(listUrl);
+                    if (downloadToken) listUrl += '&token=' + encodeURIComponent(downloadToken);
+                    const filesResp = await fetch(listUrl, { credentials: 'include' });
                     const filesData = await filesResp.json();
                     if (filesData.success && filesData.files) {
                         fileList = filesData.files;
@@ -544,11 +591,15 @@
                     realFiles.forEach(function(f, idx) {
                         const sz = f.size ? (f.size > 1048576 ? (f.size/1048576).toFixed(1)+' MB' : (f.size/1024).toFixed(1)+' KB') : '--';
                         const fi = f.name.endsWith('.mp4')||f.name.endsWith('.mov')?'fa-file-video':f.name.endsWith('.mp3')||f.name.endsWith('.wav')?'fa-file-audio':f.name.endsWith('.png')||f.name.endsWith('.jpg')||f.name.endsWith('.jpeg')?'fa-file-image':'fa-file-lines';
-                        html += '<div class="file-item"><div class="fl"><input type="checkbox" class="file-cb" checked onchange="updateSelectedCount()" data-filename="' + f.name.replace(/"/g, '&quot;') + '"><i class="fas ' + fi + '"></i><span title="' + f.name + '">' + f.name + '</span></div><span class="fs">' + sz + '</span></div>';
+                        const isImage = f.name.endsWith('.png')||f.name.endsWith('.jpg')||f.name.endsWith('.jpeg')||f.name.endsWith('.gif')||f.name.endsWith('.webp');
+                        html += '<div class="file-item" data-filename="' + f.name.replace(/"/g, '&quot;') + '" data-filesize="' + sz + '" data-fileicon="' + fi + '" data-isimage="' + (isImage ? '1' : '0') + '" data-sizebytes="' + (f.size||0) + '"><div class="fl"><input type="checkbox" class="file-cb" checked onchange="event.stopPropagation();updateSelectedCount()" data-filename="' + f.name.replace(/"/g, '&quot;') + '"><i class="fas ' + fi + '"></i><span title="' + f.name + '">' + f.name + '</span></div><span class="fs">' + sz + '</span></div>';
                     });
                     html += '</div>'; // close files-scroll
                     html += '</div>'; // close files-block
                 }
+
+            // Always render file preview panel
+            html += '<div class="file-preview-panel" id="filePreviewPanel"><div class="fp-header"><i class="fas fa-eye"></i><span>File Preview</span></div><div class="fp-body"><div class="file-preview-thumb"><i class="fas fa-file-lines fp-icon"></i></div><div class="file-preview-info"><div class="fp-name">Click a file to preview</div><div class="fp-meta"><span><i class="fas fa-hdd"></i> --</span><span><i class="fas fa-tag"></i> --</span></div></div></div></div>';
 
             // Download card
             if (productId || downloadToken) {
@@ -565,7 +616,10 @@
             setTimeout(function() {
                 updateDownloadCount();
             }, 100);
-            setTimeout(updateSelectedCount, 150);
+            setTimeout(function() {
+                updateSelectedCount();
+                initFilePreviewClicks();
+            }, 150);
         }
 
         // File selection helpers
@@ -600,13 +654,109 @@
             const total = allCbs.length;
             const sel = checked.length;
             let icon = '<i class="fas fa-cloud-arrow-down"></i> ';
-            if (total === 0 || sel === total) {
+            if (total === 0) {
                 btn.innerHTML = icon + 'Download Full Package (ZIP)';
-            } else if (sel === 1) {
-                btn.innerHTML = icon + 'Download Selected File';
+                btn.disabled = false;
+            } else if (sel === 0) {
+                btn.innerHTML = icon + 'Select files to download';
+                btn.disabled = true;
+            } else if (sel === total) {
+                btn.innerHTML = icon + 'Download Full Package (ZIP)';
+                btn.disabled = false;
             } else {
-                btn.innerHTML = icon + 'Download Selected (' + sel + ' files)';
+                btn.innerHTML = icon + 'Download Selected (' + sel + ') with ZIP';
+                btn.disabled = false;
             }
+        }
+
+        // File preview panel
+        let selectedPreviewFile = null;
+        function initFilePreviewClicks() {
+            document.querySelectorAll('.file-item').forEach(function(el) {
+                el.addEventListener('click', function(e) {
+                    // Don't trigger if clicking checkbox or download button
+                    if (e.target.closest('.file-cb')) return;
+                    var filename = el.dataset.filename;
+                    var size = el.dataset.filesize;
+                    var iconClass = el.dataset.fileicon;
+                    var isImage = el.dataset.isimage === '1';
+                    var sizeBytes = parseInt(el.dataset.sizebytes) || 0;
+                    selectFilePreview(el, filename, size, iconClass, isImage, sizeBytes);
+                });
+            });
+        }
+        function selectFilePreview(rowEl, filename, size, iconClass, isImage, sizeBytes) {
+            // Deselect previous
+            document.querySelectorAll('.file-item.file-selected').forEach(function(el) { el.classList.remove('file-selected'); });
+            if (selectedPreviewFile && selectedPreviewFile.name === filename) {
+                // Clicking same file — deselect
+                selectedPreviewFile = null;
+                document.getElementById('filePreviewPanel').classList.remove('active');
+                document.querySelector('.file-preview-panel .fp-header span').textContent = 'File Preview';
+                document.querySelector('.file-preview-panel .fp-name').textContent = 'Click a file to preview';
+                document.querySelector('.file-preview-panel .fp-meta').innerHTML = '<span><i class="fas fa-hdd"></i> --</span><span><i class="fas fa-tag"></i> --</span>';
+                document.querySelector('.file-preview-thumb').innerHTML = '<i class="fas fa-file-lines fp-icon"></i>';
+                return;
+            }
+            // Select new
+            rowEl.classList.add('file-selected');
+            selectedPreviewFile = { name: filename, size: size, icon: iconClass, isImage: isImage, sizeBytes: sizeBytes };
+            
+            var panel = document.getElementById('filePreviewPanel');
+            panel.classList.add('active');
+            panel.querySelector('.fp-header span').textContent = 'File Preview — Selected';
+            panel.querySelector('.fp-name').textContent = filename;
+            panel.querySelector('.fp-meta').innerHTML = '<span><i class="fas fa-hdd"></i> ' + size + '</span><span><i class="fas fa-tag"></i> ' + getFileTypeLabel(filename) + '</span>';
+            
+            // Show custom icon based on file extension
+            var thumbEl = panel.querySelector('.file-preview-thumb');
+            var extIcon = getFileExtIcon(filename);
+            if (extIcon) {
+                var imgEl = document.createElement('img');
+                imgEl.src = extIcon;
+                imgEl.alt = '';
+                imgEl.style.cssText = 'width:100%;height:100%;object-fit:contain;padding:4px';
+                imgEl.onerror = function() { this.style.display = 'none'; };
+                var fallbackIcon = document.createElement('i');
+                fallbackIcon.className = 'fas ' + iconClass + ' fp-icon';
+                fallbackIcon.style.display = 'none';
+                thumbEl.innerHTML = '';
+                thumbEl.appendChild(imgEl);
+                thumbEl.appendChild(fallbackIcon);
+            } else {
+                thumbEl.innerHTML = '<i class="fas ' + iconClass + ' fp-icon"></i>';
+            }
+        }
+
+        function getFileExtIcon(filename) {
+            var ext = filename.split('.').pop().toLowerCase();
+            var icons = {
+                'ffx': 'assets/ffx.png',
+                'aep': 'assets/Adobe-Icon_Adobe_After_Effects_Filetype_AEP.png',
+                'prproj': 'assets/free-adobe-premiere-pro-file-icon-svg-download-png-3516520.webp',
+                'psd': 'assets/PSD_file_icon.svg.webp'
+            };
+            return icons[ext] || '';
+        }
+
+        function getFileTypeLabel(filename) {
+            var ext = filename.split('.').pop().toLowerCase();
+            var map = { mp4: 'Video', mov: 'Video', mp3: 'Audio', wav: 'Audio', png: 'Image', jpg: 'Image', jpeg: 'Image', gif: 'Image', webp: 'Image', zip: 'Archive', rar: 'Archive', '7z': 'Archive', pdf: 'Document', psd: 'Photoshop', aep: 'After Effects', mogrt: 'Motion Graphic', prproj: 'Premiere Pro', xml: 'XML', txt: 'Text' };
+            return map[ext] || ext.toUpperCase();
+        }
+
+        function loadImagePreview(filename) {
+            // Build URL to fetch the file from R2 via API
+            var tokenParam = downloadToken ? '&token=' + encodeURIComponent(downloadToken) : '';
+            var img = document.getElementById('fpImg');
+            var spinner = document.getElementById('fpSpinner');
+            if (!img) return;
+            // We can't directly load from R2, so we skip actual preview for now
+            // Show file icon as fallback
+            img.style.display = 'none';
+            if (spinner) spinner.style.display = 'none';
+            var thumbEl = document.querySelector('.file-preview-thumb');
+            if (thumbEl) thumbEl.innerHTML = '<i class="fas fa-file-image fp-icon"></i>';
         }
 
         // Download count: directly from Bot VPS API — NO localStorage
@@ -711,6 +861,59 @@
             return Array.from(checked).map(function(cb) { return cb.dataset.filename; });
         }
 
+        let adResolve = null;
+
+        function showAdOverlay() {
+            return new Promise(function(resolve) {
+                adResolve = resolve;
+                var overlay = document.getElementById('adOverlay');
+                var countdownEl = document.getElementById('adCountdown');
+                var skipBtn = document.getElementById('adSkipBtn');
+                var skipTimer = document.getElementById('adSkipTimer');
+                
+                overlay.classList.add('active');
+                
+                // Initialize AdSense ad
+                try {
+                    (adsbygoogle = window.adsbygoogle || []).push({});
+                } catch(e) {}
+                
+                var seconds = 5;
+                countdownEl.textContent = seconds;
+                skipBtn.disabled = true;
+                skipTimer.textContent = seconds;
+                
+                var timer = setInterval(function() {
+                    seconds--;
+                    countdownEl.textContent = seconds;
+                    skipTimer.textContent = seconds;
+                    if (seconds <= 0) {
+                        clearInterval(timer);
+                        skipBtn.disabled = false;
+                        skipBtn.innerHTML = 'Continue to Download';
+                        skipTimer.textContent = '';
+                    }
+                }, 1000);
+                
+                // Allow skip after 3 seconds
+                setTimeout(function() {
+                    skipBtn.disabled = false;
+                    skipBtn.innerHTML = 'Skip Ad';
+                }, 3000);
+            });
+        }
+
+        function skipAd() {
+            var overlay = document.getElementById('adOverlay');
+            overlay.classList.remove('active');
+            if (adResolve) { adResolve(); adResolve = null; }
+        }
+
+        function hideAdOverlay() {
+            var overlay = document.getElementById('adOverlay');
+            overlay.classList.remove('active');
+        }
+
         async function triggerDownload() {
             const btn = document.getElementById('dlBtn');
             if (!btn) return;
@@ -723,6 +926,9 @@
             
             if (downloadToken) {
                 btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing...';
+                // Show ad before download
+                await showAdOverlay();
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Downloading...';
                 await downloadWithProgress('/api/downloads/download?token=' + downloadToken + fileParam + titleParam, (product ? product.name : 'download') + '.zip');
                 btn.innerHTML = '<i class="fas fa-arrow-rotate-right"></i> Link Used';
@@ -731,7 +937,12 @@
             }
 
             if (!productId) return;
+            
+            // Show ad first, then generate token
             btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing...';
+            await showAdOverlay();
+            
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating token...';
             
             try {

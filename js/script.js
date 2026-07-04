@@ -2,12 +2,32 @@
 const navbar = document.querySelector('.navbar');
 const navLinks = document.querySelectorAll('.nav-links a');
 
+let lastScrollY = 0;
+let scrollTimeout = null;
+
 window.addEventListener('scroll', () => {
-    if (window.scrollY > 50) {
+    const currentScrollY = window.scrollY;
+    
+    // Scrolled class (compact style when not at top)
+    if (currentScrollY > 50) {
         navbar.classList.add('scrolled');
     } else {
         navbar.classList.remove('scrolled');
+        navbar.classList.remove('nav-hidden');
     }
+    
+    // Hide on scroll down, show on scroll up (only when past 100px)
+    if (currentScrollY > 100) {
+        if (currentScrollY > lastScrollY) {
+            // Scrolling down → hide
+            navbar.classList.add('nav-hidden');
+        } else {
+            // Scrolling up → show
+            navbar.classList.remove('nav-hidden');
+        }
+    }
+    
+    lastScrollY = currentScrollY;
 
     // Active link on scroll
     let current = '';

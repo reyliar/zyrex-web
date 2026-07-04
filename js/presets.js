@@ -1,6 +1,9 @@
 /* ===================== PRESETS GRID RENDERER ===================== */
 
 async function initPresets() {
+    // Load creator username index for search (await to ensure ready before first search)
+    await loadCreatorIndex();
+    
     // Sync download counts + resource stats from API
     var apiCounts = {}, statsData = {};
     try {
@@ -170,15 +173,35 @@ function getCategoryLabel(category) {
 
 let currentPresetCategory = 'all';
 let currentSearch = '';
+let creatorIndex = {}; // {username: [product_ids]}
+let creatorIndexLoaded = false;
+
+async function loadCreatorIndex() {
+    if (creatorIndexLoaded) return;
+    try {
+        var r = await fetch('/api/search/creator-index');
+        var d = await r.json();
+        if (d.success && d.index) {
+            creatorIndex = d.index;
+            window._creatorIndex = d.index;
+            creatorIndexLoaded = true;
+            // Re-filter if user already typed something
+            if (currentSearch) filterPresets();
+        }
+    } catch(e) { console.error('Creator index load failed:', e); }
+}
 
 function gs() {
     const input = document.getElementById('s');
     currentSearch = input ? input.value : '';
+    console.log('🔍 Search:', currentSearch);
     filterPresets();
 }
 
 function filterPresets() {
+    try {
     const data = window.presetsData || [];
+    console.log('📦 Filtering', data.length, 'items, search:', currentSearch, 'index keys:', Object.keys(creatorIndex).length);
     let filtered = data;
     if (currentPresetCategory !== 'all') {
         filtered = filtered.filter(r => {
@@ -187,16 +210,42 @@ function filterPresets() {
         });
     }
     if (currentSearch) {
-        var s = currentSearch.toLowerCase();
+        var s = currentSearch.toLowerCase().trim();
+        // Check creator index: exact match + partial match
+        var matchedIds = null;
+        if (creatorIndex && Object.keys(creatorIndex).length > 0) {
+            // Exact match
+            var rawMatch = creatorIndex[s];
+            if (rawMatch) {
+                // Handle both array format ["id1","id2"] and string format "id1 id2"
+                var ids = Array.isArray(rawMatch) ? rawMatch : String(rawMatch).split(/\s+/);
+                matchedIds = new Set(ids);
+            } else {
+                // Partial match: any index key containing the search term
+                matchedIds = new Set();
+                for (var key in creatorIndex) {
+                    if (key.indexOf(s) !== -1) {
+                        var rawVal = creatorIndex[key];
+                        var keyIds = Array.isArray(rawVal) ? rawVal : String(rawVal).split(/\s+/);
+                        keyIds.forEach(function(id) { matchedIds.add(id); });
+                    }
+                }
+                if (matchedIds.size === 0) matchedIds = null;
+            }
+        }
         filtered = filtered.filter(function(r){
+            if (matchedIds && matchedIds.has(r.id)) return true;
             return (r.name||'').toLowerCase().includes(s)
                 || (r.creator_nickname||'').toLowerCase().includes(s)
                 || (r.author_name||'').toLowerCase().includes(s)
                 || (r.creator_username||'').toLowerCase().includes(s)
+                || (r.creator_social_url||'').toLowerCase().includes(s)
                 || (r.tags||'').toLowerCase().includes(s);
         });
+        console.log('🔎 Filtered from', data.length, 'to', filtered.length, 'matchedIds:', matchedIds ? matchedIds.size : 'none');
     }
     renderPresets(filtered);
+    } catch(e) { console.error('filterPresets error:', e); }
 }
 
 document.addEventListener('DOMContentLoaded', () => {

@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zyrex | Scenepacks</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="css/style.css?v=9">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        body{background:var(--dark);color:var(--light);font-family:'Poppins',sans-serif;min-height:100vh}
+        .page-wrap{max-width:1200px;margin:0 auto;padding:120px 24px 60px}
+        .page-wrap h1{font-size:2.5rem;font-weight:900;margin-bottom:8px;letter-spacing:-1px}
+        .page-wrap .subtitle{color:var(--gray);font-size:.95rem;margin-bottom:40px}
+        .sp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
+        .sp-card{background:rgba(12,4,8,0.45);border:1px solid rgba(var(--cherry-rgb),.08);border-radius:14px;padding:20px;transition:all .3s;text-decoration:none;color:var(--light);display:block}
+        .sp-card:hover{transform:translateY(-3px);border-color:rgba(var(--cherry-rgb),.2);box-shadow:0 12px 40px rgba(0,0,0,.3)}
+        .sp-card h3{font-size:.95rem;font-weight:700;margin-bottom:6px}
+        .sp-card .meta{font-size:.72rem;color:var(--gray-dark);display:flex;gap:12px;flex-wrap:wrap}
+        .sp-card .meta span{display:flex;align-items:center;gap:4px}
+        .sp-card .meta i{color:var(--cherry);font-size:.6rem}
+        .sp-card .link-btn{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:6px 14px;border-radius:6px;font-size:.72rem;font-weight:600;background:rgba(var(--cherry-rgb),.1);color:var(--cherry-light);border:1px solid rgba(var(--cherry-rgb),.15)}
+        .empty{text-align:center;padding:60px 20px;color:var(--gray-dark)}
+        .empty i{font-size:3rem;color:var(--cherry);opacity:.2;display:block;margin-bottom:16px}
+    </style>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5438472060600560" crossorigin="anonymous"></script>
+</head>
+<body>
+    <nav class="navbar"><div class="container"><a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><ul class="nav-links" id="navLinks"><li><a href="/">Home</a></li><li><a href="resources">Resources</a></li><li><a href="plugins">Plugins</a></li><li><a href="more">More</a></li><li><a href="/#contact">Contact</a></li></ul><div class="nav-actions"><div id="authBtn"></div><a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord"><i class="fab fa-discord"></i> <span>Join Us</span></a><button class="hamburger" id="hamburger"><span></span><span></span><span></span></button></div></div></nav>
+
+    <div class="page-wrap">
+        <h1>🎬 <span style="color:var(--cherry-light)">Scenepacks</span></h1>
+        <p class="subtitle">Project files, scene packs, and editing templates.</p>
+        <div class="sp-grid" id="spGrid">
+            <div class="empty"><i class="fas fa-film"></i><p>Loading scenepacks...</p></div>
+        </div>
+    </div>
+
+    <footer class="footer"><div class="container"><div class="footer-content"><div class="footer-brand"><div style="display:flex;align-items:center;gap:12px"><a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><h3 style="font-size:1.8rem;font-weight:900;margin:0">Editing</h3></div><p>Premium editing community & resources.</p></div><div class="footer-links"><h4>Quick Links</h4><ul><li><a href="/">Home</a></li><li><a href="resources">Resources</a></li><li><a href="plugins">Plugins</a></li><li><a href="more">More</a></li></ul></div><div class="footer-links"><h4>Legal</h4><ul><li><a href="/terms">Terms</a></li><li><a href="/privacy">Privacy</a></li><li><a href="/dmca">DMCA</a></li></ul></div><div class="footer-links"><h4>Community</h4><ul><li><a href="https://discord.gg/fAydSzpafA">Discord</a></li><li><a href="/#contact">Contact</a></li></ul></div></div><div class="footer-bottom"><p>&copy; 2026 Zyrex Editing. | <a href="/dmca">DMCA</a></p></div></div></footer>
+
+    <script src="js/auth.js"></script>
+    <script src="js/script.js?v=2"></script>
+    <script>
+        (async function(){
+            try{
+                var r=await fetch('/api/products?type=scenepack');
+                var data=await r.json();
+                if(Array.isArray(data)&&data.length){
+                    var grid=document.getElementById('spGrid');
+                    grid.innerHTML=data.map(function(p){
+                        return '<a href="/product?id='+p.id+'" class="sp-card"><h3>'+p.name+'</h3><div class="meta"><span><i class="fas fa-user"></i> '+(p.creator_nickname||p.author_name||'Zyrex')+'</span><span><i class="fas fa-download"></i> '+(p.downloads||0)+'</span></div>'+(p.source_url?'<span class="link-btn"><i class="fas fa-external-link-alt"></i> Download</span>':'')+'</a>';
+                    }).join('');
+                }else{
+                    document.getElementById('spGrid').innerHTML='<div class="empty"><i class="fas fa-film"></i><p>No scenepacks yet. Check back soon!</p></div>';
+                }
+            }catch(e){}
+        })();
+    </script>
+</body>
+</html>

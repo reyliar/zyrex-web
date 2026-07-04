@@ -4,6 +4,13 @@
 let _mergedData = null;
 
 function initResources() {
+    // Load creator index from bot API
+    if (!window._creatorIndex) {
+        fetch('/api/search/creator-index').then(r => r.json()).then(d => {
+            if (d.success && d.index) window._creatorIndex = d.index;
+        }).catch(() => {});
+    }
+    
     const data = window.resourcesData;
     if (!data) { setTimeout(initResources, 100); return; }
     _mergedData = [...data];
@@ -161,13 +168,35 @@ function filterResources() {
         });
     }
     if (currentResSearch) {
-        var s = currentResSearch.toLowerCase();
+        var s = currentResSearch.toLowerCase().trim();
+        // Check creator index: exact match + partial match
+        var matchedIds = null;
+        if (window._creatorIndex && Object.keys(window._creatorIndex).length > 0) {
+            var rawMatch = window._creatorIndex[s];
+            if (rawMatch) {
+                var ids = Array.isArray(rawMatch) ? rawMatch : String(rawMatch).split(/\s+/);
+                matchedIds = new Set(ids);
+            } else {
+                matchedIds = new Set();
+                for (var key in window._creatorIndex) {
+                    if (key.indexOf(s) !== -1) {
+                        var rawVal = window._creatorIndex[key];
+                        var keyIds = Array.isArray(rawVal) ? rawVal : String(rawVal).split(/\s+/);
+                        keyIds.forEach(function(id) { matchedIds.add(id); });
+                    }
+                }
+                if (matchedIds.size === 0) matchedIds = null;
+            }
+        }
         filtered = filtered.filter(function(r){
+            if (matchedIds && matchedIds.has(r.id)) return true;
             return (r.name||'').toLowerCase().includes(s)
                 || (r.desc||'').toLowerCase().includes(s)
                 || (r.description||'').toLowerCase().includes(s)
                 || (r.creator_nickname||'').toLowerCase().includes(s)
-                || (r.author_name||'').toLowerCase().includes(s);
+                || (r.creator_username||'').toLowerCase().includes(s)
+                || (r.author_name||'').toLowerCase().includes(s)
+                || (r.creator_social_url||'').toLowerCase().includes(s);
         });
     }
     renderResources(filtered);

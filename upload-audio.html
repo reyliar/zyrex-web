@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Audio — Zyrex</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="css/style.css?v=9">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root{--cherry:#a80f2d;--cherry-rgb:168,15,45;--cherry-light:#e8456a;--dark:#060608;--light:#e8e8ed;--gray:#8888a0;--gray-dark:#55556a;--radius:18px;--radius-sm:12px}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{background:var(--dark);color:var(--light);font-family:'Poppins',sans-serif;min-height:100vh}
+        .topbar{position:fixed;top:0;left:0;right:0;z-index:1000;padding:16px 32px;display:flex;align-items:center;justify-content:space-between;background:rgba(6,4,8,0.7);backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid rgba(255,255,255,.04)}
+        .topbar-logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--light)}
+        .topbar-logo img{height:34px}
+        .topbar-logo span{font-weight:800;font-size:1rem;letter-spacing:1px;color:var(--cherry-light)}
+        .topbar-actions{display:flex;align-items:center;gap:16px}
+        .topbar-actions a{color:var(--gray-dark);font-size:.78rem;text-decoration:none;transition:.2s}
+        .topbar-actions a:hover{color:var(--cherry-light)}
+        .main-wrap{max-width:600px;margin:0 auto;padding:100px 24px 60px}
+        .card{background:rgba(12,4,8,0.55);border:1px solid rgba(var(--cherry-rgb),.12);border-radius:var(--radius);padding:36px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
+        .card h2{font-size:1.4rem;font-weight:800;margin-bottom:6px}
+        .card .sub{color:var(--gray);font-size:.82rem;margin-bottom:24px}
+        .field{margin-bottom:20px}
+        .field label{display:block;font-size:.72rem;font-weight:700;margin-bottom:6px;color:var(--gray);text-transform:uppercase;letter-spacing:1px}
+        .field input,.field textarea,.field select{width:100%;padding:12px 16px;background:rgba(0,0,0,.3);border:1px solid rgba(var(--cherry-rgb),.1);border-radius:var(--radius-sm);color:var(--light);font-family:inherit;font-size:.85rem;outline:none;transition:.3s}
+        .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--cherry-light);box-shadow:0 0 0 3px rgba(var(--cherry-rgb),.1)}
+        .field textarea{min-height:80px;resize:vertical}
+        .file-upload-area{border:2px dashed rgba(var(--cherry-rgb),.15);border-radius:var(--radius-sm);padding:40px;text-align:center;cursor:pointer;transition:.3s;background:rgba(0,0,0,.2)}
+        .file-upload-area:hover{border-color:var(--cherry-light);background:rgba(var(--cherry-rgb),.04)}
+        .file-upload-area .fu-icon{font-size:2.5rem;color:var(--cherry);opacity:.4;margin-bottom:10px}
+        .file-upload-area .fu-text{font-size:.85rem;color:var(--gray)}
+        .file-upload-area .fu-hint{font-size:.7rem;color:var(--gray-dark);margin-top:6px}
+        .file-upload-area.has-file{border-color:rgba(0,200,100,.3);background:rgba(0,200,100,.04)}
+        .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 28px;border-radius:var(--radius-sm);font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit;border:none;transition:.3s;width:100%}
+        .btn-primary{background:linear-gradient(135deg,#8a0a22,#5a0614);color:#fff;border:1px solid rgba(var(--cherry-rgb),.25);box-shadow:0 4px 20px rgba(var(--cherry-rgb),.35)}
+        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(var(--cherry-rgb),.5)}
+        .btn-primary:disabled{opacity:.45;cursor:not-allowed;transform:none}
+        .alert{padding:12px 16px;border-radius:8px;font-size:.8rem;font-weight:600;margin-bottom:16px;display:none}
+        .alert.show{display:block}
+        .alert-error{background:rgba(var(--cherry-rgb),.1);border:1px solid rgba(var(--cherry-rgb),.2);color:var(--cherry-light)}
+        .alert-success{background:rgba(0,200,100,.1);border:1px solid rgba(0,200,100,.2);color:#00c864}
+    </style>
+</head>
+<body>
+    <div class="topbar">
+        <a href="/" class="topbar-logo"><img src="assets/content.png" alt=""><span>Upload Audio</span></a>
+        <div class="topbar-actions"><a href="/upload">← Back to Upload</a><a href="/settings">Settings</a><a href="/api/logout">Logout</a></div>
+    </div>
+
+    <div class="main-wrap">
+        <div class="card">
+            <h2>🎵 Upload Audio</h2>
+            <p class="sub">Share sound effects, music packs, and audio resources with the community.</p>
+            <div class="alert" id="alertBox"></div>
+            
+            <div class="field"><label>Audio Name *</label><input type="text" id="audioName" placeholder="Cinematic Boom Sound Effect"></div>
+            <div class="field"><label>Category</label><select id="audioCat"><option value="sfx">Sound Effects</option><option value="music">Music Pack</option><option value="vocals">Vocals</option><option value="ambient">Ambient</option><option value="others">Others</option></select></div>
+            <div class="field"><label>Description</label><textarea id="audioDesc" placeholder="Describe the audio..."></textarea></div>
+            
+            <div class="field"><label>Audio File *</label>
+                <div class="file-upload-area" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                    <div class="fu-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                    <div class="fu-text" id="fuText">Click or drag to upload</div>
+                    <div class="fu-hint">MP3, WAV, FLAC — max 50MB</div>
+                </div>
+                <input type="file" id="fileInput" accept="audio/*" style="display:none" onchange="handleFile(this.files[0])">
+            </div>
+            
+            <button class="btn btn-primary" id="btnSubmit" onclick="submitAudio()"><i class="fas fa-upload"></i> Upload Audio</button>
+        </div>
+    </div>
+
+    <script src="js/auth.js"></script>
+    <script>
+        var audioFile = null, audioBase64 = null;
+        
+        function handleFile(file) {
+            if (!file) return;
+            if (file.size > 50*1024*1024) { alert('File too large. Max 50MB.'); return; }
+            audioFile = file;
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                audioBase64 = e.target.result.split(',')[1];
+                document.getElementById('fuText').textContent = file.name + ' (' + (file.size/1024/1024).toFixed(1) + ' MB)';
+                document.getElementById('dropZone').classList.add('has-file');
+            };
+            reader.readAsDataURL(file);
+        }
+        
+        var dropZone = document.getElementById('dropZone');
+        dropZone.addEventListener('dragover', function(e){ e.preventDefault(); dropZone.style.borderColor='var(--cherry-light)'; });
+        dropZone.addEventListener('dragleave', function(){ dropZone.style.borderColor=''; });
+        dropZone.addEventListener('drop', function(e){ e.preventDefault(); dropZone.style.borderColor=''; handleFile(e.dataTransfer.files[0]); });
+        
+        async function resolveCreator(){
+            var url = document.getElementById('socialUrl').value.trim();
+            if (!url || !url.includes('.')) return;
+            try {
+                var r = await fetch('/api/hlx/resolve?url='+encodeURIComponent(url),{credentials:'include'});
+                var d = await r.json();
+                if (d.success && d.nickname) {
+                    document.getElementById('creatorName').value = d.nickname;
+                }
+            } catch(e) {}
+        }
+        
+        async function submitAudio(){
+            var btn = document.getElementById('btnSubmit');
+            var name = document.getElementById('audioName').value.trim();
+            if (!name) return alertMsg('Name is required', true);
+            if (!audioBase64) return alertMsg('Please select an audio file', true);
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+            
+            try {
+                var ext = audioFile.name.split('.').pop().toLowerCase();
+                if (!['mp3','wav','flac','ogg','aac','m4a'].includes(ext)) ext = 'mp3';
+                var upResp = await fetch('/api/audio/upload', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({filename: 'audio-'+Date.now().toString(36)+'.'+ext, data: audioBase64}),
+                    credentials: 'include'
+                });
+                var upData = await upResp.json();
+                if (!upData.success) throw new Error(upData.error || 'Upload failed');
+                
+                var payload = {
+                    type: 'audio',
+                    name: name,
+                    category: document.getElementById('audioCat').value,
+                    description: document.getElementById('audioDesc').value.trim(),
+                    file_url: upData.url,
+                    thumbnail: ''
+                };
+                
+                var subResp = await fetch('/api/products/submit', {
+                    method: 'POST',
+                    headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify(payload),
+                    credentials: 'include'
+                });
+                var subData = await subResp.json();
+                if (subResp.ok && subData.success) {
+                    alertMsg('Published! Redirecting...', false);
+                    setTimeout(function(){ window.location.href = '/product?id='+subData.id; }, 1500);
+                } else {
+                    throw new Error(subData.error || 'Submit failed');
+                }
+            } catch(e) {
+                alertMsg(e.message, true);
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-upload"></i> Upload Audio';
+            }
+        }
+        
+        function alertMsg(msg, err) {
+            var b = document.getElementById('alertBox');
+            b.textContent = msg;
+            b.className = 'alert show ' + (err ? 'alert-error' : 'alert-success');
+            setTimeout(function(){ b.classList.remove('show'); }, 5000);
+        }
+    </script>
+</body>
+</html>

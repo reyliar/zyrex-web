@@ -218,7 +218,7 @@ img {
     width: 100%;
     z-index: 10000;
     padding: 20px 0;
-    transition: var(--transition);
+    transition: var(--transition), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .navbar.scrolled {
@@ -227,6 +227,10 @@ img {
     -webkit-backdrop-filter: blur(20px) saturate(1.2);
     padding: 12px 0;
     border-bottom: 1px solid rgba(220, 20, 60, 0.1);
+}
+
+.navbar.nav-hidden {
+    transform: translateY(-100%) !important;
 }
 
 .navbar .container {
@@ -1929,13 +1933,16 @@ body {
 
 /* Style navbar separately without forcing overflow: hidden */
 .navbar {
-    background: rgba(12, 2, 4, 0.6) !important;
-    background-color: #0c0204 !important;
     backdrop-filter: blur(25px) saturate(210%) !important;
     -webkit-backdrop-filter: blur(25px) saturate(210%) !important;
+    z-index: 10000 !important;
+}
+
+.navbar.scrolled {
+    background: rgba(12, 2, 4, 0.6) !important;
+    background-color: #0c0204 !important;
     border-bottom: 1px solid rgba(var(--cherry-rgb),0.05) !important;
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.5) !important;
-    z-index: 10000 !important;
 }
 
 /* Glossy highlight line reflection for all glass cards */

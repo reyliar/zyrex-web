@@ -1,268 +1,56 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Zyrex More - Premium plugins, software & tools for editors">
-    <meta name="author" content="Zyrex">
     <title>Zyrex | More</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="stylesheet" href="css/style.css?v=9">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        .resources-page { padding-top: 100px; min-height: 100vh; background: var(--dark); }
-        .resources-page .resources-header { text-align: center; padding: 40px 0 30px; }
-        .resources-page .resources-header h1 { font-size: 2.8rem; font-weight: 900; margin-bottom: 8px; }
-        .resources-page .resources-header p { color: var(--gray); font-size: 1rem; margin-bottom: 5px; }
-        .resources-page .resources-header .password-badge {
-            display: inline-flex; align-items: center; gap: 8px; margin-top: 10px; padding: 8px 20px;
-            background: rgba(var(--cherry-rgb), 0.1); border: 1px solid rgba(var(--cherry-rgb), 0.2);
-            border-radius: 50px; font-size: 0.85rem;
-        }
-        .resources-page .resources-header .password-badge code {
-            background: var(--dark-3); padding: 3px 10px; border-radius: 5px;
-            color: var(--cherry); font-weight: 600; font-size: 0.9rem;
-        }
-        .category-tabs {
-            display: flex; justify-content: center; gap: 10px; flex-wrap: wrap;
-            margin-bottom: 30px; padding: 0 20px;
-        }
-        .category-tab {
-            padding: 10px 22px; border-radius: 50px; background: transparent;
-            border: 1px solid rgba(var(--cherry-rgb),0.1); color: var(--gray);
-            font-family: inherit; font-size: 0.85rem; font-weight: 500; cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94); position: relative; overflow: hidden;
-        }
-        .category-tab:hover { border-color: var(--cherry); color: var(--light); transform: translateY(-1px); }
-        .category-tab.active { background: var(--gradient); border-color: transparent; color: var(--light); transform: translateY(-1px); box-shadow: 0 4px 15px rgba(var(--cherry-rgb), 0.3); }
-        .platform-selector { display: flex; justify-content: center; gap: 15px; margin-bottom: 35px; }
-        .platform-btn {
-            padding: 12px 30px; border-radius: 50px; background: transparent;
-            border: 2px solid rgba(var(--cherry-rgb),0.1); color: var(--gray);
-            font-family: inherit; font-size: 0.95rem; font-weight: 600; cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            display: flex; align-items: center; gap: 8px;
-        }
-        .platform-btn i { font-size: 1.2rem; transition: transform 0.3s ease; }
-        .platform-btn:hover { border-color: var(--cherry); color: var(--light); transform: translateY(-2px); }
-        .platform-btn:hover i { transform: scale(1.15); }
-        .platform-btn.active { border-color: var(--cherry); background: rgba(var(--cherry-rgb), 0.1); color: var(--light); transform: translateY(-2px); box-shadow: 0 4px 20px rgba(var(--cherry-rgb), 0.2); }
-        .resources-grid {
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 16px; padding: 0 20px 60px; max-width: 1200px; margin: 0 auto;
-        }
-        .resource-item {
-            background: var(--dark-2); border: 1px solid rgba(var(--cherry-rgb), 0.06);
-            border-radius: var(--radius); overflow: hidden;
-            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94); position: relative;
-        }
-        .resource-item:hover { transform: translateY(-6px) scale(1.01); border-color: rgba(var(--cherry-rgb), 0.25); box-shadow: 0 12px 40px rgba(var(--cherry-rgb), 0.15); }
-        .resource-item::after { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, transparent 50%, rgba(var(--cherry-rgb), 0.03)); opacity: 0; transition: opacity 0.4s ease; pointer-events: none; }
-        .resource-item:hover::after { opacity: 1; }
-        .resource-thumb { width: 100%; aspect-ratio: 1; background: var(--dark-3); display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
-        .resource-thumb img { width: 56px; height: 56px; border-radius: 14px; object-fit: cover; transition: transform 0.3s ease; }
-        .resource-item:hover .resource-thumb img { transform: scale(1.1); }
-        .resource-thumb .thumb-fallback { font-size: 2.2rem; color: var(--cherry); opacity: 0.4; }
-        .resource-platform-badge { position: absolute; top: 8px; right: 8px; padding: 3px 8px; border-radius: 6px; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.3px; backdrop-filter: blur(4px); }
-        .resource-platform-badge.win { background: rgba(0, 168, 45, 0.2); color: #00a82d; }
-        .resource-platform-badge.mac { background: rgba(0, 122, 255, 0.2); color: #007aff; }
-        .resource-platform-badge.both { background: rgba(var(--cherry-rgb), 0.2); color: var(--cherry); }
-        .resource-info { padding: 14px 16px 16px; }
-        .resource-info h3 { font-size: 0.88rem; font-weight: 700; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .resource-info .resource-category { font-size: 0.7rem; color: var(--cherry); font-weight: 500; margin-bottom: 5px; display: block; opacity: 0.8; text-transform: uppercase; letter-spacing: 0.5px; }
-        .resource-info .resource-desc { font-size: 0.75rem; color: var(--gray-dark); line-height: 1.4; margin-top: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .more-banner {
-            text-align: center; padding: 15px 20px; margin: 0 20px 20px;
-            background: rgba(var(--cherry-rgb), 0.05); border: 1px solid rgba(var(--cherry-rgb), 0.1);
-            border-radius: var(--radius); font-size: 0.85rem; color: var(--gray);
-        }
-        .more-banner a { color: var(--cherry); font-weight: 600; }
-        .more-banner a:hover { text-decoration: underline; }
-        @media (max-width: 768px) {
-            .resources-page { padding-top: 80px }
-            .resources-page .resources-header { padding: 24px 0 18px }
-            .resources-page .resources-header h1 { font-size: 1.6rem; }
-            .resources-page .resources-header p { font-size: .85rem }
-            .resources-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; padding: 0 12px 40px; }
-            .platform-selector { gap: 8px; padding: 0 12px }
-            .platform-btn { padding: 8px 16px; font-size: 0.78rem; }
-            .category-tabs { gap: 6px; padding: 0 12px }
-            .category-tab { padding: 8px 14px; font-size: .75rem }
-            .resource-info { padding: 10px 12px 12px }
-            .resource-info h3 { font-size: .78rem }
-            .resource-info .resource-category { font-size: .62rem }
-            .resource-info .resource-desc { font-size: .68rem }
-            .more-banner { padding: 12px 14px; margin: 0 12px 16px; font-size: .78rem }
-            .source-credit .container { gap: 10px }
-            .source-credit span, .source-credit a { font-size: .68rem }
-        }
-        @media (max-width: 480px) {
-            .resources-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; max-width: 450px; margin: 0 auto; padding: 0 8px 40px }
-            .resources-page .resources-header h1 { font-size: 1.3rem }
-            .platform-btn { padding: 6px 12px; font-size: .7rem }
-            .category-tab { padding: 6px 10px; font-size: .7rem }
-        }
-        .source-credit {
-            text-align: center;
-            padding: 20px;
-            background: rgba(var(--cherry-rgb),.03);
-            border-top: 1px solid rgba(var(--cherry-rgb),.06);
-        }
-        .source-credit .container {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 18px;
-            flex-wrap: wrap;
-        }
-        .source-credit span {
-            font-size: .78rem;
-            color: var(--gray-dark);
-        }
-        .source-credit a {
-            font-size: .75rem;
-            color: var(--gray);
-            text-decoration: none;
-            padding: 4px 12px;
-            border-radius: 6px;
-            background: rgba(var(--cherry-rgb),.04);
-            border: 1px solid rgba(var(--cherry-rgb),.08);
-            transition: all .3s;
-        }
-        .source-credit a:hover {
-            border-color: var(--cherry);
-            color: var(--cherry-light);
-            background: rgba(var(--cherry-rgb),.08);
-        }
-        .source-credit .credit-label {
-            font-size: .7rem;
-            color: var(--gray-dark);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
+        :root{--cherry:#a80f2d;--cherry-rgb:168,15,45;--cherry-light:#e8456a;--dark:#060608;--light:#e8e8ed;--gray:#8888a0;--gray-dark:#55556a}
+        body{background:var(--dark);color:var(--light);font-family:'Poppins',sans-serif;min-height:100vh}
+        .page-wrap{max-width:900px;margin:0 auto;padding:120px 24px 60px;text-align:center}
+        .page-wrap h1{font-size:2.5rem;font-weight:900;margin-bottom:8px;letter-spacing:-1px}
+        .page-wrap .subtitle{color:var(--gray);font-size:.95rem;margin-bottom:50px}
+        .hub-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:700px;margin:0 auto}
+        @media(max-width:600px){.hub-grid{grid-template-columns:1fr}}
+        .hub-card{position:relative;background:rgba(12,4,8,0.55);border:1px solid rgba(var(--cherry-rgb),.1);border-radius:18px;padding:40px 28px;text-decoration:none;color:var(--light);transition:all .35s cubic-bezier(.16,1,.3,1);overflow:hidden;text-align:center}
+        .hub-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(var(--cherry-rgb),.4),transparent)}
+        .hub-card::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(var(--cherry-rgb),.06),transparent 70%);pointer-events:none}
+        .hub-card:hover{transform:translateY(-4px);border-color:rgba(var(--cherry-rgb),.3);box-shadow:0 20px 60px rgba(0,0,0,.4),0 0 30px rgba(var(--cherry-rgb),.1)}
+        .hub-card .hc-icon{font-size:3rem;margin-bottom:16px;display:block}
+        .hub-card h2{font-size:1.3rem;font-weight:800;margin-bottom:6px}
+        .hub-card p{color:var(--gray);font-size:.82rem;line-height:1.6}
+        .hub-card .hc-badge{display:inline-block;margin-top:14px;padding:6px 16px;border-radius:50px;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;background:rgba(var(--cherry-rgb),.12);border:1px solid rgba(var(--cherry-rgb),.18);color:var(--cherry-light)}
     </style>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5438472060600560" crossorigin="anonymous"></script>
 </head>
 <body>
+    <nav class="navbar"><div class="container"><a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><ul class="nav-links" id="navLinks"><li><a href="/">Home</a></li><li><a href="resources">Resources</a></li><li><a href="plugins">Plugins</a></li><li><a href="more">More</a></li><li><a href="/#contact">Contact</a></li></ul><div class="nav-actions"><div id="authBtn"></div><a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord"><i class="fab fa-discord"></i> <span>Join Us</span></a><button class="hamburger" id="hamburger"><span></span><span></span><span></span></button></div></div></nav>
 
-    <nav class="navbar scrolled">
-        <div class="container">
-            <a href="/" class="logo">
-                <img src="assets/content.png" alt="ZYREX" class="logo-img">
-                <span class="logo-text">yrex</span>
+    <div class="page-wrap">
+        <h1><span style="color:var(--cherry-light)">More</span></h1>
+        <p class="subtitle">Explore additional resources for your editing workflow.</p>
+        <div class="hub-grid">
+            <a href="/audio" class="hub-card">
+                <span class="hc-icon">🎵</span>
+                <h2>Audio Library</h2>
+                <p>Premium sound effects, music packs, and audio resources for video editors.</p>
+                <span class="hc-badge">Browse Audio</span>
             </a>
-            <ul class="nav-links" id="navLinks">
-                <li><a href="/">Home</a></li>
-                <li><a href="resources">Resources</a></li>
-                <li><a href="plugins" class="active">Plugins</a></li>
-                <li><a href="/#contact">Contact</a></li>
-            </ul>
-            <div class="nav-actions">
-                <div id="authBtn"></div>
-                <a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord">
-                    <i class="fab fa-discord"></i> <span>Join Us</span>
-                </a>
-                <button class="hamburger" id="hamburger" aria-label="Menu">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </button>
-            </div>
+            <a href="/scenepack" class="hub-card">
+                <span class="hc-icon">🎬</span>
+                <h2>Scenepacks</h2>
+                <p>Project files, scene packs, and editing templates from top creators.</p>
+                <span class="hc-badge">Browse Scenepacks</span>
+            </a>
         </div>
-    </nav>
-
-    <section class="resources-page">
-        <div class="container">
-            <div class="resources-header">
-                <h1><span class="cherry-text">Plugins</span></h1>
-                <p>Premium plugins, software & tools for editors.</p>
-            </div>
-
-            <div class="more-banner">
-                <i class="fas fa-arrow-left"></i> Looking for presets instead? Visit 
-                <a href="resources">Resources</a>.
-            </div>
-
-            <div class="platform-selector">
-                <button class="platform-btn active" data-platform="all"><i class="fas fa-globe"></i> All</button>
-                <button class="platform-btn" data-platform="win"><i class="fab fa-windows"></i> Windows</button>
-                <button class="platform-btn" data-platform="mac"><i class="fab fa-apple"></i> Mac</button>
-            </div>
-
-            <div class="category-tabs" id="categoryTabs">
-                <button class="category-tab active" data-category="all">All</button>
-                <button class="category-tab" data-category="software">Software</button>
-                <button class="category-tab" data-category="adobe-plugin">Adobe Plugins</button>
-                <button class="category-tab" data-category="ofx-plugin">OFX Plugins</button>
-            </div>
-        </div>
-
-        <div class="resources-grid" id="resourcesGrid"></div>
-    </section>
-
-    <div class="glass-card-enhanced" style="text-align:center;padding:20px;max-width:1200px;margin:0 auto 40px">
-        <span style="font-size:.8rem;color:var(--gray-dark)"><i class="fas fa-link" style="color:var(--cherry-light);margin-right:6px"></i>Sources:</span>
-        <a href="https://codec.kyiv.ua/ad0be.html" target="_blank" style="color:var(--cherry-light);font-weight:600;margin:0 8px;font-size:.78rem">codec.kyiv.ua</a>
-        <span style="color:var(--gray-dark);opacity:.3">•</span>
-        <a href="https://w18.monkrus.ws" target="_blank" style="color:var(--gray);margin:0 8px;font-size:.78rem">monkrus.ws</a>
-        <span style="color:var(--gray-dark);opacity:.3">•</span>
-        <a href="https://macked.app" target="_blank" style="color:var(--gray);margin:0 8px;font-size:.78rem">macked.app</a>
     </div>
 
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-brand">
-                    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-                        <a href="/" class="logo">
-                            <img src="assets/content.png" alt="ZYREX" class="logo-img">
-                            <span class="logo-text">yrex</span>
-                        </a>
-                        <h3 style="font-size:1.8rem;font-weight:900;margin:0;letter-spacing:2px;background:linear-gradient(135deg,#ffffff,#9090a0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Editing</h3>
-                    </div>
-                    <p>Premium editing community & resources.</p>
-                </div>
-                <div class="footer-links">
-                    <h4>Quick Links</h4>
-                    <ul>
-                        <li><a href="/">Home</a></li>
-                        <li><a href="resources">Resources</a></li>
-                        <li><a href="plugins">Plugins</a></li>
-                    </ul>
-                </div>
-                <div class="footer-links">
-                    <h4>Legal</h4>
-                    <ul>
-                        <li><a href="/terms">Terms of Service</a></li>
-                        <li><a href="/privacy">Privacy Policy</a></li>
-                        <li><a href="/dmca">DMCA</a></li>
-                    </ul>
-                </div>
-                <div class="footer-links">
-                    <h4>Community</h4>
-                    <ul>
-                        <li><a href="https://discord.gg/fAydSzpafA">Discord</a></li>
-                        <li><a href="/#contact">Contact</a></li>
-                    </ul>
-                </div>
-                <div class="footer-newsletter">
-                    <h4>Newsletter</h4>
-                    <p>Stay updated with Zyrex Editing.</p>
-                    <div class="newsletter-form">
-                        <input type="email" placeholder="Your email">
-                        <button type="submit"><i class="fas fa-arrow-right"></i></button>
-                    </div>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2026 Zyrex Editing. All rights reserved. | <a href="/dmca">DMCA</a></p>
-            </div>
-        </div>
-    </footer>
+    <footer class="footer"><div class="container"><div class="footer-content"><div class="footer-brand"><div style="display:flex;align-items:center;gap:12px"><a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><h3 style="font-size:1.8rem;font-weight:900;margin:0">Editing</h3></div><p>Premium editing community & resources.</p></div><div class="footer-links"><h4>Quick Links</h4><ul><li><a href="/">Home</a></li><li><a href="resources">Resources</a></li><li><a href="plugins">Plugins</a></li><li><a href="more">More</a></li></ul></div><div class="footer-links"><h4>Legal</h4><ul><li><a href="/terms">Terms</a></li><li><a href="/privacy">Privacy</a></li><li><a href="/dmca">DMCA</a></li></ul></div><div class="footer-links"><h4>Community</h4><ul><li><a href="https://discord.gg/fAydSzpafA">Discord</a></li><li><a href="/#contact">Contact</a></li></ul></div></div><div class="footer-bottom"><p>&copy; 2026 Zyrex Editing. | <a href="/dmca">DMCA</a></p></div></div></footer>
 
     <script src="js/auth.js"></script>
-    <script src="js/resources-data.js"></script>
-    <script src="js/resources.js"></script>
+    <script src="js/script.js?v=2"></script>
 </body>
 </html>
