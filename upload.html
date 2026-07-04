@@ -292,7 +292,17 @@
     <script src="js/auth.js"></script>
     <script>
         let step=1,prod={},selRes=null,selDstEditor='',transferred='',cloudOk=false,cloudFiles=[],currentUser=null,hlxPlatform='tiktok',cdnThumb='';
-        document.addEventListener('DOMContentLoaded',async()=>{prod.id='preset-'+Date.now().toString(36);document.getElementById('resourceId').value=prod.id;try{const r=await fetch('/api/me',{credentials:'include'});if(!r.ok){window.location.href='/';return}const u=await r.json();currentUser=u;if(!u.is_admin&&!u.can_upload){document.getElementById('sec1').innerHTML='<div style="text-align:center;padding:60px 20px"><i class="fas fa-lock" style="font-size:3rem;color:var(--cherry);opacity:.3;display:block;margin-bottom:16px"></i><h2>Access Restricted</h2><p style="color:var(--muted-dark);margin-top:8px">Uploader role required.</p><a href="/" class="btn btn-primary" style="margin-top:16px">Go Home</a></div>'}}catch(e){window.location.href='/'}});
+        document.addEventListener('DOMContentLoaded',async()=>{prod.id='preset-'+Date.now().toString(36);document.getElementById('resourceId').value=prod.id;try{const r=await fetch('/api/me',{credentials:'include'});if(!r.ok){window.location.href='/';return}const u=await r.json();currentUser=u;if(u.is_admin){return}
+        // Check all 3 uploader roles
+        const roles=[{id:'1519624224476762122',label:'Preset Uploader'},{id:'1522976282688880720',label:'Audio Uploader'},{id:'1522976376293167124',label:'Scenepack Uploader'}];
+        const checks=await Promise.all(roles.map(r=>fetch('/api/guild/check-role?userId='+u.id+'&roleId='+r.id,{credentials:'include'}).then(resp=>resp.json()).then(d=>d.has_role).catch(()=>false)));
+        const hasAny=checks.some(c=>c);
+        if(!hasAny){document.querySelector('.main-wrap').innerHTML='<div style="text-align:center;padding:80px 20px;max-width:500px;margin:0 auto"><i class="fas fa-lock" style="font-size:4rem;color:var(--cherry);opacity:.2;display:block;margin-bottom:20px"></i><h2 style="font-size:1.6rem;font-weight:800;margin-bottom:10px">No Upload Access</h2><p style="color:var(--gray);font-size:.9rem;line-height:1.6;margin-bottom:24px">You don\'t have any uploader roles yet. Join our Discord server and request the <strong style="color:var(--cherry-light)">Preset Uploader</strong>, <strong style="color:var(--cherry-light)">Audio Uploader</strong>, or <strong style="color:var(--cherry-light)">Scenepack Uploader</strong> role to start uploading.</p><div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap"><a href="https://discord.gg/zyrex" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:10px;background:#5865F2;color:#fff;text-decoration:none;font-weight:700;font-size:.85rem"><i class="fab fa-discord"></i> Join Discord</a><a href="/" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:10px;background:rgba(var(--cherry-rgb),.1);color:var(--cherry-light);text-decoration:none;font-weight:600;font-size:.85rem"><i class="fas fa-home"></i> Go Home</a></div></div>';return}
+        // Show/hide type buttons based on roles
+        if(!checks[1]){const a=document.querySelector('.type-btn[href="/upload-audio"]');if(a)a.style.display='none'}
+        if(!checks[2]){const s=document.querySelector('.type-btn[href="/upload-scenepack"]');if(s)s.style.display='none'}
+        if(!checks[0]){document.querySelector('.type-btn.active').textContent='\uD83D\uDD12 No Preset Access';document.querySelector('.type-btn.active').style.opacity='.5'}
+        }catch(e){window.location.href='/'}});
         function goStep(s,dir){
             // Validate step 1 before proceeding
             if(s>step&&step===1){
