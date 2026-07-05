@@ -1188,11 +1188,13 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
       try {
         const { old_key, new_key } = await request.json();
         if (!old_key || !new_key) return json({ error: "old_key and new_key required" }, 400);
+        // Sanitize new key to match upload behavior (spaces → underscores)
+        const safeNewKey = new_key.replace(/[^a-zA-Z0-9_.\/\-]/g, "_");
         const obj = await env.STORAGE.get(old_key);
         if (!obj) return json({ error: "Source file not found" }, 404);
-        await env.STORAGE.put(new_key, obj.body, { httpMetadata: obj.httpMetadata });
+        await env.STORAGE.put(safeNewKey, obj.body, { httpMetadata: obj.httpMetadata });
         await env.STORAGE.delete(old_key);
-        return json({ success: true, message: "Renamed" });
+        return json({ success: true, message: "Renamed", safe_key: safeNewKey });
       } catch(e) { return json({ error: e.message }, 500); }
     }
 
