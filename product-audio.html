@@ -222,8 +222,11 @@
 
         // Download buttons
         if (audioSrc) {
+            var dlName = (p.name || 'audio') + ' - ' + (p.author_name || 'Zyrex');
+            var dlExt = audioSrc.split('.').pop().split('?')[0] || 'mp3';
+            var safeDlName = dlName.replace(/[\/\\:*?"<>|]/g, '').trim().substring(0, 80) + '.' + dlExt;
             var dlHtml = '<div class="dl-section anim-3">';
-            dlHtml += '<a href="' + esc(audioSrc) + '" download class="btn-dl btn-dl-primary"><i class="fas fa-download"></i> Download Audio</a>';
+            dlHtml += '<a href="' + esc(audioSrc) + '" download="' + esc(safeDlName) + '" class="btn-dl btn-dl-primary"><i class="fas fa-download"></i> Download Audio</a>';
             dlHtml += '<button class="btn-dl btn-dl-secondary" id="btnCopyLink"><i class="fas fa-copy"></i> Copy Link</button>';
             dlHtml += '</div>';
             document.getElementById('root').innerHTML += dlHtml;

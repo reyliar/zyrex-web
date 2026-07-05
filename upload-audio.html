@@ -86,11 +86,13 @@
 
     <script src="js/auth.js"></script>
     <script>
+        var currentUser = null;
         (async function checkAuth(){
             try {
                 var meResp = await fetch('/api/me', {credentials:'include'});
                 if (!meResp.ok) { window.location.href = '/api/login?redirect=' + encodeURIComponent(location.pathname); return; }
-                var roleResp = await fetch('/api/guild/check-role?userId=' + (await meResp.json()).id + '&roleId=1522976282688880720', {credentials:'include'});
+                currentUser = await meResp.json();
+                var roleResp = await fetch('/api/guild/check-role?userId=' + currentUser.id + '&roleId=1522976282688880720', {credentials:'include'});
                 var roleData = await roleResp.json();
                 if (!roleData.has_role) {
                     document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;color:var(--gray);padding:20px"><div style="max-width:460px"><i class="fas fa-lock" style="font-size:4rem;color:var(--cherry);opacity:.2;margin-bottom:20px;display:block"></i><h2 style="color:var(--light);font-size:1.5rem;font-weight:800;margin-bottom:10px">No Audio Upload Access</h2><p style="font-size:.9rem;line-height:1.6;margin-bottom:20px">You need the <strong style="color:var(--cherry-light)">Audio Uploader</strong> role to upload audio. Join our Discord and request this role to get started.</p><div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap"><a href="https://discord.gg/zyrex" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:10px;background:#5865F2;color:#fff;text-decoration:none;font-weight:700;font-size:.82rem"><i class="fab fa-discord"></i> Join Discord</a><a href="/upload" style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:10px;background:rgba(var(--cherry-rgb),.1);color:var(--cherry-light);text-decoration:none;font-weight:600;font-size:.82rem"><i class="fas fa-arrow-left"></i> Back to Upload</a></div></div></div>';
@@ -148,10 +150,15 @@
             try {
                 var ext = audioFile.name.split('.').pop().toLowerCase();
                 if (!['mp3','wav','flac','ogg','aac','m4a'].includes(ext)) ext = 'mp3';
+                // Generate filename: "Title - UploaderName.ext"
+                var uploader = (currentUser && (currentUser.global_name || currentUser.username)) || 'Zyrex';
+                var safeName = name.replace(/[\/\\:*?"<>|]/g, '').trim().substring(0, 60);
+                var safeUploader = uploader.replace(/[\/\\:*?"<>|]/g, '').trim().substring(0, 30);
+                var fname = safeName + ' - ' + safeUploader + '.' + ext;
                 var upResp = await fetch('/api/audio/upload', {
                     method: 'POST',
                     headers: {'Content-Type':'application/json'},
-                    body: JSON.stringify({filename: 'audio-'+Date.now().toString(36)+'.'+ext, data: audioBase64}),
+                    body: JSON.stringify({filename: fname, data: audioBase64}),
                     credentials: 'include'
                 });
                 var upData = await upResp.json();

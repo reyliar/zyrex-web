@@ -1183,6 +1183,18 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
         return new Response(null, { status: 404 });
       } catch(e) { return new Response(null, { status: 500 }); }
     }
+    // Audio rename: copy R2 object to new key, delete old
+    if (path === "/api/audio/rename" && request.method === "POST") {
+      try {
+        const { old_key, new_key } = await request.json();
+        if (!old_key || !new_key) return json({ error: "old_key and new_key required" }, 400);
+        const obj = await env.STORAGE.get(old_key);
+        if (!obj) return json({ error: "Source file not found" }, 404);
+        await env.STORAGE.put(new_key, obj.body, { httpMetadata: obj.httpMetadata });
+        await env.STORAGE.delete(old_key);
+        return json({ success: true, message: "Renamed" });
+      } catch(e) { return json({ error: e.message }, 500); }
+    }
 
     // ============ CREATOR INDEX: serve + upload from R2 ============
     if (path === "/api/data/creators.json") {
