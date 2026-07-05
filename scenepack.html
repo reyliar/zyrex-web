@@ -23,6 +23,12 @@
         .sp-card .link-btn{display:inline-flex;align-items:center;gap:6px;margin-top:10px;padding:6px 14px;border-radius:6px;font-size:.72rem;font-weight:600;background:rgba(var(--cherry-rgb),.1);color:var(--cherry-light);border:1px solid rgba(var(--cherry-rgb),.15)}
         .empty{text-align:center;padding:60px 20px;color:var(--gray-dark)}
         .empty i{font-size:3rem;color:var(--cherry);opacity:.2;display:block;margin-bottom:16px}
+        .search-wrap{position:relative;max-width:400px;margin-bottom:24px}
+        .search-wrap i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--gray-dark);font-size:.8rem;pointer-events:none;z-index:1}
+        .search-wrap input{width:100%;padding:12px 16px 12px 40px;background:rgba(0,0,0,.3);border:1px solid rgba(var(--cherry-rgb),.12);border-radius:10px;color:var(--light);font-family:inherit;font-size:.85rem;outline:none;transition:.2s}
+        .search-wrap input:focus{border-color:var(--cherry-light)}
+        .search-wrap input::placeholder{color:var(--gray-dark)}
+        .results-count{font-size:.75rem;color:var(--gray-dark);margin-bottom:14px}
     </style>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5438472060600560" crossorigin="anonymous"></script>
 </head>
@@ -32,6 +38,8 @@
     <div class="page-wrap">
         <h1><i class="fas fa-clapperboard" style="color:var(--cherry-light)"></i> Scenepacks</h1>
         <p class="subtitle">Premium scenepacks by top creators.</p>
+        <div class="search-wrap"><i class="fas fa-search"></i><input type="text" id="spSearch" placeholder="Search by name or creator username..."></div>
+        <div class="results-count" id="resultsCount"></div>
         <div class="sp-grid" id="spGrid">
             <div class="empty"><i class="fas fa-film"></i><p>Loading scenepacks...</p></div>
         </div>
@@ -42,20 +50,65 @@
     <script src="js/auth.js"></script>
     <script src="js/script.js?v=2"></script>
     <script>
+        var allSP = [];
+        var creatorIndex = {};
+        
+        // Load creator index for searching by creator username
+        fetch('/api/search/creator-index').then(function(r){ return r.json(); }).then(function(d){
+            if (d && d.success && d.index) creatorIndex = d.index;
+        }).catch(function(){});
+        
         (async function(){
             try{
-                var r=await fetch('/api/products?type=scenepack');
-                var data=await r.json();
-                if(Array.isArray(data)&&data.length){
-                    var grid=document.getElementById('spGrid');
-                    grid.innerHTML=data.map(function(p){
-                        return '<a href="/product-scenepack?id='+p.id+'" class="sp-card"><h3>'+p.name+'</h3><div class="meta"><span><i class="fas fa-user"></i> '+(p.creator_nickname||p.author_name||'Zyrex')+'</span><span><i class="fas fa-download"></i> '+(p.downloads||0)+'</span></div>'+(p.source_url?'<span class="link-btn"><i class="fas fa-external-link-alt"></i> Download</span>':'')+'</a>';
-                    }).join('');
-                }else{
-                    document.getElementById('spGrid').innerHTML='<div class="empty"><i class="fas fa-film"></i><p>No scenepacks yet. Check back soon!</p></div>';
+                var r = await fetch('/api/products?type=scenepack');
+                var data = await r.json();
+                if (Array.isArray(data) && data.length) {
+                    allSP = data;
+                    renderSP(data);
+                } else {
+                    document.getElementById('spGrid').innerHTML = '<div class="empty"><i class="fas fa-film"></i><p>No scenepacks yet. Check back soon!</p></div>';
                 }
-            }catch(e){}
+            } catch(e) {}
         })();
+        
+        function renderSP(items) {
+            var grid = document.getElementById('spGrid');
+            if (items.length === 0) {
+                grid.innerHTML = '<div class="empty"><i class="fas fa-search"></i><p>No scenepacks found matching your search.</p></div>';
+                document.getElementById('resultsCount').textContent = '';
+            } else {
+                grid.innerHTML = items.map(function(p){
+                    return '<a href="/product-scenepack?id=' + p.id + '" class="sp-card"><h3>' + p.name + '</h3><div class="meta"><span><i class="fas fa-user"></i> ' + (p.creator_nickname || p.author_name || 'Zyrex') + '</span><span><i class="fas fa-download"></i> ' + (p.downloads || 0) + '</span></div>' + (p.source_url ? '<span class="link-btn"><i class="fas fa-external-link-alt"></i> Download</span>' : '') + '</a>';
+                }).join('');
+                document.getElementById('resultsCount').textContent = items.length + ' scenepack' + (items.length !== 1 ? 's' : '');
+            }
+        }
+        
+        document.addEventListener('input', function(e) {
+            if (e.target.id !== 'spSearch') return;
+            var s = e.target.value.toLowerCase().trim();
+            if (!s) { renderSP(allSP); return; }
+            
+            // Build matched IDs from creator index
+            var matchIds = null;
+            if (Object.keys(creatorIndex).length > 0) {
+                matchIds = {};
+                for (var k in creatorIndex) {
+                    if (k.indexOf(s) !== -1) {
+                        var raw = creatorIndex[k];
+                        (Array.isArray(raw) ? raw : String(raw).split(' ')).forEach(function(id){ matchIds[id] = true; });
+                    }
+                }
+                if (Object.keys(matchIds).length === 0) matchIds = null;
+            }
+            
+            var filtered = allSP.filter(function(p){
+                if (matchIds && matchIds[p.id]) return true;
+                var txt = [p.name, p.creator_nickname, p.author_name, p.creator_username, p.description, p.desc].join(' ').toLowerCase();
+                return txt.indexOf(s) !== -1;
+            });
+            renderSP(filtered);
+        });
     </script>
 </body>
 </html>

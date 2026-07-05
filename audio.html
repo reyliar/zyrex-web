@@ -22,6 +22,12 @@
         .audio-card .meta i{color:var(--cherry);font-size:.6rem}
         .empty{text-align:center;padding:60px 20px;color:var(--gray-dark)}
         .empty i{font-size:3rem;color:var(--cherry);opacity:.2;display:block;margin-bottom:16px}
+        .search-wrap{position:relative;max-width:400px;margin-bottom:24px}
+        .search-wrap i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--gray-dark);font-size:.8rem;pointer-events:none;z-index:1}
+        .search-wrap input{width:100%;padding:12px 16px 12px 40px;background:rgba(0,0,0,.3);border:1px solid rgba(var(--cherry-rgb),.12);border-radius:10px;color:var(--light);font-family:inherit;font-size:.85rem;outline:none;transition:.2s}
+        .search-wrap input:focus{border-color:var(--cherry-light)}
+        .search-wrap input::placeholder{color:var(--gray-dark)}
+        .results-count{font-size:.75rem;color:var(--gray-dark);margin-bottom:14px}
     </style>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5438472060600560" crossorigin="anonymous"></script>
 </head>
@@ -31,6 +37,8 @@
     <div class="page-wrap">
         <h1><i class="fas fa-music" style="color:var(--cherry-light)"></i> Audio Library</h1>
         <p class="subtitle">Premium audios by top creators.</p>
+        <div class="search-wrap"><i class="fas fa-search"></i><input type="text" id="audioSearch" placeholder="Search audio by name or creator..."></div>
+        <div class="results-count" id="resultsCount"></div>
         <div class="audio-grid" id="audioGrid">
             <div class="empty"><i class="fas fa-music"></i><p>Loading audio library...</p></div>
         </div>
@@ -41,20 +49,43 @@
     <script src="js/auth.js"></script>
     <script src="js/script.js?v=2"></script>
     <script>
+        var allAudio = [];
         (async function(){
             try{
-                var r=await fetch('/api/products?type=audio');
-                var data=await r.json();
-                if(Array.isArray(data)&&data.length){
-                    var grid=document.getElementById('audioGrid');
-                    grid.innerHTML=data.map(function(p){
-                        return '<a href="/product-audio?id='+p.id+'" class="audio-card"><h3>'+p.name+'</h3><div class="meta"><span><i class="fas fa-user"></i> '+(p.creator_nickname||p.author_name||'Zyrex')+'</span><span><i class="fas fa-download"></i> '+(p.downloads||0)+'</span></div></a>';
-                    }).join('');
-                }else{
-                    document.getElementById('audioGrid').innerHTML='<div class="empty"><i class="fas fa-music"></i><p>No audio resources yet. Check back soon!</p></div>';
+                var r = await fetch('/api/products?type=audio');
+                var data = await r.json();
+                if (Array.isArray(data) && data.length) {
+                    allAudio = data;
+                    renderAudio(data);
+                } else {
+                    document.getElementById('audioGrid').innerHTML = '<div class="empty"><i class="fas fa-music"></i><p>No audio resources yet. Check back soon!</p></div>';
                 }
-            }catch(e){}
+            } catch(e) {}
         })();
+        
+        function renderAudio(items) {
+            var grid = document.getElementById('audioGrid');
+            if (items.length === 0) {
+                grid.innerHTML = '<div class="empty"><i class="fas fa-search"></i><p>No audio found matching your search.</p></div>';
+                document.getElementById('resultsCount').textContent = '';
+            } else {
+                grid.innerHTML = items.map(function(p){
+                    return '<a href="/product-audio?id=' + p.id + '" class="audio-card"><h3>' + p.name + '</h3><div class="meta"><span><i class="fas fa-user"></i> ' + (p.creator_nickname || p.author_name || 'Zyrex') + '</span><span><i class="fas fa-download"></i> ' + (p.downloads || 0) + '</span></div></a>';
+                }).join('');
+                document.getElementById('resultsCount').textContent = items.length + ' audio' + (items.length !== 1 ? 's' : '');
+            }
+        }
+        
+        document.addEventListener('input', function(e) {
+            if (e.target.id !== 'audioSearch') return;
+            var s = e.target.value.toLowerCase().trim();
+            if (!s) { renderAudio(allAudio); return; }
+            var filtered = allAudio.filter(function(p) {
+                var txt = [p.name, p.creator_nickname, p.author_name, p.description, p.desc].join(' ').toLowerCase();
+                return txt.indexOf(s) !== -1;
+            });
+            renderAudio(filtered);
+        });
     </script>
 </body>
 </html>
