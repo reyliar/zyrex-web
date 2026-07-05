@@ -155,7 +155,7 @@
         // Thumbnail
         h += '<div class="preview-wrap"><div class="preview">';
         if (p.thumbnail) {
-            h += '<img src="' + esc(p.thumbnail) + '" alt="" onerror="var el=this.parentElement;el.innerHTML=\'<div class=ph><i class=\\'fas fa-film\\'></i></div><div class=stripes></div>\'">';
+            h += '<img src="' + esc(p.thumbnail) + '" alt="" data-fallback="film">';
         } else {
             h += '<div class="ph"><i class="fas fa-film"></i></div><div class="stripes"></div>';
         }
@@ -172,6 +172,21 @@
 
         // Hero
         document.getElementById('root').innerHTML = '<div class="hero-banner anim-1"><div class="hero-inner">' + h + '</div></div>';
+
+        // Attach onerror fallback handlers
+        var imgs = document.querySelectorAll('#root img[data-fallback]');
+        for (var i = 0; i < imgs.length; i++) {
+            imgs[i].onerror = function() {
+                var fb = this.getAttribute('data-fallback') || 'film';
+                var icon = fb === 'film' ? 'fa-film' : 'fa-user';
+                var parent = this.parentElement;
+                if (parent.classList.contains('cb-avatar')) {
+                    parent.innerHTML = '<i class="fas ' + icon + '"></i>';
+                } else {
+                    parent.innerHTML = '<div class="ph"><i class="fas ' + icon + '"></i></div><div class="stripes"></div>';
+                }
+            };
+        }
 
         // CTA
         if (downloadUrl) {
@@ -198,7 +213,7 @@
         if (p.creator_nickname || p.creator_social_url) {
             var creatorHtml = '<div class="creator-block anim-4"><div class="cb-avatar">';
             if (p.creator_avatar) {
-                creatorHtml += '<img src="' + esc(p.creator_avatar) + '" alt="" onerror="this.innerHTML=\'<i class=fas fa-user></i>\'">';
+                creatorHtml += '<img src="' + esc(p.creator_avatar) + '" alt="" data-fallback="user">';
             } else {
                 creatorHtml += '<i class="fas fa-user"></i>';
             }
@@ -208,6 +223,22 @@
             }
             creatorHtml += '</div></div>';
             document.getElementById('root').innerHTML += creatorHtml;
+            // Attach fallback for new image
+            var newImgs = document.querySelectorAll('#root img[data-fallback]');
+            for (var j = 0; j < newImgs.length; j++) {
+                if (!newImgs[j].onerror) {
+                    newImgs[j].onerror = function() {
+                        var fb = this.getAttribute('data-fallback') || 'user';
+                        var icon = fb === 'film' ? 'fa-film' : 'fa-user';
+                        var parent = this.parentElement;
+                        if (parent.classList.contains('cb-avatar')) {
+                            parent.innerHTML = '<i class="fas ' + icon + '"></i>';
+                        } else {
+                            parent.innerHTML = '<div class="ph"><i class="fas ' + icon + '"></i></div><div class="stripes"></div>';
+                        }
+                    };
+                }
+            }
         }
     }
     </script>

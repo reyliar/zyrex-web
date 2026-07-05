@@ -167,7 +167,7 @@
         // Thumbnail
         h += '<div class="art-wrap"><div class="art">';
         if (p.thumbnail) {
-            h += '<img src="' + esc(p.thumbnail) + '" alt="" onerror="var p=this.parentElement;p.innerHTML=\'<div class=ph><i class=\\'fas fa-music\\'></i></div><div class=disc></div>\'">';
+            h += '<img src="' + esc(p.thumbnail) + '" alt="" data-fallback="music">';
         } else {
             h += '<div class="ph"><i class="fas fa-music"></i></div><div class="disc"></div>';
         }
@@ -190,6 +190,17 @@
         // Hero card
         var heroHtml = '<div class="hero-card anim-1"><div class="hero-inner">' + h + '</div></div>';
         document.getElementById('root').innerHTML = heroHtml;
+
+        // Attach onerror handlers to all images with data-fallback
+        var imgs = document.querySelectorAll('#root img[data-fallback]');
+        for (var i = 0; i < imgs.length; i++) {
+            imgs[i].onerror = function() {
+                var fb = this.getAttribute('data-fallback') || 'user';
+                var icon = fb === 'music' ? 'fa-music' : 'fa-user';
+                var parent = this.parentElement;
+                parent.innerHTML = '<div class="ph"><i class="fas ' + icon + '"></i></div><div class="disc"></div>';
+            };
+        }
 
         // Player card
         var playerHtml = '';
@@ -236,7 +247,7 @@
         if (p.creator_nickname || p.creator_social_url) {
             var creatorHtml = '<div class="creator-card anim-4"><div class="cc-avatar">';
             if (p.creator_avatar) {
-                creatorHtml += '<img src="' + esc(p.creator_avatar) + '" alt="" onerror="this.innerHTML=\'<i class=fas fa-user></i>\'">';
+                creatorHtml += '<img src="' + esc(p.creator_avatar) + '" alt="" data-fallback="user">';
             } else {
                 creatorHtml += '<i class="fas fa-user"></i>';
             }
@@ -246,6 +257,22 @@
             }
             creatorHtml += '</div></div>';
             document.getElementById('root').innerHTML += creatorHtml;
+            // Attach fallback handlers for newly added images
+            var newImgs = document.querySelectorAll('#root img[data-fallback]');
+            for (var j = 0; j < newImgs.length; j++) {
+                if (!newImgs[j].onerror) {
+                    newImgs[j].onerror = function() {
+                        var fb = this.getAttribute('data-fallback') || 'user';
+                        var icon = fb === 'music' ? 'fa-music' : 'fa-user';
+                        var parent = this.parentElement;
+                        if (parent.classList.contains('cc-avatar') || parent.classList.contains('cb-avatar')) {
+                            parent.innerHTML = '<i class="fas ' + icon + '"></i>';
+                        } else {
+                            parent.innerHTML = '<div class="ph"><i class="fas ' + icon + '"></i></div><div class="disc"></div>';
+                        }
+                    };
+                }
+            }
         }
     }
     </script>
