@@ -17,9 +17,10 @@
         .audio-card{background:rgba(12,4,8,0.45);border:1px solid rgba(var(--cherry-rgb),.08);border-radius:14px;padding:20px;transition:all .3s;text-decoration:none;color:var(--light);display:block}
         .audio-card:hover{transform:translateY(-3px);border-color:rgba(var(--cherry-rgb),.2);box-shadow:0 12px 40px rgba(0,0,0,.3)}
         .audio-card h3{font-size:.95rem;font-weight:700;margin-bottom:6px}
-        .audio-card .meta{font-size:.72rem;color:var(--gray-dark);display:flex;gap:12px;flex-wrap:wrap}
+        .audio-card .meta{font-size:.72rem;color:var(--gray-dark);display:flex;gap:12px;flex-wrap:wrap;align-items:center}
         .audio-card .meta span{display:flex;align-items:center;gap:4px}
         .audio-card .meta i{color:var(--cherry);font-size:.6rem}
+        .audio-card .cat-tag{display:inline-flex;padding:3px 8px;border-radius:4px;font-size:.65rem;font-weight:600;background:rgba(124,58,237,.1);color:#a78bfa;border:1px solid rgba(124,58,237,.15)}
         .empty{text-align:center;padding:60px 20px;color:var(--gray-dark)}
         .empty i{font-size:3rem;color:var(--cherry);opacity:.2;display:block;margin-bottom:16px}
         .search-wrap{position:relative;max-width:400px;margin-bottom:24px}
@@ -65,12 +66,15 @@
         
         function renderAudio(items) {
             var grid = document.getElementById('audioGrid');
+            var catNames = { hot: 'Hot', soft: 'Soft', aesthetic: 'Aesthetic', cinematic: 'Cinematic', velocity: 'Velocity', others: 'Audio' };
             if (items.length === 0) {
                 grid.innerHTML = '<div class="empty"><i class="fas fa-search"></i><p>No audio found matching your search.</p></div>';
                 document.getElementById('resultsCount').textContent = '';
             } else {
                 grid.innerHTML = items.map(function(p){
-                    return '<a href="/product-audio?id=' + p.id + '" class="audio-card"><h3>' + p.name + '</h3><div class="meta"><span><i class="fas fa-user"></i> ' + (p.creator_nickname || p.author_name || 'Zyrex') + '</span><span><i class="fas fa-download"></i> ' + (p.downloads || 0) + '</span></div></a>';
+                    var cats = (p.category || '').split(',').filter(Boolean);
+                    var catTags = cats.length > 0 ? cats.map(function(c){ return '<span class="cat-tag">' + (catNames[c.trim()] || c) + '</span>'; }).join('') : '<span class="cat-tag">Audio</span>';
+                    return '<a href="/product-audio?id=' + p.id + '" class="audio-card"><h3>' + p.name + '</h3><div class="meta">' + catTags + '<span><i class="fas fa-user"></i> ' + (p.creator_nickname || p.author_name || 'Zyrex') + '</span><span><i class="fas fa-download"></i> ' + (p.downloads || 0) + '</span></div></a>';
                 }).join('');
                 document.getElementById('resultsCount').textContent = items.length + ' audio' + (items.length !== 1 ? 's' : '');
             }
