@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Zyrex Scenepacks - Premium scene packs & project templates">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://zyrexediting.xyz/product-scenepack">
+    <meta property="og:title" content="Zyrex | Scenepack">
+    <meta property="og:description" content="Premium scenepacks on Zyrex">
+    <meta name="author" content="Zyrex">
+    <title>Zyrex | Scenepack</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="css/style.css?v=9">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent: #f59e0b;
+            --accent-rgb: 245,158,11;
+            --accent-light: #fbbf24;
+            --accent-glow: rgba(245,158,11,0.3);
+            --dark: #060608;
+            --light: #e8e8ed;
+            --gray: #8888a0;
+            --gray-dark: #55556a;
+        }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{background:var(--dark);color:var(--light);font-family:'Poppins',sans-serif;min-height:100vh}
+        
+        .sp-page{padding:100px 0 80px;min-height:100vh;position:relative;overflow:hidden}
+        .sp-page::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse at 30% 20%,rgba(var(--accent-rgb),.06) 0%,transparent 60%),radial-gradient(ellipse at 70% 70%,rgba(var(--accent-rgb),.03) 0%,transparent 50%);pointer-events:none;z-index:0}
+        
+        .wrap{max-width:1000px;margin:0 auto;padding:0 24px;position:relative;z-index:1}
+        .back{display:inline-flex;align-items:center;gap:8px;color:var(--gray);font-size:.85rem;text-decoration:none;margin-bottom:28px;transition:.2s}
+        .back:hover{color:var(--accent-light)}
+        
+        /* Hero banner */
+        .hero-banner{position:relative;border-radius:24px;overflow:hidden;margin-bottom:24px}
+        .hero-banner::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(var(--accent-rgb),.08) 0%,rgba(0,0,0,.5) 60%);z-index:1;pointer-events:none}
+        .hero-banner::after{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent-light),var(--accent),transparent);z-index:2}
+        
+        .hero-inner{position:relative;z-index:1;background:rgba(10,6,2,.75);backdrop-filter:blur(30px);-webkit-backdrop-filter:blur(30px);border:1px solid rgba(var(--accent-rgb),.1);border-radius:24px;padding:44px 40px;display:flex;gap:36px;align-items:flex-start}
+        
+        @media(max-width:768px){
+            .hero-inner{flex-direction:column;padding:24px 18px;gap:20px}
+            .sp-page{padding:80px 0 60px}
+        }
+        
+        /* Thumbnail preview */
+        .preview-wrap{flex-shrink:0}
+        .preview{width:200px;height:140px;border-radius:16px;overflow:hidden;background:linear-gradient(135deg,rgba(var(--accent-rgb),.15),rgba(var(--accent-rgb),.04));display:flex;align-items:center;justify-content:center;border:2px solid rgba(var(--accent-rgb),.12);box-shadow:0 0 40px var(--accent-glow),0 10px 30px rgba(0,0,0,.4);position:relative}
+        .preview img{width:100%;height:100%;object-fit:cover}
+        .preview .ph{font-size:3rem;color:var(--accent-light);opacity:.3}
+        .preview .stripes{position:absolute;inset:0;background:repeating-linear-gradient(0deg,transparent,transparent 8px,rgba(255,255,255,.02) 8px,rgba(255,255,255,.02) 10px);pointer-events:none}
+        @media(max-width:768px){.preview{width:100%;height:120px;border-radius:14px}.preview .ph{font-size:2rem}}
+        
+        .info{flex:1;min-width:0;display:flex;flex-direction:column;gap:14px}
+        .info .type-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 14px;border-radius:50px;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;background:rgba(var(--accent-rgb),.15);border:1px solid rgba(var(--accent-rgb),.25);color:var(--accent-light);width:fit-content;margin-bottom:4px}
+        .info h1{font-size:2.2rem;font-weight:900;line-height:1.1;letter-spacing:-.5px;color:#fff}
+        .info .desc{color:var(--gray);font-size:.92rem;line-height:1.7}
+        @media(max-width:768px){.info h1{font-size:1.5rem}}
+        
+        /* CTA button */
+        .cta-section{margin-bottom:24px}
+        .btn-cta{display:inline-flex;align-items:center;gap:10px;padding:16px 32px;border-radius:14px;font-size:.9rem;font-weight:700;cursor:pointer;text-decoration:none;transition:all .3s;font-family:inherit;border:none;background:linear-gradient(135deg,var(--accent),#d97706);color:#111;box-shadow:0 4px 20px var(--accent-glow);border:1px solid rgba(var(--accent-rgb),.3)}
+        .btn-cta:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(var(--accent-rgb),.5)}
+        .btn-cta-secondary{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:12px;font-size:.82rem;font-weight:600;cursor:pointer;text-decoration:none;transition:all .2s;font-family:inherit;background:rgba(var(--accent-rgb),.06);border:1px solid rgba(var(--accent-rgb),.12);color:var(--accent-light);margin-left:10px}
+        .btn-cta-secondary:hover{background:rgba(var(--accent-rgb),.12)}
+        
+        @media(max-width:768px){.btn-cta-secondary{margin-left:0;margin-top:8px}}
+        
+        /* Info cards grid */
+        .info-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:24px}
+        .info-card{background:rgba(10,6,2,.45);backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px);border:1px solid rgba(var(--accent-rgb),.06);border-radius:16px;padding:18px 20px;display:flex;align-items:center;gap:12px}
+        .info-card .ic-icon{width:42px;height:42px;border-radius:12px;background:rgba(var(--accent-rgb),.1);display:flex;align-items:center;justify-content:center;font-size:.9rem;color:var(--accent-light);flex-shrink:0}
+        .info-card .ic-info strong{display:block;font-size:.8rem;color:var(--light)}
+        .info-card .ic-info span{font-size:.68rem;color:var(--gray-dark)}
+        
+        /* Creator */
+        .creator-block{background:rgba(10,6,2,.5);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(var(--accent-rgb),.08);border-radius:20px;padding:24px;display:flex;align-items:center;gap:16px}
+        .creator-block .cb-avatar{width:52px;height:52px;border-radius:50%;overflow:hidden;border:2px solid rgba(var(--accent-rgb),.2);flex-shrink:0;background:rgba(var(--accent-rgb),.1);display:flex;align-items:center;justify-content:center}
+        .creator-block .cb-avatar img{width:100%;height:100%;object-fit:cover}
+        .creator-block .cb-avatar i{color:var(--accent-light);font-size:1.5rem}
+        .creator-block .cb-info strong{display:block;font-size:.88rem;color:var(--light)}
+        .creator-block .cb-info a{font-size:.75rem;color:var(--accent-light);text-decoration:none}
+        .creator-block .cb-info a:hover{text-decoration:underline}
+        
+        .load{text-align:center;padding:100px 20px;color:var(--gray)}
+        .load i{font-size:2.5rem;color:var(--accent-light);opacity:.3;display:block;margin-bottom:15px}
+        .err{text-align:center;padding:80px 20px;color:var(--gray)}
+        .err i{font-size:3rem;color:var(--accent-light);opacity:.25;display:block;margin-bottom:15px}
+        .err .btn-b{display:inline-flex;align-items:center;gap:6px;padding:10px 22px;border-radius:10px;background:rgba(var(--accent-rgb),.1);border:1px solid rgba(var(--accent-rgb),.2);color:var(--accent-light);text-decoration:none;font-size:.85rem;font-weight:600;transition:.2s;font-family:inherit;margin-top:16px}
+        .err .btn-b:hover{background:rgba(var(--accent-rgb),.18)}
+        
+        .pulse{animation:pulse 2s ease-in-out infinite}
+        @keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+        .anim-1{animation:fadeUp .5s ease forwards}
+        .anim-2{animation:fadeUp .5s .1s ease both}
+        .anim-3{animation:fadeUp .5s .2s ease both}
+        .anim-4{animation:fadeUp .5s .3s ease both}
+    </style>
+</head>
+<body>
+    <nav class="navbar"><div class="container"><a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><ul class="nav-links" id="navLinks"><li><a href="/">Home</a></li><li><a href="/resources">Resources</a></li><li><a href="/plugins">Plugins</a></li><li><a href="/more">More</a></li><li><a href="/#contact">Contact</a></li></ul><div class="nav-actions"><div id="authBtn"></div><a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord"><i class="fab fa-discord"></i> <span>Join Us</span></a><button class="hamburger" id="hamburger"><span></span><span></span><span></span></button></div></div></nav>
+
+    <section class="sp-page">
+        <div class="wrap">
+            <a href="/scenepack" class="back anim-1"><i class="fas fa-arrow-left"></i> Back to Scenepacks</a>
+            <div class="load" id="load"><i class="fas fa-clapperboard fa-spin pulse"></i><p>Loading scenepack...</p></div>
+            <div class="err" id="err" style="display:none"><i class="fas fa-exclamation-circle"></i><p id="errMsg">Scenepack not found.</p><a href="/scenepack" class="btn-b"><i class="fas fa-arrow-left"></i> Browse Scenepacks</a></div>
+            <div id="root" style="display:none"></div>
+        </div>
+    </section>
+
+    <footer class="footer"><div class="container"><div class="footer-content"><div class="footer-brand"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><h3 style="font-size:1.8rem;font-weight:900;margin:0;letter-spacing:2px;background:linear-gradient(135deg,#fff,#9090a0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Editing</h3></div><p>Premium editing community &amp; resources.</p></div><div class="footer-links"><h4>Quick Links</h4><ul><li><a href="/">Home</a></li><li><a href="/resources">Resources</a></li><li><a href="/plugins">Plugins</a></li><li><a href="/more">More</a></li></ul></div><div class="footer-links"><h4>Legal</h4><ul><li><a href="/terms">Terms</a></li><li><a href="/privacy">Privacy</a></li><li><a href="/dmca">DMCA</a></li></ul></div><div class="footer-links"><h4>Community</h4><ul><li><a href="https://discord.gg/fAydSzpafA">Discord</a></li><li><a href="/#contact">Contact</a></li></ul></div><div class="footer-newsletter"><h4>Newsletter</h4><p>Stay updated with Zyrex Editing.</p><div class="newsletter-form"><input type="email" placeholder="Your email"><button type="submit"><i class="fas fa-arrow-right"></i></button></div></div></div><div class="footer-bottom"><p>&copy; 2026 Zyrex Editing. All rights reserved.</p></div></div></footer>
+
+    <script src="js/auth.js"></script>
+    <script src="js/script.js?v=2"></script>
+    <script>
+    (async function(){
+        var p = new URLSearchParams(location.search);
+        var id = p.get('id');
+        if (!id) return showErr('Scenepack ID missing');
+        try {
+            var r = await fetch('/api/products?id=' + encodeURIComponent(id));
+            if (!r.ok) { showErr('Scenepack not found'); return; }
+            var data = await r.json();
+            if (!data || !data.id) { showErr('Scenepack not found'); return; }
+            render(data);
+        } catch(e) { showErr('Failed to load scenepack'); }
+    })();
+
+    function showErr(m) {
+        document.getElementById('load').style.display = 'none';
+        document.getElementById('err').style.display = 'block';
+        document.getElementById('errMsg').textContent = m;
+    }
+
+    function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+    function render(p) {
+        document.getElementById('load').style.display = 'none';
+        document.getElementById('root').style.display = 'block';
+        document.title = (p.name || 'Scenepack') + ' \u2014 Zyrex Scenepacks';
+
+        var downloadUrl = p.source_url || '';
+        var hostname = '';
+        try { hostname = new URL(downloadUrl).hostname.replace('www.', ''); } catch(e) {}
+
+        // Build HTML
+        var h = '';
+
+        // Thumbnail
+        h += '<div class="preview-wrap"><div class="preview">';
+        if (p.thumbnail) {
+            h += '<img src="' + esc(p.thumbnail) + '" alt="" onerror="var el=this.parentElement;el.innerHTML=\'<div class=ph><i class=\\'fas fa-film\\'></i></div><div class=stripes></div>\'">';
+        } else {
+            h += '<div class="ph"><i class="fas fa-film"></i></div><div class="stripes"></div>';
+        }
+        h += '</div></div>';
+
+        // Info
+        h += '<div class="info">';
+        h += '<span class="type-badge"><i class="fas fa-clapperboard"></i> Scenepack</span>';
+        h += '<h1>' + esc(p.name || 'Untitled Scenepack') + '</h1>';
+        if (p.description || p.desc) {
+            h += '<p class="desc">' + esc(p.description || p.desc) + '</p>';
+        }
+        h += '</div>';
+
+        // Hero
+        document.getElementById('root').innerHTML = '<div class="hero-banner anim-1"><div class="hero-inner">' + h + '</div></div>';
+
+        // CTA
+        if (downloadUrl) {
+            var ctaHtml = '<div class="cta-section anim-2">';
+            ctaHtml += '<a href="' + esc(downloadUrl) + '" target="_blank" rel="noopener" class="btn-cta"><i class="fas fa-download"></i> Download Scenepack</a>';
+            ctaHtml += '<a href="' + esc(downloadUrl) + '" target="_blank" rel="noopener" class="btn-cta-secondary"><i class="fas fa-external-link-alt"></i> ' + esc(hostname) + '</a>';
+            ctaHtml += '</div>';
+            document.getElementById('root').innerHTML += ctaHtml;
+        } else {
+            document.getElementById('root').innerHTML += '<p style="color:var(--gray-dark);font-size:.85rem">No download link available.</p>';
+        }
+
+        // Info grid
+        var gridHtml = '<div class="info-grid anim-3">';
+        gridHtml += '<div class="info-card"><div class="ic-icon"><i class="fas fa-calendar"></i></div><div class="ic-info"><strong>Published</strong><span>' + (p.created_at ? new Date(p.created_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : 'Recently') + '</span></div></div>';
+        gridHtml += '<div class="info-card"><div class="ic-icon"><i class="fas fa-cloud"></i></div><div class="ic-info"><strong>Source</strong><span>' + esc(hostname || 'External') + '</span></div></div>';
+        if (p.author_name) {
+            gridHtml += '<div class="info-card"><div class="ic-icon"><i class="fab fa-discord"></i></div><div class="ic-info"><strong>Uploader</strong><span>' + esc(p.author_name) + '</span></div></div>';
+        }
+        gridHtml += '</div>';
+        document.getElementById('root').innerHTML += gridHtml;
+
+        // Creator
+        if (p.creator_nickname || p.creator_social_url) {
+            var creatorHtml = '<div class="creator-block anim-4"><div class="cb-avatar">';
+            if (p.creator_avatar) {
+                creatorHtml += '<img src="' + esc(p.creator_avatar) + '" alt="" onerror="this.innerHTML=\'<i class=fas fa-user></i>\'">';
+            } else {
+                creatorHtml += '<i class="fas fa-user"></i>';
+            }
+            creatorHtml += '</div><div class="cb-info"><strong>' + esc(p.creator_nickname || p.author_name || 'Unknown Creator') + '</strong>';
+            if (p.creator_social_url) {
+                creatorHtml += '<a href="' + esc(p.creator_social_url) + '" target="_blank"><i class="fas fa-external-link-alt"></i> View Profile</a>';
+            }
+            creatorHtml += '</div></div>';
+            document.getElementById('root').innerHTML += creatorHtml;
+        }
+    }
+    </script>
+</body>
+</html>

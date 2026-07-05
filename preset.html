@@ -388,6 +388,16 @@
         var listUrl = '/api/files/list-path?product_id=' + encodeURIComponent(p.id || '');
         if (p.file_path) listUrl += '&path=' + encodeURIComponent(p.file_path);
         var resp = await fetch(listUrl);
+        if (resp.status === 401 || resp.status === 403) {
+          // Not logged in or not verified — show login prompt in files tab
+          var tabFiles = document.getElementById('tab-files');
+          if (tabFiles) {
+            var card = tabFiles.querySelector('.card');
+            var loginUrl = '/api/login?redirect=' + encodeURIComponent(location.pathname + location.search);
+            if (card) card.innerHTML = '<div style="text-align:center;padding:50px 20px"><i class="fas fa-lock" style="font-size:2.5rem;color:var(--cherry);opacity:.25;display:block;margin-bottom:14px"></i><p style="color:var(--gray);font-size:.85rem;margin-bottom:16px;line-height:1.5">Login required to view files.<br>Verify your Discord account to access downloads.</p><a href="'+loginUrl+'" class="btn-b"><i class="fab fa-discord"></i> Login with Discord</a></div>';
+          }
+          return;
+        }
         var data = await resp.json();
         if (data.success && data.files && data.files.length > 0) {
           var iconMap = {mp4:'fa-file-video',mov:'fa-file-video',webm:'fa-file-video',mp3:'fa-file-audio',wav:'fa-file-audio',aac:'fa-file-audio',png:'fa-file-image',jpg:'fa-file-image',jpeg:'fa-file-image',gif:'fa-file-image',webp:'fa-file-image',zip:'fa-file-zipper',rar:'fa-file-zipper','7z':'fa-file-zipper',pdf:'fa-file-pdf',aep:'fa-file-video',prproj:'fa-file-video',psd:'fa-file-image'};
