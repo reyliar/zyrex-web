@@ -203,8 +203,9 @@
         var gridHtml = '<div class="info-grid anim-3">';
         gridHtml += '<div class="info-card"><div class="ic-icon"><i class="fas fa-calendar"></i></div><div class="ic-info"><strong>Published</strong><span>' + (p.created_at ? new Date(p.created_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : 'Recently') + '</span></div></div>';
         gridHtml += '<div class="info-card"><div class="ic-icon"><i class="fas fa-cloud"></i></div><div class="ic-info"><strong>Source</strong><span>' + esc(hostname || 'External') + '</span></div></div>';
-        if (p.author_name) {
-            gridHtml += '<div class="info-card"><div class="ic-icon"><i class="fab fa-discord"></i></div><div class="ic-info"><strong>Uploader</strong><span>' + esc(p.author_name) + '</span></div></div>';
+        var uploaderName = p.uploader_name || p.author_name || '';
+        if (uploaderName) {
+            gridHtml += '<div class="info-card"><div class="ic-icon"><i class="fab fa-discord"></i></div><div class="ic-info"><strong>Uploader</strong><span>' + esc(uploaderName) + '</span></div></div>';
         }
         gridHtml += '</div>';
         document.getElementById('root').innerHTML += gridHtml;

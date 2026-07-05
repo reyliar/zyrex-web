@@ -243,6 +243,35 @@
             document.getElementById('root').innerHTML += '<p style="color:var(--gray-dark);font-size:.85rem">No audio file available.</p>';
         }
 
+        // Uploader card
+        var uploaderName = p.uploader_name || p.author_name || '';
+        if (uploaderName) {
+            var uploaderHtml = '<div class="creator-card anim-4" style="margin-bottom:16px"><div class="cc-avatar" style="background:rgba(88,101,242,.12);border-color:rgba(88,101,242,.2)">';
+            if (p.uploader_avatar) {
+                uploaderHtml += '<img src="' + esc(p.uploader_avatar) + '" alt="" data-fallback="user">';
+            } else {
+                uploaderHtml += '<i class="fab fa-discord" style="color:#5865F2"></i>';
+            }
+            uploaderHtml += '</div><div class="cc-info"><strong>' + esc(uploaderName) + '</strong><span style="font-size:.68rem;color:var(--gray-dark)">Uploaded by</span></div></div>';
+            document.getElementById('root').innerHTML += uploaderHtml;
+            // Attach fallback for new image
+            var upImgs = document.querySelectorAll('#root img[data-fallback]');
+            for (var k = 0; k < upImgs.length; k++) {
+                if (!upImgs[k].onerror) {
+                    upImgs[k].onerror = function() {
+                        var fb = this.getAttribute('data-fallback') || 'user';
+                        var icon = fb === 'music' ? 'fa-music' : 'fa-user';
+                        var parent = this.parentElement;
+                        if (parent.classList.contains('cc-avatar') || parent.classList.contains('cb-avatar')) {
+                            parent.innerHTML = '<i class="fas ' + icon + '"></i>';
+                        } else {
+                            parent.innerHTML = '<div class="ph"><i class="fas ' + icon + '"></i></div><div class="disc"></div>';
+                        }
+                    };
+                }
+            }
+        }
+
         // Creator card
         if (p.creator_nickname || p.creator_social_url) {
             var creatorHtml = '<div class="creator-card anim-4"><div class="cc-avatar">';
