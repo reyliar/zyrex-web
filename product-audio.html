@@ -141,6 +141,7 @@
             if (!r.ok) { showErr('Audio not found'); return; }
             var data = await r.json();
             if (!data || !data.id) { showErr('Audio not found'); return; }
+            if (data.type !== 'audio') { showErr('This product is not an audio. <a href="/'+data.type+'" style="color:var(--accent-light)">View on '+data.type+' page</a>'); return; }
             render(data);
         } catch(e) { showErr('Failed to load audio'); }
     })();
@@ -148,7 +149,7 @@
     function showErr(m) {
         document.getElementById('load').style.display = 'none';
         document.getElementById('err').style.display = 'block';
-        document.getElementById('errMsg').textContent = m;
+        document.getElementById('errMsg').innerHTML = m;
     }
 
     function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
