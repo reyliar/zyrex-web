@@ -1171,7 +1171,7 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
     // Audio streaming
     if (path.startsWith("/api/audio/stream/") && request.method === "GET") {
       try {
-        const fname = path.replace("/api/audio/stream/", "").split("?")[0];
+        const fname = decodeURIComponent(path.replace("/api/audio/stream/", "").split("?")[0]);
         const obj = await env.STORAGE.get(`audio/${fname}`);
         if (obj) {
           const ext = fname.split('.').pop().toLowerCase();
