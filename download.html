@@ -255,8 +255,21 @@
             .code-404 { font-size: 3rem }
             .prog-bar-wrap { width: 200px }
             .prog-ring { width: 50px; height: 50px }
-            .prog-text { font-size: .72rem }
+            .prog-text { font-size: .72rem; }
         }
+
+        /* Tree structure CSS */
+        .tree-folder-group { margin-bottom: 2px; text-align: left; }
+        .tree-folder-row { display: flex; align-items: center; gap: 8px; padding: 9px 12px; background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.02); border-radius: 8px; cursor: pointer; user-select: none; font-size: 0.78rem; transition: 0.15s; margin-bottom: 2px; }
+        .tree-folder-row:hover { background: rgba(var(--cherry-rgb), 0.02); border-color: rgba(var(--cherry-rgb), 0.06); }
+        .tree-arrow { display: inline-flex; align-items: center; justify-content: center; width: 12px; font-size: 0.65rem; color: var(--gray-dark); transition: transform 0.2s; }
+        .tree-icon-folder { color: #ffca28; font-size: 0.8rem; }
+        .tree-folder-name { font-weight: 600; color: var(--light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tree-folder-content { overflow: hidden; }
+        .tree-folder-content.collapsed { display: none; }
+        .folder-cb { appearance: none; -webkit-appearance: none; width: 14px; height: 14px; border: 1.5px solid rgba(255,255,255,.12); border-radius: 3px; background: transparent; cursor: pointer; flex-shrink: 0; position: relative; transition: .15s; margin-right: 4px; }
+        .folder-cb:checked { background: var(--cherry); border-color: var(--cherry); }
+        .folder-cb:checked::after { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; font-size: .5rem; color: #fff; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); }
     </style>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5438472060600560" crossorigin="anonymous"></script>
 </head>
@@ -585,18 +598,95 @@
             
             const realFiles = fileList.filter(function(f) { return !watermarkNames.includes(f.name); });
                 
-                if (realFiles.length > 0) {
-                    html += '<div class="files-block"><div class="files-label"><div><i class="fas fa-folder-open"></i> Files in this pack (' + realFiles.length + ')</div><div class="files-label-right"><button class="select-all-btn" onclick="toggleSelectAll(this)">Select All</button></div></div>';
-                    html += '<div class="files-scroll">';
-                    realFiles.forEach(function(f, idx) {
-                        const sz = f.size ? (f.size > 1048576 ? (f.size/1048576).toFixed(1)+' MB' : (f.size/1024).toFixed(1)+' KB') : '--';
-                        const fi = f.name.endsWith('.mp4')||f.name.endsWith('.mov')?'fa-file-video':f.name.endsWith('.mp3')||f.name.endsWith('.wav')?'fa-file-audio':f.name.endsWith('.png')||f.name.endsWith('.jpg')||f.name.endsWith('.jpeg')?'fa-file-image':'fa-file-lines';
-                        const isImage = f.name.endsWith('.png')||f.name.endsWith('.jpg')||f.name.endsWith('.jpeg')||f.name.endsWith('.gif')||f.name.endsWith('.webp');
-                        html += '<div class="file-item" data-filename="' + f.name.replace(/"/g, '&quot;') + '" data-filesize="' + sz + '" data-fileicon="' + fi + '" data-isimage="' + (isImage ? '1' : '0') + '" data-sizebytes="' + (f.size||0) + '"><div class="fl"><input type="checkbox" class="file-cb" checked onchange="event.stopPropagation();updateSelectedCount()" data-filename="' + f.name.replace(/"/g, '&quot;') + '"><i class="fas ' + fi + '"></i><span title="' + f.name + '">' + f.name + '</span></div><span class="fs">' + sz + '</span></div>';
+            if (realFiles.length > 0) {
+                html += '<div class="files-block"><div class="files-label"><div><i class="fas fa-folder-open"></i> Files in this pack (' + realFiles.length + ')</div><div class="files-label-right"><button class="select-all-btn" onclick="toggleSelectAll(this)">Select All</button></div></div>';
+                html += '<div class="files-scroll">';
+                
+                // Helper functions for directory tree parsing and rendering
+                function buildTree(files) {
+                    var root = { name: '', isFolder: true, children: {} };
+                    files.forEach(function(f) {
+                        var nameStr = (f.name || '').replace(/\\/g, '/');
+                        var parts = nameStr.split('/');
+                        var current = root;
+                        parts.forEach(function(part, index) {
+                            if (!part) return;
+                            var isLast = index === parts.length - 1;
+                            if (!current.children[part]) {
+                                if (isLast) {
+                                    current.children[part] = {
+                                        name: part,
+                                        fullName: nameStr,
+                                        isFolder: false,
+                                        size: f.size,
+                                        fileObj: f
+                                    };
+                                } else {
+                                    current.children[part] = {
+                                        name: part,
+                                        isFolder: true,
+                                        children: {}
+                                    };
+                                }
+                            }
+                            current = current.children[part];
+                        });
                     });
-                    html += '</div>'; // close files-scroll
-                    html += '</div>'; // close files-block
+                    return root;
                 }
+
+                function renderTreeHTML(node, depth) {
+                    var tHtml = '';
+                    var keys = Object.keys(node.children).sort(function(a, b) {
+                        var nodeA = node.children[a];
+                        var nodeB = node.children[b];
+                        if (nodeA.isFolder && !nodeB.isFolder) return -1;
+                        if (!nodeA.isFolder && nodeB.isFolder) return 1;
+                        return a.localeCompare(b);
+                    });
+                    
+                    keys.forEach(function(key) {
+                        var child = node.children[key];
+                        var indent = depth * 16;
+                        if (child.isFolder) {
+                            tHtml += '<div class="tree-folder-group">';
+                            tHtml += '<div class="tree-folder-row" style="padding-left: ' + (indent + 8) + 'px" onclick="toggleFolderCollapse(this)">';
+                            tHtml += '<input type="checkbox" class="folder-cb" checked onclick="event.stopPropagation();toggleFolderCheckboxes(this)">';
+                            tHtml += '<span class="tree-arrow"><i class="fas fa-chevron-down"></i></span>';
+                            tHtml += '<i class="fas fa-folder tree-icon-folder"></i>';
+                            tHtml += '<span class="tree-folder-name" title="' + child.name + '">' + child.name + '</span>';
+                            tHtml += '</div>';
+                            tHtml += '<div class="tree-folder-content expanded">';
+                            tHtml += renderTreeHTML(child, depth + 1);
+                            tHtml += '</div>';
+                            tHtml += '</div>';
+                        } else {
+                            var fObj = child.fileObj;
+                            var sz = fObj.size ? (fObj.size > 1048576 ? (fObj.size/1048576).toFixed(1)+' MB' : (fObj.size/1024).toFixed(1)+' KB') : '--';
+                            var ext = child.name.split('.').pop().toLowerCase();
+                            var iconMap = {mp4:'fa-file-video',mov:'fa-file-video',webm:'fa-file-video',mp3:'fa-file-audio',wav:'fa-file-audio',aac:'fa-file-audio',png:'fa-file-image',jpg:'fa-file-image',jpeg:'fa-file-image',gif:'fa-file-image',webp:'fa-file-image',zip:'fa-file-zipper',rar:'fa-file-zipper','7z':'fa-file-zipper',pdf:'fa-file-pdf',aep:'fa-file-video',prproj:'fa-file-video',psd:'fa-file-image'};
+                            var fi = iconMap[ext] || 'fa-file-lines';
+                            var isImage = ['png','jpg','jpeg','gif','webp'].includes(ext);
+                            
+                            tHtml += '<div class="file-item" style="padding-left: ' + (indent + 12) + 'px" data-filename="' + child.fullName.replace(/"/g, '&quot;') + '" data-filesize="' + sz + '" data-fileicon="' + fi + '" data-isimage="' + (isImage ? '1' : '0') + '" data-sizebytes="' + (fObj.size||0) + '">';
+                            tHtml += '<div class="fl">';
+                            tHtml += '<input type="checkbox" class="file-cb" checked onchange="event.stopPropagation();updateSelectedCount();updateFolderCheckboxState(this)" data-filename="' + child.fullName.replace(/"/g, '&quot;') + '">';
+                            tHtml += '<i class="fas ' + fi + '"></i>';
+                            tHtml += '<span title="' + child.name + '">' + child.name + '</span>';
+                            tHtml += '</div>';
+                            tHtml += '<span class="fs">' + sz + '</span>';
+                            tHtml += '</div>';
+                        }
+                    });
+                    return tHtml;
+                }
+
+                var fileTree = buildTree(realFiles);
+                html += renderTreeHTML(fileTree, 0);
+                
+                html += '</div>'; // close files-scroll
+                html += '</div>'; // close files-block
+            }
 
             // Always render file preview panel
             html += '<div class="file-preview-panel" id="filePreviewPanel"><div class="fp-header"><i class="fas fa-eye"></i><span>File Preview</span></div><div class="fp-body"><div class="file-preview-thumb"><i class="fas fa-file-lines fp-icon"></i></div><div class="file-preview-info"><div class="fp-name">Click a file to preview</div><div class="fp-meta"><span><i class="fas fa-hdd"></i> --</span><span><i class="fas fa-tag"></i> --</span></div></div></div></div>';
@@ -625,8 +715,10 @@
         // File selection helpers
         function toggleSelectAll(btn) {
             const cbs = document.querySelectorAll('.file-cb');
+            const folderCbs = document.querySelectorAll('.folder-cb');
             const allChecked = Array.from(cbs).every(function(cb) { return cb.checked; });
             cbs.forEach(function(cb) { cb.checked = !allChecked; });
+            folderCbs.forEach(function(cb) { cb.checked = !allChecked; });
             btn.textContent = allChecked ? 'Select All' : 'Deselect All';
             updateSelectedCount();
         }
@@ -668,6 +760,67 @@
                 btn.disabled = false;
             }
         }
+
+        // Folder tree interactivity
+        window.toggleFolderCollapse = function(row) {
+            var group = row.closest('.tree-folder-group');
+            var content = group.querySelector('.tree-folder-content');
+            var arrow = row.querySelector('.tree-arrow i');
+            if (content.classList.contains('expanded')) {
+                content.classList.remove('expanded');
+                content.classList.add('collapsed');
+                if (arrow) arrow.className = 'fas fa-chevron-right';
+            } else {
+                content.classList.remove('collapsed');
+                content.classList.add('expanded');
+                if (arrow) arrow.className = 'fas fa-chevron-down';
+            }
+        };
+
+        window.toggleFolderCheckboxes = function(cb) {
+            var group = cb.closest('.tree-folder-group');
+            var content = group.querySelector('.tree-folder-content');
+            var fileCbs = content.querySelectorAll('.file-cb');
+            var folderCbs = content.querySelectorAll('.folder-cb');
+            var checked = cb.checked;
+            
+            fileCbs.forEach(function(fcb) { fcb.checked = checked; });
+            folderCbs.forEach(function(fcb) { fcb.checked = checked; });
+            
+            updateSelectedCount();
+            updateParentFolderCheckboxState(cb);
+        };
+
+        window.updateFolderCheckboxState = function(fileCb) {
+            var parentGroup = fileCb.closest('.tree-folder-group');
+            if (parentGroup) {
+                var folderCb = parentGroup.querySelector('.tree-folder-row .folder-cb');
+                if (folderCb) {
+                    var content = parentGroup.querySelector('.tree-folder-content');
+                    var childCbs = content.querySelectorAll('.file-cb');
+                    var allChecked = Array.from(childCbs).every(function(cb) { return cb.checked; });
+                    folderCb.checked = allChecked;
+                }
+                updateParentFolderCheckboxState(folderCb);
+            }
+        };
+        
+        window.updateParentFolderCheckboxState = function(folderCb) {
+            if (!folderCb) return;
+            var parentGroup = folderCb.parentElement.closest('.tree-folder-group');
+            if (parentGroup) {
+                var parentFolderCb = parentGroup.querySelector('.tree-folder-row .folder-cb');
+                if (parentFolderCb) {
+                    var content = parentGroup.querySelector('.tree-folder-content');
+                    var childFolderCbs = content.querySelectorAll('.folder-cb');
+                    var childFileCbs = content.querySelectorAll('.file-cb');
+                    var allChecked = Array.from(childFileCbs).every(function(cb) { return cb.checked; }) && 
+                                     Array.from(childFolderCbs).every(function(cb) { return cb.checked; });
+                    parentFolderCb.checked = allChecked;
+                    updateParentFolderCheckboxState(parentFolderCb);
+                }
+            }
+        };
 
         // File preview panel
         let selectedPreviewFile = null;

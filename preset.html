@@ -166,6 +166,16 @@
             .fi { padding:8px 10px; font-size:.75rem }
             .st { font-size:.78rem }
         }
+
+        /* Tree structure CSS */
+        .tree-folder-group { margin-bottom: 2px; text-align: left; }
+        .tree-folder-row { display: flex; align-items: center; gap: 8px; padding: 9px 12px; background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.02); border-radius: 10px; cursor: pointer; user-select: none; font-size: 0.8rem; transition: 0.15s; margin-bottom: 2px; }
+        .tree-folder-row:hover { background: rgba(var(--cherry-rgb), 0.03); border-color: rgba(var(--cherry-rgb), 0.1); }
+        .tree-arrow { display: inline-flex; align-items: center; justify-content: center; width: 12px; font-size: 0.65rem; color: var(--gray-dark); transition: transform 0.2s; }
+        .tree-icon-folder { color: #ffca28; font-size: 0.82rem; }
+        .tree-folder-name { font-weight: 600; color: var(--light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tree-folder-content { overflow: hidden; }
+        .tree-folder-content.collapsed { display: none; }
     </style>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5438472060600560" crossorigin="anonymous"></script>
 </head>
@@ -406,12 +416,99 @@
             var n = (f.name || '').replace(/\\/g, '/');
             return n && !n.endsWith('/');
           });
-          filtered.forEach(function(f) {
-            var sz = f.size_formatted || (f.size ? (f.size > 1048576 ? (f.size/1048576).toFixed(1)+' MB' : (f.size/1024).toFixed(1)+' KB') : '--');
-            var ext = (f.name || '').split('.').pop().toLowerCase();
-            var fi = iconMap[ext] || 'fa-file-lines';
-            html += '<div class="fi"><div class="fl"><i class="fas '+fi+'"></i><span title="'+f.name+'">'+f.name+'</span></div><span class="fs">'+sz+'</span></div>';
-          });
+          
+          // Helper functions for directory tree parsing and rendering
+          function buildTree(files) {
+              var root = { name: '', isFolder: true, children: {} };
+              files.forEach(function(f) {
+                  var nameStr = (f.name || '').replace(/\\/g, '/');
+                  var parts = nameStr.split('/');
+                  var current = root;
+                  parts.forEach(function(part, index) {
+                      if (!part) return;
+                      var isLast = index === parts.length - 1;
+                      if (!current.children[part]) {
+                          if (isLast) {
+                              current.children[part] = {
+                                  name: part,
+                                  isFolder: false,
+                                  size: f.size,
+                                  size_formatted: f.size_formatted,
+                                  fileObj: f
+                              };
+                          } else {
+                              current.children[part] = {
+                                  name: part,
+                                  isFolder: true,
+                                  children: {}
+                              };
+                          }
+                      }
+                      current = current.children[part];
+                  });
+              });
+              return root;
+          }
+
+          function renderTreeHTML(node, depth) {
+              var tHtml = '';
+              var keys = Object.keys(node.children).sort(function(a, b) {
+                  var nodeA = node.children[a];
+                  var nodeB = node.children[b];
+                  if (nodeA.isFolder && !nodeB.isFolder) return -1;
+                  if (!nodeA.isFolder && nodeB.isFolder) return 1;
+                  return a.localeCompare(b);
+              });
+              
+              keys.forEach(function(key) {
+                  var child = node.children[key];
+                  var indent = depth * 16;
+                  if (child.isFolder) {
+                      tHtml += '<div class="tree-folder-group">';
+                      tHtml += '<div class="tree-folder-row" style="padding-left: ' + (indent + 12) + 'px" onclick="toggleFolderCollapse(this)">';
+                      tHtml += '<span class="tree-arrow"><i class="fas fa-chevron-down"></i></span>';
+                      tHtml += '<i class="fas fa-folder tree-icon-folder"></i>';
+                      tHtml += '<span class="tree-folder-name" title="' + child.name + '">' + child.name + '</span>';
+                      tHtml += '</div>';
+                      tHtml += '<div class="tree-folder-content expanded">';
+                      tHtml += renderTreeHTML(child, depth + 1);
+                      tHtml += '</div>';
+                      tHtml += '</div>';
+                  } else {
+                      var fObj = child.fileObj;
+                      var sz = child.size_formatted || (fObj.size ? (fObj.size > 1048576 ? (fObj.size/1048576).toFixed(1)+' MB' : (fObj.size/1024).toFixed(1)+' KB') : '--');
+                      var ext = child.name.split('.').pop().toLowerCase();
+                      var fi = iconMap[ext] || 'fa-file-lines';
+                      
+                      tHtml += '<div class="fi" style="margin-left: ' + indent + 'px">';
+                      tHtml += '<div class="fl">';
+                      tHtml += '<i class="fas ' + fi + '"></i>';
+                      tHtml += '<span title="' + child.name + '">' + child.name + '</span>';
+                      tHtml += '</div>';
+                      tHtml += '<span class="fs">' + sz + '</span>';
+                      tHtml += '</div>';
+                  }
+              });
+              return tHtml;
+          }
+
+          window.toggleFolderCollapse = function(row) {
+              var group = row.closest('.tree-folder-group');
+              var content = group.querySelector('.tree-folder-content');
+              var arrow = row.querySelector('.tree-arrow i');
+              if (content.classList.contains('expanded')) {
+                  content.classList.remove('expanded');
+                  content.classList.add('collapsed');
+                  if (arrow) arrow.className = 'fas fa-chevron-right';
+              } else {
+                  content.classList.remove('collapsed');
+                  content.classList.add('expanded');
+                  if (arrow) arrow.className = 'fas fa-chevron-down';
+              }
+          };
+
+          var fileTree = buildTree(filtered);
+          html += renderTreeHTML(fileTree, 0);
           html += '</div>';
           var tabFiles = document.getElementById('tab-files');
           if (tabFiles) {

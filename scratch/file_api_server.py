@@ -637,7 +637,7 @@ class FileAPIHandler(BaseHTTPRequestHandler):
             
             # List objects in staging
             staging_objects = r2_list_objects(source_prefix, bucket=R2_STAGING_BUCKET)
-            file_objects = [o for o in staging_objects if not o.get("is_folder")]
+            file_objects = [o for o in staging_objects]
             if not file_objects:
                 self._send_json({"success": False, "error": f"No files found in staging: {source_prefix}"}, 404)
                 return
@@ -701,7 +701,7 @@ class FileAPIHandler(BaseHTTPRequestHandler):
             
             # Check source exists in staging R2
             staging_objects = r2_list_objects(source_prefix, bucket=R2_STAGING_BUCKET)
-            file_objects = [o for o in staging_objects if not o.get("is_folder")]
+            file_objects = [o for o in staging_objects]
             if not file_objects:
                 self._send_json({"success": False, "error": f"Source not found in cloud: {source_editor}/{source_resource}"}, 404)
                 return

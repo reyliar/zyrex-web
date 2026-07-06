@@ -2170,29 +2170,35 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
           
           const prodBucket = env.STORAGE_PROD || env.STORAGE;
           
-          // List files in staging
-          const stagingList = await stagingBucket.list({ prefix: srcPrefix });
+          // List files in staging (using r2List to support pagination and get all files recursively)
+          const stagingObjects = await r2List(env, srcPrefix, false);
           const files = [];
-          for (const obj of stagingList.objects) {
+          for (const obj of stagingObjects) {
             if (obj.key === srcPrefix) continue;
             const rel = obj.key.slice(srcPrefix.length);
-            if (rel && !rel.endsWith("/")) files.push({ srcKey: obj.key, relPath: rel, size: obj.size });
+            if (rel) files.push({ srcKey: obj.key, relPath: rel, size: obj.size });
           }
           
           if (files.length === 0) {
             return json({ success: false, error: `No files found in cloud: ${srcEditor}/${srcResource}` }, 404);
           }
           
-          // Copy each file from staging to production
+          // Copy each file/folder from staging to production
           let copied = 0;
           const failed = [];
           for (const f of files) {
             try {
-              const data = await stagingBucket.get(f.srcKey);
-              if (data) {
-                const bytes = await data.arrayBuffer();
-                await prodBucket.put(dstPrefix + f.relPath, bytes);
+              if (f.relPath.endsWith("/")) {
+                // Directory placeholder
+                await prodBucket.put(dstPrefix + f.relPath, new ArrayBuffer(0));
                 copied++;
+              } else {
+                const data = await stagingBucket.get(f.srcKey);
+                if (data) {
+                  const bytes = await data.arrayBuffer();
+                  await prodBucket.put(dstPrefix + f.relPath, bytes);
+                  copied++;
+                }
               }
             } catch (e) {
               failed.push(f.srcKey);
