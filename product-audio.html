@@ -213,7 +213,7 @@
 
         // Meta grid
         var filename = '';
-        try { filename = new URL(audioSrc).pathname.split('/').pop().split('?')[0]; } catch(e) {}
+        try { filename = decodeURIComponent(new URL(audioSrc).pathname.split('/').pop().split('?')[0]); } catch(e) {}
         var metaHtml = '<div class="meta-grid anim-3">';
         metaHtml += '<div class="meta-item"><div class="mi-icon"><i class="fas fa-folder"></i></div><div class="mi-info"><strong>Categories</strong><span>' + esc(cats.length ? cats.map(function(c){ return catNames[c] || c; }).join(', ') : 'General') + '</span></div></div>';
         metaHtml += '<div class="meta-item"><div class="mi-icon"><i class="fas fa-calendar"></i></div><div class="mi-info"><strong>Published</strong><span>' + (p.created_at ? new Date(p.created_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : 'Recently') + '</span></div></div>';
