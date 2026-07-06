@@ -1176,9 +1176,15 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
         if (obj) {
           const ext = fname.split('.').pop().toLowerCase();
           const mime = { mp3: 'audio/mpeg', wav: 'audio/wav', flac: 'audio/flac', ogg: 'audio/ogg', m4a: 'audio/mp4', aac: 'audio/aac' };
-          return new Response(obj.body, {
-            headers: { "Content-Type": mime[ext] || 'audio/mpeg', "Accept-Ranges": "bytes", "Access-Control-Allow-Origin": "*" }
-          });
+          const headers = {
+            "Content-Type": mime[ext] || 'audio/mpeg',
+            "Accept-Ranges": "bytes",
+            "Access-Control-Allow-Origin": "*"
+          };
+          if (url.searchParams.has("download")) {
+            headers["Content-Disposition"] = `attachment; filename="${fname}"`;
+          }
+          return new Response(obj.body, { headers });
         }
         return new Response(null, { status: 404 });
       } catch(e) { return new Response(null, { status: 500 }); }

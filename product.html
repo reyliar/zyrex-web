@@ -752,6 +752,7 @@
             // Build downloads block
             let dlHtml = '';
             if (p.type === 'audio' && p.file_url) {
+                const downloadUrl = p.file_url + (p.file_url.includes('?') ? '&' : '?') + 'download=1';
                 dlHtml = `
                     <div class="product-dl-btn" style="flex-direction:column;align-items:flex-start;gap:10px;padding:16px;cursor:default">
                         <div style="display:flex;align-items:center;gap:12px;width:100%">
@@ -759,7 +760,7 @@
                             <div class="dl-info"><strong style="color:var(--light)">Audio Preview</strong><span style="color:var(--gray)">${p.name}</span></div>
                         </div>
                         <audio controls style="width:100%;height:36px;border-radius:8px"><source src="${p.file_url}" type="audio/mpeg"></audio>
-                        <a href="${p.file_url}" download class="btn btn-primary" style="padding:8px 18px;font-size:.78rem;text-decoration:none;width:auto">Download Audio</a>
+                        <a href="${downloadUrl}" download class="btn btn-primary" style="padding:8px 18px;font-size:.78rem;text-decoration:none;width:auto" onclick="fetch('/api/downloads/track', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product_id: '${p.id}' }) }).catch(function(){})">Download Audio</a>
                     </div>
                 `;
             } else if (p.type === 'scenepack' && p.source_url) {

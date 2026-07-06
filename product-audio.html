@@ -226,8 +226,21 @@
             var dlName = (p.name || 'audio') + ' - ' + (p.author_name || 'Zyrex');
             var dlExt = audioSrc.split('.').pop().split('?')[0] || 'mp3';
             var safeDlName = dlName.replace(/[\/\\:*?"<>|]/g, '').trim().substring(0, 80) + '.' + dlExt;
+            var downloadUrl = esc(audioSrc) + (audioSrc.indexOf('?') === -1 ? '?' : '&') + 'download=1';
+            
+            // Define trackDownload inline if not defined
+            if (!window.trackDownload) {
+                window.trackDownload = function(pid) {
+                    fetch('/api/downloads/track', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ product_id: pid })
+                    }).catch(function(){});
+                };
+            }
+
             var dlHtml = '<div class="dl-section anim-3">';
-            dlHtml += '<a href="' + esc(audioSrc) + '" download="' + esc(safeDlName) + '" class="btn-dl btn-dl-primary"><i class="fas fa-download"></i> Download Audio</a>';
+            dlHtml += '<a href="' + downloadUrl + '" download="' + esc(safeDlName) + '" class="btn-dl btn-dl-primary" onclick="trackDownload(\'' + esc(p.id) + '\')"><i class="fas fa-download"></i> Download Audio</a>';
             dlHtml += '<button class="btn-dl btn-dl-secondary" id="btnCopyLink"><i class="fas fa-copy"></i> Copy Link</button>';
             dlHtml += '</div>';
             document.getElementById('root').innerHTML += dlHtml;
