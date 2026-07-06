@@ -251,10 +251,20 @@ img { max-width: 100%; display: block; }
     z-index: 10000;
     padding: 18px 0;
     transition: var(--transition), transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    /* Force GPU compositing from the start to prevent white flash glitch */
+    will-change: transform, background-color, backdrop-filter;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    /* Near-invisible base background so browser never repaints from fully transparent */
+    background: rgba(8, 1, 3, 0.01);
+    backdrop-filter: blur(0px);
+    -webkit-backdrop-filter: blur(0px);
 }
 
 .navbar.scrolled {
-    background: rgba(10, 2, 4, 0.85);
+    background: rgba(8, 1, 3, 0.88);
     backdrop-filter: blur(30px) saturate(230%);
     -webkit-backdrop-filter: blur(30px) saturate(230%);
     padding: 12px 0;
@@ -263,7 +273,7 @@ img { max-width: 100%; display: block; }
 }
 
 .navbar.nav-hidden {
-    transform: translateY(-100%) !important;
+    transform: translateY(-100%) translateZ(0) !important;
 }
 
 .navbar .container {
@@ -1157,15 +1167,20 @@ img { max-width: 100%; display: block; }
     box-shadow: 0 14px 45px 0 rgba(0, 0, 0, 0.60) !important;
 }
 
-/* Navbar glass */
+/* Navbar glass — base always on GPU layer, blur only when scrolled */
 .navbar {
-    backdrop-filter: blur(28px) saturate(220%) !important;
-    -webkit-backdrop-filter: blur(28px) saturate(220%) !important;
     z-index: 10000 !important;
+    will-change: transform, background-color !important;
+    transform: translateZ(0) !important;
+    -webkit-transform: translateZ(0) !important;
+    backface-visibility: hidden !important;
+    -webkit-backface-visibility: hidden !important;
 }
 
 .navbar.scrolled {
     background: rgba(8, 1, 3, 0.88) !important;
+    backdrop-filter: blur(30px) saturate(230%) !important;
+    -webkit-backdrop-filter: blur(30px) saturate(230%) !important;
     border-bottom: 1px solid rgba(var(--cherry-rgb), 0.07) !important;
     box-shadow: 0 4px 30px rgba(0, 0, 0, 0.55) !important;
 }
