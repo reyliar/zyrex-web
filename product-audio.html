@@ -11,7 +11,7 @@
     <meta name="author" content="Zyrex">
     <title>Zyrex | Audio</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="stylesheet" href="css/style.css?v=14">
+    <link rel="stylesheet" href="css/style.css?v=16">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
@@ -77,11 +77,57 @@
         
         /* Download button */
         .dl-section{display:flex;gap:12px;flex-wrap:wrap}
-        .btn-dl{display:inline-flex;align-items:center;gap:10px;padding:15px 28px;border-radius:14px;font-size:.88rem;font-weight:700;cursor:pointer;text-decoration:none;transition:all .3s;font-family:inherit;border:none}
-        .btn-dl-primary{background:linear-gradient(135deg,var(--accent),#5b21b6);border:1px solid rgba(var(--accent-rgb),.3);color:#fff;box-shadow:0 4px 20px var(--accent-glow)}
-        .btn-dl-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(var(--accent-rgb),.5)}
-        .btn-dl-secondary{background:rgba(var(--accent-rgb),.06);border:1px solid rgba(var(--accent-rgb),.12);color:var(--accent-light)}
-        .btn-dl-secondary:hover{background:rgba(var(--accent-rgb),.12)}
+        .btn-dl {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 15px 28px;
+            border-radius: 14px;
+            font-size: .88rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            font-family: inherit;
+            border: none;
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-dl-primary {
+            background: linear-gradient(135deg, #a81228 0%, #5c0613 100%) !important;
+            border: 1px solid rgba(255, 77, 109, 0.3) !important;
+            color: #fff !important;
+            box-shadow: 0 8px 25px rgba(168, 18, 40, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.15) !important;
+        }
+        .btn-dl-primary::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -150%;
+            width: 80%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+            transform: skewX(-30deg);
+            transition: none;
+        }
+        .btn-dl-primary:hover::after {
+            left: 180%;
+            transition: all 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .btn-dl-primary:hover {
+            transform: translateY(-3px) scale(1.02) !important;
+            border-color: rgba(255, 77, 109, 0.6) !important;
+            box-shadow: 0 15px 35px rgba(168, 18, 40, 0.65), 0 0 20px rgba(255, 77, 109, 0.3) !important;
+            filter: brightness(1.15);
+        }
+        .btn-dl-secondary {
+            background: rgba(var(--accent-rgb), .06);
+            border: 1px solid rgba(var(--accent-rgb), .12);
+            color: var(--accent-light);
+        }
+        .btn-dl-secondary:hover {
+            background: rgba(var(--accent-rgb), .12);
+            transform: translateY(-3px) scale(1.02);
+            border-color: var(--accent-light);
+        }
         
         /* Meta grid */
         .meta-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}

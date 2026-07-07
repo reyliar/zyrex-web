@@ -15,7 +15,7 @@
     <meta name="author" content="Zyrex">
     <title>Zyrex | Preset</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="stylesheet" href="css/style.css?v=14">
+    <link rel="stylesheet" href="css/style.css?v=16">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
@@ -62,9 +62,31 @@
         .up span { font-size:.7rem; color:var(--gray-dark) }
         
         /* Cards */
-        .card { background:var(--card-bg); border:1px solid var(--card-border); border-radius:16px; padding:24px; backdrop-filter:blur(15px); -webkit-backdrop-filter:blur(15px); box-shadow:0 4px 20px rgba(0,0,0,.2); margin-bottom:var(--gap) }
+        .card {
+            background: linear-gradient(145deg, rgba(30, 4, 10, 0.45) 0%, rgba(10, 2, 4, 0.75) 100%) !important;
+            backdrop-filter: blur(30px) saturate(220%);
+            -webkit-backdrop-filter: blur(30px) saturate(220%);
+            border: 1.5px solid transparent !important;
+            border-radius: 20px !important;
+            padding: 24px;
+            margin-bottom: var(--gap);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.05);
+            background-image: linear-gradient(rgba(10, 2, 4, 0.85), rgba(10, 2, 4, 0.85)), 
+                              conic-gradient(from var(--gradient-angle), transparent 20%, rgba(230, 21, 54, 0.15), var(--rose-glow), rgba(230, 21, 54, 0.15), transparent 80%) !important;
+            background-origin: border-box;
+            background-clip: padding-box, border-box;
+            animation: rotateBorder 6s linear infinite;
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        }
+        .card:hover {
+            transform: translateY(-4px) scale(1.01) !important;
+            background-image: linear-gradient(rgba(18, 3, 6, 0.8), rgba(18, 3, 6, 0.8)), 
+                              conic-gradient(from var(--gradient-angle), transparent 10%, rgba(230, 21, 54, 0.4), var(--rose-glow), rgba(230, 21, 54, 0.4), transparent 90%) !important;
+            box-shadow: 0 35px 75px rgba(0, 0, 0, 0.8), 0 0 40px rgba(230, 21, 54, 0.25), inset 0 1px 4px rgba(255, 255, 255, 0.1) !important;
+            animation: rotateBorder 3s linear infinite;
+        }
         .ct { font-size:.72rem; font-weight:700; color:var(--gray-dark); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:16px; display:flex; align-items:center; gap:8px }
-        .ct i { color:var(--cherry); font-size:.8rem }
+        .ct i { color:var(--cherry-light); font-size:.8rem }
         .desc { color:var(--gray); font-size:.9rem; line-height:1.8 }
         
         /* Sidebar */
@@ -72,8 +94,47 @@
         .sidebar .card { padding:20px }
         
         /* Download button */
-        .dlb { display:flex; align-items:center; justify-content:center; gap:12px; padding:18px 24px; background:linear-gradient(135deg,#8a0a22,#5a0614,#3d020c); border:1px solid rgba(var(--cherry-rgb),.3); border-radius:14px; color:#fff; font-size:1.05rem; font-weight:700; cursor:pointer; text-decoration:none; transition:.3s; margin-bottom:6px; box-shadow:0 4px 18px rgba(var(--cherry-rgb),.3),inset 0 1px 1px rgba(255,255,255,.1); font-family:inherit; width:100%; border:none }
-        .dlb:hover { box-shadow:0 6px 25px rgba(var(--cherry-rgb),.5),inset 0 1px 2px rgba(255,255,255,.15); transform:translateY(-1px) }
+        .dlb {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 16px 24px;
+            background: linear-gradient(135deg, #a81228 0%, #5c0613 100%) !important;
+            border: 1px solid rgba(255, 77, 109, 0.3) !important;
+            border-radius: 14px;
+            color: #fff;
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            margin-bottom: 6px;
+            box-shadow: 0 8px 25px rgba(168, 18, 40, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.15) !important;
+            font-family: inherit;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        .dlb::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -150%;
+            width: 80%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+            transform: skewX(-30deg);
+            transition: none;
+        }
+        .dlb:hover::after {
+            left: 180%;
+            transition: all 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .dlb:hover {
+            transform: translateY(-3px) scale(1.02) !important;
+            border-color: rgba(255, 77, 109, 0.6) !important;
+            box-shadow: 0 15px 35px rgba(168, 18, 40, 0.65), 0 0 20px rgba(255, 77, 109, 0.3) !important;
+            filter: brightness(1.15);
+        }
         .dlb:disabled { opacity:0.6; cursor:not-allowed; transform:none }
         .dlb i { font-size:1.1rem }
         .dls { text-align:center; font-size:.7rem; color:var(--gray-dark); margin-bottom:var(--gap) }

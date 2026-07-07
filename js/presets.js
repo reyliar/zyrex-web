@@ -153,6 +153,12 @@ function renderPresets(items) {
             requestAnimationFrame(() => {
                 item.style.opacity = '1';
                 item.style.transform = 'translateY(0)';
+                setTimeout(() => {
+                    item.style.opacity = '';
+                    item.style.transform = '';
+                    item.style.transition = '';
+                    item.style.transitionDelay = '';
+                }, 500 + (i * 30));
             });
         });
     });
