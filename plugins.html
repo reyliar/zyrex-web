@@ -83,12 +83,12 @@
         .no-results i{font-size:2.5rem;margin-bottom:16px;opacity:.3}
         .no-results p{font-size:.9rem}
 
-        /* === STATS === */
-        .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:32px}
-        .stat-card{background:rgba(255,255,255,.015);border:1px solid rgba(255,255,255,.04);border-radius:14px;padding:20px;text-align:center;transition:.25s}
-        .stat-card:hover{border-color:rgba(230,21,54,.1);background:rgba(230,21,54,.02);transform:translateY(-1px)}
-        .stat-card .stat-num{font-size:1.8rem;font-weight:900;color:var(--cherry-light);line-height:1;margin-bottom:4px;font-family:'Outfit',sans-serif}
-        .stat-card .stat-label{font-size:.65rem;color:var(--gray-dark);text-transform:uppercase;letter-spacing:1px;font-weight:600}
+        /* === STATS (always visible) === */
+        .stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:28px}
+        .stat-card{background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:14px;padding:20px 16px;text-align:center;transition:.25s}
+        .stat-card:hover{border-color:rgba(230,21,54,.15);background:rgba(230,21,54,.02)}
+        .stat-card .stat-num{font-size:2rem;font-weight:900;color:var(--cherry-light);line-height:1;margin-bottom:4px;font-family:'Outfit',sans-serif}
+        .stat-card .stat-label{font-size:.68rem;color:var(--gray-dark);text-transform:uppercase;letter-spacing:1px;font-weight:600}
 
         @media(max-width:768px){
             .kf-hero{padding-top:120px}
@@ -189,12 +189,11 @@
             <div class="no-results" style="grid-column:1/-1"><i class="fas fa-spinner fa-spin"></i><p>Loading plugins...</p></div>
         </div>
 
-        <!-- Stats -->
+        <!-- Stats (always visible) -->
         <div class="stats-row" id="pluginsStats">
-            <div class="stat-card"><div class="stat-num" id="statTotalPlugins">0</div><div class="stat-label">Total</div></div>
-            <div class="stat-card"><div class="stat-num" id="statWinPlugins">0</div><div class="stat-label">Windows</div></div>
-            <div class="stat-card"><div class="stat-num" id="statMacPlugins">0</div><div class="stat-label">Mac</div></div>
-            <div class="stat-card"><div class="stat-num" id="statAdobePlugins">0</div><div class="stat-label">Adobe</div></div>
+            <div class="stat-card"><div class="stat-num" id="statSoftware">0</div><div class="stat-label">Software</div></div>
+            <div class="stat-card"><div class="stat-num" id="statAdobe">0</div><div class="stat-label">Adobe Plugins</div></div>
+            <div class="stat-card"><div class="stat-num" id="statOfx">0</div><div class="stat-label">OFX Plugins</div></div>
         </div>
 
         <!-- Plugins Grid (filtered results) -->
@@ -286,14 +285,12 @@
         }
 
         function updatePluginStats() {
-            var total = allPlugins.length;
-            var win = allPlugins.filter(function(p){var pl=(p.platform||'').toLowerCase();return pl==='win'||pl==='both'||pl==='windows';}).length;
-            var mac = allPlugins.filter(function(p){var pl=(p.platform||'').toLowerCase();return pl==='mac'||pl==='both';}).length;
+            var sw = allPlugins.filter(function(p){var c=(p.category||'').toLowerCase();return c==='software';}).length;
             var adobe = allPlugins.filter(function(p){var c=(p.category||'').toLowerCase();return c==='adobe-plugin'||c==='ae-plugins'||c==='pr-plugins';}).length;
-            animateNum('statTotalPlugins', total);
-            animateNum('statWinPlugins', win);
-            animateNum('statMacPlugins', mac);
-            animateNum('statAdobePlugins', adobe);
+            var ofx = allPlugins.filter(function(p){var c=(p.category||'').toLowerCase();return c==='ofx-plugin';}).length;
+            animateNum('statSoftware', sw);
+            animateNum('statAdobe', adobe);
+            animateNum('statOfx', ofx);
         }
 
         function animateNum(id, target) {
@@ -488,145 +485,6 @@
                 if (inp) inp.focus();
             }
         });
-            
-            // Merge locally-published products (from admin wizard)
-            try {
-                const localItems = JSON.parse(localStorage.getItem('zyrex_new_products') || '[]');
-                localItems.forEach(item => {
-                    if (!allPlugins.some(p => p.id === item.id)) {
-                        allPlugins.unshift(item);
-                    }
-                });
-            } catch(e) {}
-            
-            // Apply admin edits from localStorage
-            try {
-                const edits = JSON.parse(localStorage.getItem('zyrex_edited_products') || '{}');
-                allPlugins = allPlugins.map(p => {
-                    if (edits[p.id]) {
-                        const e = edits[p.id];
-                        return { ...p, name: e.name || p.name, category: e.category || p.category, platform: e.platform || p.platform, desc: e.description || p.desc, password: e.password !== undefined ? e.password : p.password, links: e.links || p.links, notes: e.notes || p.notes };
-                    }
-                    return p;
-                });
-            } catch(e) {}
-            
-            updatePluginStats(allPlugins);
-            renderPlugins();
-        }
-
-        function filterPlatform(el, platform) {
-            document.querySelectorAll('.platform-btn').forEach(b => b.classList.remove('active'));
-            el.classList.add('active');
-            currentPlatform = platform;
-            renderPlugins();
-        }
-
-        function filterPlugins() {
-            renderPlugins();
-        }
-
-        function renderPlugins() {
-            const grid = document.getElementById('pluginsGrid');
-            const q = (document.getElementById('pluginSearch')?.value || '').toLowerCase();
-
-            let filtered = allPlugins.filter(p => {
-                if (currentPlatform !== 'all') {
-                    var plat = (p.platform || '').toLowerCase();
-                    if (currentPlatform === 'windows' && plat !== 'win' && plat !== 'both') return false;
-                    if (currentPlatform === 'apple' && plat !== 'mac' && plat !== 'both') return false;
-                }
-                if (currentCat !== 'all') {
-                    var c=(p.category||'').toLowerCase();
-                    if (currentCat==='adobe-plugin'&&c!=='adobe-plugin'&&c!=='ae-plugins'&&c!=='pr-plugins')return false;
-                    else if(c!==currentCat)return false;
-                }
-                if (q && !(p.name||'').toLowerCase().includes(q)) return false;
-                return true;
-            });
-
-            updatePluginStats();
-
-            if (!filtered.length) {
-                grid.innerHTML = '<div class="no-results"><i class="fas fa-search"></i><p>No plugins match your filters.</p></div>';
-                return;
-            }
-
-            grid.innerHTML = filtered.map((p, index) => {
-                // Platform badge with brand color
-                let platformBadge = '';
-                if (p.platform) {
-                    const plat = (p.platform || '').toLowerCase();
-                    let badgeClass = '', badgeIcon = '', badgeLabel = '';
-                    if (plat === 'win' || plat === 'windows') {
-                        badgeClass = 'platform-badge-win';
-                        badgeIcon = '<i class="fab fa-windows"></i>';
-                        badgeLabel = 'Windows';
-                    } else if (plat === 'mac') {
-                        badgeClass = 'platform-badge-mac';
-                        badgeIcon = '<i class="fab fa-apple"></i>';
-                        badgeLabel = 'Mac';
-                    } else {
-                        badgeClass = 'platform-badge-both';
-                        badgeIcon = '<i class="fab fa-windows"></i><i class="fab fa-apple" style="margin-left:3px"></i>';
-                        badgeLabel = 'Both';
-                    }
-                    platformBadge = `<span class="platform-pill ${badgeClass}">${badgeIcon} ${badgeLabel}</span>`;
-                }
-                
-                return `
-                <div class="plugin-card shimmer-sweep stagger-item" onclick="window.location.href='/product?id=${p.id}'" style="animation-delay:${index * 0.06}s">
-                    <div class="top">
-                        <div class="icon"><i class="fas ${getCategoryIcon(p.category)}"></i></div>
-                        <div class="info">
-                            <h3>${p.name||'Untitled'}</h3>
-                            <div class="author">Category: <span>${getCategoryLabel(p.category)}</span></div>
-                        </div>
-                    </div>
-                    <div class="desc">${p.desc||''}</div>
-                    <div class="tags">
-                        ${platformBadge}
-                    </div>
-                    <a href="/product?id=${p.id}" class="dl-link" onclick="event.stopPropagation()"><i class="fas fa-download"></i> Get Plugin</a>
-                    ${window._isAdmin ? `<button class="card-del-btn" onclick="event.stopPropagation();deletePlugin('${p.id}','${(p.name||'').replace(/'/g,"\\'")}')" title="Delete"><i class="fas fa-trash"></i></button>` : ''}
-                </div>
-            `}).join('');
-        }
-
-        // ── ADMIN ──
-        let _isAdmin = false;
-        const DELETED_KEY = 'zyrex_deleted_products';
-        
-        function getDeletedIds() {
-            try { return JSON.parse(localStorage.getItem(DELETED_KEY) || '[]'); } catch(e) { return []; }
-        }
-        function addDeletedId(id) {
-            const ids = getDeletedIds();
-            if (!ids.includes(id)) { ids.push(id); localStorage.setItem(DELETED_KEY, JSON.stringify(ids)); }
-        }
-        
-        async function checkAdmin() {
-            try {
-                const r = await fetch('/api/me', { credentials: 'include' });
-                if (r.ok) { const u = await r.json(); _isAdmin = u.is_admin; window._isAdmin = _isAdmin; }
-            } catch(e) {}
-        }
-        async function deletePlugin(id, name) {
-            if (!confirm('Delete "' + name + '"? This cannot be undone.')) return;
-            try {
-                const r = await fetch('/api/products/delete', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id }), credentials: 'include'
-                });
-                if (r.ok) {
-                    addDeletedId(id); // Persist in localStorage
-                    alert('Deleted!');
-                    location.reload();
-                } else alert('Delete failed');
-            } catch(e) { alert('Error: ' + e.message); }
-        }
-
-        document.addEventListener('DOMContentLoaded', async () => { await checkAdmin(); initPlugins(); });
     </script>
 </body>
 </html>
