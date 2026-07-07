@@ -264,6 +264,11 @@ if (contactForm) {
             submitBtn.innerHTML = 'Sent! <i class="fas fa-check"></i>';
             submitBtn.style.background = 'linear-gradient(135deg, #7a081e, #8b0000)';
 
+            // Show our custom premium toast
+            if (typeof window.showToast === 'function') {
+                window.showToast('Message Received', 'Thank you for reaching out! We will get back to you shortly.', 'success');
+            }
+
             setTimeout(() => {
                 submitBtn.innerHTML = originalText;
                 submitBtn.style.background = '';
@@ -358,5 +363,69 @@ if (particlesContainer) {
 document.addEventListener('DOMContentLoaded', () => {
     loadTeamMembers();
 });
+
+/* ===================== TOAST SYSTEM ===================== */
+window.showToast = function(title, message, type = 'success') {
+    let container = document.getElementById('toastContainer');
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'toastContainer';
+        container.style.position = 'fixed';
+        container.style.bottom = '24px';
+        container.style.right = '24px';
+        container.style.zIndex = '99999';
+        container.style.display = 'flex';
+        container.style.flexDirection = 'column';
+        container.style.gap = '12px';
+        container.style.pointerEvents = 'none';
+        document.body.appendChild(container);
+    }
+
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    toast.style.background = 'rgba(12, 4, 8, 0.88)';
+    toast.style.backdropFilter = 'blur(20px)';
+    toast.style.webkitBackdropFilter = 'blur(20px)';
+    toast.style.border = '1px solid rgba(168, 15, 45, 0.35)';
+    toast.style.borderRadius = '14px';
+    toast.style.padding = '16px 20px';
+    toast.style.color = '#fff';
+    toast.style.display = 'flex';
+    toast.style.alignItems = 'center';
+    toast.style.gap = '14px';
+    toast.style.boxShadow = '0 10px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(168, 15, 45, 0.15)';
+    toast.style.width = '340px';
+    toast.style.pointerEvents = 'auto';
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateY(20px)';
+    toast.style.transition = 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
+
+    const icon = type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation';
+    const iconColor = type === 'success' ? '#00c864' : '#ff3860';
+
+    toast.innerHTML = `
+        <i class="fas ${icon}" style="font-size: 1.4rem; color: ${iconColor}; flex-shrink: 0;"></i>
+        <div style="flex: 1; min-width: 0;">
+            <strong style="display: block; font-size: 0.85rem; font-weight: 700; margin-bottom: 2px;">${title}</strong>
+            <span style="display: block; font-size: 0.76rem; color: #8888a0; line-height: 1.4;">${message}</span>
+        </div>
+        <button style="background: transparent; border: none; color: #55556a; cursor: pointer; font-size: 0.8rem; padding: 4px; transition: color 0.2s;" onclick="this.parentElement.style.opacity='0';setTimeout(()=>this.parentElement.remove(),400)"><i class="fas fa-times"></i></button>
+    `;
+
+    container.appendChild(toast);
+    
+    // Animate in
+    setTimeout(() => {
+        toast.style.opacity = '1';
+        toast.style.transform = 'translateY(0)';
+    }, 50);
+
+    // Animate out
+    setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(-20px)';
+        setTimeout(() => toast.remove(), 400);
+    }, 4500);
+};
 
 console.log('🔥 Zyrex - Website loaded successfully!');

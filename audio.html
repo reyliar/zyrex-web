@@ -113,7 +113,11 @@
                     activeAudio.play();
                     btn.innerHTML = '<i class="fas fa-pause"></i>';
                 } else {
-                    alert('Preview not available');
+                    if (typeof window.showToast === 'function') {
+                        window.showToast('Preview Unavailable', 'This audio resource does not have an active preview URL.', 'error');
+                    } else {
+                        alert('Preview not available');
+                    }
                     btn.innerHTML = '<i class="fas fa-play"></i>';
                 }
             } catch(err) {
