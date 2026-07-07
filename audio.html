@@ -5,32 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zyrex | Audio Library</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="stylesheet" href="css/style.css?v=16">
+    <link rel="stylesheet" href="css/style.css?v=17">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         body{background:var(--dark);color:var(--light);font-family:'Poppins',sans-serif;min-height:100vh}
         .page-wrap{max-width:1200px;margin:0 auto;padding:140px 24px 60px}
-        .page-wrap h1{font-size:2.5rem;font-weight:900;margin-bottom:8px;letter-spacing:-1px}
-        .page-wrap .subtitle{color:var(--gray);font-size:.95rem;margin-bottom:40px}
-        .audio-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
-        .audio-card{background:linear-gradient(145deg, rgba(30, 4, 10, 0.45) 0%, rgba(10, 2, 4, 0.7) 100%);backdrop-filter:blur(30px) saturate(220%);-webkit-backdrop-filter:blur(30px) saturate(220%);border:1px solid rgba(230, 21, 54, 0.12);border-radius:18px;padding:24px;transition:all 0.45s cubic-bezier(0.16, 1, 0.3, 1);text-decoration:none;color:var(--light);display:flex;justify-content:space-between;align-items:center;gap:16px;box-shadow:0 20px 40px rgba(0,0,0,0.5), inset 0 1px 2px rgba(255,255,255,0.05);position:relative;overflow:hidden}
-        .audio-card:hover{transform:translateY(-8px) scale(1.04);border-color:rgba(230, 21, 54, 0.4);box-shadow:0 30px 60px rgba(0,0,0,0.7), 0 0 35px rgba(230, 21, 54, 0.2), inset 0 1px 3px rgba(255,255,255,0.08)}
-        .audio-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--rose-glow),transparent);opacity:0.7}
-        .audio-card h3{font-size:.98rem;font-weight:800;margin-bottom:6px;font-family:'Outfit',sans-serif;color:var(--light)}
-        .audio-card .meta{font-size:.72rem;color:var(--gray-dark);display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+        .page-header{display:flex;align-items:center;gap:16px;margin-bottom:8px;flex-wrap:wrap}
+        .page-header h1{font-size:2.5rem;font-weight:900;letter-spacing:-1px;font-family:'Outfit',sans-serif;margin:0}
+        .page-header .icon-circle{width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,rgba(230,21,54,.2),rgba(230,21,54,.05));border:1px solid rgba(230,21,54,.15);display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:var(--rose-glow);flex-shrink:0}
+        .page-wrap .subtitle{color:var(--gray);font-size:.95rem;margin-bottom:36px}
+        .audio-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+        .audio-card{background:linear-gradient(145deg,rgba(30,4,10,.5) 0%,rgba(10,2,4,.75) 100%);backdrop-filter:blur(30px) saturate(220%);-webkit-backdrop-filter:blur(30px) saturate(220%);border:1px solid rgba(230,21,54,.08);border-radius:20px;padding:24px;transition:all 0.4s cubic-bezier(0.16,1,0.3,1);text-decoration:none;color:var(--light);display:flex;justify-content:space-between;align-items:center;gap:16px;box-shadow:0 20px 40px rgba(0,0,0,.5),inset 0 1px 2px rgba(255,255,255,.04);position:relative;overflow:hidden}
+        .audio-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(230,21,54,.35),var(--rose-glow),rgba(230,21,54,.35),transparent);opacity:.5}
+        .audio-card::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(230,21,54,.03) 0%,transparent 60%);pointer-events:none;opacity:0;transition:opacity .4s ease}
+        .audio-card:hover{transform:translateY(-6px) scale(1.02);border-color:rgba(230,21,54,.25);box-shadow:0 30px 60px rgba(0,0,0,.7),0 0 40px rgba(230,21,54,.12),inset 0 1px 3px rgba(255,255,255,.06)}
+        .audio-card:hover::after{opacity:1}
+        .audio-card h3{font-size:.98rem;font-weight:800;margin-bottom:6px;font-family:'Outfit',sans-serif;color:var(--light);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:200px}
+        .audio-card .meta{font-size:.72rem;color:var(--gray-dark);display:flex;gap:10px;flex-wrap:wrap;align-items:center}
         .audio-card .meta span{display:flex;align-items:center;gap:4px}
         .audio-card .meta i{color:var(--cherry-light);font-size:.65rem}
-        .audio-card .cat-tag{display:inline-flex;padding:4px 10px;border-radius:6px;font-size:.65rem;font-weight:700;background:rgba(var(--cherry-rgb),.1);color:var(--cherry-light);border:1px solid rgba(var(--cherry-rgb),.15);text-transform:uppercase;letter-spacing:0.5px}
+        .audio-card .cat-tag{display:inline-flex;padding:4px 10px;border-radius:7px;font-size:.65rem;font-weight:700;background:rgba(230,21,54,.08);color:var(--cherry-light);border:1px solid rgba(230,21,54,.12);text-transform:uppercase;letter-spacing:.5px}
+        .play-btn{background:rgba(230,21,54,.1);border:1px solid rgba(230,21,54,.2);border-radius:50%;width:40px;height:40px;display:flex;align-items:center;justify-content:center;color:var(--rose-glow);cursor:pointer;flex-shrink:0;transition:all .25s}
+        .play-btn:hover{background:rgba(230,21,54,.2);border-color:rgba(230,21,54,.4);transform:scale(1.1)}
         .empty{text-align:center;padding:60px 20px;color:var(--gray-dark)}
-        .empty i{font-size:3rem;color:var(--cherry);opacity:.2;display:block;margin-bottom:16px}
-        .search-wrap{position:relative;max-width:400px;margin-bottom:24px}
-        .search-wrap i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--gray-dark);font-size:.8rem;pointer-events:none;z-index:1}
-        .search-wrap input{width:100%;padding:12px 16px 12px 40px;background:rgba(0,0,0,.3);border:1px solid rgba(var(--cherry-rgb),.12);border-radius:10px;color:var(--light);font-family:inherit;font-size:.85rem;outline:none;transition:.2s}
-        .search-wrap input:focus{border-color:var(--cherry-light)}
+        .empty i{font-size:3rem;color:var(--cherry);opacity:.15;display:block;margin-bottom:16px}
+        .search-wrap{position:relative;max-width:420px;margin-bottom:24px}
+        .search-wrap i{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--gray-dark);font-size:.82rem;pointer-events:none;z-index:1}
+        .search-wrap input{width:100%;padding:14px 18px 14px 44px;background:rgba(0,0,0,.35);border:1px solid rgba(230,21,54,.1);border-radius:14px;color:var(--light);font-family:inherit;font-size:.88rem;outline:none;transition:.25s}
+        .search-wrap input:focus{border-color:rgba(230,21,54,.35);box-shadow:0 0 0 3px rgba(230,21,54,.06)}
         .search-wrap input::placeholder{color:var(--gray-dark)}
         .results-count{font-size:.75rem;color:var(--gray-dark);margin-bottom:14px}
-        @media(max-width:768px){.page-wrap{padding-top:110px}}
+        @media(max-width:768px){.page-wrap{padding-top:110px}.page-header h1{font-size:1.8rem}.audio-grid{grid-template-columns:1fr}}
     </style>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5438472060600560" crossorigin="anonymous"></script>
 </head>
@@ -39,7 +45,7 @@
     <nav class="navbar"><div class="container"><a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><ul class="nav-links" id="navLinks"><li><a href="/">Home</a></li><li><a href="resources">Resources</a></li><li><a href="plugins">Plugins</a></li><li><a href="more">More</a></li><li><a href="/#contact">Contact</a></li></ul><div class="nav-actions"><div id="authBtn"></div><a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord"><i class="fab fa-discord"></i> <span>Join Us</span></a><button class="hamburger" id="hamburger"><span></span><span></span><span></span></button></div></div></nav>
 
     <div class="page-wrap">
-        <h1><i class="fas fa-music" style="color:var(--cherry-light)"></i> Audio Library</h1>
+        <div class="page-header"><div class="icon-circle"><i class="fas fa-music"></i></div><h1>Audio Library</h1></div>
         <p class="subtitle">Premium audios by top creators.</p>
         <div class="search-wrap"><i class="fas fa-search"></i><input type="text" id="audioSearch" placeholder="Search audio by name or creator..."></div>
         <div class="results-count" id="resultsCount"></div>
