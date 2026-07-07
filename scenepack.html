@@ -10,32 +10,64 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         body{background:var(--dark);color:var(--light);font-family:'Poppins',sans-serif;min-height:100vh}
-        .page-wrap{max-width:1200px;margin:0 auto;padding:140px 24px 60px}
-        .page-header{display:flex;align-items:center;gap:16px;margin-bottom:8px;flex-wrap:wrap}
-        .page-header h1{font-size:2.5rem;font-weight:900;letter-spacing:-1px;font-family:'Outfit',sans-serif;margin:0}
-        .page-header .icon-circle{width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,rgba(230,21,54,.2),rgba(230,21,54,.05));border:1px solid rgba(230,21,54,.15);display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:var(--rose-glow);flex-shrink:0}
-        .page-wrap .subtitle{color:var(--gray);font-size:.95rem;margin-bottom:36px}
-        .sp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
-        .sp-card{background:linear-gradient(145deg,rgba(30,4,10,.5) 0%,rgba(10,2,4,.75) 100%);backdrop-filter:blur(30px) saturate(220%);-webkit-backdrop-filter:blur(30px) saturate(220%);border:1px solid rgba(230,21,54,.08);border-radius:20px;padding:24px;transition:all 0.4s cubic-bezier(0.16,1,0.3,1);text-decoration:none;color:var(--light);display:block;box-shadow:0 20px 40px rgba(0,0,0,.5),inset 0 1px 2px rgba(255,255,255,.04);position:relative;overflow:hidden}
-        .sp-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(230,21,54,.35),var(--rose-glow),rgba(230,21,54,.35),transparent);opacity:.5}
-        .sp-card::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(230,21,54,.03) 0%,transparent 60%);pointer-events:none;opacity:0;transition:opacity .4s ease}
-        .sp-card:hover{transform:translateY(-6px) scale(1.02);border-color:rgba(230,21,54,.25);box-shadow:0 30px 60px rgba(0,0,0,.7),0 0 40px rgba(230,21,54,.12),inset 0 1px 3px rgba(255,255,255,.06)}
-        .sp-card:hover::after{opacity:1}
-        .sp-card h3{font-size:.98rem;font-weight:800;margin-bottom:8px;font-family:'Outfit',sans-serif;color:var(--light)}
-        .sp-card .meta{font-size:.72rem;color:var(--gray-dark);display:flex;gap:12px;flex-wrap:wrap}
-        .sp-card .meta span{display:flex;align-items:center;gap:4px}
-        .sp-card .meta i{color:var(--cherry-light);font-size:.65rem}
-        .sp-card .link-btn{display:inline-flex;align-items:center;gap:6px;margin-top:14px;padding:8px 18px;border-radius:10px;font-size:.72rem;font-weight:700;background:rgba(230,21,54,.08);color:var(--cherry-light);border:1px solid rgba(230,21,54,.15);transition:.25s}
-        .sp-card:hover .link-btn{background:linear-gradient(135deg,#a81228,#7a0a1e);border-color:transparent;color:#fff;box-shadow:0 4px 20px rgba(230,21,54,.25)}
-        .empty{text-align:center;padding:60px 20px;color:var(--gray-dark)}
-        .empty i{font-size:3rem;color:var(--cherry);opacity:.15;display:block;margin-bottom:16px}
-        .search-wrap{position:relative;max-width:420px;margin-bottom:24px}
+        .page-wrap{max-width:1240px;margin:0 auto;padding:130px 24px 80px}
+
+        /* === HERO === */
+        .sp-hero{position:relative;border-radius:28px;overflow:hidden;margin-bottom:32px;background:linear-gradient(160deg,rgba(20,4,8,.9) 0%,rgba(8,2,4,.95) 100%);border:1px solid rgba(230,21,54,.1);box-shadow:0 25px 70px rgba(0,0,0,.5)}
+        .sp-hero::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,rgba(230,21,54,.4),var(--rose-glow),rgba(230,21,54,.4),transparent);z-index:2}
+        .hero-content{position:relative;z-index:1;padding:48px 52px;display:flex;align-items:center;gap:40px;flex-wrap:wrap}
+        .hero-icon{width:80px;height:80px;border-radius:24px;background:linear-gradient(135deg,rgba(230,21,54,.25),rgba(230,21,54,.05));border:1px solid rgba(230,21,54,.2);display:flex;align-items:center;justify-content:center;font-size:2.2rem;color:var(--rose-glow);flex-shrink:0;box-shadow:0 0 50px rgba(230,21,54,.15)}
+        .hero-text{flex:1;min-width:200px}
+        .hero-text .label{display:inline-flex;align-items:center;gap:6px;padding:5px 14px;border-radius:50px;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;background:rgba(230,21,54,.1);border:1px solid rgba(230,21,54,.2);color:var(--cherry-light);margin-bottom:12px}
+        .hero-text h1{font-size:2.6rem;font-weight:900;letter-spacing:-.5px;font-family:'Outfit',sans-serif;margin:0 0 4px;line-height:1.1}
+        .hero-text .subtitle{color:var(--gray);font-size:.92rem;margin:0}
+        .hero-stripes{display:flex;gap:4px;flex-shrink:0}
+        .hero-stripes .stripe{width:6px;border-radius:3px;background:linear-gradient(180deg,var(--rose-glow),transparent);animation:stripePulse 2s ease-in-out infinite alternate}
+        .hero-stripes .stripe:nth-child(1){height:55px;animation-delay:0s}.hero-stripes .stripe:nth-child(2){height:35px;animation-delay:.15s}.hero-stripes .stripe:nth-child(3){height:65px;animation-delay:.3s}.hero-stripes .stripe:nth-child(4){height:42px;animation-delay:.1s}.hero-stripes .stripe:nth-child(5){height:50px;animation-delay:.25s}.hero-stripes .stripe:nth-child(6){height:38px;animation-delay:.2s}.hero-stripes .stripe:nth-child(7){height:58px;animation-delay:.35s}
+        @keyframes stripePulse{0%{opacity:.4;transform:scaleY(.7)}100%{opacity:1;transform:scaleY(1)}}
+        .hero-stripes .stripe:nth-child(even){background:linear-gradient(180deg,rgba(230,21,54,.6),transparent)}
+
+        /* === STATS === */
+        .stats-row{display:flex;gap:14px;margin-bottom:28px;flex-wrap:wrap}
+        .stat-card{flex:1;min-width:150px;background:rgba(20,4,8,.5);border:1px solid rgba(230,21,54,.06);border-radius:18px;padding:18px 22px;display:flex;align-items:center;gap:14px;backdrop-filter:blur(15px);-webkit-backdrop-filter:blur(15px)}
+        .stat-card .st-icon{width:42px;height:42px;border-radius:14px;background:rgba(230,21,54,.1);display:flex;align-items:center;justify-content:center;font-size:.95rem;color:var(--rose-glow);flex-shrink:0}
+        .stat-card .st-info strong{display:block;font-size:1.1rem;font-weight:800;color:var(--light);font-family:'Outfit',sans-serif}
+        .stat-card .st-info span{font-size:.7rem;color:var(--gray-dark);text-transform:uppercase;letter-spacing:.5px}
+
+        /* === TOOLBAR === */
+        .toolbar{display:flex;align-items:center;gap:14px;margin-bottom:24px;flex-wrap:wrap}
+        .search-wrap{position:relative;flex:1;min-width:240px;max-width:480px}
         .search-wrap i{position:absolute;left:16px;top:50%;transform:translateY(-50%);color:var(--gray-dark);font-size:.82rem;pointer-events:none;z-index:1}
-        .search-wrap input{width:100%;padding:14px 18px 14px 44px;background:rgba(0,0,0,.35);border:1px solid rgba(230,21,54,.1);border-radius:14px;color:var(--light);font-family:inherit;font-size:.88rem;outline:none;transition:.25s}
-        .search-wrap input:focus{border-color:rgba(230,21,54,.35);box-shadow:0 0 0 3px rgba(230,21,54,.06)}
+        .search-wrap input{width:100%;padding:14px 18px 14px 44px;background:rgba(0,0,0,.4);border:1px solid rgba(230,21,54,.12);border-radius:14px;color:var(--light);font-family:inherit;font-size:.88rem;outline:none;transition:.25s}
+        .search-wrap input:focus{border-color:rgba(230,21,54,.4);box-shadow:0 0 0 3px rgba(230,21,54,.06)}
         .search-wrap input::placeholder{color:var(--gray-dark)}
-        .results-count{font-size:.75rem;color:var(--gray-dark);margin-bottom:14px}
-        @media(max-width:768px){.page-wrap{padding-top:110px}.page-header h1{font-size:1.8rem}.sp-grid{grid-template-columns:1fr}}
+        .results-count{font-size:.74rem;color:var(--gray-dark);flex-shrink:0}
+
+        /* === SCENEPACK GRID === */
+        .sp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
+        .sp-card{background:linear-gradient(145deg,rgba(30,4,10,.45) 0%,rgba(10,2,4,.8) 100%);backdrop-filter:blur(30px) saturate(220%);-webkit-backdrop-filter:blur(30px) saturate(220%);border:1px solid rgba(230,21,54,.08);border-radius:20px;padding:20px 24px;transition:all .4s cubic-bezier(.16,1,.3,1);text-decoration:none;color:var(--light);display:flex;align-items:center;gap:18px;box-shadow:0 20px 40px rgba(0,0,0,.5),inset 0 1px 2px rgba(255,255,255,.03);position:relative;overflow:hidden}
+        .sp-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(230,21,54,.3),var(--rose-glow),rgba(230,21,54,.3),transparent);opacity:.4}
+        .sp-card::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 0%,rgba(230,21,54,.04) 0%,transparent 70%);pointer-events:none;opacity:0;transition:opacity .4s ease}
+        .sp-card:hover{transform:translateY(-5px) scale(1.015);border-color:rgba(230,21,54,.25);box-shadow:0 30px 60px rgba(0,0,0,.7),0 0 45px rgba(230,21,54,.1),inset 0 1px 3px rgba(255,255,255,.05)}
+        .sp-card:hover::after{opacity:1}
+        .sc-thumb{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,rgba(230,21,54,.15),rgba(30,4,10,.4));display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(230,21,54,.12);position:relative;overflow:hidden}
+        .sc-thumb i{font-size:1.4rem;color:var(--rose-glow);opacity:.7}
+        .sc-thumb img{width:100%;height:100%;object-fit:cover}
+        .sc-info{flex:1;min-width:0}
+        .sc-info h3{font-size:.92rem;font-weight:800;margin-bottom:5px;font-family:'Outfit',sans-serif;color:var(--light);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .sc-meta{font-size:.7rem;color:var(--gray-dark);display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+        .sc-meta span{display:flex;align-items:center;gap:4px}
+        .sc-meta i{color:var(--cherry-light);font-size:.65rem}
+        .sc-link{display:inline-flex;align-items:center;gap:5px;margin-top:8px;padding:5px 12px;border-radius:8px;font-size:.65rem;font-weight:700;background:rgba(230,21,54,.08);color:var(--cherry-light);border:1px solid rgba(230,21,54,.12);transition:.25s;text-decoration:none;width:fit-content}
+        .sp-card:hover .sc-link{background:linear-gradient(135deg,#a81228,#7a0a1e);border-color:transparent;color:#fff;box-shadow:0 4px 18px rgba(230,21,54,.2)}
+
+        /* === EMPTY === */
+        .empty{grid-column:1/-1;text-align:center;padding:80px 20px;color:var(--gray-dark)}
+        .empty i{font-size:3.5rem;color:var(--cherry);opacity:.12;display:block;margin-bottom:16px}
+        .empty p{font-size:.9rem}
+
+        @media(max-width:900px){.hero-content{padding:36px 28px;gap:24px}.hero-text h1{font-size:2rem}.hero-icon{width:64px;height:64px;font-size:1.6rem}.hero-stripes{display:none}}
+        @media(max-width:600px){.page-wrap{padding-top:110px;padding-left:14px;padding-right:14px}.hero-content{padding:28px 18px;flex-direction:column;align-items:flex-start}.hero-text h1{font-size:1.6rem}.sp-grid{grid-template-columns:1fr}.stats-row{gap:8px}.stat-card{padding:14px 16px}}
     </style>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5438472060600560" crossorigin="anonymous"></script>
 </head>
@@ -44,10 +76,36 @@
     <nav class="navbar"><div class="container"><a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><ul class="nav-links" id="navLinks"><li><a href="/">Home</a></li><li><a href="/resources">Resources</a></li><li><a href="/plugins">Plugins</a></li><li><a href="/more">More</a></li><li><a href="/#contact">Contact</a></li></ul><div class="nav-actions"><div id="authBtn"></div><a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord"><i class="fab fa-discord"></i> <span>Join Us</span></a><button class="hamburger" id="hamburger"><span></span><span></span><span></span></button></div></div></nav>
 
     <div class="page-wrap">
-        <div class="page-header"><div class="icon-circle"><i class="fas fa-clapperboard"></i></div><h1>Scenepacks</h1></div>
-        <p class="subtitle">Premium scenepacks by top creators.</p>
-        <div class="search-wrap"><i class="fas fa-search"></i><input type="text" id="spSearch" placeholder="Search by name or creator username..."></div>
-        <div class="results-count" id="resultsCount"></div>
+        <!-- HERO -->
+        <div class="sp-hero">
+            <div class="hero-content">
+                <div class="hero-icon"><i class="fas fa-clapperboard"></i></div>
+                <div class="hero-text">
+                    <span class="label"><i class="fas fa-film"></i> Scenepacks</span>
+                    <h1>Cinematic Packs</h1>
+                    <p class="subtitle">Premium scene collections by the community's best editors</p>
+                </div>
+                <div class="hero-stripes">
+                    <div class="stripe"></div><div class="stripe"></div><div class="stripe"></div><div class="stripe"></div>
+                    <div class="stripe"></div><div class="stripe"></div><div class="stripe"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- STATS -->
+        <div class="stats-row">
+            <div class="stat-card"><div class="st-icon"><i class="fas fa-film"></i></div><div class="st-info"><strong id="statTotal">--</strong><span>Total Packs</span></div></div>
+            <div class="stat-card"><div class="st-icon"><i class="fas fa-star"></i></div><div class="st-info"><strong id="statCreators">--</strong><span>Creators</span></div></div>
+            <div class="stat-card"><div class="st-icon"><i class="fas fa-download"></i></div><div class="st-info"><strong id="statDL">--</strong><span>Downloads</span></div></div>
+        </div>
+
+        <!-- TOOLBAR -->
+        <div class="toolbar">
+            <div class="search-wrap"><i class="fas fa-search"></i><input type="text" id="spSearch" placeholder="Search by name or creator username..."></div>
+            <span class="results-count" id="resultsCount"></span>
+        </div>
+
+        <!-- GRID -->
         <div class="sp-grid" id="spGrid">
             <div class="empty"><i class="fas fa-film"></i><p>Loading scenepacks...</p></div>
         </div>
@@ -61,7 +119,6 @@
         var allSP = [];
         var creatorIndex = {};
         
-        // Load creator index for searching by creator username
         fetch('/api/search/creator-index').then(function(r){ return r.json(); }).then(function(d){
             if (d && d.success && d.index) creatorIndex = d.index;
         }).catch(function(){});
@@ -72,12 +129,22 @@
                 var data = await r.json();
                 if (Array.isArray(data) && data.length) {
                     allSP = data;
+                    updateStats(data);
                     renderSP(data);
                 } else {
                     document.getElementById('spGrid').innerHTML = '<div class="empty"><i class="fas fa-film"></i><p>No scenepacks yet. Check back soon!</p></div>';
                 }
             } catch(e) {}
         })();
+
+        function updateStats(items) {
+            document.getElementById('statTotal').textContent = items.length;
+            var creators = {};
+            items.forEach(function(p){ var c = p.creator_nickname||p.author_name; if(c) creators[c]=1; });
+            document.getElementById('statCreators').textContent = Object.keys(creators).length;
+            var dl = items.reduce(function(s,x){ return s+(x.downloads||0); },0);
+            document.getElementById('statDL').textContent = dl>=1000?(dl/1000).toFixed(1)+'k':dl;
+        }
         
         function renderSP(items) {
             var grid = document.getElementById('spGrid');
@@ -86,18 +153,19 @@
                 document.getElementById('resultsCount').textContent = '';
             } else {
                 grid.innerHTML = items.map(function(p){
-                    return '<a href="/product-scenepack?id=' + p.id + '" class="sp-card"><h3>' + p.name + '</h3><div class="meta"><span><i class="fas fa-user"></i> ' + (p.creator_nickname || p.author_name || 'Zyrex') + '</span><span><i class="fas fa-download"></i> ' + (p.downloads || 0) + '</span></div>' + (p.source_url ? '<span class="link-btn"><i class="fas fa-external-link-alt"></i> Download</span>' : '') + '</a>';
+                    var thumb = p.thumbnail ? '<img src="'+p.thumbnail+'" alt="" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'block\'"><i class="fas fa-film" style="display:none"></i>' : '<i class="fas fa-film"></i>';
+                    var linkBtn = p.source_url ? '<span class="sc-link"><i class="fas fa-external-link-alt"></i> Download</span>' : '';
+                    return '<a href="/product-scenepack?id='+p.id+'" class="sp-card"><div class="sc-thumb">'+thumb+'</div><div class="sc-info"><h3>'+p.name+'</h3><div class="sc-meta"><span><i class="fas fa-user"></i> '+(p.creator_nickname||p.author_name||'Zyrex')+'</span><span><i class="fas fa-download"></i> '+(p.downloads||0)+'</span></div>'+linkBtn+'</div></a>';
                 }).join('');
-                document.getElementById('resultsCount').textContent = items.length + ' scenepack' + (items.length !== 1 ? 's' : '');
+                document.getElementById('resultsCount').textContent = items.length+' scenepack'+(items.length!==1?'s':'');
             }
         }
         
         document.addEventListener('input', function(e) {
             if (e.target.id !== 'spSearch') return;
             var s = e.target.value.toLowerCase().trim();
-            if (!s) { renderSP(allSP); return; }
+            if (!s) { renderSP(allSP); updateStats(allSP); return; }
             
-            // Build matched IDs from creator index
             var matchIds = null;
             if (Object.keys(creatorIndex).length > 0) {
                 matchIds = {};

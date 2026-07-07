@@ -108,39 +108,29 @@ function renderPresets(items) {
 
     grid.innerHTML = items.map(item => {
         const cat = getCategoryLabel(item.category);
-        const catClass = 'tag-' + item.category;
         const icons = { 'after-effects':'fa-film','premiere-pro':'fa-video','photoshop':'fa-image','video-star':'fa-star','topaz-labs':'fa-gem','others':'fa-folder' };
         const icon = icons[item.category] || 'fa-sliders';
-        const descriptionText = item.description || item.desc || '';
-        const shortDesc = descriptionText ? descriptionText.substring(0, 100) + (descriptionText.length > 100 ? '...' : '') : '';
         const avatarUrl = item.creator_avatar || '';
-        const avatarHtml = avatarUrl ? `<img src="${avatarUrl}" style="width:100%;height:100%;object-fit:cover;border-radius:50%">` : `<i class="fas fa-user" style="font-size:.6rem"></i>`;
+        const avatarHtml = avatarUrl ? `<img src="${avatarUrl}" alt="" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><i class="fas fa-user" style="display:none;font-size:.7rem;position:absolute"></i>` : `<i class="fas fa-user" style="font-size:.7rem"></i>`;
         const nickname = item.creator_nickname || item.author_name || 'Zyrex';
         const dlCount = downloadCounts[item.id] || item.downloads || 0;
         const likeCount = likeCounts[item.id] || 0;
 
         const thumbHtml = item.thumbnail ? 
-            `<img src="${item.thumbnail}" style="width:100%;height:100%;object-fit:cover">` : 
-            `<i class="fas ${icon}" style="font-size:2.5rem;color:#a80f2d;opacity:.3"></i>`;
+            `<img src="${item.thumbnail}" alt="" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><i class="fas ${icon}" style="display:none;font-size:1.1rem;color:var(--cherry-light);opacity:.6"></i>` : 
+            `<i class="fas ${icon}" style="font-size:1.1rem;color:var(--cherry-light);opacity:.6"></i>`;
 
-        return '<a href="/preset?id=' + item.id + '" class="rc glass-card-enhanced shimmer-sweep">' +
-            '<div class="rc-img">' +
-            '<div class="rimg" style="display:flex;align-items:center;justify-content:center;background:#1c1c24;overflow:hidden;width:100%;height:100%">' +
-            thumbHtml + '</div>' +
-            '<div class="roverlay"></div>' +
-            '<div class="rbadge"><span class="' + catClass + '">' + cat + '</span><span class="tag-free">Free</span></div>' +
-            '</div>' +
-            '<div class="rc-content">' +
-            '<h3 class="rc-title">' + item.name + '</h3>' +
-            (shortDesc ? '<p class="rc-desc">' + shortDesc + '</p>' : '') +
-            '<div class="rc-footer">' +
-            '<div class="rc-meta">' +
-            '<div class="rava-fb" style="overflow:hidden;display:flex;align-items:center;justify-content:center">' + avatarHtml + '</div>' +
-            '<span class="rname">' + nickname + '</span></div>' +
-            '<div class="rc-actions">' +
+        return '<a href="/preset?id=' + item.id + '" class="rc">' +
+            '<div class="rc-icon-box" style="overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center">' + thumbHtml + '</div>' +
+            '<div class="rc-text-col">' +
+            '<span class="rc-label">' + cat + '</span>' +
+            '<span class="rc-title">' + item.name + '</span>' +
+            '<div class="rc-meta-row">' +
+            '<span><i class="fas fa-user"></i> ' + nickname + '</span>' +
             '<span><i class="fas fa-download"></i> ' + dlCount + '</span>' +
             '<span><i class="fas fa-heart"></i> ' + likeCount + '</span>' +
-            '</div></div></div></a>';
+            '</div></div>' +
+            '<i class="fas fa-chevron-right rc-arrow"></i></a>';
     }).join('');
 
     requestAnimationFrame(() => {
