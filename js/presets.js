@@ -108,29 +108,39 @@ function renderPresets(items) {
 
     grid.innerHTML = items.map(item => {
         const cat = getCategoryLabel(item.category);
+        const catClass = 'tag-' + (item.category || 'others');
         const icons = { 'after-effects':'fa-film','premiere-pro':'fa-video','photoshop':'fa-image','video-star':'fa-star','topaz-labs':'fa-gem','others':'fa-folder' };
         const icon = icons[item.category] || 'fa-sliders';
+        const descriptionText = item.description || item.desc || '';
+        const shortDesc = descriptionText ? descriptionText.substring(0, 80) + (descriptionText.length > 80 ? '...' : '') : '';
         const avatarUrl = item.creator_avatar || '';
-        const avatarHtml = avatarUrl ? `<img src="${avatarUrl}" alt="" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><i class="fas fa-user" style="display:none;font-size:.7rem;position:absolute"></i>` : `<i class="fas fa-user" style="font-size:.7rem"></i>`;
+        const avatarHtml = avatarUrl ? `<img src="${avatarUrl}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><i class="fas fa-user" style="display:none;font-size:.5rem"></i>` : `<i class="fas fa-user" style="font-size:.5rem"></i>`;
         const nickname = item.creator_nickname || item.author_name || 'Zyrex';
         const dlCount = downloadCounts[item.id] || item.downloads || 0;
         const likeCount = likeCounts[item.id] || 0;
 
         const thumbHtml = item.thumbnail ? 
-            `<img src="${item.thumbnail}" alt="" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><i class="fas ${icon}" style="display:none;font-size:1.1rem;color:var(--cherry-light);opacity:.6"></i>` : 
-            `<i class="fas ${icon}" style="font-size:1.1rem;color:var(--cherry-light);opacity:.6"></i>`;
+            `<img src="${item.thumbnail}" class="rimg" alt="" loading="lazy" onerror="this.style.display='none';this.parentElement.querySelector('.rimg-fallback').style.display='flex'">` +
+            `<div class="rimg-fallback" style="display:none"><i class="fas ${icon}"></i></div>` : 
+            `<div class="rimg-fallback"><i class="fas ${icon}"></i></div>`;
 
         return '<a href="/preset?id=' + item.id + '" class="rc">' +
-            '<div class="rc-icon-box" style="overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center">' + thumbHtml + '</div>' +
-            '<div class="rc-text-col">' +
-            '<span class="rc-label">' + cat + '</span>' +
-            '<span class="rc-title">' + item.name + '</span>' +
-            '<div class="rc-meta-row">' +
-            '<span><i class="fas fa-user"></i> ' + nickname + '</span>' +
+            '<div class="rc-img">' +
+            thumbHtml +
+            '<div class="roverlay"></div>' +
+            '<div class="rbadge"><span class="' + catClass + '">' + cat + '</span><span class="tag-free">Free</span></div>' +
+            '</div>' +
+            '<div class="rc-content">' +
+            '<h3 class="rc-title" title="' + item.name + '">' + item.name + '</h3>' +
+            (shortDesc ? '<p class="rc-desc">' + shortDesc + '</p>' : '') +
+            '<div class="rc-footer">' +
+            '<div class="rc-meta">' +
+            '<div class="rava-fb">' + avatarHtml + '</div>' +
+            '<span class="rname">' + nickname + '</span></div>' +
+            '<div class="rc-actions">' +
             '<span><i class="fas fa-download"></i> ' + dlCount + '</span>' +
             '<span><i class="fas fa-heart"></i> ' + likeCount + '</span>' +
-            '</div></div>' +
-            '<i class="fas fa-chevron-right rc-arrow"></i></a>';
+            '</div></div></div></a>';
     }).join('');
 
     requestAnimationFrame(() => {
