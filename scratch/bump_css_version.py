@@ -3,7 +3,7 @@ import re
 
 def bump_version_in_html_files():
     directory = "c:\\Users\\reyli\\Desktop\\zyrexweb"
-    pattern = re.compile(r'css/style\.css\?v=12')
+    pattern = re.compile(r'css/style\.css\?v=13')
     
     html_files = [f for f in os.listdir(directory) if f.endswith(".html")]
     print(f"Found {len(html_files)} HTML files to process.")
@@ -15,7 +15,7 @@ def bump_version_in_html_files():
             content = f.read()
         
         if pattern.search(content):
-            new_content = pattern.sub("css/style.css?v=13", content)
+            new_content = pattern.sub("css/style.css?v=14", content)
             with open(filepath, "w", encoding="utf-8") as f:
                 f.write(new_content)
             print(f"[OK] Updated {filename}")
