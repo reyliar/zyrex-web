@@ -13,15 +13,15 @@
 :root {
     color-scheme: dark;
 
-    /* --- Bordeaux Color Palette --- */
-    --bordeaux-deep:    #0e0205;
-    --bordeaux-dark:    #1a0308;
-    --bordeaux-mid:     #3d0510;
-    --bordeaux-core:    #7a0a1e;
-    --bordeaux-vivid:   #a81228;
-    --bordeaux-light:   #d4183a;
-    --rose-glow:        #f2526e;
-    --rose-soft:        #ffd0d9;
+    /* --- Hyper-Glossy Bordeaux Color Palette --- */
+    --bordeaux-deep:    #050102; /* Absolute dark bordeaux */
+    --bordeaux-dark:    #0c0204;
+    --bordeaux-mid:     #2b030a;
+    --bordeaux-core:    #8a0d22;
+    --bordeaux-vivid:   #e61536; /* Bright vivid red highlight */
+    --bordeaux-light:   #ff385c;
+    --rose-glow:        #ff4d6d;
+    --rose-soft:        #ffeef1;
 
     /* --- Semantic Aliases (keep backwards compat) --- */
     --primary:          var(--bordeaux-core);
@@ -30,33 +30,58 @@
     --secondary:        var(--bordeaux-core);
     --accent:           var(--bordeaux-vivid);
     --cherry:           var(--bordeaux-core);
-    --cherry-rgb:       122, 10, 30;
+    --cherry-rgb:       138, 13, 34;
     --cherry-dark:      var(--bordeaux-mid);
     --cherry-light:     var(--bordeaux-vivid);
     --dark:             var(--bordeaux-deep);
-    --dark-2:           rgba(20, 3, 8, 0.80);
-    --dark-3:           rgba(35, 5, 12, 0.65);
+    --dark-2:           rgba(12, 2, 4, 0.85);
+    --dark-3:           rgba(20, 3, 6, 0.70);
     --light:            #fcedf0;
     --warm-light:       #ffe8ec;
     --gray:             #d4b0b8;
     --gray-dark:        #8a6570;
 
+    /* --- Premium Glassmorphism & Shadows --- */
+    --glass-bg:         rgba(8, 1, 3, 0.65);
+    --glass-border:     rgba(138, 13, 34, 0.18);
+    --glass-blur:       25px;
+    --glass-shadow:     0 20px 50px rgba(0, 0, 0, 0.75), 0 0 25px rgba(138, 13, 34, 0.12);
+    --neon-glow:        0 0 30px rgba(230, 21, 54, 0.4);
+    --text-glow:        0 0 12px rgba(255, 77, 109, 0.35);
+
     /* --- Gradients --- */
-    --gradient:               linear-gradient(135deg, #a81228 0%, #3d0510 100%);
-    --gradient-accent:        linear-gradient(135deg, #a81228 0%, #3d0510 100%);
-    --gradient-fire:          linear-gradient(135deg, #d4183a 0%, #7a0a1e 50%, #1a0308 100%);
-    --gradient-text:          linear-gradient(135deg, #fcedf0 0%, #f2526e 100%);
-    --gradient-bordeaux:      linear-gradient(135deg, #7a0a1e 0%, #1a0308 100%);
-    --gradient-rose:          linear-gradient(135deg, #f2526e 0%, #a81228 100%);
+    --gradient:               linear-gradient(135deg, #e61536 0%, #2b030a 100%);
+    --gradient-accent:        linear-gradient(135deg, #ff385c 0%, #8a0d22 100%);
+    --gradient-fire:          linear-gradient(135deg, #ff4d6d 0%, #8a0d22 50%, #0c0204 100%);
+    --gradient-text:          linear-gradient(135deg, #fcedf0 0%, #ff4d6d 100%);
+    --gradient-bordeaux:      linear-gradient(135deg, #8a0d22 0%, #0c0204 100%);
+    --gradient-rose:          linear-gradient(135deg, #ff4d6d 0%, #e61536 100%);
 
     /* --- Misc --- */
-    --transition:       all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-    --shadow:           0 16px 50px 0 rgba(0, 0, 0, 0.65);
-    --shadow-glow:      0 0 30px rgba(122, 10, 30, 0.35);
-    --shadow-card:      0 8px 32px rgba(0, 0, 0, 0.5);
-    --radius:           14px;
-    --radius-lg:        22px;
-    --radius-xl:        32px;
+    --transition:       all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    --shadow:           var(--glass-shadow);
+    --shadow-glow:      var(--neon-glow);
+    --shadow-card:      0 12px 35px rgba(0, 0, 0, 0.6);
+    --radius:           16px;
+    --radius-lg:        24px;
+    --radius-xl:        36px;
+}
+
+/* Custom Scrollbar for all browsers */
+::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+}
+::-webkit-scrollbar-track {
+    background: var(--bordeaux-deep);
+}
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, var(--bordeaux-mid) 0%, var(--bordeaux-core) 100%);
+    border-radius: 5px;
+    border: 2px solid var(--bordeaux-deep);
+}
+::-webkit-scrollbar-thumb:hover {
+    background: var(--bordeaux-vivid);
 }
 
 html {
@@ -90,6 +115,23 @@ body > * {
     position: relative;
     z-index: 1;
 }
+
+/* ===== BG Aura glows ===== */
+.bg-aura {
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+.bg-aura .orb {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(120px);
+    opacity: .06;
+}
+.orb-1 { width: 600px; height: 600px; background: var(--bordeaux-core); top: -20%; left: -10%; }
+.orb-2 { width: 400px; height: 400px; background: var(--rose-glow); bottom: 10%; right: -5%; opacity: .04; }
+.orb-3 { width: 300px; height: 300px; background: var(--bordeaux-light); top: 60%; left: 40%; opacity: .03; }
 
 @keyframes pageFadeIn {
     from { opacity: 0; }

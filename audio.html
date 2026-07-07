@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -14,7 +14,7 @@
         .page-wrap h1{font-size:2.5rem;font-weight:900;margin-bottom:8px;letter-spacing:-1px}
         .page-wrap .subtitle{color:var(--gray);font-size:.95rem;margin-bottom:40px}
         .audio-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px}
-        .audio-card{background:rgba(12,4,8,0.45);border:1px solid rgba(var(--cherry-rgb),.08);border-radius:14px;padding:20px;transition:all .3s;text-decoration:none;color:var(--light);display:block}
+        .audio-card{background:rgba(12,4,8,0.45);border:1px solid rgba(var(--cherry-rgb),.08);border-radius:14px;padding:20px;transition:all .3s;text-decoration:none;color:var(--light);display:flex;justify-content:space-between;align-items:center;gap:16px}
         .audio-card:hover{transform:translateY(-3px);border-color:rgba(var(--cherry-rgb),.2);box-shadow:0 12px 40px rgba(0,0,0,.3)}
         .audio-card h3{font-size:.95rem;font-weight:700;margin-bottom:6px}
         .audio-card .meta{font-size:.72rem;color:var(--gray-dark);display:flex;gap:12px;flex-wrap:wrap;align-items:center}
@@ -34,6 +34,7 @@
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5438472060600560" crossorigin="anonymous"></script>
 </head>
 <body>
+    <div class="bg-aura"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
     <nav class="navbar"><div class="container"><a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><ul class="nav-links" id="navLinks"><li><a href="/">Home</a></li><li><a href="resources">Resources</a></li><li><a href="plugins">Plugins</a></li><li><a href="more">More</a></li><li><a href="/#contact">Contact</a></li></ul><div class="nav-actions"><div id="authBtn"></div><a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord"><i class="fab fa-discord"></i> <span>Join Us</span></a><button class="hamburger" id="hamburger"><span></span><span></span><span></span></button></div></div></nav>
 
     <div class="page-wrap">
@@ -75,9 +76,48 @@
                 grid.innerHTML = items.map(function(p){
                     var cats = (p.category || '').split(',').filter(Boolean);
                     var catTags = cats.length > 0 ? cats.map(function(c){ return '<span class="cat-tag">' + (catNames[c.trim()] || c) + '</span>'; }).join('') : '<span class="cat-tag">Audio</span>';
-                    return '<a href="/product-audio?id=' + p.id + '" class="audio-card"><h3>' + p.name + '</h3><div class="meta">' + catTags + '<span><i class="fas fa-user"></i> ' + (p.creator_nickname || p.author_name || 'Zyrex') + '</span><span><i class="fas fa-download"></i> ' + (p.downloads || 0) + '</span></div></a>';
+                    return '<a href="/product-audio?id=' + p.id + '" class="audio-card"><div style="flex:1;min-width:0"><h3 style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + p.name + '</h3><div class="meta">' + catTags + '<span><i class="fas fa-user"></i> ' + (p.creator_nickname || p.author_name || 'Zyrex') + '</span><span><i class="fas fa-download"></i> ' + (p.downloads || 0) + '</span></div></div><button class="play-btn" onclick="playPreview(event,\'' + p.id + '\',this)" style="background:rgba(138,13,34,0.12);border:1px solid rgba(138,13,34,0.3);border-radius:50%;width:36px;height:36px;display:flex;align-items:center;justify-content:center;color:var(--rose-glow);cursor:pointer;flex-shrink:0;transition:all 0.2s"><i class="fas fa-play"></i></button></a>';
                 }).join('');
                 document.getElementById('resultsCount').textContent = items.length + ' audio' + (items.length !== 1 ? 's' : '');
+            }
+        }
+        
+        var activeAudio = null, activeBtn = null;
+        async function playPreview(e, id, btn) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (activeAudio && activeBtn === btn) {
+                if (!activeAudio.paused) {
+                    activeAudio.pause();
+                    btn.innerHTML = '<i class="fas fa-play"></i>';
+                } else {
+                    activeAudio.play();
+                    btn.innerHTML = '<i class="fas fa-pause"></i>';
+                }
+                return;
+            }
+            if (activeAudio) {
+                activeAudio.pause();
+                if (activeBtn) activeBtn.innerHTML = '<i class="fas fa-play"></i>';
+            }
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            try {
+                var r = await fetch('/api/products?id=' + encodeURIComponent(id));
+                var d = await r.json();
+                if (d && d.file_url) {
+                    activeAudio = new Audio(d.file_url);
+                    activeBtn = btn;
+                    activeAudio.addEventListener('ended', function() {
+                        btn.innerHTML = '<i class="fas fa-play"></i>';
+                    });
+                    activeAudio.play();
+                    btn.innerHTML = '<i class="fas fa-pause"></i>';
+                } else {
+                    alert('Preview not available');
+                    btn.innerHTML = '<i class="fas fa-play"></i>';
+                }
+            } catch(err) {
+                btn.innerHTML = '<i class="fas fa-play"></i>';
             }
         }
         
