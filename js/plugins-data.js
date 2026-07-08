@@ -23,6 +23,7 @@ window.pluginsData = [
     // ADOBE SOFTWARE
     // ═══════════════════════════════════════════
     {
+        vt_scan: { id: 'aHR0cHM6Ly9rb3JzYXJzLnByby92aWV3dG9waWMucGhwP3Q9MTQxMjc3', harmless: 57, malicious: 0 },
         id: makeId('Adobe Premiere Pro 2026 v26.3'),
         name: 'Adobe Premiere Pro 2026 (v26.3)',
         category: 'software', platform: 'win', password: null,
@@ -35,6 +36,7 @@ window.pluginsData = [
         ]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9pczEyLmFyZmlsZXMubmV0L0FmdGVyLkVmZmVjdHMuMjAyNi52MjYuMC4wLnJhcg', harmless: 62, malicious: 0 },
         id: makeId('After Effects 2026 v26.0 Direct'),
         name: 'After Effects 2026 (v26.0)',
         category: 'software', platform: 'win', password: null,
@@ -42,6 +44,7 @@ window.pluginsData = [
         links: [{ url: 'https://is12.arfiles.net/After.Effects.2026.v26.0.0.rar', label: 'ArFiles (direct)' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9pczIuYXJmaWxlcy5uZXQvQWZ0ZXJfRWZmZWN0c18yNS41LnJhcg', harmless: 58, malicious: 0 },
         id: makeId('After Effects 2025 v25.5'),
         name: 'After Effects 2025 (v25.5)',
         category: 'software', platform: 'win', password: null,
@@ -49,6 +52,7 @@ window.pluginsData = [
         links: [{ url: 'https://is2.arfiles.net/After_Effects_25.5.rar', label: 'ArFiles (direct)' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9pczE0LmFyZmlsZXMubmV0L0Fkb2JlX0FmdGVyX0VmZmVjdHNfMjAyNF8yNC41LjAuMDUyLnJhcg', harmless: 59, malicious: 0 },
         id: makeId('After Effects 2024 v24.5'),
         name: 'After Effects 2024 (v24.5)',
         category: 'software', platform: 'win', password: null,
@@ -56,6 +60,7 @@ window.pluginsData = [
         links: [{ url: 'https://is14.arfiles.net/Adobe_After_Effects_2024_24.5.0.052.rar', label: 'ArFiles (direct)' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9kb3dubG9hZDIyNjgubWVkaWFmaXJlLmNvbS8yeXh0aW81ZjF5emc3c3NVUzFuZUMyRThHYS1ZNHpkOFpzQldycUtRbE5WNUV6LWhSYmtxeVUyNVU3cHl6d29FVzlwZGk1Nm1rRGpvV0dteWszdWJQRjVsNFI2UWs2S1dGVWJEdHJaM0dBT2hFNjc4Ym9Bbmx6eUMySXdMbXhyUjc3MjFTeHFsQ0c5bmRmSXZKVDRkY2RRZVVHUHFfS1dNaVV2VUc1U0lSSlEvMGIwZHkxOHFienAxMmp1L0Fkb2JlX0FmdGVyX0VmZmVjdHNfMjAyM194NjQucmFy', harmless: 59, malicious: 0 },
         id: makeId('After Effects 2023 v23.2'),
         name: 'After Effects 2023 (v23.2)',
         category: 'software', platform: 'win', password: null,
@@ -63,6 +68,7 @@ window.pluginsData = [
         links: [{ url: 'https://download2268.mediafire.com/2yxtio5f1yzg7ssUS1neC2E8Ga-Y4zd8ZsBWrqKQlNV5Ez-hRbkqyU25U7pyzwoEW9pdi56mkDjoWGmyk3ubPF5l4R6Qk6KWFUbDtrZ3GAOhE678boAnlzyC2IwLmxrR7721SxqlCG9ndfIvJT4dcdQeUGPq_KWMiUvUG5SIRJQ/0b0dy18qbzp12ju/Adobe_After_Effects_2023_x64.rar', label: 'MediaFire (direct)' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9pbnMyLmFyZmlsZXMubmV0L0Fkb2JlJTIwQWZ0ZXIlMjBFZmZlY3RzJTIwMjAyMiUyMHYyMi42LjAuNjQlMjAoeDY0KSUyME11bHRpbGluZ3VhbC56aXA', harmless: 56, malicious: 1 },
         id: makeId('After Effects 2022 v22.6'),
         name: 'After Effects 2022 (v22.6)',
         category: 'software', platform: 'win', password: null,
@@ -70,6 +76,7 @@ window.pluginsData = [
         links: [{ url: 'https://ins2.arfiles.net/Adobe%20After%20Effects%202022%20v22.6.0.64%20(x64)%20Multilingual.zip', label: 'ArFiles (direct)' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly93d3cubWVkaWFmaXJlLmNvbS9maWxlL2R5amZ6aXhtMXRybTVqaS9BZG9iZUFmdGVyRWZmZWN0czIwMjF2MTguNC4xLjR4NjQuN3ovZmlsZQ', harmless: 73, malicious: 0 },
         id: makeId('After Effects 2021 v18.4'),
         name: 'After Effects 2021 (v18.4)',
         category: 'software', platform: 'win', password: null,
@@ -77,6 +84,7 @@ window.pluginsData = [
         links: [{ url: 'https://www.mediafire.com/file/dyjfzixm1trm5ji/AdobeAfterEffects2021v18.4.1.4x64.7z/file', label: 'MediaFire (direct)' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9zZXJ2ZXI4MS5zYWZlZmlsZWhvc3RpbmcuY29tOjIyMzcyL2lnZXRpbnRvcGMuY29tL2Rvd25sb2FkLnBocD91cmxfc3RyPWh0dHBzJTNBJTJGJTJGc2VydmVyODEuc2FmZWZpbGVob3N0aW5nLmNvbSUyRmlHZXRpbnRvcGMuY29tJTJGZG93bmxvYWQucGhwJTNGZmlsZW5hbWUlM0RfaWdldGludG9wYy5jb21fQWRvYmVfQWZ0ZXJfRWZmZWN0c18yMDIwX3g2NC5yYXIlMjZleHBpcmVzJTNEMTc4MzI3MjI5NCUyNnNpZ25hdHVyZSUzRDdhNWM0Njk2NDY4N2ZkNDQxOTY3MmMwOTM2NDk2NTE2JmZpbGVuYW1lPV9pZ2V0aW50b3BjLmNvbV9BZG9iZV9BZnRlcl9FZmZlY3RzXzIwMjBfeDY0LnJhciZzZG9tYWluPWlnZXRpbnRvcGMuY29t', harmless: 58, malicious: 0 },
         id: makeId('After Effects 2020 v17.5'),
         name: 'After Effects 2020 (v17.5)',
         category: 'software', platform: 'win', password: 'igetintopc.com',
@@ -85,6 +93,7 @@ window.pluginsData = [
         links: [{ url: 'https://server81.safefilehosting.com:22372/igetintopc.com/download.php?url_str=https%3A%2F%2Fserver81.safefilehosting.com%2FiGetintopc.com%2Fdownload.php%3Ffilename%3D_igetintopc.com_Adobe_After_Effects_2020_x64.rar%26expires%3D1783272294%26signature%3D7a5c46964687fd4419672c0936496516&filename=_igetintopc.com_Adobe_After_Effects_2020_x64.rar&sdomain=igetintopc.com', label: 'iGetIntoPC (direct)' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9pczcuYXJmaWxlcy5uZXQvQWRvYmVfQWZ0ZXJfRWZmZWN0c18yMDE5X3YxNi4xLjIuNTVfTXVsdGlsaW5ndWFsLnppcA', harmless: 63, malicious: 0 },
         id: makeId('After Effects 2019 v16.1'),
         name: 'After Effects 2019 (v16.1)',
         category: 'software', platform: 'win', password: null,
@@ -92,6 +101,7 @@ window.pluginsData = [
         links: [{ url: 'https://is7.arfiles.net/Adobe_After_Effects_2019_v16.1.2.55_Multilingual.zip', label: 'ArFiles (direct)' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9nb2ZpbGUuaW8vZC9Kc1Y0b3M', harmless: 57, malicious: 0 },
         id: makeId('Adobe Photoshop 2026 GoFile'),
         name: 'Adobe Photoshop 2026',
         category: 'software', platform: 'win', password: 'star',
@@ -99,6 +109,7 @@ window.pluginsData = [
         links: [{ url: 'https://gofile.io/d/JsV4os', label: 'GoFile (direct)' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9waXhlbGRyYWluLmNvbS9hcGkvZmlsZS9ZdUxScGpzTg', harmless: 60, malicious: 0 },
         id: makeId('Adobe Photoshop 2025'),
         name: 'Adobe Photoshop 2025',
         category: 'software', platform: 'win', password: '09',
@@ -107,6 +118,7 @@ window.pluginsData = [
         links: [{ url: 'https://pixeldrain.com/api/file/YuLRpjsN', label: 'Pixeldrain (direct)' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9nb2ZpbGUuaW8vZC82Q3dZcnI', harmless: 59, malicious: 0 },
         id: makeId('Adobe Photoshop 2024 GoFile'),
         name: 'Adobe Photoshop 2024',
         category: 'software', platform: 'win', password: 'star',
@@ -114,6 +126,7 @@ window.pluginsData = [
         links: [{ url: 'https://gofile.io/d/6CwYrr', label: 'GoFile (direct)' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9nb2ZpbGUuaW8vZC9ZQmcwSUc', harmless: 63, malicious: 0 },
         id: makeId('Substance 3D Designer'),
         name: 'Substance 3D Designer',
         category: 'software', platform: 'win', password: 'star',
@@ -121,6 +134,7 @@ window.pluginsData = [
         links: [{ url: 'https://gofile.io/d/YBg0IG', label: 'GoFile (direct)' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9nb2ZpbGUuaW8vZC9kTGhaSFA', harmless: 59, malicious: 0 },
         id: makeId('Substance 3D Modeler'),
         name: 'Substance 3D Modeler',
         category: 'software', platform: 'win', password: 'star',
@@ -143,6 +157,7 @@ window.pluginsData = [
         links: [{ url: "https://gofile.io/d/UxyytM", label: "GoFile (direct)" }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly93MTgubW9ua3J1cy53cy8yMDI2LzA2L2Fkb2JlLWluZGVzaWduLTIwMjYtdjIxNDEtbXVsdGlsaW5ndWFsLmh0bWw', harmless: 57, malicious: 3 },
         id: makeId('Adobe InDesign 2026 v21.4.1'),
         name: 'Adobe InDesign 2026 (v21.4.1)',
         category: 'software', platform: 'win', password: null,
@@ -163,6 +178,7 @@ window.pluginsData = [
     // AFTER EFFECTS PLUGINS (from codec.kyiv.ua/ad0be.html) — password: VR4ALL
     // ═══════════════════════════════════════════
     {
+        vt_scan: { id: 'aHR0cHM6Ly9mdWNraW5nZmFzdC5uZXQvbTh4ZmtqbG0yNGxy', harmless: 54, malicious: 5 },
         id: makeId('Maxon Red Giant 2026.4.1'),
         name: 'Maxon Red Giant 2026.4.1',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -171,6 +187,7 @@ window.pluginsData = [
         links: [{ url: 'https://fuckingfast.net/m8xfkjlm24lr', label: 'FuckingFast' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9mdWNraW5nZmFzdC5uZXQvZzMzbWR2dnYwb3h4', harmless: 53, malicious: 4 },
         id: makeId('BorisFX Continuum 2026.5 AE'),
         name: 'BorisFX Continuum 2026.5 (AE)',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -179,6 +196,7 @@ window.pluginsData = [
         links: [{ url: 'https://fuckingfast.net/g33mdvvv0oxx', label: 'FuckingFast' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9jbGlja251cGxvYWQuY2xpY2svbmR4aXB0cWpsbmw3L0JvcmlzRlguU2FwcGhpcmUuQUUuMjAyNi41LnJhcg', harmless: 58, malicious: 0 },
         id: makeId('BorisFX Sapphire AE 2026.5'),
         name: 'BorisFX Sapphire AE 2026.5',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -187,6 +205,7 @@ window.pluginsData = [
         links: [{ url: 'https://clicknupload.click/ndxiptqjlnl7/BorisFX.Sapphire.AE.2026.5.rar', label: 'ClicknUpload' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9jbGlja251cGxvYWQuY2xpY2svbWE1M2NqZWoyYml6L0JvcmlzRlguTW9jaGEuUHJvLkFkb2JlLjIwMjYuNS4wLnJhcg', harmless: 58, malicious: 0 },
         id: makeId('BorisFX Mocha Pro AE 2026.5'),
         name: 'BorisFX Mocha Pro AE 2026.5',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -195,6 +214,7 @@ window.pluginsData = [
         links: [{ url: 'https://clicknupload.click/ma53cjej2biz/BorisFX.Mocha.Pro.Adobe.2026.5.0.rar', label: 'ClicknUpload' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9kZXBvc2l0ZmlsZXMuY29tL2ZpbGVzLzRnODVtNDY0cw', harmless: 69, malicious: 0 },
         id: makeId('VideoCopilot Element 3D v2.2.2'),
         name: 'VideoCopilot Element 3D v2.2.2',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -203,6 +223,7 @@ window.pluginsData = [
         links: [{ url: 'https://depositfiles.com/files/4g85m464s', label: 'DepositFiles' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9kZXBvc2l0ZmlsZXMuY29tL2ZpbGVzL2Q5ODB5c3hlcA', harmless: 68, malicious: 0 },
         id: makeId('VideoCopilot Optical Flares Pro v1.3.5'),
         name: 'VideoCopilot Optical Flares Pro v1.3.5',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -211,6 +232,7 @@ window.pluginsData = [
         links: [{ url: 'https://depositfiles.com/files/d980ysxep', label: 'DepositFiles' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9kZXBvc2l0ZmlsZXMuY29tL2ZpbGVzL3BtZGc3M216bA', harmless: 69, malicious: 0 },
         id: makeId('VideoCopilot Twitch v1.1'),
         name: 'VideoCopilot Twitch v1.1',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -218,6 +240,7 @@ window.pluginsData = [
         links: [{ url: 'https://depositfiles.com/files/pmdg73mzl', label: 'DepositFiles' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9kZXBvc2l0ZmlsZXMuY29tL2ZpbGVzL3NxMnBjZTJtdQ', harmless: 60, malicious: 0 },
         id: makeId('VideoCopilot Heat Distortion v1.0.31'),
         name: 'VideoCopilot Heat Distortion v1.0.31',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -225,6 +248,7 @@ window.pluginsData = [
         links: [{ url: 'https://depositfiles.com/files/sq2pce2mu', label: 'DepositFiles' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9mdWNraW5nZmFzdC5uZXQvc2k5aTBpejFjNDl0', harmless: 67, malicious: 0 },
         id: makeId('Red Giant Universe 2026.0.1'),
         name: 'Red Giant Universe 2026.0.1',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -233,6 +257,7 @@ window.pluginsData = [
         links: [{ url: 'https://fuckingfast.net/si9i0iz1c49t', label: 'FuckingFast' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9jbGlja251cGxvYWQuY2xpY2svZ3MzcnZmcWQ2aGMwL0RlaGFuY2VyLlByby5BZS5Qci52Ny40LjAucmFy', harmless: 59, malicious: 0 },
         id: makeId('Dehancer Pro Ae/Pr v7.4.0'),
         name: 'Dehancer Pro Ae/Pr v7.4.0',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -241,6 +266,7 @@ window.pluginsData = [
         links: [{ url: 'https://clicknupload.click/gs3rvfqd6hc0/Dehancer.Pro.Ae.Pr.v7.4.0.rar', label: 'ClicknUpload' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9jbGlja251cGxvYWQuc2l0ZS9uazVmYTVwNGx3Y20', harmless: 56, malicious: 0 },
         id: makeId('Neat Video Pro AE v6.0.0'),
         name: 'Neat Video Pro AE v6.0.0',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -249,6 +275,7 @@ window.pluginsData = [
         links: [{ url: 'https://clicknupload.site/nk5fa5p4lwcm', label: 'ClicknUpload' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9jbGlja251cGxvYWQuY2xpY2svdmVrNzB0NzNmaTBiL1RvcGF6LlZpZGVvLlByby52MS42LjIucmFy', harmless: 57, malicious: 0 },
         id: makeId('Topaz Video Pro v1.6.2'),
         name: 'Topaz Video Pro v1.6.2',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -257,6 +284,7 @@ window.pluginsData = [
         links: [{ url: 'https://clicknupload.click/vek70t73fi0b/Topaz.Video.Pro.v1.6.2.rar', label: 'ClicknUpload' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9rYXRmaWxlLmNvbS81ZmIxaGdvYzBoZTQvUkVWaXNpb25GWC5FZmZlY3Rpb25zLlBsdXMudjI1LjgucmFyLmh0bWw', harmless: 68, malicious: 1 },
         id: makeId('RE:VisionFX Effections Plus v25.08'),
         name: 'RE:VisionFX Effections Plus v25.08',
         category: 'adobe-plugin', platform: 'win', password: null,
