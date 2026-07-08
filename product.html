@@ -11,76 +11,77 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --cherry: #e61536;
+            --cherry-rgb: 230, 21, 54;
+            --cherry-light: #ff4d6d;
+            --rose-glow: rgba(230, 21, 54, 0.15);
+            --dark: #070203;
+            --light: #fcedf0;
+            --gray: #d4b0b8;
+            --gray-dark: #8a6570;
+            --card-bg: rgba(12, 2, 4, 0.45);
+            --card-border: rgba(230, 21, 54, 0.08);
+            --transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
         .product-page {
-            padding-top: 150px;
+            padding-top: 160px;
             min-height: 100vh;
             background: var(--dark);
+            position: relative;
+            overflow: hidden;
         }
 
         .product-back {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            color: var(--gray);
-            font-size: 0.9rem;
-            margin-bottom: 30px;
+            color: var(--gray-dark);
+            font-size: 0.82rem;
+            text-decoration: none;
+            margin-bottom: 28px;
             transition: var(--transition);
-        }
-
-        .product-back:hover {
-            color: var(--cherry);
-        }
-
-        .product-back {
+            font-weight: 500;
             animation: fadeSlideIn 0.5s ease forwards;
+        }
+        .product-back:hover {
+            color: var(--cherry-light);
+            transform: translateX(-2px);
         }
 
         .product-card {
             max-width: 900px;
-            margin: 0 auto;
-            background: linear-gradient(145deg, rgba(30, 4, 10, 0.5) 0%, rgba(10, 2, 4, 0.8) 100%);
-            backdrop-filter: blur(30px) saturate(220%);
-            -webkit-backdrop-filter: blur(30px) saturate(220%);
-            border: 1px solid rgba(230, 21, 54, 0.12);
-            border-radius: var(--radius-lg);
+            margin: 0 auto 60px;
+            background: linear-gradient(160deg, rgba(30, 4, 10, 0.5) 0%, rgba(10, 2, 4, 0.8) 100%);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
             padding: 40px;
             display: grid;
-            grid-template-columns: 300px 1fr;
+            grid-template-columns: 280px 1fr;
             gap: 40px;
             text-align: left;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7), inset 0 1px 2px rgba(255, 255, 255, 0.04);
-            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7), 0 0 30px rgba(230, 21, 54, 0.05);
+            transition: var(--transition);
         }
         .product-card::before {
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0;
             height: 3px;
-            background: linear-gradient(90deg, transparent, rgba(230, 21, 54, 0.4), var(--rose-glow), rgba(230, 21, 54, 0.4), transparent);
-            opacity: 0.7;
+            background: linear-gradient(90deg, transparent, var(--cherry-light), transparent);
             z-index: 2;
             pointer-events: none;
         }
-        .product-card::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: radial-gradient(ellipse at 50% 0%, rgba(230, 21, 54, 0.04) 0%, transparent 70%);
-            pointer-events: none;
-            z-index: 1;
-            opacity: 0;
-            transition: opacity 0.5s ease;
-        }
 
         .product-card:hover {
-            transform: translateY(-6px) scale(1.01);
-            border-color: rgba(230, 21, 54, 0.35);
-            box-shadow: 0 40px 90px rgba(0, 0, 0, 0.85), 0 0 50px rgba(230, 21, 54, 0.15), inset 0 1px 4px rgba(255, 255, 255, 0.08);
-        }
-        .product-card:hover::after {
-            opacity: 1;
+            transform: translateY(-4px);
+            border-color: rgba(230, 21, 54, 0.25);
+            box-shadow: 0 40px 90px rgba(0, 0, 0, 0.8), 0 0 40px rgba(230, 21, 54, 0.12);
         }
 
         .product-left-col {
@@ -90,7 +91,6 @@
             border-right: 1px solid rgba(255, 255, 255, 0.05);
             padding-right: 30px;
         }
-
         .product-right-col {
             display: flex;
             flex-direction: column;
@@ -98,292 +98,322 @@
         }
 
         @media (max-width: 800px) {
-            .product-page { padding-top: 100px }
+            .product-page { padding-top: 120px; }
             .product-card {
                 grid-template-columns: 1fr;
-                padding: 24px 16px;
-                gap: 20px;
-                border-radius: 16px;
+                padding: 30px 20px;
+                gap: 30px;
             }
             .product-left-col {
                 border-right: none;
                 padding-right: 0;
                 border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-                padding-bottom: 20px;
-                gap: 16px;
+                padding-bottom: 24px;
+                gap: 20px;
             }
-            .product-right-col { gap: 16px }
-            .product-card h1 { font-size: 1.4rem }
-            .product-desc { font-size: .85rem }
-            .product-thumb-large { width: 72px; height: 72px; border-radius: 14px; margin-bottom: 16px }
-            .product-password-box { padding: 8px 16px }
-            .product-notes { padding: 10px 14px; font-size: .75rem }
-        }
-        @media (max-width: 480px) {
-            .product-page { padding-top: 90px }
-            .product-card { padding: 20px 12px; gap: 16px }
-            .product-card h1 { font-size: 1.2rem }
-            .product-thumb-large { width: 60px; height: 60px; border-radius: 12px }
-            .product-thumb-large img { width: 36px; height: 36px }
-            .product-category-badge { font-size: .68rem; padding: 4px 12px }
-            .product-platform-tags { gap: 6px }
-            .product-platform-tags span { font-size: .62rem; padding: 3px 10px }
-            .product-dl-btn { font-size: .8rem; padding: 10px 14px }
         }
 
         @keyframes fadeSlideUp {
-            from { opacity: 0; transform: translateY(30px); }
+            from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-
         @keyframes fadeSlideIn {
-            from { opacity: 0; transform: translateX(-15px); }
+            from { opacity: 0; transform: translateX(-10px); }
             to { opacity: 1; transform: translateX(0); }
         }
 
-        .product-dl-btn {
-            animation: fadeSlideUp 0.5s ease forwards;
-            opacity: 0;
-        }
-
-        .product-dl-btn:nth-child(1) { animation-delay: 0.1s; }
-        .product-dl-btn:nth-child(2) { animation-delay: 0.2s; }
-        .product-dl-btn:nth-child(3) { animation-delay: 0.3s; }
-        .product-dl-btn:nth-child(4) { animation-delay: 0.4s; }
-        .product-dl-btn:nth-child(5) { animation-delay: 0.5s; }
-
         .product-thumb-large {
-            width: 100px;
-            height: 100px;
-            border-radius: 22px;
-            background: linear-gradient(135deg, rgba(30,4,10,.6), rgba(10,2,4,.8));
+            width: 110px;
+            height: 110px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(230, 21, 54, 0.15), rgba(230, 21, 54, 0.03));
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 25px;
+            margin: 0 auto;
             overflow: hidden;
-            border: 1px solid rgba(230,21,54,.12);
-            box-shadow: 0 8px 30px rgba(0,0,0,.4), 0 0 20px rgba(230,21,54,.06);
+            border: 1px solid rgba(230, 21, 54, 0.12);
+            box-shadow: 0 8px 30px rgba(0,0,0,.4), 0 0 20px rgba(230, 21, 54, 0.1);
+            transition: var(--transition);
         }
-
+        .product-thumb-large:hover {
+            transform: scale(1.04);
+            border-color: rgba(230, 21, 54, 0.3);
+        }
         .product-thumb-large img {
-            width: 52px;
-            height: 52px;
-            object-fit: contain;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
         }
-            object-fit: contain;
-        }
-
         .product-thumb-large .thumb-fallback {
             font-size: 2.2rem;
-            color: var(--cherry);
-            opacity: 0.6;
+            color: var(--cherry-light);
+            opacity: 0.5;
         }
 
         .product-category-badge {
             display: inline-block;
-            padding: 6px 18px;
-            background: rgba(230,21,54,.08);
-            border: 1px solid rgba(230,21,54,.15);
+            padding: 4px 16px;
+            background: rgba(230, 21, 54, 0.08);
+            border: 1px solid rgba(230, 21, 54, 0.15);
             border-radius: 50px;
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             font-weight: 700;
             color: var(--cherry-light);
             letter-spacing: 1px;
             text-transform: uppercase;
-            margin-bottom: 15px;
-        }
-
-        .product-card h1 {
-            font-size: 1.8rem;
-            font-weight: 900;
-            margin-bottom: 12px;
-            line-height: 1.3;
-            font-family: 'Outfit', sans-serif;
-            letter-spacing: -.5px;
         }
 
         .product-desc {
             color: var(--gray);
-            font-size: 0.95rem;
-            margin-bottom: 20px;
-            line-height: 1.7;
+            font-size: 0.92rem;
+            line-height: 1.6;
         }
 
         .product-platform-tags {
             display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-bottom: 20px;
+            gap: 8px;
+            flex-wrap: wrap;
         }
-
         .product-platform-tags span {
-            padding: 4px 14px;
+            padding: 3px 12px;
             border-radius: 20px;
-            font-size: 0.7rem;
-            font-weight: 600;
+            font-size: 0.65rem;
+            font-weight: 700;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
-
         .product-platform-tags .tag-win {
-            background: rgba(0, 168, 45, 0.12);
-            color: #00a82d;
-            border: 1px solid rgba(0, 168, 45, 0.15);
+            background: rgba(0, 200, 100, 0.08);
+            color: #00c864;
+            border: 1px solid rgba(0, 200, 100, 0.15);
         }
-
         .product-platform-tags .tag-mac {
-            background: rgba(0, 122, 255, 0.12);
+            background: rgba(0, 122, 255, 0.08);
             color: #007aff;
             border: 1px solid rgba(0, 122, 255, 0.15);
         }
 
-        .product-platform-tags .tag-both {
-            background: rgba(var(--cherry-rgb), 0.12);
-            color: var(--cherry);
-            border: 1px solid rgba(var(--cherry-rgb), 0.15);
+        /* Windows SVG Mask Icon */
+        .win11-logo {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background-color: currentColor;
+            -webkit-mask: url(/assets/windows11.svg) no-repeat center;
+            -webkit-mask-size: contain;
+            mask: url(/assets/windows11.svg) no-repeat center;
+            mask-size: contain;
+        }
+
+        /* Creator blocks */
+        .creator-block {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 12px;
+            backdrop-filter: blur(10px);
+        }
+        .creator-block .cb-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 1px solid rgba(230, 21, 54, 0.15);
+            flex-shrink: 0;
+            background: rgba(230, 21, 54, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .creator-block .cb-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .creator-block .cb-avatar i {
+            color: var(--cherry-light);
+            font-size: 1.1rem;
+        }
+        .creator-block .cb-info strong {
+            display: block;
+            font-size: 0.82rem;
+            color: var(--light);
+            font-family: 'Outfit', sans-serif;
+        }
+        .creator-block .cb-info span {
+            display: block;
+            font-size: 0.65rem;
+            color: var(--gray-dark);
+        }
+        .creator-block .cb-info a {
+            font-size: 0.7rem;
+            color: var(--cherry-light);
+            text-decoration: none;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 2px;
+        }
+        .creator-block .cb-info a:hover {
+            color: #fff;
+            text-decoration: underline;
         }
 
         .product-password-box {
             display: inline-flex;
             align-items: center;
             gap: 10px;
-            padding: 12px 24px;
-            background: rgba(255,255,255,.02);
-            border: 1px solid rgba(230,21,54,.1);
-            border-radius: 14px;
-            margin-bottom: 30px;
+            padding: 10px 18px;
+            background: rgba(230, 21, 54, 0.04);
+            border: 1px solid rgba(230, 21, 54, 0.12);
+            border-radius: 12px;
+            margin-bottom: 8px;
         }
-
         .product-password-box i {
-            color: var(--cherry);
-            font-size: 1rem;
-        }
-
-        .product-password-box span {
-            color: var(--gray);
+            color: var(--cherry-light);
             font-size: 0.85rem;
         }
-
+        .product-password-box span {
+            color: var(--gray);
+            font-size: 0.8rem;
+        }
         .product-password-box code {
-            background: rgba(var(--cherry-rgb), 0.15);
-            color: var(--cherry);
-            padding: 4px 12px;
+            background: rgba(230, 21, 54, 0.12);
+            color: var(--cherry-light);
+            padding: 3px 10px;
             border-radius: 6px;
             font-weight: 700;
-            font-size: 0.9rem;
+            font-size: 0.82rem;
             cursor: pointer;
             transition: var(--transition);
         }
-
         .product-password-box code:hover {
-            background: rgba(var(--cherry-rgb), 0.25);
+            background: rgba(230, 21, 54, 0.22);
+            color: #fff;
         }
 
         .product-notes {
-            background: rgba(255, 193, 7, 0.05);
-            border: 1px solid rgba(255, 193, 7, 0.1);
-            border-radius: var(--radius);
-            padding: 14px 20px;
-            margin-bottom: 30px;
-            text-align: left;
-            font-size: 0.82rem;
+            background: rgba(255, 193, 7, 0.03);
+            border: 1px solid rgba(255, 193, 7, 0.08);
+            border-radius: 12px;
+            padding: 12px 18px;
+            margin-top: 8px;
+            font-size: 0.78rem;
             color: var(--gray);
             line-height: 1.5;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
         }
-
         .product-notes i {
             color: #ffc107;
-            margin-right: 8px;
+            margin-top: 2px;
         }
 
         .product-downloads-title {
-            font-size: 0.85rem;
-            font-weight: 600;
+            font-size: 0.78rem;
+            font-weight: 700;
             color: var(--gray-dark);
             text-transform: uppercase;
             letter-spacing: 2px;
-            margin-bottom: 15px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .product-downloads {
             display: flex;
             flex-direction: column;
-            gap: 12px;
+            gap: 10px;
         }
 
         .product-dl-btn {
             display: flex;
             align-items: center;
             gap: 14px;
-            padding: 16px 22px;
-            background: rgba(255,255,255,.02);
-            border: 1px solid rgba(255,255,255,.06);
+            padding: 14px 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 16px;
             text-decoration: none;
-            transition: all .3s ease;
+            transition: var(--transition);
             text-align: left;
+            opacity: 0;
+            animation: fadeSlideUp 0.5s ease forwards;
         }
-
         .product-dl-btn:hover {
-            border-color: rgba(230,21,54,.2);
-            transform: translateX(5px);
-            background: rgba(230,21,54,.05);
-            box-shadow: 0 4px 20px rgba(0,0,0,.3);
+            border-color: rgba(230, 21, 54, 0.2);
+            transform: translateX(4px);
+            background: rgba(230, 21, 54, 0.04);
+            box-shadow: 0 8px 24px rgba(0,0,0,.4);
         }
 
         .product-dl-btn .dl-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 14px;
-            background: rgba(230,21,54,.1);
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: rgba(230, 21, 54, 0.06);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.1rem;
+            font-size: 1rem;
             flex-shrink: 0;
+            border: 1px solid rgba(230, 21, 54, 0.08);
         }
-
-        .product-dl-btn .dl-icon.pixeldrain { color: #00d084; }
-        .product-dl-btn .dl-icon.gofile { color: #f78da7; }
-        .product-dl-btn .dl-icon.mediafire { color: #ff8c00; }
-        .product-dl-btn .dl-icon.default { color: var(--cherry); }
+        .product-dl-btn .dl-icon.pixeldrain { color: #00c864; background: rgba(0, 200, 100, 0.05); }
+        .product-dl-btn .dl-icon.gofile { color: #ff6b8b; background: rgba(255, 107, 139, 0.05); }
+        .product-dl-btn .dl-icon.mediafire { color: #ff9f43; background: rgba(255, 159, 67, 0.05); }
+        .product-dl-btn .dl-icon.default { color: var(--cherry-light); }
 
         .product-dl-btn .dl-info {
             flex: 1;
+            min-width: 0;
         }
-
         .product-dl-btn .dl-info strong {
             display: block;
-            font-size: 0.95rem;
+            font-size: 0.88rem;
             font-weight: 600;
             color: var(--light);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
-
         .product-dl-btn .dl-info span {
-            font-size: 0.78rem;
+            display: block;
+            font-size: 0.72rem;
             color: var(--gray-dark);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
-
         .product-dl-btn .dl-arrow {
             color: var(--gray-dark);
-            font-size: 1.1rem;
+            font-size: 0.95rem;
             transition: var(--transition);
         }
-
         .product-dl-btn:hover .dl-arrow {
-            color: var(--cherry);
-            transform: translateX(3px);
+            color: var(--cherry-light);
+            transform: translateX(2px);
         }
 
         .product-loading {
             text-align: center;
-            padding: 80px 20px;
+            padding: 100px 20px;
             color: var(--gray);
         }
-
         .product-loading i {
-            font-size: 2rem;
-            color: var(--cherry);
+            font-size: 2.2rem;
+            color: var(--cherry-light);
             margin-bottom: 15px;
             display: block;
         }
@@ -393,42 +423,69 @@
             padding: 80px 20px;
             color: var(--gray);
         }
-
         .product-error i {
             font-size: 3rem;
-            color: var(--cherry);
-            opacity: 0.5;
+            color: var(--cherry-light);
+            opacity: 0.4;
             margin-bottom: 15px;
             display: block;
         }
 
-        @media (max-width: 768px) {
-            .product-page {
-                padding-top: 110px;
-            }
-            .product-card {
-                padding: 35px 25px;
-            }
-            .product-card h1 {
-                font-size: 1.4rem;
-            }
-        }
-
         /* Admin controls */
-        .admin-bar{display:flex;gap:10px;margin-top:20px;flex-wrap:wrap;justify-content:center}
-        .admin-bar .btn-admin{display:inline-flex;align-items:center;gap:6px;padding:10px 20px;border-radius:10px;font-size:.8rem;font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:all .3s;color:#fff}
-        .btn-admin-edit{background:rgba(255,180,0,.15);border:1px solid rgba(255,180,0,.25);color:#ffb400}
-        .btn-admin-edit:hover{background:rgba(255,180,0,.25)}
-        .btn-admin-delete{background:rgba(255,56,96,.1);border:1px solid rgba(255,56,96,.2);color:#ff3860}
-        .btn-admin-delete:hover{background:rgba(255,56,96,.2)}
+        .admin-bar {
+            display: flex;
+            gap: 10px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .admin-bar .btn-admin {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: .8rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            font-family: inherit;
+            transition: var(--transition);
+            color: #fff;
+        }
+        .btn-admin-edit { background: rgba(255, 180, 0, 0.12); border: 1px solid rgba(255, 180, 0, 0.2); color: #ffb400; }
+        .btn-admin-edit:hover { background: rgba(255, 180, 0, 0.22); transform: translateY(-1px); }
+        .btn-admin-delete { background: rgba(255, 56, 96, 0.1); border: 1px solid rgba(255, 56, 96, 0.2); color: #ff3860; }
+        .btn-admin-delete:hover { background: rgba(255, 56, 96, 0.2); transform: translateY(-1px); }
         
-        .admin-modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:20000;display:flex;align-items:center;justify-content:center;padding:20px}
-        .admin-modal{background:rgba(12,2,4,.95);backdrop-filter:blur(30px) saturate(220%);border:1px solid rgba(var(--cherry-rgb),.15);border-radius:16px;padding:30px;max-width:500px;width:100%;max-height:90vh;overflow-y:auto}
-        .admin-modal h3{font-size:1.1rem;font-weight:800;margin-bottom:20px;display:flex;align-items:center;gap:8px}
-        .admin-modal .form-group{margin-bottom:16px}
-        .admin-modal .form-group label{display:block;font-size:.75rem;font-weight:700;margin-bottom:6px;color:var(--gray);text-transform:uppercase;letter-spacing:1px}
-        .admin-modal .form-group input,.admin-modal .form-group textarea,.admin-modal .form-group select{width:100%;padding:10px 14px;background:rgba(12,2,4,.5);border:1px solid rgba(var(--cherry-rgb),.15);border-radius:8px;color:var(--light);font-family:inherit;font-size:.85rem;outline:none}
-        .admin-modal .form-group textarea{min-height:70px;resize:vertical}
+        .admin-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 20000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(8px);
+        }
+        .admin-modal {
+            background: rgba(12, 2, 4, 0.95);
+            border: 1px solid rgba(230, 21, 54, 0.15);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+        }
+        .admin-modal h3 { font-size: 1.1rem; font-weight: 800; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; font-family: 'Outfit', sans-serif; }
+        .admin-modal .form-group { margin-bottom: 16px; }
+        .admin-modal .form-group label { display: block; font-size: .7rem; font-weight: 700; margin-bottom: 6px; color: var(--gray-dark); text-transform: uppercase; letter-spacing: 1px; }
+        .admin-modal .form-group input, .admin-modal .form-group textarea, .admin-modal .form-group select { width: 100%; padding: 10px 14px; background: rgba(12, 2, 4, 0.5); border: 1px solid rgba(230, 21, 54, 0.12); border-radius: 8px; color: var(--light); font-family: inherit; font-size: .85rem; outline: none; transition: var(--transition); }
+        .admin-modal .form-group input:focus, .admin-modal .form-group textarea:focus, .admin-modal .form-group select:focus { border-color: var(--cherry-light); }
+        .admin-modal .form-group textarea { min-height: 80px; resize: vertical; }
     </style>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5438472060600560" crossorigin="anonymous"></script>
 </head>
@@ -719,7 +776,7 @@
             if (p.type === 'scenepack') backLink = 'scenepack';
 
             const platformTags = [];
-            if (p.platform === 'win' || p.platform === 'both') platformTags.push('<span class="tag-win"><i class="fab fa-windows"></i> WIN</span>');
+            if (p.platform === 'win' || p.platform === 'both') platformTags.push('<span class="tag-win"><span class="win11-logo"></span> WIN</span>');
             if (p.platform === 'mac' || p.platform === 'both') platformTags.push('<span class="tag-mac"><i class="fab fa-apple"></i> MAC</span>');
 
             const categoryLabels = {
@@ -736,7 +793,7 @@
             // Handle thumbnail
             let thumbHtml = '';
             if (p.thumbnail) {
-                thumbHtml = `<img src="${p.thumbnail}" alt="" style="width:100%;height:100%;object-fit:cover">`;
+                thumbHtml = `<img src="${p.thumbnail}" alt="">`;
             } else {
                 const favicon = p.links && p.links[0]?.url 
                     ? `https://www.google.com/s2/favicons?domain=${new URL(p.links[0].url).hostname}&sz=64`
@@ -750,18 +807,18 @@
             const hasCreator = p.creator_nickname || p.creator_social_url;
             const creatorNickname = p.creator_nickname || p.author_name || '';
             const creatorAvatarHtml = p.creator_avatar 
-                ? `<img src="${p.creator_avatar}" style="width:100%;height:100%;object-fit:cover">` 
-                : `<i class="fas fa-user" style="color:var(--light);font-size:1.4rem"></i>`;
+                ? `<img src="${p.creator_avatar}">` 
+                : `<i class="fas fa-user"></i>`;
             const creatorSocialHtml = p.creator_social_url 
-                ? `<a href="${p.creator_social_url}" target="_blank" style="font-size:0.78rem;color:var(--cherry);text-decoration:underline;display:inline-flex;align-items:center;gap:4px;margin-top:2px"><i class="fas fa-external-link-alt" style="font-size:0.7rem"></i> View Profile</a>` 
+                ? `<a href="${p.creator_social_url}" target="_blank"><i class="fas fa-external-link-alt" style="font-size:0.6rem"></i> View Profile</a>` 
                 : '';
             const creatorSectionHtml = hasCreator ? `
-                <div class="info-section" style="margin-bottom:16px">
-                    <div class="info-label" style="font-size:.65rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gray-dark);margin-bottom:8px">Creator</div>
-                    <div style="display:flex;align-items:center;gap:10px">
-                        <div class="creator-avatar" style="width:38px;height:38px;border-radius:50%;overflow:hidden;border:2px solid rgba(var(--cherry-rgb),.15);flex-shrink:0">${creatorAvatarHtml}</div>
-                        <div>
-                            <strong style="font-size:.85rem;color:var(--light)">${creatorNickname}</strong>
+                <div style="margin-top:10px">
+                    <div style="font-size:0.75rem;font-weight:700;color:var(--gray-dark);text-transform:uppercase;letter-spacing:1px">Creator</div>
+                    <div class="creator-block">
+                        <div class="cb-avatar">${creatorAvatarHtml}</div>
+                        <div class="cb-info">
+                            <strong>${creatorNickname}</strong>
                             ${creatorSocialHtml}
                         </div>
                     </div>
@@ -772,8 +829,21 @@
             const uploaderName = p.uploader_name || '';
             const uploaderAvatarUrl = p.uploader_avatar || '';
             const uploaderAvatarHtml = uploaderAvatarUrl
-                ? `<img src="${uploaderAvatarUrl}" style="width:100%;height:100%;object-fit:cover">`
-                : `<i class="fab fa-discord" style="color:var(--light);font-size:1.3rem"></i>`;
+                ? `<img src="${uploaderAvatarUrl}">`
+                : `<i class="fab fa-discord" style="color:#5865F2;font-size:1.1rem"></i>`;
+            
+            const uploaderSectionHtml = uploaderName ? `
+                <div style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05)">
+                    <div style="font-size:0.75rem;font-weight:700;color:var(--gray-dark);text-transform:uppercase;letter-spacing:1px">Shared by</div>
+                    <div class="creator-block" style="background:rgba(88,101,242,0.03);border-color:rgba(88,101,242,0.08)">
+                        <div class="cb-avatar" style="border-color:rgba(88,101,242,0.2);background:rgba(88,101,242,0.08)">${uploaderAvatarHtml}</div>
+                        <div class="cb-info">
+                            <strong>${uploaderName}</strong>
+                            <span style="font-size:0.65rem;color:rgba(88,101,242,0.8)">Uploader</span>
+                        </div>
+                    </div>
+                </div>
+            ` : '';
 
             // Build downloads block
             let dlHtml = '';
@@ -866,20 +936,8 @@
                             <!-- Creator profile block -->
                             ${creatorSectionHtml}
 
-                            ${uploaderName ? `
                             <!-- Uploader profile block -->
-                            <div style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05)">
-                                <div style="font-size:0.75rem;font-weight:700;color:var(--gray-dark);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Shared by</div>
-                                <div style="display:flex;align-items:center;gap:12px">
-                                    <div style="width:38px;height:38px;border-radius:50%;background:rgba(88,101,242,0.08);overflow:hidden;display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(88,101,242,0.15)">
-                                        ${uploaderAvatarHtml}
-                                    </div>
-                                    <div style="min-width:0;flex:1">
-                                        <strong style="font-size:0.85rem;color:var(--light);display:flex;align-items:center;gap:4px"><i class="fab fa-discord" style="color:#5865F2;font-size:0.75rem"></i> ${uploaderName}</strong>
-                                    </div>
-                                </div>
-                            </div>
-                            ` : ''}
+                            ${uploaderSectionHtml}
                         </div>
                         
                         <!-- Right Column (Details & Download) -->
