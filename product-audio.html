@@ -157,32 +157,78 @@
             height: 100%;
             object-fit: cover;
         }
-        .art .ph {
-            font-size: 3rem;
-            color: var(--accent-light);
-            opacity: .4;
-        }
-        .art .disc {
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 44px; height: 44px;
+        /* Vinyl Record */
+        .vinyl-record {
+            width: 130px;
+            height: 130px;
             border-radius: 50%;
-            background: rgba(0, 0, 0, .7);
-            border: 1px solid rgba(255, 255, 255, .1);
+            background: radial-gradient(circle, 
+                #181818 0%, 
+                #111 20%, 
+                #1c1c1c 21%, 
+                #0c0c0c 24%, 
+                #222 28%, 
+                #111 34%, 
+                #2a2a2a 35%, 
+                #0d0d0d 39%, 
+                #1c1c1c 45%, 
+                #080808 49%, 
+                #222 55%, 
+                #111 60%, 
+                #181818 65%, 
+                #080808 70%
+            );
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5), inset 0 0 12px rgba(255,255,255,0.08);
+            position: relative;
             display: flex;
             align-items: center;
             justify-content: center;
+            animation: spin 16s linear infinite;
         }
-        .art .disc::after {
-            content: '';
-            width: 8px; height: 8px;
+        .vinyl-label {
+            width: 46px;
+            height: 46px;
             border-radius: 50%;
-            background: var(--accent-light);
+            background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent) 100%);
+            border: 1.5px solid #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            box-shadow: inset 0 2px 4px rgba(255,255,255,0.3);
+        }
+        .vinyl-label i {
+            color: #fff;
+            font-size: 1rem;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+        }
+        .vinyl-label::after {
+            content: '';
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: var(--dark);
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.15);
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.8);
+        }
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .creator-card .cc-info a.cc-discord-link {
+            color: #5865F2;
+        }
+        .creator-card .cc-info a.cc-discord-link:hover {
+            color: #7289da;
+            text-decoration: underline;
         }
         @media(max-width: 768px) {
             .art { width: 130px; height: 130px; }
-            .art .disc { width: 32px; height: 32px; }
+            .vinyl-record { width: 100px; height: 100px; }
+            .vinyl-label { width: 32px; height: 32px; }
+            .vinyl-label i { font-size: 0.75rem; }
+            .vinyl-label::after { width: 6px; height: 6px; }
         }
         
         .info {
@@ -513,7 +559,7 @@
         if (p.thumbnail) {
             h += '<img src="' + esc(p.thumbnail) + '" alt="" data-fallback="music">';
         } else {
-            h += '<div class="ph"><i class="fas fa-music"></i></div><div class="disc"></div>';
+            h += '<div class="vinyl-record"><div class="vinyl-label"><i class="fas fa-music"></i></div></div>';
         }
         h += '</div></div>';
 
@@ -540,9 +586,13 @@
         for (var i = 0; i < imgs.length; i++) {
             imgs[i].onerror = function() {
                 var fb = this.getAttribute('data-fallback') || 'user';
-                var icon = fb === 'music' ? 'fa-music' : 'fa-user';
                 var parent = this.parentElement;
-                parent.innerHTML = '<div class="ph"><i class="fas ' + icon + '"></i></div><div class="disc"></div>';
+                if (fb === 'music') {
+                    parent.innerHTML = '<div class="vinyl-record"><div class="vinyl-label"><i class="fas fa-music"></i></div></div>';
+                } else {
+                    var icon = fb === 'user' ? 'fa-user' : 'fa-music';
+                    parent.innerHTML = '<div class="ph"><i class="fas ' + icon + '"></i></div><div class="disc"></div>';
+                }
             };
         }
 
@@ -618,7 +668,13 @@
                 } else {
                     sectionHtml += '<i class="fab fa-discord" style="color:#5865F2"></i>';
                 }
-                sectionHtml += '</div><div class="cc-info"><strong>' + esc(uploaderName) + '</strong><span style="font-size:.68rem;color:var(--gray-dark)">Uploaded by</span></div></div>';
+                sectionHtml += '</div><div class="cc-info"><strong>' + esc(uploaderName) + '</strong>';
+                if (p.author_id) {
+                    sectionHtml += '<a href="https://discord.com/users/' + esc(p.author_id) + '" target="_blank" class="cc-discord-link"><i class="fab fa-discord"></i> View Profile</a>';
+                } else {
+                    sectionHtml += '<span style="font-size:.68rem;color:var(--gray-dark)">Uploaded by</span>';
+                }
+                sectionHtml += '</div></div>';
             }
             
             if (hasCreator) {
@@ -648,7 +704,11 @@
                     if (parent.classList.contains('cc-avatar') || parent.classList.contains('cb-avatar')) {
                         parent.innerHTML = '<i class="fas ' + icon + '"></i>';
                     } else {
-                        parent.innerHTML = '<div class="ph"><i class="fas ' + icon + '"></i></div><div class="disc"></div>';
+                        if (fb === 'music') {
+                            parent.innerHTML = '<div class="vinyl-record"><div class="vinyl-label"><i class="fas fa-music"></i></div></div>';
+                        } else {
+                            parent.innerHTML = '<div class="ph"><i class="fas ' + icon + '"></i></div><div class="disc"></div>';
+                        }
                     }
                 };
             }
