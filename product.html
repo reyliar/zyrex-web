@@ -770,6 +770,14 @@
             `;
         }
 
+        function linkifyUrls(text) {
+            if (!text) return '';
+            var escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            escaped = escaped.replace(/(https?:\/\/[^\s<>\[\]()]+)/gi, '<a href="$1" target="_blank" rel="noopener" style="color:var(--cherry-light);text-decoration:underline">$1</a>');
+            escaped = escaped.replace(/\n/g, '<br>');
+            return escaped;
+        }
+
         function renderProductDetail(p, isDb) {
             let backLink = 'resources';
             if (p.type === 'plugin' || p.type === 'software') backLink = 'plugins';
@@ -963,7 +971,7 @@
                         <div class="product-right-col">
                             <div>
                                 <h1 style="font-size:2.2rem;font-weight:900;margin:0 0 10px;letter-spacing:-0.5px;line-height:1.2;color:#fff">${p.name}</h1>
-                                ${p.description || p.desc ? `<p class="product-desc" style="font-size:0.92rem;line-height:1.6;color:var(--gray);margin:0">${p.description || p.desc}</p>` : ''}
+                                ${p.description || p.desc ? `<p class="product-desc" style="font-size:0.92rem;line-height:1.6;color:var(--gray);margin:0">${linkifyUrls(p.description || p.desc)}</p>` : ''}
                             </div>
                             
                             ${p.password ? `

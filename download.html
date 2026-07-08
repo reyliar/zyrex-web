@@ -534,6 +534,14 @@
             const cat = catLabels[p.category] || 'Others';
             const av = p.creator_avatar || '';
             const nick = p.creator_nickname || p.author_name || 'Zyrex Creator';
+            function linkifyUrls(text) {
+                if (!text) return '';
+                var escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+                escaped = escaped.replace(/(https?:\/\/[^\s<>\[\]()]+)/gi, '<a href="$1" target="_blank" rel="noopener" style="color:var(--cherry-light);text-decoration:underline">$1</a>');
+                escaped = escaped.replace(/\n/g, '<br>');
+                return escaped;
+            }
+
             const desc = p.description || p.desc || '';
             const authorId = p.author_id || '';
             const uploaderName = p.uploader_name || '';
@@ -575,7 +583,7 @@
 
             // Description
             if (desc) {
-                html += '<div class="desc-block"><div class="desc-label"><i class="fas fa-align-left"></i> Description</div>' + desc.replace(/\n/g, '<br>') + '</div>';
+                html += '<div class="desc-block"><div class="desc-label"><i class="fas fa-align-left"></i> Description</div>' + linkifyUrls(desc) + '</div>';
             }
 
             // Files (exclude watermarks) - fetch from API if not in product data
