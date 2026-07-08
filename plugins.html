@@ -198,7 +198,7 @@
         /* Stats Section */
         .stats-row {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 16px;
             margin-bottom: 36px;
             animation: fadeSlideUp 1s ease both;
@@ -444,7 +444,7 @@
             }
 
             .stats-row {
-                grid-template-columns: repeat(3, 1fr);
+                grid-template-columns: repeat(2, 1fr);
                 gap: 10px;
             }
 
@@ -589,6 +589,10 @@
                 <div class="stat-num" id="statOfx">0</div>
                 <div class="stat-label">OFX Plugins</div>
             </div>
+            <div class="stat-card">
+                <div class="stat-num" id="statAvx">0</div>
+                <div class="stat-label">AVX</div>
+            </div>
         </div>
 
         <div class="notice-banner">
@@ -649,6 +653,15 @@
                     <div class="cc-head"><strong>OFX Plugins</strong><i class="fas fa-arrow-right cc-arrow"></i></div>
                     <div class="cc-desc">OpenFX plugins for DaVinci Resolve, Vegas, and compatible hosts.</div>
                     <span class="cc-count" id="countOfx">-- available</span>
+                </div>
+            </a>
+
+            <a href="/plugins/avx" class="cat-card">
+                <div class="cc-icon"><i class="fas fa-bolt"></i></div>
+                <div class="cc-body">
+                    <div class="cc-head"><strong>AVX</strong><i class="fas fa-arrow-right cc-arrow"></i></div>
+                    <div class="cc-desc">Avid AVX plugins for Media Composer and compatible hosts.</div>
+                    <span class="cc-count" id="countAvx">-- available</span>
                 </div>
             </a>
 
@@ -737,19 +750,22 @@
             var sw = all.filter(function (p) { var c = (p.category || '').toLowerCase(); return c === 'software' }).length;
             var ad = all.filter(function (p) { var c = (p.category || '').toLowerCase(); return c === 'adobe-plugin' || c === 'ae-plugins' || c === 'pr-plugins' }).length;
             var ox = all.filter(function (p) { var c = (p.category || '').toLowerCase(); return c === 'ofx-plugin' }).length;
+            var av = all.filter(function (p) { var c = (p.category || '').toLowerCase(); return c === 'avx' }).length;
             animateNum('statSoftware', sw);
             animateNum('statAdobe', ad);
             animateNum('statOfx', ox);
+            animateNum('statAvx', av);
 
             var wn = all.filter(function (p) { var pl = (p.platform || '').toLowerCase(); return pl === 'win' || pl === 'both' || pl === 'windows' }).length;
             var mc = all.filter(function (p) { var pl = (p.platform || '').toLowerCase(); return pl === 'mac' || pl === 'both' }).length;
-            var ex = all.filter(function (p) { var c = (p.category || '').toLowerCase(); return c === 'others' || c === 'extensions' || c === 'scripts' }).length;
+            var ex = all.filter(function (p) { var c = (p.category || '').toLowerCase(); return c === 'others' || c === 'extensions' || c === 'scripts' || c === 'extensions-scripts' }).length;
 
             document.getElementById('countWin').textContent = wn + ' available';
             document.getElementById('countMac').textContent = mc + ' available';
             document.getElementById('countSoftware').textContent = sw + ' available';
             document.getElementById('countAdobe').textContent = ad + ' available';
             document.getElementById('countOfx').textContent = ox + ' available';
+            document.getElementById('countAvx').textContent = av + ' available';
             document.getElementById('countExtensions').textContent = ex + ' available';
         })();
 
