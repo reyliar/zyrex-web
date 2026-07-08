@@ -293,6 +293,7 @@ window.pluginsData = [
         links: [{ url: 'https://katfile.com/5fb1hgoc0he4/REVisionFX.Effections.Plus.v25.8.rar.html', label: 'KatFile' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9yYXBpZGdhdG9yLm5ldC9maWxlLzg2MTI3NDEwODZhY2NlM2FhNzZlYzA2ZTMzZjRlY2U4L1Jvd2J5dGUuYnVuZGxlLnJhci5odG1s', harmless: 60, malicious: 0 },
         id: makeId('Rowbyte bundle v2025.8'),
         name: 'Rowbyte Bundle v2025.8',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -301,6 +302,7 @@ window.pluginsData = [
         links: [{ url: 'https://rapidgator.net/file/8612741086acce3aa76ec06e33f4ece8/Rowbyte.bundle.rar.html', label: 'RapidGator' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9yZy50by9maWxlLzM0OTMxMDQxMjAxN2U3MzhlNjMxNmI1ZDhhZTQ4OTJkL1BhaW50JlN0aWNrLnYyLjEuMi5DRS5yYXIuaHRtbA', harmless: 59, malicious: 0 },
         id: makeId('aescripts Paint & Stick v2.1.2'),
         name: 'aescripts Paint & Stick v2.1.2',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -308,6 +310,7 @@ window.pluginsData = [
         links: [{ url: 'https://rg.to/file/349310412017e738e6316b5d8ae4892d/Paint&Stick.v2.1.2.CE.rar.html', label: 'RapidGator' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9kZXBvc2l0ZmlsZXMuY29tL2ZpbGVzL3M5NnpleWp0aQ', harmless: 70, malicious: 0 },
         id: makeId('DigiEffects Suite v3.0.2'),
         name: 'DigiEffects Suite v3.0.2',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -315,6 +318,7 @@ window.pluginsData = [
         links: [{ url: 'https://depositfiles.com/files/s96zeyjti', label: 'DepositFiles' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9jbGlja251cGxvYWQuY2ZkL3Nxczhsank2ZjFmdg', harmless: 50, malicious: 10 },
         id: makeId('Digital Anarchy bundle 2025.5'),
         name: 'Digital Anarchy Bundle 2025.5',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -323,6 +327,7 @@ window.pluginsData = [
         links: [{ url: 'https://clicknupload.cfd/sqs8ljy6f1fv', label: 'ClicknUpload' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9kZXBvc2l0ZmlsZXMuY29tL2ZpbGVzL24zZWpxNXEyeA', harmless: 69, malicious: 0 },
         id: makeId('FXhome Ignite Pro v4.0'),
         name: 'FXhome Ignite Pro v4.0',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -330,6 +335,7 @@ window.pluginsData = [
         links: [{ url: 'https://depositfiles.com/files/n3ejq5q2x', label: 'DepositFiles' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9kZXBvc2l0ZmlsZXMuY29tL2ZpbGVzLzRyODZzNGMyYg', harmless: 59, malicious: 0 },
         id: makeId('GraniteBay GBDeflicker v4.5.0'),
         name: 'GraniteBay GBDeflicker v4.5.0',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -337,6 +343,7 @@ window.pluginsData = [
         links: [{ url: 'https://depositfiles.com/files/4r86s4c2b', label: 'DepositFiles' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9kZXBvc2l0ZmlsZXMuY29tL2ZpbGVzL2Vvdm9zeGd6dA', harmless: 59, malicious: 0 },
         id: makeId('Motion Boutique Newton v3.0'),
         name: 'Motion Boutique Newton v3.0',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -344,6 +351,7 @@ window.pluginsData = [
         links: [{ url: 'https://depositfiles.com/files/eovosxgzt', label: 'DepositFiles' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9jbGlja251cGxvYWQuc3BhY2UvdjY0cGZkaHkxazA5', harmless: 60, malicious: 0 },
         id: makeId('proDAD Mercalli v6.0.671'),
         name: 'proDAD Mercalli v6.0.671',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -351,6 +359,7 @@ window.pluginsData = [
         links: [{ url: 'https://clicknupload.space/v64pfdhy1k09', label: 'ClicknUpload' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9rYXRmaWxlLmNvbS9heGxlM25taml0ODU', harmless: 68, malicious: 0 },
         id: makeId('Rubber Monkey FilmConvert Nitrate AE v3.47'),
         name: 'Rubber Monkey FilmConvert Nitrate AE v3.47',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -358,6 +367,7 @@ window.pluginsData = [
         links: [{ url: 'https://katfile.com/axle3nmjit85', label: 'KatFile' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9kZXBvc2l0ZmlsZXMuY29tL2ZpbGVzL250Z3cwYWg3OA', harmless: 60, malicious: 0 },
         id: makeId('SuperLuminal StarDust v1.3.1'),
         name: 'SuperLuminal StarDust v1.3.1',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -370,6 +380,7 @@ window.pluginsData = [
     // MORE AE PLUGINS (from codec.kyiv.ua/ad0be.html)
     // ═══════════════════════════════════════════
     {
+        vt_scan: { id: 'aHR0cHM6Ly9mdWNraW5nZmFzdC5uZXQvYTg3Z296bGF5YTJ3', harmless: 54, malicious: 4 },
         id: makeId('BorisFX Silhouette 2026.0.2'),
         name: 'BorisFX Silhouette 2026.0.2',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -377,6 +388,7 @@ window.pluginsData = [
         links: [{ url: 'https://fuckingfast.net/a87gozlaya2w', label: 'FuckingFast' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9mdWNraW5nZmFzdC5uZXQvdDNjZmVzMWhrODk2', harmless: 53, malicious: 4 },
         id: makeId('BorisFX SynthEyes Pro 2026.0.3'),
         name: 'BorisFX SynthEyes Pro 2026.0.3',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -384,6 +396,7 @@ window.pluginsData = [
         links: [{ url: 'https://fuckingfast.net/t3cfes1hk896', label: 'FuckingFast' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9yYXBpZGdhdG9yLm5ldC9maWxlLzkxNmI5OWYyMGM3YzlkMDVlNTdhZGM0NmM0ZmFlMmE2L0F1dG9jcm9tYS5idW5kbGUuMjAyNS43LnJhci5odG1s', harmless: 59, malicious: 0 },
         id: makeId('Autocroma bundle 2025.7'),
         name: 'Autocroma Bundle 2025.7',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -391,6 +404,7 @@ window.pluginsData = [
         links: [{ url: 'https://rapidgator.net/file/916b99f20c7c9d05e57adc46c4fae2a6/Autocroma.bundle.2025.7.rar.html', label: 'RapidGator' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9jbGlja251cGxvYWQuY2ZkLzlwM3k3MHFyd2x6OA', harmless: 49, malicious: 10 },
         id: makeId('BAO plugins bundle 2025.5'),
         name: 'BAO Plugins Bundle 2025.5',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -398,6 +412,7 @@ window.pluginsData = [
         links: [{ url: 'https://clicknupload.cfd/9p3y70qrwlz8', label: 'ClicknUpload' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9yZy50by9maWxlLzFmNDhkNjBhZWJmYWEzZTVmMzA5YmRjNzI4ZjNiYmVmL0NST1NTUEhFUkUucmFyLmh0bWw', harmless: 59, malicious: 0 },
         id: makeId('CROSSPHERE bundle 2025'),
         name: 'CROSSPHERE Bundle 2025',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -405,6 +420,7 @@ window.pluginsData = [
         links: [{ url: 'https://rg.to/file/1f48d60aebfaa3e5f309bdc728f3bbef/CROSSPHERE.rar.html', label: 'RapidGator' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9jbGlja251cGxvYWQuY2xpY2svMjhuOWF4MzF2MDEwL0N5Y29yZUZYLmJ1bmRsZS52MS4zLjIucmFy', harmless: 58, malicious: 0 },
         id: makeId('CycoreFX bundle v1.3.2'),
         name: 'CycoreFX Bundle v1.3.2',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -412,6 +428,7 @@ window.pluginsData = [
         links: [{ url: 'https://clicknupload.click/28n9ax31v010/CycoreFX.bundle.v1.3.2.rar', label: 'ClicknUpload' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9kZXBvc2l0ZmlsZXMuY29tL2ZpbGVzL2gybXE0cXl3Yw', harmless: 59, malicious: 0 },
         id: makeId('DataClay Templater v2.8.4'),
         name: 'DataClay Templater v2.8.4',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -419,6 +436,7 @@ window.pluginsData = [
         links: [{ url: 'https://depositfiles.com/files/h2mq4qywc', label: 'DepositFiles' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9kZXBvc2l0ZmlsZXMuY29tL2ZpbGVzLzV3Y3JmNjBxMg', harmless: 60, malicious: 0 },
         id: makeId('DFT FilmStocks v3.0.2'),
         name: 'DFT FilmStocks v3.0.2',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -426,6 +444,7 @@ window.pluginsData = [
         links: [{ url: 'https://depositfiles.com/files/5wcrf60q2', label: 'DepositFiles' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9kZXBvc2l0ZmlsZXMuY29tL2ZpbGVzL2wxdHZhdW9mYw', harmless: 59, malicious: 0 },
         id: makeId('DFT Rays v2.1'),
         name: 'DFT Rays v2.1',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -433,6 +452,7 @@ window.pluginsData = [
         links: [{ url: 'https://depositfiles.com/files/l1tvauofc', label: 'DepositFiles' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9jbGlja251cGxvYWQuY2xpY2svOXhsb2F0ZnlmaXd5L0ZhbmRldi5idW5kbGUucmFy', harmless: 57, malicious: 0 },
         id: makeId('FanDev bundle 2025'),
         name: 'FanDev Bundle 2025',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -440,6 +460,7 @@ window.pluginsData = [
         links: [{ url: 'https://clicknupload.click/9xloatfyfiwy/Fandev.bundle.rar', label: 'ClicknUpload' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9jbGlja251cGxvYWQuc3BhY2UvZndmMmt6c2RqNnhp', harmless: 59, malicious: 0 },
         id: makeId('Filmworkz Adobe DVO v1.0.1'),
         name: 'Filmworkz Adobe DVO v1.0.1',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -447,6 +468,7 @@ window.pluginsData = [
         links: [{ url: 'https://clicknupload.space/fwf2kzsdj6xi', label: 'ClicknUpload' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9kZXBvc2l0ZmlsZXMuY29tL2ZpbGVzL3dvcWtlMjU3ZA', harmless: 59, malicious: 0 },
         id: makeId('Fixel Algorithms bundle v2.0.3'),
         name: 'Fixel Algorithms Bundle v2.0.3',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -454,6 +476,7 @@ window.pluginsData = [
         links: [{ url: 'https://depositfiles.com/files/woqke257d', label: 'DepositFiles' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly93d3cuZmlsZWZhY3RvcnkuY29tL2ZpbGUvNWg3ZzQ3YXFjNDJtL0ZyaXNjaGx1ZnQuY29tLnJhcg', harmless: 70, malicious: 1 },
         id: makeId('frischluft AEX bundle'),
         name: 'frischluft AEX Bundle',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -461,6 +484,7 @@ window.pluginsData = [
         links: [{ url: 'https://www.filefactory.com/file/5h7g47aqc42m/Frischluft.com.rar', label: 'FileFactory' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9kZXBvc2l0ZmlsZXMuY29tL2ZpbGVzLzBjZHhsdXA5ZA', harmless: 60, malicious: 0 },
         id: makeId('GenArts Monsters GT v7.0.5'),
         name: 'GenArts Monsters GT v7.0.5',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -468,6 +492,7 @@ window.pluginsData = [
         links: [{ url: 'https://depositfiles.com/files/0cdxlup9d', label: 'DepositFiles' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9kZXBvc2l0ZmlsZXMuY29tL2ZpbGVzL241amNxYmlodA', harmless: 59, malicious: 0 },
         id: makeId('Imagenomic Video Plugin Suite'),
         name: 'Imagenomic Video Plugin Suite',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -475,6 +500,7 @@ window.pluginsData = [
         links: [{ url: 'https://depositfiles.com/files/n5jcqbiht', label: 'DepositFiles' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9yZy50by9maWxlLzM1ZWVlZDMxMDFkZWVlNjBiZmQyOGI1MzRmMjEwMDk2', harmless: 60, malicious: 0 },
         id: makeId('RE:VisionFX Color Genius Plus v25.11'),
         name: 'RE:VisionFX Color Genius Plus v25.11',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -482,6 +508,7 @@ window.pluginsData = [
         links: [{ url: 'https://rg.to/file/35eeed3101deee60bfd28b534f210096', label: 'RapidGator' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9yZy50by9maWxlL2ZiZTMzYTNlNzg2YjFmODEwYTA0YjZiNTIzNTdhYTExL0dHLlBpeGVsU29ydGVyLnJhci5odG1s', harmless: 62, malicious: 0 },
         id: makeId('Pixel Sorter Studio bundle 2025.7'),
         name: 'Pixel Sorter Studio Bundle 2025.7',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -489,6 +516,7 @@ window.pluginsData = [
         links: [{ url: 'https://rg.to/file/fbe33a3e786b1f810a04b6b52357aa11/GG.PixelSorter.rar.html', label: 'RapidGator' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9mdWNraW5nZmFzdC5uZXQvcXlnM2sydzQzMXAx', harmless: 54, malicious: 5 },
         id: makeId('ProductionCrate LaForge Suite v1.5.07'),
         name: 'ProductionCrate LaForge Suite v1.5.07',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -498,6 +526,7 @@ window.pluginsData = [
     // PREMIERE PRO PLUGINS (from codec.kyiv.ua/ad0be.html)
     // ═══════════════════════════════════════════
     {
+        vt_scan: { id: 'aHR0cHM6Ly9jbGlja251cGxvYWQuY2ZkL2RwaGNyaDE0ejZ2aQ', harmless: 64, malicious: 2 },
         id: makeId('Neat Video Pro v6.0.5 for Premiere'),
         name: 'Neat Video Pro v6.0.5 (Premiere)',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -505,6 +534,7 @@ window.pluginsData = [
         links: [{ url: 'https://clicknupload.cfd/dphcrh14z6vi', label: 'ClicknUpload' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9jbGlja251cGxvYWQuc2l0ZS9qd2R3ZWZvYWU5MXA', harmless: 56, malicious: 0 },
         id: makeId('NewBlue TotalFX 360 build 250207'),
         name: 'NewBlue TotalFX 360 (build 250207)',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -513,6 +543,7 @@ window.pluginsData = [
         links: [{ url: 'https://clicknupload.site/jwdwefoae91p', label: 'ClicknUpload' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9jbGlja251cGxvYWQuY2ZkLzJkYTI3MGxpdjUyZA', harmless: 49, malicious: 10 },
         id: makeId('FilmImpact Premium Video Effects v25.2.5'),
         name: 'FilmImpact Premium Video Effects v25.2.5',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -520,6 +551,7 @@ window.pluginsData = [
         links: [{ url: 'https://clicknupload.cfd/2da270liv52d', label: 'ClicknUpload' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9jbGlja251cGxvYWQuY2xpY2svYjA1NDZibTY1cWJqL0NvbG91cmxhYi5Qcm8uVjMuNS4wLnJhcg', harmless: 68, malicious: 1 },
         id: makeId('Colourlab Ai Pro v3.5.0'),
         name: 'Colourlab Ai Pro v3.5.0',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -528,6 +560,7 @@ window.pluginsData = [
         links: [{ url: 'https://clicknupload.click/b0546bm65qbj/Colourlab.Pro.V3.5.0.rar', label: 'ClicknUpload' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9jbGlja251cGxvYWQubmFtZS92aGZxYTd2NmN5dWY', harmless: 66, malicious: 0 },
         id: makeId('Red Giant PluralEyes 2023.0.0'),
         name: 'Red Giant PluralEyes 2023.0.0',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -536,6 +569,7 @@ window.pluginsData = [
         links: [{ url: 'https://clicknupload.name/vhfqa7v6cyuf', label: 'ClicknUpload' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9jbGlja251cGxvYWQuY2xpY2svbnVqc2ZidmNvNmlq', harmless: 59, malicious: 0 },
         id: makeId('Rubber Monkey CineMatch v1.24'),
         name: 'Rubber Monkey CineMatch v1.24',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -543,6 +577,7 @@ window.pluginsData = [
         links: [{ url: 'https://clicknupload.click/nujsfbvco6ij', label: 'ClicknUpload' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9kZXBvc2l0ZmlsZXMuY29tL2ZpbGVzL2wzazl4NWtibw', harmless: 60, malicious: 0 },
         id: makeId('FanDev CuteDCP Pr v1.5.11'),
         name: 'FanDev CuteDCP Pr v1.5.11',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -551,6 +586,7 @@ window.pluginsData = [
         links: [{ url: 'https://depositfiles.com/files/l3k9x5kbo', label: 'DepositFiles' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9kZXBvc2l0ZmlsZXMuY29tL2ZpbGVzL2Nmd2ZqcDhiYQ', harmless: 60, malicious: 0 },
         id: makeId('Sorenson Squeeze Pro v11.1.0.9'),
         name: 'Sorenson Squeeze Pro v11.1.0.9',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -562,6 +598,7 @@ window.pluginsData = [
     // PHOTOSHOP PLUGINS (from codec.kyiv.ua/ad0be.html)
     // ═══════════════════════════════════════════
     {
+        vt_scan: { id: 'aHR0cHM6Ly9mdWNraW5nZmFzdC5uZXQvMG1wbHh4cGNlZmJi', harmless: 53, malicious: 4 },
         id: makeId('BorisFX Optics 2026.0.3 for Photoshop'),
         name: 'BorisFX Optics 2026.0.3 (Photoshop)',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -569,6 +606,7 @@ window.pluginsData = [
         links: [{ url: 'https://fuckingfast.net/0mplxxpcefbb', label: 'FuckingFast' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9jbGlja251cGxvYWQuY2xpY2svdmdpMmd6cms0anZxL0JvcmlzRlguU2FwcGhpcmUuUFMuMjAyNi41LnJhcg', harmless: 58, malicious: 0 },
         id: makeId('BorisFX Sapphire 2026.5 for Photoshop'),
         name: 'BorisFX Sapphire 2026.5 (Photoshop)',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -576,6 +614,7 @@ window.pluginsData = [
         links: [{ url: 'https://clicknupload.click/vgi2gzrk4jvq/BorisFX.Sapphire.PS.2026.5.rar', label: 'ClicknUpload' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9jbGlja251cGxvYWQuY2xpY2svZmVjYWdzenpiM3FhL0RlaGFuY2VyLkZpbG0uUHMuTHIudjIuOC4wLnJhcg', harmless: 58, malicious: 0 },
         id: makeId('Dehancer Film Ps/Lr v2.8.0'),
         name: 'Dehancer Film Ps/Lr v2.8.0',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -583,6 +622,7 @@ window.pluginsData = [
         links: [{ url: 'https://clicknupload.click/fecagszzb3qa/Dehancer.Film.Ps.Lr.v2.8.0.rar', label: 'ClicknUpload' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly93d3cuZmlsZWZhY3RvcnkuY29tL2ZpbGUvODdqZ3c1enB3NDQvQmVhdXR5LkJveC5QUy52NS4wLjYuQ0UucmFy', harmless: 58, malicious: 1 },
         id: makeId('Digital Anarchy Beauty Box PS v5.0.6'),
         name: 'Digital Anarchy Beauty Box PS v5.0.6',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -590,6 +630,7 @@ window.pluginsData = [
         links: [{ url: 'https://www.filefactory.com/file/87jgw5zpw44/Beauty.Box.PS.v5.0.6.CE.rar', label: 'FileFactory' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9kZXBvc2l0ZmlsZXMuY29tL2ZpbGVzL3pxZTF3YmVkdg', harmless: 59, malicious: 0 },
         id: makeId('Imagenomic Portraiture v3.0.2.7'),
         name: 'Imagenomic Portraiture v3.0.2.7',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -598,6 +639,7 @@ window.pluginsData = [
         links: [{ url: 'https://depositfiles.com/files/zqe1wbedv', label: 'DepositFiles' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9jbGlja251cGxvYWQuY2xpY2svbDJtb3FhMmh3cDZ2L1RvcGF6LkdpZ2FwaXhlbC5Qcm8udjEuMy4wLnJhcg', harmless: 60, malicious: 0 },
         id: makeId('Topaz Gigapixel Pro v1.3.0'),
         name: 'Topaz Gigapixel Pro v1.3.0',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -605,6 +647,7 @@ window.pluginsData = [
         links: [{ url: 'https://clicknupload.click/l2moqa2hwp6v/Topaz.Gigapixel.Pro.v1.3.0.rar', label: 'ClicknUpload' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9jbGlja251cGxvYWQuY2xpY2sveHR3bm9ramYycGhlL1RvcGF6LlBob3RvLlByby52MS42LjEucmFy', harmless: 57, malicious: 0 },
         id: makeId('Topaz Photo Pro v1.6.1'),
         name: 'Topaz Photo Pro v1.6.1',
         category: 'adobe-plugin', platform: 'win', password: null,
@@ -613,7 +656,9 @@ window.pluginsData = [
     },
 
         {
-        id: makeId('Topaz Video AI 3.3.10 (Recommended)'),
+        vt_scan: { id: 'aHR0cHM6Ly9kb3dubG9hZDIzOTAubWVkaWFmaXJlLmNvbS8xcmNyNXlwN2NnemdySWtqaXNHWFRGTUxiSTVKd3llbzdqeGN5MDFVSjA0YzFvR3dabVF3cTdBalg1akFranVVSW1POUxHMXhpbkhqMndYV05jOUhNQVhCYzZOcGI5ZmRZd1dmUW14bEhxamVfaXAwbmhUX25hLVVZVURBWWJXNUVoUTNZcXphcmdKVzk1ZTY2T3UxSnozSjluY0MxdEViQ0dQNjc2Mi1WN3MvZ3l1cms5NmV5dWNiN25rL1RvcGF6K1ZpZGVvK0FJKzMuMy4xMCslMjhXaW4lMjkucmFy', harmless: 58, malicious: 0 },
+
+            id: makeId('Topaz Video AI 3.3.10 (Recommended)'),
         name: 'Topaz Video AI 3.3.10 (Recommended)',
         category: 'software', platform: 'win', password: 'Editing',
         desc: 'I recommend this version of Topaz Video AI. cuz It works good. 😊',
@@ -624,6 +669,7 @@ window.pluginsData = [
     // AVID SOFTWARE & PLUGINS (from codec.kyiv.ua/avid.html)
     // ═══════════════════════════════════════════
     {
+        vt_scan: { id: 'aHR0cHM6Ly9mdWNraW5nZmFzdC5uZXQvYWNraWZyMTBhOGEw', harmless: 53, malicious: 4 },
         id: makeId('Avid Media Composer v25.6 Windows'),
         name: 'Avid Media Composer v25.6 (Windows)',
         category: 'software', platform: 'win', password: null,
@@ -631,6 +677,7 @@ window.pluginsData = [
         links: [{ url: 'https://fuckingfast.net/ackifr10a8a0', label: 'FuckingFast' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9kZXBvc2l0ZmlsZXMuY29tL2ZpbGVzL3ZoZ2R1bnhrbA', harmless: 78, malicious: 0 },
         id: makeId('Avid Media Composer v8.4.5 Mac'),
         name: 'Avid Media Composer v8.4.5 (Mac)',
         category: 'software', platform: 'mac', password: null,
@@ -638,6 +685,7 @@ window.pluginsData = [
         links: [{ url: 'https://depositfiles.com/files/vhgdunxkl', label: 'DepositFiles' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9mdWNraW5nZmFzdC5uZXQvc3NuZW91bnl2YnNl', harmless: 54, malicious: 4 },
         id: makeId('BorisFX Continuum AVX 2026.5'),
         name: 'BorisFX Continuum AVX 2026.5',
         category: 'others', platform: 'win', password: null,
@@ -645,6 +693,7 @@ window.pluginsData = [
         links: [{ url: 'https://fuckingfast.net/ssneounyvbse', label: 'FuckingFast' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9jbGlja251cGxvYWQuY2xpY2svN3ZsMmxrN2VwejhlL0JvcmlzRlguU2FwcGhpcmUuQVZYLnYyMDI2LjUucmFy', harmless: 58, malicious: 0 },
         id: makeId('BorisFX Sapphire AVX 2026.5'),
         name: 'BorisFX Sapphire AVX 2026.5',
         category: 'others', platform: 'win', password: null,
@@ -652,6 +701,7 @@ window.pluginsData = [
         links: [{ url: 'https://clicknupload.click/7vl2lk7epz8e/BorisFX.Sapphire.AVX.v2026.5.rar', label: 'ClicknUpload' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9jbGlja251cGxvYWQuY2xpY2svdXoxNmpyMjhpZ2FsL0JvcmlzRlguTW9jaGEuUHJvLjIwMjYuNS4wLkFWWC5yYXI', harmless: 58, malicious: 0 },
         id: makeId('BorisFX Mocha Pro AVX 2026.5'),
         name: 'BorisFX Mocha Pro AVX 2026.5',
         category: 'others', platform: 'win', password: null,
