@@ -720,7 +720,7 @@ window.pluginsData = [
         vt_scan: { id: 'aHR0cHM6Ly9jbGlja251cGxvYWQubmFtZS92aGNrbW94Z3B6Mnc', harmless: 57, malicious: 0 },
         id: makeId('FilmLight BaseLight for Avid v6.0'),
         name: 'FilmLight BaseLight for Avid v6.0',
-        category: 'others', platform: 'win', password: null,
+        category: 'avx', platform: 'win', password: null,
         desc: 'FilmLight BaseLight for Avid v6.0.21185 — professional color grading plugin for Avid.',
         links: [{ url: 'https://clicknupload.name/vhckmoxgpz2w', label: 'ClicknUpload' }]
     },
