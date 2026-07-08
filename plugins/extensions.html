@@ -311,7 +311,7 @@
         document.getElementById('hamburger')?.addEventListener('click',function(){document.getElementById('navLinks').classList.toggle('active')});
         
         function getCatLabel(c){
-            var m={'software':'Software','ofx-plugin':'OFX','adobe-plugin':'Adobe','ae-plugins':'Adobe','pr-plugins':'Adobe','others':'Other','extensions':'Other','scripts':'Other'};
+            var m={'software':'Software','ofx-plugin':'OFX','adobe-plugin':'Adobe','ae-plugins':'Adobe','pr-plugins':'Adobe','extensions-scripts':'Ext & Scripts','others':'Other','extensions':'Other','scripts':'Other'};
             return m[c]||c;
         }
         
@@ -319,6 +319,7 @@
             if(c==='ofx-plugin') return 'fa-plug';
             if(c==='adobe-plugin'||c==='ae-plugins'||c==='pr-plugins') return 'fa-video';
             if(c==='software') return 'fa-laptop-code';
+            if(c==='extensions-scripts') return 'fa-puzzle-piece';
             return 'fa-puzzle-piece';
         }
         
@@ -358,7 +359,7 @@
             
             var f = all.filter(function(p){
                 // Filter by page-specific logic
-                var c=(p.category||'').toLowerCase(); return c==='others'||c==='extensions'||c==='scripts';
+                var c=(p.category||'').toLowerCase(); return c==='others'||c==='extensions'||c==='scripts'||c==='extensions-scripts';
             });
 
             // Apply search filter
