@@ -709,6 +709,7 @@ window.pluginsData = [
         links: [{ url: 'https://clicknupload.click/uz16jr28igal/BorisFX.Mocha.Pro.2026.5.0.AVX.rar', label: 'ClicknUpload' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9jbGlja251cGxvYWQuc2l0ZS84NW54Zmg2b3dqd2I', harmless: 56, malicious: 0 },
         id: makeId('NeatVideo AVX v4.1.1'),
         name: 'NeatVideo AVX v4.1.1',
         category: 'others', platform: 'win', password: null,
@@ -716,6 +717,7 @@ window.pluginsData = [
         links: [{ url: 'https://clicknupload.site/85nxfh6owjwb', label: 'ClicknUpload' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9jbGlja251cGxvYWQubmFtZS92aGNrbW94Z3B6Mnc', harmless: 57, malicious: 0 },
         id: makeId('FilmLight BaseLight for Avid v6.0'),
         name: 'FilmLight BaseLight for Avid v6.0',
         category: 'others', platform: 'win', password: null,
@@ -727,6 +729,7 @@ window.pluginsData = [
     // MAC APPS (from macked.app & audioz)
     // ═══════════════════════════════════════════
     {
+        vt_scan: { id: 'aHR0cHM6Ly9tYWNrZWQuYXBwL2Fkb2JlLWFjdGl2YXRpb24tdG9vbC1jcmFjay5odG1s', harmless: 67, malicious: 0 },
         id: makeId('Adobe Activation Tool Mac'),
         name: 'Adobe Activation Tool 1.2.7/2.1.5 (Mac)',
         category: 'software', platform: 'mac', password: null,
@@ -734,6 +737,7 @@ window.pluginsData = [
         links: [{ url: 'https://macked.app/adobe-activation-tool-crack.html', label: 'MacKed' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9tYWNrZWQuYXBwL3NldGFwcC1tYWMtY3JhY2suaHRtbA', harmless: 66, malicious: 1 },
         id: makeId('Setapp 3.53.2 Mac'),
         name: 'Setapp 3.53.2 (Mac)',
         category: 'software', platform: 'mac', password: null,
@@ -742,6 +746,7 @@ window.pluginsData = [
         links: [{ url: 'https://macked.app/setapp-mac-crack.html', label: 'MacKed' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9hdWRpb3ouZG93bmxvYWQvc29mdHdhcmUvMjk3MTEwLWRvd25sb2FkX3BhcmFsbGVscy1kZXNrdG9wLWJ1c2luZXNzLWVkaXRpb24tMjY0MDU3NTEzLW1hY29zLWF0Yi5odG1s', harmless: 0, malicious: 0 },
         id: makeId('Parallels Desktop Business Edition 26.4 Mac'),
         name: 'Parallels Desktop 26.4 Business (Mac)',
         category: 'software', platform: 'mac', password: null,
@@ -753,6 +758,7 @@ window.pluginsData = [
     // VIDEO SOFTWARE & UTILITIES
     // ═══════════════════════════════════════════
     {
+        vt_scan: { id: 'aHR0cHM6Ly9hdWRpb3ouZG93bmxvYWQvc29mdHdhcmUvd2luLzI5NzE1Ni1kb3dubG9hZF9jeWJlcmxpbmstcG93ZXJkaXJlY3Rvci11bHRpbWF0ZS0yMDI2LXYyNDYxODI0Mi5odG1s', harmless: 55, malicious: 4 },
         id: makeId('CyberLink PowerDirector Ultimate 2026'),
         name: 'CyberLink PowerDirector Ultimate 2026',
         category: 'software', platform: 'win', password: null,
@@ -760,6 +766,7 @@ window.pluginsData = [
         links: [{ url: 'https://audioz.download/software/win/297156-download_cyberlink-powerdirector-ultimate-2026-v24618242.html', label: 'AudioZ' }]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9hdWRpb3ouZG93bmxvYWQvc29mdHdhcmUvd2luLzI5NzE2Ni1kb3dubG9hZF92aXJ0dWFsLWF1ZGlvLWNhYmxlLXY0NzEuaHRtbA', harmless: 54, malicious: 4 },
         id: makeId('Virtual Audio Cable v4.71'),
         name: 'Virtual Audio Cable v4.71',
         category: 'software', platform: 'win', password: null,
@@ -772,6 +779,7 @@ window.pluginsData = [
     // OFX PLUGINS
     // ═══════════════════════════════════════════
     {
+        vt_scan: { id: 'aHR0cHM6Ly9waXhlbGRyYWluLmNvbS91L3h3dGJTdGJ0', harmless: 61, malicious: 0 },
         id: makeId('Continuum 2026 OFX'),
         name: 'BorisFX Continuum 2026 OFX',
         category: 'ofx-plugin',
@@ -785,6 +793,7 @@ window.pluginsData = [
         ]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9waXhlbGRyYWluLmNvbS91L2tCVWY2dHh0', harmless: 65, malicious: 0 },
         id: makeId('Sapphire 2026 OFX'),
         name: 'BorisFX Sapphire 2026 OFX',
         category: 'ofx-plugin',
@@ -798,6 +807,7 @@ window.pluginsData = [
         ]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9waXhlbGRyYWluLmNvbS91L01vRktoV1hF', harmless: 65, malicious: 0 },
         id: makeId('Twixtor 8.1.0 OFX'),
         name: 'Twixtor 8.1.0 OFX',
         category: 'ofx-plugin',
@@ -811,6 +821,7 @@ window.pluginsData = [
         ]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9waXhlbGRyYWluLmNvbS91L3NVN3dxNnRI', harmless: 65, malicious: 0 },
         id: makeId('RSMB 6.6.0 OFX'),
         name: 'RSMB 6.6.0 OFX',
         category: 'ofx-plugin',
@@ -823,6 +834,7 @@ window.pluginsData = [
         ]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9waXhlbGRyYWluLmNvbS91LzR6TXRHcERH', harmless: 64, malicious: 0 },
         id: makeId('REVisionFX Bundle 25.08 OFX'),
         name: 'RE:VisionFX Bundle 25.08 OFX',
         category: 'ofx-plugin',
@@ -836,6 +848,7 @@ window.pluginsData = [
         ]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9waXhlbGRyYWluLmNvbS91L3JKdDg1NjR3', harmless: 60, malicious: 0 },
         id: makeId('Dehancer Pro 7.3.1 OFX'),
         name: 'Dehancer Pro 7.3.1 OFX',
         category: 'ofx-plugin',
@@ -849,6 +862,7 @@ window.pluginsData = [
         ]
     },
     {
+        vt_scan: { id: 'aHR0cHM6Ly9waXhlbGRyYWluLmNvbS91Lzl1Z2o4SmZ0', harmless: 60, malicious: 0 },
         id: makeId('Bullet Time 1.1 OFX'),
         name: 'Bullet Time 1.1 OFX',
         category: 'ofx-plugin',
