@@ -688,6 +688,114 @@ window.pluginsData = [
         desc: 'Virtual Audio Cable v4.71 — transfer audio streams between applications. Create virtual audio devices.',
         notes: 'Useful for routing audio between apps.',
         links: [{ url: 'https://audioz.download/software/win/297166-download_virtual-audio-cable-v471.html', label: 'AudioZ' }]
+    },
+
+    // ═══════════════════════════════════════════
+    // OFX PLUGINS
+    // ═══════════════════════════════════════════
+    {
+        id: makeId('Continuum 2026 OFX'),
+        name: 'BorisFX Continuum 2026 OFX',
+        category: 'ofx-plugin',
+        platform: 'win',
+        password: null,
+        desc: 'BorisFX Continuum 2026 OFX v19.0.0 for DaVinci Resolve.',
+        links: [
+            { url: 'https://pixeldrain.com/u/xwtbStbt', label: 'Pixeldrain' },
+            { url: 'https://gofile.io/d/3IaiOT', label: 'GoFile' },
+            { url: 'https://www.mediafire.com/file_premium/32npiq3z89zmvh4/BorisFX_Continuum_2026_OFX_v19.0.0_win_-_satvrn.7z/file', label: 'MediaFire' }
+        ]
+    },
+    {
+        id: makeId('Sapphire 2026 OFX'),
+        name: 'BorisFX Sapphire 2026 OFX',
+        category: 'ofx-plugin',
+        platform: 'win',
+        password: null,
+        desc: 'BorisFX Sapphire 2026 OFX for DaVinci Resolve.',
+        links: [
+            { url: 'https://pixeldrain.com/u/kBUf6txt', label: 'Pixeldrain' },
+            { url: 'https://gofile.io/d/oUPHHu', label: 'GoFile' },
+            { url: 'https://www.mediafire.com/file_premium/01vm0agltgnwe0y/Sapphire_OFX_2026_Win_-_satvrn.7z/file', label: 'MediaFire' }
+        ]
+    },
+    {
+        id: makeId('Twixtor 8.1.0 OFX'),
+        name: 'Twixtor 8.1.0 OFX',
+        category: 'ofx-plugin',
+        platform: 'win',
+        password: null,
+        desc: 'RE:VisionFX Twixtor v8.1.0 OFX for DaVinci Resolve.',
+        links: [
+            { url: 'https://pixeldrain.com/u/MoFKhWXE', label: 'Pixeldrain' },
+            { url: 'https://gofile.io/d/Uku6ac', label: 'GoFile' },
+            { url: 'https://www.mediafire.com/file_premium/ydz6rvid4su4rj6/Twixtor_v8.1.0_OFX_Win_-_satvrn.7z/file', label: 'MediaFire' }
+        ]
+    },
+    {
+        id: makeId('RSMB 6.6.0 OFX'),
+        name: 'RSMB 6.6.0 OFX',
+        category: 'ofx-plugin',
+        platform: 'win',
+        password: null,
+        desc: 'RE:VisionFX RSMB v6.6.0 OFX - Motion Blur for DaVinci Resolve.',
+        links: [
+            { url: 'https://pixeldrain.com/u/sU7wq6tH', label: 'Pixeldrain' },
+            { url: 'https://gofile.io/d/eWhvmj', label: 'GoFile' }
+        ]
+    },
+    {
+        id: makeId('REVisionFX Bundle 25.08 OFX'),
+        name: 'RE:VisionFX Bundle 25.08 OFX',
+        category: 'ofx-plugin',
+        platform: 'win',
+        password: null,
+        desc: 'RE:VisionFX Effects Bundle v25.08 OFX for DaVinci Resolve.',
+        links: [
+            { url: 'https://pixeldrain.com/u/4zMtGpDG', label: 'Pixeldrain' },
+            { url: 'https://gofile.io/d/Z7SJki', label: 'GoFile' },
+            { url: 'https://www.mediafire.com/file_premium/hkms9jglcj8o9r4/RE-VisionFX.Effections.OFX.v25.08_win_-_satvrn.7z/file', label: 'MediaFire' }
+        ]
+    },
+    {
+        id: makeId('Dehancer Pro 7.3.1 OFX'),
+        name: 'Dehancer Pro 7.3.1 OFX',
+        category: 'ofx-plugin',
+        platform: 'win',
+        password: null,
+        desc: 'Dehancer Pro OFX v7.3.1 for DaVinci Resolve.',
+        links: [
+            { url: 'https://pixeldrain.com/u/rJt8564w', label: 'Pixeldrain' },
+            { url: 'https://gofile.io/d/VgijJJ', label: 'GoFile' },
+            { url: 'https://www.mediafire.com/file_premium/ni6o0s1m3eb562i/Dehancer_Pro_OFX_7.3.1_Win_-_satvrn.7z/file', label: 'MediaFire' }
+        ]
+    },
+    {
+        id: makeId('Bullet Time 1.1 OFX'),
+        name: 'Bullet Time 1.1 OFX',
+        category: 'ofx-plugin',
+        platform: 'win',
+        password: null,
+        desc: 'Bullet Time 1.1.14 OFX for DaVinci Resolve.',
+        links: [
+            { url: 'https://pixeldrain.com/u/9ugj8Jft', label: 'Pixeldrain' },
+            { url: 'https://gofile.io/d/g7oBJU', label: 'GoFile' },
+            { url: 'https://www.mediafire.com/file_premium/s1g8e6zktwtkqt0/BulletTime1.1.14_OFX_Win_-_satvrn.zip/file', label: 'MediaFire' }
+        ]
+    },
+    {
+        id: makeId('FilmConvert Nitrate OFX'),
+        name: 'FilmConvert Nitrate Pro 2.20 OFX (VEGAS)',
+        category: 'ofx-plugin',
+        platform: 'win',
+        password: null,
+        desc: 'FilmConvert Nitrate Pro 2.20 OFX for VEGAS Pro only.',
+        notes: 'Discontinued version, only version supporting VEGAS Pro.',
+        links: [
+            { url: 'https://pixeldrain.com/u/FzbhQ29c', label: 'Pixeldrain' },
+            { url: 'https://gofile.io/d/ROPafq', label: 'GoFile' },
+            { url: 'https://www.mediafire.com/file_premium/mieqgz1qzwrkxy8/FilmConvert.OFX.v2.20.CE_Win_VEGAS_-_satvrn.zip/file', label: 'MediaFire' }
+        ]
     }
 ];
 
