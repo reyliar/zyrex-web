@@ -745,7 +745,9 @@
             if (!data) return;
             var dels = [];
             try { dels = JSON.parse(localStorage.getItem('zyrex_deleted_products') || '[]') } catch (e) { }
-            var all = data.filter(function (p) { return !dels.includes(p.id) });
+            var custom = [];
+            try { custom = JSON.parse(localStorage.getItem('zyrex_new_products') || '[]'); } catch(e) {}
+            var all = data.concat(custom).filter(function (p) { return !dels.includes(p.id) });
 
             var sw = all.filter(function (p) { var c = (p.category || '').toLowerCase(); return c === 'software' }).length;
             var ad = all.filter(function (p) { var c = (p.category || '').toLowerCase(); return c === 'adobe-plugin' || c === 'ae-plugins' || c === 'pr-plugins' }).length;
