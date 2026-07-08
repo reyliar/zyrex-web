@@ -2336,6 +2336,60 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
                 submitData.thumbnail = cdnUrl;
               }
             }
+
+            // VirusTotal scan integration
+            const firstLink = submitData.links && submitData.links[0] ? submitData.links[0].url : "";
+            if (firstLink && firstLink.startsWith("http")) {
+              try {
+                const cleanUrl = firstLink;
+                const base64Url = btoa(unescape(encodeURIComponent(cleanUrl)))
+                  .replace(/=+$/, "")
+                  .replace(/\+/g, "-")
+                  .replace(/\//g, "_");
+                
+                const vtApiKey = "bcc0ff88c6227cdd52e616a12988d1f4bde36edbf9cab37ec251dfd9c0264aaf";
+                
+                let vtResp = await fetch(`https://www.virustotal.com/api/v3/urls/${base64Url}`, {
+                  headers: { "x-apikey": vtApiKey }
+                });
+                
+                if (vtResp.status === 404) {
+                  await fetch("https://www.virustotal.com/api/v3/urls", {
+                    method: "POST",
+                    headers: {
+                      "x-apikey": vtApiKey,
+                      "Content-Type": "application/x-www-form-urlencoded"
+                    },
+                    body: "url=" + encodeURIComponent(cleanUrl)
+                  });
+                  await new Promise(resolve => setTimeout(resolve, 5000));
+                  vtResp = await fetch(`https://www.virustotal.com/api/v3/urls/${base64Url}`, {
+                    headers: { "x-apikey": vtApiKey }
+                  });
+                }
+                
+                if (vtResp.status === 200) {
+                  const vtData = await vtResp.json();
+                  const stats = vtData?.data?.attributes?.last_analysis_stats;
+                  if (stats) {
+                    submitData.vt_scan = {
+                      id: base64Url,
+                      harmless: stats.harmless || 0,
+                      malicious: stats.malicious || 0
+                    };
+                  }
+                } else {
+                  submitData.vt_scan = {
+                    id: base64Url,
+                    harmless: 0,
+                    malicious: 0
+                  };
+                }
+              } catch(vtErr) {
+                console.error("VirusTotal Worker Scan error:", vtErr);
+              }
+            }
+
             body = JSON.stringify(submitData);
           } catch(e) {}
         }

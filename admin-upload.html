@@ -7,41 +7,49 @@
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="stylesheet" href="css/style.css?v=17">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --cherry-glow: rgba(230, 21, 54, 0.15);
+            --card-bg: rgba(12, 2, 4, 0.45);
+            --card-border: rgba(230, 21, 54, 0.08);
+            --card-hover-border: rgba(230, 21, 54, 0.25);
+            --transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
         *{margin:0;padding:0;box-sizing:border-box}
         body{
             background:var(--dark);
-            background-image:radial-gradient(circle at 50% 0%, rgba(var(--cherry-rgb),.06) 0%, transparent 60%);
-            color:var(--light);font-family:Poppins,sans-serif;min-height:100vh;padding-top:100px;
+            background-image:radial-gradient(circle at 50% 0%, rgba(230, 21, 54, 0.06) 0%, transparent 60%);
+            color:var(--light);font-family:'Poppins',sans-serif;min-height:100vh;padding-top:100px;
         }
         .admin-header{
             background:rgba(12,2,4,0.6);backdrop-filter:blur(25px) saturate(210%);
             -webkit-backdrop-filter:blur(25px) saturate(210%);
-            border-bottom:1px solid rgba(var(--cherry-rgb),.1);
+            border-bottom:1px solid rgba(230, 21, 54, 0.1);
             box-shadow:0 4px 30px rgba(0,0,0,0.5);padding:16px 30px;
             display:flex;align-items:center;justify-content:space-between;
             position:fixed;top:0;left:0;width:100%;z-index:10000;
         }
-        .admin-header .logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--light)}
+        .admin-header .logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--light);font-family:'Outfit',sans-serif;}
         .admin-header .logo img{height:36px}
         .admin-header .logo span{font-weight:800;font-size:1.1rem;letter-spacing:1px;color:var(--cherry-light)}
         .admin-badge{font-size:.65rem;font-weight:700;background:var(--cherry);color:#fff;padding:3px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:1px}
         .wizard-container{max-width:900px;margin:40px auto;padding:40px;
-            background:rgba(12,2,4,0.45);backdrop-filter:blur(25px) saturate(210%);
-            -webkit-backdrop-filter:blur(25px) saturate(210%);
-            border:1px solid rgba(var(--cherry-rgb),.12);border-radius:20px;
-            box-shadow:0 25px 60px rgba(0,0,0,0.5),0 0 40px rgba(var(--cherry-rgb),.15);position:relative;overflow:hidden;
+            background:var(--card-bg);backdrop-filter:blur(20px);
+            -webkit-backdrop-filter:blur(20px);
+            border:1px solid var(--card-border);border-radius:20px;
+            box-shadow:0 25px 60px rgba(0,0,0,0.5),0 0 30px rgba(230, 21, 54, 0.03);position:relative;overflow:hidden;
+            transition:var(--transition);
         }
         .wizard-container::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
-            background:linear-gradient(90deg,rgba(var(--cherry-rgb),0) 0%,rgba(var(--cherry-rgb),.35) 50%,rgba(var(--cherry-rgb),0) 100%);z-index:2}
-        .section-title{font-size:1.4rem;font-weight:900;margin-bottom:8px;display:flex;align-items:center;gap:12px}
+            background:linear-gradient(90deg,rgba(230, 21, 54,0) 0%,rgba(230, 21, 54,.35) 50%,rgba(230, 21, 54,0) 100%);z-index:2}
+        .section-title{font-size:1.6rem;font-weight:900;margin-bottom:8px;display:flex;align-items:center;gap:12px;font-family:'Outfit',sans-serif;letter-spacing:-0.5px}
         .section-title i{color:var(--cherry-light)}
         .section-sub{font-size:.85rem;color:var(--gray-dark);margin-bottom:30px}
         .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
         @media(max-width:768px) {
             .wizard-container { padding: 24px 18px; margin: 20px 12px; border-radius: 16px }
-            .section-title { font-size: 1.1rem }
+            .section-title { font-size: 1.3rem }
             .section-sub { font-size: .78rem }
             .btn { padding: 10px 20px; font-size: .78rem }
             .admin-header { padding: 12px 16px }
@@ -49,32 +57,34 @@
         }
         @media(max-width:600px){.form-row{grid-template-columns:1fr}}
         .form-group{margin-bottom:20px}
-        .form-group label{display:block;font-size:.78rem;font-weight:700;margin-bottom:8px;color:var(--gray);text-transform:uppercase;letter-spacing:1px}
+        .form-group label{display:block;font-size:.7rem;font-weight:700;margin-bottom:8px;color:var(--gray-dark);text-transform:uppercase;letter-spacing:1px}
         .form-group input,.form-group textarea,.form-group select{
-            width:100%;padding:14px 18px;background:rgba(12,2,4,0.45);border:1px solid rgba(var(--cherry-rgb),.15);
-            border-radius:12px;color:var(--light);font-family:inherit;font-size:.88rem;outline:none;transition:all .3s cubic-bezier(0.16,1,0.3,1);
+            width:100%;padding:14px 18px;background:rgba(12,2,4,0.45);border:1px solid var(--card-border);
+            border-radius:12px;color:var(--light);font-family:inherit;font-size:.88rem;outline:none;transition:var(--transition);
+            backdrop-filter:blur(10px);
         }
         .form-group input:focus,.form-group textarea:focus,.form-group select:focus{
-            border-color:var(--cherry-light);background:rgba(var(--cherry-rgb),.05);box-shadow:0 0 0 3px rgba(var(--cherry-rgb),.25);
+            border-color:var(--cherry-light);background:rgba(230, 21, 54,.03);box-shadow:0 0 20px rgba(230, 21, 54, 0.05);
         }
         .form-group textarea{min-height:80px;resize:vertical}
         .form-group select{appearance:none;cursor:pointer}
         .form-group select option{background:#0e0e12;color:var(--light)}
-        .btn-row{display:flex;gap:12px;margin-top:25px;padding-top:20px;border-top:1px solid rgba(var(--cherry-rgb),.08);flex-wrap:wrap}
-        .btn{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:10px;font-size:.85rem;font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:all .3s;text-decoration:none}
-        .btn-primary{background:linear-gradient(180deg,#7a081e 0%,#42020d 50%,#300109 100%);border:1px solid rgba(var(--cherry-rgb),.25);color:#fff;box-shadow:0 4px 15px rgba(122,8,30,.35),inset 0 1px 1px rgba(255,255,255,.1)}
+        .btn-row{display:flex;gap:12px;margin-top:25px;padding-top:20px;border-top:1px solid var(--card-border);flex-wrap:wrap}
+        .btn{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:10px;font-size:.85rem;font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:var(--transition);text-decoration:none}
+        .btn-primary{background:linear-gradient(180deg,#7a081e 0%,#42020d 50%,#300109 100%);border:1px solid rgba(230, 21, 54,.25);color:#fff;box-shadow:0 4px 15px rgba(122,8,30,.35),inset 0 1px 1px rgba(255,255,255,.1)}
         .btn-primary:hover{box-shadow:0 6px 20px rgba(122,8,30,.5);transform:translateY(-1px)}
-        .btn-secondary{background:rgba(var(--cherry-rgb),.06);color:var(--light);border:1px solid rgba(var(--cherry-rgb),.12)}
-        .btn-secondary:hover{background:rgba(var(--cherry-rgb),.12)}
+        .btn-secondary{background:rgba(230, 21, 54,.06);color:var(--light);border:1px solid rgba(230, 21, 54,.12)}
+        .btn-secondary:hover{background:rgba(230, 21, 54,.12);transform:translateY(-1px)}
         .btn-success{background:linear-gradient(180deg,#00c864 0%,#008a3a 100%);border:1px solid rgba(0,200,100,.25);color:#fff;box-shadow:0 4px 15px rgba(0,200,100,.2)}
-        .code-output{background:#0a0a0f;border:1px solid rgba(var(--cherry-rgb),.15);border-radius:12px;padding:20px;margin-top:20px;font-family:'Consolas','Courier New',monospace;font-size:.8rem;color:#00c864;white-space:pre-wrap;overflow-x:auto;max-height:400px;overflow-y:auto;display:none}
+        .btn-success:hover{transform:translateY(-1px)}
+        .code-output{background:#0a0a0f;border:1px solid var(--card-border);border-radius:12px;padding:20px;margin-top:20px;font-family:'Consolas','Courier New',monospace;font-size:.8rem;color:#00c864;white-space:pre-wrap;overflow-x:auto;max-height:400px;overflow-y:auto;display:none}
         .code-output.show{display:block}
         .code-output .key{color:#ffb400}.code-output .str{color:#00c864}.code-output .num{color:#5284ff}
-        .alert{background:rgba(var(--cherry-rgb),.1);border:1px solid rgba(var(--cherry-rgb),.2);border-radius:12px;padding:14px 20px;margin-bottom:20px;font-size:.85rem;color:var(--cherry-light);display:none;font-weight:600}
+        .alert{background:rgba(230, 21, 54,.1);border:1px solid rgba(230, 21, 54,.2);border-radius:12px;padding:14px 20px;margin-bottom:20px;font-size:.85rem;color:var(--cherry-light);display:none;font-weight:600}
         .alert.show{display:block}.alert-success{background:rgba(0,200,100,.1);border-color:rgba(0,200,100,.2);color:#00c864}
-        .preview-card{border:1px dashed rgba(var(--cherry-rgb),.2);border-radius:12px;padding:20px;margin-top:25px;display:none}
+        .preview-card{border:1px dashed var(--card-border);border-radius:12px;padding:20px;margin-top:25px;display:none;background:rgba(12, 2, 4, 0.25)}
         .preview-card.show{display:block}
-        .preview-card h4{font-size:.85rem;color:var(--gray);margin-bottom:12px}
+        .preview-card h4{font-size:.8rem;color:var(--gray-dark);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px;font-family:'Outfit',sans-serif}
     </style>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5438472060600560" crossorigin="anonymous"></script>
 </head>
@@ -92,7 +102,7 @@
         <div id="alertBox" class="alert"></div>
         
         <div class="section-title"><i class="fas fa-puzzle-piece"></i> Add Plugin / Software</div>
-        <p class="section-sub">Generate a new entry for <code>plugins-data.js</code>. Fill the form and copy the generated code.</p>
+        <p class="section-sub">Generate a new entry for <code>plugins-data.js</code> or publish dynamically. Fill the form to get started.</p>
 
         <div class="form-row">
             <div class="form-group">
@@ -250,9 +260,11 @@
 
         function showAlert(msg, isError) {
             const box = document.getElementById('alertBox');
-            box.textContent = msg;
+            box.innerHTML = msg;
             box.className = 'alert show' + (isError ? '' : ' alert-success');
-            setTimeout(() => box.classList.remove('show'), 4000);
+            if (!msg.includes('fa-spin')) {
+                setTimeout(() => box.classList.remove('show'), 5000);
+            }
         }
 
         async function publishLive() {
@@ -283,7 +295,7 @@
                 type: 'plugin'
             };
 
-            showAlert('Publishing...', false);
+            showAlert('<i class="fas fa-shield-halved fa-spin" style="color:var(--cherry-light);margin-right:6px"></i> Scanning download link with VirusTotal & publishing...', false);
             try {
                 const resp = await fetch('/api/products/submit', {
                     method: 'POST',
