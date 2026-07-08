@@ -3,350 +3,897 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload — Zyrex</title>
+    <title>Creator Studio — Zyrex</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="stylesheet" href="css/style.css?v=17">
+    <link rel="stylesheet" href="css/style.css?v=18">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        :root{--cherry:#a80f2d;--cherry-rgb:168,15,45;--cherry-light:#e8456a;--dark:#060608;--card-bg:rgba(12,4,8,0.55);--border:rgba(168,15,45,0.12);--text:#e8e8ed;--muted:#8888a0;--muted-dark:#55556a;--glass:rgba(12,4,8,0.65);--radius:18px;--radius-sm:12px}
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{background:var(--dark);color:var(--text);font-family:'Poppins',sans-serif;min-height:100vh;overflow-x:hidden}
-        .bg-aura{position:fixed;inset:0;pointer-events:none;z-index:0}
-        .bg-aura .orb{position:absolute;border-radius:50%;filter:blur(120px);opacity:.06}
-        .orb-1{width:600px;height:600px;background:var(--cherry);top:-20%;left:-10%}
-        .orb-2{width:400px;height:400px;background:#5865F2;bottom:10%;right:-5%;opacity:.04}
-        .orb-3{width:300px;height:300px;background:var(--cherry-light);top:60%;left:40%;opacity:.03}
-        .grid-bg{position:fixed;inset:0;pointer-events:none;z-index:0;background-image:linear-gradient(rgba(255,255,255,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.012) 1px,transparent 1px);background-size:60px 60px;mask-image:radial-gradient(ellipse at 50% 30%,black 20%,transparent 70%)}
-        .topbar{position:fixed;top:0;left:0;right:0;z-index:1000;padding:16px 32px;display:flex;align-items:center;justify-content:space-between;background:rgba(6,4,8,0.7);backdrop-filter:blur(20px) saturate(180%);-webkit-backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid rgba(255,255,255,.04)}
-        .topbar-logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--text)}
-        .topbar-logo img{height:34px}
-        .topbar-logo span{font-weight:800;font-size:1rem;letter-spacing:1px;color:var(--cherry-light)}
-        .topbar-actions{display:flex;align-items:center;gap:16px}
-        .topbar-actions a{color:var(--muted-dark);font-size:.78rem;text-decoration:none;transition:.2s}
-        .topbar-actions a:hover{color:var(--cherry-light)}
-        .type-selector{display:flex;justify-content:center;gap:10px;margin-bottom:30px;flex-wrap:wrap}
-        .type-btn{padding:10px 22px;border-radius:50px;border:1px solid rgba(var(--cherry-rgb),.15);background:rgba(var(--cherry-rgb),.04);color:var(--muted);font-family:inherit;font-size:.78rem;font-weight:600;cursor:pointer;transition:.3s;text-decoration:none;display:inline-flex;align-items:center;gap:6px}
-        .type-btn:hover{border-color:rgba(var(--cherry-rgb),.3);color:var(--light)}
-        .type-btn.active{background:linear-gradient(135deg,var(--cherry),#7a081e);border-color:transparent;color:#fff;box-shadow:0 4px 15px rgba(var(--cherry-rgb),.35)}
-        .main-wrap{position:relative;z-index:1;max-width:1060px;margin:0 auto;padding:100px 24px 60px}
-        .wizard{display:flex;align-items:center;justify-content:center;gap:0;margin-bottom:50px}
-        .wz-step{display:flex;align-items:center;gap:12px;position:relative}
-        .wz-dot{width:48px;height:48px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1rem;background:rgba(var(--cherry-rgb),.05);border:2px solid rgba(var(--cherry-rgb),.15);color:var(--muted-dark);transition:all .5s cubic-bezier(.16,1,.3,1);position:relative;z-index:1;flex-shrink:0}
-        .wz-dot.active{background:linear-gradient(135deg,var(--cherry),var(--cherry-light));border-color:var(--cherry-light);color:#fff;box-shadow:0 0 30px rgba(var(--cherry-rgb),.5),inset 0 1px 1px rgba(255,255,255,.15);animation:wzPulse 2.5s ease-in-out infinite}
-        .wz-dot.done{background:rgba(var(--cherry-rgb),.15);border-color:var(--cherry);color:var(--cherry-light)}
-        @keyframes wzPulse{0%,100%{box-shadow:0 0 20px rgba(var(--cherry-rgb),.4)}50%{box-shadow:0 0 40px rgba(var(--cherry-rgb),.7)}}
-        .wz-info{display:flex;flex-direction:column}
-        .wz-label{font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted-dark);transition:.3s}
-        .wz-label.active{color:var(--cherry-light)}
-        .wz-title{font-size:.8rem;font-weight:700;color:var(--text)}
-        .wz-line{width:80px;height:2px;background:rgba(var(--cherry-rgb),.1);margin:0 6px;transition:all .5s;flex-shrink:0}
-        .wz-line.done{background:var(--cherry);box-shadow:0 0 8px rgba(var(--cherry-rgb),.4)}
-        .card{background:var(--glass);border:1px solid var(--border);border-radius:var(--radius);padding:36px;box-shadow:0 20px 60px rgba(0,0,0,.4),0 0 40px rgba(var(--cherry-rgb),.06);position:relative;overflow:hidden}
-        .card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(var(--cherry-rgb),.3) 50%,transparent);z-index:2}
-        .card::after{content:'';position:absolute;top:-100px;right:-100px;width:250px;height:250px;background:radial-gradient(circle,rgba(var(--cherry-rgb),.04),transparent 70%);pointer-events:none}
-        .section{display:none}
-        .section.active{display:block}
-        .section.slide-in-right{display:block;animation:slideInRight .45s cubic-bezier(.16,1,.3,1) forwards}
-        .section.slide-in-left{display:block;animation:slideInLeft .45s cubic-bezier(.16,1,.3,1) forwards}
-        @keyframes slideInRight{from{opacity:0;transform:translateX(60px)}to{opacity:1;transform:translateX(0)}}
-        @keyframes slideInLeft{from{opacity:0;transform:translateX(-60px)}to{opacity:1;transform:translateX(0)}}
-        .section-col{display:flex;gap:32px;align-items:flex-start}
-        .section-col-left{flex:1;min-width:0}
-        .section-col-right{width:280px;flex-shrink:0;position:sticky;top:110px}
-        .field{margin-bottom:22px}
-        .field label{display:block;font-size:.72rem;font-weight:700;margin-bottom:8px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
-        .field label i{color:var(--cherry);margin-right:4px;font-size:.65rem}
-        .field input,.field textarea,.field select{width:100%;padding:14px 18px;background:rgba(0,0,0,.3);border:1px solid rgba(var(--cherry-rgb),.1);border-radius:var(--radius-sm);color:var(--text);font-family:inherit;font-size:.88rem;outline:none;transition:all .3s cubic-bezier(.16,1,.3,1)}
-        .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--cherry-light);background:rgba(var(--cherry-rgb),.04);box-shadow:0 0 0 4px rgba(var(--cherry-rgb),.1)}
-        .field textarea{min-height:110px;resize:vertical}
-        .field select{appearance:none;cursor:pointer;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M6 8L1 3h10z' fill='%238888a0'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;padding-right:40px}
-        .field select option{background:#0e0e12;color:var(--text)}
-        .row{display:grid;grid-template-columns:1fr 1fr;gap:18px}
-        @media(max-width:600px){.row{grid-template-columns:1fr}}
-        .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 28px;border-radius:var(--radius-sm);font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit;border:none;transition:all .3s cubic-bezier(.16,1,.3,1);text-decoration:none}
-        .btn-primary{background:linear-gradient(135deg,var(--cherry),#7a081e);color:#fff;border:1px solid rgba(var(--cherry-rgb),.3);box-shadow:0 4px 20px rgba(var(--cherry-rgb),.35)}
-        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(var(--cherry-rgb),.5)}
-        .btn-primary:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
-        .btn-ghost{background:rgba(var(--cherry-rgb),.05);color:var(--text);border:1px solid rgba(var(--cherry-rgb),.1)}
-        .btn-ghost:hover{background:rgba(var(--cherry-rgb),.1);border-color:rgba(var(--cherry-rgb),.2)}
-        .btn-sm{padding:8px 18px;font-size:.78rem}
-        .btn-icon{width:40px;height:40px;border-radius:50%;padding:0;background:rgba(var(--cherry-rgb),.08);border:1px solid rgba(var(--cherry-rgb),.2);color:var(--cherry-light);cursor:pointer;transition:.3s;display:inline-flex;align-items:center;justify-content:center;font-size:1rem}
-        .btn-icon:hover{background:rgba(var(--cherry-rgb),.15);border-color:var(--cherry-light)}
-        .btn-icon.active{background:rgba(var(--cherry-rgb),.15);border-color:var(--cherry-light);box-shadow:0 0 15px rgba(var(--cherry-rgb),.3)}
-        .actions{display:flex;justify-content:flex-end;gap:12px;margin-top:32px;padding-top:24px;border-top:1px solid rgba(255,255,255,.04)}
-        .alert{padding:14px 20px;border-radius:var(--radius-sm);margin-bottom:0;font-size:.82rem;font-weight:600;display:none;align-items:center;gap:10px;position:absolute;top:16px;left:50%;transform:translateX(-50%);z-index:50;white-space:nowrap;max-width:90%}
-        .alert.show{display:flex}
-        .alert-error{background:rgba(var(--cherry-rgb),.12);border:1px solid rgba(var(--cherry-rgb),.25);color:var(--cherry-light)}
-        .alert-success{background:rgba(0,200,100,.1);border:1px solid rgba(0,200,100,.2);color:#00c864}
-        .social-field{position:relative}
-        .social-input-wrap{display:flex;align-items:stretch;background:rgba(0,0,0,.3);border:1px solid rgba(var(--cherry-rgb),.1);border-radius:var(--radius-sm);overflow:hidden;transition:all .3s cubic-bezier(.16,1,.3,1)}
-        .social-input-wrap:focus-within{border-color:var(--cherry-light);box-shadow:0 0 0 4px rgba(var(--cherry-rgb),.1)}
-        .social-input-wrap input{flex:1;padding:14px 14px 14px 18px;background:transparent;border:none;color:var(--text);font-family:inherit;font-size:.88rem;outline:none}
-        .social-input-wrap .lookup-btn{width:44px;flex-shrink:0;background:rgba(var(--cherry-rgb),.1);border:none;border-left:1px solid rgba(var(--cherry-rgb),.12);color:var(--cherry-light);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.3s;font-size:.9rem}
-        .social-input-wrap .lookup-btn:hover{background:rgba(var(--cherry-rgb),.2)}
-        .payhip-row{display:flex;gap:10px}
-        .payhip-row input{flex:1}
-        .scraped-badge{display:none;align-items:center;gap:6px;margin-top:10px;padding:10px 14px;border-radius:8px;font-size:.78rem;background:rgba(0,200,100,.06);border:1px solid rgba(0,200,100,.15);color:#00c864}
-        .scraped-badge.show{display:flex}
-        .thumb-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-        .thumb-row input{flex:1;min-width:200px}
-        .thumb-previews{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
-        .tp-item{position:relative;width:80px;height:50px;border-radius:8px;overflow:hidden;border:1px solid rgba(var(--cherry-rgb),.1)}
-        .tp-item img{width:100%;height:100%;object-fit:cover}
-        .tp-item .tp-rm{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:rgba(var(--cherry-rgb),.8);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.55rem}
-        .panel{background:rgba(0,0,0,.25);border:1px solid rgba(var(--cherry-rgb),.08);border-radius:var(--radius-sm);padding:24px;margin-bottom:20px}
-        .panel h3{font-size:.9rem;font-weight:800;color:#fff;margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px}
-        .panel p{font-size:.78rem;color:var(--muted-dark);margin-bottom:16px}
-        .res-list{background:rgba(0,0,0,.2);border:1px dashed rgba(var(--cherry-rgb),.06);border-radius:10px;min-height:80px;display:flex;flex-direction:column;justify-content:center;align-items:center;padding:24px}
-        .res-list .empty{color:var(--muted-dark);text-align:center;font-size:.82rem}
-        .res-list .empty i{font-size:2rem;color:var(--cherry);display:block;margin-bottom:10px;opacity:.3}
-        .res-card{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-radius:10px;cursor:pointer;transition:.2s;border:1px solid transparent;width:100%;margin-bottom:6px;background:rgba(var(--cherry-rgb),.02)}
-        .res-card:hover{background:rgba(var(--cherry-rgb),.05);border-color:rgba(var(--cherry-rgb),.1)}
-        .res-card.selected{background:rgba(var(--cherry-rgb),.08);border-color:rgba(var(--cherry-rgb),.2)}
-        .res-card .rc-icon{width:38px;height:38px;border-radius:10px;background:rgba(var(--cherry-rgb),.1);display:flex;align-items:center;justify-content:center;color:var(--cherry-light);flex-shrink:0}
-        .res-card .rc-info{flex:1;margin-left:12px;min-width:0}
-        .res-card .rc-info strong{display:block;font-size:.82rem;color:var(--text)}
-        .res-card .rc-info span{font-size:.7rem;color:var(--muted-dark)}
-        .review-card{text-align:center;padding:30px}
-        .review-card .check{width:80px;height:80px;border-radius:50%;background:rgba(0,200,100,.1);border:1px solid rgba(0,200,100,.2);display:flex;align-items:center;justify-content:center;margin:0 auto 20px;box-shadow:0 0 30px rgba(0,200,100,.08)}
-        .review-card .check i{font-size:2rem;color:#00c864}
-        .review-card h2{font-size:1.4rem;margin-bottom:8px}
-        .review-summary{text-align:left;padding:20px;border-radius:var(--radius-sm);background:rgba(0,0,0,.2);border:1px solid rgba(var(--cherry-rgb),.06);margin-top:20px}
-        .review-summary .rs-row{display:flex;justify-content:space-between;padding:9px 0;font-size:.82rem;border-bottom:1px solid rgba(255,255,255,.03)}
-        .review-summary .rs-row span:first-child{color:var(--muted-dark)}
-        .review-summary .rs-row:last-child{border:none}
-        .info-banner{display:flex;gap:14px;align-items:flex-start;padding:18px;border-radius:var(--radius-sm);margin-bottom:24px;background:rgba(var(--cherry-rgb),.08);border:1px solid rgba(var(--cherry-rgb),.18)}
-        .info-banner .ib-icon{width:34px;height:34px;border-radius:8px;background:rgba(var(--cherry-rgb),.15);display:flex;align-items:center;justify-content:center;color:var(--cherry-light);flex-shrink:0}
-        .info-banner h4{font-size:.88rem;font-weight:700;color:#fff;margin-bottom:2px}
-        .info-banner p{font-size:.76rem;color:var(--muted);margin:0}
-        .live-card-wrap{margin:0}
-        .live-card-wrap h4{font-size:.78rem;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:8px}
-        .live-card-wrap h4 i{color:var(--cherry)}
-        .live-card{width:100%;border-radius:14px;overflow:hidden;border:1px solid rgba(var(--cherry-rgb),.12);background:rgba(14,6,10,.7);pointer-events:none;transition:all .3s;position:relative}
-        .live-card .lc-img{aspect-ratio:16/10;background:#1a1a22;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
-        .live-card .lc-img span{display:flex;align-items:center;justify-content:center;width:100%;height:100%}
-        .live-card .lc-img i{font-size:2rem;color:var(--cherry);opacity:.2}
-        .live-card .lc-img img{width:100%;height:100%;object-fit:cover}
-        .live-card .lc-badge{position:absolute;bottom:8px;left:8px;display:flex;gap:4px}
-        .live-card .lc-badge span{padding:3px 8px;border-radius:4px;font-size:.55rem;font-weight:700;text-transform:uppercase;background:rgba(255,180,0,.15);color:#ffb400}
-        .live-card .lc-body{padding:10px 12px}
-        .live-card .lc-body h3{font-size:.76rem;font-weight:700;color:var(--text);margin-bottom:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-        .live-card .lc-body p{font-size:.63rem;color:var(--muted-dark);margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-        .live-card .lc-foot{display:flex;align-items:center;justify-content:space-between}
-        .live-card .lc-foot .lc-author{display:flex;align-items:center;gap:5px}
-        .live-card .lc-foot .lc-av{width:18px;height:18px;border-radius:50%;background:var(--cherry);display:flex;align-items:center;justify-content:center;font-size:.4rem;color:#fff;overflow:hidden}
-        .live-card .lc-foot .lc-av img{width:100%;height:100%;object-fit:cover}
-        .live-card .lc-foot .lc-name{font-size:.63rem;color:var(--muted)}
-        .live-card .lc-foot .lc-stats{font-size:.58rem;color:var(--muted-dark)}
-        .preview-hint{font-size:.62rem;color:var(--muted-dark);text-align:center;margin-top:10px;opacity:.6}
-        @media(max-width:860px){
-            .section-col{flex-direction:column}
-            .section-col-right{width:100%;position:static}
-            .card{padding:24px}
-            .wz-line{width:30px}
-            .btn{padding:12px 20px;font-size:.8rem}
-            .main-wrap{padding:90px 16px 50px}
-            .wz-dot{width:40px;height:40px;font-size:.85rem}
-            .wz-info .wz-title{font-size:.7rem}
-            .wz-info .wz-label{font-size:.6rem}
-            .topbar{padding:12px 16px}
-            .topbar-logo span{font-size:.85rem}
-            .topbar-actions a{font-size:.7rem}
-            .panel{padding:18px}
-            .panel h3{font-size:.8rem}
-            .review-card{padding:20px}
-            .review-card h2{font-size:1.1rem}
+        :root {
+            --cherry: #e61536;
+            --cherry-rgb: 230, 21, 54;
+            --cherry-light: #ff4d6d;
+            --cherry-dark: #8a0d22;
+            --dark: #070203;
+            --dark-panel: rgba(15, 4, 7, 0.7);
+            --border: rgba(230, 21, 54, 0.1);
+            --border-hover: rgba(230, 21, 54, 0.25);
+            --text: #fcedf0;
+            --muted: #8a6570;
+            --muted-dark: #5c3f47;
+            --radius-lg: 20px;
+            --radius-md: 14px;
+            --transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        @media(max-width:480px){
-            .main-wrap{padding:80px 10px 40px}
-            .card{padding:18px 12px}
-            .wz-line{width:16px}
-            .wz-dot{width:34px;height:34px;font-size:.75rem}
-            .wz-info .wz-title{font-size:.65rem;display:none}
-            .wz-info .wz-label{font-size:.55rem}
-            .wizard{margin-bottom:30px}
-            .btn{padding:10px 16px;font-size:.75rem}
-            .actions{flex-direction:column;gap:8px}
-            .actions .btn{width:100%}
-            .info-banner{flex-direction:column;gap:8px;padding:14px}
-            .res-card{padding:10px 12px}
-            .res-card .rc-icon{width:32px;height:32px}
-            .res-card .rc-info strong{font-size:.75rem}
-            .res-card .rc-info span{font-size:.65rem}
-            .hlxOverlay > div{padding:20px}
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: var(--dark);
+            color: var(--text);
+            font-family: 'Poppins', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+        }
+
+        /* === BG AURA === */
+        .bg-aura { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+        .bg-aura .orb { position: absolute; border-radius: 50%; filter: blur(120px); opacity: .07; }
+        .orb-1 { width: 500px; height: 500px; background: var(--cherry); top: -10%; left: -10%; }
+        .orb-2 { width: 400px; height: 400px; background: #5865F2; bottom: -5%; right: -5%; opacity: .04; }
+        .orb-3 { width: 300px; height: 300px; background: var(--cherry-light); top: 50%; left: 30%; opacity: .03; }
+        
+        .grid-bg {
+            position: fixed; inset: 0; pointer-events: none; z-index: 0;
+            background-image: linear-gradient(rgba(230, 21, 54, 0.015) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(230, 21, 54, 0.015) 1px, transparent 1px);
+            background-size: 50px 50px;
+            mask-image: radial-gradient(ellipse at 50% 30%, black 40%, transparent 80%);
+            -webkit-mask-image: radial-gradient(ellipse at 50% 30%, black 40%, transparent 80%);
+        }
+
+        /* === DASHBOARD LAYOUT === */
+        .studio-container {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* === SIDEBAR === */
+        .studio-sidebar {
+            width: 280px;
+            background: rgba(5, 1, 2, 0.85);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-right: 1px solid var(--border);
+            padding: 32px 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: fixed;
+            height: 100vh;
+            left: 0; top: 0;
+            z-index: 100;
+            transition: var(--transition);
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            margin-bottom: 40px;
+        }
+        .sidebar-brand img { height: 38px; }
+        .sidebar-brand span {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 900;
+            font-size: 1.35rem;
+            letter-spacing: 1.5px;
+            background: linear-gradient(90deg, #fff, var(--cherry-light));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sidebar-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            list-style: none;
+            flex: 1;
+        }
+        .menu-title {
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--muted);
+            margin: 15px 0 8px 12px;
+        }
+        .menu-item a, .menu-item span.locked-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            font-size: 0.86rem;
+            font-weight: 600;
+            color: var(--muted);
+            text-decoration: none;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+        .menu-item.active a {
+            background: rgba(230, 21, 54, 0.08);
+            color: #fff;
+            box-shadow: inset 4px 0 0 var(--cherry-light);
+        }
+        .menu-item a:hover {
+            background: rgba(230, 21, 54, 0.04);
+            color: #fff;
+        }
+        .menu-item span.locked-item {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+        .menu-item i { font-size: 1rem; width: 22px; }
+        .menu-item .lock-badge {
+            font-size: 0.65rem;
+            background: rgba(230, 21, 54, 0.1);
+            color: var(--cherry-light);
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid rgba(230, 21, 54, 0.15);
+        }
+
+        .sidebar-footer {
+            border-top: 1px solid rgba(230, 21, 54, 0.08);
+            padding-top: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .user-profile img {
+            width: 42px; height: 42px;
+            border-radius: 50%;
+            border: 2px solid var(--cherry);
+        }
+        .user-info { display: flex; flex-direction: column; min-width: 0; }
+        .user-info .name { font-size: 0.84rem; font-weight: 700; color: #fff; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
+        .user-info .role { font-size: 0.68rem; color: var(--muted); }
+
+        .footer-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .footer-nav a {
+            font-size: 0.78rem;
+            color: var(--muted);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+        }
+        .footer-nav a:hover { color: var(--cherry-light); }
+
+        /* === MAIN CONTENT === */
+        .studio-main {
+            flex: 1;
+            margin-left: 280px;
+            padding: 40px 48px;
+            transition: var(--transition);
+        }
+
+        .studio-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+        .studio-header h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+        }
+        .studio-header p {
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        /* === STEPPER / WIZARD === */
+        .wizard-stepper {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--dark-panel);
+            border: 1px solid var(--border);
+            border-radius: 50px;
+            padding: 6px 16px;
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+        }
+        .step-dot {
+            width: 28px; height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.78rem;
+            font-weight: 800;
+            background: rgba(230, 21, 54, 0.05);
+            border: 1.5px solid var(--border);
+            color: var(--muted);
+            transition: var(--transition);
+        }
+        .step-dot.active {
+            background: var(--cherry);
+            border-color: var(--cherry-light);
+            color: #fff;
+            box-shadow: 0 0 15px rgba(230, 21, 54, 0.4);
+        }
+        .step-dot.done {
+            background: rgba(230, 21, 54, 0.15);
+            border-color: var(--cherry);
+            color: var(--cherry-light);
+        }
+        .step-label {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--muted);
+            margin: 0 8px;
+        }
+        .step-label.active { color: var(--cherry-light); }
+        .step-connector {
+            width: 40px; height: 1.5px;
+            background: rgba(230, 21, 54, 0.1);
+        }
+        .step-connector.done { background: var(--cherry); }
+
+        /* === PANELS / CARDS === */
+        .glass-panel {
+            background: var(--dark-panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 36px;
+            backdrop-filter: blur(25px) saturate(220%);
+            -webkit-backdrop-filter: blur(25px) saturate(220%);
+            box-shadow: 0 25px 70px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.03);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .form-layout {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 40px;
+        }
+
+        /* === FORM FIELDS === */
+        .field { margin-bottom: 24px; }
+        .field label {
+            display: block;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        .field label i { color: var(--cherry-light); margin-right: 4px; }
+        
+        .field input, .field textarea, .field select {
+            width: 100%;
+            padding: 14px 18px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            color: #fff;
+            font-family: inherit;
+            font-size: 0.88rem;
+            outline: none;
+            transition: var(--transition);
+        }
+        .field input:focus, .field textarea:focus, .field select:focus {
+            border-color: var(--cherry-light);
+            background: rgba(230, 21, 54, 0.02);
+            box-shadow: 0 0 0 3px rgba(230, 21, 54, 0.08);
+        }
+        .field textarea { min-height: 120px; resize: vertical; }
+
+        .row-fields {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+        }
+
+        /* Custom Payhip/Scrape wrap */
+        .scrape-input-wrap {
+            display: flex; gap: 10px;
+        }
+        .scrape-input-wrap input { flex: 1; }
+
+        .social-input-wrap {
+            display: flex; border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; background: rgba(0, 0, 0, 0.4);
+        }
+        .social-input-wrap input { border: none; background: transparent; flex: 1; }
+        .social-lookup-btn {
+            width: 48px; border: none; background: rgba(230, 21, 54, 0.08); color: var(--cherry-light); cursor: pointer; transition: var(--transition);
+        }
+        .social-lookup-btn:hover { background: rgba(230, 21, 54, 0.15); color: #fff; }
+
+        /* === PREVIEW CARD === */
+        .preview-sticky {
+            position: sticky; top: 40px;
+        }
+        .preview-sticky h3 {
+            font-size: 0.72rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;
+        }
+        .live-card {
+            background: linear-gradient(145deg, rgba(30, 4, 10, 0.6) 0%, rgba(10, 2, 4, 0.9) 100%);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            transition: var(--transition);
+        }
+        .lc-media {
+            aspect-ratio: 16/10;
+            background: #100609;
+            position: relative;
+            display: flex; align-items: center; justify-content: center;
+            border-bottom: 1px solid rgba(230, 21, 54, 0.06);
+        }
+        .lc-media img { width: 100%; height: 100%; object-fit: cover; }
+        .lc-media i { font-size: 2.2rem; color: var(--cherry); opacity: 0.15; }
+        .lc-badge {
+            position: absolute; top: 12px; left: 12px;
+            font-size: 0.6rem; font-weight: 700; text-transform: uppercase;
+            background: rgba(230, 21, 54, 0.12); color: var(--cherry-light);
+            border: 1px solid rgba(230, 21, 54, 0.2); padding: 3px 8px; border-radius: 4px;
+        }
+        .lc-details { padding: 16px; }
+        .lc-details h4 {
+            font-size: 0.86rem; font-weight: 700; color: #fff; margin-bottom: 4px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .lc-details p {
+            font-size: 0.7rem; color: var(--muted); margin-bottom: 12px;
+            line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        }
+        .lc-meta {
+            display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.03); padding-top: 10px;
+        }
+        .lc-creator { display: flex; align-items: center; gap: 8px; font-size: 0.7rem; color: var(--muted); }
+        .lc-creator img { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; }
+        .lc-creator i { font-size: 0.75rem; color: var(--cherry-light); }
+        .lc-stats { font-size: 0.65rem; color: var(--muted-dark); }
+
+        /* === BTNS === */
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 13px 24px; border-radius: var(--radius-md); font-size: 0.84rem; font-weight: 700;
+            border: none; cursor: pointer; transition: var(--transition); font-family: inherit;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--cherry), var(--cherry-dark));
+            color: #fff; border: 1px solid rgba(255, 77, 109, 0.2);
+            box-shadow: 0 4px 20px rgba(230, 21, 54, 0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px); box-shadow: 0 8px 30px rgba(230, 21, 54, 0.5);
+        }
+        .btn-primary:disabled {
+            opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none;
+        }
+        .btn-ghost {
+            background: rgba(230, 21, 54, 0.05); color: var(--text); border: 1px solid rgba(230, 21, 54, 0.12);
+        }
+        .btn-ghost:hover { background: rgba(230, 21, 54, 0.1); border-color: var(--border-hover); }
+        .btn-sm { padding: 8px 16px; font-size: 0.78rem; border-radius: 8px; }
+
+        .form-actions {
+            display: flex; justify-content: flex-end; gap: 12px; margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.04);
+        }
+
+        /* === STEP PANELS === */
+        .step-section { display: none; }
+        .step-section.active { display: block; }
+        
+        /* === CLOUD SELECTION PANEL === */
+        .panel-box {
+            background: rgba(0, 0, 0, 0.2); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 24px; margin-bottom: 24px;
+        }
+        .panel-box h3 { font-size: 0.95rem; font-weight: 700; color: #fff; margin-bottom: 4px; }
+        .panel-box p { font-size: 0.78rem; color: var(--muted); margin-bottom: 16px; }
+
+        .res-list {
+            display: flex; flex-direction: column; gap: 8px; min-height: 80px; justify-content: center;
+        }
+        .res-card {
+            display: flex; align-items: center; justify-content: space-between; padding: 14px 18px;
+            background: rgba(230, 21, 54, 0.02); border: 1px solid var(--border); border-radius: var(--radius-md);
+            cursor: pointer; transition: var(--transition);
+        }
+        .res-card:hover { border-color: var(--border-hover); background: rgba(230, 21, 54, 0.04); }
+        .res-card.selected { border-color: var(--cherry-light); background: rgba(230, 21, 54, 0.08); }
+        .res-card .rc-icon {
+            width: 38px; height: 38px; border-radius: 10px; background: rgba(230, 21, 54, 0.1);
+            display: flex; align-items: center; justify-content: center; color: var(--cherry-light);
+        }
+        .res-card .rc-info { flex: 1; margin-left: 14px; }
+        .res-card .rc-info strong { display: block; font-size: 0.82rem; color: #fff; }
+        .res-card .rc-info span { font-size: 0.72rem; color: var(--muted); }
+
+        .transfer-path { font-size: 0.8rem; color: var(--text); margin-bottom: 12px; }
+        .transfer-path strong { color: var(--cherry-light); }
+
+        /* === LOCK / ACCESS DENIED SCREEN === */
+        .lock-container {
+            display: flex; align-items: center; justify-content: center; min-height: calc(100vh - 160px); width: 100%;
+        }
+        .lock-card {
+            max-width: 480px; text-align: center; padding: 48px 36px;
+            background: var(--dark-panel); border: 1px solid var(--border); border-radius: var(--radius-lg);
+            box-shadow: 0 25px 70px rgba(0,0,0,0.6);
+        }
+        .lock-card i.lock-icon { font-size: 4rem; color: var(--cherry); opacity: 0.2; margin-bottom: 24px; display: block; }
+        .lock-card h2 { font-family: 'Outfit', sans-serif; font-size: 1.6rem; font-weight: 800; color: #fff; margin-bottom: 12px; }
+        .lock-card p { font-size: 0.88rem; color: var(--muted); line-height: 1.6; margin-bottom: 28px; }
+        .lock-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .btn-discord { background: #5865F2; color: #fff; }
+        .btn-discord:hover { background: #4752c4; transform: translateY(-2px); }
+
+        /* === ALERTS === */
+        .studio-alert {
+            position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
+            z-index: 10000; padding: 12px 24px; border-radius: 30px; font-size: 0.84rem; font-weight: 700;
+            display: none; align-items: center; gap: 8px; backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            animation: alertIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes alertIn { from { opacity: 0; transform: translate(-50%, -10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+        .studio-alert.show { display: flex; }
+        .studio-alert.error { background: rgba(230, 21, 54, 0.15); border: 1px solid rgba(230, 21, 54, 0.25); color: var(--cherry-light); }
+        .studio-alert.success { background: rgba(0, 200, 100, 0.15); border: 1px solid rgba(0, 200, 100, 0.25); color: #00e676; }
+
+        /* === INFO BANNER === */
+        .info-banner {
+            display: flex; gap: 14px; padding: 16px; border-radius: var(--radius-md); background: rgba(230, 21, 54, 0.05); border: 1px solid var(--border); margin-bottom: 24px;
+        }
+        .info-banner i { font-size: 1.1rem; color: var(--cherry-light); margin-top: 2px; }
+        .info-banner h4 { font-size: 0.84rem; font-weight: 700; color: #fff; margin-bottom: 2px; }
+        .info-banner p { font-size: 0.74rem; color: var(--muted); margin: 0; }
+
+        /* === REVIEW SUMMARY === */
+        .review-card { text-align: center; padding: 24px 0; }
+        .review-card .check {
+            width: 70px; height: 70px; border-radius: 50%; background: rgba(0, 200, 100, 0.1); border: 1.5px solid rgba(0, 200, 100, 0.25);
+            display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: #00e676; font-size: 1.8rem;
+        }
+        .review-summary {
+            text-align: left; padding: 20px; border-radius: var(--radius-md); background: rgba(0, 0, 0, 0.25); border: 1px solid var(--border); margin: 24px 0;
+        }
+        .rs-row {
+            display: flex; justify-content: space-between; padding: 10px 0; font-size: 0.82rem; border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+        .rs-row span { color: var(--muted); }
+        .rs-row strong { color: #fff; }
+        .rs-row:last-child { border: none; }
+
+        /* === MOBILE MENU TRIGGER === */
+        .mobile-trigger {
+            display: none;
+            background: transparent; border: none; color: #fff; font-size: 1.4rem; cursor: pointer; z-index: 1000;
+        }
+
+        /* === RESPONSIVE === */
+        @media(max-width: 900px) {
+            .studio-sidebar { left: -280px; }
+            .studio-sidebar.open { left: 0; }
+            .studio-main { margin-left: 0; padding: 32px 20px; }
+            .mobile-trigger { display: block; }
+            .form-layout { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
     <div class="bg-aura"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
     <div class="grid-bg"></div>
-    <div class="topbar">
-        <a href="/" class="topbar-logo"><img src="assets/content.png" alt=""><span>Upload</span></a>
-        <div class="topbar-actions">
-            <a href="/"><i class="fas fa-arrow-left"></i> Back to Site</a>
-            <a href="/settings"><i class="fas fa-cog"></i> Settings</a>
-            <a href="/api/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+
+    <div class="studio-alert" id="alertBox"></div>
+
+    <div class="studio-container">
+        <!-- SIDEBAR -->
+        <div class="studio-sidebar" id="sidebar">
+            <div>
+                <a href="/" class="sidebar-brand">
+                    <img src="assets/content.png" alt="Zyrex Logo">
+                    <span>Creator Studio</span>
+                </a>
+                <ul class="sidebar-menu">
+                    <span class="menu-title">Publish Portals</span>
+                    <li class="menu-item active">
+                        <a href="/upload"><i class="fas fa-sliders"></i> <span>Preset Uploader</span></a>
+                    </li>
+                    <li class="menu-item" id="sidebarAudio">
+                        <a href="/upload-audio"><i class="fas fa-music"></i> <span>Audio Uploader</span></a>
+                    </li>
+                    <li class="menu-item" id="sidebarScenepack">
+                        <a href="/upload-scenepack"><i class="fas fa-film"></i> <span>Scenepack Uploader</span></a>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="sidebar-footer">
+                <div class="user-profile" id="userProfile" style="display:none">
+                    <img src="" id="userAvatar" alt="">
+                    <div class="user-info">
+                        <span class="name" id="userName">Creator</span>
+                        <span class="role">Zyrex Partner</span>
+                    </div>
+                </div>
+                <div class="footer-nav">
+                    <a href="/settings"><i class="fas fa-cog"></i> Dashboard Settings</a>
+                    <a href="/"><i class="fas fa-arrow-left"></i> Back to Main Site</a>
+                    <a href="/api/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN MAIN -->
+        <div class="studio-main">
+            <!-- TOP BAR / ACCENT -->
+            <div class="studio-header">
+                <div>
+                    <button class="mobile-trigger" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+                    <h1>Preset Upload</h1>
+                    <p>Share your professional presets with the Zyrex library</p>
+                </div>
+                <!-- STEPPER -->
+                <div class="wizard-stepper" id="stepper">
+                    <div class="step-dot active" id="wzDot1">1</div>
+                    <span class="step-label active">Details</span>
+                    <div class="step-connector" id="wzLine1"></div>
+                    <div class="step-dot" id="wzDot2">2</div>
+                    <span class="step-label">Files</span>
+                    <div class="step-connector" id="wzLine2"></div>
+                    <div class="step-dot" id="wzDot3">3</div>
+                    <span class="step-label">Review</span>
+                </div>
+            </div>
+
+            <!-- CONTENT CARD -->
+            <div class="glass-panel" id="mainPanel">
+                <!-- STEP 1 -->
+                <div class="step-section active" id="sec1">
+                    <div class="form-layout">
+                        <!-- LEFT FIELDS -->
+                        <div>
+                            <input type="hidden" id="resourceId">
+                            <div class="field">
+                                <label><i class="fas fa-tag"></i> Product Name *</label>
+                                <input type="text" id="productName" placeholder="TOM HOLLAND CINEMATIC PRESETS" oninput="updateLivePreview()">
+                            </div>
+                            
+                            <div class="field">
+                                <label><i class="fas fa-folder"></i> Category *</label>
+                                <select id="productCategory" onchange="updateLivePreview()">
+                                    <option value="">Select category...</option>
+                                    <option value="after-effects">After Effects</option>
+                                    <option value="premiere-pro">Premiere Pro</option>
+                                    <option value="photoshop">Photoshop</option>
+                                    <option value="video-star">Video Star</option>
+                                    <option value="topaz-labs">Topaz Labs</option>
+                                    <option value="others">Others</option>
+                                </select>
+                            </div>
+
+                            <div class="row-fields">
+                                <div class="field">
+                                    <label><i class="fas fa-link"></i> Creator Social URL *</label>
+                                    <div class="social-input-wrap">
+                                        <input type="url" id="creatorSocialUrl" placeholder="https://tiktok.com/@creator" onblur="resolveSocial()" oninput="updateLivePreview()">
+                                        <button class="social-lookup-btn" onclick="toggleHlx()" title="Social Lookup"><i class="fas fa-magic"></i></button>
+                                    </div>
+                                    <input type="hidden" id="creatorName"><input type="hidden" id="creatorAvatar"><input type="hidden" id="creatorUsername">
+                                </div>
+                                <div class="field">
+                                    <label><i class="fas fa-user"></i> Creator Name</label>
+                                    <input type="text" id="creatorNameInput" placeholder="Auto-filled from social URL" readonly style="background:rgba(0,0,0,0.2);cursor:not-allowed;">
+                                </div>
+                            </div>
+
+                            <div class="field">
+                                <label><i class="fas fa-hashtag"></i> Tags</label>
+                                <input type="text" id="productTags" placeholder="cinematic, velocity, shake">
+                            </div>
+
+                            <div class="field">
+                                <label><i class="fas fa-align-left"></i> Description *</label>
+                                <textarea id="productDesc" placeholder="Describe the presets, overlays, and contents of this bundle..." oninput="updateLivePreview()"></textarea>
+                            </div>
+
+                            <div class="field">
+                                <label><i class="fas fa-shopping-cart"></i> Product Link / Payhip (optional)</label>
+                                <div class="scrape-input-wrap">
+                                    <input type="url" id="payhipLink" placeholder="https://payhip.com/b/xxxxx" onblur="autoScrape()">
+                                    <button class="btn btn-ghost btn-sm" id="btnScrape" onclick="scrapeProduct()"><i class="fas fa-magic"></i> Scrape</button>
+                                </div>
+                                <div class="scraped-badge" id="scrapedBadge" style="display:none;align-items:center;gap:6px;margin-top:10px;padding:8px 12px;border-radius:8px;font-size:0.75rem;background:rgba(0,200,100,0.06);border:1px solid rgba(0,200,100,0.15);color:#00e676;">
+                                    <i class="fas fa-check-circle"></i> Data auto-filled from link
+                                </div>
+                            </div>
+
+                            <div class="field">
+                                <label><i class="fas fa-image"></i> Thumbnail Image URL</label>
+                                <input type="url" id="thumbUrl" placeholder="https://i.imgur.com/xxxxx.png" oninput="updateLivePreview()">
+                            </div>
+
+                            <div class="form-actions">
+                                <a href="/" class="btn btn-ghost">Cancel</a>
+                                <button class="btn btn-primary" onclick="goStep(2,'right')">Next <i class="fas fa-arrow-right"></i></button>
+                            </div>
+                        </div>
+
+                        <!-- RIGHT LIVE PREVIEW -->
+                        <div class="preview-sticky">
+                            <h3>Card Preview</h3>
+                            <div class="live-card">
+                                <div class="lc-media" id="lcImg">
+                                    <span id="lcThumb"><i class="fas fa-sliders"></i></span>
+                                    <div class="lc-badge"><span id="lcCatBadge">Others</span></div>
+                                </div>
+                                <div class="lc-details">
+                                    <h4 id="lcTitle">Untitled Preset</h4>
+                                    <p id="lcDesc">No description provided yet. Describe your presets in the field to the left.</p>
+                                    <div class="lc-meta">
+                                        <div class="lc-creator">
+                                            <div id="lcAv" style="width:20px;height:20px;border-radius:50%;background:rgba(230,21,54,0.1);display:flex;align-items:center;justify-content:center;overflow:hidden;">
+                                                <i class="fas fa-user" style="font-size:0.5rem;color:var(--cherry-light)"></i>
+                                            </div>
+                                            <span id="lcName">Zyrex</span>
+                                        </div>
+                                        <span class="lc-stats"><i class="fas fa-download"></i> 0 downloads</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- STEP 2 -->
+                <div class="step-section" id="sec2">
+                    <div class="info-banner">
+                        <i class="fas fa-info-circle"></i>
+                        <div>
+                            <h4>Resource Upload Selection</h4>
+                            <p>Pick a file/folder from your personal cloud storage. This file will be packaged and served on Zyrex servers.</p>
+                        </div>
+                    </div>
+
+                    <div class="panel-box">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+                            <h3>1. Select from Cloud Storage</h3>
+                            <button class="btn btn-ghost btn-sm" onclick="scanCloud()"><i class="fas fa-arrows-rotate"></i> Refresh Cloud</button>
+                        </div>
+                        <p>Select the folder containing your upload files.</p>
+                        <div class="res-list" id="resList">
+                            <div class="empty" style="text-align:center;padding:24px;color:var(--muted);"><i class="fas fa-spinner fa-spin"></i> Scanning cloud...</div>
+                        </div>
+                    </div>
+
+                    <div class="panel-box">
+                        <h3>2. Destination Editor Directory</h3>
+                        <p>Select your unique editor namespace or create a new namespace folder.</p>
+                        <div class="row-fields">
+                            <div class="field" style="margin:0">
+                                <label>Existing Namespaces</label>
+                                <input type="text" id="dstEditorSearch" placeholder="Search creators..." oninput="filterEditors()" style="padding:10px 14px;margin-bottom:8px;font-size:0.8rem">
+                                <select id="dstEditor" onchange="checkConflict()">
+                                    <option value="">Select namespace...</option>
+                                </select>
+                            </div>
+                            <div class="field" style="margin:0">
+                                <label>Or Register New Namespace</label>
+                                <div style="display:flex;gap:8px">
+                                    <input type="text" id="newEditor" placeholder="e.g. REYLIFFX" style="flex:1">
+                                    <button class="btn btn-primary btn-sm" onclick="createEditor()" style="white-space:nowrap"><i class="fas fa-folder-plus"></i> Create</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="panel-box">
+                        <h3>3. Complete Resource Packaging</h3>
+                        <p class="transfer-path" id="destPath">Destination Path: <strong>--</strong></p>
+                        <div class="field">
+                            <label>File Source Path</label>
+                            <input type="text" id="cloudPath" readonly placeholder="No source folder selected" style="cursor:not-allowed;opacity:0.7">
+                        </div>
+                        <button class="btn btn-primary" style="width:100%;justify-content:center;padding:16px" id="btnTransfer" disabled onclick="transfer()"><i class="fas fa-cloud-arrow-up"></i> Package & Transfer to Production</button>
+                    </div>
+
+                    <div class="form-actions">
+                        <button class="btn btn-ghost" onclick="goStep(1,'left')"><i class="fas fa-arrow-left"></i> Back</button>
+                        <button class="btn btn-primary" id="btnToStep3" disabled onclick="goStep(3,'right')">Next Step <i class="fas fa-arrow-right"></i></button>
+                    </div>
+                </div>
+
+                <!-- STEP 3 -->
+                <div class="step-section" id="sec3">
+                    <div class="review-card">
+                        <div class="check"><i class="fas fa-check"></i></div>
+                        <h2>Creator Review Check</h2>
+                        <p style="color:var(--muted);margin-bottom:16px">Review all details before publishing this preset to the public list.</p>
+                        <div class="review-summary" id="reviewSummary"></div>
+                        <div style="display:flex;gap:12px;justify-content:center;margin-top:24px">
+                            <button class="btn btn-ghost" onclick="goStep(2,'left')"><i class="fas fa-arrow-left"></i> Back</button>
+                            <button class="btn btn-primary" id="btnSubmit" onclick="submitProduct()"><i class="fas fa-paper-plane"></i> Publish Preset</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    <div class="main-wrap">
-        <div class="type-selector">
-            <span class="type-btn active"><i class="fas fa-sliders"></i> Preset</span>
-            <a href="/upload-audio" class="type-btn"><i class="fas fa-music"></i> Audio</a>
-            <a href="/upload-scenepack" class="type-btn"><i class="fas fa-film"></i> Scenepack</a>
-        </div>
-        <div class="wizard">
-            <div class="wz-step"><div class="wz-dot active" id="wzDot1">1</div><div class="wz-info"><span class="wz-label active">Step 1</span><span class="wz-title">Details</span></div></div>
-            <div class="wz-line" id="wzLine1"></div>
-            <div class="wz-step"><div class="wz-dot" id="wzDot2">2</div><div class="wz-info"><span class="wz-label">Step 2</span><span class="wz-title">Files</span></div></div>
-            <div class="wz-line" id="wzLine2"></div>
-            <div class="wz-step"><div class="wz-dot" id="wzDot3">3</div><div class="wz-info"><span class="wz-label">Step 3</span><span class="wz-title">Review</span></div></div>
-        </div>
-        <div class="card">
-            <div id="alertBox" class="alert"></div>
-            <!-- STEP 1 -->
-            <div class="section active" id="sec1">
-                <div class="section-col"><div class="section-col-left">
-                <input type="hidden" id="resourceId">
-                <div class="field"><label><i class="fas fa-tag"></i> Product Name *</label><input type="text" id="productName" placeholder="EDITING PACK 1" oninput="updateLivePreview()"></div>
-                <div class="row">
-                    <div class="field">
-                        <label><i class="fas fa-folder"></i> Category *</label>
-                        <select id="productCategory" onchange="updateLivePreview()" style="width:100%;padding:14px 18px;background:rgba(0,0,0,.3);border:1px solid rgba(var(--cherry-rgb),.1);border-radius:var(--radius-sm);color:var(--text);font-family:inherit;font-size:.88rem;outline:none;cursor:pointer;appearance:none;-webkit-appearance:none">
-                            <option value="">Select category...</option>
-                            <option value="after-effects">After Effects</option>
-                            <option value="premiere-pro">Premiere Pro</option>
-                            <option value="photoshop">Photoshop</option>
-                            <option value="video-star">Video Star</option>
-                            <option value="topaz-labs">Topaz Labs</option>
-                            <option value="others">Others</option>
-                        </select>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="field social-field">
-                        <label><i class="fas fa-link"></i> Creator Social URL *</label>
-                        <div class="social-input-wrap">
-                            <input type="url" id="creatorSocialUrl" placeholder="https://tiktok.com/@creator" onblur="resolveSocial()" oninput="updateLivePreview()">
-                            <button class="lookup-btn" onclick="toggleHlx()" title="Social Lookup"><i class="fas fa-magic"></i></button>
-                        </div>
-                        <input type="hidden" id="creatorName"><input type="hidden" id="creatorAvatar"><input type="hidden" id="creatorUsername">
-                    </div>
-                    <div class="field">
-                        <label><i class="fas fa-user"></i> Creator Name</label>
-                        <input type="text" id="creatorNameInput" placeholder="Auto-filled from social URL" readonly style="background:rgba(0,0,0,.2);cursor:not-allowed;user-select:none" oninput="">
-                    </div>
-                </div>
-                <div class="field"><label><i class="fas fa-hashtag"></i> Tags</label><input type="text" id="productTags" placeholder="premiere, cinematic, warm"></div>
-                <div class="field"><label><i class="fas fa-align-left"></i> Description *</label><textarea id="productDesc" placeholder="Describe what this resource includes..." oninput="updateLivePreview()"></textarea></div>
-                <div class="field"><label><i class="fas fa-shopping-cart"></i> Product Link</label><div class="payhip-row"><input type="url" id="payhipLink" placeholder="https://payhip.com/b/xxxxx or patreon.com/posts/... or boosty.to/..." onblur="autoScrape()"><button class="btn btn-ghost btn-sm" id="btnScrape" onclick="scrapeProduct()"><i class="fas fa-magic"></i> Scrape</button></div><div class="scraped-badge" id="scrapedBadge"><i class="fas fa-check-circle"></i> Data auto-filled</div></div>
-                <div class="field"><label><i class="fas fa-image"></i> Thumbnail URL</label><input type="url" id="thumbUrl" placeholder="https://...image.png" oninput="updateLivePreview()" style="width:100%;padding:14px 18px;background:rgba(0,0,0,.3);border:1px solid rgba(var(--cherry-rgb),.1);border-radius:var(--radius-sm);color:var(--text);font-family:inherit;font-size:.88rem;outline:none"></div>
-                <div class="actions"><a href="/" class="btn btn-ghost">Cancel</a><button class="btn btn-primary" onclick="goStep(2,'right')">Next <i class="fas fa-arrow-right"></i></button></div>
-                </div>
-                <div class="section-col-right">
-                    <div class="live-card-wrap">
-                        <h4><i class="fas fa-eye"></i> Live Preview</h4>
-                        <div class="live-card">
-                            <div class="lc-img" id="lcImg">
-                                <span id="lcThumb"><i class="fas fa-sliders"></i></span>
-                                <div class="lc-badge"><span id="lcCatBadge">Others</span></div>
-                            </div>
-                            <div class="lc-body"><h3 id="lcTitle">Untitled</h3><p id="lcDesc">No description</p>
-                                <div class="lc-foot"><div class="lc-author"><div class="lc-av" id="lcAv"><i class="fas fa-user"></i></div><span class="lc-name" id="lcName">Zyrex</span></div><span class="lc-stats"><i class="fas fa-download"></i> 0</span></div>
-                            </div>
-                        </div>
-                        <p class="preview-hint">Updates as you type</p>
-                    </div>
-                </div>
+
+    <!-- SOCIAL LOOKUP MODAL -->
+    <div id="hlxOverlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.85);align-items:center;justify-content:center" onclick="if(event.target===this)toggleHlx()">
+        <div style="background:rgba(15,4,7,0.98);border:1px solid var(--border);border-radius:20px;padding:32px;width:420px;max-width:90vw;box-shadow:0 25px 60px rgba(0,0,0,0.7)">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+                <span style="font-size:0.9rem;font-weight:700;color:var(--text);"><i class="fas fa-magic" style="color:var(--cherry-light);margin-right:6px"></i>Social Lookup</span>
+                <button onclick="toggleHlx()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.4rem">&times;</button>
             </div>
+            <div style="display:flex;gap:10px;justify-content:center;margin-bottom:20px" id="hlxPlatforms">
+                <button class="btn-icon active" data-plat="tiktok" onclick="selHlxPlat(this,'tiktok')" style="width:40px;height:40px;border-radius:50%;background:rgba(230,21,54,0.08);border:1px solid var(--border);color:var(--cherry-light);cursor:pointer;transition:var(--transition);display:inline-flex;align-items:center;justify-content:center;"><i class="fab fa-tiktok"></i></button>
+                <button class="btn-icon" data-plat="instagram" onclick="selHlxPlat(this,'instagram')" style="width:40px;height:40px;border-radius:50%;background:rgba(230,21,54,0.08);border:1px solid var(--border);color:var(--cherry-light);cursor:pointer;transition:var(--transition);display:inline-flex;align-items:center;justify-content:center;"><i class="fab fa-instagram"></i></button>
+                <button class="btn-icon" data-plat="youtube" onclick="selHlxPlat(this,'youtube')" style="width:40px;height:40px;border-radius:50%;background:rgba(230,21,54,0.08);border:1px solid var(--border);color:var(--cherry-light);cursor:pointer;transition:var(--transition);display:inline-flex;align-items:center;justify-content:center;"><i class="fab fa-youtube"></i></button>
+                <button class="btn-icon" data-plat="x" onclick="selHlxPlat(this,'x')" style="width:40px;height:40px;border-radius:50%;background:rgba(230,21,54,0.08);border:1px solid var(--border);color:var(--cherry-light);cursor:pointer;transition:var(--transition);display:inline-flex;align-items:center;justify-content:center;"><i class="fab fa-x-twitter"></i></button>
             </div>
-            <!-- STEP 2 -->
-            <div class="section" id="sec2">
-                <div class="info-banner"><div class="ib-icon"><i class="fas fa-info-circle"></i></div><div><h4>Cloud Resource Selection</h4><p>Select a detected resource from your private cloud and choose the destination editor.</p></div></div>
-                <div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px"><h3 style="margin:0">1. Select Resource from Your Cloud</h3><button class="btn btn-ghost btn-sm" onclick="scanCloud()"><i class="fas fa-arrows-rotate"></i> Refresh</button></div><p>Only EDITOR → RESOURCE folders are selectable.</p><div class="res-list" id="resList"><div class="empty"><i class="fas fa-spinner fa-spin"></i>Scanning cloud...</div></div></div>
-                <div class="panel"><h3>2. Destination Editor</h3><p>Production folder where files will be published.</p><div class="row"><div class="field" style="margin:0"><label>Existing Folder *</label><input type="text" id="dstEditorSearch" placeholder="Search folder..." oninput="filterEditors()" style="padding:10px 14px;margin-bottom:8px;font-size:.82rem"><select id="dstEditor" onchange="checkConflict()"><option value="">Select editor...</option></select></div><div class="field" style="margin:0"><label>Or Create New</label><div style="display:flex;gap:8px"><input type="text" id="newEditor" placeholder="e.g. REYLIFFX" style="flex:1"><button class="btn btn-primary btn-sm" onclick="createEditor()" style="white-space:nowrap"><i class="fas fa-folder-plus"></i> Create</button></div></div></div></div>
-                <div class="panel"><h3>3. Transfer</h3><p id="destPath">Destination: <strong>--</strong></p><div class="field"><label>Cloud File Path</label><input type="text" id="cloudPath" readonly placeholder="e.g. REYLIFFX/EDITING PACK 1" style="cursor:not-allowed;opacity:.7"></div><button class="btn btn-primary" style="width:100%;justify-content:center;padding:16px" id="btnTransfer" disabled onclick="transfer()"><i class="fas fa-cloud-arrow-up"></i> Transfer to Production</button></div>
-                <div class="actions"><button class="btn btn-ghost" onclick="goStep(1,'left')"><i class="fas fa-arrow-left"></i> Back</button><button class="btn btn-primary" id="btnToStep3" disabled onclick="goStep(3,'right')">Next <i class="fas fa-arrow-right"></i></button></div>
+            <div style="display:flex;background:rgba(0,0,0,0.4);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;margin-bottom:18px">
+                <span style="padding:14px 0 14px 18px;color:var(--muted);font-size:0.88rem" id="hlxPrefix">@</span>
+                <input id="hlxUser" placeholder="username..." style="flex:1;padding:14px;background:transparent;border:none;color:#fff;font-family:inherit;font-size:0.88rem;outline:none" onkeydown="if(event.key==='Enter')hlxLookup()">
             </div>
-            <!-- STEP 3 -->
-            <div class="section" id="sec3">
-                <div class="review-card"><div class="check"><i class="fas fa-check"></i></div><h2>Ready to Submit</h2><p style="color:var(--muted-dark);margin-bottom:16px">Review your resource before submitting</p><div class="review-summary" id="reviewSummary"></div><div style="display:flex;gap:12px;justify-content:center;margin-top:24px"><button class="btn btn-ghost" onclick="goStep(2,'left')"><i class="fas fa-arrow-left"></i> Back</button><button class="btn btn-primary" id="btnSubmit" onclick="submitProduct()"><i class="fas fa-paper-plane"></i> Submit for Review</button></div></div>
-            </div>
-        </div>
-        <!-- HLX Modal -->
-        <div id="hlxOverlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);align-items:center;justify-content:center" onclick="if(event.target===this)toggleHlx()">
-            <div style="background:rgba(14,6,10,.98);border:1px solid rgba(var(--cherry-rgb),.2);border-radius:16px;padding:28px;width:420px;max-width:90vw;box-shadow:0 25px 60px rgba(0,0,0,.7)">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px"><span style="font-size:.85rem;font-weight:700;color:var(--muted)"><i class="fas fa-magic" style="color:var(--cherry-light);margin-right:6px"></i>Social Lookup</span><button onclick="toggleHlx()" style="background:none;border:none;color:var(--muted-dark);cursor:pointer;font-size:1.2rem">&times;</button></div>
-                <div style="display:flex;gap:10px;justify-content:center;margin-bottom:16px" id="hlxPlatforms">
-                    <button class="btn-icon active" data-plat="tiktok" onclick="selHlxPlat(this,'tiktok')"><i class="fab fa-tiktok"></i></button>
-                    <button class="btn-icon" data-plat="instagram" onclick="selHlxPlat(this,'instagram')"><i class="fab fa-instagram"></i></button>
-                    <button class="btn-icon" data-plat="youtube" onclick="selHlxPlat(this,'youtube')"><i class="fab fa-youtube"></i></button>
-                    <button class="btn-icon" data-plat="x" onclick="selHlxPlat(this,'x')"><i class="fab fa-x-twitter"></i></button>
-                </div>
-                <div style="display:flex;background:rgba(0,0,0,.3);border:1px solid rgba(var(--cherry-rgb),.1);border-radius:10px;overflow:hidden;margin-bottom:14px"><span style="padding:12px 0 12px 16px;color:var(--muted-dark);font-size:.85rem" id="hlxPrefix">@</span><input id="hlxUser" placeholder="username..." style="flex:1;padding:12px;background:transparent;border:none;color:var(--text);font-family:inherit;font-size:.85rem;outline:none" onkeydown="if(event.key==='Enter')hlxLookup()"></div>
-                <button class="btn btn-primary" style="width:100%;font-size:.84rem" onclick="hlxLookup()"><i class="fas fa-search"></i> Fetch & Fill</button>
-                <div id="hlxStatus" style="display:none;margin-top:10px;padding:10px;border-radius:8px;font-size:.75rem;text-align:center"></div>
-            </div>
+            <button class="btn btn-primary" style="width:100%;font-size:0.84rem" onclick="hlxLookup()"><i class="fas fa-search"></i> Fetch Profile Info</button>
+            <div id="hlxStatus" style="display:none;margin-top:14px;padding:10px;border-radius:8px;font-size:0.75rem;text-align:center"></div>
         </div>
     </div>
+
     <script src="js/auth.js"></script>
     <script>
         let step=1,prod={},selRes=null,selDstEditor='',transferred='',cloudOk=false,cloudFiles=[],allEditors=[],currentUser=null,hlxPlatform='tiktok',cdnThumb='';
-        document.addEventListener('DOMContentLoaded',async()=>{prod.id='preset-'+Date.now().toString(36);document.getElementById('resourceId').value=prod.id;try{const r=await fetch('/api/me',{credentials:'include'});if(!r.ok){window.location.href='/';return}const u=await r.json();currentUser=u;if(u.is_admin){return}
-        // Check all 3 uploader roles
-        const roles=[{id:'1519624224476762122',label:'Preset Uploader'},{id:'1522976282688880720',label:'Audio Uploader'},{id:'1522976376293167124',label:'Scenepack Uploader'}];
-        const checks=await Promise.all(roles.map(r=>fetch('/api/guild/check-role?userId='+u.id+'&roleId='+r.id,{credentials:'include'}).then(resp=>resp.json()).then(d=>d.has_role).catch(()=>false)));
-        const hasAny=checks.some(c=>c);
-        if(!hasAny){document.querySelector('.main-wrap').innerHTML='<div style="text-align:center;padding:80px 20px;max-width:500px;margin:0 auto"><i class="fas fa-lock" style="font-size:4rem;color:var(--cherry);opacity:.2;display:block;margin-bottom:20px"></i><h2 style="font-size:1.6rem;font-weight:800;margin-bottom:10px">No Upload Access</h2><p style="color:var(--gray);font-size:.9rem;line-height:1.6;margin-bottom:24px">You don\'t have any uploader roles yet. Join our Discord server and request the <strong style="color:var(--cherry-light)">Preset Uploader</strong>, <strong style="color:var(--cherry-light)">Audio Uploader</strong>, or <strong style="color:var(--cherry-light)">Scenepack Uploader</strong> role to start uploading.</p><div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap"><a href="https://discord.gg/zyrex" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:10px;background:#5865F2;color:#fff;text-decoration:none;font-weight:700;font-size:.85rem"><i class="fab fa-discord"></i> Join Discord</a><a href="/" style="display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:10px;background:rgba(var(--cherry-rgb),.1);color:var(--cherry-light);text-decoration:none;font-weight:600;font-size:.85rem"><i class="fas fa-home"></i> Go Home</a></div></div>';return}
-        // Show/hide type buttons based on roles
-        if(!checks[1]){const a=document.querySelector('.type-btn[href="/upload-audio"]');if(a)a.style.display='none'}
-        if(!checks[2]){const s=document.querySelector('.type-btn[href="/upload-scenepack"]');if(s)s.style.display='none'}
-        if(!checks[0]){document.querySelector('.type-btn.active').textContent='\uD83D\uDD12 No Preset Access';document.querySelector('.type-btn.active').style.opacity='.5'}
-        }catch(e){window.location.href='/'}});
+        
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        document.addEventListener('DOMContentLoaded',async()=>{
+            prod.id='preset-'+Date.now().toString(36);
+            document.getElementById('resourceId').value=prod.id;
+            try{
+                const r=await fetch('/api/me',{credentials:'include'});
+                if(!r.ok){window.location.href='/';return}
+                const u=await r.json();
+                currentUser=u;
+                
+                // Show profile footer
+                document.getElementById('userProfile').style.display = 'flex';
+                if(u.avatar) document.getElementById('userAvatar').src = u.avatar;
+                else document.getElementById('userAvatar').style.display = 'none';
+                document.getElementById('userName').textContent = u.global_name || u.username;
+
+                if(u.is_admin){
+                    return;
+                }
+                
+                // Check all 3 uploader roles
+                const roles=[
+                    {id:'1519624224476762122',label:'Preset Uploader'},
+                    {id:'1522976282688880720',label:'Audio Uploader'},
+                    {id:'1522976376293167124',label:'Scenepack Uploader'}
+                ];
+                const checks=await Promise.all(roles.map(role=>fetch('/api/guild/check-role?userId='+u.id+'&roleId='+role.id,{credentials:'include'}).then(resp=>resp.json()).then(d=>d.has_role).catch(()=>false)));
+                const hasAny=checks.some(c=>c);
+                if(!hasAny){
+                    showLockScreen('No Creator Access', 'You do not have permission to access the upload studio. Connect to our Discord and claim a creator role.');
+                    return;
+                }
+                
+                // Update sidebar items
+                if(!checks[1]){
+                    document.getElementById('sidebarAudio').innerHTML = '<span class="locked-item"><i class="fas fa-lock"></i> <span>Audio Uploader</span> <span class="lock-badge">Locked</span></span>';
+                }
+                if(!checks[2]){
+                    document.getElementById('sidebarScenepack').innerHTML = '<span class="locked-item"><i class="fas fa-lock"></i> <span>Scenepack Uploader</span> <span class="lock-badge">Locked</span></span>';
+                }
+                if(!checks[0]){
+                    showLockScreen('No Preset Uploader Access', 'You do not have the <strong>Preset Uploader</strong> role on Discord yet. Claim it to unlock preset packaging.');
+                }
+            }catch(e){window.location.href='/'}
+        });
+
+        function showLockScreen(title, text) {
+            document.querySelector('.studio-main').innerHTML = `
+                <div class="lock-container">
+                    <div class="lock-card">
+                        <i class="fas fa-lock lock-icon"></i>
+                        <h2>${title}</h2>
+                        <p>${text}</p>
+                        <div class="lock-actions">
+                            <a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn btn-discord"><i class="fab fa-discord"></i> Join Discord Server</a>
+                            <a href="/" class="btn btn-ghost"><i class="fas fa-home"></i> Go Back</a>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
         function goStep(s,dir){
-            // Validate step 1 before proceeding
             if(s>step&&step===1){
                 var n=document.getElementById('productName').value.trim();
                 var c=(document.getElementById('productCategory')||{}).value;
                 var d=document.getElementById('productDesc').value.trim();
-                if(!n){alert('Product Name is required',true);return}
-                if(!c){alert('Category is required',true);return}
-                if(!d){alert('Description is required',true);return}
+                if(!n){alertMsg('Product Name is required',true);return}
+                if(!c){alertMsg('Category is required',true);return}
+                if(!d){alertMsg('Description is required',true);return}
             }
-            // Validate step 2 before proceeding to step 3
             if(s>step&&step===2){
-                if(!transferred){alert('Please transfer files to production first',true);return}
+                if(!transferred){alertMsg('Please transfer files to production first',true);return}
             }
             dir=dir||(s>step?'right':'left');
             var oldSec=document.getElementById('sec'+step);
             var newSec=document.getElementById('sec'+s);
-            // Remove old animation classes
-            document.querySelectorAll('.section').forEach(function(x){x.classList.remove('active','slide-in-right','slide-in-left')});
-            // Apply animation
-            newSec.classList.add(dir==='right'?'slide-in-right':'slide-in-left');
+            document.querySelectorAll('.step-section').forEach(function(x){x.classList.remove('active')});
+            newSec.classList.add('active');
             step=s;
-            // Update wizard dots
+            // Update stepper visual state
             for(var i=1;i<=3;i++){
                 var d=document.getElementById('wzDot'+i),l=document.getElementById('wzLine'+i);
-                var info=d.parentElement.querySelector('.wz-label');
-                d.classList.remove('active','done');info.classList.remove('active');
-                if(l)l.classList.remove('done');
-                if(i<s){d.classList.add('done');d.innerHTML='<i class="fas fa-check"></i>';if(l)l.classList.add('done')}
-                else if(i===s){d.classList.add('active');d.innerHTML=i;info.classList.add('active')}
-                else{d.innerHTML=i}
+                var info=document.querySelectorAll('.wizard-stepper .step-label')[i-1];
+                d.className = 'step-dot';
+                if(info) info.classList.remove('active');
+                if(l) l.className = 'step-connector';
+                
+                if(i<s){
+                    d.classList.add('done');
+                    d.innerHTML='<i class="fas fa-check"></i>';
+                    if(l) l.classList.add('done');
+                }
+                else if(i===s){
+                    d.classList.add('active');
+                    d.innerHTML=i;
+                    if(info) info.classList.add('active');
+                }
+                else{
+                    d.innerHTML=i;
+                }
             }
             if(s===2){scanCloud();loadEditors()}
             if(s===3)buildReview()
         }
-        function alert(msg,err){const b=document.getElementById('alertBox');b.textContent=msg;b.className='alert show '+(err?'alert-error':'alert-success');setTimeout(()=>b.classList.remove('show'),4000)}
+
+        function alertMsg(msg,err){
+            const b=document.getElementById('alertBox');
+            b.textContent=msg;
+            b.className='studio-alert show '+(err?'error':'success');
+            setTimeout(()=>b.classList.remove('show'),4000);
+        }
+
         async function resolveSocial(){
             var url=document.getElementById('creatorSocialUrl').value.trim();
             if(!url||!url.includes('.'))return;
-            // Extract raw username from URL as fallback
             var rawUser='';
             try{var parts=url.replace(/\/$/,'').split('/');rawUser=parts[parts.length-1].replace('@','')}catch(e){}
             document.getElementById('creatorUsername').value=rawUser;
-            // Always set name from URL immediately as placeholder
             if(rawUser){
                 document.getElementById('creatorNameInput').value=rawUser;
                 document.getElementById('creatorName').value=rawUser;
@@ -361,24 +908,24 @@
                     document.getElementById('creatorNameInput').value=creatorDisplay;
                     document.getElementById('creatorAvatar').value=d.avatar||'';
                     updateLivePreview();
-                    alert('Profile found: '+creatorDisplay,false);
+                    alertMsg('Profile found: '+creatorDisplay,false);
                 }else if(d.success&&!d.nickname){
-                    // Keep rawUser, already set above
                     updateLivePreview();
-                    alert('Profile found but username could not be resolved. Using URL username.',true);
+                    alertMsg('Profile found but username could not be resolved.',true);
                 }else{
                     updateLivePreview();
-                    alert(d.error||'Could not fetch profile. Check the URL or use Social Lookup.',true);
+                    alertMsg(d.error||'Could not fetch profile.',true);
                 }
-            }catch(e){alert('Network error: '+(e.message||'Failed to fetch profile. Check the URL.'),true)}
+            }catch(e){alertMsg('Failed to fetch profile.',true)}
         }
+
         function toggleHlx(){var o=document.getElementById('hlxOverlay');o.style.display=(o.style.display==='flex')?'none':'flex'}
         function selHlxPlat(btn,p){hlxPlatform=p;document.querySelectorAll('#hlxPlatforms .btn-icon').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}
+        
         async function hlxLookup(){
             var user=document.getElementById('hlxUser').value.trim();
             if(!user)return;
             var st=document.getElementById('hlxStatus');st.style.display='block';st.textContent='Searching...';st.className='';
-            // Build URL from platform + username
             var platforms={tiktok:'https://www.tiktok.com/@'+user,instagram:'https://www.instagram.com/'+user,youtube:'https://www.youtube.com/@'+user,x:'https://x.com/'+user};
             var lookupUrl=platforms[hlxPlatform]||('https://www.tiktok.com/@'+user);
             try{
@@ -390,15 +937,47 @@
                     document.getElementById('creatorName').value=creatorDisplay;
                     document.getElementById('creatorNameInput').value=creatorDisplay;
                     document.getElementById('creatorAvatar').value=d.avatar;
-                    st.className='alert-success';st.innerHTML='<i class="fas fa-check-circle"></i> Found: '+creatorDisplay;
-                    updateLivePreview();toggleHlx();
+                    st.style.color = '#00e676';
+                    st.innerHTML='<i class="fas fa-check-circle"></i> Found: '+creatorDisplay;
+                    updateLivePreview();setTimeout(toggleHlx, 1000);
                 }else{
-                    st.className='alert-error';st.textContent=d.error||'Not found';
+                    st.style.color = 'var(--cherry-light)';
+                    st.textContent=d.error||'Not found';
                 }
-            }catch(e){st.className='alert-error';st.textContent='Network error'}
+            }catch(e){st.style.color = 'var(--cherry-light)';st.textContent='Network error'}
         }
+
         function autoScrape(){const url=document.getElementById('payhipLink').value.trim();if(url&&(url.includes('payhip.com')||url.includes('patreon.com')||url.includes('boosty.to')))scrapeProduct()}
-        async function scrapeProduct(){const url=document.getElementById('payhipLink').value.trim();if(!url)return;const btn=document.getElementById('btnScrape');btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i>';try{const r=await fetch('/api/scrape?url='+encodeURIComponent(url));const d=await r.json();if(d.success){if(d.title)document.getElementById('productName').value=d.title;if(d.description)document.getElementById('productDesc').value=d.description;if(d.thumbnails&&d.thumbnails.length){var tu=document.getElementById('thumbUrl');if(tu)tu.value=d.thumbnails[0]}if(d.image&&(!d.thumbnails||!d.thumbnails.length)){var tu2=document.getElementById('thumbUrl');if(tu2)tu2.value=d.image}if(d.cdn_thumbnail){cdnThumb=d.cdn_thumbnail}else if(d.image){cdnThumb=''}document.getElementById('scrapedBadge').classList.add('show');updateLivePreview()}}catch(e){}btn.disabled=false;btn.innerHTML='<i class="fas fa-magic"></i> Scrape'}
+        
+        async function scrapeProduct(){
+            const url=document.getElementById('payhipLink').value.trim();
+            if(!url)return;
+            const btn=document.getElementById('btnScrape');
+            btn.disabled=true;
+            btn.innerHTML='<i class="fas fa-spinner fa-spin"></i>';
+            try{
+                const r=await fetch('/api/scrape?url='+encodeURIComponent(url));
+                const d=await r.json();
+                if(d.success){
+                    if(d.title)document.getElementById('productName').value=d.title;
+                    if(d.description)document.getElementById('productDesc').value=d.description;
+                    if(d.thumbnails&&d.thumbnails.length){
+                        var tu=document.getElementById('thumbUrl');if(tu)tu.value=d.thumbnails[0]
+                    }
+                    if(d.image&&(!d.thumbnails||!d.thumbnails.length)){
+                        var tu2=document.getElementById('thumbUrl');if(tu2)tu2.value=d.image
+                    }
+                    if(d.cdn_thumbnail){cdnThumb=d.cdn_thumbnail}
+                    else if(d.image){cdnThumb=''}
+                    document.getElementById('scrapedBadge').style.display = 'flex';
+                    updateLivePreview();
+                    alertMsg('Scrape successful!', false);
+                }
+            }catch(e){alertMsg('Scrape failed.', true)}
+            btn.disabled=false;
+            btn.innerHTML='<i class="fas fa-magic"></i> Scrape';
+        }
+
         function updateLivePreview(){
             var n=(document.getElementById('productName')||{}).value||'Untitled';n=n.trim()||'Untitled';
             var d=(document.getElementById('productDesc')||{}).value||'No description';d=d.trim()||'No description';
@@ -411,23 +990,179 @@
             var lcCatBadge=document.getElementById('lcCatBadge');if(lcCatBadge)lcCatBadge.textContent=labels[cat]||'Others';
             var lcName=document.getElementById('lcName');if(lcName)lcName.textContent=cn;
             var avEl=document.getElementById('lcAv');
-            if(avEl){if(av){avEl.innerHTML='<img src="'+av+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%" onerror="this.style.display=\'none\'">';
-            }else{avEl.innerHTML='<i class="fas fa-user"></i>'}}
+            if(avEl){
+                if(av){avEl.innerHTML='<img src="'+av+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%">';}
+                else{avEl.innerHTML='<i class="fas fa-user" style="font-size:0.5rem;color:var(--cherry-light)"></i>'}
+            }
             var thumbUrl=document.getElementById('thumbUrl');
             var lcThumb=document.getElementById('lcThumb');
-            if(lcThumb){if(thumbUrl&&thumbUrl.value.trim()){lcThumb.innerHTML='<img src="'+thumbUrl.value.trim()+'" style="width:100%;height:100%;object-fit:cover" onerror="this.style.display=\'none\'">'}
-            else{lcThumb.innerHTML='<i class="fas fa-sliders"></i>'}}
+            if(lcThumb){
+                if(thumbUrl&&thumbUrl.value.trim()){lcThumb.innerHTML='<img src="'+thumbUrl.value.trim()+'" style="width:100%;height:100%;object-fit:cover" onerror="this.innerHTML=\'<i class=\\\'fas fa-sliders\\\'></i>\'">'}
+                else{lcThumb.innerHTML='<i class="fas fa-sliders"></i>'}
+            }
         }
-        async function scanCloud(){const list=document.getElementById('resList');list.innerHTML='<div class="empty"><i class="fas fa-spinner fa-spin"></i>Scanning cloud...</div>';try{const r=await fetch('/api/sftpgo/detected-resources',{credentials:'include'});const d=await r.json();if(d.success&&d.resources&&d.resources.length){cloudOk=true;cloudFiles=d.resources;list.innerHTML=d.resources.map((res,i)=>'<div class="res-card'+(selRes===i?' selected':'')+'" onclick="selectResource('+i+')"><div class="rc-icon"><i class="fas fa-folder"></i></div><div class="rc-info"><strong>'+res.editor+' / '+res.resource+'</strong><span>'+(res.files||[]).length+' files</span></div><i class="fas fa-chevron-right" style="color:var(--muted-dark)"></i></div>').join('')}else{cloudOk=false;list.innerHTML='<div class="empty"><i class="fas fa-cloud-upload-alt"></i>No resources detected in your cloud</div>'}}catch(e){list.innerHTML='<div class="empty"><i class="fas fa-exclamation-triangle"></i>Failed to scan cloud</div>'}}
-        function selectResource(i){selRes=i;document.querySelectorAll('.res-card').forEach((c,idx)=>c.classList.toggle('selected',idx===i));const res=cloudFiles[i];document.getElementById('cloudPath').value=res.editor+'/'+res.resource;document.getElementById('destPath').innerHTML='Destination: <strong>'+res.editor+'/'+res.resource+'</strong>';checkConflict()}
-        async function loadEditors(){try{var r=await fetch('/api/products/destination-editors',{credentials:'include'});var d=await r.json();if(d.success&&d.editors&&d.editors.length){allEditors=d.editors;var searchInput=document.getElementById('dstEditorSearch');if(searchInput)searchInput.value='';populateEditors(allEditors)}else{var cn=document.getElementById('creatorName').value;if(cn)document.getElementById('newEditor').value=cn.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,12)||cn.toUpperCase().slice(0,12)}}catch(e){}}
-        function populateEditors(list){var sel=document.getElementById('dstEditor');var currentVal=sel.value;sel.innerHTML='<option value="">Select editor...</option>'+list.map(function(e){return'<option value="'+e+'">'+e+'</option>'}).join('');if(list.includes(currentVal)){sel.value=currentVal}}
-        function filterEditors(){var query=(document.getElementById('dstEditorSearch')||{}).value||'';query=query.toLowerCase();var filtered=allEditors.filter(function(e){return e.toLowerCase().includes(query)});populateEditors(filtered);checkConflict()}
-        function checkConflict(){const editor=document.getElementById('dstEditor').value||document.getElementById('newEditor').value.trim();if(editor&&selRes!==null){document.getElementById('btnTransfer').disabled=false;selDstEditor=editor;document.getElementById('destPath').innerHTML='Destination: <strong>'+editor+'/'+(cloudFiles[selRes]?.resource||'')+'</strong>'}else{document.getElementById('btnTransfer').disabled=true}}
-        async function createEditor(){const name=document.getElementById('newEditor').value.trim();if(!name){alert('Enter a folder name',true);return}try{const r=await fetch('/api/products/create-editor',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name}),credentials:'include'});const d=await r.json();if(d.success){alert('Folder created!',false);await loadEditors();document.getElementById('dstEditor').value=name;checkConflict()}else alert(d.error||'Failed',true)}catch(e){alert('Network error',true)}}
-        async function transfer(){if(selRes===null||!selDstEditor)return;const res=cloudFiles[selRes],btn=document.getElementById('btnTransfer');btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Transferring...';try{const r=await fetch('/api/products/transfer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({product_id:prod.id,source_editor:res.editor,source_resource:res.resource,destination_editor:selDstEditor}),credentials:'include'});const d=await r.json();if(d.success){transferred=d.file_path||'';btn.innerHTML='<i class="fas fa-check-circle"></i> Transfer Completed';btn.className='btn btn-ghost';btn.style.opacity='0.7';btn.disabled=true;alert('Transfer complete!',false);document.getElementById('btnToStep3').disabled=false}else alert(d.error||'Transfer failed',true)}catch(e){alert('Network error',true);btn.disabled=false;btn.innerHTML='<i class="fas fa-cloud-arrow-up"></i> Transfer to Production'}}
-        function buildReview(){const n=document.getElementById('productName').value.trim()||'Untitled',cat=(document.getElementById('productCategory')||{}).value||'others',tags=document.getElementById('productTags').value.trim(),desc=document.getElementById('productDesc').value.trim(),cn=document.getElementById('creatorName').value||'N/A',fp=transferred||'Not transferred';document.getElementById('reviewSummary').innerHTML='<div class="rs-row"><span>Name</span><strong>'+n+'</strong></div><div class="rs-row"><span>Category</span><strong>'+cat+'</strong></div>'+(tags?'<div class="rs-row"><span>Tags</span><strong>'+tags+'</strong></div>':'')+'<div class="rs-row"><span>Creator</span><strong>'+cn+'</strong></div><div class="rs-row"><span>File Path</span><strong style="font-size:.7rem;color:var(--muted)">'+fp+'</strong></div>'}
-        async function submitProduct(){const btn=document.getElementById('btnSubmit');btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Submitting...';var thumbVal=document.getElementById('thumbUrl')?document.getElementById('thumbUrl').value.trim():'';var payhipVal=document.getElementById('payhipLink')?document.getElementById('payhipLink').value.trim():'';const payload={id:prod.id,name:document.getElementById('productName').value.trim(),category:(document.getElementById('productCategory')||{}).value||'others',tags:document.getElementById('productTags').value.trim(),description:document.getElementById('productDesc').value.trim(),creator_nickname:document.getElementById('creatorName').value||'',creator_username:document.getElementById('creatorUsername').value||'',creator_social_url:document.getElementById('creatorSocialUrl').value.trim(),creator_avatar:document.getElementById('creatorAvatar').value||'',thumbnail:thumbVal,cdn_thumbnail:cdnThumb,product_url:payhipVal,source_url:payhipVal,file_path:transferred||'',type:'preset'};if(!payload.name||!payload.category){alert('Fill required fields',true);btn.disabled=false;btn.innerHTML='<i class="fas fa-paper-plane"></i> Submit for Review';return}try{const r=await fetch('/api/products/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),credentials:'include'});const d=await r.json();if(r.ok&&d.success){document.getElementById('sec3').innerHTML='<div class="review-card"><div class="check"><i class="fas fa-check"></i></div><h2>Published!</h2><p style="color:var(--muted-dark);margin-bottom:8px">Your preset is now live on the resources page.</p><p style="font-size:.75rem;color:var(--muted-dark)"><i class="fas fa-info-circle"></i> Admin approval is not required — presets are published instantly.</p><a href="/preset?id='+(d.id||prod.id)+'" class="btn btn-primary" style="margin-top:20px">View Preset</a> <a href="/resources" class="btn btn-ghost" style="margin-top:20px">Browse Resources</a> <button onclick="window.location.reload()" class="btn btn-ghost" style="margin-top:20px"><i class="fas fa-redo"></i> Upload Another</button></div>'}else alert(d.error||'Submit failed',true)}catch(e){alert('Network error',true)}btn.disabled=false;btn.innerHTML='<i class="fas fa-paper-plane"></i> Submit for Review'}
+
+        async function scanCloud(){
+            const list=document.getElementById('resList');
+            list.innerHTML='<div class="empty" style="text-align:center;padding:24px;color:var(--muted);"><i class="fas fa-spinner fa-spin"></i> Scanning cloud...</div>';
+            try{
+                const r=await fetch('/api/sftpgo/detected-resources',{credentials:'include'});
+                const d=await r.json();
+                if(d.success&&d.resources&&d.resources.length){
+                    cloudOk=true;
+                    cloudFiles=d.resources;
+                    list.innerHTML=d.resources.map((res,i)=>'<div class="res-card'+(selRes===i?' selected':'')+'" onclick="selectResource('+i+')"><div class="rc-icon"><i class="fas fa-folder"></i></div><div class="rc-info"><strong>'+res.editor+' / '+res.resource+'</strong><span>'+(res.files||[]).length+' files</span></div><i class="fas fa-chevron-right" style="color:var(--muted)"></i></div>').join('')
+                }else{
+                    cloudOk=false;
+                    list.innerHTML='<div class="empty" style="text-align:center;padding:24px;color:var(--muted);"><i class="fas fa-cloud-upload-alt"></i> No resources detected in your cloud. Upload via SFTP first.</div>'
+                }
+            }catch(e){list.innerHTML='<div class="empty" style="text-align:center;padding:24px;color:var(--cherry-light);"><i class="fas fa-exclamation-triangle"></i> Failed to scan cloud</div>'}
+        }
+
+        function selectResource(i){
+            selRes=i;
+            document.querySelectorAll('.res-card').forEach((c,idx)=>c.classList.toggle('selected',idx===i));
+            const res=cloudFiles[i];
+            document.getElementById('cloudPath').value=res.editor+'/'+res.resource;
+            document.getElementById('destPath').innerHTML='Destination Path: <strong>'+res.editor+'/'+res.resource+'</strong>';
+            checkConflict();
+        }
+
+        async function loadEditors(){
+            try{
+                var r=await fetch('/api/products/destination-editors',{credentials:'include'});
+                var d=await r.json();
+                if(d.success&&d.editors&&d.editors.length){
+                    allEditors=d.editors;
+                    var searchInput=document.getElementById('dstEditorSearch');
+                    if(searchInput)searchInput.value='';
+                    populateEditors(allEditors)
+                }else{
+                    var cn=document.getElementById('creatorName').value;
+                    if(cn)document.getElementById('newEditor').value=cn.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,12)||cn.toUpperCase().slice(0,12)
+                }
+            }catch(e){}
+        }
+
+        function populateEditors(list){
+            var sel=document.getElementById('dstEditor');
+            var currentVal=sel.value;
+            sel.innerHTML='<option value="">Select namespace...</option>'+list.map(function(e){return'<option value="'+e+'">'+e+'</option>'}).join('');
+            if(list.includes(currentVal)){sel.value=currentVal}
+        }
+
+        function filterEditors(){
+            var query=(document.getElementById('dstEditorSearch')||{}).value||'';
+            query=query.toLowerCase();
+            var filtered=allEditors.filter(function(e){return e.toLowerCase().includes(query)});
+            populateEditors(filtered);
+            checkConflict();
+        }
+
+        function checkConflict(){
+            const editor=document.getElementById('dstEditor').value||document.getElementById('newEditor').value.trim();
+            if(editor&&selRes!==null){
+                document.getElementById('btnTransfer').disabled=false;
+                selDstEditor=editor;
+                document.getElementById('destPath').innerHTML='Destination Path: <strong>'+editor+'/'+(cloudFiles[selRes]?.resource||'')+'</strong>'
+            }else{
+                document.getElementById('btnTransfer').disabled=true
+            }
+        }
+
+        async function createEditor(){
+            const name=document.getElementById('newEditor').value.trim();
+            if(!name){alertMsg('Enter a folder name',true);return}
+            try{
+                const r=await fetch('/api/products/create-editor',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name}),credentials:'include'});
+                const d=await r.json();
+                if(d.success){
+                    alertMsg('Folder created!',false);
+                    await loadEditors();
+                    document.getElementById('dstEditor').value=name;
+                    checkConflict();
+                }else alertMsg(d.error||'Failed to create folder',true)
+            }catch(e){alertMsg('Network error',true)}
+        }
+
+        async function transfer(){
+            if(selRes===null||!selDstEditor)return;
+            const res=cloudFiles[selRes],btn=document.getElementById('btnTransfer');
+            btn.disabled=true;
+            btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Transferring Files...';
+            try{
+                const r=await fetch('/api/products/transfer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({product_id:prod.id,source_editor:res.editor,source_resource:res.resource,destination_editor:selDstEditor}),credentials:'include'});
+                const d=await r.json();
+                if(d.success){
+                    transferred=d.file_path||'';
+                    btn.innerHTML='<i class="fas fa-check-circle"></i> Packaging Complete';
+                    btn.className='btn btn-ghost';
+                    btn.style.opacity='0.7';
+                    btn.disabled=true;
+                    alertMsg('Transfer complete!',false);
+                    document.getElementById('btnToStep3').disabled=false;
+                }else{
+                    alertMsg(d.error||'Transfer failed',true);
+                    btn.disabled=false;
+                    btn.innerHTML='<i class="fas fa-cloud-arrow-up"></i> Package & Transfer to Production';
+                }
+            }catch(e){
+                alertMsg('Network error',true);
+                btn.disabled=false;
+                btn.innerHTML='<i class="fas fa-cloud-arrow-up"></i> Package & Transfer to Production';
+            }
+        }
+
+        function buildReview(){
+            const n=document.getElementById('productName').value.trim()||'Untitled',
+                  cat=(document.getElementById('productCategory')||{}).value||'others',
+                  tags=document.getElementById('productTags').value.trim(),
+                  desc=document.getElementById('productDesc').value.trim(),
+                  cn=document.getElementById('creatorName').value||'N/A',
+                  fp=transferred||'Not transferred';
+            document.getElementById('reviewSummary').innerHTML='<div class="rs-row"><span>Name</span><strong>'+n+'</strong></div><div class="rs-row"><span>Category</span><strong>'+cat+'</strong></div>'+(tags?'<div class="rs-row"><span>Tags</span><strong>'+tags+'</strong></div>':'')+'<div class="rs-row"><span>Creator</span><strong>'+cn+'</strong></div><div class="rs-row"><span>File Path</span><strong style="font-size:.7rem;color:var(--muted)">'+fp+'</strong></div>';
+        }
+
+        async function submitProduct(){
+            const btn=document.getElementById('btnSubmit');
+            btn.disabled=true;
+            btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Submitting...';
+            var thumbVal=document.getElementById('thumbUrl')?document.getElementById('thumbUrl').value.trim():'';
+            var payhipVal=document.getElementById('payhipLink')?document.getElementById('payhipLink').value.trim():'';
+            const payload={
+                id:prod.id,
+                name:document.getElementById('productName').value.trim(),
+                category:(document.getElementById('productCategory')||{}).value||'others',
+                tags:document.getElementById('productTags').value.trim(),
+                description:document.getElementById('productDesc').value.trim(),
+                creator_nickname:document.getElementById('creatorName').value||'',
+                creator_username:document.getElementById('creatorUsername').value||'',
+                creator_social_url:document.getElementById('creatorSocialUrl').value.trim(),
+                creator_avatar:document.getElementById('creatorAvatar').value||'',
+                thumbnail:thumbVal,
+                cdn_thumbnail:cdnThumb,
+                product_url:payhipVal,
+                source_url:payhipVal,
+                file_path:transferred||'',
+                type:'preset'
+            };
+            if(!payload.name||!payload.category){
+                alertMsg('Fill required fields',true);
+                btn.disabled=false;
+                btn.innerHTML='<i class="fas fa-paper-plane"></i> Publish Preset';
+                return;
+            }
+            try{
+                const r=await fetch('/api/products/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),credentials:'include'});
+                const d=await r.json();
+                if(r.ok&&d.success){
+                    document.getElementById('mainPanel').innerHTML='<div class="review-card"><div class="check"><i class="fas fa-check"></i></div><h2>Published!</h2><p style="color:var(--muted);margin-bottom:8px">Your preset is now live on the resources page.</p><p style="font-size:0.75rem;color:var(--muted)"><i class="fas fa-info-circle"></i> Presets are published instantly without administrative delay.</p><div style="display:flex;gap:12px;justify-content:center;margin-top:24px"><a href="/preset?id='+(d.id||prod.id)+'" class="btn btn-primary">View Preset</a> <a href="/resources" class="btn btn-ghost">Browse Resources</a> <button onclick="window.location.reload()" class="btn btn-ghost"><i class="fas fa-redo"></i> Upload Another</button></div></div>'
+                }else alertMsg(d.error||'Submit failed',true)
+            }catch(e){alertMsg('Network error',true)}
+            btn.disabled=false;
+            btn.innerHTML='<i class="fas fa-paper-plane"></i> Publish Preset';
+        }
+        
         updateLivePreview();
     </script>
 </body>

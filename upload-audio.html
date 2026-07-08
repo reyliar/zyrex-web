@@ -3,130 +3,702 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Audio — Zyrex</title>
+    <title>Creator Studio — Zyrex</title>
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
-    <link rel="stylesheet" href="css/style.css?v=17">
+    <link rel="stylesheet" href="css/style.css?v=18">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        :root{--cherry:#a80f2d;--cherry-rgb:168,15,45;--cherry-light:#e8456a;--dark:#060608;--light:#e8e8ed;--gray:#8888a0;--gray-dark:#55556a;--radius:18px;--radius-sm:12px}
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{background:var(--dark);color:var(--light);font-family:'Poppins',sans-serif;min-height:100vh}
-        .topbar{position:fixed;top:0;left:0;right:0;z-index:1000;padding:16px 32px;display:flex;align-items:center;justify-content:space-between;background:rgba(6,4,8,0.7);backdrop-filter:blur(20px) saturate(180%);border-bottom:1px solid rgba(255,255,255,.04)}
-        .topbar-logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--light)}
-        .topbar-logo img{height:34px}
-        .topbar-logo span{font-weight:800;font-size:1rem;letter-spacing:1px;color:var(--cherry-light)}
-        .topbar-actions{display:flex;align-items:center;gap:16px}
-        .topbar-actions a{color:var(--gray-dark);font-size:.78rem;text-decoration:none;transition:.2s}
-        .topbar-actions a:hover{color:var(--cherry-light)}
-        .main-wrap{max-width:600px;margin:0 auto;padding:100px 24px 60px}
-        .card{background:rgba(12,4,8,0.55);border:1px solid rgba(var(--cherry-rgb),.12);border-radius:var(--radius);padding:36px;box-shadow:0 20px 60px rgba(0,0,0,.4)}
-        .card h2{font-size:1.4rem;font-weight:800;margin-bottom:6px}
-        .card .sub{color:var(--gray);font-size:.82rem;margin-bottom:24px}
-        .field{margin-bottom:20px}
-        .field label{display:block;font-size:.72rem;font-weight:700;margin-bottom:6px;color:var(--gray);text-transform:uppercase;letter-spacing:1px}
-        .field input,.field textarea,.field select{width:100%;padding:12px 16px;background:rgba(0,0,0,.3);border:1px solid rgba(var(--cherry-rgb),.1);border-radius:var(--radius-sm);color:var(--light);font-family:inherit;font-size:.85rem;outline:none;transition:.3s}
-        .field input:focus,.field textarea:focus,.field select:focus{border-color:var(--cherry-light);box-shadow:0 0 0 3px rgba(var(--cherry-rgb),.1)}
-        .field textarea{min-height:80px;resize:vertical}
-        .cat-chip{display:inline-flex;align-items:center;gap:4px;padding:8px 14px;border-radius:50px;border:1px solid rgba(var(--cherry-rgb),.15);background:rgba(var(--cherry-rgb),.03);font-size:.75rem;color:var(--gray);cursor:pointer;transition:.2s;user-select:none}
-        .cat-chip:has(input:checked){background:rgba(var(--cherry-rgb),.15);border-color:var(--cherry-light);color:var(--cherry-light)}
-        .cat-chip input{display:none}
-        .file-upload-area{border:2px dashed rgba(var(--cherry-rgb),.15);border-radius:var(--radius-sm);padding:40px;text-align:center;cursor:pointer;transition:.3s;background:rgba(0,0,0,.2)}
-        .file-upload-area:hover{border-color:var(--cherry-light);background:rgba(var(--cherry-rgb),.04)}
-        .file-upload-area .fu-icon{font-size:2.5rem;color:var(--cherry);opacity:.4;margin-bottom:10px}
-        .file-upload-area .fu-text{font-size:.85rem;color:var(--gray)}
-        .file-upload-area .fu-hint{font-size:.7rem;color:var(--gray-dark);margin-top:6px}
-        .file-upload-area.has-file{border-color:rgba(0,200,100,.3);background:rgba(0,200,100,.04)}
-        .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 28px;border-radius:var(--radius-sm);font-size:.85rem;font-weight:700;cursor:pointer;font-family:inherit;border:none;transition:.3s;width:100%}
-        .btn-primary{background:linear-gradient(135deg,#8a0a22,#5a0614);color:#fff;border:1px solid rgba(var(--cherry-rgb),.25);box-shadow:0 4px 20px rgba(var(--cherry-rgb),.35)}
-        .btn-primary:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(var(--cherry-rgb),.5)}
-        .btn-primary:disabled{opacity:.45;cursor:not-allowed;transform:none}
-        .alert{padding:12px 16px;border-radius:8px;font-size:.8rem;font-weight:600;margin-bottom:16px;display:none}
-        .alert.show{display:block}
-        .alert-error{background:rgba(var(--cherry-rgb),.1);border:1px solid rgba(var(--cherry-rgb),.2);color:var(--cherry-light)}
-        .alert-success{background:rgba(0,200,100,.1);border:1px solid rgba(0,200,100,.2);color:#00c864}
+        :root {
+            --cherry: #e61536;
+            --cherry-rgb: 230, 21, 54;
+            --cherry-light: #ff4d6d;
+            --cherry-dark: #8a0d22;
+            --dark: #070203;
+            --dark-panel: rgba(15, 4, 7, 0.7);
+            --border: rgba(230, 21, 54, 0.1);
+            --border-hover: rgba(230, 21, 54, 0.25);
+            --text: #fcedf0;
+            --muted: #8a6570;
+            --muted-dark: #5c3f47;
+            --radius-lg: 20px;
+            --radius-md: 14px;
+            --transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: var(--dark);
+            color: var(--text);
+            font-family: 'Poppins', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            overflow-x: hidden;
+        }
+
+        /* === BG AURA === */
+        .bg-aura { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+        .bg-aura .orb { position: absolute; border-radius: 50%; filter: blur(120px); opacity: .07; }
+        .orb-1 { width: 500px; height: 500px; background: var(--cherry); top: -10%; left: -10%; }
+        .orb-2 { width: 400px; height: 400px; background: #5865F2; bottom: -5%; right: -5%; opacity: .04; }
+        .orb-3 { width: 300px; height: 300px; background: var(--cherry-light); top: 50%; left: 30%; opacity: .03; }
+        
+        .grid-bg {
+            position: fixed; inset: 0; pointer-events: none; z-index: 0;
+            background-image: linear-gradient(rgba(230, 21, 54, 0.015) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(230, 21, 54, 0.015) 1px, transparent 1px);
+            background-size: 50px 50px;
+            mask-image: radial-gradient(ellipse at 50% 30%, black 40%, transparent 80%);
+            -webkit-mask-image: radial-gradient(ellipse at 50% 30%, black 40%, transparent 80%);
+        }
+
+        /* === DASHBOARD LAYOUT === */
+        .studio-container {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* === SIDEBAR === */
+        .studio-sidebar {
+            width: 280px;
+            background: rgba(5, 1, 2, 0.85);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            border-right: 1px solid var(--border);
+            padding: 32px 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: fixed;
+            height: 100vh;
+            left: 0; top: 0;
+            z-index: 100;
+            transition: var(--transition);
+        }
+
+        .sidebar-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            margin-bottom: 40px;
+        }
+        .sidebar-brand img { height: 38px; }
+        .sidebar-brand span {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 900;
+            font-size: 1.35rem;
+            letter-spacing: 1.5px;
+            background: linear-gradient(90deg, #fff, var(--cherry-light));
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sidebar-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            list-style: none;
+            flex: 1;
+        }
+        .menu-title {
+            font-size: 0.65rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--muted);
+            margin: 15px 0 8px 12px;
+        }
+        .menu-item a, .menu-item span.locked-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            border-radius: var(--radius-md);
+            font-size: 0.86rem;
+            font-weight: 600;
+            color: var(--muted);
+            text-decoration: none;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+        .menu-item.active a {
+            background: rgba(230, 21, 54, 0.08);
+            color: #fff;
+            box-shadow: inset 4px 0 0 var(--cherry-light);
+        }
+        .menu-item a:hover {
+            background: rgba(230, 21, 54, 0.04);
+            color: #fff;
+        }
+        .menu-item span.locked-item {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+        .menu-item i { font-size: 1rem; width: 22px; }
+        .menu-item .lock-badge {
+            font-size: 0.65rem;
+            background: rgba(230, 21, 54, 0.1);
+            color: var(--cherry-light);
+            padding: 2px 6px;
+            border-radius: 4px;
+            border: 1px solid rgba(230, 21, 54, 0.15);
+        }
+
+        .sidebar-footer {
+            border-top: 1px solid rgba(230, 21, 54, 0.08);
+            padding-top: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .user-profile img {
+            width: 42px; height: 42px;
+            border-radius: 50%;
+            border: 2px solid var(--cherry);
+        }
+        .user-info { display: flex; flex-direction: column; min-width: 0; }
+        .user-info .name { font-size: 0.84rem; font-weight: 700; color: #fff; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; }
+        .user-info .role { font-size: 0.68rem; color: var(--muted); }
+
+        .footer-nav {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .footer-nav a {
+            font-size: 0.78rem;
+            color: var(--muted);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: var(--transition);
+        }
+        .footer-nav a:hover { color: var(--cherry-light); }
+
+        /* === MAIN CONTENT === */
+        .studio-main {
+            flex: 1;
+            margin-left: 280px;
+            padding: 40px 48px;
+            transition: var(--transition);
+        }
+
+        .studio-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+        .studio-header h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+        }
+        .studio-header p {
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        /* === PANELS / CARDS === */
+        .glass-panel {
+            background: var(--dark-panel);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 36px;
+            backdrop-filter: blur(25px) saturate(220%);
+            -webkit-backdrop-filter: blur(25px) saturate(220%);
+            box-shadow: 0 25px 70px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.03);
+            position: relative;
+            overflow: hidden;
+            max-width: 760px;
+            margin: 0 auto;
+        }
+
+        /* === FORM FIELDS === */
+        .field { margin-bottom: 24px; }
+        .field label {
+            display: block;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        .field label i { color: var(--cherry-light); margin-right: 4px; }
+        
+        .field input, .field textarea, .field select {
+            width: 100%;
+            padding: 14px 18px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            color: #fff;
+            font-family: inherit;
+            font-size: 0.88rem;
+            outline: none;
+            transition: var(--transition);
+        }
+        .field input:focus, .field textarea:focus, .field select:focus {
+            border-color: var(--cherry-light);
+            background: rgba(230, 21, 54, 0.02);
+            box-shadow: 0 0 0 3px rgba(230, 21, 54, 0.08);
+        }
+        .field textarea { min-height: 100px; resize: vertical; }
+
+        .row-fields {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+        }
+
+        /* Category tags */
+        .cat-tags-wrap {
+            display: flex; flex-wrap: wrap; gap: 10px;
+        }
+        .cat-chip {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 18px; border-radius: 50px;
+            border: 1px solid var(--border); background: rgba(230, 21, 54, 0.03);
+            font-size: 0.75rem; color: var(--muted); cursor: pointer; transition: var(--transition);
+            user-select: none; font-weight: 600;
+        }
+        .cat-chip:hover { border-color: var(--border-hover); color: #fff; }
+        .cat-chip:has(input:checked) {
+            background: rgba(230, 21, 54, 0.15); border-color: var(--cherry-light); color: var(--cherry-light);
+            box-shadow: 0 0 12px rgba(230, 21, 54, 0.1);
+        }
+        .cat-chip input { display: none; }
+
+        /* Drag & Drop area */
+        .file-upload-area {
+            border: 2px dashed var(--border); border-radius: var(--radius-md);
+            padding: 40px; text-align: center; cursor: pointer; transition: var(--transition);
+            background: rgba(0, 0, 0, 0.25);
+        }
+        .file-upload-area:hover { border-color: var(--cherry-light); background: rgba(230, 21, 54, 0.02); }
+        .file-upload-area.has-file { border-color: rgba(0, 200, 100, 0.35); background: rgba(0, 200, 100, 0.03); }
+        .file-upload-area .fu-icon { font-size: 2.8rem; color: var(--cherry); opacity: 0.3; margin-bottom: 12px; transition: var(--transition); }
+        .file-upload-area:hover .fu-icon { opacity: 0.6; transform: translateY(-2px); }
+        .file-upload-area.has-file .fu-icon { color: #00e676; opacity: 0.6; }
+        .file-upload-area .fu-text { font-size: 0.88rem; font-weight: 700; color: #fff; margin-bottom: 4px; }
+        .file-upload-area .fu-hint { font-size: 0.72rem; color: var(--muted); }
+
+        /* Social lookup input */
+        .social-input-wrap {
+            display: flex; border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; background: rgba(0, 0, 0, 0.4);
+        }
+        .social-input-wrap input { border: none; background: transparent; flex: 1; }
+        .social-lookup-btn {
+            width: 48px; border: none; background: rgba(230, 21, 54, 0.08); color: var(--cherry-light); cursor: pointer; transition: var(--transition);
+        }
+        .social-lookup-btn:hover { background: rgba(230, 21, 54, 0.15); color: #fff; }
+
+        /* Custom Audio Preview Component */
+        .audio-preview-panel {
+            background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: var(--radius-md);
+            padding: 16px; margin-top: 14px; display: none; align-items: center; gap: 14px;
+        }
+        .audio-preview-panel.show { display: flex; }
+        .ap-btn {
+            width: 40px; height: 40px; border-radius: 50%; background: var(--cherry); border: none;
+            color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer;
+            font-size: 0.9rem; transition: var(--transition); box-shadow: 0 4px 12px rgba(230,21,54,0.3);
+        }
+        .ap-btn:hover { transform: scale(1.08); background: var(--cherry-light); }
+        .ap-info { flex: 1; min-width: 0; }
+        .ap-info .filename { font-size: 0.8rem; font-weight: 700; color: #fff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .ap-info .details { font-size: 0.68rem; color: var(--muted); }
+
+        /* Wave visual decoration inside player */
+        .ap-wave { display: flex; align-items: center; gap: 2px; height: 24px; }
+        .ap-wave span { width: 2px; height: 8px; background: var(--cherry-light); border-radius: 1px; transition: height 0.15s ease; }
+        .ap-wave.playing span { animation: apWavePulse 0.8s ease infinite alternate; }
+        .ap-wave.playing span:nth-child(2) { animation-delay: 0.15s; }
+        .ap-wave.playing span:nth-child(3) { animation-delay: 0.3s; }
+        .ap-wave.playing span:nth-child(4) { animation-delay: 0.1s; }
+        .ap-wave.playing span:nth-child(5) { animation-delay: 0.25s; }
+        @keyframes apWavePulse { 0% { height: 6px; } 100% { height: 20px; } }
+
+        /* === BTNS === */
+        .btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 13px 24px; border-radius: var(--radius-md); font-size: 0.84rem; font-weight: 700;
+            border: none; cursor: pointer; transition: var(--transition); font-family: inherit;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, var(--cherry), var(--cherry-dark));
+            color: #fff; border: 1px solid rgba(255, 77, 109, 0.2);
+            box-shadow: 0 4px 20px rgba(230, 21, 54, 0.3);
+        }
+        .btn-primary:hover {
+            transform: translateY(-2px); box-shadow: 0 8px 30px rgba(230, 21, 54, 0.5);
+        }
+        .btn-primary:disabled {
+            opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none;
+        }
+        .btn-ghost {
+            background: rgba(230, 21, 54, 0.05); color: var(--text); border: 1px solid rgba(230, 21, 54, 0.12);
+        }
+        .btn-ghost:hover { background: rgba(230, 21, 54, 0.1); border-color: var(--border-hover); }
+
+        .form-actions {
+            display: flex; justify-content: flex-end; gap: 12px; margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.04);
+        }
+
+        /* === LOCK / ACCESS DENIED SCREEN === */
+        .lock-container {
+            display: flex; align-items: center; justify-content: center; min-height: calc(100vh - 160px); width: 100%;
+        }
+        .lock-card {
+            max-width: 480px; text-align: center; padding: 48px 36px;
+            background: var(--dark-panel); border: 1px solid var(--border); border-radius: var(--radius-lg);
+            box-shadow: 0 25px 70px rgba(0,0,0,0.6);
+        }
+        .lock-card i.lock-icon { font-size: 4rem; color: var(--cherry); opacity: 0.2; margin-bottom: 24px; display: block; }
+        .lock-card h2 { font-family: 'Outfit', sans-serif; font-size: 1.6rem; font-weight: 800; color: #fff; margin-bottom: 12px; }
+        .lock-card p { font-size: 0.88rem; color: var(--muted); line-height: 1.6; margin-bottom: 28px; }
+        .lock-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .btn-discord { background: #5865F2; color: #fff; }
+        .btn-discord:hover { background: #4752c4; transform: translateY(-2px); }
+
+        /* === ALERTS === */
+        .studio-alert {
+            position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
+            z-index: 10000; padding: 12px 24px; border-radius: 30px; font-size: 0.84rem; font-weight: 700;
+            display: none; align-items: center; gap: 8px; backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            animation: alertIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes alertIn { from { opacity: 0; transform: translate(-50%, -10px); } to { opacity: 1; transform: translate(-50%, 0); } }
+        .studio-alert.show { display: flex; }
+        .studio-alert.error { background: rgba(230, 21, 54, 0.15); border: 1px solid rgba(230, 21, 54, 0.25); color: var(--cherry-light); }
+        .studio-alert.success { background: rgba(0, 200, 100, 0.15); border: 1px solid rgba(0, 200, 100, 0.25); color: #00e676; }
+
+        /* === MOBILE MENU TRIGGER === */
+        .mobile-trigger {
+            display: none;
+            background: transparent; border: none; color: #fff; font-size: 1.4rem; cursor: pointer; z-index: 1000;
+        }
+
+        /* === RESPONSIVE === */
+        @media(max-width: 900px) {
+            .studio-sidebar { left: -280px; }
+            .studio-sidebar.open { left: 0; }
+            .studio-main { margin-left: 0; padding: 32px 20px; }
+            .mobile-trigger { display: block; }
+        }
     </style>
 </head>
 <body>
     <div class="bg-aura"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
-    <div class="topbar">
-        <a href="/" class="topbar-logo"><img src="assets/content.png" alt=""><span>Upload Audio</span></a>
-        <div class="topbar-actions"><a href="/upload">← Back to Upload</a><a href="/settings">Settings</a><a href="/api/logout">Logout</a></div>
+    <div class="grid-bg"></div>
+
+    <div class="studio-alert" id="alertBox"></div>
+
+    <div class="studio-container">
+        <!-- SIDEBAR -->
+        <div class="studio-sidebar" id="sidebar">
+            <div>
+                <a href="/" class="sidebar-brand">
+                    <img src="assets/content.png" alt="Zyrex Logo">
+                    <span>Creator Studio</span>
+                </a>
+                <ul class="sidebar-menu">
+                    <span class="menu-title">Publish Portals</span>
+                    <li class="menu-item" id="sidebarPreset">
+                        <a href="/upload"><i class="fas fa-sliders"></i> <span>Preset Uploader</span></a>
+                    </li>
+                    <li class="menu-item active">
+                        <a href="/upload-audio"><i class="fas fa-music"></i> <span>Audio Uploader</span></a>
+                    </li>
+                    <li class="menu-item" id="sidebarScenepack">
+                        <a href="/upload-scenepack"><i class="fas fa-film"></i> <span>Scenepack Uploader</span></a>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="sidebar-footer">
+                <div class="user-profile" id="userProfile" style="display:none">
+                    <img src="" id="userAvatar" alt="">
+                    <div class="user-info">
+                        <span class="name" id="userName">Creator</span>
+                        <span class="role">Zyrex Partner</span>
+                    </div>
+                </div>
+                <div class="footer-nav">
+                    <a href="/settings"><i class="fas fa-cog"></i> Dashboard Settings</a>
+                    <a href="/"><i class="fas fa-arrow-left"></i> Back to Main Site</a>
+                    <a href="/api/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- MAIN MAIN -->
+        <div class="studio-main">
+            <!-- TOP BAR -->
+            <div class="studio-header">
+                <div>
+                    <button class="mobile-trigger" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+                    <h1>Audio Upload</h1>
+                    <p>Share high-quality community sound files on the Zyrex audio library</p>
+                </div>
+            </div>
+
+            <!-- CONTENT CARD -->
+            <div class="glass-panel" id="mainPanel" style="display:none">
+                <div class="field">
+                    <label><i class="fas fa-music"></i> Audio Name *</label>
+                    <input type="text" id="audioName" placeholder="Ariana Grande - thank u, next (Aesthetic Remix)">
+                </div>
+                
+                <div class="field">
+                    <label><i class="fas fa-list"></i> Category Tags</label>
+                    <div class="cat-tags-wrap" id="catTags">
+                        <label class="cat-chip"><input type="checkbox" value="hot" onchange="updateCats()"> Hot</label>
+                        <label class="cat-chip"><input type="checkbox" value="soft" onchange="updateCats()"> Soft</label>
+                        <label class="cat-chip"><input type="checkbox" value="aesthetic" onchange="updateCats()"> Aesthetic</label>
+                        <label class="cat-chip"><input type="checkbox" value="cinematic" onchange="updateCats()"> Cinematic</label>
+                        <label class="cat-chip"><input type="checkbox" value="velocity" onchange="updateCats()"> Velocity</label>
+                    </div>
+                </div>
+
+                <div class="row-fields">
+                    <div class="field">
+                        <label><i class="fas fa-link"></i> Creator Social URL (optional)</label>
+                        <div class="social-input-wrap">
+                            <input type="url" id="socialUrl" placeholder="https://tiktok.com/@creator" onblur="resolveCreator()">
+                            <button class="social-lookup-btn" onclick="toggleHlx()" title="Social Lookup"><i class="fas fa-magic"></i></button>
+                        </div>
+                    </div>
+                    <div class="field">
+                        <label><i class="fas fa-user"></i> Creator Name (optional)</label>
+                        <input type="text" id="creatorName" placeholder="Auto-filled from social URL" readonly style="background:rgba(0,0,0,0.2);cursor:not-allowed">
+                    </div>
+                </div>
+
+                <div class="field">
+                    <label><i class="fas fa-align-left"></i> Description</label>
+                    <textarea id="audioDesc" placeholder="Provide credits or description for this sound pack..."></textarea>
+                </div>
+
+                <div class="field">
+                    <label><i class="fas fa-cloud-arrow-up"></i> Sound File *</label>
+                    <div class="file-upload-area" id="dropZone" onclick="document.getElementById('fileInput').click()">
+                        <div class="fu-icon"><i class="fas fa-cloud-upload-alt"></i></div>
+                        <div class="fu-text" id="fuText">Click or Drag & Drop audio file</div>
+                        <div class="fu-hint">Supports MP3, WAV, FLAC, OGG, AAC — Max Size: 50MB</div>
+                    </div>
+                    <input type="file" id="fileInput" accept="audio/*" style="display:none" onchange="handleFile(this.files[0])">
+                    
+                    <!-- Premium Audio Preview Player -->
+                    <div class="audio-preview-panel" id="previewPlayerPanel">
+                        <button class="ap-btn" id="playBtn" onclick="togglePreviewAudio()"><i class="fas fa-play" id="playIcon"></i></button>
+                        <div class="ap-info">
+                            <div class="filename" id="previewFilename">audio_file.mp3</div>
+                            <div class="details" id="previewDetails">0.0 MB</div>
+                        </div>
+                        <div class="ap-wave" id="apWave">
+                            <span></span><span></span><span></span><span></span><span></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-actions">
+                    <a href="/audio" class="btn btn-ghost">Cancel</a>
+                    <button class="btn btn-primary" id="btnSubmit" onclick="submitAudio()"><i class="fas fa-upload"></i> Publish Audio</button>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="main-wrap" style="display:none">
-        <div class="card">
-            <h2><i class="fas fa-music"></i> Upload Audio</h2>
-            <p class="sub">Upload your audio files and share them with the community.</p>
-            <div class="alert" id="alertBox"></div>
-            
-            <div class="field"><label>Audio Name *</label><input type="text" id="audioName" placeholder="Ariana Grande - thank u next"></div>
-            <div class="field"><label>Categories</label>
-                <div style="display:flex;flex-wrap:wrap;gap:8px" id="catTags">
-                    <label class="cat-chip"><input type="checkbox" value="hot" onchange="updateCats()"> Hot</label>
-                    <label class="cat-chip"><input type="checkbox" value="soft" onchange="updateCats()"> Soft</label>
-                    <label class="cat-chip"><input type="checkbox" value="aesthetic" onchange="updateCats()"> Aesthetic</label>
-                    <label class="cat-chip"><input type="checkbox" value="cinematic" onchange="updateCats()"> Cinematic</label>
-                    <label class="cat-chip"><input type="checkbox" value="velocity" onchange="updateCats()"> Velocity</label>
-                </div>
+    <!-- SOCIAL LOOKUP MODAL -->
+    <div id="hlxOverlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.85);align-items:center;justify-content:center" onclick="if(event.target===this)toggleHlx()">
+        <div style="background:rgba(15,4,7,0.98);border:1px solid var(--border);border-radius:20px;padding:32px;width:420px;max-width:90vw;box-shadow:0 25px 60px rgba(0,0,0,0.7)">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+                <span style="font-size:0.9rem;font-weight:700;color:var(--text);"><i class="fas fa-magic" style="color:var(--cherry-light);margin-right:6px"></i>Social Lookup</span>
+                <button onclick="toggleHlx()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.4rem">&times;</button>
             </div>
-            <div class="field"><label>Description</label><textarea id="audioDesc" placeholder="Describe the audio..."></textarea></div>
-            
-            <div class="field"><label>Audio File *</label>
-                <div class="file-upload-area" id="dropZone" onclick="document.getElementById('fileInput').click()">
-                    <div class="fu-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-                    <div class="fu-text" id="fuText">Click or drag to upload</div>
-                    <div class="fu-hint">MP3, WAV, FLAC — max 50MB</div>
-                </div>
-                <input type="file" id="fileInput" accept="audio/*" style="display:none" onchange="handleFile(this.files[0])">
+            <div style="display:flex;gap:10px;justify-content:center;margin-bottom:20px" id="hlxPlatforms">
+                <button class="btn-icon active" data-plat="tiktok" onclick="selHlxPlat(this,'tiktok')" style="width:40px;height:40px;border-radius:50%;background:rgba(230, 21, 54, 0.08);border:1px solid var(--border);color:var(--cherry-light);cursor:pointer;transition:var(--transition);display:inline-flex;align-items:center;justify-content:center;"><i class="fab fa-tiktok"></i></button>
+                <button class="btn-icon" data-plat="instagram" onclick="selHlxPlat(this,'instagram')" style="width:40px;height:40px;border-radius:50%;background:rgba(230, 21, 54, 0.08);border:1px solid var(--border);color:var(--cherry-light);cursor:pointer;transition:var(--transition);display:inline-flex;align-items:center;justify-content:center;"><i class="fab fa-instagram"></i></button>
+                <button class="btn-icon" data-plat="youtube" onclick="selHlxPlat(this,'youtube')" style="width:40px;height:40px;border-radius:50%;background:rgba(230, 21, 54, 0.08);border:1px solid var(--border);color:var(--cherry-light);cursor:pointer;transition:var(--transition);display:inline-flex;align-items:center;justify-content:center;"><i class="fab fa-youtube"></i></button>
+                <button class="btn-icon" data-plat="x" onclick="selHlxPlat(this,'x')" style="width:40px;height:40px;border-radius:50%;background:rgba(230, 21, 54, 0.08);border:1px solid var(--border);color:var(--cherry-light);cursor:pointer;transition:var(--transition);display:inline-flex;align-items:center;justify-content:center;"><i class="fab fa-x-twitter"></i></button>
             </div>
-            
-            <button class="btn btn-primary" id="btnSubmit" onclick="submitAudio()"><i class="fas fa-upload"></i> Upload Audio</button>
+            <div style="display:flex;background:rgba(0,0,0,0.4);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;margin-bottom:18px">
+                <span style="padding:14px 0 14px 18px;color:var(--muted);font-size:0.88rem" id="hlxPrefix">@</span>
+                <input id="hlxUser" placeholder="username..." style="flex:1;padding:14px;background:transparent;border:none;color:#fff;font-family:inherit;font-size:0.88rem;outline:none" onkeydown="if(event.key==='Enter')hlxLookup()">
+            </div>
+            <button class="btn btn-primary" style="width:100%;font-size:0.84rem" onclick="hlxLookup()"><i class="fas fa-search"></i> Fetch Profile Info</button>
+            <div id="hlxStatus" style="display:none;margin-top:14px;padding:10px;border-radius:8px;font-size:0.75rem;text-align:center"></div>
         </div>
     </div>
 
     <script src="js/auth.js"></script>
     <script>
-        var currentUser = null;
+        var currentUser = null, audioFile = null, audioBase64 = null;
+        var selectedCats = [];
+        var previewAudioElement = null;
+        var hlxPlatform = 'tiktok';
+
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
         (async function checkAuth(){
             try {
                 var meResp = await fetch('/api/me', {credentials:'include'});
                 if (!meResp.ok) { window.location.href = '/api/login?redirect=' + encodeURIComponent(location.pathname); return; }
                 currentUser = await meResp.json();
-                var roleResp = await fetch('/api/guild/check-role?userId=' + currentUser.id + '&roleId=1522976282688880720', {credentials:'include'});
-                var roleData = await roleResp.json();
-                if (!roleData.has_role) {
-                    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center;color:var(--gray);padding:20px"><div style="max-width:460px"><i class="fas fa-lock" style="font-size:4rem;color:var(--cherry);opacity:.2;margin-bottom:20px;display:block"></i><h2 style="color:var(--light);font-size:1.5rem;font-weight:800;margin-bottom:10px">No Audio Upload Access</h2><p style="font-size:.9rem;line-height:1.6;margin-bottom:20px">You need the <strong style="color:var(--cherry-light)">Audio Uploader</strong> role to upload audio. Join our Discord and request this role to get started.</p><div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap"><a href="https://discord.gg/zyrex" target="_blank" style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:10px;background:#5865F2;color:#fff;text-decoration:none;font-weight:700;font-size:.82rem"><i class="fab fa-discord"></i> Join Discord</a><a href="/upload" style="display:inline-flex;align-items:center;gap:8px;padding:10px 22px;border-radius:10px;background:rgba(var(--cherry-rgb),.1);color:var(--cherry-light);text-decoration:none;font-weight:600;font-size:.82rem"><i class="fas fa-arrow-left"></i> Back to Upload</a></div></div></div>';
+                
+                // Show profile footer
+                document.getElementById('userProfile').style.display = 'flex';
+                if(currentUser.avatar) document.getElementById('userAvatar').src = currentUser.avatar;
+                else document.getElementById('userAvatar').style.display = 'none';
+                document.getElementById('userName').textContent = currentUser.global_name || currentUser.username;
+
+                if (currentUser.is_admin) {
+                    document.getElementById('mainPanel').style.display = 'block';
+                    return;
+                }
+
+                // Check roles
+                const roles=[
+                    {id:'1519624224476762122',label:'Preset Uploader'},
+                    {id:'1522976282688880720',label:'Audio Uploader'},
+                    {id:'1522976376293167124',label:'Scenepack Uploader'}
+                ];
+                const checks=await Promise.all(roles.map(role=>fetch('/api/guild/check-role?userId='+currentUser.id+'&roleId='+role.id,{credentials:'include'}).then(resp=>resp.json()).then(d=>d.has_role).catch(()=>false)));
+                const hasAny=checks.some(c=>c);
+                if(!hasAny){
+                    showLockScreen('No Creator Access', 'You do not have permission to access the upload studio. Connect to our Discord and claim a creator role.');
+                    return;
+                }
+                
+                // Update sidebar items
+                if(!checks[0]){
+                    document.getElementById('sidebarPreset').innerHTML = '<span class="locked-item"><i class="fas fa-lock"></i> <span>Preset Uploader</span> <span class="lock-badge">Locked</span></span>';
+                }
+                if(!checks[2]){
+                    document.getElementById('sidebarScenepack').innerHTML = '<span class="locked-item"><i class="fas fa-lock"></i> <span>Scenepack Uploader</span> <span class="lock-badge">Locked</span></span>';
+                }
+                if (!checks[1]) {
+                    showLockScreen('No Audio Uploader Access', 'You do not have the <strong>Audio Uploader</strong> role on Discord yet. Claim it to unlock audio uploads.');
                     return;
                 }
             } catch(e) { /* proceed */ }
-            document.querySelector('.main-wrap').style.display = 'block';
+            document.getElementById('mainPanel').style.display = 'block';
         })();
-        var audioFile = null, audioBase64 = null;
-        
-        var selectedCats = [];
+
+        function showLockScreen(title, text) {
+            document.querySelector('.studio-main').innerHTML = `
+                <div class="lock-container">
+                    <div class="lock-card">
+                        <i class="fas fa-lock lock-icon"></i>
+                        <h2>${title}</h2>
+                        <p>${text}</p>
+                        <div class="lock-actions">
+                            <a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn btn-discord"><i class="fab fa-discord"></i> Join Discord Server</a>
+                            <a href="/" class="btn btn-ghost"><i class="fas fa-home"></i> Go Back</a>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
         function updateCats(){
             selectedCats = [];
             document.querySelectorAll('#catTags input:checked').forEach(function(cb){ selectedCats.push(cb.value); });
         }
+
         function handleFile(file) {
             if (!file) return;
-            if (file.size > 50*1024*1024) { alert('File too large. Max 50MB.'); return; }
+            if (file.size > 50*1024*1024) { alertMsg('File too large. Max size is 50MB.', true); return; }
             audioFile = file;
+            
+            // Setup local audio preview
+            if (previewAudioElement) {
+                previewAudioElement.pause();
+                previewAudioElement = null;
+            }
+            var audioUrl = URL.createObjectURL(file);
+            previewAudioElement = new Audio(audioUrl);
+            previewAudioElement.addEventListener('ended', function(){
+                document.getElementById('playIcon').className = 'fas fa-play';
+                document.getElementById('apWave').classList.remove('playing');
+            });
+            
             var reader = new FileReader();
             reader.onload = function(e) {
                 audioBase64 = e.target.result.split(',')[1];
-                document.getElementById('fuText').textContent = file.name + ' (' + (file.size/1024/1024).toFixed(1) + ' MB)';
+                document.getElementById('fuText').textContent = file.name;
                 document.getElementById('dropZone').classList.add('has-file');
+                
+                // Show player details
+                document.getElementById('previewFilename').textContent = file.name;
+                document.getElementById('previewDetails').textContent = (file.size/1024/1024).toFixed(2) + ' MB';
+                document.getElementById('previewPlayerPanel').classList.add('show');
             };
             reader.readAsDataURL(file);
         }
-        
+
+        function togglePreviewAudio() {
+            if (!previewAudioElement) return;
+            var playIcon = document.getElementById('playIcon');
+            var apWave = document.getElementById('apWave');
+            if (previewAudioElement.paused) {
+                previewAudioElement.play();
+                playIcon.className = 'fas fa-pause';
+                apWave.classList.add('playing');
+            } else {
+                previewAudioElement.pause();
+                playIcon.className = 'fas fa-play';
+                apWave.classList.remove('playing');
+            }
+        }
+
         var dropZone = document.getElementById('dropZone');
         dropZone.addEventListener('dragover', function(e){ e.preventDefault(); dropZone.style.borderColor='var(--cherry-light)'; });
         dropZone.addEventListener('dragleave', function(){ dropZone.style.borderColor=''; });
         dropZone.addEventListener('drop', function(e){ e.preventDefault(); dropZone.style.borderColor=''; handleFile(e.dataTransfer.files[0]); });
+
+        function toggleHlx(){var o=document.getElementById('hlxOverlay');o.style.display=(o.style.display==='flex')?'none':'flex'}
+        function selHlxPlat(btn,p){hlxPlatform=p;document.querySelectorAll('#hlxPlatforms .btn-icon').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}
         
+        async function hlxLookup(){
+            var user=document.getElementById('hlxUser').value.trim();
+            if(!user)return;
+            var st=document.getElementById('hlxStatus');st.style.display='block';st.textContent='Searching...';st.className='';
+            var platforms={tiktok:'https://www.tiktok.com/@'+user,instagram:'https://www.instagram.com/'+user,username:'https://www.tiktok.com/@'+user};
+            var lookupUrl=platforms[hlxPlatform]||('https://www.tiktok.com/@'+user);
+            try{
+                var r=await fetch('/api/hlx/resolve?url='+encodeURIComponent(lookupUrl),{credentials:'include'});
+                var d=await r.json();
+                if(d.success){
+                    var creatorDisplay=d.nickname;
+                    document.getElementById('socialUrl').value=lookupUrl;
+                    document.getElementById('creatorName').value=creatorDisplay;
+                    st.style.color = '#00e676';
+                    st.innerHTML='<i class="fas fa-check-circle"></i> Found: '+creatorDisplay;
+                    setTimeout(toggleHlx, 1000);
+                }else{
+                    st.style.color = 'var(--cherry-light)';
+                    st.textContent=d.error||'Not found';
+                }
+            }catch(e){st.style.color = 'var(--cherry-light)';st.textContent='Network error'}
+        }
+
         async function resolveCreator(){
             var url = document.getElementById('socialUrl').value.trim();
             if (!url || !url.includes('.')) return;
@@ -135,10 +707,11 @@
                 var d = await r.json();
                 if (d.success && d.nickname) {
                     document.getElementById('creatorName').value = d.nickname;
+                    alertMsg('Social resolved: ' + d.nickname, false);
                 }
             } catch(e) {}
         }
-        
+
         async function submitAudio(){
             var btn = document.getElementById('btnSubmit');
             var name = document.getElementById('audioName').value.trim();
@@ -146,16 +719,16 @@
             if (!audioBase64) return alertMsg('Please select an audio file', true);
             
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading sound...';
             
             try {
                 var ext = audioFile.name.split('.').pop().toLowerCase();
                 if (!['mp3','wav','flac','ogg','aac','m4a'].includes(ext)) ext = 'mp3';
-                // Generate filename: "Title - UploaderName.ext"
                 var uploader = (currentUser && (currentUser.global_name || currentUser.username)) || 'Zyrex';
                 var safeName = name.replace(/[\/\\:*?"<>|]/g, '').trim().substring(0, 60);
                 var safeUploader = uploader.replace(/[\/\\:*?"<>|]/g, '').trim().substring(0, 30);
                 var fname = safeName + ' - ' + safeUploader + '.' + ext;
+                
                 var upResp = await fetch('/api/audio/upload', {
                     method: 'POST',
                     headers: {'Content-Type':'application/json'},
@@ -171,7 +744,9 @@
                     category: selectedCats.join(',') || 'others',
                     description: document.getElementById('audioDesc').value.trim(),
                     file_url: upData.url,
-                    thumbnail: ''
+                    thumbnail: '',
+                    creator_nickname: document.getElementById('creatorName').value.trim(),
+                    creator_social_url: document.getElementById('socialUrl').value.trim()
                 };
                 
                 var subResp = await fetch('/api/products/submit', {
@@ -182,7 +757,7 @@
                 });
                 var subData = await subResp.json();
                 if (subResp.ok && subData.success) {
-                    alertMsg('Published! Redirecting...', false);
+                    alertMsg('Published! Redirecting to audio page...', false);
                     setTimeout(function(){ window.location.href = '/product-audio?id='+subData.id; }, 1500);
                 } else {
                     throw new Error(subData.error || 'Submit failed');
@@ -190,14 +765,14 @@
             } catch(e) {
                 alertMsg(e.message, true);
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-upload"></i> Upload Audio';
+                btn.innerHTML = '<i class="fas fa-upload"></i> Publish Audio';
             }
         }
-        
+
         function alertMsg(msg, err) {
             var b = document.getElementById('alertBox');
             b.textContent = msg;
-            b.className = 'alert show ' + (err ? 'alert-error' : 'alert-success');
+            b.className = 'studio-alert show ' + (err ? 'error' : 'success');
             setTimeout(function(){ b.classList.remove('show'); }, 5000);
         }
     </script>
