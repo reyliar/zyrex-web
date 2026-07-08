@@ -189,18 +189,21 @@
             width: 46px;
             height: 46px;
             border-radius: 50%;
-            background: linear-gradient(135deg, var(--accent-light) 0%, var(--accent) 100%);
+            background: #120204;
             border: 1.5px solid #000;
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
             box-shadow: inset 0 2px 4px rgba(255,255,255,0.3);
+            overflow: hidden;
         }
-        .vinyl-label i {
-            color: #fff;
-            font-size: 1rem;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+        .vinyl-logo {
+            width: 75%;
+            height: 75%;
+            object-fit: contain;
+            pointer-events: none;
+            z-index: 1;
         }
         .vinyl-label::after {
             content: '';
@@ -211,6 +214,7 @@
             border-radius: 50%;
             border: 1px solid rgba(255,255,255,0.15);
             box-shadow: inset 0 1px 2px rgba(0,0,0,0.8);
+            z-index: 2;
         }
         @keyframes spin {
             from { transform: rotate(0deg); }
@@ -227,7 +231,6 @@
             .art { width: 130px; height: 130px; }
             .vinyl-record { width: 100px; height: 100px; }
             .vinyl-label { width: 32px; height: 32px; }
-            .vinyl-label i { font-size: 0.75rem; }
             .vinyl-label::after { width: 6px; height: 6px; }
         }
         
@@ -521,6 +524,22 @@
     <script src="js/auth.js"></script>
     <script src="js/script.js?v=2"></script>
     <script>
+    async function fetchDiscordAvatar(userId) {
+        if (!userId) return '';
+        try {
+            var resp = await fetch('/api/discord-user?userId=' + userId);
+            var data = await resp.json();
+            if (data.success && data.user && data.user.avatar) {
+                var ext = data.user.avatar.startsWith('a_') ? 'gif' : 'png';
+                return '/api/avatar/' + userId + '/' + data.user.avatar + '.' + ext + '?size=128';
+            }
+        } catch(e) {}
+        // Fallback: default Discord avatar (works in all browsers)
+        var defIdx = 0;
+        try { defIdx = Number((BigInt(userId) >> 22n) % 6n); } catch(e) { defIdx = parseInt(userId) % 5; }
+        return '/api/avatar/default/' + defIdx + '.png';
+    }
+
     (async function(){
         var p = new URLSearchParams(location.search);
         var id = p.get('id');
@@ -531,7 +550,7 @@
             var data = await r.json();
             if (!data || !data.id) { showErr('Audio not found'); return; }
             if (data.type !== 'audio') { showErr('This product is not an audio. <a href="/'+data.type+'" style="color:var(--accent-light)">View on '+data.type+' page</a>'); return; }
-            render(data);
+            await render(data);
         } catch(e) { showErr('Failed to load audio'); }
     })();
 
@@ -543,7 +562,7 @@
 
     function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
-    function render(p) {
+    async function render(p) {
         document.getElementById('load').style.display = 'none';
         document.getElementById('root').style.display = 'block';
         document.title = (p.name || 'Audio') + ' \u2014 Zyrex Audio';
@@ -559,7 +578,7 @@
         if (p.thumbnail) {
             h += '<img src="' + esc(p.thumbnail) + '" alt="" data-fallback="music">';
         } else {
-            h += '<div class="vinyl-record"><div class="vinyl-label"><i class="fas fa-music"></i></div></div>';
+            h += '<div class="vinyl-record"><div class="vinyl-label"><img src="assets/content.png" alt="" class="vinyl-logo"></div></div>';
         }
         h += '</div></div>';
 
@@ -588,7 +607,7 @@
                 var fb = this.getAttribute('data-fallback') || 'user';
                 var parent = this.parentElement;
                 if (fb === 'music') {
-                    parent.innerHTML = '<div class="vinyl-record"><div class="vinyl-label"><i class="fas fa-music"></i></div></div>';
+                    parent.innerHTML = '<div class="vinyl-record"><div class="vinyl-label"><img src="assets/content.png" alt="" class="vinyl-logo"></div></div>';
                 } else {
                     var icon = fb === 'user' ? 'fa-user' : 'fa-music';
                     parent.innerHTML = '<div class="ph"><i class="fas ' + icon + '"></i></div><div class="disc"></div>';
@@ -659,12 +678,21 @@
         var hasCreator = !!(p.creator_nickname || p.creator_social_url);
         
         if (hasUploader || hasCreator) {
+            var uploaderAvatar = '';
+            if (hasUploader) {
+                if (p.uploader_avatar && (p.uploader_avatar.includes('discordapp.com') || p.uploader_avatar.includes('discord.com'))) {
+                    uploaderAvatar = p.uploader_avatar;
+                } else {
+                    uploaderAvatar = await fetchDiscordAvatar(p.author_id || '');
+                }
+            }
+
             var sectionHtml = '<div class="creator-section anim-4">';
             
             if (hasUploader) {
                 sectionHtml += '<div class="creator-card"><div class="cc-avatar" style="background:rgba(88,101,242,.06);border-color:rgba(88,101,242,.15)">';
-                if (p.uploader_avatar) {
-                    sectionHtml += '<img src="' + esc(p.uploader_avatar) + '" alt="" data-fallback="user">';
+                if (uploaderAvatar) {
+                    sectionHtml += '<img src="' + esc(uploaderAvatar) + '" alt="" data-fallback="user">';
                 } else {
                     sectionHtml += '<i class="fab fa-discord" style="color:#5865F2"></i>';
                 }
@@ -705,7 +733,7 @@
                         parent.innerHTML = '<i class="fas ' + icon + '"></i>';
                     } else {
                         if (fb === 'music') {
-                            parent.innerHTML = '<div class="vinyl-record"><div class="vinyl-label"><i class="fas fa-music"></i></div></div>';
+                            parent.innerHTML = '<div class="vinyl-record"><div class="vinyl-label"><img src="assets/content.png" alt="" class="vinyl-logo"></div></div>';
                         } else {
                             parent.innerHTML = '<div class="ph"><i class="fas ' + icon + '"></i></div><div class="disc"></div>';
                         }
