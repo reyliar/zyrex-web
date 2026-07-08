@@ -688,7 +688,7 @@ window.pluginsData = [
         vt_scan: { id: 'aHR0cHM6Ly9mdWNraW5nZmFzdC5uZXQvc3NuZW91bnl2YnNl', harmless: 54, malicious: 4 },
         id: makeId('BorisFX Continuum AVX 2026.5'),
         name: 'BorisFX Continuum AVX 2026.5',
-        category: 'others', platform: 'win', password: null,
+        category: 'avx', platform: 'win', password: null,
         desc: 'BorisFX Continuum AVX 2026.5 v19.5.4 — comprehensive VFX plugins for Avid Media Composer.',
         links: [{ url: 'https://fuckingfast.net/ssneounyvbse', label: 'FuckingFast' }]
     },
@@ -696,7 +696,7 @@ window.pluginsData = [
         vt_scan: { id: 'aHR0cHM6Ly9jbGlja251cGxvYWQuY2xpY2svN3ZsMmxrN2VwejhlL0JvcmlzRlguU2FwcGhpcmUuQVZYLnYyMDI2LjUucmFy', harmless: 58, malicious: 0 },
         id: makeId('BorisFX Sapphire AVX 2026.5'),
         name: 'BorisFX Sapphire AVX 2026.5',
-        category: 'others', platform: 'win', password: null,
+        category: 'avx', platform: 'win', password: null,
         desc: 'BorisFX Sapphire AVX 2026.5 — 270+ effects and presets for Avid Media Composer.',
         links: [{ url: 'https://clicknupload.click/7vl2lk7epz8e/BorisFX.Sapphire.AVX.v2026.5.rar', label: 'ClicknUpload' }]
     },
@@ -704,7 +704,7 @@ window.pluginsData = [
         vt_scan: { id: 'aHR0cHM6Ly9jbGlja251cGxvYWQuY2xpY2svdXoxNmpyMjhpZ2FsL0JvcmlzRlguTW9jaGEuUHJvLjIwMjYuNS4wLkFWWC5yYXI', harmless: 58, malicious: 0 },
         id: makeId('BorisFX Mocha Pro AVX 2026.5'),
         name: 'BorisFX Mocha Pro AVX 2026.5',
-        category: 'others', platform: 'win', password: null,
+        category: 'avx', platform: 'win', password: null,
         desc: 'BorisFX Mocha Pro AVX 2026.5 — planar tracking and rotoscoping for Avid.',
         links: [{ url: 'https://clicknupload.click/uz16jr28igal/BorisFX.Mocha.Pro.2026.5.0.AVX.rar', label: 'ClicknUpload' }]
     },
@@ -712,7 +712,7 @@ window.pluginsData = [
         vt_scan: { id: 'aHR0cHM6Ly9jbGlja251cGxvYWQuc2l0ZS84NW54Zmg2b3dqd2I', harmless: 56, malicious: 0 },
         id: makeId('NeatVideo AVX v4.1.1'),
         name: 'NeatVideo AVX v4.1.1',
-        category: 'others', platform: 'win', password: null,
+        category: 'avx', platform: 'win', password: null,
         desc: 'NeatVideo AVX v4.1.1 — noise reduction plugin for Avid Media Composer.',
         links: [{ url: 'https://clicknupload.site/85nxfh6owjwb', label: 'ClicknUpload' }]
     },
