@@ -245,9 +245,15 @@
             opacity: 0.5;
         }
         .win11-logo {
+            display: inline-block;
             width: 16px;
             height: 16px;
-            object-fit: contain;
+            background-color: currentColor;
+            -webkit-mask: url(/assets/windows11.svg) no-repeat center;
+            -webkit-mask-size: contain;
+            mask: url(/assets/windows11.svg) no-repeat center;
+            mask-size: contain;
+            vertical-align: middle;
         }
         
         @media(max-width: 768px) {
@@ -266,7 +272,7 @@
     <nav class="navbar"><div class="container"><a href="/" class="logo"><img src="/assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><ul class="nav-links" id="navLinks"><li><a href="/">Home</a></li><li><a href="/resources">Resources</a></li><li><a href="/plugins" class="active">Plugins</a></li><li><a href="/more">More</a></li><li><a href="/#contact">Contact</a></li></ul><div class="nav-actions"><div id="authBtn"></div><a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord"><i class="fab fa-discord"></i> <span>Join Us</span></a><button class="hamburger" id="hamburger"><span></span><span></span><span></span></button></div></div></nav>
 
     <div class="pg-hero">
-        <h1><img src="/assets/windows11.png" alt="Windows" style="width:30px;height:30px;margin-right:12px;vertical-align:middle;object-fit:contain">Windows Plugins</h1>
+        <h1><span class="win11-logo" style="width:30px;height:30px;margin-right:12px;vertical-align:middle"></span>Windows Plugins</h1>
         <p class="sub">Verified software and plugins for Windows editors.</p>
     </div>
     
@@ -318,9 +324,9 @@
         
         function platBadge(p){
             var pl=(p.platform||'').toLowerCase();
-            if(pl==='win'||pl==='windows') return '<span class="pc-tag"><img src="/assets/windows11.png" alt="Win" style="width:10px;height:10px;margin-right:4px;object-fit:contain">Win</span>';
+            if(pl==='win'||pl==='windows') return '<span class="pc-tag"><span class="win11-logo" style="width:10px;height:10px;margin-right:4px"></span>Win</span>';
             if(pl==='mac') return '<span class="pc-tag"><i class="fab fa-apple"></i> Mac</span>';
-            if(pl==='both') return '<span class="pc-tag"><img src="/assets/windows11.png" alt="Win" style="width:10px;height:10px;margin-right:4px;object-fit:contain"><i class="fab fa-apple" style="margin-left:2px"></i> Both</span>';
+            if(pl==='both') return '<span class="pc-tag"><span class="win11-logo" style="width:10px;height:10px;margin-right:4px"></span><i class="fab fa-apple" style="margin-left:2px"></i> Both</span>';
             return '';
         }
 
