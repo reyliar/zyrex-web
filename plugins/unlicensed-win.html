@@ -1,0 +1,98 @@
+<!-- plugins-guide-unlicensed-win -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Fix Adobe unlicensed popups on Windows — firewall rules, hosts file, and service blocking.">
+    <title>Unlicensed Fix (Windows) — Zyrex</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=20">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --cherry-glow: rgba(230,21,54,0.15); --card-bg: rgba(12,2,4,0.45); --card-border: rgba(230,21,54,0.08); --card-hover-border: rgba(230,21,54,0.22); --transition: all 0.3s cubic-bezier(0.16,1,0.3,1); }
+        body { background: var(--dark); color: var(--light); font-family: 'Poppins', sans-serif; min-height: 100vh; overflow-x: hidden; }
+        .container { max-width: 860px; margin: 0 auto; padding: 0 24px; }
+        .page-wrap { padding: 150px 0 80px; }
+        .breadcrumb { text-align: center; margin-bottom: 24px; font-size: 0.78rem; }
+        .breadcrumb a { color: var(--gray-dark); text-decoration: none; } .breadcrumb a:hover { color: var(--cherry-light); } .breadcrumb span { color: var(--gray-dark); margin: 0 8px; }
+        .guide-card { background: linear-gradient(160deg, rgba(30,4,10,0.55), rgba(10,2,4,0.85)); border: 1px solid var(--card-border); border-radius: 24px; padding: 44px 40px; backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); box-shadow: 0 30px 60px rgba(0,0,0,0.6); }
+        .guide-card h1 { font-size: clamp(1.8rem, 4vw, 2.3rem); font-weight: 900; font-family: 'Outfit', sans-serif; margin: 0 0 8px; display: flex; align-items: center; gap: 12px; }
+        .guide-card .sub { color: var(--gray); font-size: 0.95rem; margin-bottom: 32px; line-height: 1.6; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 20px; }
+        .guide-card h2 { font-size: 1.15rem; font-weight: 800; font-family: 'Outfit', sans-serif; color: var(--cherry-light); margin: 32px 0 12px; padding-left: 14px; border-left: 3px solid var(--cherry); }
+        .guide-card h3 { font-size: 0.95rem; font-weight: 700; color: var(--light); margin: 20px 0 8px; }
+        .guide-card p, .guide-card li { color: var(--gray); font-size: 0.88rem; line-height: 1.85; }
+        .guide-card ul, .guide-card ol { padding-left: 20px; margin: 8px 0 16px; }
+        .guide-card code { background: rgba(230,21,54,0.08); padding: 2px 7px; border-radius: 5px; font-size: 0.82rem; color: var(--cherry-light); }
+        .guide-card .note { background: rgba(230,21,54,0.04); border: 1px solid rgba(230,21,54,0.1); border-radius: 12px; padding: 14px 18px; margin: 16px 0; font-size: 0.84rem; }
+        .guide-card .note i { color: var(--cherry-light); margin-right: 6px; }
+        .guide-card .step { display: flex; gap: 12px; margin-bottom: 14px; }
+        .guide-card .step-num { width: 28px; height: 28px; background: rgba(230,21,54,0.12); border: 1px solid rgba(230,21,54,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.75rem; font-weight: 700; color: var(--cherry-light); }
+        @media(max-width: 768px) { .guide-card { padding: 28px 18px; } .page-wrap { padding-top: 120px; } }
+    </style>
+</head>
+<body>
+<div class="bg-aura"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
+<nav class="navbar"><div class="container"><a href="/" class="logo"><img src="/assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><ul class="nav-links" id="navLinks"><li><a href="/">Home</a></li><li><a href="/resources">Resources</a></li><li><a href="/plugins" class="active">Plugins</a></li><li><a href="/more">More</a></li><li><a href="/#contact">Contact</a></li></ul><div class="nav-actions"><div id="authBtn"></div><a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord"><i class="fab fa-discord"></i> <span>Join Us</span></a><button class="hamburger" id="hamburger"><span></span><span></span><span></span></button></div></div></nav>
+
+<div class="page-wrap">
+    <div class="breadcrumb"><a href="/">Home</a><span>/</span><a href="/plugins">Plugins</a><span>/</span><a href="/plugins/guides">Guides</a><span>/</span>Unlicensed Fix (Windows)</div>
+    <div class="container">
+        <div class="guide-card">
+            <h1><i class="fas fa-ban" style="color:var(--cherry-light)"></i> Unlicensed Fix — Windows</h1>
+            <p class="sub">Stop the "This unlicensed Adobe app will be disabled soon" popup permanently.</p>
+
+            <h2>Why This Happens</h2>
+            <p>Adobe apps include a background license verification system. When your cracked installation contacts Adobe's servers, the license check fails and triggers the warning. This typically occurs because:</p>
+            <ul>
+                <li>The app wasn't blocked from reaching Adobe's validation servers after cracking</li>
+                <li>An Adobe background update re-enabled license checks</li>
+                <li>Adobe Genuine Software Integrity Service (AGSService) is running and flagged your install</li>
+            </ul>
+            <div class="note"><i class="fas fa-info-circle"></i> <strong>Before starting:</strong> Disconnect from VPNs and proxies — they route traffic around local firewall rules. Make sure Windows Firewall is enabled. If you use repacks, uninstall Creative Cloud first — it often re-enables validation checks.</div>
+
+            <h2>Method 1 — Windows Firewall Rules (Recommended)</h2>
+            <p>Block the application from making any outbound internet connection. This is the most reliable fix.</p>
+            <div class="step"><div class="step-num">1</div><div><strong>Open Windows Firewall Advanced Security.</strong> Press <code>Win + R</code>, type <code>wf.msc</code>, and hit Enter.</div></div>
+            <div class="step"><div class="step-num">2</div><div><strong>Go to Outbound Rules.</strong> Click <em>Outbound Rules</em> in the left panel, then <em>New Rule...</em> in the right panel.</div></div>
+            <div class="step"><div class="step-num">3</div><div><strong>Select Program.</strong> Choose <em>Program</em> as the rule type and click Next.</div></div>
+            <div class="step"><div class="step-num">4</div><div><strong>Browse to the executable.</strong> Select <em>This program path</em> and click Browse. Navigate to the actual <code>.exe</code> — not a shortcut. For Adobe, typical paths look like <code>C:\Program Files\Adobe\Adobe After Effects 2025\Support Files\AfterFX.exe</code>. If unsure, right-click the desktop shortcut → Properties → check the Target field.</div></div>
+            <div class="step"><div class="step-num">5</div><div><strong>Block the connection.</strong> Select <em>Block the connection</em> and click Next.</div></div>
+            <div class="step"><div class="step-num">6</div><div><strong>Apply to all profiles.</strong> Check all three boxes — Domain, Private, and Public. Click Next.</div></div>
+            <div class="step"><div class="step-num">7</div><div><strong>Name the rule.</strong> Give it a recognizable name like <em>Block After Effects</em> so you can find it later. Click Finish.</div></div>
+            <div class="step"><div class="step-num">8</div><div><strong>Repeat for all Adobe executables.</strong> Some apps use multiple processes — After Effects also runs <code>Adobe CEF Helper.exe</code> and <code>AdobeIPCBroker.exe</code>. Block them all. Check <code>C:\Program Files (x86)\Common Files\Adobe\</code> for additional background services.</div></div>
+            <div class="note"><i class="fas fa-lightbulb"></i> If the popup persists after creating Outbound rules, repeat the process for <strong>Inbound Rules</strong> too. Also, if third-party security software manages your firewall (Norton, McAfee, etc.), add the blocks inside that software's firewall settings.</div>
+
+            <h2>Method 2 — Hosts File</h2>
+            <p>Block Adobe's validation domains at the system level. More targeted — the app can still access the internet for fonts and assets, but not license servers.</p>
+            <div class="step"><div class="step-num">1</div><div><strong>Stop Adobe background services.</strong> Open PowerShell as Administrator and run: <code>Stop-Process -Name "Adobe Desktop Service" -Force</code></div></div>
+            <div class="step"><div class="step-num">2</div><div><strong>Open the hosts file.</strong> Right-click Notepad → Run as administrator. Go to File → Open and navigate to <code>C:\Windows\System32\drivers\etc\hosts</code>. Set file filter to <em>All Files (*.*)</em> — the hosts file has no extension.</div></div>
+            <div class="step"><div class="step-num">3</div><div><strong>Add the blocklist.</strong> On a blank line at the bottom, paste the validation server entries from the maintained blocklist at <a href="https://a.dove.isdumb.one/list.txt" target="_blank" style="color:var(--cherry-light)">a.dove.isdumb.one/list.txt</a>. Copy only the IP and hostname lines — skip headers and comments.</div></div>
+            <div class="step"><div class="step-num">4</div><div><strong>Save and restart.</strong> Save the file (Ctrl+S), restart the Adobe app or reboot. If the popup returns months later, refresh the blocklist — Adobe adds new addresses over time.</div></div>
+
+            <h2>Other Fixes</h2>
+            <h3>Disable Adobe Genuine Software Integrity Service</h3>
+            <p>Press <code>Win + R</code>, type <code>services.msc</code>, find <em>Adobe Genuine Software Integrity Service</em>, set Startup type to <strong>Disabled</strong>, and click Stop if running.</p>
+            <h3>Disable Adobe Update Tasks</h3>
+            <p>Open <code>taskschd.msc</code>, browse the Task Scheduler Library, find tasks starting with <em>Adobe</em> (typically <code>AdobeAAMUpdater</code>), right-click each and select Disable.</p>
+            <h3>Re-apply the Crack</h3>
+            <p>If an update slipped through, your crack was overwritten. Close the app, re-run the patcher, then apply firewall rules to prevent recurrence.</p>
+
+            <h2>Still Seeing the Popup?</h2>
+            <ul>
+                <li><strong>After a Windows update?</strong> Updates can reset firewall rules and hosts entries. Re-check both.</li>
+                <li><strong>On a VPN?</strong> VPNs bypass local DNS and firewall rules. Disconnect, verify the fix works, then reconnect.</li>
+                <li><strong>Creative Cloud installed?</strong> CC runs its own validation services. Either uninstall CC or block it via firewall as well.</li>
+                <li><strong>Rule exists but doesn't work?</strong> Verify the rule is Outbound, action is Block, it's Enabled, and the program path points to the actual <code>.exe</code> — not a shortcut.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<footer class="footer"><div class="container"><div class="footer-content"><div class="footer-brand"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><a href="/" class="logo"><img src="/assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><h3 style="font-size:1.8rem;font-weight:900;margin:0;letter-spacing:2px;background:linear-gradient(135deg,#ffffff,#9090a0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Editing</h3></div><p>Premium editing community &amp; resources.</p></div><div class="footer-links"><h4>Quick Links</h4><ul><li><a href="/">Home</a></li><li><a href="/resources">Resources</a></li><li><a href="/plugins">Plugins</a></li><li><a href="/more">More</a></li></ul></div><div class="footer-links"><h4>Legal</h4><ul><li><a href="/terms">Terms</a></li><li><a href="/privacy">Privacy</a></li><li><a href="/dmca">DMCA</a></li></ul></div><div class="footer-links"><h4>Community</h4><ul><li><a href="https://discord.gg/fAydSzpafA">Discord</a></li><li><a href="/#contact">Contact</a></li></ul></div></div><div class="footer-bottom"><p>&copy; 2026 Zyrex Editing.</p></div></div></footer>
+<script src="/js/auth.js"></script>
+<script src="/js/script.js?v=2"></script>
+<script>document.getElementById('hamburger')?.addEventListener('click',function(){document.getElementById('navLinks').classList.toggle('active')});</script>
+</body>
+</html>

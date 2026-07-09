@@ -1,0 +1,97 @@
+<!-- plugins-guide-extract-mac -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="How to extract Mac archives — DMGs, PKGs, app bundles, and plugin folders without breaking the install.">
+    <title>Extract Guide (Mac) — Zyrex</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=20">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --cherry-glow: rgba(230,21,54,0.15); --card-bg: rgba(12,2,4,0.45); --card-border: rgba(230,21,54,0.08); --card-hover-border: rgba(230,21,54,0.22); --transition: all 0.3s cubic-bezier(0.16,1,0.3,1); }
+        body { background: var(--dark); color: var(--light); font-family: 'Poppins', sans-serif; min-height: 100vh; overflow-x: hidden; }
+        .container { max-width: 860px; margin: 0 auto; padding: 0 24px; }
+        .page-wrap { padding: 150px 0 80px; }
+        .breadcrumb { text-align: center; margin-bottom: 24px; font-size: 0.78rem; }
+        .breadcrumb a { color: var(--gray-dark); text-decoration: none; } .breadcrumb a:hover { color: var(--cherry-light); } .breadcrumb span { color: var(--gray-dark); margin: 0 8px; }
+        .guide-card { background: linear-gradient(160deg, rgba(30,4,10,0.55), rgba(10,2,4,0.85)); border: 1px solid var(--card-border); border-radius: 24px; padding: 44px 40px; backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); box-shadow: 0 30px 60px rgba(0,0,0,0.6); }
+        .guide-card h1 { font-size: clamp(1.8rem, 4vw, 2.3rem); font-weight: 900; font-family: 'Outfit', sans-serif; margin: 0 0 8px; display: flex; align-items: center; gap: 12px; }
+        .guide-card .sub { color: var(--gray); font-size: 0.95rem; margin-bottom: 32px; line-height: 1.6; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 20px; }
+        .guide-card h2 { font-size: 1.15rem; font-weight: 800; font-family: 'Outfit', sans-serif; color: var(--cherry-light); margin: 32px 0 12px; padding-left: 14px; border-left: 3px solid var(--cherry); }
+        .guide-card h3 { font-size: 0.95rem; font-weight: 700; color: var(--light); margin: 20px 0 8px; }
+        .guide-card p, .guide-card li { color: var(--gray); font-size: 0.88rem; line-height: 1.85; }
+        .guide-card ul, .guide-card ol { padding-left: 20px; margin: 8px 0 16px; }
+        .guide-card code { background: rgba(230,21,54,0.08); padding: 2px 7px; border-radius: 5px; font-size: 0.82rem; color: var(--cherry-light); }
+        .guide-card .note { background: rgba(230,21,54,0.04); border: 1px solid rgba(230,21,54,0.1); border-radius: 12px; padding: 14px 18px; margin: 16px 0; font-size: 0.84rem; }
+        .guide-card .note i { color: var(--cherry-light); margin-right: 6px; }
+        .guide-card .step { display: flex; gap: 12px; margin-bottom: 14px; }
+        .guide-card .step-num { width: 28px; height: 28px; background: rgba(230,21,54,0.12); border: 1px solid rgba(230,21,54,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.75rem; font-weight: 700; color: var(--cherry-light); }
+        @media(max-width: 768px) { .guide-card { padding: 28px 18px; } .page-wrap { padding-top: 120px; } }
+    </style>
+</head>
+<body>
+<div class="bg-aura"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
+<nav class="navbar"><div class="container"><a href="/" class="logo"><img src="/assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><ul class="nav-links" id="navLinks"><li><a href="/">Home</a></li><li><a href="/resources">Resources</a></li><li><a href="/plugins" class="active">Plugins</a></li><li><a href="/more">More</a></li><li><a href="/#contact">Contact</a></li></ul><div class="nav-actions"><div id="authBtn"></div><a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord"><i class="fab fa-discord"></i> <span>Join Us</span></a><button class="hamburger" id="hamburger"><span></span><span></span><span></span></button></div></div></nav>
+
+<div class="page-wrap">
+    <div class="breadcrumb"><a href="/">Home</a><span>/</span><a href="/plugins">Plugins</a><span>/</span><a href="/plugins/guides">Guides</a><span>/</span>Extract (Mac)</div>
+    <div class="container">
+        <div class="guide-card">
+            <h1><i class="fab fa-apple" style="color:var(--cherry-light)"></i> Extract Guide — Mac</h1>
+            <p class="sub">How to unpack Mac downloads without corrupting DMGs, app bundles, PKG installers, or plugin folders.</p>
+
+            <h2>Extraction Is Part of the Install</h2>
+            <p>Mac downloads are rarely a single file you double-click and forget. A download may contain a DMG disk image, PKG installer, app bundle, plugin bundle, ZXP extension, script, or a readme — often several of these together. If the archive is only partially extracted, macOS can report the app as "damaged," the installer can miss helper files, or After Effects can fail to recognize a plugin.</p>
+            <p>Treat extraction as the first real step of installation. Keep the original archive, extract into its own folder, and never run installers from a preview window or directly inside an archive manager.</p>
+
+            <h2>Choose the Right Extractor</h2>
+            <h3>Keka (Recommended)</h3>
+            <p><a href="https://www.keka.io/en/" target="_blank" style="color:var(--cherry-light)">Keka</a> is the cleanest choice for password-protected archives, <code>.7z</code> files, <code>.rar</code> archives, and split archive parts. It handles far more formats than Finder's built-in Archive Utility.</p>
+            <h3>Archive Utility (Built-in)</h3>
+            <p>Fine for simple ZIP files and normal DMG mounting. Not reliable for protected or multi-part releases. If Archive Utility extracts an empty folder or says the password is wrong, retry with Keka before assuming the download is broken.</p>
+            <h3>The Unarchiver</h3>
+            <p>A reasonable fallback for common compressed formats. If one extractor fails and the archive size matches the listed download size, trying a second extractor is a valid troubleshooting step.</p>
+
+            <h2>Clean Extraction Workflow</h2>
+            <div class="step"><div class="step-num">1</div><div><strong>Move the archive first.</strong> Put it in a stable folder — Downloads, Desktop, or a dedicated folder. Don't extract from iCloud placeholders, browser temp folders, or half-synced cloud locations.</div></div>
+            <div class="step"><div class="step-num">2</div><div><strong>Extract into a new folder.</strong> Right-click → Open With → Keka. Extract into a folder named after the release. Keeping releases isolated prevents loose installers and readmes from mixing.</div></div>
+            <div class="step"><div class="step-num">3</div><div><strong>Handle split archives as one set.</strong> If the download includes parts like <code>.001</code>, <code>.002</code>, or <code>.part1.rar</code>, keep all parts in the same folder and extract from the first part only. The extractor stitches them together automatically.</div></div>
+            <div class="step"><div class="step-num">4</div><div><strong>Keep the archive until verified.</strong> Don't delete the original download immediately. Keep it until the app opens, the plugin appears in After Effects, and everything works.</div></div>
+            <div class="step"><div class="step-num">5</div><div><strong>Read the extracted folder first.</strong> Look for a readme, install notes, or folder names that explain the target app version. Mac releases often separate files for Intel vs. Apple Silicon, or different Adobe versions.</div></div>
+
+            <h2>Understanding File Types</h2>
+            <h3>DMG</h3>
+            <p>A disk image. Double-click to mount it, then either drag the app to Applications or run the installer inside. After installation, eject the mounted disk image from Finder (right-click → Eject).</p>
+            <h3>PKG</h3>
+            <p>Opens the macOS Installer app and usually needs an administrator password. PKGs can install into Applications, Library folders, plugin directories, or background service locations. Close Adobe apps before running plugin PKG installers.</p>
+            <h3>APP</h3>
+            <p>An app bundle — Finder shows it as a single file, but it's actually a folder. Move real apps into <code>/Applications</code>. Don't run production apps from Downloads or from inside a mounted DMG.</p>
+            <h3>Plugins, Scripts & Extensions</h3>
+            <p>Native After Effects plugins, CEP/ZXP extensions, and JSX scripts each have different install locations. If your extracted folder contains these instead of a normal app, check the <a href="/plugins/install-mac" style="color:var(--cherry-light)">Mac Install Guide</a> for correct placement.</p>
+
+            <h2>Gatekeeper Warnings</h2>
+            <p>macOS checks downloaded apps before allowing them to run. A "damaged" or "unverified" message doesn't always mean the file is broken — it can mean the app is unsigned, was modified, or has a quarantine flag. Re-extract first, then use the normal approval flow: Control-click the app → Open, or check System Settings → Privacy & Security for an "Open Anyway" button.</p>
+            <div class="note"><i class="fas fa-exclamation-triangle"></i> Don't blindly strip quarantine metadata from everything. If a file is genuinely compromised, that warning is useful. Only override for files you trust. See the <a href="/plugins/gatekeeper-guide" style="color:var(--cherry-light)">Gatekeeper Guide</a> for proper handling.</div>
+
+            <h2>Common Problems</h2>
+            <h3>Password rejected</h3>
+            <p>Type the password manually — copy-paste can grab invisible spaces. Confirm the archive is fully downloaded and use Keka.</p>
+            <h3>App says damaged after extraction</h3>
+            <p>Re-extract into a fresh folder. If the same bundle still fails, check Gatekeeper quarantine, macOS version compatibility, and whether the release is Intel-only.</p>
+            <h3>DMG opens but nothing installs</h3>
+            <p>Look inside the mounted disk image — it may show a drag-to-Applications layout, a PKG installer, or a readme. Don't copy the DMG itself into Applications.</p>
+            <h3>Extracting from iCloud or cloud sync</h3>
+            <p>Cloud sync can leave placeholder files or lock folders mid-extraction. Move the archive to a local folder first, wait for the download to finish, then extract.</p>
+        </div>
+    </div>
+</div>
+
+<footer class="footer"><div class="container"><div class="footer-content"><div class="footer-brand"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><a href="/" class="logo"><img src="/assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><h3 style="font-size:1.8rem;font-weight:900;margin:0;letter-spacing:2px;background:linear-gradient(135deg,#ffffff,#9090a0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Editing</h3></div><p>Premium editing community &amp; resources.</p></div><div class="footer-links"><h4>Quick Links</h4><ul><li><a href="/">Home</a></li><li><a href="/resources">Resources</a></li><li><a href="/plugins">Plugins</a></li><li><a href="/more">More</a></li></ul></div><div class="footer-links"><h4>Legal</h4><ul><li><a href="/terms">Terms</a></li><li><a href="/privacy">Privacy</a></li><li><a href="/dmca">DMCA</a></li></ul></div><div class="footer-links"><h4>Community</h4><ul><li><a href="https://discord.gg/fAydSzpafA">Discord</a></li><li><a href="/#contact">Contact</a></li></ul></div></div><div class="footer-bottom"><p>&copy; 2026 Zyrex Editing.</p></div></div></footer>
+<script src="/js/auth.js"></script>
+<script src="/js/script.js?v=2"></script>
+<script>document.getElementById('hamburger')?.addEventListener('click',function(){document.getElementById('navLinks').classList.toggle('active')});</script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!-- plugins-guide-extract-win -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="How to properly extract archived downloads on Windows — avoid broken installers and missing files.">
+    <title>Extract Guide (Windows) — Zyrex</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=20">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --cherry-glow: rgba(230,21,54,0.15); --card-bg: rgba(12,2,4,0.45); --card-border: rgba(230,21,54,0.08); --card-hover-border: rgba(230,21,54,0.22); --transition: all 0.3s cubic-bezier(0.16,1,0.3,1); }
+        body { background: var(--dark); color: var(--light); font-family: 'Poppins', sans-serif; min-height: 100vh; overflow-x: hidden; }
+        .container { max-width: 860px; margin: 0 auto; padding: 0 24px; }
+        .page-wrap { padding: 150px 0 80px; }
+        .breadcrumb { text-align: center; margin-bottom: 24px; font-size: 0.78rem; }
+        .breadcrumb a { color: var(--gray-dark); text-decoration: none; } .breadcrumb a:hover { color: var(--cherry-light); } .breadcrumb span { color: var(--gray-dark); margin: 0 8px; }
+        .guide-card { background: linear-gradient(160deg, rgba(30,4,10,0.55), rgba(10,2,4,0.85)); border: 1px solid var(--card-border); border-radius: 24px; padding: 44px 40px; backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); box-shadow: 0 30px 60px rgba(0,0,0,0.6); }
+        .guide-card h1 { font-size: clamp(1.8rem, 4vw, 2.3rem); font-weight: 900; font-family: 'Outfit', sans-serif; margin: 0 0 8px; display: flex; align-items: center; gap: 12px; }
+        .guide-card .sub { color: var(--gray); font-size: 0.95rem; margin-bottom: 32px; line-height: 1.6; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 20px; }
+        .guide-card h2 { font-size: 1.15rem; font-weight: 800; font-family: 'Outfit', sans-serif; color: var(--cherry-light); margin: 32px 0 12px; padding-left: 14px; border-left: 3px solid var(--cherry); }
+        .guide-card h3 { font-size: 0.95rem; font-weight: 700; color: var(--light); margin: 20px 0 8px; }
+        .guide-card p, .guide-card li { color: var(--gray); font-size: 0.88rem; line-height: 1.85; }
+        .guide-card ul, .guide-card ol { padding-left: 20px; margin: 8px 0 16px; }
+        .guide-card code { background: rgba(230,21,54,0.08); padding: 2px 7px; border-radius: 5px; font-size: 0.82rem; color: var(--cherry-light); }
+        .guide-card .note { background: rgba(230,21,54,0.04); border: 1px solid rgba(230,21,54,0.1); border-radius: 12px; padding: 14px 18px; margin: 16px 0; font-size: 0.84rem; }
+        .guide-card .note i { color: var(--cherry-light); margin-right: 6px; }
+        .guide-card .step { display: flex; gap: 12px; margin-bottom: 14px; }
+        .guide-card .step-num { width: 28px; height: 28px; background: rgba(230,21,54,0.12); border: 1px solid rgba(230,21,54,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.75rem; font-weight: 700; color: var(--cherry-light); }
+        @media(max-width: 768px) { .guide-card { padding: 28px 18px; } .page-wrap { padding-top: 120px; } }
+    </style>
+</head>
+<body>
+<div class="bg-aura"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
+<nav class="navbar"><div class="container"><a href="/" class="logo"><img src="/assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><ul class="nav-links" id="navLinks"><li><a href="/">Home</a></li><li><a href="/resources">Resources</a></li><li><a href="/plugins" class="active">Plugins</a></li><li><a href="/more">More</a></li><li><a href="/#contact">Contact</a></li></ul><div class="nav-actions"><div id="authBtn"></div><a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord"><i class="fab fa-discord"></i> <span>Join Us</span></a><button class="hamburger" id="hamburger"><span></span><span></span><span></span></button></div></div></nav>
+
+<div class="page-wrap">
+    <div class="breadcrumb"><a href="/">Home</a><span>/</span><a href="/plugins">Plugins</a><span>/</span><a href="/plugins/guides">Guides</a><span>/</span>Extract (Windows)</div>
+    <div class="container">
+        <div class="guide-card">
+            <h1><i class="fas fa-file-zipper" style="color:var(--cherry-light)"></i> Extract Guide — Windows</h1>
+            <p class="sub">How to unpack downloaded archives correctly so you never see "installer file may be damaged" again.</p>
+
+            <h2>Why Are Files Archived?</h2>
+            <p>Most software shared in the editing community arrives as <code>.zip</code>, <code>.rar</code>, or <code>.7z</code> archives — often password-protected. This isn't just for compression. Hosting platforms and copyright enforcement bots scan public file links by comparing known binary signatures. Wrapping the release inside an encrypted archive hides the contents from automated scanners, keeping the link alive longer. Without this layer, download links get taken down within hours.</p>
+            <p>Think of the archive as a protective shell. It's not there to inconvenience you — it's there so the file still exists when you click the link.</p>
+
+            <h2>Choose the Right Tool</h2>
+            <h3>7-Zip (Recommended)</h3>
+            <p><a href="https://7-zip.org/" target="_blank" style="color:var(--cherry-light)">7-Zip</a> is free, open-source, and handles every archive format you'll come across. It integrates into the Windows right-click menu, supports password-protected archives natively, and rarely produces extraction errors. Install it before touching any downloaded archive.</p>
+            <h3>WinRAR (Alternative)</h3>
+            <p><a href="https://www.win-rar.com/" target="_blank" style="color:var(--cherry-light)">WinRAR</a> is a solid fallback that handles the same formats. The trial never fully expires — it just shows a reminder. Functionally equal to 7-Zip for most purposes.</p>
+            <div class="note"><i class="fas fa-exclamation-triangle"></i> <strong>Do not use Windows' built-in extractor.</strong> It cannot open <code>.rar</code> or <code>.7z</code> files, silently fails on password-protected archives, and is known to produce incomplete or corrupted output folders.</div>
+
+            <h2>Step-by-Step Extraction</h2>
+            <div class="step"><div class="step-num">1</div><div><strong>Add an antivirus exclusion first.</strong> Before extracting anything, add your download folder to Windows Defender's exclusion list. Cracked executables trigger heuristic detection — Defender will quarantine files during extraction if you skip this. See the Exclusions section below.</div></div>
+            <div class="step"><div class="step-num">2</div><div><strong>Right-click the archive.</strong> Locate the downloaded file, right-click it, and hover over the <em>7-Zip</em> entry in the context menu.</div></div>
+            <div class="step"><div class="step-num">3</div><div><strong>Choose "Extract to [folder name]".</strong> This creates a new folder next to the archive containing all extracted files. Avoid "Extract Here" — it scatters files into your current directory.</div></div>
+            <div class="step"><div class="step-num">4</div><div><strong>Enter the password.</strong> If prompted, type the archive password. The default Zyrex password is listed on the download page. Type it manually — copy-paste can sometimes grab invisible spaces.</div></div>
+            <div class="step"><div class="step-num">5</div><div><strong>Open the extracted folder.</strong> Look for a <code>setup.exe</code>, <code>install.exe</code>, a pre-cracked app folder, or a <code>readme.txt</code> / <code>.nfo</code> file with instructions. Always check the readme first.</div></div>
+
+            <h2>Antivirus Exclusions</h2>
+            <p>Windows Defender (and most third-party AV tools) will flag cracked files during extraction. This doesn't mean the file is dangerous — it means the binary has been modified from its original signed state. To stop Defender from deleting your files mid-extraction:</p>
+            <h3>Windows Defender</h3>
+            <ol>
+                <li>Open <strong>Settings → Privacy & Security → Windows Security → Virus & threat protection</strong></li>
+                <li>Click <strong>Manage settings</strong> under Virus & threat protection settings</li>
+                <li>Scroll down to <strong>Exclusions</strong> and click <strong>Add or remove exclusions</strong></li>
+                <li>Click <strong>Add an exclusion → Folder</strong> and select your download and extraction folders</li>
+            </ol>
+            <h3>Third-Party Antivirus</h3>
+            <p>If you use Malwarebytes, Bitdefender, Norton, or similar, look for an "exclusions", "allowlist", or "exceptions" panel in the settings. Add the same folders there. Some AV suites also let you exclude specific file types or running processes.</p>
+            <div class="note"><i class="fas fa-lightbulb"></i> <strong>Always add exclusions before extracting.</strong> Once Defender quarantines a file, you can't reliably restore it — you'll need to re-download and extract again.</div>
+
+            <h2>Common Problems</h2>
+            <h3>"The installer file may be damaged"</h3>
+            <p>This almost always means you used Windows' built-in extractor, or Defender removed files during extraction. Re-extract with 7-Zip after adding the exclusion.</p>
+            <h3>Archive says it's corrupted</h3>
+            <p>The download was interrupted. Re-download — if the problem persists, try a different browser or use a download manager like <a href="https://www.internetdownloadmanager.com/" target="_blank" style="color:var(--cherry-light)">IDM</a> that resumes partial transfers.</p>
+            <h3>Wrong password</h3>
+            <p>Type the password manually. Watch for: lowercase L vs. 1, O vs. 0, trailing spaces. Passwords are case-sensitive. If you're copying from a website, some browsers add hidden formatting characters.</p>
+            <h3>Files missing after extraction</h3>
+            <p>Check your AV quarantine. This is the #1 reason people think a download is incomplete — the files were there, but security software removed them during extraction.</p>
+        </div>
+    </div>
+</div>
+
+<footer class="footer"><div class="container"><div class="footer-content"><div class="footer-brand"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><a href="/" class="logo"><img src="/assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><h3 style="font-size:1.8rem;font-weight:900;margin:0;letter-spacing:2px;background:linear-gradient(135deg,#ffffff,#9090a0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Editing</h3></div><p>Premium editing community &amp; resources.</p></div><div class="footer-links"><h4>Quick Links</h4><ul><li><a href="/">Home</a></li><li><a href="/resources">Resources</a></li><li><a href="/plugins">Plugins</a></li><li><a href="/more">More</a></li></ul></div><div class="footer-links"><h4>Legal</h4><ul><li><a href="/terms">Terms</a></li><li><a href="/privacy">Privacy</a></li><li><a href="/dmca">DMCA</a></li></ul></div><div class="footer-links"><h4>Community</h4><ul><li><a href="https://discord.gg/fAydSzpafA">Discord</a></li><li><a href="/#contact">Contact</a></li></ul></div></div><div class="footer-bottom"><p>&copy; 2026 Zyrex Editing.</p></div></div></footer>
+<script src="/js/auth.js"></script>
+<script src="/js/script.js?v=2"></script>
+<script>document.getElementById('hamburger')?.addEventListener('click',function(){document.getElementById('navLinks').classList.toggle('active')});</script>
+</body>
+</html>

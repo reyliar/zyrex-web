@@ -1,0 +1,94 @@
+<!-- plugins-guide-unlicensed-mac -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Stop Adobe unlicensed popups on macOS — hosts blocker, Radio Silence firewall, and manual hosts editing.">
+    <title>Unlicensed Fix (Mac) — Zyrex</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="/css/style.css?v=20">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --cherry-glow: rgba(230,21,54,0.15); --card-bg: rgba(12,2,4,0.45); --card-border: rgba(230,21,54,0.08); --card-hover-border: rgba(230,21,54,0.22); --transition: all 0.3s cubic-bezier(0.16,1,0.3,1); }
+        body { background: var(--dark); color: var(--light); font-family: 'Poppins', sans-serif; min-height: 100vh; overflow-x: hidden; }
+        .container { max-width: 860px; margin: 0 auto; padding: 0 24px; }
+        .page-wrap { padding: 150px 0 80px; }
+        .breadcrumb { text-align: center; margin-bottom: 24px; font-size: 0.78rem; }
+        .breadcrumb a { color: var(--gray-dark); text-decoration: none; } .breadcrumb a:hover { color: var(--cherry-light); } .breadcrumb span { color: var(--gray-dark); margin: 0 8px; }
+        .guide-card { background: linear-gradient(160deg, rgba(30,4,10,0.55), rgba(10,2,4,0.85)); border: 1px solid var(--card-border); border-radius: 24px; padding: 44px 40px; backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); box-shadow: 0 30px 60px rgba(0,0,0,0.6); }
+        .guide-card h1 { font-size: clamp(1.8rem, 4vw, 2.3rem); font-weight: 900; font-family: 'Outfit', sans-serif; margin: 0 0 8px; display: flex; align-items: center; gap: 12px; }
+        .guide-card .sub { color: var(--gray); font-size: 0.95rem; margin-bottom: 32px; line-height: 1.6; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 20px; }
+        .guide-card h2 { font-size: 1.15rem; font-weight: 800; font-family: 'Outfit', sans-serif; color: var(--cherry-light); margin: 32px 0 12px; padding-left: 14px; border-left: 3px solid var(--cherry); }
+        .guide-card h3 { font-size: 0.95rem; font-weight: 700; color: var(--light); margin: 20px 0 8px; }
+        .guide-card p, .guide-card li { color: var(--gray); font-size: 0.88rem; line-height: 1.85; }
+        .guide-card ul, .guide-card ol { padding-left: 20px; margin: 8px 0 16px; }
+        .guide-card code { background: rgba(230,21,54,0.08); padding: 2px 7px; border-radius: 5px; font-size: 0.82rem; color: var(--cherry-light); }
+        .guide-card .note { background: rgba(230,21,54,0.04); border: 1px solid rgba(230,21,54,0.1); border-radius: 12px; padding: 14px 18px; margin: 16px 0; font-size: 0.84rem; }
+        .guide-card .note i { color: var(--cherry-light); margin-right: 6px; }
+        .guide-card .step { display: flex; gap: 12px; margin-bottom: 14px; }
+        .guide-card .step-num { width: 28px; height: 28px; background: rgba(230,21,54,0.12); border: 1px solid rgba(230,21,54,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.75rem; font-weight: 700; color: var(--cherry-light); }
+        @media(max-width: 768px) { .guide-card { padding: 28px 18px; } .page-wrap { padding-top: 120px; } }
+    </style>
+</head>
+<body>
+<div class="bg-aura"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
+<nav class="navbar"><div class="container"><a href="/" class="logo"><img src="/assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><ul class="nav-links" id="navLinks"><li><a href="/">Home</a></li><li><a href="/resources">Resources</a></li><li><a href="/plugins" class="active">Plugins</a></li><li><a href="/more">More</a></li><li><a href="/#contact">Contact</a></li></ul><div class="nav-actions"><div id="authBtn"></div><a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord"><i class="fab fa-discord"></i> <span>Join Us</span></a><button class="hamburger" id="hamburger"><span></span><span></span><span></span></button></div></div></nav>
+
+<div class="page-wrap">
+    <div class="breadcrumb"><a href="/">Home</a><span>/</span><a href="/plugins">Plugins</a><span>/</span><a href="/plugins/guides">Guides</a><span>/</span>Unlicensed Fix (Mac)</div>
+    <div class="container">
+        <div class="guide-card">
+            <h1><i class="fab fa-apple" style="color:var(--cherry-light)"></i> Unlicensed Fix — Mac</h1>
+            <p class="sub">Stop Adobe's "unlicensed app" warnings on macOS using hosts blocking, firewall tools, or manual methods.</p>
+
+            <h2>What's Happening</h2>
+            <p>Adobe includes a background component called Adobe Genuine Service (AGS) with its apps. It periodically verifies your license by contacting Adobe's servers. When it detects a non-genuine installation, you'll see warnings — and eventually the app may stop working entirely. This happens because:</p>
+            <ul>
+                <li>The app can still reach Adobe's validation servers</li>
+                <li>A macOS or Adobe update re-enabled background checks</li>
+                <li>Adobe Genuine Service is running and reporting your install</li>
+            </ul>
+            <div class="note"><i class="fas fa-info-circle"></i> <strong>Before starting:</strong> Disconnect VPNs and proxies — they route traffic around local blocks. If you activated with MacKed or another tool that includes its own blocker, check that tool's docs first — it may already handle this.</div>
+
+            <h2>Method 1 — Automatic Hosts Blocker (Easiest)</h2>
+            <p>A lightweight background utility that syncs a maintained blocklist of Adobe validation addresses to your hosts file. Run it once and it updates automatically.</p>
+            <div class="step"><div class="step-num">1</div><div><strong>Download the blocker utility.</strong> Get it from the maintained source at <a href="https://a.dove.isdumb.one/list.txt" target="_blank" style="color:var(--cherry-light)">a.dove.isdumb.one/list.txt</a> (this is the blocklist the tool syncs).</div></div>
+            <div class="step"><div class="step-num">2</div><div><strong>Run the utility.</strong> Open the downloaded app/script. macOS may ask you to approve it in System Settings → Privacy & Security — allow if prompted.</div></div>
+            <div class="step"><div class="step-num">3</div><div><strong>Let it run in the background.</strong> On startup it pulls the latest blocklist, writes entries into <code>/etc/hosts</code>, and refreshes every 30 minutes. If the list can't be fetched, your existing entries stay untouched.</div></div>
+            <div class="step"><div class="step-num">4</div><div><strong>Restart Adobe apps.</strong> Quit every Adobe app completely, then reopen. The popup should stop appearing.</div></div>
+
+            <h2>Method 2 — Radio Silence Firewall</h2>
+            <p>macOS doesn't offer simple per-app outbound firewall rules out of the box. Radio Silence is a lightweight third-party tool designed exactly for this — one click blocks an app from making any network connections. <a href="https://objective-see.org/products/lulu.html" target="_blank" style="color:var(--cherry-light)">LuLu</a> is a free alternative if you prefer Objective-See's firewall.</p>
+            <div class="step"><div class="step-num">1</div><div><strong>Install Radio Silence.</strong> Download, drag to Applications, launch, and complete activation if prompted.</div></div>
+            <div class="step"><div class="step-num">2</div><div><strong>Turn it on.</strong> Make sure the main toggle shows On. Radio Silence only blocks apps you explicitly add.</div></div>
+            <div class="step"><div class="step-num">3</div><div><strong>Block Adobe apps.</strong> Click <em>Block Application</em>, browse to each Adobe app — After Effects, Premiere Pro, Photoshop — and select the <code>.app</code> bundle. Repeat for every Adobe app.</div></div>
+            <div class="step"><div class="step-num">4</div><div><strong>Close Radio Silence.</strong> Rules stay active in the background — no need to keep the window open.</div></div>
+            <div class="note"><i class="fas fa-lightbulb"></i> Still seeing the popup? Add a second layer: open <strong>System Settings → Network → Firewall → Options</strong>, add the Adobe app, and set it to <strong>Block incoming connections</strong>.</div>
+
+            <h2>Method 3 — Manual Hosts File</h2>
+            <p>Edit the hosts file yourself — same blocklist as Method 1, but you maintain it manually.</p>
+            <div class="step"><div class="step-num">1</div><div><strong>Open hosts file.</strong> Terminal: <code>sudo nano /etc/hosts</code>. Enter your Mac password — Terminal won't show characters as you type.</div></div>
+            <div class="step"><div class="step-num">2</div><div><strong>Add the blocklist.</strong> Arrow key to the bottom. Paste IP entries from <a href="https://a.dove.isdumb.one/list.txt" target="_blank" style="color:var(--cherry-light)">a.dove.isdumb.one/list.txt</a>. Copy only IP and hostname lines — skip headers.</div></div>
+            <div class="step"><div class="step-num">3</div><div><strong>Save and exit.</strong> <code>Ctrl+X</code>, then <code>Y</code>, then <code>Return</code>.</div></div>
+            <div class="step"><div class="step-num">4</div><div><strong>Flush DNS.</strong> <code>sudo killall -HUP mDNSResponder</code></div></div>
+            <div class="step"><div class="step-num">5</div><div><strong>Restart.</strong> Reboot your Mac, then open the Adobe app. If the popup returns later, refresh the blocklist.</div></div>
+
+            <h2>Still Seeing the Popup?</h2>
+            <ul>
+                <li><strong>On a VPN?</strong> VPNs bypass local DNS and firewall rules. Disconnect, verify, then reconnect.</li>
+                <li><strong>After an update?</strong> Updates can restore services or add new validation addresses. Re-run Method 1 or refresh your hosts entries.</li>
+                <li><strong>Creative Cloud installed?</strong> CC runs its own validation services. Uninstall CC if you don't need it, or add it to your Radio Silence block list.</li>
+                <li><strong>Only one app affected?</strong> Check if shared background processes like Adobe Desktop Service or AGS are still running. Block every Adobe-related process you find.</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<footer class="footer"><div class="container"><div class="footer-content"><div class="footer-brand"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><a href="/" class="logo"><img src="/assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><h3 style="font-size:1.8rem;font-weight:900;margin:0;letter-spacing:2px;background:linear-gradient(135deg,#ffffff,#9090a0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Editing</h3></div><p>Premium editing community &amp; resources.</p></div><div class="footer-links"><h4>Quick Links</h4><ul><li><a href="/">Home</a></li><li><a href="/resources">Resources</a></li><li><a href="/plugins">Plugins</a></li><li><a href="/more">More</a></li></ul></div><div class="footer-links"><h4>Legal</h4><ul><li><a href="/terms">Terms</a></li><li><a href="/privacy">Privacy</a></li><li><a href="/dmca">DMCA</a></li></ul></div><div class="footer-links"><h4>Community</h4><ul><li><a href="https://discord.gg/fAydSzpafA">Discord</a></li><li><a href="/#contact">Contact</a></li></ul></div></div><div class="footer-bottom"><p>&copy; 2026 Zyrex Editing.</p></div></div></footer>
+<script src="/js/auth.js"></script>
+<script src="/js/script.js?v=2"></script>
+<script>document.getElementById('hamburger')?.addEventListener('click',function(){document.getElementById('navLinks').classList.toggle('active')});</script>
+</body>
+</html>
