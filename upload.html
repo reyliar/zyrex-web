@@ -539,7 +539,6 @@
                     <img src="" id="userAvatar" alt="">
                     <div class="user-info">
                         <span class="name" id="userName">Creator</span>
-                        <span class="role">Zyrex Partner</span>
                     </div>
                 </div>
                 <div class="footer-nav">
@@ -582,7 +581,7 @@
                             <input type="hidden" id="resourceId">
                             <div class="field">
                                 <label><i class="fas fa-tag"></i> Product Name *</label>
-                                <input type="text" id="productName" placeholder="TOM HOLLAND CINEMATIC PRESETS" oninput="updateLivePreview()">
+                                <input type="text" id="productName" placeholder="EDITING PACK" oninput="updateLivePreview()">
                             </div>
                             
                             <div class="field">
@@ -787,8 +786,11 @@
                 
                 // Show profile footer
                 document.getElementById('userProfile').style.display = 'flex';
-                if(u.avatar) document.getElementById('userAvatar').src = u.avatar;
-                else document.getElementById('userAvatar').style.display = 'none';
+                if(u.avatar && u.id) {
+                    document.getElementById('userAvatar').src = 'https://cdn.discordapp.com/avatars/' + u.id + '/' + u.avatar + '.png?size=64';
+                } else {
+                    document.getElementById('userAvatar').style.display = 'none';
+                }
                 document.getElementById('userName').textContent = u.global_name || u.username;
 
                 if(u.is_admin){

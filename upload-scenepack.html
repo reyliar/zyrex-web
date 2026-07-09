@@ -390,7 +390,6 @@
                     <img src="" id="userAvatar" alt="">
                     <div class="user-info">
                         <span class="name" id="userName">Creator</span>
-                        <span class="role">Zyrex Partner</span>
                     </div>
                 </div>
                 <div class="footer-nav">
@@ -498,8 +497,11 @@
                 
                 // Show profile footer
                 document.getElementById('userProfile').style.display = 'flex';
-                if(currentUser.avatar) document.getElementById('userAvatar').src = currentUser.avatar;
-                else document.getElementById('userAvatar').style.display = 'none';
+                if(currentUser.avatar && currentUser.id) {
+                    document.getElementById('userAvatar').src = 'https://cdn.discordapp.com/avatars/' + currentUser.id + '/' + currentUser.avatar + '.png?size=64';
+                } else {
+                    document.getElementById('userAvatar').style.display = 'none';
+                }
                 document.getElementById('userName').textContent = currentUser.global_name || currentUser.username;
 
                 if (currentUser.is_admin) {
