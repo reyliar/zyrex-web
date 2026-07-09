@@ -2290,6 +2290,56 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
         }
       }
 
+      // ============ VIRUSTOTAL ADMIN MASS SCANNER ============
+      if (path === "/api/admin/vt-scan" && request.method === "POST") {
+        const session = parseSession(request.headers.get("Cookie"));
+        if (!session?.userId || !ADMIN_IDS.includes(session.userId)) {
+          return json({ error: "Unauthorized" }, 403);
+        }
+        try {
+          const { url } = await request.json();
+          if (!url || !url.startsWith("http")) return json({ error: "Invalid URL" }, 400);
+          
+          const cleanUrl = url;
+          const base64Url = btoa(unescape(encodeURIComponent(cleanUrl)))
+            .replace(/=+$/, "").replace(/\+/g, "-").replace(/\//g, "_");
+          const vtApiKey = "bcc0ff88c6227cdd52e616a12988d1f4bde36edbf9cab37ec251dfd9c0264aaf";
+          
+          let vtResp = await fetch(`https://www.virustotal.com/api/v3/urls/${base64Url}`, {
+            headers: { "x-apikey": vtApiKey }
+          });
+          
+          if (vtResp.status === 404) {
+            await fetch("https://www.virustotal.com/api/v3/urls", {
+              method: "POST",
+              headers: { "x-apikey": vtApiKey, "Content-Type": "application/x-www-form-urlencoded" },
+              body: "url=" + encodeURIComponent(cleanUrl)
+            });
+            await new Promise(r => setTimeout(r, 8000));
+            vtResp = await fetch(`https://www.virustotal.com/api/v3/urls/${base64Url}`, {
+              headers: { "x-apikey": vtApiKey }
+            });
+          }
+          
+          if (vtResp.ok) {
+            const vtData = await vtResp.json();
+            const stats = vtData?.data?.attributes?.last_analysis_stats;
+            return json({
+              success: true,
+              vt_id: base64Url,
+              harmless: stats?.harmless || 0,
+              malicious: stats?.malicious || 0,
+              suspicious: stats?.suspicious || 0,
+              undetected: stats?.undetected || 0,
+              total: (stats?.harmless||0) + (stats?.malicious||0) + (stats?.suspicious||0) + (stats?.undetected||0)
+            });
+          }
+          return json({ success: true, vt_id: base64Url, harmless: 0, malicious: 0, pending: true });
+        } catch(e) {
+          return json({ success: false, error: e.message }, 502);
+        }
+      }
+
       // ============ BOT PROXY (admin, cloud link/unlink, downloads, hlx, verify, products) ============
       if (path.startsWith("/api/products") || path.startsWith("/api/admin/") || path.startsWith("/api/cloud/") || path.startsWith("/api/downloads/") || path.startsWith("/api/hlx/") || path.startsWith("/api/verify") || path.startsWith("/api/sftpgo/") || path.startsWith("/api/search/") || path === "/api/resource-stats") {
         const session = parseSession(request.headers.get("Cookie"));

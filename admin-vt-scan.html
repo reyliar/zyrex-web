@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zyrex | Admin - VirusTotal Scanner</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="css/style.css?v=17">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root { --cherry: #e61536; --cherry-light: #ff4d6d; --dark: #070203; --light: #fcedf0; --gray: #d4b0b8; --gray-dark: #8a6570; --card-bg: rgba(12,2,4,0.45); --card-border: rgba(230,21,54,0.08); --transition: all 0.3s cubic-bezier(0.16,1,0.3,1); }
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{background:var(--dark);color:var(--light);font-family:'Poppins',sans-serif;min-height:100vh;padding-top:100px}
+        .admin-header{background:rgba(12,2,4,0.6);backdrop-filter:blur(25px);-webkit-backdrop-filter:blur(25px);border-bottom:1px solid rgba(230,21,54,0.1);box-shadow:0 4px 30px rgba(0,0,0,0.5);padding:16px 30px;display:flex;align-items:center;justify-content:space-between;position:fixed;top:0;left:0;width:100%;z-index:10000}
+        .admin-header .logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--light);font-family:'Outfit',sans-serif}
+        .admin-header .logo img{height:36px}
+        .admin-badge{font-size:.65rem;font-weight:700;background:var(--cherry);color:#fff;padding:3px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:1px}
+        .container{max-width:1100px;margin:40px auto;padding:0 24px}
+        .panel{background:var(--card-bg);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid var(--card-border);border-radius:20px;padding:36px;box-shadow:0 25px 60px rgba(0,0,0,0.5);margin-bottom:24px}
+        .panel h2{font-size:1.3rem;font-weight:900;font-family:'Outfit',sans-serif;margin-bottom:6px;display:flex;align-items:center;gap:10px}
+        .panel .sub{color:var(--gray-dark);font-size:.82rem;margin-bottom:24px}
+        .btn{display:inline-flex;align-items:center;gap:8px;padding:12px 24px;border-radius:10px;font-size:.85rem;font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:var(--transition);text-decoration:none}
+        .btn-primary{background:linear-gradient(180deg,#7a081e 0%,#42020d 50%,#300109 100%);border:1px solid rgba(230,21,54,.25);color:#fff;box-shadow:0 4px 15px rgba(122,8,30,.35)}
+        .btn-primary:hover{box-shadow:0 6px 20px rgba(122,8,30,.5);transform:translateY(-1px)}
+        .btn-primary:disabled{opacity:.4;cursor:not-allowed;transform:none}
+        .btn-secondary{background:rgba(230,21,54,.06);color:var(--light);border:1px solid rgba(230,21,54,.12)}
+        .btn-success{background:linear-gradient(180deg,#00c864 0%,#008a3a 100%);border:1px solid rgba(0,200,100,.25);color:#fff}
+        .btn-danger{background:linear-gradient(180deg,#ff3860 0%,#c0392b 100%);border:1px solid rgba(255,56,96,.25);color:#fff}
+        .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+        .stat-box{background:rgba(255,255,255,0.02);border:1px solid var(--card-border);border-radius:14px;padding:18px;text-align:center}
+        .stat-box .num{font-size:1.8rem;font-weight:900;font-family:'Outfit',sans-serif}
+        .stat-box .label{font-size:.68rem;color:var(--gray-dark);text-transform:uppercase;letter-spacing:1px;margin-top:4px}
+        .stat-box.green .num{color:#00c864}.stat-box.red .num{color:#ff3860}.stat-box.yellow .num{color:#ffb400}.stat-box.blue .num{color:#5284ff}
+        .progress-bar{height:6px;background:rgba(255,255,255,0.05);border-radius:3px;margin:16px 0;overflow:hidden}
+        .progress-bar .fill{height:100%;background:var(--cherry-light);border-radius:3px;transition:width 0.3s}
+        table{width:100%;border-collapse:collapse;font-size:.82rem}
+        th{text-align:left;padding:12px;background:rgba(230,21,54,0.04);font-size:.7rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--gray-dark);border-bottom:1px solid var(--card-border)}
+        td{padding:12px;border-bottom:1px solid rgba(255,255,255,0.03);vertical-align:top}
+        tr:hover td{background:rgba(230,21,54,0.02)}
+        .badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:20px;font-size:.65rem;font-weight:700}
+        .badge-safe{background:rgba(0,200,100,0.08);color:#00c864;border:1px solid rgba(0,200,100,0.15)}
+        .badge-warn{background:rgba(255,184,0,0.08);color:#ffb400;border:1px solid rgba(255,184,0,0.15)}
+        .badge-danger{background:rgba(255,56,96,0.08);color:#ff3860;border:1px solid rgba(255,56,96,0.15)}
+        .badge-pending{background:rgba(100,100,255,0.08);color:#5284ff;border:1px solid rgba(100,100,255,0.15)}
+        .empty-state{text-align:center;padding:40px;color:var(--gray-dark)}
+        a.inline-link{color:var(--cherry-light);text-decoration:none}
+        a.inline-link:hover{text-decoration:underline}
+        .scanning-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--cherry-light);animation:pulse 1s infinite}
+        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+        @media(max-width:768px){.stats-row{grid-template-columns:repeat(2,1fr)}.panel{padding:24px 16px}}
+    </style>
+</head>
+<body>
+<div class="bg-aura"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
+<div class="admin-header">
+    <a href="/" class="logo"><img src="assets/content.png" alt=""><span>Admin</span></a>
+    <div style="display:flex;align-items:center;gap:12px">
+        <span class="admin-badge"><i class="fas fa-shield-halved"></i> VT Scanner</span>
+        <a href="/api/logout" style="color:var(--gray-dark);font-size:.8rem;text-decoration:none"><i class="fas fa-sign-out-alt"></i></a>
+    </div>
+</div>
+
+<div class="container">
+    <div class="panel">
+        <h2><i class="fas fa-shield-virus" style="color:var(--cherry-light)"></i> VirusTotal Mass Scanner</h2>
+        <p class="sub">Scan all download links from plugins-data.js and custom uploads. Flagged results are highlighted.</p>
+        
+        <div class="stats-row" id="statsRow">
+            <div class="stat-box blue"><div class="num" id="statTotal">0</div><div class="label">Total Links</div></div>
+            <div class="stat-box green"><div class="num" id="statSafe">0</div><div class="label">Clean</div></div>
+            <div class="stat-box red"><div class="num" id="statMal">0</div><div class="label">Malicious</div></div>
+            <div class="stat-box yellow"><div class="num" id="statPending">0</div><div class="label">Pending / No Data</div></div>
+        </div>
+        
+        <div class="progress-bar"><div class="fill" id="progressFill" style="width:0%"></div></div>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:18px;font-size:.78rem;color:var(--gray-dark)">
+            <span id="scanStatus">Ready</span>
+        </div>
+        
+        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px">
+            <button class="btn btn-primary" id="btnScanAll" onclick="scanAll()"><i class="fas fa-play"></i> Scan All Links</button>
+            <button class="btn btn-secondary" onclick="scanMissing()"><i class="fas fa-magnifying-glass"></i> Scan Only Unscanned</button>
+            <button class="btn btn-danger" id="btnStop" onclick="stopScan()" style="display:none"><i class="fas fa-stop"></i> Stop</button>
+            <button class="btn btn-success" onclick="exportReport()"><i class="fas fa-file-export"></i> Export Flagged Report</button>
+            <a href="/settings" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+        </div>
+    </div>
+
+    <div class="panel" id="resultsPanel" style="display:none">
+        <h2><i class="fas fa-triangle-exclamation" style="color:#ff3860"></i> Flagged Results <span style="font-size:.75rem;color:var(--gray-dark);font-weight:400">(malicious > 0)</span></h2>
+        <div id="flaggedTable"></div>
+    </div>
+
+    <div class="panel" id="allResultsPanel">
+        <h2><i class="fas fa-list-check" style="color:var(--cherry-light)"></i> All Scan Results</h2>
+        <div id="allTable">
+            <div class="empty-state"><i class="fas fa-spinner fa-spin" style="display:block;font-size:2rem;margin-bottom:12px;opacity:.5"></i>Click <strong>Scan All Links</strong> to begin</div>
+        </div>
+    </div>
+</div>
+
+<script src="js/auth.js"></script>
+<script src="js/plugins-data.js"></script>
+<script>
+    let scanResults = [];
+    let scanning = false;
+    let stopRequested = false;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        try {
+            const resp = await fetch('/api/me', { credentials: 'include' });
+            if (!resp.ok) { window.location.href = '/'; return; }
+            const user = await resp.json();
+            if (!user.is_admin) {
+                document.body.innerHTML = `<div style="text-align:center;padding:150px 20px;color:var(--gray)"><i class="fas fa-lock" style="font-size:4rem;color:var(--cherry);opacity:.3;display:block;margin-bottom:20px"></i><h2>Access Denied</h2><p>Admin only.</p></div>`;
+            }
+        } catch(e) { window.location.href = '/'; }
+    });
+
+    function collectLinks() {
+        const links = [];
+        const seen = new Set();
+        
+        const allData = (window.pluginsData || []).concat(
+            JSON.parse(localStorage.getItem('zyrex_new_products') || '[]')
+        );
+        
+        allData.forEach(p => {
+            const productLinks = p.links || [];
+            productLinks.forEach(link => {
+                const url = (link.url || '').trim();
+                if (url && url.startsWith('http') && !seen.has(url)) {
+                    seen.add(url);
+                    links.push({
+                        url: url,
+                        productName: p.name || 'Unknown',
+                        productId: p.id || '',
+                        productPage: '/product?id=' + (p.id || ''),
+                        existingScan: p.vt_scan || null
+                    });
+                }
+            });
+        });
+        return links;
+    }
+
+    async function scanAll() {
+        const links = collectLinks();
+        if (links.length === 0) return alert('No links found to scan.');
+        scanResults = [];
+        scanning = true;
+        stopRequested = false;
+        document.getElementById('btnScanAll').disabled = true;
+        document.getElementById('btnStop').style.display = 'inline-flex';
+        document.getElementById('flaggedTable').innerHTML = '';
+        document.getElementById('resultsPanel').style.display = 'none';
+        renderAllTable(links);
+        await processScans(links);
+    }
+
+    async function scanMissing() {
+        const links = collectLinks().filter(l => !l.existingScan || !l.existingScan.id);
+        if (links.length === 0) return alert('All links already have scan data.');
+        scanResults = [];
+        scanning = true;
+        stopRequested = false;
+        document.getElementById('btnScanAll').disabled = true;
+        document.getElementById('btnStop').style.display = 'inline-flex';
+        document.getElementById('flaggedTable').innerHTML = '';
+        document.getElementById('resultsPanel').style.display = 'none';
+        renderAllTable(links);
+        await processScans(links);
+    }
+
+    function stopScan() {
+        stopRequested = true;
+        scanning = false;
+        document.getElementById('btnScanAll').disabled = false;
+        document.getElementById('btnStop').style.display = 'none';
+        document.getElementById('scanStatus').textContent = 'Stopped';
+    }
+
+    async function processScans(links) {
+        document.getElementById('scanStatus').innerHTML = '<span class="scanning-dot"></span> Scanning...';
+        let completed = 0;
+        let safe = 0, mal = 0, pending = 0;
+        const batchSize = 4; // VT free API rate limit: 4/min
+
+        for (let i = 0; i < links.length; i += batchSize) {
+            if (stopRequested) break;
+            const batch = links.slice(i, i + batchSize);
+            const batchResults = await Promise.all(batch.map(async (link) => {
+                try {
+                    const resp = await fetch('/api/admin/vt-scan', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url: link.url }),
+                        credentials: 'include'
+                    });
+                    const data = await resp.json();
+                    return { ...link, scanResult: data };
+                } catch(e) {
+                    return { ...link, scanResult: { success: false, error: e.message } };
+                }
+            }));
+            
+            batchResults.forEach(r => {
+                scanResults.push(r);
+                completed++;
+                const s = r.scanResult;
+                if (s.malicious > 0) mal++;
+                else if (s.pending || !s.success) pending++;
+                else safe++;
+            });
+            
+            updateStats(completed, links.length, safe, mal, pending);
+            renderAllTable(links.map((l, idx) => {
+                const existing = scanResults.find(r => r.url === l.url);
+                return existing || l;
+            }));
+            renderFlagged();
+            
+            if (i + batchSize < links.length && !stopRequested) {
+                document.getElementById('scanStatus').innerHTML = '<span class="scanning-dot"></span> Rate limit cooldown (60s)... ' + completed + '/' + links.length;
+                await new Promise(r => setTimeout(r, 61000)); // 61s for safety
+            }
+        }
+        
+        scanning = false;
+        document.getElementById('btnScanAll').disabled = false;
+        document.getElementById('btnStop').style.display = 'none';
+        document.getElementById('scanStatus').textContent = 'Done — ' + completed + ' links scanned';
+    }
+
+    function updateStats(total, scanned, safe, mal, pending) {
+        document.getElementById('statTotal').textContent = total;
+        document.getElementById('statSafe').textContent = safe;
+        document.getElementById('statMal').textContent = mal;
+        document.getElementById('statPending').textContent = pending;
+        document.getElementById('progressFill').style.width = Math.round(scanned / total * 100) + '%';
+    }
+
+    function renderAllTable(links) {
+        const html = links.length === 0 ? '<div class="empty-state">No links collected</div>' : `
+            <table>
+                <thead><tr><th>#</th><th>Product</th><th>Download URL</th><th>Status</th><th>VT</th></tr></thead>
+                <tbody>${links.map((l, i) => {
+                    const s = l.scanResult;
+                    let statusHtml = '', vtHtml = '';
+                    if (!s) {
+                        statusHtml = '<span class="badge badge-pending"><i class="fas fa-clock"></i> Queued</span>';
+                    } else if (!s.success) {
+                        statusHtml = '<span class="badge badge-pending"><i class="fas fa-exclamation"></i> Error</span>';
+                        vtHtml = s.error || '';
+                    } else if (s.pending) {
+                        statusHtml = '<span class="badge badge-pending"><i class="fas fa-clock"></i> Pending</span>';
+                    } else if (s.malicious > 0) {
+                        statusHtml = `<span class="badge badge-danger"><i class="fas fa-virus"></i> ${s.malicious} threats</span>`;
+                        vtHtml = `${s.harmless} clean / ${s.malicious} malicious / ${s.total} total`;
+                    } else {
+                        statusHtml = '<span class="badge badge-safe"><i class="fas fa-check"></i> Clean</span>';
+                        vtHtml = `${s.harmless} clean / ${s.total} total`;
+                    }
+                    return `<tr>
+                        <td>${i + 1}</td>
+                        <td><a href="${l.productPage}" target="_blank" class="inline-link">${l.productName}</a></td>
+                        <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="${l.url}" target="_blank" class="inline-link" title="${l.url}">${new URL(l.url).hostname}/...</a></td>
+                        <td>${statusHtml}</td>
+                        <td style="font-size:.75rem;color:var(--gray)">${vtHtml}</td>
+                    </tr>`;
+                }).join('')}</tbody>
+            </table>`;
+        document.getElementById('allTable').innerHTML = html;
+    }
+
+    function renderFlagged() {
+        const flagged = scanResults.filter(r => r.scanResult && r.scanResult.malicious > 0);
+        if (flagged.length === 0) return;
+        document.getElementById('resultsPanel').style.display = 'block';
+        document.getElementById('flaggedTable').innerHTML = `
+            <table>
+                <thead><tr><th>Product</th><th>Flagged URL</th><th>Threats</th><th>VT Report</th></tr></thead>
+                <tbody>${flagged.map(r => {
+                    const s = r.scanResult;
+                    return `<tr>
+                        <td><a href="${r.productPage}" target="_blank" class="inline-link">${r.productName}</a></td>
+                        <td style="max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><a href="${r.url}" target="_blank" class="inline-link">${r.url}</a></td>
+                        <td><span class="badge badge-danger"><i class="fas fa-virus"></i> ${s.malicious} detected</span></td>
+                        <td><a href="https://www.virustotal.com/gui/url/${s.vt_id}" target="_blank" class="inline-link"><i class="fas fa-external-link-alt"></i> View Report</a></td>
+                    </tr>`;
+                }).join('')}</tbody>
+            </table>`;
+    }
+
+    function exportReport() {
+        const flagged = scanResults.filter(r => r.scanResult && r.scanResult.malicious > 0);
+        if (flagged.length === 0) return alert('No flagged results to export.');
+        let report = '=== ZYREX VIRUSTOTAL FLAGGED LINKS REPORT ===\n\n';
+        flagged.forEach((r, i) => {
+            report += `${i + 1}. ${r.productName}\n`;
+            report += `   Product: ${window.location.origin}${r.productPage}\n`;
+            report += `   URL: ${r.url}\n`;
+            report += `   Threats: ${r.scanResult.malicious}\n`;
+            report += `   VT Report: https://www.virustotal.com/gui/url/${r.scanResult.vt_id}\n\n`;
+        });
+        const blob = new Blob([report], { type: 'text/plain' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'zyrex_vt_flagged_' + new Date().toISOString().slice(0,10) + '.txt';
+        a.click();
+    }
+</script>
+</body>
+</html>
