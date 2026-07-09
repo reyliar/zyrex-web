@@ -804,12 +804,7 @@
             if (p.thumbnail) {
                 thumbHtml = `<img src="${p.thumbnail}" alt="">`;
             } else {
-                const favicon = p.links && p.links[0]?.url 
-                    ? `https://www.google.com/s2/favicons?domain=${new URL(p.links[0].url).hostname}&sz=64`
-                    : '';
-                thumbHtml = favicon 
-                    ? `<img src="${favicon}" alt="" onerror="this.parentElement.innerHTML='<div class=\\'thumb-fallback\\'><i class=\\'fas fa-cube\\'></i></div>'">`
-                    : `<div class="thumb-fallback"><i class="fas fa-cube"></i></div>`;
+                thumbHtml = `<img src="/assets/content.png" alt="" style="width:56px;height:56px;object-fit:contain">`;
             }
 
             // Creator details (original preset author) — only show if creator info exists
@@ -861,7 +856,7 @@
                 dlHtml = `
                     <div class="product-dl-btn" style="flex-direction:column;align-items:flex-start;gap:10px;padding:16px;cursor:default">
                         <div style="display:flex;align-items:center;gap:12px;width:100%">
-                            <div class="dl-icon default" style="background:rgba(var(--cherry-rgb),0.1)"><img src="/assets/content.png" alt="" style="width:22px;height:22px;object-fit:contain"></div>
+                            <div class="dl-icon default" style="background:rgba(var(--cherry-rgb),0.1)"><i class="fas fa-play" style="color:var(--light)"></i></div>
                             <div class="dl-info"><strong style="color:var(--light)">Audio Preview</strong><span style="color:var(--gray)">${p.name}</span></div>
                         </div>
                         <audio controls style="width:100%;height:36px;border-radius:8px"><source src="${p.file_url}" type="audio/mpeg"></audio>
@@ -871,7 +866,7 @@
             } else if (p.type === 'scenepack' && p.source_url) {
                 dlHtml = `
                     <a href="${p.source_url}" target="_blank" rel="noopener" class="product-dl-btn" style="background:var(--gradient-accent)!important;border:1px solid rgba(var(--cherry-rgb),0.15)!important;box-shadow:0 4px 15px rgba(var(--cherry-rgb),0.35),inset 0 1px 1px rgba(var(--cherry-rgb),0.3)!important;">
-                        <div class="dl-icon default" style="background:rgba(var(--cherry-rgb),0.1)"><img src="/assets/content.png" alt="" style="width:22px;height:22px;object-fit:contain"></div>
+                        <div class="dl-icon default" style="background:rgba(var(--cherry-rgb),0.1)"><i class="fas fa-external-link-alt" style="color:var(--light)"></i></div>
                         <div class="dl-info"><strong style="color:var(--light)">Download Scenepack</strong><span style="color:var(--gray)">External Link</span></div>
                         <i class="fas fa-arrow-right dl-arrow" style="color:var(--light)"></i>
                     </a>
@@ -881,7 +876,7 @@
                 dlHtml = `
                     <a href="https://dl.zyrexediting.xyz/?id=${p.id}" target="_blank" rel="noopener" class="product-dl-btn" style="background:var(--gradient-accent) !important;border:1px solid rgba(var(--cherry-rgb),0.15) !important;box-shadow:0 4px 15px rgba(var(--cherry-rgb),0.35), inset 0 1px 1px rgba(var(--cherry-rgb),0.3) !important;">
                         <div class="dl-icon default" style="background:rgba(var(--cherry-rgb),0.1)">
-                            <img src="/assets/content.png" alt="" style="width:22px;height:22px;object-fit:contain">
+                            <i class="fas fa-cloud-arrow-down" style="color:var(--light)"></i>
                         </div>
                         <div class="dl-info">
                             <strong style="color:var(--light)">Download ZIP / Resource</strong>
@@ -908,7 +903,7 @@
                 dlHtml = p.links.map(link => `
                     <a href="${link.url}" target="_blank" rel="noopener" class="product-dl-btn">
                         <div class="dl-icon ${getDlClass(link.label)}">
-                            <img src="/assets/content.png" alt="" style="width:22px;height:22px;object-fit:contain">
+                            <i class="fas ${getDlIcon(link.label)}"></i>
                         </div>
                         <div class="dl-info">
                             <strong>${link.label}</strong>
