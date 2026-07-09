@@ -740,14 +740,33 @@
         document.getElementById('hamburger')?.addEventListener('click', function () { document.getElementById('navLinks').classList.toggle('active') });
         function animateNum(id, target) { var el = document.getElementById(id); if (!el) return; var start = parseInt(el.textContent) || 0; if (start === target) return; var dur = 600, step = (target - start) / (dur / 16), cur = start; function tick() { cur += step; if ((step > 0 && cur >= target) || (step < 0 && cur <= target)) { el.textContent = target; return } el.textContent = Math.round(cur); requestAnimationFrame(tick) } tick() }
 
-        (function initHub() {
+        (async function initHub() {
             var data = window.pluginsData;
             if (!data) return;
             var dels = [];
             try { dels = JSON.parse(localStorage.getItem('zyrex_deleted_products') || '[]') } catch (e) { }
             var custom = [];
             try { custom = JSON.parse(localStorage.getItem('zyrex_new_products') || '[]'); } catch(e) {}
-            var all = data.concat(custom).filter(function (p) { return !dels.includes(p.id) });
+            
+            // Fetch database products (cross-device — works on mobile too)
+            var apiProducts = [];
+            try {
+                var apiResp = await fetch('/api/products?type=plugin', { credentials: 'include' });
+                var apiData = await apiResp.json();
+                if (Array.isArray(apiData)) apiProducts = apiData;
+            } catch(e) {}
+            
+            // Merge all sources, deduplicate by id
+            var seen = {};
+            var all = [];
+            [data, custom, apiProducts].forEach(function(list) {
+                (list || []).forEach(function(p) {
+                    if (!dels.includes(p.id) && !seen[p.id]) {
+                        seen[p.id] = true;
+                        all.push(p);
+                    }
+                });
+            });
 
             var sw = all.filter(function (p) { var c = (p.category || '').toLowerCase(); return c === 'software' }).length;
             var ad = all.filter(function (p) { var c = (p.category || '').toLowerCase(); return c === 'adobe-plugin' || c === 'ae-plugins' || c === 'pr-plugins' }).length;

@@ -335,7 +335,7 @@
             dels = JSON.parse(localStorage.getItem('zyrex_deleted_products') || '[]');
         } catch(e) {}
 
-        function load() {
+        async function load() {
             var d = window.pluginsData;
             if(!d) {
                 setTimeout(load, 50);
@@ -348,8 +348,26 @@
                 custom = JSON.parse(localStorage.getItem('zyrex_new_products') || '[]');
             } catch(e) {}
             
-            var combined = d.concat(custom);
-            all = combined.filter(function(p){ return !dels.includes(p.id); });
+            // Fetch database products (cross-device sync)
+            var apiProducts = [];
+            try {
+                var apiResp = await fetch('/api/products?type=plugin', { credentials: 'include' });
+                var apiData = await apiResp.json();
+                if (Array.isArray(apiData)) apiProducts = apiData;
+            } catch(e) {}
+            
+            // Merge all sources, deduplicate by id
+            var seen = {};
+            var combined = [];
+            [d, custom, apiProducts].forEach(function(list) {
+                (list || []).forEach(function(p) {
+                    if (!dels.includes(p.id) && !seen[p.id]) {
+                        seen[p.id] = true;
+                        combined.push(p);
+                    }
+                });
+            });
+            all = combined;
             render();
         }
 
