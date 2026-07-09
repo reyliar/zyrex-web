@@ -10,7 +10,7 @@ async function checkAuth() {
         if (resp.ok) {
             const user = await resp.json();
             const avatarUrl = user.avatar
-                ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=64`
+                ? avatarProxyUrl(user.id, user.avatar, 64)
                 : '';
 
             btn.innerHTML = `

@@ -834,7 +834,7 @@
         function renderSidebarProfile(user) {
             const sidebar = document.getElementById('sidebarProfile');
             const avatarUrl = user.avatar 
-                ? `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.png?size=128` 
+                ? avatarProxyUrl(user.id, user.avatar, 128) 
                 : '';
             
             sidebar.innerHTML = `
@@ -1463,7 +1463,7 @@
                     data.members.sort((a,b) => b.is_admin - a.is_admin);
                     grid.innerHTML = data.members.map(m => {
                         const avatar = m.avatar 
-                            ? `https://cdn.discordapp.com/avatars/${m.id}/${m.avatar}.png?size=64`
+                            ? avatarProxyUrl(m.id, m.avatar, 64)
                             : '';
                         return `
                             <div class="member-card">
@@ -1581,9 +1581,7 @@
         }
 
         function discordAvatarUrl(discordId, avatarHash) {
-            if (!discordId || !avatarHash) return '';
-            const ext = avatarHash.startsWith('a_') ? 'gif' : 'png';
-            return `https://cdn.discordapp.com/avatars/${discordId}/${avatarHash}.${ext}?size=64`;
+            return avatarProxyUrl(discordId, avatarHash, 64);
         }
 
         function escapeHtml(text) {

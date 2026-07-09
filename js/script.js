@@ -68,6 +68,17 @@ navLinks.forEach(link => {
 const BOT_API = 'http://93.115.101.154:12988';
 const CDN_BASE = 'https://cdn.discordapp.com';
 
+// Avatar proxy helper — bypasses Discord CDN blocks (e.g. Turkey)
+function avatarProxyUrl(userId, avatarHash, size) {
+    size = size || 64;
+    if (!userId || !avatarHash) return '';
+    const ext = avatarHash.startsWith('a_') ? 'gif' : 'png';
+    return '/api/avatar/' + userId + '/' + avatarHash + '.' + ext + '?size=' + size;
+}
+function defaultAvatarUrl(idx) {
+    return '/api/avatar/default/' + (idx || 0) + '.png';
+}
+
 const teamMembers = [
     {
         userId: '1421177012814614548',
@@ -82,15 +93,14 @@ const teamMembers = [
 ];
 
 function getAvatarUrl(user, size = 256) {
-    if (!user?.avatar) return '';
-    const ext = user.avatar.startsWith('a_') ? 'gif' : 'png';
-    return `${CDN_BASE}/avatars/${user.id}/${user.avatar}.${ext}?size=${size}`;
+    if (!user?.avatar || !user?.id) return '';
+    return avatarProxyUrl(user.id, user.avatar, size);
 }
 
 function getBannerUrl(user, size = 480) {
-    if (!user?.banner) return '';
+    if (!user?.banner || !user?.id) return '';
     const ext = user.banner.startsWith('a_') ? 'gif' : 'png';
-    return `${CDN_BASE}/banners/${user.id}/${user.banner}.${ext}?size=${size}`;
+    return '/api/banner/' + user.id + '/' + user.banner + '.' + ext + '?size=' + size;
 }
 
 async function fetchDiscordUser(userId) {

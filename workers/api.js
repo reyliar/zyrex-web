@@ -1230,7 +1230,7 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
       }
     }
 
-    // ============ AVATAR PROXY (bypass Discord CDN blocks) ============
+    // ============ AVATAR & BANNER PROXY (bypass Discord CDN blocks) ============
     if (path.startsWith("/api/avatar/")) {
       const cacheTTL = 86400;
       try {
@@ -1257,6 +1257,28 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
           });
         }
       } catch(e) { console.error("Avatar proxy error:", e.message); }
+      return new Response(null, { status: 404, headers: corsHeaders });
+    }
+    if (path.startsWith("/api/banner/")) {
+      const cacheTTL = 86400;
+      try {
+        const parts = path.replace("/api/banner/", "").split("/");
+        const userId = parts[0];
+        const hash = parts[1]?.replace(/\?.*/, "") || "";
+        const size = url.searchParams.get("size") || "480";
+        const cdnUrl = `https://cdn.discordapp.com/banners/${userId}/${hash}?size=${size}`;
+        const imgResp = await fetch(cdnUrl);
+        if (imgResp.ok) {
+          return new Response(imgResp.body, {
+            status: 200,
+            headers: {
+              "Content-Type": imgResp.headers.get("Content-Type") || "image/png",
+              "Cache-Control": `public, max-age=${cacheTTL}`,
+              "Access-Control-Allow-Origin": "*",
+            },
+          });
+        }
+      } catch(e) { console.error("Banner proxy error:", e.message); }
       return new Response(null, { status: 404, headers: corsHeaders });
     }
 
