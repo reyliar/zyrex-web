@@ -1,6 +1,14 @@
 /* ===================== DISCORD AUTH BUTTON ===================== */
 // Tries API first, falls back to Discord invite
 
+// Avatar proxy helper — bypasses Discord CDN blocks (e.g. Turkey)
+function avatarProxyUrl(userId, avatarHash, size) {
+    size = size || 64;
+    if (!userId || !avatarHash) return '';
+    const ext = avatarHash.startsWith('a_') ? 'gif' : 'png';
+    return '/api/avatar/' + userId + '/' + avatarHash + '.' + ext + '?size=' + size;
+}
+
 async function checkAuth() {
     const btn = document.getElementById('authBtn');
     if (!btn) return;
