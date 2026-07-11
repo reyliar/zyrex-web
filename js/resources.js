@@ -3,12 +3,45 @@
 
 let _mergedData = null;
 
+// Cache helpers for resources
+var RESOURCES_CACHE_KEY = 'zyrex_resources_cache';
+var RESOURCES_CACHE_TTL = 15 * 60 * 1000; // 15 minutes
+
+function getCachedResources() {
+    try {
+        var raw = localStorage.getItem(RESOURCES_CACHE_KEY);
+        if (!raw) return null;
+        var cached = JSON.parse(raw);
+        if (Date.now() - cached.ts < RESOURCES_CACHE_TTL) return cached.data;
+    } catch(e) {}
+    return null;
+}
+function setCachedResources(data) {
+    try {
+        localStorage.setItem(RESOURCES_CACHE_KEY, JSON.stringify({ ts: Date.now(), data: data }));
+    } catch(e) {}
+}
+
 function initResources() {
-    // Load creator index from bot API
+    // Load creator index from bot API (cache-aware)
     if (!window._creatorIndex) {
-        fetch('/api/search/creator-index').then(r => r.json()).then(d => {
-            if (d.success && d.index) window._creatorIndex = d.index;
-        }).catch(() => {});
+        // Try cache first
+        try {
+            var raw = localStorage.getItem('zyrex_creator_index');
+            if (raw) {
+                var cached = JSON.parse(raw);
+                if (cached.data && (Date.now() - cached.ts < 30 * 60 * 1000)) {
+                    window._creatorIndex = cached.data;
+                }
+            }
+        } catch(e) {}
+        // Fetch fresh in background
+        fetch('/api/search/creator-index').then(function(r) { return r.json(); }).then(function(d) {
+            if (d.success && d.index) {
+                window._creatorIndex = d.index;
+                try { localStorage.setItem('zyrex_creator_index', JSON.stringify({ ts: Date.now(), data: d.index })); } catch(e) {}
+            }
+        }).catch(function() {});
     }
     
     const data = window.resourcesData;

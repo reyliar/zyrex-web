@@ -1,5 +1,24 @@
 /* ===================== PRESETS GRID RENDERER ===================== */
 
+// Cache helpers for products data
+var PRODUCTS_CACHE_KEY = 'zyrex_products_cache';
+var PRODUCTS_CACHE_TTL = 15 * 60 * 1000; // 15 minutes
+
+function getCachedProducts() {
+    try {
+        var raw = localStorage.getItem(PRODUCTS_CACHE_KEY);
+        if (!raw) return null;
+        var cached = JSON.parse(raw);
+        if (Date.now() - cached.ts < PRODUCTS_CACHE_TTL) return cached.data;
+    } catch(e) {}
+    return null;
+}
+function setCachedProducts(data) {
+    try {
+        localStorage.setItem(PRODUCTS_CACHE_KEY, JSON.stringify({ ts: Date.now(), data: data }));
+    } catch(e) {}
+}
+
 async function initPresets() {
     // Load creator username index for search (await to ensure ready before first search)
     await loadCreatorIndex();
@@ -17,24 +36,45 @@ async function initPresets() {
         if (d2.success) statsData = d2;
     } catch(e) {}
     
+    // Try cached products first — render immediately if available
+    var cachedProducts = getCachedProducts();
+    if (cachedProducts && Array.isArray(cachedProducts)) {
+        var staticPresets = window.presetsData || [];
+        var mergedCached = [...cachedProducts];
+        staticPresets.forEach(function(sp) {
+            if (!mergedCached.some(function(p) { return p.id === sp.id; })) mergedCached.push(sp);
+        });
+        var presetsOnlyCached = mergedCached.filter(function(p) { return !p.type || p.type === 'preset'; });
+        window.presetsData = presetsOnlyCached;
+        updatePresetStats(presetsOnlyCached, apiCounts, statsData);
+        renderPresets(presetsOnlyCached);
+    }
+    
+    // Always fetch fresh data in background
     try {
         const resp = await fetch('/api/products');
         const data = await resp.json();
         if (Array.isArray(data)) {
+            setCachedProducts(data);
             const staticPresets = window.presetsData || [];
             const merged = [...data];
             staticPresets.forEach(sp => {
                 if (!merged.some(p => p.id === sp.id)) merged.push(sp);
             });
             const presetsOnly = merged.filter(p => !p.type || p.type === 'preset');
-            window.presetsData = presetsOnly;
-            updatePresetStats(presetsOnly, apiCounts, statsData);
-            renderPresets(presetsOnly);
-        } else {
+            // Only re-render if data changed or wasn't cached
+            if (!cachedProducts || JSON.stringify(presetsOnly.map(function(p){return p.id}).sort()) !== JSON.stringify(presetsOnlyCached.map(function(p){return p.id}).sort())) {
+                window.presetsData = presetsOnly;
+                updatePresetStats(presetsOnly, apiCounts, statsData);
+                renderPresets(presetsOnly);
+            }
+        } else if (!cachedProducts) {
             renderPresets(window.presetsData || []);
         }
     } catch(e) {
-        renderPresets(window.presetsData || []);
+        if (!cachedProducts) {
+            renderPresets(window.presetsData || []);
+        }
     }
 }
 
@@ -183,17 +223,49 @@ let currentSort = 'recent';
 let creatorIndex = {}; // {username: [product_ids]}
 let creatorIndexLoaded = false;
 
+// Cache helpers for creator index
+var CREATOR_INDEX_CACHE_KEY = 'zyrex_creator_index';
+var CREATOR_INDEX_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+
+function getCachedCreatorIndex() {
+    try {
+        var raw = localStorage.getItem(CREATOR_INDEX_CACHE_KEY);
+        if (!raw) return null;
+        var cached = JSON.parse(raw);
+        if (Date.now() - cached.ts < CREATOR_INDEX_CACHE_TTL) return cached.data;
+    } catch(e) {}
+    return null;
+}
+function setCachedCreatorIndex(data) {
+    try {
+        localStorage.setItem(CREATOR_INDEX_CACHE_KEY, JSON.stringify({ ts: Date.now(), data: data }));
+    } catch(e) {}
+}
+
 async function loadCreatorIndex() {
     if (creatorIndexLoaded) return;
+    
+    // Try cache first — apply immediately
+    var cached = getCachedCreatorIndex();
+    if (cached) {
+        creatorIndex = cached;
+        window._creatorIndex = cached;
+        creatorIndexLoaded = true;
+        if (currentSearch) filterPresets();
+    }
+    
+    // Always fetch fresh in background
     try {
         var r = await fetch('/api/search/creator-index');
         var d = await r.json();
         if (d.success && d.index) {
+            setCachedCreatorIndex(d.index);
+            var changed = JSON.stringify(d.index) !== JSON.stringify(creatorIndex);
             creatorIndex = d.index;
             window._creatorIndex = d.index;
             creatorIndexLoaded = true;
-            // Re-filter if user already typed something
-            if (currentSearch) filterPresets();
+            // Re-filter if index changed and user already typed something
+            if (changed && currentSearch) filterPresets();
         }
     } catch(e) { console.error('Creator index load failed:', e); }
 }

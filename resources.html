@@ -260,16 +260,30 @@
     </footer>
 
     <script src="js/auth.js"></script>
-    <script src="js/script.js?v=2"></script>
+    <script src="js/script.js?v=3"></script>
     <script src="js/presets-data.js?v=4"></script>
-    <script src="js/presets.js?v=9"></script>
+    <script src="js/presets.js?v=10"></script>
     <script>
     (function() {
         var searchIndex = {};
         
-        // Load creator index from bot API
+        // Try loading creator index from cache first (instant availability)
+        try {
+            var raw = localStorage.getItem('zyrex_creator_index');
+            if (raw) {
+                var cached = JSON.parse(raw);
+                if (cached.data && (Date.now() - cached.ts < 30 * 60 * 1000)) {
+                    searchIndex = cached.data;
+                }
+            }
+        } catch(e) {}
+        
+        // Load creator index from bot API (refresh in background)
         fetch('/api/search/creator-index').then(function(r){ return r.json(); }).then(function(d){
-            if (d && d.success && d.index) searchIndex = d.index;
+            if (d && d.success && d.index) {
+                searchIndex = d.index;
+                try { localStorage.setItem('zyrex_creator_index', JSON.stringify({ ts: Date.now(), data: d.index })); } catch(e) {}
+            }
         }).catch(function(){});
         
         // Use event delegation on document (DOM might be rebuilt by presets.js)

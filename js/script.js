@@ -103,13 +103,33 @@ function getBannerUrl(user, size = 480) {
     return '/api/banner/' + user.id + '/' + user.banner + '.' + ext + '?size=' + size;
 }
 
+// Cache helpers for Discord user data
+var DISCORD_USER_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+function getCachedDiscordUser(userId) {
+    try {
+        var raw = localStorage.getItem('zyrex_discord_user_' + userId);
+        if (!raw) return null;
+        var cached = JSON.parse(raw);
+        if (Date.now() - cached.ts < DISCORD_USER_CACHE_TTL) return cached.data;
+    } catch(e) {}
+    return null;
+}
+function setCachedDiscordUser(userId, data) {
+    try {
+        localStorage.setItem('zyrex_discord_user_' + userId, JSON.stringify({ ts: Date.now(), data: data }));
+    } catch(e) {}
+}
+
 async function fetchDiscordUser(userId) {
     try {
         const url = new URL('/api/discord-user', location.origin);
         url.searchParams.set('userId', userId);
         const response = await fetch(url);
         const data = await response.json();
-        if (data.success && data.user) return data.user;
+        if (data.success && data.user) {
+            setCachedDiscordUser(userId, data.user);
+            return data.user;
+        }
     } catch (err) {
         console.warn(`Failed to fetch Discord user ${userId}:`, err);
     }
@@ -120,105 +140,145 @@ async function loadTeamMembers() {
     const teamGrid = document.getElementById('teamGrid');
     if (!teamGrid) return;
 
-    teamGrid.innerHTML = '<div class="loading-team"><i class="fas fa-spinner fa-spin"></i> Loading team...</div>';
+    // Helper to render a single member card
+    function renderMemberCard(member) {
+        var card = document.createElement('div');
+        card.className = 'team-card';
+        var avatarHtml = member.user && member.user.avatar
+            ? '<img src="' + getAvatarUrl(member.user) + '" alt="' + (member.user.global_name || member.user.username) + '">'
+            : '<div class="avatar-placeholder"><i class="fas fa-user"></i></div>';
+        var displayName = (member.user && (member.user.global_name || member.user.username)) || member.cached_name || 'Loading...';
+        var username = (member.user && member.user.username) || member.cached_username || '';
+        var discordTag = username ? '@' + username : '';
+        var roleClass = member.role.toLowerCase().replace(/\s+/g, '-');
+        card.innerHTML = '<a href="https://discord.com/users/' + member.userId + '" target="_blank" class="team-card-link">' +
+            '<div class="team-avatar">' + avatarHtml + '</div>' +
+            '<h4>' + displayName + '</h4>' +
+            '<span class="team-discord-tag">' + discordTag + '</span>' +
+            '<span class="team-role role-' + roleClass + '"><i class="fas fa-crown"></i> ' + member.role + '</span>' +
+            '</a>';
+        return card;
+    }
 
-    // Timeout: show fallback after 6 seconds if still loading
-    const timeoutId = setTimeout(() => {
-        if (teamGrid.querySelector('.loading-team')) {
+    // Step 1: Try to render from cache immediately
+    var cachedMembers = teamMembers.map(function(member) {
+        var cached = getCachedDiscordUser(member.userId);
+        return { ...member, user: cached, cached_name: cached ? (cached.global_name || cached.username) : null, cached_username: cached ? cached.username : null };
+    });
+    var hasAllCached = cachedMembers.every(function(m) { return m.user; });
+
+    if (hasAllCached) {
+        // Render cached data immediately — no loading spinner
+        teamGrid.innerHTML = '';
+        cachedMembers.forEach(function(member) {
+            teamGrid.appendChild(renderMemberCard(member));
+        });
+    } else {
+        teamGrid.innerHTML = '<div class="loading-team"><i class="fas fa-spinner fa-spin"></i> Loading team...</div>';
+    }
+
+    // Step 2: Always fetch fresh data in background and update
+    var timeoutId = setTimeout(function() {
+        if (!hasAllCached && teamGrid.querySelector('.loading-team')) {
             teamGrid.innerHTML = '';
-            teamMembers.forEach(member => {
-                const card = document.createElement('div');
+            teamMembers.forEach(function(member) {
+                var card = document.createElement('div');
                 card.className = 'team-card';
-                const roleClass = member.role.toLowerCase().replace(/\s+/g, '-');
-                card.innerHTML = `
-                    <a href="https://discord.com/users/${member.userId}" target="_blank" class="team-card-link">
-                        <div class="team-avatar">
-                            <div class="avatar-placeholder"><i class="fas fa-user"></i></div>
-                        </div>
-                        <h4>Loading...</h4>
-                        <span class="team-discord-tag">@${member.userId}</span>
-                        <span class="team-role role-${roleClass}">
-                            <i class="fas fa-crown"></i> ${member.role}
-                        </span>
-                    </a>
-                `;
+                var roleClass = member.role.toLowerCase().replace(/\s+/g, '-');
+                card.innerHTML = '<a href="https://discord.com/users/' + member.userId + '" target="_blank" class="team-card-link">' +
+                    '<div class="team-avatar"><div class="avatar-placeholder"><i class="fas fa-user"></i></div></div>' +
+                    '<h4>Loading...</h4>' +
+                    '<span class="team-discord-tag">@' + member.userId + '</span>' +
+                    '<span class="team-role role-' + roleClass + '"><i class="fas fa-crown"></i> ' + member.role + '</span>' +
+                    '</a>';
                 teamGrid.appendChild(card);
             });
         }
     }, 6000);
 
-    const members = await Promise.all(
-        teamMembers.map(async (member) => {
-            const user = await fetchDiscordUser(member.userId);
-            return { ...member, user };
+    var freshMembers = await Promise.all(
+        teamMembers.map(async function(member) {
+            var user = await fetchDiscordUser(member.userId);
+            // Fall back to cache if fetch fails
+            if (!user) user = getCachedDiscordUser(member.userId);
+            return { ...member, user: user };
         })
     );
 
     clearTimeout(timeoutId);
-    teamGrid.innerHTML = '';
 
-    members.forEach(member => {
-        const card = document.createElement('div');
-        card.className = 'team-card';
+    // Only update if data actually changed
+    var needsUpdate = false;
+    if (!hasAllCached) { needsUpdate = true; }
+    else {
+        for (var i = 0; i < freshMembers.length; i++) {
+            var f = freshMembers[i];
+            var c = cachedMembers[i];
+            var fName = (f.user && (f.user.global_name || f.user.username)) || '';
+            var cName = c.cached_name || '';
+            if (fName !== cName) { needsUpdate = true; break; }
+        }
+    }
 
-        const avatarHtml = member.user && member.user.avatar
-            ? `<img src="${getAvatarUrl(member.user)}" alt="${member.user.global_name || member.user.username}">`
-            : `<div class="avatar-placeholder"><i class="fas fa-user"></i></div>`;
-
-        const displayName = member.user?.global_name || member.user?.username || 'Unknown';
-        const username = member.user?.username || '';
-        const discordTag = member.user ? `@${username}` : '';
-        const roleClass = member.role.toLowerCase().replace(/\s+/g, '-');
-
-        card.innerHTML = `
-            <a href="https://discord.com/users/${member.userId}" target="_blank" class="team-card-link">
-                <div class="team-avatar">
-                    ${avatarHtml}
-                </div>
-                <h4>${displayName}</h4>
-                <span class="team-discord-tag">${discordTag}</span>
-                <span class="team-role role-${roleClass}">
-                    <i class="fas fa-crown"></i> ${member.role}
-                </span>
-            </a>
-        `;
-
-        teamGrid.appendChild(card);
-    });
+    if (needsUpdate) {
+        teamGrid.innerHTML = '';
+        freshMembers.forEach(function(member) {
+            teamGrid.appendChild(renderMemberCard(member));
+        });
+    }
 }
 
 /* ===================== DISCORD GUILD STATS ===================== */
+var GUILD_STATS_CACHE_KEY = 'zyrex_guild_stats';
+var GUILD_STATS_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+
 async function fetchGuildStats() {
+    // Try cached stats first
+    try {
+        var raw = localStorage.getItem(GUILD_STATS_CACHE_KEY);
+        if (raw) {
+            var cached = JSON.parse(raw);
+            if (cached.data && (Date.now() - cached.ts < GUILD_STATS_CACHE_TTL)) {
+                applyGuildStats(cached.data);
+            }
+        }
+    } catch(e) {}
+
     try {
         const resp = await fetch('/api/guild/stats');
         if (!resp.ok) return;
         const data = await resp.json();
-        
-        const badge = document.querySelector('.stats-badge');
-        if (badge && data.name) {
-            badge.innerHTML = `<i class="fab fa-discord"></i> ${data.name.toUpperCase()}`;
-        }
-        
-        const statMap = {
-            'Members': data.member_count || 0,
-            'Online': data.online_count || 0,
-            'Channels': data.channels_count || 0,
-            'Roles': data.roles_count || 0,
-            'Boost Level': data.boost_level || 0
-        };
-        document.querySelectorAll('.stats-item').forEach(item => {
-            const label = item.querySelector('.stats-label');
-            const number = item.querySelector('.stats-number');
-            if (label && number) {
-                const key = label.textContent.trim();
-                if (statMap[key] !== undefined) {
-                    number.setAttribute('data-target', statMap[key]);
-                }
-            }
-        });
+        // Cache the guild stats
+        try { localStorage.setItem(GUILD_STATS_CACHE_KEY, JSON.stringify({ ts: Date.now(), data: data })); } catch(e) {}
+        applyGuildStats(data);
     } catch(e) {
         console.warn('Guild stats unavailable');
     }
+}
+
+function applyGuildStats(data) {
+    const badge = document.querySelector('.stats-badge');
+    if (badge && data.name) {
+        badge.innerHTML = '<i class="fab fa-discord"></i> ' + data.name.toUpperCase();
+    }
+    
+    const statMap = {
+        'Members': data.member_count || 0,
+        'Online': data.online_count || 0,
+        'Channels': data.channels_count || 0,
+        'Roles': data.roles_count || 0,
+        'Boost Level': data.boost_level || 0
+    };
+    document.querySelectorAll('.stats-item').forEach(function(item) {
+        const label = item.querySelector('.stats-label');
+        const number = item.querySelector('.stats-number');
+        if (label && number) {
+            const key = label.textContent.trim();
+            if (statMap[key] !== undefined) {
+                number.setAttribute('data-target', statMap[key]);
+            }
+        }
+    });
 }
 
 fetchGuildStats().then(() => {
