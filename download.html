@@ -369,6 +369,7 @@
         let downloadToken = null;
         let product = null;
         let resolvedFilePath = '';
+        let initialSelectedFiles = [];
         let countdownInterval = null;
         let tokenExpiryTime = null;
 
@@ -451,6 +452,7 @@
                     if (validateData.success) {
                         downloadToken = token;
                         resolvedFilePath = validateData.file_path || '';
+                        initialSelectedFiles = Array.isArray(validateData.selected_files) ? validateData.selected_files : [];
                         var expiresIn = validateData.expires_in || 0;
                         await loadProduct(validateData.product_id);
                         if (product && resolvedFilePath && !product.file_path) product.file_path = resolvedFilePath;
@@ -716,9 +718,27 @@
                 updateDownloadCount();
             }, 100);
             setTimeout(function() {
+                applyInitialSelectedFiles();
                 updateSelectedCount();
                 initFilePreviewClicks();
             }, 150);
+        }
+
+        function applyInitialSelectedFiles() {
+            if (!initialSelectedFiles || initialSelectedFiles.length === 0) return;
+            const selected = new Set(initialSelectedFiles.map(function(name) {
+                return String(name || '').replace(/\\/g, '/').replace(/^\/+/, '');
+            }).filter(Boolean));
+            if (selected.size === 0) return;
+
+            document.querySelectorAll('.file-cb').forEach(function(cb) {
+                cb.checked = selected.has(String(cb.dataset.filename || '').replace(/\\/g, '/').replace(/^\/+/, ''));
+            });
+            document.querySelectorAll('.folder-cb').forEach(function(cb) {
+                const group = cb.closest('.tree-folder-group');
+                const children = group ? group.querySelectorAll('.file-cb') : [];
+                cb.checked = children.length > 0 && Array.from(children).every(function(child) { return child.checked; });
+            });
         }
 
         // File selection helpers
@@ -1023,6 +1043,25 @@
             return Array.from(checked).map(function(cb) { return cb.dataset.filename; });
         }
 
+        function buildTokenRequestUrl(selectedFiles) {
+            const fpHint = resolvedFilePath || (product && product.file_path ? product.file_path : '');
+            const query = new URLSearchParams();
+            if (fpHint) query.set('file_path', fpHint);
+            if (Array.isArray(selectedFiles)) {
+                selectedFiles.forEach(function(name) {
+                    if (name) query.append('file', name);
+                });
+            }
+            const qs = query.toString();
+            return '/api/downloads/request-token/' + encodeURIComponent(productId) + (qs ? '?' + qs : '');
+        }
+
+        function resetDownloadButton(btn) {
+            if (!btn) return;
+            btn.disabled = false;
+            updateButtonText();
+        }
+
         let adResolve = null;
 
         function showAdOverlay() {
@@ -1089,8 +1128,6 @@
             if (downloadToken) {
                 btn.disabled = true;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing...';
-                // Show ad before download
-                await showAdOverlay();
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Downloading...';
                 await downloadWithProgress('/api/downloads/download?token=' + downloadToken + fileParam + titleParam, (product ? product.name : 'download') + '.zip');
                 btn.innerHTML = '<i class="fas fa-arrow-rotate-right"></i> Link Used';
@@ -1100,16 +1137,11 @@
 
             if (!productId) return;
             
-            // Show ad first, then generate token
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing...';
-            await showAdOverlay();
-            
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating token...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating sponsored link...';
             
             try {
-                const fpHint = resolvedFilePath || (product && product.file_path ? product.file_path : '');
-                const tokenUrl = '/api/downloads/request-token/' + productId + (fpHint ? '?file_path=' + encodeURIComponent(fpHint) : '');
+                const tokenUrl = buildTokenRequestUrl(Array.isArray(selectedFiles) ? selectedFiles : []);
                 const tokenResp = await fetch(tokenUrl);
                 if (!tokenResp.ok) {
                     const d = await tokenResp.json();
@@ -1118,32 +1150,25 @@
                         return;
                     }
                     alert(d.error || 'Unable to acquire download ticket.');
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-cloud-arrow-down"></i> Download Full Package (ZIP)';
+                    resetDownloadButton(btn);
                     return;
                 }
                 const tokenData = await tokenResp.json();
-                if (tokenData.success && tokenData.token) {
-                    downloadToken = tokenData.token;
+                if (tokenData.success && tokenData.ad_url) {
                     if (tokenData.file_path) {
                         resolvedFilePath = tokenData.file_path;
                         if (product) product.file_path = tokenData.file_path;
                     }
-                    if (tokenData.expires_in) startCountdown(tokenData.expires_in);
-                    btn.innerHTML = '<i class="fas fa-circle-check"></i> Starting download...';
-                    await downloadWithProgress('/api/downloads/download?token=' + tokenData.token + fileParam + titleParam, (product ? product.name : 'download') + '.zip');
-                    btn.innerHTML = '<i class="fas fa-arrow-rotate-right"></i> Link Used';
-                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fas fa-up-right-from-square"></i> Opening sponsored link...';
+                    window.location.href = tokenData.ad_url;
                 } else {
-                    alert('Ticket generation failed.');
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-cloud-arrow-down"></i> Download Full Package (ZIP)';
+                    alert('Sponsored link generation failed.');
+                    resetDownloadButton(btn);
                 }
             } catch (e) {
                 console.error('Download error:', e);
                 alert('Network error. Please try again.');
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-cloud-arrow-down"></i> Download Full Package (ZIP)';
+                resetDownloadButton(btn);
             }
         }
 
@@ -1154,8 +1179,7 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
             try {
-                const fpHint = resolvedFilePath || (product && product.file_path ? product.file_path : '');
-                const tokenUrl = '/api/downloads/request-token/' + productId + (fpHint ? '?file_path=' + encodeURIComponent(fpHint) : '');
+                const tokenUrl = buildTokenRequestUrl([filePath]);
                 const tokenResp = await fetch(tokenUrl);
                 if (!tokenResp.ok) {
                     const d = await tokenResp.json();
@@ -1165,12 +1189,10 @@
                     return;
                 }
                 const tokenData = await tokenResp.json();
-                if (tokenData.success && tokenData.token) {
-                    trackDownload();
-                    window.location.href = '/api/downloads/download?token=' + tokenData.token + '&file=' + encodeURIComponent(filePath);
-                    setTimeout(function() { btn.disabled = false; btn.innerHTML = origHtml; }, 3000);
+                if (tokenData.success && tokenData.ad_url) {
+                    window.location.href = tokenData.ad_url;
                 } else {
-                    alert('Ticket generation failed.');
+                    alert('Sponsored link generation failed.');
                     btn.disabled = false;
                     btn.innerHTML = origHtml;
                 }

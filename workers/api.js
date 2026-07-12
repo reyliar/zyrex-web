@@ -133,6 +133,39 @@ function redirect(url) {
   return Response.redirect(url, 302);
 }
 
+async function createShrinkEarnLink(env, destinationUrl) {
+  const apiToken = (env.SHRINKEARN_API_TOKEN || "").trim();
+  if (!apiToken) throw new Error("ShrinkEarn API token is not configured");
+
+  const apiUrl = new URL("https://shrinkearn.com/api");
+  apiUrl.searchParams.set("api", apiToken);
+  apiUrl.searchParams.set("url", destinationUrl);
+
+  const resp = await fetch(apiUrl.toString(), { cf: { cacheTtl: 0 } });
+  const text = await resp.text();
+  if (!resp.ok) throw new Error("ShrinkEarn API returned " + resp.status);
+
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error("ShrinkEarn API returned an invalid response");
+  }
+
+  if (data.status === "error") throw new Error(data.message || "ShrinkEarn could not create the link");
+
+  const shortUrl = String(data.shortenedUrl || "").replace(/^"+|"+$/g, "");
+  if (!/^https?:\/\//i.test(shortUrl)) throw new Error("ShrinkEarn did not return a short URL");
+  return shortUrl;
+}
+
+function buildTokenLandingUrl(token) {
+  const landingUrl = new URL("https://dl.zyrexediting.xyz/");
+  landingUrl.searchParams.set("token", token);
+  landingUrl.searchParams.set("src", "shrinkearn");
+  return landingUrl.toString();
+}
+
 function parseSession(cookie) {
   if (!cookie) return null;
   const m = cookie.match(/zyrex_session=([^;]+)/);
@@ -1612,6 +1645,7 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
           product_id: data.product_id,
           file_path: data.file_path,
           discord_id: data.discord_id,
+          selected_files: Array.isArray(data.selected_files) ? data.selected_files : [],
           expires_in: Math.max(0, Math.floor((data.exp - Date.now()) / 1000)),
         });
       }
@@ -1642,6 +1676,7 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
         
         let r2Prefix = "";
         let productHint = null;
+        const selectedFiles = getRequestedFileSet(url);
         try {
           const hintPath = url.searchParams.get("file_path");
           productHint = await fetchProductHint(productId, session);
@@ -1660,13 +1695,23 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
           discord_id: session.userId,
           product_id: productId,
           file_path: r2Prefix,
+          selected_files: selectedFiles ? Array.from(selectedFiles) : [],
           used: false,
         });
+
+        let adUrl = "";
+        const destinationUrl = buildTokenLandingUrl(token);
+        try {
+          adUrl = await createShrinkEarnLink(env, destinationUrl);
+        } catch (e) {
+          console.error("ShrinkEarn link error:", e.message);
+          return json({ success: false, error: "Sponsored link could not be created: " + e.message }, 502);
+        }
         
         return json({
           success: true,
-          token,
-          url: `https://dl.zyrexediting.xyz/?token=${token}`,
+          ad_url: adUrl,
+          short_url: adUrl,
           expires_in: TOKEN_EXPIRY,
           file_path: r2Prefix,
         });
@@ -1710,7 +1755,9 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
         await markTokenUsed(env, tokenFingerprint);
         
         const r2Prefix = normalizeR2Prefix(data.file_path);
-        const selectedSet = getRequestedFileSet(url);
+        const selectedSet = getRequestedFileSet(url) || (Array.isArray(data.selected_files) && data.selected_files.length
+          ? new Set(data.selected_files.map(normalizeSelectedName).filter(Boolean))
+          : null);
         const title = url.searchParams.get("title") || data.product_id;
         if (!r2Prefix) return json({ success: false, error: "Token does not contain a storage path" }, 400);
         
