@@ -1043,10 +1043,11 @@
             return Array.from(checked).map(function(cb) { return cb.dataset.filename; });
         }
 
-        function buildTokenRequestUrl(selectedFiles) {
+        function buildTokenRequestUrl(selectedFiles, redirectToSponsoredLink) {
             const fpHint = resolvedFilePath || (product && product.file_path ? product.file_path : '');
             const query = new URLSearchParams();
             if (fpHint) query.set('file_path', fpHint);
+            if (redirectToSponsoredLink) query.set('redirect', '1');
             if (Array.isArray(selectedFiles)) {
                 selectedFiles.forEach(function(name) {
                     if (name) query.append('file', name);
@@ -1162,30 +1163,8 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating sponsored link...';
             
             try {
-                const tokenUrl = buildTokenRequestUrl(Array.isArray(selectedFiles) ? selectedFiles : []);
-                const tokenResp = await fetch(tokenUrl);
-                const tokenData = await readApiJson(tokenResp);
-                if (!tokenResp.ok) {
-                    if (tokenResp.status === 401) {
-                        window.location.href = '/api/login?redirect=' + encodeURIComponent(location.pathname + location.search);
-                        return;
-                    }
-                    showDownloadError('Download link could not be created', tokenData, 'Unable to acquire download ticket.');
-                    resetDownloadButton(btn);
-                    return;
-                }
-                const sponsoredUrl = getSponsoredRedirectUrl(tokenData);
-                if (tokenData.success && sponsoredUrl) {
-                    if (tokenData.file_path) {
-                        resolvedFilePath = tokenData.file_path;
-                        if (product) product.file_path = tokenData.file_path;
-                    }
-                    btn.innerHTML = '<i class="fas fa-up-right-from-square"></i> Opening sponsored link...';
-                    window.location.href = sponsoredUrl;
-                } else {
-                    showDownloadError('Sponsored link generation failed', tokenData, 'No short link was returned.');
-                    resetDownloadButton(btn);
-                }
+                btn.innerHTML = '<i class="fas fa-up-right-from-square"></i> Opening sponsored link...';
+                window.location.href = buildTokenRequestUrl(Array.isArray(selectedFiles) ? selectedFiles : [], true);
             } catch (e) {
                 console.error('Download error:', e);
                 alert('Network error. Please try again.');
@@ -1200,23 +1179,7 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
             try {
-                const tokenUrl = buildTokenRequestUrl([filePath]);
-                const tokenResp = await fetch(tokenUrl);
-                const tokenData = await readApiJson(tokenResp);
-                if (!tokenResp.ok) {
-                    showDownloadError('Download link could not be created', tokenData, 'Unable to acquire download ticket.');
-                    btn.disabled = false;
-                    btn.innerHTML = origHtml;
-                    return;
-                }
-                const sponsoredUrl = getSponsoredRedirectUrl(tokenData);
-                if (tokenData.success && sponsoredUrl) {
-                    window.location.href = sponsoredUrl;
-                } else {
-                    showDownloadError('Sponsored link generation failed', tokenData, 'No short link was returned.');
-                    btn.disabled = false;
-                    btn.innerHTML = origHtml;
-                }
+                window.location.href = buildTokenRequestUrl([filePath], true);
             } catch (e) {
                 console.error('File download error:', e);
                 alert('Network error. Please try again.');

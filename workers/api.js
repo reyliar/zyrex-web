@@ -1717,6 +1717,10 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
           console.error("ShrinkEarn link error:", e.message);
           return json({ success: false, error: "Sponsored link could not be created: " + e.message }, 502);
         }
+
+        if (url.searchParams.get("redirect") === "1") {
+          return redirect(adUrl);
+        }
         
         return json({
           success: true,
