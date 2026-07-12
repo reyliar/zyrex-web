@@ -25,6 +25,22 @@ function escapeHtml(value) {
     });
 }
 
+function clearAuthCache() {
+    try { localStorage.removeItem(AUTH_USER_CACHE_KEY); } catch(e) {}
+}
+
+function renderLoginUI(btn) {
+    if (!btn) return;
+    btn.classList.remove('auth-ready', 'menu-open');
+    btn.innerHTML = '<a href="/api/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search) + '" class="auth-login-btn"><i class="fab fa-discord"></i><span>Login</span></a>';
+}
+
+function redirectToLogin(returnTo) {
+    clearAuthCache();
+    const target = returnTo || (window.location.pathname + window.location.search);
+    window.location.href = '/api/login?redirect=' + encodeURIComponent(target);
+}
+
 // Render auth UI from user data (reusable for both cached & fresh)
 function renderAuthUI(user) {
     const btn = document.getElementById('authBtn');
@@ -91,14 +107,19 @@ async function checkAuth() {
             renderAuthUI(user);
             return;
         }
+        if (resp.status === 401 || resp.status === 403) {
+            clearAuthCache();
+            renderLoginUI(btn);
+            return;
+        }
     } catch(e) {
         console.log('Auth API unavailable, showing invite link');
     }
     
     // Fallback: show Discord Login button (only if no cached user shown)
     if (!btn.querySelector('.auth-user')) {
-        btn.classList.remove('auth-ready', 'menu-open');
-        btn.innerHTML = '<a href="/api/login" class="auth-login-btn"><i class="fab fa-discord"></i><span>Login</span></a>';
+        clearAuthCache();
+        renderLoginUI(btn);
     }
 }
 
@@ -116,6 +137,9 @@ function toggleUserMenu() {
 
 // Close menu when clicking outside
 document.addEventListener('click', (e) => {
+    const logoutLink = e.target.closest && e.target.closest('a[href="/api/logout"]');
+    if (logoutLink) clearAuthCache();
+
     const menu = document.getElementById('userMenu');
     const btn = document.getElementById('authBtn');
     if (menu && btn && !btn.contains(e.target)) {

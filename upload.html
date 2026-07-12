@@ -767,7 +767,7 @@
         </div>
     </div>
 
-    <script src="js/auth.js?v=8"></script>
+    <script src="js/auth.js?v=9"></script>
     <script>
         let step=1,prod={},selRes=null,selDstEditor='',transferred='',cloudOk=false,cloudFiles=[],allEditors=[],currentUser=null,hlxPlatform='tiktok',cdnThumb='';
         
@@ -780,7 +780,7 @@
             document.getElementById('resourceId').value=prod.id;
             try{
                 const r=await fetch('/api/me',{credentials:'include'});
-                if(!r.ok){window.location.href='/';return}
+                if(!r.ok){redirectToLogin();return}
                 const u=await r.json();
                 currentUser=u;
                 
@@ -820,7 +820,7 @@
                 if(!checks[0]){
                     showLockScreen('No Preset Uploader Access', 'You do not have the <strong>Preset Uploader</strong> role on Discord yet. Claim it to unlock preset packaging.');
                 }
-            }catch(e){window.location.href='/'}
+            }catch(e){redirectToLogin()}
         });
 
         function showLockScreen(title, text) {

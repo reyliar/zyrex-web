@@ -657,7 +657,7 @@
         </div>
     </div>
 
-    <script src="js/auth.js?v=8"></script>
+    <script src="js/auth.js?v=9"></script>
     <script>
         let currentUser = null;
         let allProducts = [];
@@ -667,7 +667,7 @@
             try {
                 // Fetch logged in session
                 const resp = await fetch('/api/me', { credentials: 'include' });
-                if (!resp.ok) { window.location.href = '/'; return; }
+                if (!resp.ok) { redirectToLogin(); return; }
                 currentUser = await resp.json();
 
                 renderSidebarProfile(currentUser);
@@ -713,7 +713,7 @@
                 }
             } catch (e) {
                 console.error("Dashboard init error:", e);
-                window.location.href = '/';
+                redirectToLogin();
             }
 
             // Set up log refresh interval hook

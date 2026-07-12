@@ -175,18 +175,18 @@
         </div>
     </div>
 
-    <script src="js/auth.js?v=8"></script>
+    <script src="js/auth.js?v=9"></script>
     <script>
         // Auth check — admin only
         document.addEventListener('DOMContentLoaded', async () => {
             try {
                 const resp = await fetch('/api/me', { credentials: 'include' });
-                if (!resp.ok) { window.location.href = '/'; return; }
+                if (!resp.ok) { redirectToLogin(); return; }
                 const user = await resp.json();
                 if (!user.is_admin) {
                     document.body.innerHTML = `<div style="text-align:center;padding:150px 20px;color:var(--gray)"><i class="fas fa-lock" style="font-size:4rem;color:var(--cherry);opacity:.3;display:block;margin-bottom:20px"></i><h2>Access Denied</h2><p style="margin-top:10px">Admin only.</p><a href="/" style="color:var(--cherry);margin-top:20px;display:inline-block">Go Home</a></div>`;
                 }
-            } catch(e) { window.location.href = '/'; }
+            } catch(e) { redirectToLogin(); }
         });
 
         function updatePreview() {
