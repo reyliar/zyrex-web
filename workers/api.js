@@ -1722,6 +1722,7 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
           success: true,
           ad_url: adUrl,
           short_url: adUrl,
+          url: adUrl,
           provider: "shrinkearn",
           expires_in: TOKEN_EXPIRY,
           file_path: r2Prefix,

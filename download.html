@@ -1071,7 +1071,9 @@
 
         function getSponsoredRedirectUrl(data) {
             if (!data) return '';
-            const raw = data.ad_url || data.short_url || data.shortenedUrl || data.sponsored_url || '';
+            const nested = data.data || data.result || {};
+            const raw = data.ad_url || data.short_url || data.shortenedUrl || data.shortUrl || data.sponsored_url || data.url ||
+                nested.ad_url || nested.short_url || nested.shortenedUrl || nested.shortUrl || nested.sponsored_url || nested.url || '';
             const value = String(raw || '').replace(/^"+|"+$/g, '');
             return /^https?:\/\//i.test(value) ? value : '';
         }
