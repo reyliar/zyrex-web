@@ -88,14 +88,27 @@ document.addEventListener('click', (e) => {
 
 document.addEventListener('DOMContentLoaded', () => {
     checkAuth();
-    initCookieConsent();
+    if (!shouldSkipCookieConsent()) {
+        initCookieConsent();
+    }
 });
 
 /* ===================== COOKIES CONSENT SYSTEM ===================== */
 
+function shouldSkipCookieConsent() {
+    const host = window.location.hostname.toLowerCase();
+    const path = (window.location.pathname.replace(/\/+$/, '') || '/').toLowerCase();
+    return host === 'dl.zyrexediting.xyz' || path === '/download' || path === '/download.html';
+}
+
 function initCookieConsent() {
+    if (shouldSkipCookieConsent()) return;
+
     // Check if consent already given
-    const consent = localStorage.getItem('zyrex_cookie_consent');
+    let consent = null;
+    try {
+        consent = localStorage.getItem('zyrex_cookie_consent');
+    } catch(e) {}
     
     // Inject the global cookie consent CSS style
     const style = document.createElement('style');
@@ -303,18 +316,61 @@ function initCookieConsent() {
             color: #707080;
             margin-top: 2px;
         }
+
+        .cookie-backdrop,
+        .cookie-backdrop.show {
+            display: none !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
+
+        .cookie-banner {
+            left: 50% !important;
+            right: auto !important;
+            bottom: 24px !important;
+            width: calc(100% - 48px) !important;
+            max-width: 980px !important;
+            background: linear-gradient(135deg, rgba(16, 3, 7, 0.92), rgba(7, 8, 14, 0.92)) !important;
+            backdrop-filter: blur(22px) saturate(180%) !important;
+            -webkit-backdrop-filter: blur(22px) saturate(180%) !important;
+            border: 1px solid rgba(255, 255, 255, 0.10) !important;
+            border-radius: 14px !important;
+            padding: 16px 18px !important;
+            box-shadow: 0 18px 50px rgba(0, 0, 0, 0.55), 0 0 28px rgba(var(--cherry-rgb), 0.12) !important;
+            gap: 18px !important;
+            transform: translate3d(-50%, 18px, 0) !important;
+            transition: opacity 0.28s ease, transform 0.28s ease !important;
+        }
+
+        .cookie-banner.show {
+            transform: translate3d(-50%, 0, 0) !important;
+        }
+
+        .cookie-banner h3 {
+            font-size: 0.92rem !important;
+        }
+
+        .cookie-banner p {
+            line-height: 1.5 !important;
+        }
         
         @media (max-width: 768px) {
             .cookie-banner {
                 flex-direction: column !important;
                 align-items: stretch !important;
-                padding: 16px 16px 20px !important;
+                bottom: 14px !important;
+                width: calc(100% - 28px) !important;
+                padding: 14px !important;
                 gap: 14px !important;
-                border-radius: 14px 14px 0 0 !important;
+                border-radius: 12px !important;
             }
             .cookie-actions {
-                justify-content: flex-end;
+                justify-content: stretch;
                 flex-wrap: wrap;
+            }
+            .cookie-actions > * {
+                flex: 1 1 auto;
+                text-align: center;
             }
         }
     `;
@@ -331,13 +387,13 @@ function initCookieConsent() {
     banner.className = 'cookie-banner hidden';
     banner.innerHTML = `
         <div class="cookie-banner-text">
-            <h3>Cookie Preferences 🍪</h3>
-            <p>We use cookies to enhance your browsing experience, serve personalized content, and analyze our traffic. Please choose your preferences.</p>
+            <h3>Privacy choices</h3>
+            <p>Essential cookies keep login and downloads working. Optional cookies help us improve the site experience.</p>
         </div>
         <div class="cookie-actions">
-            <button id="acceptAllCookies" class="btn-cookie-primary">Accept All</button>
+            <button id="acceptAllCookies" class="btn-cookie-primary">Accept</button>
             <button id="declineCookies" class="btn-cookie-secondary">Decline</button>
-            <a href="/settings?tab=general" class="btn-cookie-link" style="text-decoration: underline; padding: 9px 12px;">Cookie Settings</a>
+            <a href="/settings?tab=general" class="btn-cookie-link" style="text-decoration: underline; padding: 9px 12px;">Settings</a>
         </div>
     `;
     document.body.appendChild(banner);
@@ -368,7 +424,9 @@ function saveConsent(analytics, personalization) {
         personalization: personalization,
         timestamp: Date.now()
     };
-    localStorage.setItem('zyrex_cookie_consent', JSON.stringify(preferences));
+    try {
+        localStorage.setItem('zyrex_cookie_consent', JSON.stringify(preferences));
+    } catch(e) {}
     
     const banner = document.getElementById('cookieConsentBanner');
     const backdrop = document.getElementById('cookieBackdrop');

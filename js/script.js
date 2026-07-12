@@ -5,6 +5,7 @@ const navLinks = document.querySelectorAll('.nav-links a');
 let lastScrollY = 0;
 let scrollTimeout = null;
 
+if (navbar) {
 window.addEventListener('scroll', () => {
     const currentScrollY = window.scrollY;
     
@@ -46,11 +47,13 @@ window.addEventListener('scroll', () => {
         }
     });
 });
+}
 
 /* ===================== MOBILE HAMBURGER MENU ===================== */
 const hamburger = document.getElementById('hamburger');
 const navLinksContainer = document.getElementById('navLinks');
 
+if (hamburger && navLinksContainer) {
 hamburger.addEventListener('click', () => {
     hamburger.classList.toggle('active');
     navLinksContainer.classList.toggle('open');
@@ -63,6 +66,7 @@ navLinks.forEach(link => {
         navLinksContainer.classList.remove('open');
     });
 });
+}
 
 /* ===================== DISCORD API - TEAM PROFILES ===================== */
 const BOT_API = 'http://93.115.101.154:12988';
@@ -281,6 +285,7 @@ function applyGuildStats(data) {
     });
 }
 
+if (document.querySelector('.stats-badge, .stats-item, .stats-number')) {
 fetchGuildStats().then(() => {
     /* ===================== COUNTER ANIMATION ===================== */
 const counters = document.querySelectorAll('.stats-number');
@@ -317,6 +322,7 @@ const counterObserver = new IntersectionObserver((entries) => {
 
 counters.forEach(counter => counterObserver.observe(counter));
 });
+}
 
 /* ===================== CONTACT FORM ===================== */
 const contactForm = document.getElementById('contactForm');
@@ -326,6 +332,7 @@ if (contactForm) {
         e.preventDefault();
 
         const submitBtn = contactForm.querySelector('.form-submit');
+        if (!submitBtn) return;
         const originalText = submitBtn.innerHTML;
         submitBtn.innerHTML = 'Sending... <i class="fas fa-spinner fa-spin"></i>';
         submitBtn.disabled = true;
@@ -352,6 +359,12 @@ if (contactForm) {
 /* ===================== SCROLL REVEAL ANIMATION ===================== */
 function initScrollReveal() {
     const revealElements = document.querySelectorAll('.reveal, .reveal-scale, .reveal-left, .reveal-right, .resource-card, .team-card, .contact-grid, .stats-item, .about-intro-card');
+    if (!revealElements.length) return;
+
+    if (!('IntersectionObserver' in window)) {
+        revealElements.forEach(el => el.classList.add('revealed'));
+        return;
+    }
 
     const revealObserver = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
@@ -399,7 +412,8 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 /* ===================== PARTICLE BACKGROUND ===================== */
 const particlesContainer = document.getElementById('particles');
 if (particlesContainer) {
-    const particleCount = 50;
+    const compactParticles = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+    const particleCount = compactParticles ? 18 : 36;
     for (let i = 0; i < particleCount; i++) {
         const particle = document.createElement('div');
         particle.style.cssText = `
@@ -498,4 +512,4 @@ window.showToast = function(title, message, type = 'success') {
     }, 4500);
 };
 
-console.log('🔥 Zyrex - Website loaded successfully!');
+console.log('Zyrex - Website loaded successfully!');
