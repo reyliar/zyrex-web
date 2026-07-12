@@ -141,20 +141,30 @@ async function createShrinkEarnLink(env, destinationUrl) {
   apiUrl.searchParams.set("api", apiToken);
   apiUrl.searchParams.set("url", destinationUrl);
 
-  const resp = await fetch(apiUrl.toString(), { cf: { cacheTtl: 0 } });
+  const resp = await fetch(apiUrl.toString(), {
+    headers: {
+      "Accept": "application/json, text/plain, */*",
+      "User-Agent": "Mozilla/5.0 (compatible; ZyrexDownload/1.0)",
+    },
+    cf: { cacheTtl: 0 },
+  });
   const text = await resp.text();
-  if (!resp.ok) throw new Error("ShrinkEarn API returned " + resp.status);
+  if (!resp.ok) {
+    throw new Error("ShrinkEarn API returned " + resp.status + ": " + text.slice(0, 160));
+  }
 
-  let data;
+  let data = null;
   try {
     data = JSON.parse(text);
   } catch {
-    throw new Error("ShrinkEarn API returned an invalid response");
+    const plainUrl = text.trim().replace(/^"+|"+$/g, "");
+    if (/^https?:\/\//i.test(plainUrl)) return plainUrl;
+    throw new Error("ShrinkEarn API returned an invalid response: " + text.slice(0, 160));
   }
 
   if (data.status === "error") throw new Error(data.message || "ShrinkEarn could not create the link");
 
-  const shortUrl = String(data.shortenedUrl || "").replace(/^"+|"+$/g, "");
+  const shortUrl = String(data.shortenedUrl || data.short_url || data.shortUrl || data.url || "").replace(/^"+|"+$/g, "");
   if (!/^https?:\/\//i.test(shortUrl)) throw new Error("ShrinkEarn did not return a short URL");
   return shortUrl;
 }
@@ -1712,6 +1722,7 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
           success: true,
           ad_url: adUrl,
           short_url: adUrl,
+          provider: "shrinkearn",
           expires_in: TOKEN_EXPIRY,
           file_path: r2Prefix,
         });

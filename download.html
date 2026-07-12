@@ -1062,6 +1062,25 @@
             updateButtonText();
         }
 
+        async function readApiJson(resp) {
+            const text = await resp.text();
+            if (!text) return {};
+            try { return JSON.parse(text); }
+            catch(e) { return { error: text }; }
+        }
+
+        function getSponsoredRedirectUrl(data) {
+            if (!data) return '';
+            const raw = data.ad_url || data.short_url || data.shortenedUrl || data.sponsored_url || '';
+            const value = String(raw || '').replace(/^"+|"+$/g, '');
+            return /^https?:\/\//i.test(value) ? value : '';
+        }
+
+        function showDownloadError(prefix, data, fallback) {
+            const detail = data && (data.error || data.message || data.status);
+            alert(prefix + (detail ? ': ' + detail : ': ' + fallback));
+        }
+
         let adResolve = null;
 
         function showAdOverlay() {
@@ -1143,26 +1162,26 @@
             try {
                 const tokenUrl = buildTokenRequestUrl(Array.isArray(selectedFiles) ? selectedFiles : []);
                 const tokenResp = await fetch(tokenUrl);
+                const tokenData = await readApiJson(tokenResp);
                 if (!tokenResp.ok) {
-                    const d = await tokenResp.json();
                     if (tokenResp.status === 401) {
                         window.location.href = '/api/login?redirect=' + encodeURIComponent(location.pathname + location.search);
                         return;
                     }
-                    alert(d.error || 'Unable to acquire download ticket.');
+                    showDownloadError('Download link could not be created', tokenData, 'Unable to acquire download ticket.');
                     resetDownloadButton(btn);
                     return;
                 }
-                const tokenData = await tokenResp.json();
-                if (tokenData.success && tokenData.ad_url) {
+                const sponsoredUrl = getSponsoredRedirectUrl(tokenData);
+                if (tokenData.success && sponsoredUrl) {
                     if (tokenData.file_path) {
                         resolvedFilePath = tokenData.file_path;
                         if (product) product.file_path = tokenData.file_path;
                     }
                     btn.innerHTML = '<i class="fas fa-up-right-from-square"></i> Opening sponsored link...';
-                    window.location.href = tokenData.ad_url;
+                    window.location.href = sponsoredUrl;
                 } else {
-                    alert('Sponsored link generation failed.');
+                    showDownloadError('Sponsored link generation failed', tokenData, 'No short link was returned.');
                     resetDownloadButton(btn);
                 }
             } catch (e) {
@@ -1181,18 +1200,18 @@
             try {
                 const tokenUrl = buildTokenRequestUrl([filePath]);
                 const tokenResp = await fetch(tokenUrl);
+                const tokenData = await readApiJson(tokenResp);
                 if (!tokenResp.ok) {
-                    const d = await tokenResp.json();
-                    alert(d.error || 'Unable to acquire download ticket.');
+                    showDownloadError('Download link could not be created', tokenData, 'Unable to acquire download ticket.');
                     btn.disabled = false;
                     btn.innerHTML = origHtml;
                     return;
                 }
-                const tokenData = await tokenResp.json();
-                if (tokenData.success && tokenData.ad_url) {
-                    window.location.href = tokenData.ad_url;
+                const sponsoredUrl = getSponsoredRedirectUrl(tokenData);
+                if (tokenData.success && sponsoredUrl) {
+                    window.location.href = sponsoredUrl;
                 } else {
-                    alert('Sponsored link generation failed.');
+                    showDownloadError('Sponsored link generation failed', tokenData, 'No short link was returned.');
                     btn.disabled = false;
                     btn.innerHTML = origHtml;
                 }
