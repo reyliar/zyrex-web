@@ -7,7 +7,7 @@
     <meta name="author" content="Zyrex">
     <title>Zyrex | Product</title>
     <link rel="icon" type="image/png" href="/assets/content.png">
-    <link rel="stylesheet" href="css/style.css?v=22">
+    <link rel="stylesheet" href="css/style.css?v=23">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
@@ -24,7 +24,7 @@
             --card-border: rgba(230, 21, 54, 0.08);
             --transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        
+
         .product-page {
             padding-top: 160px;
             min-height: 100vh;
@@ -457,7 +457,7 @@
         .btn-admin-edit:hover { background: rgba(255, 180, 0, 0.22); transform: translateY(-1px); }
         .btn-admin-delete { background: rgba(255, 56, 96, 0.1); border: 1px solid rgba(255, 56, 96, 0.2); color: #ff3860; }
         .btn-admin-delete:hover { background: rgba(255, 56, 96, 0.2); transform: translateY(-1px); }
-        
+
         .admin-modal-overlay {
             position: fixed;
             inset: 0;
@@ -506,9 +506,7 @@
             </ul>
             <div class="nav-actions">
                 <div id="authBtn"></div>
-                <a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord">
-                    <i class="fab fa-discord"></i> <span>Join Us</span>
-                </a>
+
                 <button class="hamburger" id="hamburger" aria-label="Menu">
                     <span></span>
                     <span></span>
@@ -578,7 +576,7 @@
         </div>
     </footer>
 
-    <script src="js/auth.js?v=5"></script>
+    <script src="js/auth.js?v=6"></script>
     <script src="js/script.js?v=5"></script>
     <script src="js/plugins-data.js?v=4"></script>
     <script src="js/presets-data.js?v=4"></script>
@@ -795,7 +793,7 @@
                 'others': 'Others'
             };
 
-            const notesHtml = p.notes 
+            const notesHtml = p.notes
                 ? `<div class="product-notes"><i class="fas fa-circle-info"></i> ${p.notes}</div>`
                 : '';
 
@@ -810,11 +808,11 @@
             // Creator details (original preset author) — only show if creator info exists
             const hasCreator = p.creator_nickname || p.creator_social_url;
             const creatorNickname = p.creator_nickname || p.author_name || '';
-            const creatorAvatarHtml = p.creator_avatar 
-                ? `<img src="${p.creator_avatar}">` 
+            const creatorAvatarHtml = p.creator_avatar
+                ? `<img src="${p.creator_avatar}">`
                 : `<i class="fas fa-user"></i>`;
-            const creatorSocialHtml = p.creator_social_url 
-                ? `<a href="${p.creator_social_url}" target="_blank"><i class="fas fa-external-link-alt" style="font-size:0.6rem"></i> View Profile</a>` 
+            const creatorSocialHtml = p.creator_social_url
+                ? `<a href="${p.creator_social_url}" target="_blank"><i class="fas fa-external-link-alt" style="font-size:0.6rem"></i> View Profile</a>`
                 : '';
             const creatorSectionHtml = hasCreator ? `
                 <div style="margin-top:10px">
@@ -835,7 +833,7 @@
             const uploaderAvatarHtml = uploaderAvatarUrl
                 ? `<img src="${uploaderAvatarUrl}">`
                 : `<i class="fab fa-discord" style="color:#5865F2;font-size:1.1rem"></i>`;
-            
+
             const uploaderSectionHtml = uploaderName ? `
                 <div style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05)">
                     <div style="font-size:0.75rem;font-weight:700;color:var(--gray-dark);text-transform:uppercase;letter-spacing:1px">Shared by</div>
@@ -921,7 +919,7 @@
                     <a href="javascript:if(document.referrer && document.referrer.includes(window.location.hostname)){history.back();}else{window.location.href='/plugins';}" class="product-back">
                         <i class="fas fa-arrow-left"></i> Back to Plugins
                     </a>
-                    
+
                     <div class="product-card glass-card-enhanced shimmer-sweep">
                         <!-- Left Column (Metadata) -->
                         <div class="product-left-col">
@@ -929,14 +927,14 @@
                             <div style="text-align:center">
                                 <span class="product-category-badge">${categoryLabels[p.category] || p.category}</span>
                             </div>
-                            
+
                             ${platformTags.length ? `
                             <div style="margin-top:10px">
                                 <div style="font-size:0.75rem;font-weight:700;color:var(--gray-dark);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Compatibility</div>
                                 <div class="product-platform-tags" style="justify-content:flex-start">${platformTags.join('')}</div>
                             </div>
                             ` : ''}
-                            
+
                             <!-- Creator profile block -->
                             ${creatorSectionHtml}
 
@@ -961,14 +959,14 @@
                             </div>
                             ` : ''}
                         </div>
-                        
+
                         <!-- Right Column (Details & Download) -->
                         <div class="product-right-col">
                             <div>
                                 <h1 style="font-size:2.2rem;font-weight:900;margin:0 0 10px;letter-spacing:-0.5px;line-height:1.2;color:#fff">${p.name}</h1>
                                 ${p.description || p.desc ? `<p class="product-desc" style="font-size:0.92rem;line-height:1.6;color:var(--gray);margin:0">${linkifyUrls(p.description || p.desc)}</p>` : ''}
                             </div>
-                            
+
                             ${p.password ? `
                             <div style="display:flex;align-items:center;gap:15px;flex-wrap:wrap">
                                 <div class="product-password-box" style="margin-bottom:0;padding:8px 18px">
@@ -978,9 +976,9 @@
                                 </div>
                             </div>
                             ` : ''}
-                            
+
                             ${notesHtml}
-                            
+
                             <div style="margin-top:10px">
                                 <div class="product-downloads-title" style="margin-bottom:12px"><i class="fas fa-cloud-arrow-down"></i> Installation Package</div>
                                 <div class="product-downloads">

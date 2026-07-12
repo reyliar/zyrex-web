@@ -13,6 +13,18 @@ function avatarProxyUrl(userId, avatarHash, size) {
     return '/api/avatar/' + userId + '/' + avatarHash + '.' + ext + '?size=' + size;
 }
 
+function escapeHtml(value) {
+    return String(value || '').replace(/[&<>"']/g, function(char) {
+        return {
+            '&': '&amp;',
+            '<': '&lt;',
+            '>': '&gt;',
+            '"': '&quot;',
+            "'": '&#39;'
+        }[char];
+    });
+}
+
 // Render auth UI from user data (reusable for both cached & fresh)
 function renderAuthUI(user) {
     const btn = document.getElementById('authBtn');
@@ -20,19 +32,37 @@ function renderAuthUI(user) {
     const avatarUrl = user.avatar
         ? avatarProxyUrl(user.id, user.avatar, 64)
         : '';
-    btn.innerHTML = '<div class="auth-user" style="position:relative;display:flex;align-items:center;gap:8px;cursor:pointer" onclick="toggleUserMenu()">' +
-        (avatarUrl ? '<img src="' + avatarUrl + '" alt="" style="width:32px;height:32px;border-radius:50%;border:2px solid rgba(122, 8, 30,.3)">' : '') +
-        '<span style="font-size:.82rem;font-weight:500;color:#fff">' + (user.global_name || user.username) + '</span>' +
-        (user.is_admin ? '<span style="font-size:.55rem;padding:1px 5px;border-radius:4px;background:rgba(122, 8, 30,.15);color:#f53d5c;font-weight:700">ADMIN</span>' : '') +
-        '</div>' +
-        '<div id="userMenu" style="display:none;position:absolute;top:100%;right:0;margin-top:8px;background:#121216;border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:6px;min-width:180px;z-index:9999;box-shadow:0 10px 40px rgba(0,0,0,.5)">' +
-        '<div style="padding:10px 14px;border-bottom:1px solid rgba(255,255,255,.04);margin-bottom:4px">' +
-        '<div style="font-size:.85rem;font-weight:600">' + (user.global_name || user.username) + '</div>' +
-        '<div style="font-size:.7rem;color:#606070">@' + user.username + '</div>' +
-        '</div>' +
-        '<a href="/settings" style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:6px;color:#9090a0;text-decoration:none;font-size:.8rem;transition:all .2s" onmouseover="this.style.background=\'rgba(255,255,255,.04)\'" onmouseout="this.style.background=\'transparent\'"><i class="fas fa-cog" style="width:16px;text-align:center"></i> Settings</a>' +
-        ((user.can_upload || user.is_admin) ? '<a href="/upload" style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:6px;color:#9090a0;text-decoration:none;font-size:.8rem;transition:all .2s" onmouseover="this.style.background=\'rgba(255,255,255,.04)\'" onmouseout="this.style.background=\'transparent\'"><i class="fas fa-cloud-upload-alt" style="width:16px;text-align:center"></i> Upload</a>' : '') +
-        '<a href="/api/logout" style="display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:6px;color:#9090a0;text-decoration:none;font-size:.8rem;transition:all .2s" onmouseover="this.style.background=\'rgba(255,255,255,.04)\'" onmouseout="this.style.background=\'transparent\'"><i class="fas fa-sign-out-alt" style="width:16px;text-align:center"></i> Logout</a>' +
+    const displayName = escapeHtml(user.global_name || user.username || 'Zyrex User');
+    const username = escapeHtml(user.username || 'member');
+    const roleLabel = user.is_admin ? 'Admin' : (user.can_upload ? 'Uploader' : 'Member');
+    const initial = escapeHtml((user.global_name || user.username || 'Z').charAt(0).toUpperCase());
+    const avatarHtml = avatarUrl
+        ? '<img class="auth-avatar" src="' + avatarUrl + '" alt="">'
+        : '<span class="auth-avatar auth-avatar-fallback">' + initial + '</span>';
+
+    btn.classList.remove('menu-open');
+    btn.classList.add('auth-ready');
+    btn.innerHTML =
+        '<button type="button" class="auth-user" onclick="toggleUserMenu()" aria-expanded="false" aria-controls="userMenu">' +
+            avatarHtml +
+            '<span class="auth-copy">' +
+                '<span class="auth-name">' + displayName + '</span>' +
+                '<span class="auth-role">' + roleLabel + '</span>' +
+            '</span>' +
+            (user.is_admin ? '<span class="auth-admin-badge">ADMIN</span>' : '') +
+            '<i class="fas fa-chevron-down auth-chevron" aria-hidden="true"></i>' +
+        '</button>' +
+        '<div id="userMenu" class="auth-dropdown" hidden>' +
+            '<div class="auth-menu-head">' +
+                avatarHtml +
+                '<div class="auth-menu-copy">' +
+                    '<strong>' + displayName + '</strong>' +
+                    '<span>@' + username + '</span>' +
+                '</div>' +
+            '</div>' +
+            '<a href="/settings" class="auth-menu-link"><i class="fas fa-cog"></i><span>Settings</span></a>' +
+            ((user.can_upload || user.is_admin) ? '<a href="/upload" class="auth-menu-link"><i class="fas fa-cloud-upload-alt"></i><span>Upload</span></a>' : '') +
+            '<a href="/api/logout" class="auth-menu-link auth-menu-link-danger"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>' +
         '</div>';
 }
 
@@ -66,14 +96,20 @@ async function checkAuth() {
     
     // Fallback: show Discord Login button (only if no cached user shown)
     if (!btn.querySelector('.auth-user')) {
-        btn.innerHTML = '<a href="/api/login" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:8px;background:rgba(122, 8, 30,.15);color:#f53d5c;text-decoration:none;font-size:.8rem;font-weight:600;transition:all .3s" onmouseover="this.style.background=\'rgba(122, 8, 30,.25)\'" onmouseout="this.style.background=\'rgba(122, 8, 30,.15)\'"><i class="fab fa-discord"></i> Login</a>';
+        btn.classList.remove('auth-ready', 'menu-open');
+        btn.innerHTML = '<a href="/api/login" class="auth-login-btn"><i class="fab fa-discord"></i><span>Login</span></a>';
     }
 }
 
 function toggleUserMenu() {
+    const wrapper = document.getElementById('authBtn');
     const menu = document.getElementById('userMenu');
-    if (menu) {
-        menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+    const trigger = wrapper ? wrapper.querySelector('.auth-user') : null;
+    if (wrapper && menu) {
+        const nextOpen = !wrapper.classList.contains('menu-open');
+        wrapper.classList.toggle('menu-open', nextOpen);
+        menu.hidden = !nextOpen;
+        if (trigger) trigger.setAttribute('aria-expanded', String(nextOpen));
     }
 }
 
@@ -82,7 +118,10 @@ document.addEventListener('click', (e) => {
     const menu = document.getElementById('userMenu');
     const btn = document.getElementById('authBtn');
     if (menu && btn && !btn.contains(e.target)) {
-        menu.style.display = 'none';
+        btn.classList.remove('menu-open');
+        menu.hidden = true;
+        const trigger = btn.querySelector('.auth-user');
+        if (trigger) trigger.setAttribute('aria-expanded', 'false');
     }
 });
 

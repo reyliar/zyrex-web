@@ -14,7 +14,7 @@
     <meta property="og:image:height" content="745">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:image" content="https://zyrexediting.xyz/assets/banner.png">
-    <link rel="icon" type="image/png" href="/assets/content.png">    <link rel="stylesheet" href="css/style.css?v=22">
+    <link rel="icon" type="image/png" href="/assets/content.png">    <link rel="stylesheet" href="css/style.css?v=23">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
@@ -151,7 +151,7 @@
         </ul>
         <div class="nav-actions">
             <div id="authBtn"></div>
-            <a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord"><i class="fab fa-discord"></i> <span>Join Us</span></a>
+
             <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
         </div>
     </div></nav>
@@ -259,14 +259,14 @@
         </div>
     </footer>
 
-    <script src="js/auth.js?v=5"></script>
+    <script src="js/auth.js?v=6"></script>
     <script src="js/script.js?v=5"></script>
     <script src="js/presets-data.js?v=4"></script>
     <script src="js/presets.js?v=10"></script>
     <script>
     (function() {
         var searchIndex = {};
-        
+
         // Try loading creator index from cache first (instant availability)
         try {
             var raw = localStorage.getItem('zyrex_creator_index');
@@ -277,7 +277,7 @@
                 }
             }
         } catch(e) {}
-        
+
         // Load creator index from bot API (refresh in background)
         fetch('/api/search/creator-index').then(function(r){ return r.json(); }).then(function(d){
             if (d && d.success && d.index) {
@@ -285,21 +285,21 @@
                 try { localStorage.setItem('zyrex_creator_index', JSON.stringify({ ts: Date.now(), data: d.index })); } catch(e) {}
             }
         }).catch(function(){});
-        
+
         // Use event delegation on document (DOM might be rebuilt by presets.js)
         document.addEventListener('input', function(e) {
             var inp = e.target;
             if (!inp || inp.id !== 's') return;
-            
+
             var s = inp.value.toLowerCase().trim();
             var data = window.presetsData || [];
             console.log('🔍 Search:', s, '| Data items:', data.length, '| Index keys:', Object.keys(searchIndex).length);
-            
-            if (!s) { 
+
+            if (!s) {
                 if (typeof renderPresets === 'function') renderPresets(data);
-                return; 
+                return;
             }
-            
+
             // Build matched IDs from creator index
             var matchIds = null;
             if (Object.keys(searchIndex).length > 0) {
@@ -320,18 +320,18 @@
                     if (!found) matchIds = null;
                 }
             }
-            
+
             // Filter
             var filtered = data.filter(function(r){
                 if (matchIds && matchIds[r.id]) return true;
                 var txt = [
-                    r.name, r.creator_nickname, r.author_name, 
+                    r.name, r.creator_nickname, r.author_name,
                     r.creator_username, r.creator_social_url, r.tags,
                     r.desc, r.description
                 ].join(' ').toLowerCase();
                 return txt.indexOf(s) !== -1;
             });
-            
+
             if (typeof renderPresets === 'function') {
                 console.log('📊 Filtered:', filtered.length, 'results. matchIds size:', matchIds ? Object.keys(matchIds).length : 'none');
                 renderPresets(filtered);
@@ -339,7 +339,7 @@
                 console.log('❌ renderPresets not available');
             }
         });
-        
+
         // Init presets
         if (typeof initPresets === 'function') {
             initPresets().catch(function(e){ console.error(e); });
