@@ -1674,12 +1674,20 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
       }
 
       if (path.startsWith("/api/downloads/request-token/")) {
+        const shouldRedirect = url.searchParams.get("redirect") === "1";
+        const returnTo = url.searchParams.get("return_to") || "/download";
         const session = parseSession(request.headers.get("Cookie"));
-        if (!session) return json({ error: "Not logged in" }, 401);
+        if (!session) {
+          if (shouldRedirect) return redirect("/api/login?redirect=" + encodeURIComponent(returnTo));
+          return json({ error: "Not logged in" }, 401);
+        }
         
         // Verified role gate
         const isVerified = await checkVerifiedRole(session.userId, env);
-        if (!isVerified) return json({ error: "Verification required. You need the Verified role in our Discord server to download.", code: "NOT_VERIFIED" }, 403);
+        if (!isVerified) {
+          if (shouldRedirect) return redirect("/download?id=" + encodeURIComponent(path.split("/api/downloads/request-token/")[1] || ""));
+          return json({ error: "Verification required. You need the Verified role in our Discord server to download.", code: "NOT_VERIFIED" }, 403);
+        }
         
         const productId = path.split("/api/downloads/request-token/")[1];
         if (!productId) return json({ error: "Product ID required" }, 400);
@@ -1718,7 +1726,7 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
           return json({ success: false, error: "Sponsored link could not be created: " + e.message }, 502);
         }
 
-        if (url.searchParams.get("redirect") === "1") {
+        if (shouldRedirect) {
           return redirect(adUrl);
         }
         
