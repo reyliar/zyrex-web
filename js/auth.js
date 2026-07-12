@@ -78,6 +78,7 @@ function renderAuthUI(user) {
                 '</div>' +
             '</div>' +
             '<a href="/settings" class="auth-menu-link"><i class="fas fa-cog"></i><span>Settings</span></a>' +
+            '<a href="/bookmarks" class="auth-menu-link"><i class="fas fa-bookmark"></i><span>Bookmarks</span></a>' +
             ((user.can_upload || user.is_admin) ? '<a href="/upload" class="auth-menu-link"><i class="fas fa-cloud-upload-alt"></i><span>Upload</span></a>' : '') +
             '<a href="/api/logout" class="auth-menu-link auth-menu-link-danger"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>' +
         '</div>';

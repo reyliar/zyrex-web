@@ -3,6 +3,10 @@
 // Cache helpers for products data
 var PRODUCTS_CACHE_KEY = 'zyrex_products_cache';
 var PRODUCTS_CACHE_TTL = 15 * 60 * 1000; // 15 minutes
+var PRESETS_PAGE_SIZE = 33;
+var currentPresetPage = 1;
+var lastPresetRenderKey = '';
+var lastPresetRenderItems = [];
 
 function getCachedProducts() {
     try {
@@ -114,6 +118,86 @@ function animateRes(id,target){
     tick();
 }
 
+function shouldPaginatePresetGrid(grid) {
+    return !!grid && grid.id === 'pg' && !!document.querySelector('.pgn');
+}
+
+function setPresetPageStatus(page, totalPages, totalItems, pageItemCount, paginate) {
+    var shown = document.getElementById('shownCount');
+    if (shown) {
+        shown.textContent = paginate && totalItems > 0 ? pageItemCount + ' of ' + totalItems : String(totalItems);
+    }
+
+    var pageStatus = document.getElementById('pageStatus');
+    if (pageStatus) {
+        var safePage = totalItems > 0 ? page : 0;
+        var safeTotal = totalItems > 0 ? totalPages : 0;
+        pageStatus.innerHTML = 'Page <strong>' + safePage + '</strong> of <strong>' + safeTotal + '</strong>';
+    }
+}
+
+function getPresetPaginationPages(totalPages) {
+    var pages = [];
+    if (totalPages <= 7) {
+        for (var i = 1; i <= totalPages; i++) pages.push(i);
+        return pages;
+    }
+
+    pages.push(1);
+    var start = Math.max(2, currentPresetPage - 1);
+    var end = Math.min(totalPages - 1, currentPresetPage + 1);
+    if (start > 2) pages.push('gap-start');
+    for (var p = start; p <= end; p++) pages.push(p);
+    if (end < totalPages - 1) pages.push('gap-end');
+    pages.push(totalPages);
+    return pages;
+}
+
+function renderPresetPagination(totalPages) {
+    var pager = document.querySelector('.pgn');
+    if (!pager) return;
+    if (totalPages <= 1) {
+        pager.innerHTML = '';
+        return;
+    }
+
+    var buttons = [
+        '<button type="button" data-page="prev" aria-label="Previous page"' + (currentPresetPage === 1 ? ' disabled' : '') + '><i class="fas fa-chevron-left"></i></button>'
+    ];
+
+    getPresetPaginationPages(totalPages).forEach(function(page) {
+        if (typeof page === 'string') {
+            buttons.push('<span class="pgn-ellipsis" aria-hidden="true">...</span>');
+            return;
+        }
+        buttons.push('<button type="button" data-page="' + page + '"' + (page === currentPresetPage ? ' class="active"' : '') + '>' + page + '</button>');
+    });
+
+    buttons.push('<button type="button" data-page="next" aria-label="Next page"' + (currentPresetPage === totalPages ? ' disabled' : '') + '><i class="fas fa-chevron-right"></i></button>');
+    pager.innerHTML = buttons.join('');
+}
+
+function goToPresetPage(targetPage) {
+    if (!lastPresetRenderItems.length) return;
+    var totalPages = Math.max(1, Math.ceil(lastPresetRenderItems.length / PRESETS_PAGE_SIZE));
+    var nextPage = currentPresetPage;
+
+    if (targetPage === 'prev') nextPage -= 1;
+    else if (targetPage === 'next') nextPage += 1;
+    else nextPage = parseInt(targetPage, 10);
+
+    if (!Number.isFinite(nextPage)) return;
+    nextPage = Math.max(1, Math.min(totalPages, nextPage));
+    if (nextPage === currentPresetPage) return;
+
+    currentPresetPage = nextPage;
+    renderPresets(lastPresetRenderItems);
+    var top = document.querySelector('.rh') || document.getElementById('pg');
+    if (top && typeof top.scrollIntoView === 'function') {
+        top.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
 function renderPresets(items) {
     // Filter out deleted products
     let deletedIds = [];
@@ -128,15 +212,30 @@ function renderPresets(items) {
     
     const grid = document.getElementById('pg') || document.getElementById('presetsGrid');
     if (!grid) return;
+
+    const paginate = shouldPaginatePresetGrid(grid);
+    const renderKey = items.map(function(p) { return p.id || ''; }).join('|');
+    if (renderKey !== lastPresetRenderKey) {
+        currentPresetPage = 1;
+        lastPresetRenderKey = renderKey;
+    }
+    lastPresetRenderItems = items.slice();
+
     if (items.length === 0) {
         grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:#606070"><i class="fas fa-search" style="font-size:2rem;margin-bottom:15px;display:block"></i>No presets found.</div>';
-        const shown = document.getElementById('shownCount');
-        if (shown) shown.textContent = '0';
+        setPresetPageStatus(0, 0, 0, 0, paginate);
+        renderPresetPagination(0);
         return;
     }
 
-    const shown = document.getElementById('shownCount');
-    if (shown) shown.textContent = items.length;
+    const totalItems = items.length;
+    const totalPages = paginate ? Math.max(1, Math.ceil(totalItems / PRESETS_PAGE_SIZE)) : 1;
+    currentPresetPage = Math.max(1, Math.min(totalPages, currentPresetPage));
+    const pageStart = paginate ? (currentPresetPage - 1) * PRESETS_PAGE_SIZE : 0;
+    const pageItems = paginate ? items.slice(pageStart, pageStart + PRESETS_PAGE_SIZE) : items;
+
+    setPresetPageStatus(currentPresetPage, totalPages, totalItems, pageItems.length, paginate);
+    renderPresetPagination(totalPages);
 
     // Load download counts and like counts
     var downloadCounts = {};
@@ -146,7 +245,7 @@ function renderPresets(items) {
     try { likeCounts = JSON.parse(localStorage.getItem('zyrex_likes_count') || '{}'); } catch(e) {}
     try { bookmarkCounts = JSON.parse(localStorage.getItem('zyrex_bookmarks_count') || '{}'); } catch(e) {}
 
-    grid.innerHTML = items.map(item => {
+    grid.innerHTML = pageItems.map(item => {
         const cat = getCategoryLabel(item.category);
         const catClass = 'tag-' + (item.category || 'others');
         const icons = { 'after-effects':'fa-film','premiere-pro':'fa-video','photoshop':'fa-image','video-star':'fa-star','topaz-labs':'fa-gem','others':'fa-folder' };
@@ -363,6 +462,14 @@ document.addEventListener('DOMContentLoaded', () => {
             filterPresets();
         });
     });
+    const pager = document.querySelector('.pgn');
+    if (pager) {
+        pager.addEventListener('click', (e) => {
+            const button = e.target.closest('button[data-page]');
+            if (!button || button.disabled) return;
+            goToPresetPage(button.dataset.page);
+        });
+    }
 });
 
 console.log('🎨 Zyrex Presets loaded!');

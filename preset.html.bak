@@ -67,7 +67,7 @@
         <div class="footer-links"><h4>Community</h4><ul><li><a href="https://discord.gg/fAydSzpafA">Discord</a></li><li><a href="/#contact">Contact</a></li></ul></div>
         <div class="footer-newsletter"><h4>Newsletter</h4><p>Stay updated with Zyrex Editing.</p><div class="newsletter-form"><input type="email" placeholder="Your email"><button type="submit"><i class="fas fa-arrow-right"></i></button></div></div>
     </div><div class="footer-bottom"><p>&copy; 2026 Zyrex Editing. All rights reserved.</p></div></div></footer>
-    <script src="js/auth.js?v=9"></script>
+    <script src="js/auth.js?v=10"></script>
     <script src="js/presets-data.js?v=4"></script>
     <script>
     document.addEventListener("DOMContentLoaded",async()=>{const p=new URLSearchParams(window.location.search);const id=p.get("id");if(!id){showError("Preset ID missing");return}let product=null;try{const r=await fetch("/api/products?id="+id);if(r.ok){const d=await r.json();if(d&&d.id)product=d}}catch(e){console.warn(e)}if(!product&&window.presetsData)product=window.presetsData.find(p=>p.id===id);if(!product&&window.pluginsData)product=window.pluginsData.find(p=>p.id===id);if(!product){showError("Preset not found");return}renderPreset(product)});
