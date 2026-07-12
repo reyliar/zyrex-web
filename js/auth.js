@@ -34,7 +34,8 @@ function renderAuthUI(user) {
         : '';
     const displayName = escapeHtml(user.global_name || user.username || 'Zyrex User');
     const username = escapeHtml(user.username || 'member');
-    const roleLabel = user.is_admin ? 'Zyrex Staff' : (user.can_upload ? 'Uploader' : 'Member');
+    const roleLabel = user.can_upload ? 'Uploader' : 'Member';
+    const roleHtml = user.is_admin ? '' : '<span class="auth-role">' + roleLabel + '</span>';
     const initial = escapeHtml((user.global_name || user.username || 'Z').charAt(0).toUpperCase());
     const avatarHtml = avatarUrl
         ? '<img class="auth-avatar" src="' + avatarUrl + '" alt="">'
@@ -47,7 +48,7 @@ function renderAuthUI(user) {
             avatarHtml +
             '<span class="auth-copy">' +
                 '<span class="auth-name">' + displayName + '</span>' +
-                '<span class="auth-role">' + roleLabel + '</span>' +
+                roleHtml +
             '</span>' +
             (user.is_admin ? '<span class="auth-admin-badge" title="Admin"><i class="fas fa-shield-halved"></i><span>Admin</span></span>' : '') +
             '<i class="fas fa-chevron-down auth-chevron" aria-hidden="true"></i>' +
