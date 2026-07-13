@@ -12,51 +12,102 @@
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
         body{background:var(--dark);color:var(--light);font-family:Poppins,sans-serif;min-height:100vh}
-        .bm-wrap{padding:132px 20px 80px}
-        .bm-head{max-width:1160px;margin:0 auto 24px;display:flex;align-items:flex-end;justify-content:space-between;gap:18px}
-        .bm-kicker{display:inline-flex;align-items:center;gap:8px;color:var(--cherry-light);font-size:.74rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
-        .bm-head h1{font-family:Outfit,sans-serif;font-size:2rem;line-height:1.1;font-weight:900;margin:0 0 6px}
-        .bm-head p{color:var(--gray-dark);font-size:.86rem;line-height:1.6;max-width:560px}
-        .bm-count{display:inline-flex;align-items:center;gap:8px;padding:9px 12px;border:1px solid rgba(var(--cherry-rgb),.14);border-radius:8px;background:rgba(var(--cherry-rgb),.05);color:var(--gray);font-size:.76rem;font-weight:700;white-space:nowrap}
-        .bm-count strong{color:var(--cherry-light)}
-        .bm-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;max-width:1160px;margin:0 auto}
-        .bm-card{display:block;overflow:hidden;text-decoration:none;color:inherit;border:1px solid rgba(255,255,255,.07);border-radius:8px;background:rgba(255,255,255,.025);box-shadow:0 2px 16px rgba(0,0,0,.22);transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease}
-        .bm-card:hover{transform:translateY(-3px);border-color:rgba(var(--cherry-rgb),.28);box-shadow:0 12px 34px rgba(0,0,0,.35)}
-        .bm-img{position:relative;aspect-ratio:16/10;background:linear-gradient(135deg,#0a0a1a,#151528);overflow:hidden}
-        .bm-img img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .35s ease}
-        .bm-card:hover .bm-img img{transform:scale(1.04)}
-        .bm-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(var(--cherry-rgb),.08),rgba(10,2,4,.35))}
-        .bm-fallback i{font-size:2.4rem;color:rgba(var(--cherry-rgb),.24)}
-        .bm-badges{position:absolute;top:10px;left:10px;right:10px;display:flex;align-items:center;justify-content:space-between;gap:8px;z-index:2}
-        .bm-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 9px;border-radius:6px;background:rgba(0,0,0,.54);border:1px solid rgba(255,255,255,.08);backdrop-filter:blur(8px);color:#fff;font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.03em}
-        .bm-badge.saved{background:rgba(var(--cherry-rgb),.18);border-color:rgba(var(--cherry-rgb),.22);color:var(--cherry-light)}
-        .bm-body{padding:14px 16px 15px}
-        .bm-title{font-family:Outfit,sans-serif;font-size:.9rem;font-weight:800;line-height:1.3;margin:0 0 6px;display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-        .bm-desc{font-size:.72rem;color:var(--gray-dark);line-height:1.5;margin:0 0 14px;display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-        .bm-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;color:var(--gray-dark);font-size:.68rem}
-        .bm-creator{min-width:0;display:flex;align-items:center;gap:7px}
-        .bm-avatar{width:22px;height:22px;border-radius:50%;overflow:hidden;background:rgba(var(--cherry-rgb),.12);border:1px solid rgba(var(--cherry-rgb),.14);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        button,input,select{font:inherit}
+        [hidden]{display:none!important}
+        .bm-wrap{width:min(1220px,calc(100% - 40px));margin:0 auto;padding:126px 0 90px}
+        .bm-hero{position:relative;isolation:isolate;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:48px;min-height:290px;padding:48px 52px;margin-bottom:28px;border:1px solid rgba(255,255,255,.08);border-radius:26px;background:linear-gradient(120deg,rgba(30,4,10,.94),rgba(9,2,4,.88) 64%,rgba(39,4,11,.82));box-shadow:0 30px 80px rgba(0,0,0,.36),inset 0 1px 0 rgba(255,255,255,.04)}
+        .bm-hero::before{content:"";position:absolute;z-index:-2;width:440px;height:440px;right:-110px;top:-225px;border-radius:50%;background:radial-gradient(circle,rgba(230,21,54,.34),rgba(138,13,34,.08) 48%,transparent 70%);filter:blur(4px)}
+        .bm-hero::after{content:"";position:absolute;z-index:-1;inset:0;opacity:.18;background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:38px 38px;mask-image:linear-gradient(90deg,#000,transparent 75%)}
+        .bm-kicker{display:inline-flex;align-items:center;gap:9px;margin-bottom:16px;color:#ff6680;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.15em}
+        .bm-kicker::before{content:"";width:25px;height:1px;background:currentColor;box-shadow:0 0 12px currentColor}
+        .bm-hero h1{max-width:650px;margin:0 0 13px;font-family:Outfit,sans-serif;font-size:clamp(2.35rem,5vw,4.6rem);font-weight:800;line-height:.97;letter-spacing:-.055em}
+        .bm-hero h1 span{background:linear-gradient(135deg,#fff 20%,#ff4564 96%);-webkit-background-clip:text;background-clip:text;color:transparent}
+        .bm-hero p{max-width:600px;color:#b58f98;font-size:.93rem;line-height:1.75}
+        .bm-hero-actions{display:flex;align-items:center;gap:12px;margin-top:25px;flex-wrap:wrap}
+        .bm-primary,.bm-secondary{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:43px;padding:0 17px;border-radius:11px;text-decoration:none;font-size:.76rem;font-weight:800;transition:transform .25s ease,border-color .25s ease,background .25s ease,box-shadow .25s ease}
+        .bm-primary{color:#fff;background:linear-gradient(135deg,#d51232,#790d20);border:1px solid rgba(255,100,125,.35);box-shadow:0 10px 28px rgba(138,13,34,.25)}
+        .bm-primary:hover{color:#fff;transform:translateY(-2px);box-shadow:0 14px 34px rgba(168,14,40,.34)}
+        .bm-secondary{color:#dcbfc6;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.035)}
+        .bm-secondary:hover{color:#fff;border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.065)}
+        .bm-stat{position:relative;width:186px;height:186px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid rgba(255,83,112,.2);border-radius:50%;background:rgba(15,2,5,.68);box-shadow:inset 0 0 40px rgba(138,13,34,.15),0 0 0 13px rgba(138,13,34,.035),0 22px 55px rgba(0,0,0,.28)}
+        .bm-stat::before{content:"";position:absolute;inset:13px;border:1px dashed rgba(255,100,128,.18);border-radius:50%;animation:bm-spin 30s linear infinite}
+        .bm-stat i{margin-bottom:4px;color:#ff4867;font-size:1rem;filter:drop-shadow(0 0 10px rgba(255,56,92,.55))}
+        .bm-stat strong{font-family:Outfit,sans-serif;font-size:3.2rem;line-height:1;font-weight:800;letter-spacing:-.05em}
+        .bm-stat span{margin-top:4px;color:#9c747e;font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.13em}
+        @keyframes bm-spin{to{transform:rotate(360deg)}}
+        .bm-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px;padding:13px;border:1px solid rgba(255,255,255,.07);border-radius:16px;background:rgba(255,255,255,.025);box-shadow:0 12px 34px rgba(0,0,0,.15);backdrop-filter:blur(16px)}
+        .bm-search{position:relative;flex:1;max-width:470px}
+        .bm-search i{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#795a62;font-size:.75rem;pointer-events:none}
+        .bm-search input{width:100%;height:43px;padding:0 42px 0 39px;border:1px solid transparent;border-radius:11px;outline:none;color:#fcedf0;background:rgba(0,0,0,.24);font-size:.76rem;transition:border-color .2s ease,background .2s ease,box-shadow .2s ease}
+        .bm-search input::placeholder{color:#765861}
+        .bm-search input:focus{border-color:rgba(230,21,54,.42);background:rgba(0,0,0,.36);box-shadow:0 0 0 3px rgba(138,13,34,.1)}
+        .bm-search-clear{position:absolute;right:9px;top:50%;width:27px;height:27px;transform:translateY(-50%);border:0;border-radius:7px;background:transparent;color:#96727b;cursor:pointer}
+        .bm-search-clear:hover{color:#fff;background:rgba(255,255,255,.06)}
+        .bm-tools{display:flex;align-items:center;gap:12px}
+        .bm-results{color:#8f6d76;font-size:.68rem;font-weight:600;white-space:nowrap}
+        .bm-sort{position:relative}
+        .bm-sort i{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#a67b86;font-size:.66rem;pointer-events:none}
+        .bm-sort select{height:43px;padding:0 34px 0 34px;border:1px solid rgba(255,255,255,.08);border-radius:11px;outline:none;appearance:none;color:#d8bac1;background:#130509;font-size:.7rem;font-weight:700;cursor:pointer}
+        .bm-sort::after{content:"\f078";position:absolute;right:13px;top:50%;transform:translateY(-50%);font-family:"Font Awesome 6 Free";font-size:.55rem;font-weight:900;color:#7f5d66;pointer-events:none}
+        .bm-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+        .bm-card{position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.075);border-radius:18px;background:linear-gradient(150deg,rgba(25,7,11,.9),rgba(8,2,4,.94));box-shadow:0 15px 35px rgba(0,0,0,.23);animation:bm-rise .48s both;animation-delay:var(--delay,0ms);transition:transform .28s cubic-bezier(.2,.8,.2,1),border-color .28s ease,box-shadow .28s ease}
+        .bm-card:hover{transform:translateY(-6px);border-color:rgba(230,21,54,.29);box-shadow:0 24px 50px rgba(0,0,0,.38),0 0 25px rgba(138,13,34,.08)}
+        @keyframes bm-rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+        .bm-img{position:relative;aspect-ratio:16/9;background:#11050a;overflow:hidden}
+        .bm-cover{position:absolute;inset:0;display:block}
+        .bm-img::after{content:"";position:absolute;inset:auto 0 0;height:55%;pointer-events:none;background:linear-gradient(transparent,rgba(8,2,4,.82))}
+        .bm-img img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s cubic-bezier(.2,.8,.2,1),filter .3s ease}
+        .bm-card:hover .bm-img img{transform:scale(1.055);filter:saturate(1.08)}
+        .bm-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 30%,rgba(230,21,54,.17),transparent 42%),linear-gradient(135deg,#16050a,#080204)}
+        .bm-fallback i{font-size:3rem;color:rgba(255,67,99,.33);filter:drop-shadow(0 0 22px rgba(230,21,54,.25))}
+        .bm-badge{position:absolute;z-index:3;left:13px;top:13px;display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border:1px solid rgba(255,255,255,.1);border-radius:8px;background:rgba(5,1,2,.66);backdrop-filter:blur(12px);color:#f4dce2;font-size:.58rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;pointer-events:none}
+        .bm-remove{position:absolute;z-index:4;right:13px;top:13px;width:34px;height:34px;border:1px solid rgba(255,255,255,.1);border-radius:9px;background:rgba(5,1,2,.7);backdrop-filter:blur(12px);color:#ff607b;cursor:pointer;transition:background .2s ease,color .2s ease,transform .2s ease,border-color .2s ease}
+        .bm-remove:hover{transform:scale(1.06);color:#fff;background:rgba(172,13,41,.88);border-color:rgba(255,125,147,.4)}
+        .bm-body{padding:17px 18px 18px}
+        .bm-saved-label{display:flex;align-items:center;gap:7px;margin-bottom:8px;color:#a77b86;font-size:.58rem;font-weight:800;text-transform:uppercase;letter-spacing:.09em}
+        .bm-saved-label i{color:#ef2b4d}
+        .bm-title-link{text-decoration:none;color:inherit}
+        .bm-title{min-height:42px;margin:0 0 8px;font-family:Outfit,sans-serif;font-size:1.04rem;font-weight:750;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;transition:color .2s ease}
+        .bm-title-link:hover .bm-title{color:#ff6680}
+        .bm-desc{min-height:40px;margin:0 0 16px;color:#89666f;font-size:.68rem;line-height:1.55}
+        .bm-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:13px;border-top:1px solid rgba(255,255,255,.055);color:#96727b;font-size:.65rem}
+        .bm-creator{min-width:0;display:flex;align-items:center;gap:8px}
+        .bm-avatar{width:26px;height:26px;border-radius:8px;overflow:hidden;background:rgba(var(--cherry-rgb),.14);border:1px solid rgba(var(--cherry-rgb),.18);display:flex;align-items:center;justify-content:center;flex-shrink:0}
         .bm-avatar img{width:100%;height:100%;object-fit:cover}
-        .bm-avatar i{font-size:.58rem;color:var(--cherry-light)}
+        .bm-avatar i{font-size:.58rem;color:#ff5571}
         .bm-creator span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-        .bm-actions{display:flex;align-items:center;gap:10px;flex-shrink:0}
-        .bm-actions span{display:inline-flex;align-items:center;gap:4px}
-        .bm-actions i{color:var(--cherry-light);font-size:.62rem}
-        .bm-empty,.bm-loading{max-width:720px;margin:18px auto 0;padding:48px 20px;border:1px solid rgba(255,255,255,.06);border-radius:8px;background:rgba(255,255,255,.022);text-align:center;color:var(--gray-dark)}
-        .bm-empty i,.bm-loading i{display:block;font-size:2rem;color:var(--cherry-light);margin-bottom:14px}
-        .bm-empty h2{font-size:1rem;color:var(--light);font-family:Outfit,sans-serif;margin-bottom:8px}
-        .bm-empty p,.bm-loading p{font-size:.82rem;line-height:1.6;margin:0 auto 18px;max-width:440px}
-        .bm-empty a{display:inline-flex;align-items:center;gap:8px;text-decoration:none;color:#fff;background:var(--cherry);padding:10px 15px;border-radius:8px;font-size:.78rem;font-weight:800}
-        @media(max-width:768px){
-            .bm-wrap{padding:106px 14px 56px}
-            .bm-head{display:block}
-            .bm-head h1{font-size:1.55rem}
-            .bm-count{margin-top:14px}
-            .bm-grid{grid-template-columns:repeat(2,1fr);gap:12px}
-            .bm-body{padding:12px}
-            .bm-title{font-size:.78rem}
+        .bm-downloads{display:inline-flex;align-items:center;gap:5px;flex-shrink:0}
+        .bm-downloads i{color:#e52a49;font-size:.62rem}
+        .bm-state{max-width:760px;margin:38px auto 0;padding:58px 28px;border:1px solid rgba(255,255,255,.07);border-radius:22px;background:linear-gradient(145deg,rgba(25,6,10,.74),rgba(8,2,4,.75));text-align:center;color:#99747d;box-shadow:0 22px 55px rgba(0,0,0,.2)}
+        .bm-state-icon{position:relative;width:74px;height:74px;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;border:1px solid rgba(230,21,54,.22);border-radius:22px;color:#fa3657;background:linear-gradient(145deg,rgba(230,21,54,.13),rgba(138,13,34,.035));font-size:1.55rem;box-shadow:0 14px 35px rgba(138,13,34,.12)}
+        .bm-state h2{margin-bottom:8px;color:#f7e9ec;font-family:Outfit,sans-serif;font-size:1.35rem}
+        .bm-state p{max-width:470px;margin:0 auto 22px;font-size:.78rem;line-height:1.7}
+        .bm-loading-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
+        .bm-skeleton{overflow:hidden;border:1px solid rgba(255,255,255,.055);border-radius:18px;background:rgba(255,255,255,.018)}
+        .bm-skeleton-img,.bm-skeleton-line{position:relative;overflow:hidden;background:rgba(255,255,255,.045)}
+        .bm-skeleton-img{aspect-ratio:16/9}
+        .bm-skeleton-body{padding:18px}
+        .bm-skeleton-line{height:10px;margin-bottom:11px;border-radius:10px}
+        .bm-skeleton-line:first-child{width:70%;height:14px}.bm-skeleton-line:last-child{width:46%}
+        .bm-skeleton-img::after,.bm-skeleton-line::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.055),transparent);animation:bm-shimmer 1.4s infinite}
+        @keyframes bm-shimmer{to{transform:translateX(100%)}}
+        .bm-toast{position:fixed;z-index:1000;left:50%;bottom:28px;display:flex;align-items:center;gap:9px;padding:11px 15px;border:1px solid rgba(255,255,255,.1);border-radius:11px;color:#f7e9ec;background:rgba(20,4,8,.94);box-shadow:0 18px 45px rgba(0,0,0,.45);font-size:.72rem;font-weight:700;backdrop-filter:blur(16px);transform:translate(-50%,18px);opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease}
+        .bm-toast.visible{opacity:1;transform:translate(-50%,0)}
+        .bm-toast i{color:#ff4563}
+        @media(max-width:900px){
+            .bm-hero{padding:42px 38px;gap:25px}.bm-stat{width:155px;height:155px}.bm-stat strong{font-size:2.7rem}
+            .bm-grid,.bm-loading-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
         }
-        @media(max-width:520px){.bm-grid{grid-template-columns:1fr}}
+        @media(max-width:680px){
+            .bm-wrap{width:min(100% - 28px,1220px);padding:105px 0 62px}
+            .bm-hero{display:block;min-height:0;padding:33px 25px;border-radius:20px}.bm-hero h1{font-size:2.55rem}.bm-hero p{font-size:.8rem}.bm-stat{display:none}
+            .bm-toolbar{align-items:stretch;flex-direction:column}.bm-search{max-width:none}.bm-tools{justify-content:space-between}.bm-results{padding-left:3px}
+        }
+        @media(max-width:540px){
+            .bm-grid,.bm-loading-grid{grid-template-columns:1fr}.bm-hero h1{font-size:2.15rem}.bm-hero-actions{align-items:stretch;flex-direction:column}.bm-primary,.bm-secondary{width:100%}
+            .bm-state{padding:44px 20px}.bm-sort select{max-width:180px}.bm-card{border-radius:16px}
+        }
+        @media(prefers-reduced-motion:reduce){.bm-stat::before,.bm-skeleton-img::after,.bm-skeleton-line::after{animation:none}.bm-card{animation:none}.bm-card,.bm-img img,.bm-primary,.bm-secondary{transition:none}}
     </style>
 </head>
 <body>
@@ -77,27 +128,65 @@
     </div></nav>
 
     <main class="bm-wrap">
-        <div class="bm-head">
-            <div>
-                <span class="bm-kicker"><i class="fas fa-bookmark"></i> Saved Presets</span>
-                <h1>Bookmarks</h1>
-                <p>Preset sayfasinda kaydettigin tum kaynaklar burada goruntulenir.</p>
+        <section class="bm-hero" aria-labelledby="bookmarksTitle">
+            <div class="bm-hero-copy">
+                <span class="bm-kicker">Your saved library</span>
+                <h1 id="bookmarksTitle">Keep inspiration <span>within reach.</span></h1>
+                <p>Every preset you save is collected here, ready for your next edit. Search your library, organize your shortlist, and jump back into creating.</p>
+                <div class="bm-hero-actions">
+                    <a class="bm-primary" href="/resources"><i class="fas fa-compass"></i> Discover Resources</a>
+                    <a class="bm-secondary" href="/"><i class="fas fa-arrow-left"></i> Back to Home</a>
+                </div>
             </div>
-            <div class="bm-count"><i class="fas fa-layer-group"></i> <strong id="bookmarkCount">0</strong> saved</div>
-        </div>
+            <div class="bm-stat" aria-label="Saved preset count">
+                <i class="fas fa-bookmark"></i>
+                <strong id="bookmarkCount">0</strong>
+                <span id="bookmarkCountLabel">Saved presets</span>
+            </div>
+        </section>
 
-        <div class="bm-loading" id="bookmarkLoading">
-            <i class="fas fa-circle-notch fa-spin"></i>
-            <p>Loading saved presets...</p>
-        </div>
-        <div class="bm-grid" id="bookmarksGrid" hidden></div>
-        <div class="bm-empty" id="bookmarksEmpty" hidden>
-            <i class="far fa-bookmark"></i>
-            <h2>No bookmarks yet</h2>
-            <p>Save presets with the Bookmark button on preset detail pages. They will appear here instantly.</p>
-            <a href="/resources"><i class="fas fa-search"></i> Browse Resources</a>
-        </div>
+        <section aria-label="Saved presets">
+            <div class="bm-toolbar" id="bookmarkToolbar" hidden>
+                <label class="bm-search" for="bookmarkSearch">
+                    <i class="fas fa-magnifying-glass"></i>
+                    <input id="bookmarkSearch" type="search" placeholder="Search saved presets..." autocomplete="off">
+                    <button class="bm-search-clear" id="clearSearch" type="button" aria-label="Clear search" hidden><i class="fas fa-xmark"></i></button>
+                </label>
+                <div class="bm-tools">
+                    <span class="bm-results" id="bookmarkResults" aria-live="polite"></span>
+                    <label class="bm-sort" aria-label="Sort saved presets">
+                        <i class="fas fa-arrow-down-wide-short"></i>
+                        <select id="bookmarkSort">
+                            <option value="saved">Saved order</option>
+                            <option value="name-asc">Name: A to Z</option>
+                            <option value="name-desc">Name: Z to A</option>
+                            <option value="downloads">Most downloaded</option>
+                        </select>
+                    </label>
+                </div>
+            </div>
+
+            <div class="bm-loading-grid" id="bookmarkLoading" aria-label="Loading saved presets">
+                <div class="bm-skeleton"><div class="bm-skeleton-img"></div><div class="bm-skeleton-body"><div class="bm-skeleton-line"></div><div class="bm-skeleton-line"></div></div></div>
+                <div class="bm-skeleton"><div class="bm-skeleton-img"></div><div class="bm-skeleton-body"><div class="bm-skeleton-line"></div><div class="bm-skeleton-line"></div></div></div>
+                <div class="bm-skeleton"><div class="bm-skeleton-img"></div><div class="bm-skeleton-body"><div class="bm-skeleton-line"></div><div class="bm-skeleton-line"></div></div></div>
+            </div>
+            <div class="bm-grid" id="bookmarksGrid" hidden></div>
+            <div class="bm-state" id="bookmarksEmpty" hidden>
+                <div class="bm-state-icon"><i class="far fa-bookmark"></i></div>
+                <h2>Your collection starts here</h2>
+                <p>Save any preset you love and it will appear here, ready whenever inspiration strikes.</p>
+                <a class="bm-primary" href="/resources"><i class="fas fa-compass"></i> Explore Resources</a>
+            </div>
+            <div class="bm-state" id="bookmarksNoResults" hidden>
+                <div class="bm-state-icon"><i class="fas fa-magnifying-glass"></i></div>
+                <h2>No matching presets</h2>
+                <p>Try a different title, creator, or category.</p>
+                <button class="bm-secondary" id="resetSearch" type="button"><i class="fas fa-rotate-left"></i> Reset Search</button>
+            </div>
+        </section>
     </main>
+    <div class="bm-toast" id="bookmarkToast" role="status" aria-live="polite"><i class="fas fa-circle-check"></i> Bookmark removed</div>
 
     <footer class="footer">
         <div class="container">
@@ -159,6 +248,8 @@
             'others': 'fa-folder',
             'other': 'fa-folder'
         };
+        var allBookmarks = [];
+        var toastTimer;
 
         function escapeHtml(value) {
             return String(value || '').replace(/[&<>"']/g, function(char) {
@@ -213,26 +304,40 @@
             return merged;
         }
 
+        function updateCount(count) {
+            document.getElementById('bookmarkCount').textContent = count;
+            document.getElementById('bookmarkCountLabel').textContent = count === 1 ? 'Saved preset' : 'Saved presets';
+        }
+
         function renderEmpty() {
             document.getElementById('bookmarkLoading').hidden = true;
             document.getElementById('bookmarksGrid').hidden = true;
+            document.getElementById('bookmarkToolbar').hidden = true;
+            document.getElementById('bookmarksNoResults').hidden = true;
             document.getElementById('bookmarksEmpty').hidden = false;
+            updateCount(0);
         }
 
         function renderCards(items) {
             var grid = document.getElementById('bookmarksGrid');
             document.getElementById('bookmarkLoading').hidden = true;
             document.getElementById('bookmarksEmpty').hidden = true;
+            document.getElementById('bookmarksNoResults').hidden = true;
+            document.getElementById('bookmarkToolbar').hidden = false;
             grid.hidden = false;
-            grid.innerHTML = items.map(function(item) {
+            document.getElementById('bookmarkResults').textContent = items.length === allBookmarks.length
+                ? items.length + (items.length === 1 ? ' saved item' : ' saved items')
+                : 'Showing ' + items.length + ' of ' + allBookmarks.length;
+            grid.innerHTML = items.map(function(item, index) {
                 var category = item.category || 'others';
                 var categoryLabel = CATEGORY_LABELS[category] || category;
                 var icon = CATEGORY_ICONS[category] || 'fa-sliders';
-                var desc = item.description || item.desc || '';
-                var shortDesc = desc ? desc.substring(0, 86) + (desc.length > 86 ? '...' : '') : '';
                 var avatar = item.creator_avatar || '';
                 var creator = item.creator_nickname || item.author_name || 'Zyrex';
                 var downloads = item.downloads || 0;
+                var itemName = item.name || 'Untitled Preset';
+                var itemId = String(item.id || '');
+                var presetUrl = '/preset?id=' + encodeURIComponent(itemId);
                 var thumb = item.thumbnail
                     ? '<img src="' + escapeHtml(item.thumbnail) + '" alt="" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.style.display=&quot;flex&quot;"><div class="bm-fallback" style="display:none"><i class="fas ' + icon + '"></i></div>'
                     : '<div class="bm-fallback"><i class="fas ' + icon + '"></i></div>';
@@ -240,25 +345,88 @@
                     ? '<img src="' + escapeHtml(avatar) + '" alt="" onerror="this.hidden=true;this.nextElementSibling.style.display=&quot;block&quot;"><i class="fas fa-user" style="display:none"></i>'
                     : '<i class="fas fa-user"></i>';
 
-                return '<a class="bm-card" href="/preset?id=' + encodeURIComponent(item.id) + '">' +
-                    '<div class="bm-img">' + thumb +
-                        '<div class="bm-badges"><span class="bm-badge">' + escapeHtml(categoryLabel) + '</span><span class="bm-badge saved"><i class="fas fa-bookmark"></i> Saved</span></div>' +
+                return '<article class="bm-card" style="--delay:' + Math.min(index * 55, 330) + 'ms">' +
+                    '<div class="bm-img">' +
+                        '<a class="bm-cover" href="' + presetUrl + '" aria-label="Open ' + escapeHtml(itemName) + '">' + thumb + '</a>' +
+                        '<span class="bm-badge"><i class="fas ' + icon + '"></i> ' + escapeHtml(categoryLabel) + '</span>' +
+                        '<button class="bm-remove" type="button" data-bookmark-id="' + escapeHtml(itemId) + '" aria-label="Remove ' + escapeHtml(itemName) + ' from bookmarks" title="Remove bookmark"><i class="fas fa-bookmark"></i></button>' +
                     '</div>' +
                     '<div class="bm-body">' +
-                        '<h3 class="bm-title" title="' + escapeHtml(item.name || 'Preset') + '">' + escapeHtml(item.name || 'Preset') + '</h3>' +
-                        (shortDesc ? '<p class="bm-desc">' + escapeHtml(shortDesc) + '</p>' : '<p class="bm-desc">No description available.</p>') +
+                        '<span class="bm-saved-label"><i class="fas fa-bookmark"></i> Saved to your library</span>' +
+                        '<a class="bm-title-link" href="' + presetUrl + '"><h3 class="bm-title" title="' + escapeHtml(itemName) + '">' + escapeHtml(itemName) + '</h3></a>' +
+                        '<p class="bm-desc">Open this preset to view its files, details, and download options.</p>' +
                         '<div class="bm-foot">' +
                             '<div class="bm-creator"><span class="bm-avatar">' + avatarHtml + '</span><span>' + escapeHtml(creator) + '</span></div>' +
-                            '<div class="bm-actions"><span><i class="fas fa-download"></i> ' + escapeHtml(downloads) + '</span></div>' +
+                            '<span class="bm-downloads" title="Downloads"><i class="fas fa-arrow-down"></i> ' + escapeHtml(downloads) + '</span>' +
                         '</div>' +
                     '</div>' +
-                '</a>';
+                '</article>';
             }).join('');
+        }
+
+        function applyFilters() {
+            if (!allBookmarks.length) {
+                renderEmpty();
+                return;
+            }
+
+            var searchInput = document.getElementById('bookmarkSearch');
+            var query = searchInput.value.trim().toLocaleLowerCase('en');
+            var sort = document.getElementById('bookmarkSort').value;
+            var items = allBookmarks.filter(function(item) {
+                var category = CATEGORY_LABELS[item.category] || item.category || 'Other';
+                var creator = item.creator_nickname || item.author_name || 'Zyrex';
+                return !query || [item.name, category, creator].some(function(value) {
+                    return String(value || '').toLocaleLowerCase('en').indexOf(query) !== -1;
+                });
+            });
+
+            if (sort === 'name-asc' || sort === 'name-desc') {
+                items.sort(function(a, b) {
+                    var result = String(a.name || '').localeCompare(String(b.name || ''), 'en', { sensitivity: 'base' });
+                    return sort === 'name-desc' ? -result : result;
+                });
+            } else if (sort === 'downloads') {
+                items.sort(function(a, b) { return Number(b.downloads || 0) - Number(a.downloads || 0); });
+            }
+
+            document.getElementById('clearSearch').hidden = !query;
+            if (!items.length) {
+                document.getElementById('bookmarkLoading').hidden = true;
+                document.getElementById('bookmarksEmpty').hidden = true;
+                document.getElementById('bookmarksGrid').hidden = true;
+                document.getElementById('bookmarksNoResults').hidden = false;
+                document.getElementById('bookmarkToolbar').hidden = false;
+                document.getElementById('bookmarkResults').textContent = 'No matches';
+                return;
+            }
+            renderCards(items);
+        }
+
+        function showToast(message) {
+            var toast = document.getElementById('bookmarkToast');
+            toast.lastChild.nodeValue = ' ' + message;
+            toast.classList.add('visible');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(function() { toast.classList.remove('visible'); }, 2400);
+        }
+
+        function removeBookmark(id) {
+            try {
+                localStorage.removeItem('zyrex_bookmark_' + id);
+                var counts = JSON.parse(localStorage.getItem('zyrex_bookmarks_count') || '{}');
+                counts[id] = Math.max(0, Number(counts[id] || 0) - 1);
+                localStorage.setItem('zyrex_bookmarks_count', JSON.stringify(counts));
+            } catch(e) {}
+            allBookmarks = allBookmarks.filter(function(item) { return String(item.id) !== String(id); });
+            updateCount(allBookmarks.length);
+            applyFilters();
+            showToast('Bookmark removed');
         }
 
         async function initBookmarks() {
             var ids = getBookmarkedIds();
-            document.getElementById('bookmarkCount').textContent = ids.length;
+            updateCount(ids.length);
             if (!ids.length) {
                 renderEmpty();
                 return;
@@ -267,17 +435,33 @@
             var products = await loadProducts();
             var byId = {};
             products.forEach(function(item) { byId[String(item.id)] = item; });
-            var bookmarked = ids.map(function(id) { return byId[id]; }).filter(Boolean);
-            document.getElementById('bookmarkCount').textContent = bookmarked.length;
-            if (!bookmarked.length) {
+            allBookmarks = ids.map(function(id) { return byId[id]; }).filter(Boolean);
+            updateCount(allBookmarks.length);
+            if (!allBookmarks.length) {
                 renderEmpty();
                 return;
             }
-            renderCards(bookmarked);
+            applyFilters();
         }
 
         document.addEventListener('DOMContentLoaded', function(){
             initBookmarks();
+            document.getElementById('bookmarkSearch').addEventListener('input', applyFilters);
+            document.getElementById('bookmarkSort').addEventListener('change', applyFilters);
+            document.getElementById('clearSearch').addEventListener('click', function() {
+                document.getElementById('bookmarkSearch').value = '';
+                document.getElementById('bookmarkSearch').focus();
+                applyFilters();
+            });
+            document.getElementById('resetSearch').addEventListener('click', function() {
+                document.getElementById('bookmarkSearch').value = '';
+                document.getElementById('bookmarkSort').value = 'saved';
+                applyFilters();
+            });
+            document.getElementById('bookmarksGrid').addEventListener('click', function(event) {
+                var button = event.target.closest('.bm-remove');
+                if (button) removeBookmark(button.getAttribute('data-bookmark-id'));
+            });
             document.getElementById('hamburger')?.addEventListener('click', function(){
                 document.getElementById('navLinks')?.classList.toggle('active');
             });
