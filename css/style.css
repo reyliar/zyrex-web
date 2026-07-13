@@ -944,6 +944,104 @@ img { max-width: 100%; display: block; }
     60% { transform: translateX(-50%) translateY(-5px); }
 }
 
+/* ===================== CREATIVE TOOLS MARQUEE ===================== */
+.brand-showcase {
+    position: relative;
+    overflow: hidden;
+    padding: 18px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.055);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.055);
+    background:
+        radial-gradient(circle at 15% 0%, rgba(230, 21, 54, 0.09), transparent 34%),
+        linear-gradient(180deg, rgba(15, 2, 5, 0.98), rgba(5, 1, 2, 0.98));
+}
+
+.brand-showcase::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.16;
+    background-image:
+        linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
+    background-size: 34px 34px;
+    mask-image: linear-gradient(to bottom, black, transparent 88%);
+}
+
+.brand-marquee {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    overflow: hidden;
+    mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+    -webkit-mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+}
+
+.brand-track {
+    display: flex;
+    width: max-content;
+    will-change: transform;
+    animation: brandFlowRight 28s linear infinite;
+}
+
+
+.brand-group {
+    display: flex;
+    flex-shrink: 0;
+    gap: 20px;
+    padding-right: 20px;
+}
+
+.brand-item {
+    width: 76px;
+    height: 76px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 8px; /* Less padding to make SVGs look larger */
+    border: 1px solid rgba(255, 255, 255, 0.075);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.03);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.02), 0 8px 24px rgba(0, 0, 0, 0.15);
+    transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+}
+
+.brand-item img {
+    max-width: 100%;
+    max-height: 100%;
+    display: block;
+    object-fit: contain;
+}
+
+.brand-wide {
+    width: 120px;
+    padding: 10px 8px; /* Less padding for wide SVG wordmarks */
+}
+
+.brand-app {
+    padding: 0;
+    overflow: hidden;
+}
+
+.brand-app img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.brand-item:hover {
+    border-color: rgba(250, 48, 86, 0.35);
+    background: rgba(255, 255, 255, 0.05);
+    box-shadow: 0 12px 28px rgba(250, 48, 86, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+@keyframes brandFlowRight {
+    from { transform: translateX(-50%); }
+    to { transform: translateX(0); }
+}
+
 /* ===================== ABOUT INTRO ===================== */
 .about-intro {
     background: var(--bordeaux-deep);
@@ -1944,6 +2042,13 @@ img { max-width: 100%; display: block; }
     .hero-accent-1 { width: 180px; height: 180px; top: 5%; right: -15%; opacity: 0.04; }
     .hero-accent-2 { width: 130px; height: 130px; bottom: 10%; left: -10%; opacity: 0.04; }
 
+    /* Creative tools marquee */
+    .brand-showcase { padding: 14px 0; }
+    .brand-marquee { mask-image: linear-gradient(90deg, transparent, black 4%, black 96%, transparent); -webkit-mask-image: linear-gradient(90deg, transparent, black 4%, black 96%, transparent); }
+    .brand-track { animation-duration: 22s; }
+    .brand-item { width: 62px; height: 62px; padding: 6px; border-radius: 11px; }
+    .brand-wide { width: 100px; padding: 8px 6px; }
+
     /* About Intro */
     .about-intro-grid { grid-template-columns: 1fr; max-width: 440px; margin: 0 auto; gap: 16px; }
     .about-intro-card { padding: 26px 20px; }
@@ -2022,6 +2127,8 @@ img { max-width: 100%; display: block; }
     .hero-badge { font-size: 0.62rem; padding: 5px 14px; }
     .hero-buttons { flex-direction: column; gap: 8px; }
     .hero-buttons .btn { width: 100%; justify-content: center; padding: 11px 18px; font-size: 0.82rem; }
+    .brand-item { width: 56px; height: 56px; padding: 5px; border-radius: 9px; }
+    .brand-wide { width: 90px; padding: 7px 5px; }
     .btn { width: 100%; justify-content: center; }
     .stats-card { padding: 26px 12px; }
     .stats-title { font-size: 1.25rem; }
@@ -2041,6 +2148,17 @@ img { max-width: 100%; display: block; }
     .team-card { padding: 20px 14px; }
     .team-avatar { width: 70px; height: 70px; }
     .footer-content { gap: 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .brand-marquee {
+        overflow-x: auto;
+        mask-image: none;
+        -webkit-mask-image: none;
+        scrollbar-width: thin;
+    }
+    .brand-track { animation: none; transform: none; }
+    .brand-group[aria-hidden="true"] { display: none; }
 }
 
 /* ===================== SUBPAGE CARDS REDESIGN ===================== */
