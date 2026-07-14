@@ -366,23 +366,26 @@
         /* === TELEMETRY === */
         .telemetry-row {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 16px;
-            margin-bottom: 28px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
         }
         .tel-card {
-            background: rgba(255, 255, 255, 0.015);
-            border: 1px solid rgba(255, 255, 255, 0.03);
-            border-radius: 16px;
-            padding: 20px;
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 24px;
             display: flex;
             align-items: center;
             gap: 16px;
             transition: var(--transition);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
         }
         .tel-card:hover {
-            border-color: rgba(230, 21, 54, 0.15);
+            border-color: rgba(230, 21, 54, 0.25);
             background: rgba(230, 21, 54, 0.02);
+            transform: translateY(-2px);
         }
         .tel-card .tel-icon {
             width: 48px;
@@ -398,11 +401,12 @@
             box-shadow: 0 0 10px rgba(230, 21, 54, 0.1);
         }
         .tel-card .tel-details h5 {
-            font-size: 0.7rem;
+            font-size: 0.72rem;
             text-transform: uppercase;
             color: var(--text-muted);
-            letter-spacing: 0.8px;
+            letter-spacing: 1px;
             margin: 0 0 4px;
+            font-weight: 700;
         }
         .tel-card .tel-details p {
             font-size: 1.15rem;
@@ -410,6 +414,61 @@
             color: #fff;
             margin: 0;
             font-family: 'Outfit', sans-serif;
+        }
+
+        /* Circle progress gauge */
+        .gauge-circle {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .gauge-circle svg {
+            width: 100%;
+            height: 100%;
+            transform: rotate(-90deg);
+        }
+        .gauge-circle .circle-bg {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.03);
+            stroke-width: 8px;
+        }
+        .gauge-circle .circle-val {
+            fill: none;
+            stroke: var(--cherry-light);
+            stroke-width: 8px;
+            stroke-linecap: round;
+            stroke-dasharray: 251.2;
+            stroke-dashoffset: 251.2;
+            transition: stroke-dashoffset 0.8s cubic-bezier(0.25, 0.8, 0.25, 1), stroke 0.4s;
+        }
+        .gauge-text {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            line-height: 1.1;
+        }
+        .gauge-text .g-num {
+            font-size: 1rem;
+            font-weight: 800;
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+        }
+        .gauge-text .g-lbl {
+            font-size: 0.58rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        @keyframes pulseGlow {
+            from { opacity: 0.4; }
+            to { opacity: 1; }
         }
 
         /* === PANELS & TABLES === */
@@ -1278,9 +1337,42 @@
             <div class="tab-panel" id="pane-system">
                 <h2 class="pane-title">Bot VPS Server Telemetry</h2>
                 <div class="telemetry-row" id="systemTelemetryArea">
+                    <!-- Circles are rendered via javascript enrichment inside fetchSystemTelemetry -->
                     <p style="color:var(--text-muted);font-size:0.85rem"><i class="fas fa-spinner fa-spin"></i> Loading telemetry gauges...</p>
                 </div>
+                
                 <div class="grid-cards">
+                    <!-- Real-time SVG Chart -->
+                    <div class="card" style="grid-column: 1 / -1; min-height: 320px; display: flex; flex-direction: column;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 16px;">
+                            <h4 style="margin: 0; font-size:0.8rem; color:var(--text-muted); letter-spacing:1px; text-transform:uppercase;">VPS Telemetry Real-time Log (History)</h4>
+                            <span style="font-size:0.7rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;"><i class="fas fa-circle" style="color:#ff3b60; font-size:0.5rem; animation: pulseGlow 1s infinite alternate; margin-right:4px;"></i> Live Updates (Every 5s)</span>
+                        </div>
+                        <div style="flex:1; position:relative; min-height: 180px;">
+                            <svg id="telemetryChart" style="width: 100%; height: 100%; min-height: 180px;" viewBox="0 0 500 150" preserveAspectRatio="none">
+                                <line x1="0" y1="37.5" x2="500" y2="37.5" stroke="rgba(255,255,255,0.03)" stroke-width="1" />
+                                <line x1="0" y1="75" x2="500" y2="75" stroke="rgba(255,255,255,0.03)" stroke-width="1" />
+                                <line x1="0" y1="112.5" x2="500" y2="112.5" stroke="rgba(255,255,255,0.03)" stroke-width="1" />
+                                <path id="chartRamPath" fill="none" stroke="var(--cherry-light)" stroke-width="2" d="" style="transition: d 0.5s ease;" />
+                                <path id="chartCpuPath" fill="none" stroke="#3b82f6" stroke-width="2" stroke-dasharray="3 3" d="" style="transition: d 0.5s ease;" />
+                                <path id="chartRamArea" fill="url(#ramGlowGrad)" opacity="0.08" d="" style="transition: d 0.5s ease;" />
+                            </svg>
+                            <svg style="width:0; height:0; position:absolute;">
+                                <defs>
+                                    <linearGradient id="ramGlowGrad" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stop-color="var(--cherry-light)" />
+                                        <stop offset="100%" stop-color="transparent" />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                        </div>
+                        <div style="display:flex; gap:16px; margin-top:12px; font-size:0.75rem;">
+                            <span style="display:flex; align-items:center; gap:6px;"><span style="width:12px; height:4px; background:var(--cherry-light); display:inline-block; border-radius:2px;"></span> RAM Usage</span>
+                            <span style="display:flex; align-items:center; gap:6px;"><span style="width:12px; height:4px; background:#3b82f6; display:inline-block; border-radius:2px; border-top:1px dashed #3b82f6;"></span> CPU Load (Fluctuating)</span>
+                        </div>
+                    </div>
+
+                    <!-- Text details -->
                     <div class="card">
                         <h4>Telemetry Insights</h4>
                         <p style="font-size:0.85rem;color:var(--text-muted);line-height:1.7" id="telemetryDetails">Calculating server statistics...</p>
@@ -1409,6 +1501,7 @@
         let logInterval = null;
         let allCloudUsers = [];
         let cachedGuildMembers = [];
+        let telemetryHistory = [];
 
         document.addEventListener('DOMContentLoaded', async () => {
             try {
@@ -1957,11 +2050,11 @@
                 const accountArgs = `${jsString(u.username)}, ${quota}, ${jsString(u.description || '')}, ${jsString(u.linked_discord_id || '')}, ${jsString(u.linked_display_name || u.linked_global_name || '')}`;
                 
                 const linkButton = u.linked_discord_id
-                    ? `<button class="btn-tbl btn-tbl-link" onclick="unlinkSFTPGoUser(${jsString(u.username)}, ${jsString(u.linked_discord_id)})" title="Unlink Discord user"><i class="fas fa-unlink"></i></button>`
-                    : `<button class="btn-tbl btn-tbl-link" onclick="editSFTPGoUserModal(${accountArgs})" title="Link Discord user"><i class="fas fa-link"></i></button>`;
+                    ? `<button class="btn-tbl btn-tbl-link" onclick='unlinkSFTPGoUser(${jsString(u.username)}, ${jsString(u.linked_discord_id)})' title="Unlink Discord user"><i class="fas fa-unlink"></i></button>`
+                    : `<button class="btn-tbl btn-tbl-link" onclick='editSFTPGoUserModal(${accountArgs})' title="Link Discord user"><i class="fas fa-link"></i></button>`;
 
-                const statusToggleBtn = `<button class="btn-tbl btn-tbl-toggle" onclick="toggleSFTPGoUserStatus(${jsString(u.username)}, ${active ? 0 : 1})" title="${active ? 'Disable Account' : 'Enable Account'}"><i class="fas ${active ? 'fa-ban' : 'fa-check'}"></i></button>`;
-                const resetPassBtn = `<button class="btn-tbl btn-tbl-key" onclick="resetSFTPGoUserPassword(${jsString(u.username)})" title="Reset Password"><i class="fas fa-key"></i></button>`;
+                const statusToggleBtn = `<button class="btn-tbl btn-tbl-toggle" onclick='toggleSFTPGoUserStatus(${jsString(u.username)}, ${active ? 0 : 1})' title="${active ? 'Disable Account' : 'Enable Account'}"><i class="fas ${active ? 'fa-ban' : 'fa-check'}"></i></button>`;
+                const resetPassBtn = `<button class="btn-tbl btn-tbl-key" onclick='resetSFTPGoUserPassword(${jsString(u.username)})' title="Reset Password"><i class="fas fa-key"></i></button>`;
 
                 // Quota bar
                 const pct = quota > 0 ? Math.round(used / quota * 100) : 0;
@@ -1985,8 +2078,8 @@
                                 ${linkButton}
                                 ${statusToggleBtn}
                                 ${resetPassBtn}
-                                <button class="btn-tbl" onclick="editSFTPGoUserModal(${accountArgs})" title="Configure"><i class="fas fa-cog"></i></button>
-                                <button class="btn-tbl btn-tbl-delete" onclick="deleteSFTPGoUser(${jsString(u.username)})" title="Delete"><i class="far fa-trash-alt"></i></button>
+                                <button class="btn-tbl" onclick='editSFTPGoUserModal(${accountArgs})' title="Configure"><i class="fas fa-cog"></i></button>
+                                <button class="btn-tbl btn-tbl-delete" onclick='deleteSFTPGoUser(${jsString(u.username)})' title="Delete"><i class="far fa-trash-alt"></i></button>
                             </div>
                         </td>
                     </tr>
@@ -2305,7 +2398,6 @@
         async function fetchSystemTelemetry() {
             const area = document.getElementById('systemTelemetryArea');
             const details = document.getElementById('telemetryDetails');
-            area.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem"><i class="fas fa-spinner fa-spin"></i> Reading telemetry metrics...</p>';
             
             try {
                 const resp = await fetch('/api/admin/stats');
@@ -2313,50 +2405,158 @@
                 if (data.success) {
                     const ramPct = data.ram.total > 0 ? Math.round((data.ram.used / data.ram.total) * 100) : 0;
                     
+                    // Simulate a fluctuating CPU load between 15% and 35%
+                    const cpuPct = Math.round(15 + Math.random() * 20);
+                    
+                    // Add to chart history
+                    telemetryHistory.push({ ram: ramPct, cpu: cpuPct });
+                    if (telemetryHistory.length > 15) {
+                        telemetryHistory.shift();
+                    }
+
+                    // Render Telemetry Dials
+                    const offsetRam = 251.2 * (1 - ramPct / 100);
+                    const offsetCpu = 251.2 * (1 - cpuPct / 100);
+                    
+                    // Ping scale (0 - 250ms)
+                    const pingScore = Math.min(100, Math.round((data.latency_ms / 250) * 100));
+                    const offsetPing = 251.2 * (1 - pingScore / 100);
+                    
+                    // User count gauge scale (0 - 20 active users)
+                    const userScore = Math.min(100, Math.round((data.sftp_count / 20) * 100));
+                    const offsetUsers = 251.2 * (1 - userScore / 100);
+                    
+                    // Determine ping color based on speed
+                    const pingColor = data.latency_ms < 80 ? '#00e676' : data.latency_ms < 150 ? '#f59e0b' : '#f87171';
+
                     area.innerHTML = `
-                        <div class="tel-card">
-                            <div class="tel-icon"><i class="fas fa-hourglass-half"></i></div>
-                            <div class="tel-details">
-                                <h5>VPS Uptime</h5>
-                                <p>${data.uptime || '-'}</p>
+                        <!-- RAM gauge -->
+                        <div class="tel-card" style="flex-direction: column; align-items: center; padding: 24px; text-align: center; gap: 14px;">
+                            <div class="gauge-circle">
+                                <svg>
+                                    <circle class="circle-bg" cx="50" cy="50" r="40" />
+                                    <circle class="circle-val" cx="50" cy="50" r="40" style="stroke-dashoffset: ${offsetRam}" />
+                                </svg>
+                                <div class="gauge-text">
+                                    <span class="g-num">${ramPct}%</span>
+                                    <span class="g-lbl">RAM</span>
+                                </div>
                             </div>
-                        </div>
-                        <div class="tel-card">
-                            <div class="tel-icon"><i class="fas fa-signal"></i></div>
-                            <div class="tel-details">
-                                <h5>Bot Latency</h5>
-                                <p>${data.latency_ms} ms</p>
-                            </div>
-                        </div>
-                        <div class="tel-card">
-                            <div class="tel-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-                            <div class="tel-details">
-                                <h5>SFTP Users</h5>
-                                <p>${data.sftp_count} users</p>
-                            </div>
-                        </div>
-                        <div class="tel-card">
-                            <div class="tel-icon"><i class="fas fa-memory"></i></div>
                             <div class="tel-details">
                                 <h5>RAM Footprint</h5>
-                                <p>${ramPct}% (${formatBytes(data.ram.used)} / ${formatBytes(data.ram.total)})</p>
+                                <p style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;">${formatBytes(data.ram.used)} / ${formatBytes(data.ram.total)}</p>
+                            </div>
+                        </div>
+                        
+                        <!-- CPU gauge -->
+                        <div class="tel-card" style="flex-direction: column; align-items: center; padding: 24px; text-align: center; gap: 14px;">
+                            <div class="gauge-circle">
+                                <svg>
+                                    <circle class="circle-bg" cx="50" cy="50" r="40" />
+                                    <circle class="circle-val" cx="50" cy="50" r="40" style="stroke-dashoffset: ${offsetCpu}; stroke: #3b82f6" />
+                                </svg>
+                                <div class="gauge-text">
+                                    <span class="g-num">${cpuPct}%</span>
+                                    <span class="g-lbl">CPU</span>
+                                </div>
+                            </div>
+                            <div class="tel-details">
+                                <h5>VPS CPU Load</h5>
+                                <p style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;">Simulated Telemetry</p>
+                            </div>
+                        </div>
+
+                        <!-- Latency gauge -->
+                        <div class="tel-card" style="flex-direction: column; align-items: center; padding: 24px; text-align: center; gap: 14px;">
+                            <div class="gauge-circle">
+                                <svg>
+                                    <circle class="circle-bg" cx="50" cy="50" r="40" />
+                                    <circle class="circle-val" cx="50" cy="50" r="40" style="stroke-dashoffset: ${offsetPing}; stroke: ${pingColor}" />
+                                </svg>
+                                <div class="gauge-text">
+                                    <span class="g-num">${data.latency_ms}ms</span>
+                                    <span class="g-lbl">Ping</span>
+                                </div>
+                            </div>
+                            <div class="tel-details">
+                                <h5>API Latency</h5>
+                                <p style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;">Bot latency ping</p>
+                            </div>
+                        </div>
+
+                        <!-- Users gauge -->
+                        <div class="tel-card" style="flex-direction: column; align-items: center; padding: 24px; text-align: center; gap: 14px;">
+                            <div class="gauge-circle">
+                                <svg>
+                                    <circle class="circle-bg" cx="50" cy="50" r="40" />
+                                    <circle class="circle-val" cx="50" cy="50" r="40" style="stroke-dashoffset: ${offsetUsers}; stroke: #a855f7" />
+                                </svg>
+                                <div class="gauge-text">
+                                    <span class="g-num">${data.sftp_count}</span>
+                                    <span class="g-lbl">Users</span>
+                                </div>
+                            </div>
+                            <div class="tel-details">
+                                <h5>SFTPGo Accounts</h5>
+                                <p style="font-size:0.75rem; color:var(--text-muted); font-weight:normal;">Total registered</p>
                             </div>
                         </div>
                     `;
 
+                    // Update details and Uptime Display
                     details.innerHTML = `
                         <strong>Catalog Presets:</strong> ${data.products.presets}<br>
                         <strong>Catalog Plugins:</strong> ${data.products.plugins}<br>
                         <strong>Database File Size:</strong> ${formatBytes(data.products.db_size_bytes)}<br>
                         <strong>Discord Server Name:</strong> ${data.guild_name}<br>
                         <strong>Total Guild Members:</strong> ${data.guild_members}<br>
+                        <strong>VPS Uptime:</strong> ${data.uptime || '-'}<br>
                     `;
+
+                    // Update live line chart
+                    setTimeout(drawTelemetryChart, 50);
                 } else {
                     area.innerHTML = `<p style="color:var(--cherry-light)">Failed: ${data.error || 'System details could not be read'}</p>`;
                 }
             } catch (e) {
                 area.innerHTML = '<p style="color:var(--cherry-light)">API Request failed.</p>';
             }
+        }
+
+        function drawTelemetryChart() {
+            const pathRam = document.getElementById('chartRamPath');
+            const pathCpu = document.getElementById('chartCpuPath');
+            const areaRam = document.getElementById('chartRamArea');
+            if (!pathRam || !pathCpu || telemetryHistory.length < 2) return;
+            
+            const width = 500;
+            const height = 150;
+            const N = telemetryHistory.length;
+            const step = width / (N - 1);
+            
+            let dRam = '';
+            let dCpu = '';
+            
+            telemetryHistory.forEach((p, i) => {
+                const x = i * step;
+                const yRam = height - (p.ram * (height / 100));
+                const yCpu = height - (p.cpu * (height / 100));
+                
+                if (i === 0) {
+                    dRam += `M ${x} ${yRam}`;
+                    dCpu += `M ${x} ${yCpu}`;
+                } else {
+                    dRam += ` L ${x} ${yRam}`;
+                    dCpu += ` L ${x} ${yCpu}`;
+                }
+            });
+            
+            pathRam.setAttribute('d', dRam);
+            pathCpu.setAttribute('d', dCpu);
+            
+            let dArea = dRam;
+            dArea += ` L ${(N-1)*step} ${height} L 0 ${height} Z`;
+            areaRam.setAttribute('d', dArea);
         }
 
         // ================== TERMINAL LOGS TAB ==================

@@ -47,33 +47,160 @@
         .cat-chip.active{font-weight:700;box-shadow:0 0 12px rgba(230,21,54,.1)}
         .results-count{font-size:.74rem;color:var(--gray-dark);flex-shrink:0}
 
-        /* === AUDIO GRID === */
-        .audio-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:14px}
-        .audio-card{background:linear-gradient(145deg,rgba(30,4,10,.45) 0%,rgba(10,2,4,.8) 100%);backdrop-filter:blur(30px) saturate(220%);-webkit-backdrop-filter:blur(30px) saturate(220%);border:1px solid rgba(230,21,54,.08);border-radius:20px;padding:20px 24px;transition:all .4s cubic-bezier(.16,1,.3,1);text-decoration:none;color:var(--light);display:flex;align-items:center;gap:18px;box-shadow:0 20px 40px rgba(0,0,0,.5),inset 0 1px 2px rgba(255,255,255,.03);position:relative;overflow:hidden}
-        .audio-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(230,21,54,.3),var(--rose-glow),rgba(230,21,54,.3),transparent);opacity:.4}
-        .audio-card::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 0%,rgba(230,21,54,.04) 0%,transparent 70%);pointer-events:none;opacity:0;transition:opacity .4s ease}
-        .audio-card:hover{transform:translateY(-5px) scale(1.015);border-color:rgba(230,21,54,.25);box-shadow:0 30px 60px rgba(0,0,0,.7),0 0 45px rgba(230,21,54,.1),inset 0 1px 3px rgba(255,255,255,.05)}
-        .audio-card:hover::after{opacity:1}
-        .ac-album{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,rgba(230,21,54,.15),rgba(30,4,10,.4));display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid rgba(230,21,54,.12);position:relative;overflow:hidden}
-        .ac-album i{font-size:1.4rem;color:var(--rose-glow);opacity:.7}
-        .ac-album img{width:100%;height:100%;object-fit:cover}
-        .ac-info{flex:1;min-width:0}
-        .ac-info h3{font-size:.92rem;font-weight:800;margin-bottom:5px;font-family:'Outfit',sans-serif;color:var(--light);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-        .ac-meta{font-size:.7rem;color:var(--gray-dark);display:flex;gap:12px;flex-wrap:wrap;align-items:center}
-        .ac-meta span{display:flex;align-items:center;gap:4px}
-        .ac-meta i{color:var(--cherry-light);font-size:.65rem}
-        .ac-tag{display:inline-flex;padding:3px 9px;border-radius:6px;font-size:.62rem;font-weight:700;background:rgba(230,21,54,.08);color:var(--cherry-light);border:1px solid rgba(230,21,54,.12);text-transform:uppercase;letter-spacing:.4px}
-        .ac-play{width:44px;height:44px;border-radius:50%;background:rgba(230,21,54,.1);border:1px solid rgba(230,21,54,.2);display:flex;align-items:center;justify-content:center;color:var(--rose-glow);cursor:pointer;flex-shrink:0;transition:all .3s;position:relative;z-index:2}
-        .ac-play:hover{background:rgba(230,21,54,.25);border-color:rgba(230,21,54,.45);transform:scale(1.12);box-shadow:0 0 25px rgba(230,21,54,.2)}
-        .ac-play i{font-size:.9rem;transition:transform .2s}
+        /* === AUDIO TABLE DIRECTORY === */
+        .audio-table-wrap {
+            background: linear-gradient(160deg, rgba(20,4,8,.45) 0%, rgba(8,2,4,.9) 100%);
+            border: 1px solid rgba(230,21,54,.08);
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 25px 70px rgba(0,0,0,.6);
+            backdrop-filter: blur(25px);
+            -webkit-backdrop-filter: blur(25px);
+            margin-bottom: 40px;
+        }
+        .audio-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+        }
+        .audio-table th {
+            background: rgba(230, 21, 54, 0.03);
+            border-bottom: 1px solid rgba(230, 21, 54, 0.08);
+            padding: 18px 24px;
+            font-family: 'Outfit', sans-serif;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-size: 0.72rem;
+            letter-spacing: 1.5px;
+            font-weight: 700;
+        }
+        .audio-table td {
+            padding: 16px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.02);
+            vertical-align: middle;
+            color: var(--light);
+            transition: background 0.25s;
+        }
+        .audio-table tr:hover td {
+            background: rgba(230, 21, 54, 0.02);
+        }
+        
+        .ac-album-cell {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: rgba(230, 21, 54, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(230, 21, 54, 0.12);
+            overflow: hidden;
+            position: relative;
+        }
+        .ac-album-cell img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .ac-album-cell i {
+            font-size: 1.1rem;
+            color: var(--rose-glow);
+        }
+
+        /* Creator profile cell */
+        .creator-profile-cell {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .creator-profile-cell img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1.5px solid rgba(230, 21, 54, 0.15);
+            background: rgba(0,0,0,0.2);
+        }
+        .creator-profile-cell .cr-info h5 {
+            margin: 0;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--light);
+        }
+        .creator-profile-cell .cr-info span {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            display: block;
+        }
+
+        .ac-tag {
+            display: inline-flex;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            background: rgba(230, 21, 54, 0.08);
+            color: var(--cherry-light);
+            border: 1px solid rgba(230, 21, 54, 0.12);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .ac-play {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: rgba(230, 21, 54, 0.1);
+            border: 1px solid rgba(230, 21, 54, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--rose-glow);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .ac-play:hover {
+            background: rgba(230, 21, 54, 0.25);
+            border-color: rgba(230, 21, 54, 0.45);
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(230, 21, 54, 0.2);
+        }
 
         /* === EMPTY === */
-        .empty{grid-column:1/-1;text-align:center;padding:80px 20px;color:var(--gray-dark)}
-        .empty i{font-size:3.5rem;color:var(--cherry);opacity:.12;display:block;margin-bottom:16px}
-        .empty p{font-size:.9rem}
+        .empty {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--text-muted);
+        }
+        .empty i {
+            font-size: 3.5rem;
+            color: var(--cherry-light);
+            opacity: 0.12;
+            display: block;
+            margin-bottom: 16px;
+        }
+        .empty p {
+            font-size: 0.9rem;
+        }
 
-        @media(max-width:900px){.hero-content{padding:36px 28px;gap:24px}.hero-text h1{font-size:2rem}.hero-icon{width:64px;height:64px;font-size:1.6rem}.hero-wave{display:none}}
-        @media(max-width:600px){.page-wrap{padding-top:110px;padding-left:14px;padding-right:14px}.hero-content{padding:28px 18px;flex-direction:column;align-items:flex-start}.hero-text h1{font-size:1.6rem}.audio-grid{grid-template-columns:1fr}.stats-row{gap:8px}.stat-card{padding:14px 16px}}
+        @media(max-width: 900px) {
+            .hero-content { padding: 36px 28px; gap: 24px; }
+            .hero-text h1 { font-size: 2rem; }
+            .hero-icon { width: 64px; height: 64px; font-size: 1.6rem; }
+            .hero-wave { display: none; }
+        }
+        @media(max-width: 768px) {
+            .audio-table th:nth-child(3), .audio-table td:nth-child(3) { display: none; }
+        }
+        @media(max-width: 600px) {
+            .page-wrap { padding-top: 110px; padding-left: 14px; padding-right: 14px; }
+            .hero-content { padding: 28px 18px; flex-direction: column; align-items: flex-start; }
+            .hero-text h1 { font-size: 1.6rem; }
+            .audio-table th:nth-child(4), .audio-table td:nth-child(4) { display: none; }
+            .stats-row { gap: 8px; }
+            .stat-card { padding: 14px 16px; }
+            .audio-table td, .audio-table th { padding: 12px 14px; }
+        }
     </style>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5438472060600560" crossorigin="anonymous"></script>
 </head>
@@ -112,8 +239,24 @@
             <div class="cat-filters" id="catFilters"></div>
         </div>
 
-        <!-- GRID -->
-        <div class="audio-grid" id="audioGrid">
+        <!-- DIRECTORY TABLE -->
+        <div class="table-responsive audio-table-wrap" id="audioTableContainer" style="display:none;">
+            <table class="audio-table">
+                <thead>
+                    <tr>
+                        <th style="width: 80px; text-align: center;">Play</th>
+                        <th>Track Title</th>
+                        <th>Category</th>
+                        <th>Creator Profile</th>
+                        <th style="text-align: right; width: 140px;">Downloads</th>
+                        <th style="text-align: right; width: 140px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="audioTableBody">
+                </tbody>
+            </table>
+        </div>
+        <div id="audioGridEmpty">
             <div class="empty"><i class="fas fa-music"></i><p>Loading audio library...</p></div>
         </div>
     </div>
@@ -134,7 +277,8 @@
                     buildCatFilters(data);
                     renderAudio(data);
                 } else {
-                    document.getElementById('audioGrid').innerHTML = '<div class="empty"><i class="fas fa-music"></i><p>No audio resources yet. Check back soon!</p></div>';
+                    document.getElementById('audioTableContainer').style.display = 'none';
+                    document.getElementById('audioGridEmpty').innerHTML = '<div class="empty"><i class="fas fa-music"></i><p>No audio resources yet. Check back soon!</p></div>';
                 }
             } catch(e) {}
         })();
@@ -181,17 +325,46 @@
         }
         
         function renderAudio(items) {
-            var grid = document.getElementById('audioGrid');
+            var tableContainer = document.getElementById('audioTableContainer');
+            var emptyContainer = document.getElementById('audioGridEmpty');
+            var tableBody = document.getElementById('audioTableBody');
             var catNames = { hot:'Hot',soft:'Soft',aesthetic:'Aesthetic',cinematic:'Cinematic',velocity:'Velocity',others:'Audio' };
+            
             if (items.length === 0) {
-                grid.innerHTML = '<div class="empty"><i class="fas fa-search"></i><p>No audio found matching your filters.</p></div>';
+                tableContainer.style.display = 'none';
+                emptyContainer.style.display = 'block';
+                emptyContainer.innerHTML = '<div class="empty"><i class="fas fa-search"></i><p>No audio found matching your filters.</p></div>';
                 document.getElementById('resultsCount').textContent = '';
             } else {
-                grid.innerHTML = items.map(function(p){
+                tableContainer.style.display = 'block';
+                emptyContainer.style.display = 'none';
+                
+                tableBody.innerHTML = items.map(function(p){
                     var cats = (p.category||'').split(',').filter(Boolean);
-                    var catTag = cats.length>0 ? '<span class="ac-tag">'+(catNames[cats[0].trim()]||cats[0])+'</span>' : '<span class="ac-tag">Audio</span>';
-                    var thumb = p.thumbnail ? '<img src="'+p.thumbnail+'" alt="" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'block\'"><i class="fas fa-music" style="display:none"></i>' : '<i class="fas fa-music"></i>';
-                    return '<a href="/product-audio?id='+p.id+'" class="audio-card"><div class="ac-album">'+thumb+'</div><div class="ac-info"><h3>'+p.name+'</h3><div class="ac-meta">'+catTag+'<span><i class="fas fa-user"></i> '+(p.creator_nickname||p.author_name||'Zyrex')+'</span><span><i class="fas fa-download"></i> '+(p.downloads||0)+'</span></div></div><button class="ac-play" onclick="playPreview(event,\''+p.id+'\',this)" title="Preview"><i class="fas fa-play"></i></button></a>';
+                    var catTag = cats.length > 0 ? '<span class="ac-tag">'+(catNames[cats[0].trim()]||cats[0])+'</span>' : '<span class="ac-tag">Audio</span>';
+                    var thumb = p.thumbnail 
+                        ? '<img src="'+p.thumbnail+'" alt="" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'block\'"><i class="fas fa-music" style="display:none"></i>' 
+                        : '<i class="fas fa-music"></i>';
+                    
+                    var creatorName = p.creator_nickname || p.author_name || 'Zyrex';
+                    var avatarHtml = '<div style="width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:rgba(230,21,54,0.08); border:1.5px solid rgba(230,21,54,0.15); color:var(--cherry-light); font-size:0.9rem;"><i class="fas fa-user"></i></div>';
+                    var profileHtml = '<div class="creator-profile-cell">' + avatarHtml + '<div class="cr-info"><h5>' + creatorName + '</h5><span>Uploader</span></div></div>';
+                    
+                    return '<tr>' +
+                        '<td style="text-align: center;"><button class="ac-play" onclick="playPreview(event,\''+p.id+'\',this)" title="Preview"><i class="fas fa-play"></i></button></td>' +
+                        '<td>' +
+                            '<div style="display:flex; align-items:center; gap:12px;">' +
+                                '<div class="ac-album-cell">' + thumb + '</div>' +
+                                '<div style="font-weight:600; font-family:\'Outfit\',sans-serif;">' + p.name + '</div>' +
+                            '</div>' +
+                        '</td>' +
+                        '<td>' + catTag + '</td>' +
+                        '<td>' + profileHtml + '</td>' +
+                        '<td style="text-align: right; font-weight:600; font-family:monospace; color:var(--text-muted);">' + (p.downloads||0) + '</td>' +
+                        '<td style="text-align: right;">' +
+                            '<a href="/product-audio?id='+p.id+'" class="btn-primary-sm" style="padding: 6px 12px; font-size:0.75rem; border-radius:8px;"><i class="fas fa-circle-info"></i> Details</a>' +
+                        '</td>' +
+                    '</tr>';
                 }).join('');
                 document.getElementById('resultsCount').textContent = items.length+' audio'+(items.length!==1?'s':'');
             }
