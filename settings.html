@@ -136,95 +136,127 @@
         }
         .dash-sidebar {
             width: 280px;
-            background: rgba(8, 2, 4, 0.4);
-            border-right: 1px solid var(--glass-border);
-            backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px);
-            padding: 30px 20px;
+            background: transparent;
+            border-right: none;
+            padding: 30px 16px;
             display: flex;
             flex-direction: column;
-            gap: 26px;
+            gap: 20px;
             flex-shrink: 0;
         }
         .dash-content {
             flex: 1;
-            padding: 40px 48px;
+            padding: 30px 48px;
             overflow-y: auto;
         }
 
-        /* === SIDEBAR PROFILE === */
-        .sidebar-profile {
+        /* === GLOBAL HEADER PROFILE BANNER === */
+        .profile-header-banner {
+            background: linear-gradient(135deg, rgba(230, 21, 54, 0.15) 0%, rgba(230, 21, 54, 0.02) 100%);
+            border: 1px solid rgba(230, 21, 54, 0.08);
+            border-radius: 20px;
+            padding: 24px 32px;
             display: flex;
-            flex-direction: column;
             align-items: center;
-            text-align: center;
-            padding-bottom: 24px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            gap: 24px;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
         }
-        .sidebar-profile img, .sidebar-profile .profile-fallback {
-            width: 80px;
-            height: 80px;
+        .profile-header-banner::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(230, 21, 54, 0.05) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .profile-banner-avatar {
+            width: 90px;
+            height: 90px;
             border-radius: 50%;
-            border: 2px solid var(--glass-border);
-            margin-bottom: 12px;
-            object-fit: cover;
-            box-shadow: 0 0 15px rgba(230, 21, 54, 0.15);
-        }
-        .sidebar-profile .profile-fallback {
-            background: rgba(230, 21, 54, 0.06);
+            border: 2.5px solid rgba(230, 21, 54, 0.2);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2.2rem;
-            color: var(--text-muted);
-            border-style: dashed;
+            background: rgba(230, 21, 54, 0.05);
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(230, 21, 54, 0.1);
+            flex-shrink: 0;
         }
-        .sidebar-profile h3 {
-            font-size: 1.1rem;
-            font-weight: 700;
+        .profile-banner-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .profile-banner-avatar .avatar-fallback {
+            font-size: 2.5rem;
+            font-weight: 800;
             color: #fff;
-            margin-bottom: 4px;
             font-family: 'Outfit', sans-serif;
         }
-        .sidebar-profile span {
-            font-size: 0.75rem;
-            color: var(--text-muted);
+        .profile-banner-info {
+            flex: 1;
         }
-        .badge-container {
+        .profile-banner-info h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            margin: 0 0 4px 0;
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            letter-spacing: -0.5px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+        .profile-banner-meta {
             display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin-top: 10px;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-bottom: 10px;
         }
-        .badge {
+        .profile-banner-meta .dot {
+            opacity: 0.5;
+        }
+        .role-badge-container {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .role-pill {
             display: inline-flex;
             align-items: center;
-            gap: 5px;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 0.65rem;
+            padding: 3px 12px;
+            border-radius: 50px;
+            font-size: 0.62rem;
             font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        .badge-admin {
-            background: rgba(230, 21, 54, 0.15);
+            letter-spacing: 0.8px;
+            background: transparent;
+            border: 1px solid var(--cherry-light);
             color: var(--cherry-light);
-            border: 1px solid rgba(230, 21, 54, 0.25);
         }
-        .badge-upload {
-            background: rgba(0, 230, 118, 0.12);
+        .role-pill.role-uploader {
+            border-color: #00e676;
             color: #00e676;
-            border: 1px solid rgba(0, 230, 118, 0.25);
         }
+        .role-pill.role-member {
+            border-color: #3b82f6;
+            color: #3b82f6;
+        }
+
         .sidebar-section-title {
             font-size: 0.68rem;
             text-transform: uppercase;
             letter-spacing: 2px;
-            color: rgba(255, 255, 255, 0.2);
+            color: rgba(255, 255, 255, 0.15);
             font-weight: 700;
-            margin: 24px 0 6px 14px;
+            margin: 20px 0 6px 14px;
         }
         .sidebar-menu {
             display: flex;
@@ -242,7 +274,7 @@
             padding: 12px 16px;
             border-radius: 12px;
             font-family: inherit;
-            font-size: 0.88rem;
+            font-size: 0.9rem;
             font-weight: 600;
             display: flex;
             align-items: center;
@@ -253,14 +285,12 @@
         }
         .menu-item button:hover {
             color: #fff;
-            background: rgba(230, 21, 54, 0.05);
-            transform: translateX(4px);
+            background: rgba(255, 255, 255, 0.04);
         }
         .menu-item.active button {
             color: #fff;
-            background: linear-gradient(90deg, rgba(230, 21, 54, 0.12) 0%, rgba(230, 21, 54, 0.02) 100%);
-            box-shadow: inset 4px 0 0 var(--cherry-light);
-            font-weight: 700;
+            background: rgba(255, 255, 255, 0.08);
+            font-weight: 600;
         }
 
         /* === TAB CONTENT PANELS === */
@@ -1012,10 +1042,6 @@
     <div class="dash-wrapper">
         <!-- Sidebar Navigation -->
         <div class="dash-sidebar">
-            <div class="sidebar-profile" id="sidebarProfile">
-                <div class="profile-fallback"><i class="fas fa-spinner fa-spin"></i></div>
-                <h3>Loading User...</h3>
-            </div>
 
             <ul class="sidebar-menu">
                 <li class="menu-item active" data-tab="overview">
@@ -1065,9 +1091,28 @@
 
         <!-- Content Area -->
         <div class="dash-content">
+            <!-- Global Profile Header Banner -->
+            <div class="profile-header-banner" id="globalProfileBanner" style="display:none">
+                <div class="profile-banner-avatar" id="globalProfileAvatar"></div>
+                <div class="profile-banner-info">
+                    <h1 id="globalProfileName">-</h1>
+                    <div class="profile-banner-meta">
+                        <span id="globalProfileDiscord">-</span>
+                        <span class="dot">•</span>
+                        <span id="globalProfileJoined">-</span>
+                    </div>
+                    <div id="globalProfileRoles" class="role-badge-container"></div>
+                </div>
+            </div>
+
             <!-- TAB 1: OVERVIEW -->
             <div class="tab-panel active" id="pane-overview">
-                <h2 class="pane-title">Overview Dashboard</h2>
+                <h2 class="pane-title" style="margin-bottom: 20px; font-size: 1.4rem;">Account Overview</h2>
+                <div class="grid-cards" style="grid-template-columns: 1fr; margin-bottom: 24px;">
+                    <div class="card" style="padding: 24px 30px;">
+                        <p style="font-size: 0.95rem; color: var(--text-muted); line-height: 1.8; margin: 0;">Welcome to your account dashboard. Select a category from the sidebar to manage your settings, storage, and history.</p>
+                    </div>
+                </div>
                 <div class="grid-cards">
                     <!-- Storage info (rendered dynamically for uploaders / admins) -->
                     <div class="card" id="storageCard" style="display:none">
@@ -1091,12 +1136,6 @@
                             <a href="/upload" class="btn-action-primary" style="justify-content:center"><i class="fas fa-upload"></i> Product Upload Wizard</a>
                             <a href="https://storage.zyrexediting.xyz" target="_blank" class="logout-btn" style="justify-content:center"><i class="fas fa-external-link-alt"></i> Access Web SFTPGo</a>
                         </div>
-                    </div>
-
-                    <!-- Welcome note -->
-                    <div class="card">
-                        <h4>Session Information</h4>
-                        <p style="font-size:0.85rem;color:var(--text-muted);line-height:1.7">Welcome to Zyrex Editing administrative tools. Use the sidebar sections to manage presets, configure storage quotas, explore active Discord uploaders, and examine server health logs.</p>
                     </div>
 
                     <!-- Cookie Preferences Card -->
@@ -1663,22 +1702,58 @@
             alert("Cookie and privacy settings saved successfully!");
         }
 
-        // Render profile card in sidebar
+        function getDiscordCreationDate(idStr) {
+            if (!idStr) return 'Joined Feb 2026';
+            try {
+                const id = BigInt(idStr);
+                const timestamp = (id >> 22n) + 1420070400000n;
+                const date = new Date(Number(timestamp));
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                return 'Joined ' + months[date.getMonth()] + ' ' + date.getFullYear();
+            } catch(e) {
+                return 'Joined Feb 2026';
+            }
+        }
+
+        // Render profile card in global header banner
         function renderSidebarProfile(user) {
-            const sidebar = document.getElementById('sidebarProfile');
+            const banner = document.getElementById('globalProfileBanner');
+            const avatarContainer = document.getElementById('globalProfileAvatar');
+            const nameEl = document.getElementById('globalProfileName');
+            const discordEl = document.getElementById('globalProfileDiscord');
+            const joinedEl = document.getElementById('globalProfileJoined');
+            const rolesEl = document.getElementById('globalProfileRoles');
+            
+            if (!banner) return;
+            
             const avatarUrl = user.avatar 
                 ? avatarProxyUrl(user.id, user.avatar, 128) 
                 : '';
+                
+            if (avatarUrl) {
+                avatarContainer.innerHTML = `<img src="${avatarUrl}" alt="Avatar">`;
+            } else {
+                const char = (user.global_name || user.username || 'U').charAt(0).toUpperCase();
+                avatarContainer.innerHTML = `<div class="avatar-fallback">${char}</div>`;
+            }
             
-            sidebar.innerHTML = `
-                ${avatarUrl ? `<img src="${avatarUrl}" alt="Avatar">` : '<div class="profile-fallback"><i class="fas fa-user"></i></div>'}
-                <h3>${user.global_name || user.username}</h3>
-                <span>@${user.username}</span>
-                <div class="badge-container">
-                    ${user.is_admin ? '<span class="badge badge-admin"><i class="fas fa-crown"></i> Admin</span>' : ''}
-                    ${user.can_upload ? '<span class="badge badge-upload"><i class="fas fa-upload"></i> Uploader</span>' : ''}
-                </div>
-            `;
+            nameEl.textContent = user.global_name || user.username;
+            discordEl.textContent = `@${user.username}`;
+            joinedEl.textContent = getDiscordCreationDate(user.id);
+            
+            let rolesHtml = '';
+            if (user.is_admin) {
+                rolesHtml += '<span class="role-pill role-admin"><i class="fas fa-crown"></i> Admin</span>';
+            }
+            if (user.can_upload) {
+                rolesHtml += '<span class="role-pill role-uploader"><i class="fas fa-upload"></i> Uploader</span>';
+            }
+            if (!rolesHtml) {
+                rolesHtml += '<span class="role-pill role-member"><i class="fas fa-user"></i> Member</span>';
+            }
+            rolesEl.innerHTML = rolesHtml;
+            
+            banner.style.display = 'flex';
         }
 
         // Load quota display for overview dashboard
