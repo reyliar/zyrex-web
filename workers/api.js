@@ -1610,8 +1610,28 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
         }
         const { id } = await request.json();
         if (!id) return json({ error: "Product ID required" }, 400);
-        // For now, respond success (DB integration later)
-        return json({ success: true, message: `Product ${id} deleted` });
+        
+        const targetUrl = `${BOT_API}/api/products/${encodeURIComponent(id)}`;
+        const proxyHeaders = {
+          "Content-Type": "application/json",
+          "X-User-ID": session.userId || "",
+          "X-User-Name": session.username || "",
+          "X-User-Display-Name": session.displayName || session.username || "",
+          "X-User-Avatar": session.avatar || "",
+          "X-User-Can-Upload": session.canUpload ? "true" : "false",
+          "X-User-Is-Admin": ADMIN_IDS.includes(session.userId) ? "true" : "false"
+        };
+        
+        try {
+          const botResp = await fetch(targetUrl, {
+            method: "DELETE",
+            headers: proxyHeaders
+          });
+          const botData = await botResp.json();
+          return json(botData, botResp.status);
+        } catch(e) {
+          return json({ success: false, error: e.message }, 502);
+        }
       }
 
       // ============ SCRAPER (Unified — Proxied to Bot) ============

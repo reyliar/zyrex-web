@@ -1098,8 +1098,6 @@
                     <h1 id="globalProfileName">-</h1>
                     <div class="profile-banner-meta">
                         <span id="globalProfileDiscord">-</span>
-                        <span class="dot">•</span>
-                        <span id="globalProfileJoined">-</span>
                     </div>
                     <div id="globalProfileRoles" class="role-badge-container"></div>
                 </div>
@@ -1702,26 +1700,12 @@
             alert("Cookie and privacy settings saved successfully!");
         }
 
-        function getDiscordCreationDate(idStr) {
-            if (!idStr) return 'Joined Feb 2026';
-            try {
-                const id = BigInt(idStr);
-                const timestamp = (id >> 22n) + 1420070400000n;
-                const date = new Date(Number(timestamp));
-                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                return 'Joined ' + months[date.getMonth()] + ' ' + date.getFullYear();
-            } catch(e) {
-                return 'Joined Feb 2026';
-            }
-        }
-
         // Render profile card in global header banner
         function renderSidebarProfile(user) {
             const banner = document.getElementById('globalProfileBanner');
             const avatarContainer = document.getElementById('globalProfileAvatar');
             const nameEl = document.getElementById('globalProfileName');
             const discordEl = document.getElementById('globalProfileDiscord');
-            const joinedEl = document.getElementById('globalProfileJoined');
             const rolesEl = document.getElementById('globalProfileRoles');
             
             if (!banner) return;
@@ -1739,7 +1723,6 @@
             
             nameEl.textContent = user.global_name || user.username;
             discordEl.textContent = `@${user.username}`;
-            joinedEl.textContent = getDiscordCreationDate(user.id);
             
             let rolesHtml = '';
             if (user.is_admin) {
