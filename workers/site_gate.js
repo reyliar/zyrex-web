@@ -21,13 +21,13 @@ function healthCacheTtl(env) {
     : numberFromEnv(env.HEALTH_OFFLINE_CACHE_MS, DEFAULT_OFFLINE_CACHE_MS);
 }
 
-async function probeVps(env) {
+async function probeServer(env) {
   const controller = new AbortController();
   const timeoutMs = numberFromEnv(env.HEALTH_TIMEOUT_MS, DEFAULT_TIMEOUT_MS);
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
-    const response = await fetch(env.VPS_HEALTH_URL || DEFAULT_HEALTH_URL, {
+    const response = await fetch(env.SERVER_HEALTH_URL || DEFAULT_HEALTH_URL, {
       method: "GET",
       headers: {
         Accept: "application/json",
@@ -45,21 +45,21 @@ async function probeVps(env) {
     const status = String(payload?.status || "").toLowerCase();
     return status === "ok" || status === "healthy" || status === "online";
   } catch (error) {
-    console.warn("VPS health probe failed", error?.message || String(error));
+    console.warn("Server health probe failed", error?.message || String(error));
     return false;
   } finally {
     clearTimeout(timeout);
   }
 }
 
-async function isVpsAvailable(env) {
+async function isServerAvailable(env) {
   const now = Date.now();
   if (healthState.initialized && now - healthState.checkedAt < healthCacheTtl(env)) {
     return healthState.available;
   }
 
   if (!activeProbe) {
-    activeProbe = probeVps(env)
+    activeProbe = probeServer(env)
       .then((available) => {
         healthState = { available, checkedAt: Date.now(), initialized: true };
         return available;
@@ -74,12 +74,12 @@ async function isVpsAvailable(env) {
 
 function maintenanceHtml() {
   return `<!doctype html>
-<html lang="tr">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
-  <title>Sunucular Çevrimdışı · Zyrex Editing</title>
+  <title>Servers Offline · Zyrex Editing</title>
   <style>
     :root{color-scheme:dark;--bg:#07070a;--panel:#111116;--line:#292932;--text:#f5f5f7;--muted:#a4a4af;--red:#ff4d5e}
     *{box-sizing:border-box}html,body{height:100%;margin:0}body{display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 50% 20%,#1b1117 0,#0b0b0f 38%,var(--bg) 72%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
@@ -93,11 +93,11 @@ function maintenanceHtml() {
 </head>
 <body>
   <main>
-    <span class="mark"><span class="dot"></span>Sistem çevrimdışı</span>
-    <h1>Sunucular şu anda kapalı</h1>
-    <p>VPS hizmeti erişilebilir olmadığı için Zyrex Editing geçici olarak kullanıma kapatıldı. Sunucu yeniden açıldığında site otomatik olarak normale dönecek.</p>
-    <button type="button" onclick="location.reload()">Tekrar kontrol et</button>
-    <span class="note">Bu sayfa 15 saniyede bir otomatik kontrol edilir.</span>
+    <span class="mark"><span class="dot"></span>System offline</span>
+    <h1>Our servers are currently offline</h1>
+    <p>Zyrex Editing is temporarily unavailable because the server cannot be reached. The site will automatically return when the server is online again.</p>
+    <button type="button" onclick="location.reload()">Check again</button>
+    <span class="note">This page checks the server automatically every 15 seconds.</span>
   </main>
   <script>setTimeout(function(){location.reload()},15000)</script>
 </body>
@@ -119,7 +119,7 @@ function offlineResponse(request) {
     headers["Content-Type"] = "application/json; charset=UTF-8";
     return new Response(JSON.stringify({
       error: "service_unavailable",
-      message: "VPS is offline. The site is temporarily unavailable.",
+      message: "The server is offline. The site is temporarily unavailable.",
     }), { status: 503, headers });
   }
 
@@ -139,7 +139,7 @@ function isApiRequest(pathname) {
 
 export default {
   async fetch(request, env) {
-    if (!(await isVpsAvailable(env))) {
+    if (!(await isServerAvailable(env))) {
       return offlineResponse(request);
     }
 
