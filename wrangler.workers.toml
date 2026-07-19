@@ -24,18 +24,9 @@ binding = "STORAGE_PROD"
 bucket_name = "zyrexediting-staging"
 
 # === Routes ===
-# Route - handles /api/* and dl subdomain and thumbnail subdomain
-[[routes]]
-pattern = "zyrexediting.xyz/resources*"
-zone_id = "1844c05896c2b3897c61d37dc08b71e8"
-
-[[routes]]
-pattern = "zyrexediting.xyz/api/*"
-zone_id = "1844c05896c2b3897c61d37dc08b71e8"
-
-[[routes]]
-pattern = "dl.zyrexediting.xyz/*"
-zone_id = "1844c05896c2b3897c61d37dc08b71e8"
+# Main-domain API/resource traffic and the download subdomain enter through
+# zyrex-site-gate and reach this Worker over the API service binding.
+# The thumbnail CDN remains directly routed here.
 
 [[routes]]
 pattern = "thumbnail.zyrexediting.xyz/*"

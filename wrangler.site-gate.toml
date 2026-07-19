@@ -1,0 +1,38 @@
+name = "zyrex-site-gate"
+main = "workers/site_gate.js"
+compatibility_date = "2026-07-19"
+
+[vars]
+VPS_HEALTH_URL = "https://storage.zyrexediting.xyz/health"
+HEALTH_TIMEOUT_MS = "3000"
+HEALTH_ONLINE_CACHE_MS = "10000"
+HEALTH_OFFLINE_CACHE_MS = "5000"
+
+[assets]
+directory = ".site-assets"
+binding = "ASSETS"
+run_worker_first = true
+not_found_handling = "404-page"
+html_handling = "auto-trailing-slash"
+
+[[services]]
+binding = "API"
+service = "zyrex-api"
+
+[[routes]]
+pattern = "zyrexediting.xyz/*"
+zone_id = "1844c05896c2b3897c61d37dc08b71e8"
+
+# These more-specific routes previously belonged to the API/Gateway Workers.
+# The gate owns them and delegates through service bindings while the VPS is online.
+[[routes]]
+pattern = "zyrexediting.xyz/resources*"
+zone_id = "1844c05896c2b3897c61d37dc08b71e8"
+
+[[routes]]
+pattern = "zyrexediting.xyz/api/*"
+zone_id = "1844c05896c2b3897c61d37dc08b71e8"
+
+[[routes]]
+pattern = "dl.zyrexediting.xyz/*"
+zone_id = "1844c05896c2b3897c61d37dc08b71e8"
