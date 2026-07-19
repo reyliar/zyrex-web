@@ -144,6 +144,47 @@ function isApiRequest(pathname) {
     pathname.startsWith("/api/");
 }
 
+function isAdminPublishPage(pathname) {
+  return pathname === "/admin-publish" || pathname === "/admin-publish.html";
+}
+
+function adminForbiddenResponse() {
+  return new Response(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Admin access required · Zyrex</title><style>html,body{height:100%;margin:0}body{display:grid;place-items:center;padding:24px;background:#080506;color:#f8f5f6;font-family:system-ui,sans-serif;text-align:center}main{max-width:520px;padding:36px;border:1px solid #32252a;border-radius:20px;background:#120d0f}h1{margin:0 0 10px}p{margin:0;color:#aa9da2;line-height:1.6}a{display:inline-block;margin-top:22px;padding:10px 14px;border-radius:10px;background:#9f1d3a;color:white;text-decoration:none;font-weight:700}</style></head><body><main><h1>Admin access required</h1><p>This publishing page is only available to Zyrex administrators.</p><a href="/settings">Return to settings</a></main></body></html>`, {
+    status: 403,
+    headers: {
+      "Content-Type": "text/html; charset=UTF-8",
+      "Cache-Control": "no-store",
+      "X-Robots-Tag": "noindex, nofollow",
+    },
+  });
+}
+
+async function authorizeAdminPublish(request, env) {
+  if (!env.API) return new Response("Authentication service unavailable", { status: 503 });
+
+  const meUrl = new URL(request.url);
+  meUrl.pathname = "/api/me";
+  meUrl.search = "";
+  const authResponse = await env.API.fetch(new Request(meUrl.toString(), {
+    method: "GET",
+    headers: request.headers,
+  }));
+
+  if (authResponse.status === 401) {
+    const loginUrl = new URL("/api/login", request.url);
+    loginUrl.searchParams.set("redirect", "/admin-publish");
+    return Response.redirect(loginUrl.toString(), 302);
+  }
+
+  if (!authResponse.ok) return adminForbiddenResponse();
+  try {
+    const user = await authResponse.json();
+    return user?.is_admin ? null : adminForbiddenResponse();
+  } catch (_) {
+    return adminForbiddenResponse();
+  }
+}
+
 export default {
   async fetch(request, env) {
     if (!(await isServerAvailable(env))) {
@@ -152,6 +193,11 @@ export default {
 
     const url = new URL(request.url);
     const pathname = url.pathname;
+
+    if (isAdminPublishPage(pathname)) {
+      const denied = await authorizeAdminPublish(request, env);
+      if (denied) return denied;
+    }
 
     if ((url.hostname === "dl.zyrexediting.xyz" || isApiRequest(pathname)) && env.API) {
       return env.API.fetch(request);
