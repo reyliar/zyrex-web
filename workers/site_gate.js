@@ -9,6 +9,7 @@ let healthState = {
   initialized: false,
 };
 let activeProbe = null;
+let lastHealthReason = "not-checked";
 
 function numberFromEnv(value, fallback) {
   const parsed = Number.parseInt(value || "", 10);
@@ -34,17 +35,22 @@ async function probeServer(env) {
         "User-Agent": "Zyrex-Site-Gate/1.0",
       },
       cache: "no-store",
-      redirect: "error",
+      redirect: "manual",
       signal: controller.signal,
-      cf: { cacheTtl: 0, cacheEverything: false },
     });
 
-    if (!response.ok) return false;
+    if (!response.ok) {
+      lastHealthReason = `http-${response.status}`;
+      return false;
+    }
 
     const payload = await response.json();
     const status = String(payload?.status || "").toLowerCase();
-    return status === "ok" || status === "healthy" || status === "online";
+    const available = status === "ok" || status === "healthy" || status === "online";
+    lastHealthReason = available ? "online" : `invalid-status-${status || "missing"}`;
+    return available;
   } catch (error) {
+    lastHealthReason = "request-error";
     console.warn("Server health probe failed", error?.message || String(error));
     return false;
   } finally {
@@ -113,6 +119,7 @@ function offlineResponse(request) {
     "Retry-After": "15",
     "X-Robots-Tag": "noindex, nofollow",
     "X-Zyrex-Site-Gate": "offline",
+    "X-Zyrex-Health-Reason": lastHealthReason,
   };
 
   if (wantsJson) {
