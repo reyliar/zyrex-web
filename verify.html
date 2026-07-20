@@ -1,285 +1,720 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zyrex | Verify</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#09090b">
+    <meta name="description" content="Securely verify your Discord account for Zyrex Editing.">
+    <title>Zyrex — Discord Verification</title>
     <link rel="icon" type="image/png" href="/assets/content.png">
-    <link rel="stylesheet" href="css/style.css?v=24">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
     <style>
-        :root{--cherry-rgb:122,8,30;--cherry:#7a081e;--cherry-light:#c81e3a;--dark:#0a0103;--light:#f5f0f0;--gray:#999;--gray-dark:#666}
-        body{background:var(--dark);background-image:radial-gradient(circle at 50% 0%,rgba(var(--cherry-rgb),.08) 0%,transparent 70%);color:var(--light);font-family:Poppins,sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;margin:0;padding:20px}
-        .verify-container{text-align:center;max-width:480px;width:100%;padding:50px 40px;
-            background:rgba(12,2,4,.5);backdrop-filter:blur(25px) saturate(210%);
-            -webkit-backdrop-filter:blur(25px) saturate(210%);
-            border:1px solid rgba(var(--cherry-rgb),.12);border-radius:24px;
-            box-shadow:0 30px 60px rgba(0,0,0,.5),0 0 40px rgba(var(--cherry-rgb),.12);
-            transition:all .4s ease;
+        :root {
+            color-scheme: dark;
+            --bg: #08080a;
+            --panel: rgba(20, 18, 21, .88);
+            --panel-strong: #161316;
+            --line: rgba(255, 255, 255, .085);
+            --line-bright: rgba(255, 255, 255, .14);
+            --text: #f7f4f5;
+            --muted: #aaa3a7;
+            --subtle: #746e72;
+            --brand: #d72f58;
+            --brand-deep: #8f1534;
+            --brand-soft: rgba(215, 47, 88, .13);
+            --discord: #5865f2;
+            --success: #43d18d;
+            --success-soft: rgba(67, 209, 141, .12);
+            --danger: #ff647c;
+            --radius-xl: 30px;
+            --radius-lg: 20px;
+            --shadow: 0 32px 90px rgba(0, 0, 0, .55);
         }
-        .verify-container.premium{border-color:rgba(0,200,100,.15);box-shadow:0 30px 60px rgba(0,0,0,.5),0 0 60px rgba(0,200,100,.08)}
-        .verify-icon{width:90px;height:90px;border-radius:50%;margin:0 auto 25px;display:flex;align-items:center;justify-content:center;font-size:2.5rem;transition:all .5s ease}
-        .verify-icon.pending{background:rgba(var(--cherry-rgb),.1);border:2px solid rgba(var(--cherry-rgb),.2);color:var(--cherry-light);animation:iconPulse 2s infinite}
-        .verify-icon.success{background:rgba(0,200,100,.1);border:2px solid rgba(0,200,100,.2);color:#00c864}
-        .verify-icon.error{background:rgba(255,56,96,.1);border:2px solid rgba(255,56,96,.2);color:#ff3860}
-        @keyframes iconPulse{0%,100%{box-shadow:0 0 0 0 rgba(var(--cherry-rgb),.4)}50%{box-shadow:0 0 0 20px rgba(var(--cherry-rgb),0)}}
-        h1{font-size:1.8rem;font-weight:900;margin-bottom:10px}
-        p{color:var(--gray-dark);font-size:.9rem;line-height:1.6;margin-bottom:25px}
-        .btn-verify{display:inline-flex;align-items:center;gap:10px;padding:16px 40px;border-radius:14px;font-size:1rem;font-weight:700;cursor:pointer;border:none;font-family:inherit;text-decoration:none;
-            background:linear-gradient(180deg,#7a081e 0%,#42020d 50%,#300109 100%);border:1px solid rgba(var(--cherry-rgb),.25);color:#fff;
-            box-shadow:0 4px 20px rgba(122,8,30,.35),inset 0 1px 1px rgba(255,255,255,.1);transition:all .3s
-        }
-        .btn-verify:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(122,8,30,.5)}
-        .btn-verify:disabled{opacity:.5;cursor:not-allowed;transform:none}
-        .info-row{display:flex;align-items:center;gap:8px;padding:12px 16px;background:rgba(var(--cherry-rgb),.04);border:1px solid rgba(var(--cherry-rgb),.08);border-radius:10px;margin-top:20px;font-size:.8rem;color:var(--gray);justify-content:center}
-        .info-row i{color:var(--cherry-light)}
 
-        /* Premium Success Card */
-        .premium-card{display:none;animation:fadeSlideUp .5s ease}
-        .premium-card.show{display:block}
-        @keyframes fadeSlideUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
-        .avatar-ring{position:relative;width:96px;height:96px;margin:0 auto 20px}
-        .avatar-ring::before{content:'';position:absolute;inset:-4px;border-radius:50%;background:conic-gradient(from 0deg,#00c864,#00e676,#00c864,#00c864);animation:avatarGlow 3s linear infinite;z-index:0}
-        .avatar-ring::after{content:'';position:absolute;inset:2px;border-radius:50%;background:var(--dark);z-index:1}
-        @keyframes avatarGlow{to{transform:rotate(360deg)}}
-        .avatar-ring img{position:relative;width:100%;height:100%;border-radius:50%;object-fit:cover;z-index:2}
-        .avatar-ring .verified-badge{position:absolute;bottom:2px;right:2px;width:28px;height:28px;border-radius:50%;background:#00c864;display:flex;align-items:center;justify-content:center;z-index:3;border:3px solid var(--dark);font-size:.7rem;color:#fff}
-        .display-name{font-size:1.4rem;font-weight:800;color:var(--light);margin:8px 0 2px}
-        .user-tag{font-size:.85rem;color:var(--gray);margin-bottom:6px}
-        .welcome-msg{font-size:.85rem;color:#00c864;font-weight:600;margin-bottom:20px;letter-spacing:.5px}
-        .divider{width:60px;height:2px;background:linear-gradient(90deg,transparent,rgba(0,200,100,.4),transparent);margin:16px auto}
-        .btn-discord{display:inline-flex;align-items:center;gap:10px;padding:14px 36px;border-radius:12px;font-size:.95rem;font-weight:700;cursor:pointer;border:none;font-family:inherit;text-decoration:none;
-            background:linear-gradient(180deg,#5865F2 0%,#4752c4 100%);border:1px solid rgba(88,101,242,.3);color:#fff;
-            box-shadow:0 4px 20px rgba(88,101,242,.3);transition:all .3s
+        * { box-sizing: border-box; }
+
+        html { min-width: 320px; }
+
+        body {
+            min-height: 100vh;
+            margin: 0;
+            overflow-x: hidden;
+            background:
+                radial-gradient(circle at 12% 12%, rgba(215, 47, 88, .14), transparent 31rem),
+                radial-gradient(circle at 88% 88%, rgba(88, 101, 242, .09), transparent 30rem),
+                var(--bg);
+            color: var(--text);
+            font-family: "DM Sans", sans-serif;
         }
-        .btn-discord:hover{transform:translateY(-2px);box-shadow:0 8px 30px rgba(88,101,242,.45)}
-        .loading-spinner{display:inline-block;width:24px;height:24px;border:3px solid rgba(var(--cherry-rgb),.2);border-top-color:var(--cherry-light);border-radius:50%;animation:spin .7s linear infinite}
-        @keyframes spin{to{transform:rotate(360deg)}}
-        @media(max-width:480px) {
-            body{padding:12px}
-            .verify-container{padding:32px 20px;border-radius:18px}
-            h1{font-size:1.4rem}
-            p{font-size:.8rem}
-            .verify-icon{width:70px;height:70px;font-size:2rem;margin-bottom:18px}
-            .btn-verify{padding:14px 28px;font-size:.9rem}
-            .avatar-ring{width:76px;height:76px}
-            .display-name{font-size:1.1rem}
-            .btn-discord{padding:12px 24px;font-size:.82rem}
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            opacity: .22;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 160 160' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.16'/%3E%3C/svg%3E");
+            mix-blend-mode: soft-light;
+        }
+
+        button, a { -webkit-tap-highlight-color: transparent; }
+
+        .shell {
+            width: min(1160px, calc(100% - 40px));
+            min-height: 100vh;
+            margin: 0 auto;
+            padding: 30px 0;
+            display: grid;
+            grid-template-rows: auto 1fr auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 11px;
+            color: var(--text);
+            text-decoration: none;
+            font-family: Manrope, sans-serif;
+            font-size: 17px;
+            font-weight: 800;
+            letter-spacing: -.03em;
+        }
+
+        .brand img {
+            width: 33px;
+            height: 33px;
+            object-fit: contain;
+            filter: drop-shadow(0 7px 14px rgba(215, 47, 88, .28));
+        }
+
+        .secure-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .secure-label svg { width: 15px; color: var(--success); }
+
+        main {
+            min-width: 0;
+            display: grid;
+            place-items: center;
+            padding: 54px 0;
+        }
+
+        .verification-card {
+            width: 100%;
+            max-width: 930px;
+            min-width: 0;
+            min-height: 590px;
+            display: grid;
+            grid-template-columns: minmax(0, 1.08fr) minmax(320px, .92fr);
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: var(--radius-xl);
+            background: var(--panel);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+        }
+
+        .hero {
+            min-width: 0;
+            position: relative;
+            padding: 58px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow: hidden;
+            border-right: 1px solid var(--line);
+            background:
+                linear-gradient(145deg, rgba(215, 47, 88, .09), transparent 45%),
+                rgba(255, 255, 255, .012);
+        }
+
+        .hero::after {
+            content: "Z";
+            position: absolute;
+            right: -38px;
+            bottom: -110px;
+            font: 800 340px/1 Manrope, sans-serif;
+            letter-spacing: -.12em;
+            color: transparent;
+            -webkit-text-stroke: 1px rgba(255, 255, 255, .045);
+            transform: rotate(-7deg);
+            pointer-events: none;
+        }
+
+        .eyebrow {
+            width: fit-content;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 7px 11px;
+            border: 1px solid rgba(215, 47, 88, .22);
+            border-radius: 999px;
+            background: var(--brand-soft);
+            color: #ff9db3;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: .11em;
+            text-transform: uppercase;
+        }
+
+        .eyebrow::before {
+            content: "";
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--brand);
+            box-shadow: 0 0 14px var(--brand);
+        }
+
+        .hero h1 {
+            max-width: 520px;
+            margin: 24px 0 17px;
+            font: 800 clamp(36px, 5vw, 57px)/1.02 Manrope, sans-serif;
+            letter-spacing: -.055em;
+        }
+
+        .hero h1 span {
+            color: transparent;
+            background: linear-gradient(105deg, #fff 0%, #ff9ab1 45%, #d72f58 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+        }
+
+        .hero-copy {
+            max-width: 450px;
+            margin: 0;
+            color: var(--muted);
+            font-size: 15px;
+            line-height: 1.72;
+        }
+
+        .trust-list {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            gap: 14px;
+            margin-top: 54px;
+        }
+
+        .trust-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #c8c2c5;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .trust-icon {
+            width: 30px;
+            height: 30px;
+            display: grid;
+            place-items: center;
+            flex: 0 0 auto;
+            border: 1px solid var(--line);
+            border-radius: 9px;
+            background: rgba(255, 255, 255, .035);
+            color: #e86a88;
+        }
+
+        .trust-icon svg { width: 14px; height: 14px; }
+
+        .stage {
+            min-width: 0;
+            min-height: 590px;
+            padding: 42px;
+            display: grid;
+            place-items: center;
+            background: rgba(7, 7, 9, .2);
+        }
+
+        .view {
+            width: 100%;
+            min-width: 0;
+            animation: rise .45s cubic-bezier(.2, .75, .25, 1) both;
+        }
+
+        .view[hidden] { display: none !important; }
+
+        @keyframes rise {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: none; }
+        }
+
+        .state-icon {
+            width: 74px;
+            height: 74px;
+            display: grid;
+            place-items: center;
+            margin-bottom: 25px;
+            border: 1px solid rgba(215, 47, 88, .25);
+            border-radius: 22px;
+            background: var(--brand-soft);
+            color: #f16d8c;
+            box-shadow: 0 14px 45px rgba(143, 21, 52, .18);
+        }
+
+        .state-icon svg { width: 33px; height: 33px; }
+
+        .stage h2 {
+            margin: 0 0 11px;
+            font: 800 27px/1.2 Manrope, sans-serif;
+            letter-spacing: -.035em;
+        }
+
+        .stage-copy {
+            margin: 0 0 27px;
+            color: var(--muted);
+            font-size: 14px;
+            line-height: 1.65;
+        }
+
+        .primary-button, .secondary-button {
+            width: 100%;
+            min-height: 53px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 0 20px;
+            border: 0;
+            border-radius: 15px;
+            color: white;
+            font: 700 14px "DM Sans", sans-serif;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+        }
+
+        .primary-button {
+            background: linear-gradient(180deg, #e13a62, #a71d3e);
+            box-shadow: 0 12px 28px rgba(167, 29, 62, .32), inset 0 1px rgba(255, 255, 255, .2);
+        }
+
+        .secondary-button { background: var(--discord); box-shadow: 0 12px 28px rgba(88, 101, 242, .25); }
+        .primary-button:hover, .secondary-button:hover { transform: translateY(-2px); filter: brightness(1.07); }
+        .primary-button svg, .secondary-button svg { width: 18px; height: 18px; }
+
+        .microcopy {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            margin-top: 15px;
+            color: var(--subtle);
+            font-size: 11px;
+        }
+
+        .microcopy svg { width: 12px; }
+
+        .loading-view { text-align: center; }
+
+        .loader {
+            width: 52px;
+            height: 52px;
+            margin: 0 auto 25px;
+            border: 2px solid rgba(255, 255, 255, .08);
+            border-top-color: var(--brand);
+            border-radius: 50%;
+            animation: spin .75s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .profile-head {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+
+        .avatar-wrap { position: relative; width: 66px; height: 66px; flex: 0 0 auto; }
+
+        .avatar-wrap img {
+            width: 100%;
+            height: 100%;
+            display: block;
+            object-fit: cover;
+            border: 2px solid var(--line-bright);
+            border-radius: 19px;
+            background: var(--panel-strong);
+        }
+
+        .verified-mark {
+            position: absolute;
+            right: -5px;
+            bottom: -5px;
+            width: 25px;
+            height: 25px;
+            display: grid;
+            place-items: center;
+            border: 4px solid var(--panel-strong);
+            border-radius: 50%;
+            background: var(--success);
+            color: #07150e;
+        }
+
+        .verified-mark svg { width: 11px; stroke-width: 3; }
+
+        .profile-name {
+            margin: 0 0 3px;
+            overflow-wrap: anywhere;
+            font: 800 21px/1.2 Manrope, sans-serif;
+            letter-spacing: -.03em;
+        }
+
+        .profile-tag { color: var(--muted); font-size: 13px; }
+
+        .status-pill {
+            width: fit-content;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            margin-top: 7px;
+            color: var(--success);
+            font-size: 11px;
+            font-weight: 700;
+        }
+
+        .status-pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; box-shadow: 0 0 12px currentColor; }
+
+        .timeline {
+            margin: 0 0 26px;
+            overflow: hidden;
+            border: 1px solid var(--line);
+            border-radius: 17px;
+            background: rgba(255, 255, 255, .022);
+        }
+
+        .timeline-row {
+            display: grid;
+            grid-template-columns: 36px minmax(0, 1fr);
+            gap: 12px;
+            padding: 16px;
+        }
+
+        .timeline-row + .timeline-row { border-top: 1px solid var(--line); }
+
+        .timeline-icon {
+            width: 36px;
+            height: 36px;
+            display: grid;
+            place-items: center;
+            border-radius: 11px;
+            color: #d9d1d5;
+            background: rgba(255, 255, 255, .05);
+        }
+
+        .timeline-row:last-child .timeline-icon { color: var(--success); background: var(--success-soft); }
+        .timeline-icon svg { width: 16px; height: 16px; }
+        .timeline-label { display: block; margin: 0 0 3px; color: var(--subtle); font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+        .timeline-value { display: block; color: #e7e2e4; font-size: 12px; font-weight: 600; line-height: 1.45; overflow-wrap: anywhere; }
+
+        .success-note {
+            margin: -7px 0 21px;
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.55;
+        }
+
+        .error-view .state-icon { border-color: rgba(255, 100, 124, .22); background: rgba(255, 100, 124, .1); color: var(--danger); }
+        .error-actions { display: grid; gap: 10px; }
+        .error-actions .secondary-button { background: rgba(255, 255, 255, .07); box-shadow: none; }
+
+        footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            color: var(--subtle);
+            font-size: 11px;
+        }
+
+        footer a { color: var(--muted); text-decoration: none; }
+        footer a:hover { color: var(--text); }
+
+        @media (max-width: 800px) {
+            .shell { width: calc(100% - 24px); max-width: 580px; padding: 20px 0; }
+            main { padding: 34px 0; }
+            .verification-card { width: calc(100vw - 24px); max-width: 580px; grid-template-columns: minmax(0, 1fr); }
+            .hero { min-height: auto; padding: 40px 34px; border-right: 0; border-bottom: 1px solid var(--line); }
+            .hero h1 { max-width: 450px; font-size: clamp(34px, 10vw, 48px); }
+            .trust-list { margin-top: 34px; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+            .trust-item { align-items: flex-start; flex-direction: column; font-size: 11px; line-height: 1.4; }
+            .stage { min-height: 490px; }
+        }
+
+        @media (max-width: 520px) {
+            .secure-label span { display: none; }
+            .hero { padding: 34px 25px; }
+            .hero h1 { margin-top: 19px; }
+            .hero-copy { font-size: 14px; }
+            .trust-list { grid-template-columns: 1fr; margin-top: 29px; }
+            .trust-item { flex-direction: row; align-items: center; }
+            .stage { min-height: 460px; padding: 33px 24px; }
+            footer { align-items: flex-start; flex-direction: column; gap: 7px; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
         }
     </style>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5438472060600560" crossorigin="anonymous"></script>
 </head>
 <body>
-    <div class="bg-aura"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
-    <div class="verify-container" id="verifyContainer">
-        <!-- No params: manual guide -->
-        <div id="coldView">
-            <div class="verify-icon pending" id="verifyIcon"><i class="fas fa-shield-halved"></i></div>
-            <h1 id="verifyTitle">Server Verification</h1>
-            <p id="verifyDesc">Join our Discord server and follow the steps to get verified.</p>
-            
-            <div style="text-align:left;margin:20px 0">
-                <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.04)">
-                    <div style="width:32px;height:32px;border-radius:50%;background:rgba(var(--cherry-rgb),.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--cherry-light);font-weight:700;font-size:.85rem">1</div>
-                    <div><strong style="font-size:.85rem;color:var(--light);display:block;margin-bottom:3px">Join the Discord Server</strong><span style="font-size:.78rem;color:var(--gray)">Click the button below to join our server.</span></div>
-                </div>
-                <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.04)">
-                    <div style="width:32px;height:32px;border-radius:50%;background:rgba(var(--cherry-rgb),.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--cherry-light);font-weight:700;font-size:.85rem">2</div>
-                    <div><strong style="font-size:.85rem;color:var(--light);display:block;margin-bottom:3px">Go to #verify Channel</strong><span style="font-size:.78rem;color:var(--gray)">Look for the <code style="background:rgba(255,255,255,.04);padding:1px 6px;border-radius:3px;font-size:.75rem">#verify</code> channel.</span></div>
-                </div>
-                <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 0;border-bottom:1px solid rgba(255,255,255,.04)">
-                    <div style="width:32px;height:32px;border-radius:50%;background:rgba(var(--cherry-rgb),.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--cherry-light);font-weight:700;font-size:.85rem">3</div>
-                    <div><strong style="font-size:.85rem;color:var(--light);display:block;margin-bottom:3px">Click the Verify Button</strong><span style="font-size:.78rem;color:var(--gray)">Press the <strong style="color:var(--cherry-light)">Verify</strong> button in the channel.</span></div>
-                </div>
-                <div style="display:flex;align-items:flex-start;gap:14px;padding:14px 0">
-                    <div style="width:32px;height:32px;border-radius:50%;background:rgba(var(--cherry-rgb),.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--cherry-light);font-weight:700;font-size:.85rem">4</div>
-                    <div><strong style="font-size:.85rem;color:var(--light);display:block;margin-bottom:3px">Complete Verification</strong><span style="font-size:.78rem;color:var(--gray)">Follow the instructions and you'll get access automatically.</span></div>
-                </div>
-            </div>
-
-            <a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord" style="display:inline-flex;align-items:center;gap:10px;padding:14px 32px;border-radius:12px;font-size:.9rem;font-weight:700;text-decoration:none;background:#5865F2;color:#fff;transition:.2s;margin-top:8px">
-                <i class="fab fa-discord"></i> Join Discord Server
+    <div class="shell">
+        <header class="topbar">
+            <a class="brand" href="/" aria-label="Zyrex home">
+                <img src="/assets/content.png" alt="">
+                <span>Zyrex Editing</span>
             </a>
-            <p style="font-size:.7rem;color:var(--gray-dark);margin-top:16px">Already verified? <a href="/api/login?redirect=/verify&state=verify" style="color:var(--cherry-light)">Click here to login</a></p>
-        </div>
-
-        <!-- Success / Premium View -->
-        <div class="premium-card" id="successView">
-            <div class="avatar-ring">
-                <img id="avatarImg" src="" alt="Avatar" onerror="this.onerror=null;this.src='/api/avatar/default/0.png';">
-                <div class="verified-badge"><i class="fas fa-check"></i></div>
+            <div class="secure-label">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>
+                <span>Secure Discord connection</span>
             </div>
-            <div class="display-name" id="displayName"></div>
-            <div class="user-tag" id="userTag"></div>
-            <div class="welcome-msg">🎉 Welcome to Zyrex</div>
-            <div class="divider"></div>
-            <p style="font-size:.82rem;color:var(--gray);margin-bottom:20px">You now have full access to the server.</p>
-            <a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord">
-                <i class="fab fa-discord"></i> Open Discord
-            </a>
-        </div>
+        </header>
 
-        <!-- Error View -->
-        <div class="premium-card" id="errorView">
-            <div class="verify-icon error"><i class="fas fa-exclamation-circle"></i></div>
-            <h1>Verification Failed</h1>
-            <p id="errorMsg">Something went wrong.</p>
-            <button class="btn-verify" onclick="window.location.href='/verify'">
-                <i class="fas fa-redo"></i> Try Again
-            </button>
-        </div>
+        <main>
+            <section class="verification-card" aria-live="polite">
+                <div class="hero">
+                    <div>
+                        <span class="eyebrow">Member gateway</span>
+                        <h1>One step closer to <span>Zyrex.</span></h1>
+                        <p class="hero-copy">Connect your Discord identity to unlock the community, resources, events and member-only channels.</p>
+                    </div>
+                    <div class="trust-list" aria-label="Verification information">
+                        <div class="trust-item">
+                            <span class="trust-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 7 9 18l-5-5"/></svg></span>
+                            <span>Instant role access</span>
+                        </div>
+                        <div class="trust-item">
+                            <span class="trust-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></span>
+                            <span>Protected sign-in</span>
+                        </div>
+                        <div class="trust-item">
+                            <span class="trust-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+                            <span>Done in seconds</span>
+                        </div>
+                    </div>
+                </div>
 
-        <!-- Loading -->
-        <div id="loadingView" style="display:none">
-            <div class="loading-spinner" style="margin:0 auto 20px"></div>
-            <h1>Checking...</h1>
-            <p>Fetching your Discord profile...</p>
-        </div>
+                <div class="stage">
+                    <div class="view" id="startView" hidden>
+                        <div class="state-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="M9 12h6M12 9v6"/></svg>
+                        </div>
+                        <h2 id="startTitle">Verify your account</h2>
+                        <p class="stage-copy" id="startCopy">Sign in with Discord and we’ll securely assign your verified member role.</p>
+                        <button class="primary-button" id="verifyButton" type="button">
+                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.5 5.34A16.3 16.3 0 0 0 15.44 4l-.5 1.02a15.2 15.2 0 0 0-5.87 0L8.55 4A16.5 16.5 0 0 0 4.5 5.35C1.94 9.13 1.25 12.82 1.6 16.46a16.6 16.6 0 0 0 4.98 2.5l1.2-1.64a10.6 10.6 0 0 1-1.88-.9l.46-.36c3.62 1.68 7.55 1.68 11.12 0l.47.36c-.6.35-1.23.65-1.89.9l1.2 1.64a16.5 16.5 0 0 0 4.98-2.5c.42-4.22-.72-7.87-2.74-11.12ZM8.52 14.25c-1.09 0-1.98-1-1.98-2.22s.87-2.23 1.98-2.23c1.1 0 2 1 1.98 2.23 0 1.22-.88 2.22-1.98 2.22Zm6.96 0c-1.09 0-1.98-1-1.98-2.22s.87-2.23 1.98-2.23c1.1 0 2 1 1.98 2.23 0 1.22-.87 2.22-1.98 2.22Z"/></svg>
+                            Continue with Discord
+                        </button>
+                        <div class="microcopy">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+                            We never receive your Discord password
+                        </div>
+                    </div>
+
+                    <div class="view loading-view" id="loadingView">
+                        <div class="loader" aria-hidden="true"></div>
+                        <h2>Checking your access</h2>
+                        <p class="stage-copy">Confirming your Discord profile and Zyrex role…</p>
+                    </div>
+
+                    <div class="view" id="successView" hidden>
+                        <div class="profile-head">
+                            <div class="avatar-wrap">
+                                <img id="avatar" src="/api/avatar/default/0.png" alt="Discord avatar">
+                                <span class="verified-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="m6 12 4 4 8-8"/></svg></span>
+                            </div>
+                            <div>
+                                <p class="profile-name" id="displayName">Zyrex member</p>
+                                <div class="profile-tag" id="userTag"></div>
+                                <span class="status-pill">Verified member</span>
+                            </div>
+                        </div>
+
+                        <div class="timeline">
+                            <div class="timeline-row">
+                                <span class="timeline-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg></span>
+                                <div><span class="timeline-label">Discord account created</span><span class="timeline-value" id="createdAt">—</span></div>
+                            </div>
+                            <div class="timeline-row">
+                                <span class="timeline-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg></span>
+                                <div><span class="timeline-label">Verified on Zyrex</span><span class="timeline-value" id="verifiedAt">—</span></div>
+                            </div>
+                        </div>
+                        <p class="success-note">Your account is ready. You now have access to verified member channels.</p>
+                        <a class="secondary-button" href="https://discord.gg/fAydSzpafA" target="_blank" rel="noopener">
+                            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M19.5 5.34A16.3 16.3 0 0 0 15.44 4l-.5 1.02a15.2 15.2 0 0 0-5.87 0L8.55 4A16.5 16.5 0 0 0 4.5 5.35C1.94 9.13 1.25 12.82 1.6 16.46a16.6 16.6 0 0 0 4.98 2.5l1.2-1.64a10.6 10.6 0 0 1-1.88-.9l.46-.36c3.62 1.68 7.55 1.68 11.12 0l.47.36c-.6.35-1.23.65-1.89.9l1.2 1.64a16.5 16.5 0 0 0 4.98-2.5c.42-4.22-.72-7.87-2.74-11.12ZM8.52 14.25c-1.09 0-1.98-1-1.98-2.22s.87-2.23 1.98-2.23c1.1 0 2 1 1.98 2.23 0 1.22-.88 2.22-1.98 2.22Zm6.96 0c-1.09 0-1.98-1-1.98-2.22s.87-2.23 1.98-2.23c1.1 0 2 1 1.98 2.23 0 1.22-.87 2.22-1.98 2.22Z"/></svg>
+                            Open Zyrex on Discord
+                        </a>
+                    </div>
+
+                    <div class="view error-view" id="errorView" hidden>
+                        <div class="state-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 7v6M12 17h.01"/></svg></div>
+                        <h2>Verification didn’t finish</h2>
+                        <p class="stage-copy" id="errorMessage">Something interrupted the verification. Please try again.</p>
+                        <div class="error-actions">
+                            <button class="primary-button" type="button" id="retryButton">Try verification again</button>
+                            <a class="secondary-button" href="https://discord.gg/fAydSzpafA" target="_blank" rel="noopener">Join the Discord server</a>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <footer>
+            <span>© 2026 Zyrex Editing</span>
+            <span><a href="/privacy">Privacy</a> &nbsp;·&nbsp; <a href="/terms">Terms</a></span>
+        </footer>
     </div>
 
     <script>
-        function getParam(p) {
-            const sp = new URLSearchParams(window.location.search);
-            let v = sp.get(p);
-            if (v) return v;
-            if (window.location.hash.includes('?')) {
-                const hp = new URLSearchParams(window.location.hash.split('?')[1]);
-                v = hp.get(p);
-                if (v) return v;
-            }
+        const views = {
+            start: document.getElementById("startView"),
+            loading: document.getElementById("loadingView"),
+            success: document.getElementById("successView"),
+            error: document.getElementById("errorView"),
+        };
+
+        function showView(name) {
+            Object.entries(views).forEach(([key, element]) => { element.hidden = key !== name; });
+        }
+
+        function getParameter(name) {
+            const direct = new URLSearchParams(location.search).get(name);
+            if (direct) return direct;
+            const hashQuery = location.hash.includes("?") ? location.hash.split("?")[1] : "";
+            return new URLSearchParams(hashQuery).get(name);
+        }
+
+        function accountCreatedFromSnowflake(id) {
             try {
-                const up = new URLSearchParams(window.location.href.split('?')[1]?.split('#')[0]);
-                v = up.get(p);
-                if (v) return v;
-            } catch(e) {}
-            return null;
-        }
-
-        const result = getParam('result');
-        const name = getParam('name') || '';
-        const msg = getParam('msg') || '';
-        const verifyToken = getParam('token') || '';
-
-        const coldView = document.getElementById('coldView');
-        const successView = document.getElementById('successView');
-        const errorView = document.getElementById('errorView');
-        const loadingView = document.getElementById('loadingView');
-        const container = document.getElementById('verifyContainer');
-
-        function hideAll() {
-            coldView.style.display = 'none';
-            successView.classList.remove('show');
-            errorView.classList.remove('show');
-            loadingView.style.display = 'none';
-        }
-
-        function showPremiumSuccess(userData) {
-            hideAll();
-            container.classList.add('premium');
-            const dn = userData.global_name || userData.username || name || 'User';
-            const uname = userData.username || '';
-            
-            document.getElementById('displayName').textContent = dn;
-            document.getElementById('userTag').textContent = uname ? '@' + uname : '';
-            
-            // Use avatar_url from API (constructed server-side)
-            if (userData.avatar_url) {
-                document.getElementById('avatarImg').src = userData.avatar_url;
+                return new Date(Number((BigInt(id) >> 22n) + 1420070400000n)).toISOString();
+            } catch (_) {
+                return null;
             }
-            
-            successView.classList.add('show');
         }
 
-        function showErrorView(errorMsg) {
-            hideAll();
-            container.classList.remove('premium');
-            document.getElementById('errorMsg').textContent = errorMsg || 'Something went wrong.';
-            errorView.classList.add('show');
+        function formatDate(value, missingText = "Record unavailable") {
+            if (!value) return missingText;
+            const date = new Date(value);
+            if (Number.isNaN(date.getTime())) return missingText;
+            return new Intl.DateTimeFormat(undefined, {
+                dateStyle: "long",
+                timeStyle: "short",
+            }).format(date);
         }
 
-        function showColdView() {
-            hideAll();
-            container.classList.remove('premium');
-            coldView.style.display = 'block';
+        function verificationUrl() {
+            return "/api/login?redirect=" + encodeURIComponent("/verify") + "&state=verify";
         }
 
-        function showLoading() {
-            hideAll();
-            loadingView.style.display = 'block';
+        function showStart(isLoggedIn = false) {
+            document.getElementById("startTitle").textContent = isLoggedIn ? "Complete verification" : "Verify your account";
+            document.getElementById("startCopy").textContent = isLoggedIn
+                ? "Your Discord account is connected, but the verified role is still missing. Continue to finish."
+                : "Sign in with Discord and we’ll securely assign your verified member role.";
+            showView("start");
         }
 
-        // Fetch user profile from API
-        async function fetchAndShowSuccess(displayName) {
-            showLoading();
+        function showError(message) {
+            document.getElementById("errorMessage").textContent = message || "Something interrupted the verification. Please try again.";
+            showView("error");
+        }
+
+        function showSuccess(profile, status) {
+            const displayName = profile.global_name || profile.username || status.display_name || "Zyrex member";
+            document.getElementById("displayName").textContent = displayName;
+            document.getElementById("userTag").textContent = profile.username ? "@" + profile.username : "Discord member";
+            document.getElementById("avatar").src = profile.avatar_url || "/api/avatar/default/0.png";
+            document.getElementById("createdAt").textContent = formatDate(
+                status.discord_created_at || accountCreatedFromSnowflake(profile.id),
+                "Unknown"
+            );
+            document.getElementById("verifiedAt").textContent = formatDate(
+                status.verified_at,
+                "Historical record unavailable"
+            );
+            showView("success");
+        }
+
+        async function getJson(url, options) {
+            const response = await fetch(url, { credentials: "include", cache: "no-store", ...options });
+            let data = {};
+            try { data = await response.json(); } catch (_) {}
+            return { response, data };
+        }
+
+        async function loadCurrentState() {
+            showView("loading");
+            const result = getParameter("result");
+            const message = getParameter("msg");
+            const token = getParameter("token");
+
+            if (result === "error") {
+                showError(message || "Verification failed.");
+                return;
+            }
+
             try {
-                const resp = await fetch('/api/me', { credentials: 'include' });
-                const data = await resp.json();
-                if (data.id) {
-                    showPremiumSuccess(data);
-                } else {
-                    // Fallback: show basic success with just the name from URL
-                    showPremiumSuccess({ 
-                        username: displayName || name || 'User',
-                        global_name: displayName || name || 'User'
-                    });
+                const profileResult = await getJson("/api/me");
+                if (!profileResult.response.ok || !profileResult.data.id) {
+                    showStart(false);
+                    return;
                 }
-            } catch(e) {
-                showPremiumSuccess({ 
-                    username: displayName || name || 'User',
-                    global_name: displayName || name || 'User'
-                });
+
+                const profile = profileResult.data;
+                if (token) {
+                    const completion = await getJson("/api/verify/complete", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ token }),
+                    });
+                    if (!completion.response.ok || !completion.data.success) {
+                        showError(completion.data.error || "The verification link is invalid or expired.");
+                        return;
+                    }
+                }
+
+                const statusResult = await getJson("/api/verify/status");
+                if (statusResult.response.ok && statusResult.data.verified) {
+                    showSuccess(profile, statusResult.data);
+                    return;
+                }
+
+                if (result === "success") {
+                    showError(statusResult.data.error || "The verified role could not be confirmed. Please try once more.");
+                    return;
+                }
+                showStart(true);
+            } catch (_) {
+                showError("The verification service is temporarily unavailable. Please try again shortly.");
             }
         }
 
-        if (result === 'success') {
-            fetchAndShowSuccess(name);
-        } else if (result === 'error') {
-            showErrorView(msg);
-        } else if (verifyToken) {
-            // Bot-generated one-time token: login + complete verification via bot API
-            fetch('/api/me', { credentials: 'include' })
-                .then(r => r.json())
-                .then(async data => {
-                    if (data.id) {
-                        try {
-                            const vResp = await fetch('/api/verify/complete', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ token: verifyToken, userId: data.id }),
-                                credentials: 'include'
-                            });
-                            const vData = await vResp.json();
-                            if (vData.success) { showPremiumSuccess(data); return; }
-                            else { showErrorView(vData.error || 'Verification failed'); return; }
-                        } catch(e) { showErrorView('Service unavailable.'); return; }
-                    }
-                    showColdView();
-                })
-                .catch(() => showColdView());
-        } else {
-            // No result param — check if user is already logged in AND in guild
-            showLoading();
-            fetch('/api/me', { credentials: 'include' })
-                .then(r => r.json())
-                .then(async data => {
-                    if (data.id) {
-                        try {
-                            const checkResp = await fetch('/api/guild/check-membership', { credentials: 'include' });
-                            const checkData = await checkResp.json();
-                            if (checkData.in_guild) { showPremiumSuccess(data); return; }
-                        } catch(e) {}
-                        showColdView();
-                    } else {
-                        showColdView();
-                    }
-                })
-                .catch(() => showColdView());
-        }
-
-        function startVerification() {
-            window.location.href = '/api/login?redirect=/verify&state=verify';
-        }
+        document.getElementById("verifyButton").addEventListener("click", () => { location.href = verificationUrl(); });
+        document.getElementById("retryButton").addEventListener("click", () => { location.href = verificationUrl(); });
+        document.getElementById("avatar").addEventListener("error", event => { event.currentTarget.src = "/api/avatar/default/0.png"; });
+        loadCurrentState();
     </script>
 </body>
 </html>

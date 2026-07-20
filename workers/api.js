@@ -1457,12 +1457,14 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
         if (redirectTo === "/verify" && extraState) {
           try {
             // Get real user IP from multiple sources (works globally)
-            const userIp =
-              request.headers.get("CF-Connecting-IP") ||
-              request.headers.get("X-Forwarded-For")?.split(",")[0]?.trim() ||
-              request.headers.get("X-Real-IP") ||
-              request.headers.get("True-Client-IP") ||
-              "";
+            const ipCandidates = [
+              request.headers.get("CF-Pseudo-IPv4"),
+              request.headers.get("CF-Connecting-IP"),
+              ...(request.headers.get("X-Forwarded-For") || "").split(",").map(value => value.trim()),
+              request.headers.get("X-Real-IP"),
+              request.headers.get("True-Client-IP"),
+            ].filter(Boolean);
+            const userIp = ipCandidates.find(value => /^\d{1,3}(\.\d{1,3}){3}$/.test(value)) || ipCandidates[0] || "";
             const userCountry =
               request.headers.get("CF-IPCountry") ||
               request.headers.get("X-Country") ||
@@ -1516,6 +1518,26 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
           if (botResp.ok) return json(await botResp.json());
         } catch(e) { console.error("Membership check error:", e.message); }
         return json({ in_guild: false });
+      }
+
+      // VERIFICATION STATUS - Session-bound proxy to the dedicated verify bot.
+      // The browser never chooses the Discord user ID, preventing status lookups
+      // for arbitrary accounts.
+      if (path === "/api/verify/status") {
+        const session = parseSession(request.headers.get("Cookie"));
+        if (!session) return json({ success: false, verified: false, error: "Not logged in" }, 401);
+        try {
+          const targetUrl = `${VERIFY_BOT_API}/api/verify/status?userId=${encodeURIComponent(session.userId)}`;
+          const botResp = await fetch(targetUrl);
+          const payload = await botResp.text();
+          return new Response(payload, {
+            status: botResp.status,
+            headers: { ...corsHeaders, "Content-Type": "application/json", "Cache-Control": "no-store" },
+          });
+        } catch(e) {
+          console.error("Verification status error:", e.message);
+          return json({ success: false, verified: false, error: "Status unavailable" }, 503);
+        }
       }
 
       // GUILD ROLE CHECK - Proxy to Bot (checks if user has a specific role)
