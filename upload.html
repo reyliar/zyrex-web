@@ -566,26 +566,50 @@
 
     <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
-    <!-- TIKTOK / PAYHIP BIO SCANNER MODAL -->
-    <div class="scanner-modal-overlay" id="scannerModal">
-        <div class="scanner-modal">
+    <!-- UNIFIED CREATOR SOCIAL & PAYHIP AUTO-FILL WIZARD MODAL -->
+    <div id="creatorWizardModal" class="scanner-modal-overlay" onclick="if(event.target===this)closeCreatorWizard()">
+        <div class="scanner-modal" style="max-width:540px;">
+            <!-- Header -->
             <div class="scanner-modal-header">
-                <h3><i class="fab fa-tiktok" style="color:#ff0050"></i> Scan Creator Bio Links</h3>
-                <button type="button" class="close-modal-btn" onclick="closeScannerModal()"><i class="fas fa-times"></i></button>
+                <div style="display:flex;align-items:center;gap:12px">
+                    <div style="width:40px;height:40px;border-radius:12px;background:rgba(230,21,54,0.12);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--cherry-light);font-size:1.1rem">
+                        <i class="fas fa-wand-magic-sparkles"></i>
+                    </div>
+                    <div>
+                        <h3 style="font-size:1.1rem;font-weight:800;color:#fff;margin:0">Creator Studio Auto-Fill</h3>
+                        <p style="font-size:0.75rem;color:var(--muted);margin:0">Social profile lookup & Payhip store scanner</p>
+                    </div>
+                </div>
+                <button type="button" class="close-modal-btn" onclick="closeCreatorWizard()"><i class="fas fa-times"></i></button>
             </div>
-            <p style="font-size:0.8rem;color:var(--muted);margin-bottom:16px;">
-                Enter a TikTok username or URL. We'll automatically scan bio links (Linktree, Guns.lol, Bio.link) for Payhip/Boosty accounts and auto-fill your product details.
-            </p>
-            <div class="field" style="margin-bottom:16px;">
-                <label><i class="fab fa-tiktok"></i> TikTok Profile or Username</label>
-                <div class="scrape-input-wrap">
-                    <input type="text" id="scannerUrlInput" placeholder="https://tiktok.com/@username or @username">
-                    <button type="button" class="btn btn-primary btn-sm" id="btnStartScan" onclick="runBioScanner()"><i class="fas fa-search"></i> Scan Bio</button>
+
+            <!-- Wizard Step Bar -->
+            <div style="display:flex;align-items:center;justify-content:space-between;margin:16px 0 24px;padding:10px 16px;background:rgba(0,0,0,0.4);border:1px solid var(--border);border-radius:14px;" id="wizardStepBar">
+                <div id="wzStep1" style="display:flex;align-items:center;gap:6px;font-size:0.75rem;font-weight:700;color:var(--cherry-light);">
+                    <span style="width:20px;height:20px;border-radius:50%;background:var(--cherry);color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:0.68rem">1</span> Profile
+                </div>
+                <div style="flex:1;height:2px;background:rgba(230,21,54,0.15);margin:0 10px;" id="wzLineA"></div>
+                <div id="wzStep2" style="display:flex;align-items:center;gap:6px;font-size:0.75rem;font-weight:700;color:var(--muted);">
+                    <span style="width:20px;height:20px;border-radius:50%;background:rgba(230,21,54,0.1);color:var(--muted);display:inline-flex;align-items:center;justify-content:center;font-size:0.68rem">2</span> Store Scan
+                </div>
+                <div style="flex:1;height:2px;background:rgba(230,21,54,0.15);margin:0 10px;" id="wzLineB"></div>
+                <div id="wzStep3" style="display:flex;align-items:center;gap:6px;font-size:0.75rem;font-weight:700;color:var(--muted);">
+                    <span style="width:20px;height:20px;border-radius:50%;background:rgba(230,21,54,0.1);color:var(--muted);display:inline-flex;align-items:center;justify-content:center;font-size:0.68rem">3</span> Products
                 </div>
             </div>
 
-            <div id="scannerStatus" style="display:none;"></div>
-            <div id="scannerResults"></div>
+            <!-- Input Bar -->
+            <div class="field" style="margin-bottom:16px;">
+                <label><i class="fab fa-tiktok" style="color:#ff0050"></i> TikTok / Social Handle or Profile URL</label>
+                <div class="scrape-input-wrap">
+                    <input type="text" id="wizUrlInput" placeholder="e.g. @username or https://tiktok.com/@username" onkeydown="if(event.key==='Enter')startCreatorWizard()">
+                    <button type="button" class="btn btn-primary btn-sm" id="btnWizStart" onclick="startCreatorWizard()"><i class="fas fa-search"></i> Start Lookup</button>
+                </div>
+            </div>
+
+            <!-- Dynamic Content Area -->
+            <div id="wizStatus" style="display:none;margin-bottom:16px;"></div>
+            <div id="wizBody"></div>
         </div>
     </div>
 
@@ -995,33 +1019,8 @@
 
         async function resolveSocial(){
             var url=document.getElementById('creatorSocialUrl').value.trim();
-            if(!url||!url.includes('.'))return;
-            var rawUser='';
-            try{var parts=url.replace(/\/$/,'').split('/');rawUser=parts[parts.length-1].replace('@','')}catch(e){}
-            document.getElementById('creatorUsername').value=rawUser;
-            if(rawUser){
-                document.getElementById('creatorNameInput').value=rawUser;
-                document.getElementById('creatorName').value=rawUser;
-                updateLivePreview();
-            }
-            try{
-                var r=await fetch('/api/hlx/resolve?url='+encodeURIComponent(url),{credentials:'include'});
-                var d=await r.json();
-                if(d.success&&d.nickname){
-                    var creatorDisplay=d.nickname;
-                    document.getElementById('creatorName').value=creatorDisplay;
-                    document.getElementById('creatorNameInput').value=creatorDisplay;
-                    document.getElementById('creatorAvatar').value=d.avatar||'';
-                    updateLivePreview();
-                    alertMsg('Profile found: '+creatorDisplay,false);
-                }else if(d.success&&!d.nickname){
-                    updateLivePreview();
-                    alertMsg('Profile found but username could not be resolved.',true);
-                }else{
-                    updateLivePreview();
-                    alertMsg(d.error||'Could not fetch profile.',true);
-                }
-            }catch(e){alertMsg('Failed to fetch profile.',true)}
+            if(!url) return;
+            openCreatorWizard(url);
         }
 
         function toggleHlx(){var o=document.getElementById('hlxOverlay');o.style.display=(o.style.display==='flex')?'none':'flex'}
@@ -1120,109 +1119,171 @@
             btn.innerHTML='<i class="fas fa-magic"></i> Scrape';
         }
 
-        // === TIKTOK & BIO LINK SCANNER ===
-        function openScannerModal() {
-            var modal = document.getElementById('scannerModal');
+        // === UNIFIED CREATOR SOCIAL & PAYHIP WIZARD ===
+        function openCreatorWizard(initialUrl) {
+            var modal = document.getElementById('creatorWizardModal');
             if (!modal) return;
             modal.classList.add('open');
-            var socialUrl = (document.getElementById('creatorSocialUrl') || {}).value || '';
-            if (socialUrl && !document.getElementById('scannerUrlInput').value) {
-                document.getElementById('scannerUrlInput').value = socialUrl;
+
+            var val = initialUrl || (document.getElementById('creatorSocialUrl') || {}).value || '';
+            var inp = document.getElementById('wizUrlInput');
+            if (inp) {
+                if (val) inp.value = val;
+                inp.focus();
+            }
+            if (val) {
+                startCreatorWizard();
             }
         }
 
-        function closeScannerModal() {
-            var modal = document.getElementById('scannerModal');
+        function closeCreatorWizard() {
+            var modal = document.getElementById('creatorWizardModal');
             if (modal) modal.classList.remove('open');
         }
 
-        async function runBioScanner() {
-            var inputVal = document.getElementById('scannerUrlInput').value.trim();
+        function toggleHlx() { openCreatorWizard(); }
+        function openScannerModal() { openCreatorWizard(); }
+
+        function setWizStep(stepNum) {
+            var s1 = document.getElementById('wzStep1');
+            var s2 = document.getElementById('wzStep2');
+            var s3 = document.getElementById('wzStep3');
+            var lA = document.getElementById('wzLineA');
+            var lB = document.getElementById('wzLineB');
+
+            if (!s1 || !s2 || !s3) return;
+
+            [s1, s2, s3].forEach(function(el, idx) {
+                var num = idx + 1;
+                var dot = el.querySelector('span');
+                if (num < stepNum) {
+                    el.style.color = '#00e676';
+                    if (dot) { dot.style.background = '#00e676'; dot.style.color = '#000'; dot.innerHTML = '<i class="fas fa-check"></i>'; }
+                } else if (num === stepNum) {
+                    el.style.color = 'var(--cherry-light)';
+                    if (dot) { dot.style.background = 'var(--cherry)'; dot.style.color = '#fff'; dot.textContent = num; }
+                } else {
+                    el.style.color = 'var(--muted)';
+                    if (dot) { dot.style.background = 'rgba(230,21,54,0.1)'; dot.style.color = 'var(--muted)'; dot.textContent = num; }
+                }
+            });
+
+            if (lA) lA.style.background = stepNum > 1 ? '#00e676' : 'rgba(230,21,54,0.15)';
+            if (lB) lB.style.background = stepNum > 2 ? '#00e676' : 'rgba(230,21,54,0.15)';
+        }
+
+        async function startCreatorWizard() {
+            var inputVal = document.getElementById('wizUrlInput').value.trim();
             if (!inputVal) {
-                alertMsg('Please enter a TikTok URL or username', true);
+                alertMsg('Please enter a TikTok handle or URL', true);
                 return;
             }
 
-            var statusEl = document.getElementById('scannerStatus');
-            var resultEl = document.getElementById('scannerResults');
-            var btn = document.getElementById('btnStartScan');
+            var statusEl = document.getElementById('wizStatus');
+            var bodyEl = document.getElementById('wizBody');
+            var btn = document.getElementById('btnWizStart');
 
-            statusEl.style.display = 'block';
-            statusEl.className = 'info-banner';
-            statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <div><h4>Scanning Bio Links...</h4><p>Searching TikTok, Linktree, Guns.lol, and Bio pages for Payhip/Boosty store accounts.</p></div>';
-            resultEl.innerHTML = '';
             btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            statusEl.style.display = 'block';
+            bodyEl.innerHTML = '';
 
+            // STEP 1: RESOLVE SOCIAL PROFILE
+            setWizStep(1);
+            statusEl.className = 'info-banner';
+            statusEl.style.background = 'rgba(230, 21, 54, 0.05)';
+            statusEl.style.borderColor = 'var(--border)';
+            statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <div><h4>Step 1: Resolving Social Profile...</h4><p>Fetching creator nickname & avatar for ' + inputVal + '</p></div>';
+
+            let profileData = null;
             try {
-                var resp = await fetch('/api/scan-creator-links?url=' + encodeURIComponent(inputVal));
-                var data = await resp.json();
+                var r1 = await fetch('/api/hlx/resolve?url=' + encodeURIComponent(inputVal), { credentials: 'include' });
+                profileData = await r1.json();
+            } catch(e) {}
 
-                if (data.success && data.found && (data.payhipUrl || data.boostyUrl)) {
-                    var storeUrl = data.payhipUrl || data.boostyUrl;
-                    var platformName = data.platform === 'boosty' ? 'Boosty' : 'Payhip';
-                    statusEl.className = 'info-banner';
-                    statusEl.style.background = 'rgba(0, 200, 100, 0.08)';
-                    statusEl.style.borderColor = 'rgba(0, 200, 100, 0.25)';
-                    statusEl.innerHTML = '<i class="fas fa-check-circle" style="color:#00e676"></i> <div><h4>' + platformName + ' Account Detected!</h4><p>Found account link: <strong style="color:#fff">' + storeUrl + '</strong></p></div>';
+            var creatorName = (profileData && profileData.nickname) || inputVal.replace(/^@/, '');
+            var creatorAv = (profileData && profileData.avatar) || '';
+            var socialUrl = inputVal.startsWith('http') ? inputVal : ('https://www.tiktok.com/@' + inputVal.replace(/^@/, ''));
 
-                    var html = '<div style="margin-top:16px;padding:16px;background:rgba(230,21,54,0.04);border:1px solid var(--border);border-radius:12px;">';
-                    html += '<p style="font-size:0.85rem;color:#fff;margin-bottom:12px">Is <strong>' + storeUrl + '</strong> your ' + platformName + ' store account?</p>';
-                    html += '<div style="display:flex;gap:10px;flex-wrap:wrap;">';
-                    html += '<button type="button" class="btn btn-primary btn-sm" onclick="confirmPayhipAccount(\'' + storeUrl + '\')"><i class="fas fa-check"></i> Yes, Confirm Account</button>';
-                    html += '<button type="button" class="btn btn-ghost btn-sm" onclick="showManualPayhipInput()"><i class="fas fa-edit"></i> Enter Manually</button>';
-                    html += '</div></div>';
+            // Auto-fill creator fields
+            document.getElementById('creatorSocialUrl').value = socialUrl;
+            document.getElementById('creatorName').value = creatorName;
+            var cni = document.getElementById('creatorNameInput');
+            if (cni) cni.value = creatorName;
+            var cav = document.getElementById('creatorAvatar');
+            if (cav) cav.value = creatorAv;
+            updateLivePreview();
 
-                    if (data.products && data.products.length > 0) {
-                        window.scannedProducts = data.products;
-                        html += '<h4 style="font-size:0.88rem;color:#fff;margin:20px 0 10px 0;"><i class="fas fa-store"></i> Store Products (Click to Auto-Fill)</h4>';
-                        html += '<div class="product-grid-select">';
-                        data.products.forEach(function(prod, idx) {
-                            html += '<div class="prod-select-card" onclick="selectScannedProduct(' + idx + ')">';
-                            if (prod.image) html += '<img src="' + prod.image + '" alt="">';
-                            else html += '<div style="aspect-ratio:16/10;background:#150508;border-radius:8px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);"><i class="fas fa-box"></i></div>';
-                            html += '<div class="p-title">' + (prod.title || 'Product') + '</div>';
-                            if (prod.price) html += '<div class="p-price">' + prod.price + '</div>';
-                            html += '</div>';
-                        });
-                        html += '</div>';
-                    }
+            // Display Creator Profile Card
+            var html = '<div style="background:rgba(230,21,54,0.03);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px;display:flex;align-items:center;gap:14px;">';
+            if (creatorAv) {
+                html += '<img src="' + creatorAv + '" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid var(--cherry);">';
+            } else {
+                html += '<div style="width:48px;height:48px;border-radius:50%;background:rgba(230,21,54,0.12);display:flex;align-items:center;justify-content:center;color:var(--cherry-light);font-size:1.2rem;"><i class="fas fa-user"></i></div>';
+            }
+            html += '<div style="flex:1;">';
+            html += '<div style="font-size:0.95rem;font-weight:800;color:#fff;">' + creatorName + '</div>';
+            html += '<div style="font-size:0.75rem;color:var(--muted);">' + socialUrl + '</div>';
+            html += '</div>';
+            html += '<div style="padding:4px 10px;border-radius:20px;background:rgba(0,200,100,0.1);border:1px solid rgba(0,200,100,0.2);color:#00e676;font-size:0.7rem;font-weight:700;"><i class="fas fa-check-circle"></i> Profile Set</div>';
+            html += '</div>';
 
-                    resultEl.innerHTML = html;
+            bodyEl.innerHTML = html;
+
+            // STEP 2: SCAN BIO LINKS FOR PAYHIP STORE
+            setWizStep(2);
+            statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <div><h4>Step 2: Deep Scanning Bio Links...</h4><p>Scanning TikTok bio, Linktree, and Guns.lol for Payhip or Boosty creator store accounts.</p></div>';
+
+            let scanData = null;
+            try {
+                var r2 = await fetch('/api/scan-creator-links?url=' + encodeURIComponent(socialUrl));
+                scanData = await r2.json();
+            } catch(e) {}
+
+            if (scanData && scanData.success && scanData.found && (scanData.payhipUrl || scanData.boostyUrl)) {
+                var storeUrl = scanData.payhipUrl || scanData.boostyUrl;
+                var platformName = scanData.platform === 'boosty' ? 'Boosty' : 'Payhip';
+
+                document.getElementById('payhipLink').value = storeUrl;
+
+                statusEl.style.background = 'rgba(0, 200, 100, 0.08)';
+                statusEl.style.borderColor = 'rgba(0, 200, 100, 0.25)';
+                statusEl.innerHTML = '<i class="fas fa-check-circle" style="color:#00e676"></i> <div><h4>' + platformName + ' Store Account Found!</h4><p>Detected store: <strong style="color:#fff">' + storeUrl + '</strong></p></div>';
+
+                // STEP 3: DISPLAY STORE PRODUCTS
+                if (scanData.products && scanData.products.length > 0) {
+                    setWizStep(3);
+                    window.scannedProducts = scanData.products;
+
+                    var prodHtml = '<h4 style="font-size:0.88rem;color:#fff;margin:16px 0 10px 0;"><i class="fas fa-store" style="color:var(--cherry-light)"></i> Select Store Product to Auto-Fill</h4>';
+                    prodHtml += '<div class="product-grid-select">';
+                    scanData.products.forEach(function(prod, idx) {
+                        prodHtml += '<div class="prod-select-card" onclick="selectWizProduct(' + idx + ')">';
+                        if (prod.image) prodHtml += '<img src="' + prod.image + '" alt="">';
+                        else prodHtml += '<div style="aspect-ratio:16/10;background:#150508;border-radius:8px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);"><i class="fas fa-box"></i></div>';
+                        prodHtml += '<div class="p-title">' + (prod.title || 'Product') + '</div>';
+                        if (prod.price) prodHtml += '<div class="p-price">' + prod.price + '</div>';
+                        prodHtml += '</div>';
+                    });
+                    prodHtml += '</div>';
+
+                    bodyEl.innerHTML += prodHtml;
                 } else {
-                    statusEl.className = 'info-banner';
-                    statusEl.style.background = 'rgba(230, 21, 54, 0.08)';
-                    statusEl.style.borderColor = 'rgba(230, 21, 54, 0.2)';
-                    statusEl.innerHTML = '<i class="fas fa-exclamation-circle" style="color:var(--cherry-light)"></i> <div><h4>No Payhip Account Found</h4><p>Deep scan completed across TikTok bio, Linktree, and Guns.lol links. No Payhip or store link was found.</p></div>';
-
-                    resultEl.innerHTML = '<div style="margin-top:16px;padding:16px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:12px;text-align:center;">' +
-                        '<p style="font-size:0.84rem;color:var(--muted);margin-bottom:12px;">Please enter your Payhip product link manually in the input field.</p>' +
-                        '<button type="button" class="btn btn-ghost btn-sm" onclick="showManualPayhipInput()"><i class="fas fa-keyboard"></i> Enter Link Manually</button>' +
+                    bodyEl.innerHTML += '<div style="margin-top:12px;padding:14px;background:rgba(0,200,100,0.04);border:1px solid rgba(0,200,100,0.15);border-radius:12px;color:#00e676;font-size:0.8rem;">' +
+                        '<i class="fas fa-check-circle"></i> Payhip link set to <strong>' + storeUrl + '</strong>. Click Scrape button to load product details.' +
                         '</div>';
                 }
-            } catch(e) {
-                statusEl.className = 'info-banner';
-                statusEl.innerHTML = '<i class="fas fa-exclamation-triangle" style="color:var(--cherry-light)"></i> <div><h4>Scan Failed</h4><p>Could not connect to scanner service. Please enter your product link manually.</p></div>';
+            } else {
+                statusEl.style.background = 'rgba(230, 21, 54, 0.08)';
+                statusEl.style.borderColor = 'rgba(230, 21, 54, 0.2)';
+                statusEl.innerHTML = '<i class="fas fa-info-circle" style="color:var(--cherry-light)"></i> <div><h4>No Payhip Link Found in Bio</h4><p>Social profile metadata set successfully. Please paste your Payhip product link manually.</p></div>';
             }
+
             btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-rotate"></i> Re-Scan';
         }
 
-        function confirmPayhipAccount(payhipUrl) {
-            var linkInput = document.getElementById('payhipLink');
-            if (linkInput) {
-                linkInput.value = payhipUrl;
-                autoScrape();
-            }
-            alertMsg('Payhip account confirmed: ' + payhipUrl, false);
-            closeScannerModal();
-        }
-
-        function showManualPayhipInput() {
-            closeScannerModal();
-            var linkInput = document.getElementById('payhipLink');
-            if (linkInput) linkInput.focus();
-        }
-
-        function selectScannedProduct(idx) {
+        function selectWizProduct(idx) {
             if (!window.scannedProducts || !window.scannedProducts[idx]) return;
             var prod = window.scannedProducts[idx];
             
@@ -1235,9 +1296,19 @@
             document.getElementById('scrapedBadge').style.display = 'flex';
             updateLivePreview();
             alertMsg('Auto-filled product: ' + prod.title, false);
-            closeScannerModal();
 
-            if (prod.url) scrapeProduct();
+            var statusEl = document.getElementById('wizStatus');
+            if (statusEl) {
+                statusEl.className = 'info-banner';
+                statusEl.style.background = 'rgba(0, 200, 100, 0.1)';
+                statusEl.style.borderColor = 'rgba(0, 200, 100, 0.3)';
+                statusEl.innerHTML = '<i class="fas fa-check-circle" style="color:#00e676;font-size:1.4rem"></i> <div><h4>Product Details Auto-Filled!</h4><p>Selected: <strong style="color:#fff">' + prod.title + '</strong></p></div>';
+            }
+
+            setTimeout(function() {
+                closeCreatorWizard();
+                if (prod.url) scrapeProduct();
+            }, 1200);
         }
 
         function updateLivePreview(){
