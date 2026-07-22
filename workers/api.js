@@ -1097,7 +1097,26 @@ async function scanCreatorLinks(rawUrl) {
     result.boostyUrl = targetUrl;
     result.platform = "boosty";
   } else {
-    try {
+    // Direct Payhip username handle probe (e.g. payhip.com/username)
+    const cleanUser = String(rawUrl || "").replace(/^@/, "").split("/").pop().replace(/^@/, "").trim();
+    if (cleanUser && cleanUser.length >= 2 && !cleanUser.includes(".")) {
+      try {
+        const directPayhip = `https://payhip.com/${cleanUser}`;
+        const probeResp = await fetch(directPayhip, {
+          headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36" }
+        });
+        if (probeResp.ok) {
+          const probeHtml = await probeResp.text();
+          if (probeHtml.includes("/b/") || probeHtml.includes("payhip.com/b/")) {
+            result.found = true;
+            result.payhipUrl = directPayhip;
+            result.platform = "payhip";
+          }
+        }
+      } catch(e) {}
+    }
+
+    if (!result.found) try {
       const resp = await fetch(targetUrl, {
         headers: {
           "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
