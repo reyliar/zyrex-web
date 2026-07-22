@@ -1223,9 +1223,9 @@
         }
 
         async function startCreatorWizard() {
-            var inputVal = document.getElementById('wizUrlInput').value.trim();
-            if (!inputVal) {
-                alertMsg('Please enter a TikTok handle or URL', true);
+            var rawInput = document.getElementById('wizUrlInput').value.trim();
+            if (!rawInput) {
+                alertMsg('Please enter a TikTok handle, Payhip link, or social URL', true);
                 return;
             }
 
@@ -1238,31 +1238,66 @@
             statusEl.style.display = 'block';
             bodyEl.innerHTML = '';
 
-            // STEP 1: RESOLVE SOCIAL PROFILE
+            // Format input URL properly
+            var socialUrl = rawInput;
+            if (!socialUrl.startsWith('http://') && !socialUrl.startsWith('https://')) {
+                if (socialUrl.includes('payhip.com') || socialUrl.includes('boosty.to') || socialUrl.includes('patreon.com') || socialUrl.includes('linktr.ee') || socialUrl.includes('guns.lol')) {
+                    socialUrl = 'https://' + socialUrl;
+                } else if (socialUrl.startsWith('@')) {
+                    socialUrl = 'https://www.tiktok.com/' + socialUrl;
+                } else {
+                    socialUrl = 'https://www.tiktok.com/@' + socialUrl;
+                }
+            }
+
+            // Case A: Direct Payhip Product Link (e.g. payhip.com/b/xxxxx)
+            if (socialUrl.includes('payhip.com/b/') || socialUrl.includes('boosty.to/p/')) {
+                setWizStep(1);
+                statusEl.className = 'info-banner';
+                statusEl.style.background = 'rgba(0, 200, 100, 0.08)';
+                statusEl.style.borderColor = 'rgba(0, 200, 100, 0.25)';
+                statusEl.innerHTML = '<i class="fas fa-magic" style="color:#00e676"></i> <div><h4>Scraping Product Page...</h4><p>Fetching title, price, description, and images from: ' + socialUrl + '</p></div>';
+
+                document.getElementById('payhipLink').value = socialUrl;
+                await scrapeProduct();
+
+                bodyEl.innerHTML = '<div style="padding:16px;background:rgba(0,200,100,0.06);border:1px solid rgba(0,200,100,0.2);border-radius:14px;color:#00e676;font-size:0.85rem;">' +
+                    '<i class="fas fa-check-circle"></i> Single product details scraped and auto-filled successfully!' +
+                    '</div>';
+
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-rotate"></i> Re-Scan';
+                setTimeout(closeCreatorWizard, 1200);
+                return;
+            }
+
+            // Case B: TikTok / Social Profile / Payhip Store / Linktree
             setWizStep(1);
             statusEl.className = 'info-banner';
             statusEl.style.background = 'rgba(230, 21, 54, 0.05)';
             statusEl.style.borderColor = 'var(--border)';
-            statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <div><h4>Step 1: Resolving Social Profile...</h4><p>Fetching creator nickname & avatar for ' + inputVal + '</p></div>';
+            statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <div><h4>Step 1: Resolving Social Profile & Metadata...</h4><p>Fetching creator nickname & avatar for ' + socialUrl + '</p></div>';
 
             let profileData = null;
-            try {
-                var r1 = await fetch('/api/hlx/resolve?url=' + encodeURIComponent(inputVal), { credentials: 'include' });
-                profileData = await r1.json();
-            } catch(e) {}
+            if (socialUrl.includes('tiktok.com')) {
+                try {
+                    var r1 = await fetch('/api/hlx/resolve?url=' + encodeURIComponent(socialUrl), { credentials: 'include' });
+                    profileData = await r1.json();
+                } catch(e) {}
+            }
 
-            var creatorName = (profileData && profileData.nickname) || inputVal.replace(/^@/, '');
+            var creatorName = (profileData && profileData.nickname) || socialUrl.replace(/^https?:\/\//, '').split('/')[0].replace(/^@/, '');
             var creatorAv = (profileData && profileData.avatar) || '';
-            var socialUrl = inputVal.startsWith('http') ? inputVal : ('https://www.tiktok.com/@' + inputVal.replace(/^@/, ''));
 
-            // Auto-fill creator fields
-            document.getElementById('creatorSocialUrl').value = socialUrl;
-            document.getElementById('creatorName').value = creatorName;
-            var cni = document.getElementById('creatorNameInput');
-            if (cni) cni.value = creatorName;
-            var cav = document.getElementById('creatorAvatar');
-            if (cav) cav.value = creatorAv;
-            updateLivePreview();
+            if (socialUrl.includes('tiktok.com') || socialUrl.includes('instagram.com') || socialUrl.includes('youtube.com') || socialUrl.includes('twitter.com')) {
+                document.getElementById('creatorSocialUrl').value = socialUrl;
+                document.getElementById('creatorName').value = creatorName;
+                var cni = document.getElementById('creatorNameInput');
+                if (cni) cni.value = creatorName;
+                var cav = document.getElementById('creatorAvatar');
+                if (cav) cav.value = creatorAv;
+                updateLivePreview();
+            }
 
             // Display Creator Profile Card
             var html = '<div style="background:rgba(230,21,54,0.03);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px;display:flex;align-items:center;gap:14px;">';
@@ -1280,9 +1315,9 @@
 
             bodyEl.innerHTML = html;
 
-            // STEP 2: SCAN BIO LINKS FOR PAYHIP STORE
+            // STEP 2: SCAN BIO LINKS FOR PAYHIP STORE & PRODUCTS
             setWizStep(2);
-            statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <div><h4>Step 2: Deep Scanning Bio Links...</h4><p>Scanning TikTok bio, Linktree, and Guns.lol for Payhip or Boosty creator store accounts.</p></div>';
+            statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <div><h4>Step 2: Deep Scanning Bio Links & Store Catalog...</h4><p>Scanning TikTok bio, Linktree, and Guns.lol for Payhip or Boosty creator store accounts.</p></div>';
 
             let scanData = null;
             try {
@@ -1298,7 +1333,7 @@
 
                 statusEl.style.background = 'rgba(0, 200, 100, 0.08)';
                 statusEl.style.borderColor = 'rgba(0, 200, 100, 0.25)';
-                statusEl.innerHTML = '<i class="fas fa-check-circle" style="color:#00e676"></i> <div><h4>' + platformName + ' Store Account Found!</h4><p>Detected store: <strong style="color:#fff">' + storeUrl + '</strong></p></div>';
+                statusEl.innerHTML = '<i class="fas fa-check-circle" style="color:#00e676"></i> <div><h4>' + platformName + ' Store Found!</h4><p>Detected store: <strong style="color:#fff">' + storeUrl + '</strong></p></div>';
 
                 // STEP 3: DISPLAY STORE PRODUCTS
                 if (scanData.products && scanData.products.length > 0) {
@@ -1313,6 +1348,7 @@
                         else prodHtml += '<div style="aspect-ratio:16/10;background:#150508;border-radius:8px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);"><i class="fas fa-box"></i></div>';
                         prodHtml += '<div class="p-title">' + (prod.title || 'Product') + '</div>';
                         if (prod.price) prodHtml += '<div class="p-price">' + prod.price + '</div>';
+                        prodHtml += '<div class="p-btn"><i class="fas fa-bolt"></i> Auto-Fill</div>';
                         prodHtml += '</div>';
                     });
                     prodHtml += '</div>';
@@ -1326,7 +1362,7 @@
             } else {
                 statusEl.style.background = 'rgba(230, 21, 54, 0.08)';
                 statusEl.style.borderColor = 'rgba(230, 21, 54, 0.2)';
-                statusEl.innerHTML = '<i class="fas fa-info-circle" style="color:var(--cherry-light)"></i> <div><h4>No Payhip Link Found in Bio</h4><p>Social profile metadata set successfully. Enter your Payhip store link or product link manually below to load products:</p></div>';
+                statusEl.innerHTML = '<i class="fas fa-info-circle" style="color:var(--cherry-light)"></i> <div><h4>No Direct Payhip Link Found in Bio</h4><p>Social profile metadata resolved successfully. Enter your Payhip store link or product link manually below to load catalog:</p></div>';
 
                 var manualHtml = '<div style="margin-top:14px;padding:16px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:14px;">' +
                     '<label style="font-size:0.78rem;font-weight:700;color:var(--muted);display:block;margin-bottom:8px;"><i class="fas fa-store"></i> Enter Payhip Store / Product URL</label>' +
