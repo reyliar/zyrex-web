@@ -1053,10 +1053,11 @@ async function scrapePayhip(url) {
 async function scanCreatorLinks(rawUrl) {
   let targetUrl = String(rawUrl || "").trim();
   if (!targetUrl) return { success: false, error: "URL or username is required" };
-  
+
+  // Normalize URL
   if (!targetUrl.startsWith("http://") && !targetUrl.startsWith("https://")) {
     if (targetUrl.startsWith("@")) targetUrl = `https://www.tiktok.com/${targetUrl}`;
-    else if (targetUrl.includes("payhip.com") || targetUrl.includes("boosty.to") || targetUrl.includes("linktr.ee") || targetUrl.includes("guns.lol")) {
+    else if (/^(payhip|boosty|patreon|linktr|guns|beacons|bio\.link|carrd)\./i.test(targetUrl)) {
       targetUrl = `https://${targetUrl}`;
     } else {
       targetUrl = `https://www.tiktok.com/@${targetUrl}`;
@@ -1068,96 +1069,122 @@ async function scanCreatorLinks(rawUrl) {
     inputUrl: rawUrl,
     targetUrl,
     found: false,
+    storeUrl: null,
     payhipUrl: null,
     boostyUrl: null,
+    patreonUrl: null,
     platform: null,
     bioLinks: [],
     products: []
   };
 
-  function findStoreLinks(htmlText) {
-    const payhipMatches = htmlText.match(/https?:\/\/(?:www\.)?payhip\.com\/[a-zA-Z0-9_\-\/]+/gi) || [];
-    const boostyMatches = htmlText.match(/https?:\/\/(?:www\.)?boosty\.to\/[a-zA-Z0-9_\-\/]+/gi) || [];
-    
-    const payhipUserMatch = htmlText.match(/payhip\.com\/([a-zA-Z0-9_\-]+)/i);
-    const boostyUserMatch = htmlText.match(/boosty\.to\/([a-zA-Z0-9_\-]+)/i);
+  // --- Helpers ---
+  const STORE_DOMAINS = ["payhip.com", "boosty.to", "patreon.com"];
+  const AGGREGATOR_DOMAINS = ["linktr.ee", "guns.lol", "bio.link", "beacons.ai", "carrd.co", "linkr.bio", "linkin.bio", "solo.to", "taplink.cc", "koji.to"];
 
-    let payhip = payhipMatches[0] || (payhipUserMatch ? `https://payhip.com/${payhipUserMatch[1]}` : null);
-    let boosty = boostyMatches[0] || (boostyUserMatch ? `https://boosty.to/${boostyUserMatch[1]}` : null);
-
-    return { payhip, boosty };
+  function extractStoreLinks(text) {
+    const payhip  = (text.match(/https?:\/\/(?:www\.)?payhip\.com\/[a-zA-Z0-9_\-\/]+/i) || [])[0] || null;
+    const boosty  = (text.match(/https?:\/\/(?:www\.)?boosty\.to\/[a-zA-Z0-9_\-\/]+/i) || [])[0] || null;
+    const patreon = (text.match(/https?:\/\/(?:www\.)?patreon\.com\/[a-zA-Z0-9_\-\/]+/i) || [])[0] || null;
+    // Also match bare domain mentions like payhip.com/username
+    const payhipBare  = payhip  || ((text.match(/payhip\.com\/([a-zA-Z0-9_\-]+)/i) || [])[0] ? `https://payhip.com/${(text.match(/payhip\.com\/([a-zA-Z0-9_\-]+)/i)||[])[1]}` : null);
+    const boostyBare  = boosty  || ((text.match(/boosty\.to\/([a-zA-Z0-9_\-]+)/i) || [])[0] ? `https://boosty.to/${(text.match(/boosty\.to\/([a-zA-Z0-9_\-]+)/i)||[])[1]}` : null);
+    const patreonBare = patreon || ((text.match(/patreon\.com\/([a-zA-Z0-9_\-]+)/i) || [])[0] ? `https://patreon.com/${(text.match(/patreon\.com\/([a-zA-Z0-9_\-]+)/i)||[])[1]}` : null);
+    return { payhip: payhipBare, boosty: boostyBare, patreon: patreonBare };
   }
 
-  if (targetUrl.includes("payhip.com")) {
-    result.found = true;
-    result.payhipUrl = targetUrl;
-    result.platform = "payhip";
-  } else if (targetUrl.includes("boosty.to")) {
-    result.found = true;
-    result.boostyUrl = targetUrl;
-    result.platform = "boosty";
-  } else {
-    // Direct Payhip username handle probe (e.g. payhip.com/username)
-    const cleanUser = String(rawUrl || "").replace(/^@/, "").split("/").pop().replace(/^@/, "").trim();
-    if (cleanUser && cleanUser.length >= 2 && !cleanUser.includes(".")) {
-      try {
-        const directPayhip = `https://payhip.com/${cleanUser}`;
-        const probeResp = await fetch(directPayhip, {
-          headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36" }
-        });
-        if (probeResp.ok) {
-          const probeHtml = await probeResp.text();
-          if (probeHtml.includes("/b/") || probeHtml.includes("payhip.com/b/")) {
-            result.found = true;
-            result.payhipUrl = directPayhip;
-            result.platform = "payhip";
-          }
-        }
-      } catch(e) {}
+  function applyStore({ payhip, boosty, patreon }) {
+    if (payhip) {
+      result.found = true; result.payhipUrl = payhip; result.storeUrl = payhip; result.platform = "payhip";
+    } else if (boosty) {
+      result.found = true; result.boostyUrl = boosty; result.storeUrl = boosty; result.platform = "boosty";
+    } else if (patreon) {
+      result.found = true; result.patreonUrl = patreon; result.storeUrl = patreon; result.platform = "patreon";
     }
+    return result.found;
+  }
 
-    if (!result.found) try {
-      const resp = await fetch(targetUrl, {
-        headers: {
-          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-          "Accept-Language": "en-US,en;q=0.9"
-        }
-      });
+  const FETCH_HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9"
+  };
+
+  // Case 1: Input IS already a store link
+  if (STORE_DOMAINS.some(d => targetUrl.includes(d))) {
+    const { payhip, boosty, patreon } = extractStoreLinks(targetUrl);
+    applyStore({ payhip, boosty, patreon });
+    if (!result.found) { result.found = true; result.storeUrl = targetUrl; result.platform = "unknown"; }
+  }
+
+  // Case 2: Input is a link aggregator itself — crawl it directly
+  if (!result.found && AGGREGATOR_DOMAINS.some(d => targetUrl.includes(d))) {
+    try {
+      const r = await fetch(targetUrl, { headers: FETCH_HEADERS });
+      if (r.ok) {
+        const html = await r.text();
+        applyStore(extractStoreLinks(html));
+      }
+    } catch(e) {}
+  }
+
+  // Case 3: Social media profile — fetch HTML and scan
+  if (!result.found) {
+    try {
+      const resp = await fetch(targetUrl, { headers: FETCH_HEADERS });
       if (resp.ok) {
         const html = await resp.text();
-        const { payhip, boosty } = findStoreLinks(html);
 
-        if (payhip) {
-          result.found = true;
-          result.payhipUrl = payhip;
-          result.platform = "payhip";
-        } else if (boosty) {
-          result.found = true;
-          result.boostyUrl = boosty;
-          result.platform = "boosty";
+        // Priority 1: Profile "links" section — TikTok/Instagram embed their link list in JSON-LD or data attrs
+        // Try extracting all href targets in the profile page
+        const allLinks = [];
+        const linkHrefRe = /href=["']([^"']+)["']/gi;
+        let m;
+        while ((m = linkHrefRe.exec(html)) !== null) {
+          const href = m[1];
+          if (!href.startsWith("http")) continue;
+          if (STORE_DOMAINS.some(d => href.includes(d))) { allLinks.unshift(href); } // store links first
+          else if (AGGREGATOR_DOMAINS.some(d => href.includes(d))) { allLinks.push(href); }
+        }
+        // Also grab links from JSON-LD / __NEXT_DATA__ / script tags
+        const jsonLdMatches = html.match(/"url"\s*:\s*"(https:\/\/[^"]+)"/g) || [];
+        for (const jl of jsonLdMatches) {
+          const u = (jl.match(/"(https:\/\/[^"]+)"/) || [])[1];
+          if (!u) continue;
+          if (STORE_DOMAINS.some(d => u.includes(d))) allLinks.unshift(u);
+          else if (AGGREGATOR_DOMAINS.some(d => u.includes(d))) allLinks.push(u);
+        }
+
+        // Check store links found directly on profile page
+        if (applyStore(extractStoreLinks(html))) {
+          // done
         } else {
-          const bioAggregators = html.match(/https?:\/\/(?:www\.)?(?:linktr\.ee|guns\.lol|bio\.link|beacons\.ai|carrd\.co|linkr\.bio)\/[a-zA-Z0-9_\.\-]+/gi) || [];
-          result.bioLinks = Array.from(new Set(bioAggregators));
+          // Priority 2: Crawl aggregator links found on profile
+          const uniqueAggs = Array.from(new Set(allLinks.filter(u => AGGREGATOR_DOMAINS.some(d => u.includes(d)))));
+          result.bioLinks = uniqueAggs.slice(0, 8);
 
-          for (const bioLink of result.bioLinks) {
+          for (const aggUrl of result.bioLinks) {
             try {
-              const bioResp = await fetch(bioLink, {
-                headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" }
-              });
-              if (bioResp.ok) {
-                const bioHtml = await bioResp.text();
-                const bioStores = findStoreLinks(bioHtml);
-                if (bioStores.payhip) {
-                  result.found = true;
-                  result.payhipUrl = bioStores.payhip;
-                  result.platform = "payhip";
-                  break;
-                } else if (bioStores.boosty) {
-                  result.found = true;
-                  result.boostyUrl = bioStores.boosty;
-                  result.platform = "boosty";
-                  break;
+              const aggResp = await fetch(aggUrl, { headers: FETCH_HEADERS });
+              if (aggResp.ok) {
+                const aggHtml = await aggResp.text();
+                if (applyStore(extractStoreLinks(aggHtml))) break;
+              }
+            } catch(e) {}
+          }
+        }
+
+        // Priority 3: Direct Payhip username probe (same username as the social profile)
+        if (!result.found) {
+          const username = targetUrl.replace(/\/$/, "").split("/").pop().replace(/^@/, "").trim();
+          if (username && username.length >= 2 && !username.includes(".")) {
+            try {
+              const probeUrl = `https://payhip.com/${username}`;
+              const pr = await fetch(probeUrl, { headers: FETCH_HEADERS });
+              if (pr.ok) {
+                const ph = await pr.text();
+                if (ph.includes("/b/") || ph.includes("payhip.com/b/")) {
+                  result.found = true; result.payhipUrl = probeUrl; result.storeUrl = probeUrl; result.platform = "payhip";
                 }
               }
             } catch(e) {}

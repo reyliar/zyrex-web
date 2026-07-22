@@ -714,58 +714,46 @@
                                 </select>
                             </div>
 
-                            <!-- REMAKED CREATOR STUDIO SOCIAL INTELLIGENCE PANEL -->
-                            <div class="creator-studio-panel" style="background: linear-gradient(135deg, rgba(230,21,54,0.06), rgba(15,3,6,0.8)); border: 1px solid var(--border-hover); border-radius: 18px; padding: 20px; margin-bottom: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08);">
-                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
-                                    <div style="display:flex; align-items:center; gap:10px;">
-                                        <div style="width:36px; height:36px; border-radius:10px; background:rgba(230,21,54,0.15); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; color:var(--cherry-light); font-size:1rem;">
-                                            <i class="fas fa-wand-magic-sparkles"></i>
-                                        </div>
-                                        <div>
-                                            <h4 style="font-size:0.92rem; font-weight:800; color:#fff; margin:0; display:flex; align-items:center; gap:8px;">
-                                                Creator Social & Store Intelligence
-                                                <span style="font-size:0.62rem; background:var(--gradient); padding:2px 8px; border-radius:10px; color:#fff; font-weight:700;">PRO SCANNER</span>
-                                            </h4>
-                                            <p style="font-size:0.7rem; color:var(--muted); margin:2px 0 0 0;">Automatic HLX profile lookup, bio scanner & Payhip store auto-fill</p>
-                                        </div>
+                            <!-- CREATOR SOCIAL LOOKUP -->
+                            <div class="creator-studio-panel" style="background:linear-gradient(135deg,rgba(230,21,54,0.06),rgba(15,3,6,0.8));border:1px solid var(--border-hover);border-radius:18px;padding:20px;margin-bottom:24px;box-shadow:0 10px 30px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.08);">
+                                <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+                                    <div style="width:36px;height:36px;border-radius:10px;background:rgba(230,21,54,0.15);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--cherry-light);font-size:1rem;flex-shrink:0;">
+                                        <i class="fas fa-wand-magic-sparkles"></i>
                                     </div>
-
-                                    <button type="button" class="btn btn-primary btn-sm" onclick="openCreatorWizard()" style="box-shadow: 0 0 15px rgba(230,21,54,0.4); animation: pulseGlow 2s infinite;">
-                                        <i class="fas fa-bolt"></i> Auto-Fill Wizard
-                                    </button>
+                                    <div>
+                                        <h4 style="font-size:0.92rem;font-weight:800;color:#fff;margin:0;display:flex;align-items:center;gap:8px;">
+                                            Creator Social Lookup
+                                            <span style="font-size:0.62rem;background:var(--gradient);padding:2px 8px;border-radius:10px;color:#fff;font-weight:700;">AUTO SCAN</span>
+                                        </h4>
+                                        <p style="font-size:0.7rem;color:var(--muted);margin:2px 0 0 0;">Enter a profile link — store & products are scanned automatically</p>
+                                    </div>
                                 </div>
 
-                                <!-- Platform Selector Pills -->
-                                <div style="display:flex; gap:8px; margin-bottom:14px; overflow-x:auto; padding-bottom:4px;" id="platformPillBar">
-                                    <span class="plat-pill active" onclick="setPlatFilter('tiktok')"><i class="fab fa-tiktok" style="color:#ff0050"></i> TikTok</span>
-                                    <span class="plat-pill" onclick="setPlatFilter('instagram')"><i class="fab fa-instagram" style="color:#e1306c"></i> Instagram</span>
-                                    <span class="plat-pill" onclick="setPlatFilter('youtube')"><i class="fab fa-youtube" style="color:#ff0000"></i> YouTube</span>
-                                    <span class="plat-pill" onclick="setPlatFilter('twitter')"><i class="fab fa-twitter" style="color:#1da1f2"></i> Twitter/X</span>
-                                </div>
-
-                                <div class="row-fields" style="gap:12px;">
-                                    <div class="field" style="margin-bottom:0">
-                                        <label><i class="fas fa-link"></i> Creator Social URL *</label>
-                                        <div class="social-input-wrap">
-                                            <input type="text" id="creatorSocialUrl" placeholder="e.g. @overbills or https://tiktok.com/@creator" onblur="resolveSocial()" onchange="resolveSocial()" onpaste="setTimeout(resolveSocial, 100)" onkeydown="if(event.key==='Enter'){event.preventDefault();resolveSocial();}" oninput="updateLivePreview()">
-                                            <button type="button" class="social-lookup-btn" onclick="resolveSocial()" title="Scan Social Profile & Payhip Store" style="display:flex;align-items:center;gap:6px;padding:0 14px;width:auto;border-radius:10px;font-size:0.75rem;font-weight:800;background:var(--cherry);color:#fff;border:none;cursor:pointer;white-space:nowrap;"><i class="fas fa-bolt"></i> Scan Store</button>
-                                        </div>
-                                        <input type="hidden" id="creatorName"><input type="hidden" id="creatorAvatar"><input type="hidden" id="creatorUsername">
+                                <div class="field" style="margin-bottom:0">
+                                    <label><i class="fas fa-link"></i> Creator Social URL *</label>
+                                    <div class="social-input-wrap">
+                                        <input type="text" id="creatorSocialUrl"
+                                            placeholder="@username, tiktok.com/@creator, instagram.com/..."
+                                            onblur="resolveSocial()"
+                                            onkeydown="if(event.key==='Enter'){event.preventDefault();resolveSocial();}"
+                                            onpaste="setTimeout(resolveSocial,150)"
+                                            oninput="updateLivePreview()">
+                                        <button type="button" class="social-lookup-btn" onclick="resolveSocial()" title="Scan profile & find store"
+                                            style="display:flex;align-items:center;gap:6px;padding:0 16px;width:auto;border-radius:10px;font-size:0.75rem;font-weight:800;background:var(--cherry);color:#fff;border:none;cursor:pointer;white-space:nowrap;height:44px;transition:opacity 0.2s;">
+                                            <i class="fas fa-bolt"></i> Scan
+                                        </button>
                                     </div>
-                                    <div class="field" style="margin-bottom:0">
-                                        <label><i class="fas fa-user-check"></i> Creator Name</label>
-                                        <input type="text" id="creatorNameInput" placeholder="Auto-filled from lookup" readonly style="background:rgba(0,0,0,0.3); cursor:not-allowed; border-color:rgba(255,255,255,0.06);">
-                                    </div>
+                                    <input type="hidden" id="creatorName"><input type="hidden" id="creatorAvatar"><input type="hidden" id="creatorUsername">
                                 </div>
 
                                 <!-- Resolved Creator Live Badge -->
-                                <div id="creatorLiveBadge" style="display:none; margin-top:14px; padding:10px 14px; background:rgba(0,0,0,0.4); border:1px solid var(--border); border-radius:12px; align-items:center; gap:12px;">
-                                    <img id="badgeAvatar" src="" alt="" style="width:36px; height:36px; border-radius:50%; object-fit:cover; border:2px solid var(--cherry);">
+                                <div id="creatorLiveBadge" style="display:none;margin-top:14px;padding:10px 14px;background:rgba(0,0,0,0.4);border:1px solid var(--border);border-radius:12px;align-items:center;gap:12px;">
+                                    <img id="badgeAvatar" src="" alt="" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--cherry);">
                                     <div style="flex:1">
-                                        <div id="badgeTitle" style="font-size:0.85rem; font-weight:800; color:#fff">Creator</div>
-                                        <div id="badgeUrl" style="font-size:0.7rem; color:var(--muted)">URL</div>
+                                        <div id="badgeTitle" style="font-size:0.85rem;font-weight:800;color:#fff">Creator</div>
+                                        <div id="badgeUrl" style="font-size:0.7rem;color:var(--muted)">URL</div>
                                     </div>
-                                    <span id="badgeStatus" style="font-size:0.68rem; font-weight:700; color:#00e676; background:rgba(0,200,100,0.1); border:1px solid rgba(0,200,100,0.2); padding:4px 10px; border-radius:12px;"><i class="fas fa-check-circle"></i> Profile Set</span>
+                                    <span id="badgeStatus" style="font-size:0.68rem;font-weight:700;color:#ffb74d;background:rgba(255,183,77,0.1);border:1px solid rgba(255,183,77,0.2);padding:4px 10px;border-radius:12px;"><i class="fas fa-spinner fa-spin"></i> Scanning...</span>
                                 </div>
                             </div>
 
@@ -1075,10 +1063,10 @@
             var rawInput = document.getElementById('creatorSocialUrl').value.trim();
             if(!rawInput) return;
 
-            // Format URL properly for @username or full URL
+            // Normalize URL
             var url = rawInput;
             if (!url.startsWith('http://') && !url.startsWith('https://')) {
-                if (url.includes('payhip.com') || url.includes('boosty.to') || url.includes('linktr.ee') || url.includes('guns.lol')) {
+                if (/^(payhip|boosty|patreon|linktr|guns|beacons)\./i.test(url)) {
                     url = 'https://' + url;
                 } else if (url.startsWith('@')) {
                     url = 'https://www.tiktok.com/' + url;
@@ -1089,54 +1077,30 @@
 
             var rawUser = '';
             try {
-                var clean = url.split('?')[0].replace(/\/$/, '');
-                var parts = clean.split('/');
-                rawUser = parts[parts.length - 1].replace('@', '');
+                rawUser = url.split('?')[0].replace(/\/$/, '').split('/').pop().replace('@', '');
             } catch(e) {}
 
-            document.getElementById('creatorUsername').value = rawUser;
-            if(rawUser){
-                document.getElementById('creatorNameInput').value = rawUser;
+            // Pre-fill hidden fields
+            if (rawUser) {
+                document.getElementById('creatorUsername').value = rawUser;
                 document.getElementById('creatorName').value = rawUser;
                 updateLivePreview();
             }
 
+            // Show scanning badge immediately
             var badge = document.getElementById('creatorLiveBadge');
             var badgeStatus = document.getElementById('badgeStatus');
             if (badge) {
                 badge.style.display = 'flex';
-                var badgeTitle = document.getElementById('badgeTitle');
-                if (badgeTitle) badgeTitle.textContent = rawUser || 'Creator';
-                var badgeUrl = document.getElementById('badgeUrl');
-                if (badgeUrl) badgeUrl.textContent = url;
-                if (badgeStatus) badgeStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scanning Profile & Bio...';
+                var bt = document.getElementById('badgeTitle');
+                if (bt) bt.textContent = rawUser || 'Creator';
+                var bu = document.getElementById('badgeUrl');
+                if (bu) bu.textContent = url;
+                if (badgeStatus) badgeStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scanning...';
             }
 
-            try {
-                // Step 1: Resolve HLX profile avatar & name
-                var r = await fetch('/api/hlx/resolve?url=' + encodeURIComponent(url), { credentials: 'include' });
-                var d = await r.json();
-                var creatorDisplay = rawUser;
-                if (d && (d.success || d.nickname)) {
-                    creatorDisplay = d.nickname || d.username || rawUser;
-                    document.getElementById('creatorName').value = creatorDisplay;
-                    document.getElementById('creatorNameInput').value = creatorDisplay;
-                    if (d.avatar) {
-                        document.getElementById('creatorAvatar').value = d.avatar;
-                        var badgeAv = document.getElementById('badgeAvatar');
-                        if (badgeAv) badgeAv.src = d.avatar;
-                    }
-                    var badgeTitle = document.getElementById('badgeTitle');
-                    if (badgeTitle) badgeTitle.textContent = creatorDisplay;
-                }
-                updateLivePreview();
-
-                // ALWAYS Launch Creator Wizard Modal for store bio scanning and product selection!
-                openCreatorWizard(url);
-            } catch(e) {
-                if (rawUser) alertMsg('Profile set to: @' + rawUser, false);
-                openCreatorWizard(url);
-            }
+            // Immediately open wizard modal and let it handle everything
+            openCreatorWizard(url);
         }
 
         function autoScrape(){const url=document.getElementById('payhipLink').value.trim();if(url&&(url.includes('payhip.com')||url.includes('patreon.com')||url.includes('boosty.to')))scrapeProduct()}
@@ -1244,7 +1208,7 @@
         async function startCreatorWizard() {
             var rawInput = document.getElementById('wizUrlInput').value.trim();
             if (!rawInput) {
-                alertMsg('Please enter a TikTok handle, Payhip link, or social URL', true);
+                alertMsg('Please enter a social media URL or @username', true);
                 return;
             }
 
@@ -1257,10 +1221,10 @@
             statusEl.style.display = 'block';
             bodyEl.innerHTML = '';
 
-            // Format input URL properly
+            // Normalize URL
             var socialUrl = rawInput;
             if (!socialUrl.startsWith('http://') && !socialUrl.startsWith('https://')) {
-                if (socialUrl.includes('payhip.com') || socialUrl.includes('boosty.to') || socialUrl.includes('patreon.com') || socialUrl.includes('linktr.ee') || socialUrl.includes('guns.lol')) {
+                if (/^(payhip|boosty|patreon|linktr|guns|beacons)\./i.test(socialUrl)) {
                     socialUrl = 'https://' + socialUrl;
                 } else if (socialUrl.startsWith('@')) {
                     socialUrl = 'https://www.tiktok.com/' + socialUrl;
@@ -1273,70 +1237,69 @@
             if (socialUrl.includes('payhip.com/b/') || socialUrl.includes('boosty.to/p/')) {
                 setWizStep(1);
                 statusEl.className = 'info-banner';
-                statusEl.style.background = 'rgba(0, 200, 100, 0.08)';
-                statusEl.style.borderColor = 'rgba(0, 200, 100, 0.25)';
-                statusEl.innerHTML = '<i class="fas fa-magic" style="color:#00e676"></i> <div><h4>Scraping Product Page...</h4><p>Fetching title, price, description, and images from: ' + socialUrl + '</p></div>';
+                statusEl.style.background = 'rgba(0,200,100,0.08)';
+                statusEl.style.borderColor = 'rgba(0,200,100,0.25)';
+                statusEl.innerHTML = '<i class="fas fa-magic" style="color:#00e676"></i> <div><h4>Scraping Product Page...</h4><p>Fetching title, price, description and images...</p></div>';
 
                 document.getElementById('payhipLink').value = socialUrl;
                 await scrapeProduct();
 
-                bodyEl.innerHTML = '<div style="padding:16px;background:rgba(0,200,100,0.06);border:1px solid rgba(0,200,100,0.2);border-radius:14px;color:#00e676;font-size:0.85rem;">' +
-                    '<i class="fas fa-check-circle"></i> Single product details scraped and auto-filled successfully!' +
-                    '</div>';
-
+                bodyEl.innerHTML = '<div style="padding:16px;background:rgba(0,200,100,0.06);border:1px solid rgba(0,200,100,0.2);border-radius:14px;color:#00e676;font-size:0.85rem;"><i class="fas fa-check-circle"></i> Product details auto-filled successfully!</div>';
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-rotate"></i> Re-Scan';
                 setTimeout(closeCreatorWizard, 1200);
                 return;
             }
 
-            // Case B: TikTok / Social Profile / Payhip Store / Linktree
+            // Case B: Social profile — Step 1: Resolve avatar & name
             setWizStep(1);
             statusEl.className = 'info-banner';
-            statusEl.style.background = 'rgba(230, 21, 54, 0.05)';
+            statusEl.style.background = 'rgba(230,21,54,0.05)';
             statusEl.style.borderColor = 'var(--border)';
-            statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <div><h4>Step 1: Resolving Social Profile & Metadata...</h4><p>Fetching creator nickname & avatar for ' + socialUrl + '</p></div>';
+            statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <div><h4>Step 1: Resolving Social Profile...</h4><p>Fetching creator nickname & avatar...</p></div>';
 
             let profileData = null;
-            if (socialUrl.includes('tiktok.com')) {
-                try {
-                    var r1 = await fetch('/api/hlx/resolve?url=' + encodeURIComponent(socialUrl), { credentials: 'include' });
-                    profileData = await r1.json();
-                } catch(e) {}
-            }
+            try {
+                var r1 = await fetch('/api/hlx/resolve?url=' + encodeURIComponent(socialUrl), { credentials: 'include' });
+                profileData = await r1.json();
+            } catch(e) {}
 
-            var creatorName = (profileData && profileData.nickname) || socialUrl.replace(/^https?:\/\//, '').split('/')[0].replace(/^@/, '');
+            var creatorName = (profileData && profileData.nickname) || rawInput.replace(/^@/, '').split('/').pop();
             var creatorAv = (profileData && profileData.avatar) || '';
 
-            if (socialUrl.includes('tiktok.com') || socialUrl.includes('instagram.com') || socialUrl.includes('youtube.com') || socialUrl.includes('twitter.com')) {
-                document.getElementById('creatorSocialUrl').value = socialUrl;
-                document.getElementById('creatorName').value = creatorName;
-                var cni = document.getElementById('creatorNameInput');
-                if (cni) cni.value = creatorName;
-                var cav = document.getElementById('creatorAvatar');
-                if (cav) cav.value = creatorAv;
-                updateLivePreview();
-            }
+            // Fill hidden form fields
+            document.getElementById('creatorSocialUrl').value = socialUrl;
+            document.getElementById('creatorName').value = creatorName;
+            document.getElementById('creatorUsername').value = rawInput.replace(/^@/, '').split('/').pop();
+            updateLivePreview();
 
-            // Display Creator Profile Card
-            var html = '<div style="background:rgba(230,21,54,0.03);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px;display:flex;align-items:center;gap:14px;">';
-            if (creatorAv) {
-                html += '<img src="' + creatorAv + '" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid var(--cherry);">';
-            } else {
-                html += '<div style="width:48px;height:48px;border-radius:50%;background:rgba(230,21,54,0.12);display:flex;align-items:center;justify-content:center;color:var(--cherry-light);font-size:1.2rem;"><i class="fas fa-user"></i></div>';
+            // Update live badge
+            var badgeAv = document.getElementById('badgeAvatar');
+            if (badgeAv && creatorAv) badgeAv.src = creatorAv;
+            var badgeTitle = document.getElementById('badgeTitle');
+            if (badgeTitle) badgeTitle.textContent = creatorName;
+            var badgeStatus = document.getElementById('badgeStatus');
+            if (badgeStatus) {
+                badgeStatus.innerHTML = '<i class="fas fa-check-circle"></i> Profile Set';
+                badgeStatus.style.color = '#00e676';
+                badgeStatus.style.background = 'rgba(0,200,100,0.1)';
+                badgeStatus.style.borderColor = 'rgba(0,200,100,0.2)';
             }
-            html += '<div style="flex:1;">';
-            html += '<div style="font-size:0.95rem;font-weight:800;color:#fff;">' + creatorName + '</div>';
-            html += '<div style="font-size:0.75rem;color:var(--muted);">' + socialUrl + '</div>';
-            html += '</div>';
+            if (document.getElementById('creatorAvatar') && creatorAv) document.getElementById('creatorAvatar').value = creatorAv;
+
+            // Render creator card
+            var html = '<div style="background:rgba(230,21,54,0.03);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:16px;display:flex;align-items:center;gap:14px;">';
+            if (creatorAv) html += '<img src="' + creatorAv + '" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:2px solid var(--cherry);">';
+            else html += '<div style="width:48px;height:48px;border-radius:50%;background:rgba(230,21,54,0.12);display:flex;align-items:center;justify-content:center;color:var(--cherry-light);font-size:1.2rem;"><i class="fas fa-user"></i></div>';
+            html += '<div style="flex:1;"><div style="font-size:0.95rem;font-weight:800;color:#fff;">' + creatorName + '</div>';
+            html += '<div style="font-size:0.75rem;color:var(--muted);">' + socialUrl + '</div></div>';
             html += '<div style="padding:4px 10px;border-radius:20px;background:rgba(0,200,100,0.1);border:1px solid rgba(0,200,100,0.2);color:#00e676;font-size:0.7rem;font-weight:700;"><i class="fas fa-check-circle"></i> Profile Set</div>';
             html += '</div>';
-
             bodyEl.innerHTML = html;
 
-            // STEP 2: SCAN BIO LINKS FOR PAYHIP STORE & PRODUCTS
+            // Step 2: Scan links (bio + profile links section + aggregators)
             setWizStep(2);
-            statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <div><h4>Step 2: Deep Scanning Bio Links & Store Catalog...</h4><p>Scanning TikTok bio, Linktree, and Guns.lol for Payhip or Boosty creator store accounts.</p></div>';
+            statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <div><h4>Step 2: Scanning Profile Links & Bio...</h4><p>Checking profile links, bio, Linktree, Guns.lol and more for Payhip / Boosty / Patreon stores...</p></div>';
 
             let scanData = null;
             try {
@@ -1344,22 +1307,21 @@
                 scanData = await r2.json();
             } catch(e) {}
 
-            if (scanData && scanData.success && scanData.found && (scanData.payhipUrl || scanData.boostyUrl)) {
-                var storeUrl = scanData.payhipUrl || scanData.boostyUrl;
-                var platformName = scanData.platform === 'boosty' ? 'Boosty' : 'Payhip';
+            if (scanData && scanData.success && scanData.found && scanData.storeUrl) {
+                var storeUrl = scanData.storeUrl;
+                var platformName = scanData.platform === 'boosty' ? 'Boosty' : scanData.platform === 'patreon' ? 'Patreon' : 'Payhip';
 
                 document.getElementById('payhipLink').value = storeUrl;
 
-                statusEl.style.background = 'rgba(0, 200, 100, 0.08)';
-                statusEl.style.borderColor = 'rgba(0, 200, 100, 0.25)';
-                statusEl.innerHTML = '<i class="fas fa-check-circle" style="color:#00e676"></i> <div><h4>' + platformName + ' Store Found!</h4><p>Detected store: <strong style="color:#fff">' + storeUrl + '</strong></p></div>';
+                statusEl.style.background = 'rgba(0,200,100,0.08)';
+                statusEl.style.borderColor = 'rgba(0,200,100,0.25)';
+                statusEl.innerHTML = '<i class="fas fa-check-circle" style="color:#00e676"></i> <div><h4>' + platformName + ' Store Found!</h4><p>Detected: <strong style="color:#fff">' + storeUrl + '</strong></p></div>';
 
-                // STEP 3: DISPLAY STORE PRODUCTS
                 if (scanData.products && scanData.products.length > 0) {
                     setWizStep(3);
                     window.scannedProducts = scanData.products;
 
-                    var prodHtml = '<h4 style="font-size:0.88rem;color:#fff;margin:16px 0 10px 0;"><i class="fas fa-store" style="color:var(--cherry-light)"></i> Select Store Product to Auto-Fill</h4>';
+                    var prodHtml = '<h4 style="font-size:0.88rem;color:#fff;margin:16px 0 10px 0;"><i class="fas fa-store" style="color:var(--cherry-light)"></i> Select a Product to Auto-Fill</h4>';
                     prodHtml += '<div class="product-grid-select">';
                     scanData.products.forEach(function(prod, idx) {
                         prodHtml += '<div class="prod-select-card" onclick="selectWizProduct(' + idx + ')">';
@@ -1371,22 +1333,22 @@
                         prodHtml += '</div>';
                     });
                     prodHtml += '</div>';
-
                     bodyEl.innerHTML += prodHtml;
                 } else {
                     bodyEl.innerHTML += '<div style="margin-top:12px;padding:14px;background:rgba(0,200,100,0.04);border:1px solid rgba(0,200,100,0.15);border-radius:12px;color:#00e676;font-size:0.8rem;">' +
-                        '<i class="fas fa-check-circle"></i> Payhip link set to <strong>' + storeUrl + '</strong>. Click Scrape button to load product details.' +
+                        '<i class="fas fa-check-circle"></i> Store linked! Click <strong>Scrape</strong> button in the form to load product details.' +
                         '</div>';
                 }
             } else {
-                statusEl.style.background = 'rgba(230, 21, 54, 0.08)';
-                statusEl.style.borderColor = 'rgba(230, 21, 54, 0.2)';
-                statusEl.innerHTML = '<i class="fas fa-info-circle" style="color:var(--cherry-light)"></i> <div><h4>No Direct Payhip Link Found in Bio</h4><p>Social profile metadata resolved successfully. Enter your Payhip store link or product link manually below to load catalog:</p></div>';
+                // Not found — show manual input
+                statusEl.style.background = 'rgba(230,21,54,0.08)';
+                statusEl.style.borderColor = 'rgba(230,21,54,0.2)';
+                statusEl.innerHTML = '<i class="fas fa-info-circle" style="color:var(--cherry-light)"></i> <div><h4>No Store Found in Bio or Links</h4><p>No Payhip / Boosty / Patreon link found automatically. Enter your store link manually:</p></div>';
 
                 var manualHtml = '<div style="margin-top:14px;padding:16px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:14px;">' +
-                    '<label style="font-size:0.78rem;font-weight:700;color:var(--muted);display:block;margin-bottom:8px;"><i class="fas fa-store"></i> Enter Payhip Store / Product URL</label>' +
+                    '<label style="font-size:0.78rem;font-weight:700;color:var(--muted);display:block;margin-bottom:8px;"><i class="fas fa-store"></i> Enter Store or Product URL</label>' +
                     '<div class="scrape-input-wrap">' +
-                    '<input type="url" id="manualStoreInput" placeholder="https://payhip.com/yourname or https://payhip.com/b/xxxxx">' +
+                    '<input type="url" id="manualStoreInput" placeholder="https://payhip.com/yourname or https://payhip.com/b/xxxxx" style="flex:1;">' +
                     '<button type="button" class="btn btn-primary btn-sm" onclick="scanManualStore()"><i class="fas fa-magic"></i> Load Products</button>' +
                     '</div>' +
                     '</div>';
