@@ -1394,39 +1394,47 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
       }
     }
 
-    // ============ TIKTOK & BIO CREATOR SCANNER API ============
+    // ============ TIKTOK & BIO CREATOR SCANNER API (Proxies to BOT_API, fallback to Worker) ============
     if ((path === "/api/scan-creator-links" || path === "/api/scan-creator-links/") && (request.method === "GET" || request.method === "POST")) {
-      try {
-        let scanUrl = url.searchParams.get("url") || "";
-        if (request.method === "POST") {
-          const body = await request.json().catch(() => ({}));
-          scanUrl = body.url || scanUrl;
-        }
-        const res = await scanCreatorLinks(scanUrl);
-        return json(res);
-      } catch(e) {
-        return json({ success: false, error: e.message }, 500);
+      let scanUrl = url.searchParams.get("url") || "";
+      if (request.method === "POST") {
+        const body = await request.json().catch(() => ({}));
+        scanUrl = body.url || scanUrl;
       }
+      try {
+        const botResp = await fetch(`${BOT_API}/api/scan-creator-links?url=${encodeURIComponent(scanUrl)}`, { headers: corsHeaders });
+        if (botResp.ok) {
+          const data = await botResp.json();
+          if (data && data.success) return json(data);
+        }
+      } catch(e) {}
+      
+      const fallbackRes = await scanCreatorLinks(scanUrl);
+      return json(fallbackRes);
     }
 
-    if ((path === "/api/scrape-payhip" || path === "/api/scrape-payhip/") && (request.method === "GET" || request.method === "POST")) {
-      try {
-        let payUrl = url.searchParams.get("url") || "";
-        if (request.method === "POST") {
-          const body = await request.json().catch(() => ({}));
-          payUrl = body.url || payUrl;
-        }
-        const res = await scrapePayhip(payUrl);
-        return json(res);
-      } catch(e) {
-        return json({ success: false, error: e.message }, 500);
+    if ((path === "/api/scrape" || path === "/api/scrape-payhip" || path === "/api/scrape/") && (request.method === "GET" || request.method === "POST")) {
+      let payUrl = url.searchParams.get("url") || "";
+      if (request.method === "POST") {
+        const body = await request.json().catch(() => ({}));
+        payUrl = body.url || payUrl;
       }
+      try {
+        const botResp = await fetch(`${BOT_API}/api/scrape?url=${encodeURIComponent(payUrl)}`, { headers: corsHeaders });
+        if (botResp.ok) {
+          const data = await botResp.json();
+          if (data && data.success) return json(data);
+        }
+      } catch(e) {}
+
+      const res = await scrapePayhip(payUrl);
+      return json(res);
     }
 
     if ((path === "/api/hlx/resolve" || path === "/api/hlx/resolve/") && request.method === "GET") {
       const targetSocialUrl = url.searchParams.get("url") || "";
       try {
-        const botResp = await fetch(`${BOT_API}${path}${url.search}`, { headers: corsHeaders });
+        const botResp = await fetch(`${BOT_API}/api/hlx/resolve?url=${encodeURIComponent(targetSocialUrl)}`, { headers: corsHeaders });
         if (botResp.ok) {
           const data = await botResp.json();
           if (data && data.success) return json(data);
