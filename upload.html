@@ -747,7 +747,7 @@
                                     <div class="field" style="margin-bottom:0">
                                         <label><i class="fas fa-link"></i> Creator Social URL *</label>
                                         <div class="social-input-wrap">
-                                            <input type="url" id="creatorSocialUrl" placeholder="https://tiktok.com/@creator" onblur="resolveSocial()" oninput="updateLivePreview()">
+                                            <input type="url" id="creatorSocialUrl" placeholder="https://tiktok.com/@creator" onblur="resolveSocial()" onchange="resolveSocial()" onpaste="setTimeout(resolveSocial, 100)" oninput="updateLivePreview()">
                                             <button type="button" class="social-lookup-btn" onclick="openCreatorWizard()" title="Social Lookup & Payhip Scan"><i class="fas fa-magic"></i></button>
                                         </div>
                                         <input type="hidden" id="creatorName"><input type="hidden" id="creatorAvatar"><input type="hidden" id="creatorUsername">
@@ -1088,33 +1088,65 @@
                 updateLivePreview();
             }
 
+            var badge = document.getElementById('creatorLiveBadge');
+            var badgeStatus = document.getElementById('badgeStatus');
+            if (badge) {
+                badge.style.display = 'flex';
+                var badgeTitle = document.getElementById('badgeTitle');
+                if (badgeTitle) badgeTitle.textContent = rawUser || 'Creator';
+                var badgeUrl = document.getElementById('badgeUrl');
+                if (badgeUrl) badgeUrl.textContent = url;
+                if (badgeStatus) badgeStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scanning Profile & Bio...';
+            }
+
             try {
+                // Step 1: Resolve HLX profile avatar & name
                 var r = await fetch('/api/hlx/resolve?url=' + encodeURIComponent(url), { credentials: 'include' });
                 var d = await r.json();
+                var creatorDisplay = rawUser;
                 if (d && (d.success || d.nickname)) {
-                    var creatorDisplay = d.nickname || d.username || rawUser;
+                    creatorDisplay = d.nickname || d.username || rawUser;
                     document.getElementById('creatorName').value = creatorDisplay;
                     document.getElementById('creatorNameInput').value = creatorDisplay;
                     if (d.avatar) {
                         document.getElementById('creatorAvatar').value = d.avatar;
-                    }
-                    
-                    var badge = document.getElementById('creatorLiveBadge');
-                    if (badge) {
-                        badge.style.display = 'flex';
                         var badgeAv = document.getElementById('badgeAvatar');
-                        if (badgeAv) badgeAv.src = d.avatar || 'assets/content.png';
-                        var badgeTitle = document.getElementById('badgeTitle');
-                        if (badgeTitle) badgeTitle.textContent = creatorDisplay;
-                        var badgeUrl = document.getElementById('badgeUrl');
-                        if (badgeUrl) badgeUrl.textContent = url;
+                        if (badgeAv) badgeAv.src = d.avatar;
+                    }
+                    var badgeTitle = document.getElementById('badgeTitle');
+                    if (badgeTitle) badgeTitle.textContent = creatorDisplay;
+                }
+
+                // Step 2: Automatically scan bio links & link aggregators (Linktree/Guns.lol) for Payhip store
+                var r2 = await fetch('/api/scan-creator-links?url=' + encodeURIComponent(url));
+                var scanData = await r2.json();
+
+                if (scanData && scanData.success && scanData.found && (scanData.payhipUrl || scanData.boostyUrl)) {
+                    var storeUrl = scanData.payhipUrl || scanData.boostyUrl;
+                    document.getElementById('payhipLink').value = storeUrl;
+
+                    if (badgeStatus) {
+                        badgeStatus.style.color = '#00e676';
+                        badgeStatus.style.background = 'rgba(0,200,100,0.1)';
+                        badgeStatus.style.borderColor = 'rgba(0,200,100,0.2)';
+                        badgeStatus.innerHTML = '<i class="fas fa-store"></i> Payhip Store Linked!';
                     }
 
-                    updateLivePreview();
-                    alertMsg('Profile resolved: ' + creatorDisplay, false);
-                } else if (rawUser) {
-                    alertMsg('Profile set to: @' + rawUser, false);
+                    alertMsg('Payhip store detected: ' + storeUrl + '! Opening products menu...', false);
+
+                    // Auto-open products selection modal!
+                    openCreatorWizard(url);
+                } else {
+                    if (badgeStatus) {
+                        badgeStatus.style.color = '#ffb74d';
+                        badgeStatus.style.background = 'rgba(255,183,77,0.1)';
+                        badgeStatus.style.borderColor = 'rgba(255,183,77,0.2)';
+                        badgeStatus.innerHTML = '<i class="fas fa-check-circle"></i> Profile Set';
+                    }
+                    alertMsg('Profile set to: ' + creatorDisplay, false);
                 }
+
+                updateLivePreview();
             } catch(e) {
                 if (rawUser) alertMsg('Profile set to: @' + rawUser, false);
             }
