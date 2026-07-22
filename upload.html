@@ -1018,74 +1018,40 @@
         }
 
         async function resolveSocial(){
-            var url=document.getElementById('creatorSocialUrl').value.trim();
-            if(!url) return;
-            openCreatorWizard(url);
-        }
+            var url = document.getElementById('creatorSocialUrl').value.trim();
+            if(!url || !url.includes('.')) return;
+            var rawUser = '';
+            try {
+                var clean = url.split('?')[0].replace(/\/$/, '');
+                var parts = clean.split('/');
+                rawUser = parts[parts.length - 1].replace('@', '');
+            } catch(e) {}
 
-        function toggleHlx(){var o=document.getElementById('hlxOverlay');o.style.display=(o.style.display==='flex')?'none':'flex'}
-        function selHlxPlat(btn,p){
-            hlxPlatform=p;
-            document.querySelectorAll('#hlxPlatforms .btn-icon').forEach(b=>{
-                b.style.background='rgba(230,21,54,0.04)';
-                b.style.borderColor='var(--border)';
-                b.style.color='var(--muted)';
-            });
-            btn.style.background='rgba(230,21,54,0.15)';
-            btn.style.borderColor='var(--cherry-light)';
-            btn.style.color='#fff';
-        }
-        
-        async function hlxLookup(){
-            var user=document.getElementById('hlxUser').value.trim();
-            if(!user)return;
-            var st=document.getElementById('hlxStatus');
-            var btn=document.getElementById('btnHlxLookup');
-            st.style.display='block';
-            st.style.background='rgba(230,21,54,0.06)';
-            st.style.border='1px solid var(--border)';
-            st.style.color='#fff';
-            st.innerHTML='<i class="fas fa-spinner fa-spin"></i> Fetching profile...';
-            if(btn){btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Fetching...'}
-
-            var platforms={tiktok:'https://www.tiktok.com/@'+user,instagram:'https://www.instagram.com/'+user,youtube:'https://www.youtube.com/@'+user,x:'https://x.com/'+user};
-            var lookupUrl=platforms[hlxPlatform]||('https://www.tiktok.com/@'+user);
-            try{
-                var r=await fetch('/api/hlx/resolve?url='+encodeURIComponent(lookupUrl),{credentials:'include'});
-                var d=await r.json();
-                if(d && (d.success || d.nickname)){
-                    var creatorDisplay=d.nickname || d.username || user;
-                    document.getElementById('creatorSocialUrl').value=lookupUrl;
-                    document.getElementById('creatorName').value=creatorDisplay;
-                    var cni=document.getElementById('creatorNameInput');
-                    if(cni)cni.value=creatorDisplay;
-                    var cav=document.getElementById('creatorAvatar');
-                    if(cav)cav.value=d.avatar || '';
-                    st.style.background='rgba(0,200,100,0.08)';
-                    st.style.borderColor='rgba(0,200,100,0.25)';
-                    st.style.color='#00e676';
-                    st.innerHTML='<i class="fas fa-check-circle"></i> Profile Found: <strong>'+creatorDisplay+'</strong>';
-                    updateLivePreview();
-                    setTimeout(toggleHlx, 1000);
-                }else{
-                    st.style.background='rgba(230,21,54,0.08)';
-                    st.style.borderColor='rgba(230,21,54,0.2)';
-                    st.style.color='var(--cherry-light)';
-                    st.innerHTML='<i class="fas fa-exclamation-circle"></i> ' + (d.error||'Not found');
-                }
-            }catch(e){
-                st.style.background='rgba(0,200,100,0.08)';
-                st.style.borderColor='rgba(0,200,100,0.25)';
-                st.style.color='#00e676';
-                st.innerHTML='<i class="fas fa-check-circle"></i> Profile set: <strong>'+user+'</strong>';
-                document.getElementById('creatorSocialUrl').value=lookupUrl;
-                document.getElementById('creatorName').value=user;
-                var cni2=document.getElementById('creatorNameInput');
-                if(cni2)cni2.value=user;
+            document.getElementById('creatorUsername').value = rawUser;
+            if(rawUser){
+                document.getElementById('creatorNameInput').value = rawUser;
+                document.getElementById('creatorName').value = rawUser;
                 updateLivePreview();
-                setTimeout(toggleHlx, 1000);
             }
-            if(btn){btn.disabled=false;btn.innerHTML='<i class="fas fa-search"></i> Fetch Profile Info'}
+
+            try {
+                var r = await fetch('/api/hlx/resolve?url=' + encodeURIComponent(url), { credentials: 'include' });
+                var d = await r.json();
+                if (d && (d.success || d.nickname)) {
+                    var creatorDisplay = d.nickname || d.username || rawUser;
+                    document.getElementById('creatorName').value = creatorDisplay;
+                    document.getElementById('creatorNameInput').value = creatorDisplay;
+                    if (d.avatar) {
+                        document.getElementById('creatorAvatar').value = d.avatar;
+                    }
+                    updateLivePreview();
+                    alertMsg('Profile resolved: ' + creatorDisplay, false);
+                } else if (rawUser) {
+                    alertMsg('Profile set to: @' + rawUser, false);
+                }
+            } catch(e) {
+                if (rawUser) alertMsg('Profile set to: @' + rawUser, false);
+            }
         }
 
         function autoScrape(){const url=document.getElementById('payhipLink').value.trim();if(url&&(url.includes('payhip.com')||url.includes('patreon.com')||url.includes('boosty.to')))scrapeProduct()}
