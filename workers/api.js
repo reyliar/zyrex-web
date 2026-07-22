@@ -1132,64 +1132,92 @@ async function scanCreatorLinks(rawUrl) {
     if (html) applyStore(extractStoreLinks(html));
   }
 
-  // === CASE 3: Social media profile — username-based strategy ===
+  // === CASE 3: Social media profile — multi-strategy scan ===
   if (!result.found && username && username.length >= 2 && !username.includes(".")) {
 
-    // STRATEGY A: Probe all aggregators in parallel using the same username
-    // (This bypasses JS-rendering on TikTok/Instagram entirely)
-    const aggregatorProbes = [
-      `https://linktr.ee/${username}`,
-      `https://guns.lol/${username}`,
-      `https://bio.link/${username}`,
-      `https://beacons.ai/${username}`,
-      `https://solo.to/${username}`,
-      `https://taplink.cc/${username}`,
-    ];
-    result.bioLinks = aggregatorProbes;
-
-    const probeResults = await Promise.allSettled(
-      aggregatorProbes.map(url => fetchText(url))
-    );
-
-    for (let i = 0; i < probeResults.length; i++) {
-      if (probeResults[i].status === "fulfilled" && probeResults[i].value) {
-        const html = probeResults[i].value;
-        // Make sure this aggregator page actually exists (not a 404/empty page)
-        if (html.length < 500) continue; // Too short = not found page
-        if (applyStore(extractStoreLinks(html))) break;
-      }
-    }
-
-    // STRATEGY B: Try fetching the social profile HTML (works for some platforms)
-    // TikTok embeds data in __NEXT_DATA__ JSON even without JS
-    if (!result.found) {
-      const profileHtml = await fetchText(targetUrl);
-      if (profileHtml) {
-        // Check all URLs in JSON blobs (__NEXT_DATA__, JSON-LD, etc.)
+    // STRATEGY A: Fetch actual profile HTML → extract real bio link from __NEXT_DATA__ or og tags
+    // This gets the CORRECT link even when linktree username ≠ social username
+    let actualBioLink = null;
+    const profileHtml = await fetchText(targetUrl);
+    if (profileHtml) {
+      // Check if store link is directly in the profile page
+      if (applyStore(extractStoreLinks(profileHtml))) {
+        // done — store link was directly in bio text
+      } else {
+        // Extract the real bio link from __NEXT_DATA__ JSON
+        const nextDataMatch = profileHtml.match(/<script[^>]+id=["']__NEXT_DATA__["'][^>]*>([\s\S]*?)<\/script>/i);
+        if (nextDataMatch) {
+          try {
+            const nd = JSON.parse(nextDataMatch[1]);
+            const user = nd?.props?.pageProps?.userInfo?.user ||
+                         nd?.props?.pageProps?.user ||
+                         nd?.props?.initialProps?.user;
+            if (user?.bioLink?.link) actualBioLink = user.bioLink.link;
+            else if (user?.bio_link?.link) actualBioLink = user.bio_link.link;
+          } catch(e) {}
+        }
+        // Fallback: scan raw HTML for bioLink JSON pattern
+        if (!actualBioLink) {
+          const m = profileHtml.match(/"bioLink"\s*:\s*\{[^}]*"link"\s*:\s*"(https?:\/\/[^"]+)"/i)
+                 || profileHtml.match(/"bio_link"\s*:\s*\{[^}]*"link"\s*:\s*"(https?:\/\/[^"]+)"/i)
+                 || profileHtml.match(/"external_url"\s*:\s*"(https?:\/\/[^"]+)"/i);
+          if (m) actualBioLink = m[1];
+        }
+        // Also scan for any store/aggregator URLs in the JSON blobs
         const allUrlsInPage = [];
         const urlRe = /"(https?:\/\/[^"]{5,200})"/g;
-        let m;
-        while ((m = urlRe.exec(profileHtml)) !== null) {
-          const u = m[1];
+        let mm;
+        while ((mm = urlRe.exec(profileHtml)) !== null) {
+          const u = mm[1];
           if (STORE_DOMAINS.some(d => u.includes(d))) allUrlsInPage.unshift(u);
           else if (AGGREGATOR_DOMAINS.some(d => u.includes(d))) allUrlsInPage.push(u);
         }
-
-        // Try store links first
-        if (applyStore(extractStoreLinks(profileHtml))) {
-          // done
-        } else {
-          // Crawl any aggregator links found in the page source
-          const aggLinks = Array.from(new Set(allUrlsInPage.filter(u => AGGREGATOR_DOMAINS.some(d => u.includes(d)))));
-          for (const aggUrl of aggLinks.slice(0, 5)) {
+        // Try store links found in page JSON
+        if (!result.found) applyStore(extractStoreLinks(profileHtml));
+        // Crawl aggregator links found in page JSON
+        if (!result.found) {
+          const aggInPage = Array.from(new Set(allUrlsInPage.filter(u => AGGREGATOR_DOMAINS.some(d => u.includes(d)))));
+          if (!actualBioLink && aggInPage[0]) actualBioLink = aggInPage[0];
+          for (const aggUrl of aggInPage.slice(0, 3)) {
             const aggHtml = await fetchText(aggUrl);
-            if (aggHtml && applyStore(extractStoreLinks(aggHtml))) break;
+            if (aggHtml && aggHtml.length > 500 && applyStore(extractStoreLinks(aggHtml))) break;
           }
         }
       }
     }
 
-    // STRATEGY C: Direct Payhip/Boosty username probe
+    // STRATEGY B: Crawl the ACTUAL bio link (correct linktree/guns.lol etc even with different username)
+    if (!result.found && actualBioLink) {
+      result.bioLinks = [actualBioLink];
+      const bioHtml = await fetchText(actualBioLink);
+      if (bioHtml && bioHtml.length > 500) {
+        applyStore(extractStoreLinks(bioHtml));
+      }
+    }
+
+    // STRATEGY C: Username-based parallel probe (fast fallback when bio link not found)
+    if (!result.found) {
+      const aggregatorProbes = [
+        `https://linktr.ee/${username}`,
+        `https://guns.lol/${username}`,
+        `https://bio.link/${username}`,
+        `https://beacons.ai/${username}`,
+        `https://solo.to/${username}`,
+        `https://taplink.cc/${username}`,
+      ];
+      if (!result.bioLinks || result.bioLinks.length === 0) result.bioLinks = aggregatorProbes;
+
+      const probeResults = await Promise.allSettled(aggregatorProbes.map(url => fetchText(url)));
+      for (let i = 0; i < probeResults.length; i++) {
+        if (probeResults[i].status === "fulfilled" && probeResults[i].value) {
+          const html = probeResults[i].value;
+          if (html.length < 500) continue;
+          if (applyStore(extractStoreLinks(html))) break;
+        }
+      }
+    }
+
+    // STRATEGY D: Direct Payhip/Boosty username probe
     if (!result.found) {
       const storeProbes = [
         { url: `https://payhip.com/${username}`, check: (h) => h.includes("/b/") || h.includes("payhip.com/b/"), platform: "payhip" },
@@ -1256,7 +1284,7 @@ async function resolveSocialProfile(targetUrl) {
 
     const resp = await fetch(cleanUrl, {
       headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "en-US,en;q=0.9"
       }
@@ -1266,33 +1294,58 @@ async function resolveSocialProfile(targetUrl) {
     const username = parts[parts.length - 1].replace("@", "");
 
     if (!resp.ok) {
-      return { success: true, nickname: username, avatar: "", username };
+      return { success: true, nickname: username, avatar: "", username, bioLink: null };
     }
 
     const html = await resp.text();
 
+    // --- og tags ---
     let title = (html.match(/<meta\s+property="og:title"\s+content="([^"]+)"/i) || [])[1]
              || (html.match(/<title>([^<]+)<\/title>/i) || [])[1] || "";
     title = title.replace(/&amp;/g, "&").replace(/&#39;/g, "'");
-
     let nickname = title.split("(")[0].replace(/[|\-–]\s*(TikTok|Instagram|YouTube|X).*/i, "").trim();
-    if (!nickname || nickname.toLowerCase().includes("tiktok") || nickname.toLowerCase().includes("instagram")) {
-      nickname = username;
-    }
-
+    if (!nickname || nickname.toLowerCase().includes("tiktok") || nickname.toLowerCase().includes("instagram")) nickname = username;
     let avatar = (html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i) || [])[1]
               || (html.match(/<meta\s+name="twitter:image"\s+content="([^"]+)"/i) || [])[1] || "";
+
+    // --- Extract REAL bio link from __NEXT_DATA__ / JSON-LD ---
+    let bioLink = null;
+    // TikTok embeds profile data in a <script id="__NEXT_DATA__"> tag
+    const nextDataMatch = html.match(/<script[^>]+id=["']__NEXT_DATA__["'][^>]*>([\s\S]*?)<\/script>/i);
+    if (nextDataMatch) {
+      try {
+        const nextData = JSON.parse(nextDataMatch[1]);
+        // TikTok path: props.pageProps.userInfo.user.bioLink.link
+        const user = nextData?.props?.pageProps?.userInfo?.user ||
+                     nextData?.props?.pageProps?.user ||
+                     nextData?.props?.initialProps?.user;
+        if (user?.bioLink?.link) bioLink = user.bioLink.link;
+        else if (user?.bio_link?.link) bioLink = user.bio_link.link;
+      } catch(e) {}
+    }
+    // Fallback: search raw HTML for any "bioLink":"..." or "link":"https://..." near bio
+    if (!bioLink) {
+      const bioLinkMatch = html.match(/"bioLink"\s*:\s*\{[^}]*"link"\s*:\s*"(https?:\/\/[^"]+)"/i)
+                        || html.match(/"bio_link"\s*:\s*\{[^}]*"link"\s*:\s*"(https?:\/\/[^"]+)"/i);
+      if (bioLinkMatch) bioLink = bioLinkMatch[1];
+    }
+    // Instagram: check for "external_url" in JSON blob
+    if (!bioLink && cleanUrl.includes("instagram.com")) {
+      const igMatch = html.match(/"external_url"\s*:\s*"(https?:\/\/[^"]+)"/i);
+      if (igMatch) bioLink = igMatch[1];
+    }
 
     return {
       success: true,
       nickname: nickname || username,
-      avatar: avatar,
-      username: username
+      avatar,
+      username,
+      bioLink  // The actual URL from their bio/links section
     };
   } catch (e) {
     const parts = String(targetUrl).replace(/\/$/, "").split("/");
     const fallbackName = parts[parts.length - 1]?.replace("@", "") || "Creator";
-    return { success: true, nickname: fallbackName, avatar: "", username: fallbackName };
+    return { success: true, nickname: fallbackName, avatar: "", username: fallbackName, bioLink: null };
   }
 }
 
