@@ -1049,6 +1049,148 @@ async function scrapePayhip(url) {
   }
 }
 
+// ============ TIKTOK & BIO CREATOR SCANNER ============
+async function scanCreatorLinks(rawUrl) {
+  let targetUrl = String(rawUrl || "").trim();
+  if (!targetUrl) return { success: false, error: "URL or username is required" };
+  
+  if (!targetUrl.startsWith("http://") && !targetUrl.startsWith("https://")) {
+    if (targetUrl.startsWith("@")) targetUrl = `https://www.tiktok.com/${targetUrl}`;
+    else if (targetUrl.includes("payhip.com") || targetUrl.includes("boosty.to") || targetUrl.includes("linktr.ee") || targetUrl.includes("guns.lol")) {
+      targetUrl = `https://${targetUrl}`;
+    } else {
+      targetUrl = `https://www.tiktok.com/@${targetUrl}`;
+    }
+  }
+
+  const result = {
+    success: true,
+    inputUrl: rawUrl,
+    targetUrl,
+    found: false,
+    payhipUrl: null,
+    boostyUrl: null,
+    platform: null,
+    bioLinks: [],
+    products: []
+  };
+
+  function findStoreLinks(htmlText) {
+    const payhipMatches = htmlText.match(/https?:\/\/(?:www\.)?payhip\.com\/[a-zA-Z0-9_\-\/]+/gi) || [];
+    const boostyMatches = htmlText.match(/https?:\/\/(?:www\.)?boosty\.to\/[a-zA-Z0-9_\-\/]+/gi) || [];
+    
+    const payhipUserMatch = htmlText.match(/payhip\.com\/([a-zA-Z0-9_\-]+)/i);
+    const boostyUserMatch = htmlText.match(/boosty\.to\/([a-zA-Z0-9_\-]+)/i);
+
+    let payhip = payhipMatches[0] || (payhipUserMatch ? `https://payhip.com/${payhipUserMatch[1]}` : null);
+    let boosty = boostyMatches[0] || (boostyUserMatch ? `https://boosty.to/${boostyUserMatch[1]}` : null);
+
+    return { payhip, boosty };
+  }
+
+  if (targetUrl.includes("payhip.com")) {
+    result.found = true;
+    result.payhipUrl = targetUrl;
+    result.platform = "payhip";
+  } else if (targetUrl.includes("boosty.to")) {
+    result.found = true;
+    result.boostyUrl = targetUrl;
+    result.platform = "boosty";
+  } else {
+    try {
+      const resp = await fetch(targetUrl, {
+        headers: {
+          "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+          "Accept-Language": "en-US,en;q=0.9"
+        }
+      });
+      if (resp.ok) {
+        const html = await resp.text();
+        const { payhip, boosty } = findStoreLinks(html);
+
+        if (payhip) {
+          result.found = true;
+          result.payhipUrl = payhip;
+          result.platform = "payhip";
+        } else if (boosty) {
+          result.found = true;
+          result.boostyUrl = boosty;
+          result.platform = "boosty";
+        } else {
+          const bioAggregators = html.match(/https?:\/\/(?:www\.)?(?:linktr\.ee|guns\.lol|bio\.link|beacons\.ai|carrd\.co|linkr\.bio)\/[a-zA-Z0-9_\.\-]+/gi) || [];
+          result.bioLinks = Array.from(new Set(bioAggregators));
+
+          for (const bioLink of result.bioLinks) {
+            try {
+              const bioResp = await fetch(bioLink, {
+                headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" }
+              });
+              if (bioResp.ok) {
+                const bioHtml = await bioResp.text();
+                const bioStores = findStoreLinks(bioHtml);
+                if (bioStores.payhip) {
+                  result.found = true;
+                  result.payhipUrl = bioStores.payhip;
+                  result.platform = "payhip";
+                  break;
+                } else if (bioStores.boosty) {
+                  result.found = true;
+                  result.boostyUrl = bioStores.boosty;
+                  result.platform = "boosty";
+                  break;
+                }
+              }
+            } catch(e) {}
+          }
+        }
+      }
+    } catch(e) {
+      console.error("Scan creator links error:", e.message);
+    }
+  }
+
+  if (result.found && result.payhipUrl && result.platform === "payhip") {
+    try {
+      const storeResp = await fetch(result.payhipUrl, {
+        headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" }
+      });
+      if (storeResp.ok) {
+        const storeHtml = await storeResp.text();
+        const products = [];
+        
+        const prodRegex = /<a[^>]+href="(\/b\/[a-zA-Z0-9_]+|https?:\/\/payhip\.com\/b\/[a-zA-Z0-9_]+)"[^>]*>([\s\S]*?)<\/a>/gi;
+        let match;
+        const seenUrls = new Set();
+
+        while ((match = prodRegex.exec(storeHtml)) !== null && products.length < 12) {
+          let pUrl = match[1];
+          if (pUrl.startsWith("/")) pUrl = `https://payhip.com${pUrl}`;
+          if (seenUrls.has(pUrl)) continue;
+          seenUrls.add(pUrl);
+
+          const cardSnippet = match[2];
+          const titleMatch = cardSnippet.match(/(?:class="[^"]*title[^"]*"[^>]*|h3|h4)[^>]*>([^<]+)/i);
+          const title = titleMatch ? titleMatch[1].trim() : "Product";
+          
+          const imgMatch = cardSnippet.match(/src="(https:\/\/[^"]+)"/i);
+          const image = imgMatch ? imgMatch[1] : "";
+
+          const priceMatch = cardSnippet.match(/\$([\d.]+)/);
+          const price = priceMatch ? `$${priceMatch[1]}` : "";
+
+          if (title && pUrl) {
+            products.push({ title, url: pUrl, image, price });
+          }
+        }
+        result.products = products;
+      }
+    } catch(e) {}
+  }
+
+  return result;
+}
+
 // Upload thumbnail to R2 CDN (called after scraping)
 async function uploadThumbnailToCDN(env, imageUrl, productId) {
   if (!imageUrl || !productId) return imageUrl;
@@ -1196,6 +1338,35 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
         return json({ success: true, url: `https://thumbnail.zyrexediting.xyz/${safeName}` });
       } catch(e) {
         return json({ error: e.message }, 500);
+      }
+    }
+
+    // ============ TIKTOK & BIO CREATOR SCANNER API ============
+    if ((path === "/api/scan-creator-links" || path === "/api/scan-creator-links/") && (request.method === "GET" || request.method === "POST")) {
+      try {
+        let scanUrl = url.searchParams.get("url") || "";
+        if (request.method === "POST") {
+          const body = await request.json().catch(() => ({}));
+          scanUrl = body.url || scanUrl;
+        }
+        const res = await scanCreatorLinks(scanUrl);
+        return json(res);
+      } catch(e) {
+        return json({ success: false, error: e.message }, 500);
+      }
+    }
+
+    if ((path === "/api/scrape-payhip" || path === "/api/scrape-payhip/") && (request.method === "GET" || request.method === "POST")) {
+      try {
+        let payUrl = url.searchParams.get("url") || "";
+        if (request.method === "POST") {
+          const body = await request.json().catch(() => ({}));
+          payUrl = body.url || payUrl;
+        }
+        const res = await scrapePayhip(payUrl);
+        return json(res);
+      } catch(e) {
+        return json({ success: false, error: e.message }, 500);
       }
     }
 

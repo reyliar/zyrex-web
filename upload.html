@@ -496,19 +496,98 @@
             background: transparent; border: none; color: #fff; font-size: 1.4rem; cursor: pointer; z-index: 1000;
         }
 
-        /* === RESPONSIVE === */
-        @media(max-width: 900px) {
-            .studio-sidebar { left: -280px; }
-            .studio-sidebar.open { left: 0; }
-            .studio-main { margin-left: 0; padding: 32px 20px; }
-            .mobile-trigger { display: block; }
-            .form-layout { grid-template-columns: 1fr; }
+        /* === SIDEBAR OVERLAY FOR MOBILE === */
+        .sidebar-overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            z-index: 99;
         }
+        .sidebar-overlay.show { display: block; }
+
+        /* === RESPONSIVE & MOBILE adaptation === */
+        @media(max-width: 900px) {
+            .studio-sidebar { left: -280px; box-shadow: 10px 0 30px rgba(0,0,0,0.8); }
+            .studio-sidebar.open { left: 0; }
+            .studio-main { margin-left: 0; padding: 24px 16px; width: 100%; }
+            .mobile-trigger { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 10px; background: rgba(230,21,54,0.1); border: 1px solid var(--border); margin-right: 12px; }
+            .form-layout { grid-template-columns: 1fr; gap: 24px; }
+            .studio-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+            .wizard-stepper { width: 100%; overflow-x: auto; max-width: 100%; justify-content: space-between; padding: 8px 12px; }
+            .glass-panel { padding: 20px 16px; border-radius: 16px; }
+            .row-fields { grid-template-columns: 1fr; gap: 12px; }
+            .scrape-input-wrap { flex-direction: column; }
+            .preview-sticky { position: static; margin-top: 20px; }
+            .form-actions { flex-direction: column-reverse; width: 100%; }
+            .form-actions .btn { width: 100%; }
+        }
+
+        @media(max-width: 480px) {
+            .studio-header h1 { font-size: 1.4rem; }
+            .step-label { display: none; }
+            .step-connector { width: 20px; }
+        }
+
+        /* === TIKTOK / PAYHIP SCANNER MODAL === */
+        .scanner-modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(4, 1, 2, 0.85); backdrop-filter: blur(12px);
+            z-index: 10000; align-items: center; justify-content: center; padding: 20px;
+        }
+        .scanner-modal-overlay.open { display: flex; }
+        .scanner-modal {
+            background: #0d0407; border: 1px solid var(--border-hover); border-radius: 20px;
+            width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; padding: 28px;
+            box-shadow: 0 25px 80px rgba(0,0,0,0.8), 0 0 30px rgba(230,21,54,0.2);
+            position: relative; animation: modalPop 0.3s cubic-bezier(0.16,1,0.3,1);
+        }
+        @keyframes modalPop { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
+        .scanner-modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .scanner-modal-header h3 { font-size: 1.1rem; font-weight: 800; color: #fff; display: flex; align-items: center; gap: 8px; }
+        .close-modal-btn { background: rgba(255,255,255,0.05); border: none; color: var(--muted); width: 32px; height: 32px; border-radius: 50%; cursor: pointer; }
+        .close-modal-btn:hover { color: #fff; background: rgba(230,21,54,0.2); }
+        
+        .product-grid-select { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin-top: 16px; }
+        .prod-select-card {
+            background: rgba(230, 21, 54, 0.03); border: 1px solid var(--border); border-radius: 12px; padding: 10px;
+            cursor: pointer; transition: var(--transition); text-align: left;
+        }
+        .prod-select-card:hover { border-color: var(--cherry-light); background: rgba(230,21,54,0.08); transform: translateY(-2px); }
+        .prod-select-card img { width: 100%; aspect-ratio: 16/10; object-fit: cover; border-radius: 8px; margin-bottom: 8px; background: #000; }
+        .prod-select-card .p-title { font-size: 0.78rem; font-weight: 700; color: #fff; line-height: 1.3; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+        .prod-select-card .p-price { font-size: 0.7rem; font-weight: 800; color: var(--cherry-light); }
     </style>
 </head>
 <body>
     <div class="bg-aura"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
     <div class="grid-bg"></div>
+
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <!-- TIKTOK / PAYHIP BIO SCANNER MODAL -->
+    <div class="scanner-modal-overlay" id="scannerModal">
+        <div class="scanner-modal">
+            <div class="scanner-modal-header">
+                <h3><i class="fab fa-tiktok" style="color:#ff0050"></i> Scan Creator Bio Links</h3>
+                <button type="button" class="close-modal-btn" onclick="closeScannerModal()"><i class="fas fa-times"></i></button>
+            </div>
+            <p style="font-size:0.8rem;color:var(--muted);margin-bottom:16px;">
+                Enter a TikTok username or URL. We'll automatically scan bio links (Linktree, Guns.lol, Bio.link) for Payhip/Boosty accounts and auto-fill your product details.
+            </p>
+            <div class="field" style="margin-bottom:16px;">
+                <label><i class="fab fa-tiktok"></i> TikTok Profile or Username</label>
+                <div class="scrape-input-wrap">
+                    <input type="text" id="scannerUrlInput" placeholder="https://tiktok.com/@username or @username">
+                    <button type="button" class="btn btn-primary btn-sm" id="btnStartScan" onclick="runBioScanner()"><i class="fas fa-search"></i> Scan Bio</button>
+                </div>
+            </div>
+
+            <div id="scannerStatus" style="display:none;"></div>
+            <div id="scannerResults"></div>
+        </div>
+    </div>
 
     <div class="studio-alert" id="alertBox"></div>
 
@@ -626,7 +705,8 @@
                                 <label><i class="fas fa-shopping-cart"></i> Product Link / Payhip (optional)</label>
                                 <div class="scrape-input-wrap">
                                     <input type="url" id="payhipLink" placeholder="https://payhip.com/b/xxxxx" onblur="autoScrape()">
-                                    <button class="btn btn-ghost btn-sm" id="btnScrape" onclick="scrapeProduct()"><i class="fas fa-magic"></i> Scrape</button>
+                                    <button type="button" class="btn btn-ghost btn-sm" id="btnScanBio" onclick="openScannerModal()"><i class="fab fa-tiktok" style="color:#ff0050"></i> TikTok Scan</button>
+                                    <button type="button" class="btn btn-ghost btn-sm" id="btnScrape" onclick="scrapeProduct()"><i class="fas fa-magic"></i> Scrape</button>
                                 </div>
                                 <div class="scraped-badge" id="scrapedBadge" style="display:none;align-items:center;gap:6px;margin-top:10px;padding:8px 12px;border-radius:8px;font-size:0.75rem;background:rgba(0,200,100,0.06);border:1px solid rgba(0,200,100,0.15);color:#00e676;">
                                     <i class="fas fa-check-circle"></i> Data auto-filled from link
@@ -978,6 +1058,126 @@
             }catch(e){alertMsg('Scrape failed.', true)}
             btn.disabled=false;
             btn.innerHTML='<i class="fas fa-magic"></i> Scrape';
+        }
+
+        // === TIKTOK & BIO LINK SCANNER ===
+        function openScannerModal() {
+            var modal = document.getElementById('scannerModal');
+            if (!modal) return;
+            modal.classList.add('open');
+            var socialUrl = (document.getElementById('creatorSocialUrl') || {}).value || '';
+            if (socialUrl && !document.getElementById('scannerUrlInput').value) {
+                document.getElementById('scannerUrlInput').value = socialUrl;
+            }
+        }
+
+        function closeScannerModal() {
+            var modal = document.getElementById('scannerModal');
+            if (modal) modal.classList.remove('open');
+        }
+
+        async function runBioScanner() {
+            var inputVal = document.getElementById('scannerUrlInput').value.trim();
+            if (!inputVal) {
+                alertMsg('Please enter a TikTok URL or username', true);
+                return;
+            }
+
+            var statusEl = document.getElementById('scannerStatus');
+            var resultEl = document.getElementById('scannerResults');
+            var btn = document.getElementById('btnStartScan');
+
+            statusEl.style.display = 'block';
+            statusEl.className = 'info-banner';
+            statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <div><h4>Scanning Bio Links...</h4><p>Searching TikTok, Linktree, Guns.lol, and Bio pages for Payhip/Boosty store accounts.</p></div>';
+            resultEl.innerHTML = '';
+            btn.disabled = true;
+
+            try {
+                var resp = await fetch('/api/scan-creator-links?url=' + encodeURIComponent(inputVal));
+                var data = await resp.json();
+
+                if (data.success && data.found && (data.payhipUrl || data.boostyUrl)) {
+                    var storeUrl = data.payhipUrl || data.boostyUrl;
+                    var platformName = data.platform === 'boosty' ? 'Boosty' : 'Payhip';
+                    statusEl.className = 'info-banner';
+                    statusEl.style.background = 'rgba(0, 200, 100, 0.08)';
+                    statusEl.style.borderColor = 'rgba(0, 200, 100, 0.25)';
+                    statusEl.innerHTML = '<i class="fas fa-check-circle" style="color:#00e676"></i> <div><h4>' + platformName + ' Account Detected!</h4><p>Found account link: <strong style="color:#fff">' + storeUrl + '</strong></p></div>';
+
+                    var html = '<div style="margin-top:16px;padding:16px;background:rgba(230,21,54,0.04);border:1px solid var(--border);border-radius:12px;">';
+                    html += '<p style="font-size:0.85rem;color:#fff;margin-bottom:12px">Is <strong>' + storeUrl + '</strong> your ' + platformName + ' store account?</p>';
+                    html += '<div style="display:flex;gap:10px;flex-wrap:wrap;">';
+                    html += '<button type="button" class="btn btn-primary btn-sm" onclick="confirmPayhipAccount(\'' + storeUrl + '\')"><i class="fas fa-check"></i> Yes, Confirm Account</button>';
+                    html += '<button type="button" class="btn btn-ghost btn-sm" onclick="showManualPayhipInput()"><i class="fas fa-edit"></i> Enter Manually</button>';
+                    html += '</div></div>';
+
+                    if (data.products && data.products.length > 0) {
+                        window.scannedProducts = data.products;
+                        html += '<h4 style="font-size:0.88rem;color:#fff;margin:20px 0 10px 0;"><i class="fas fa-store"></i> Store Products (Click to Auto-Fill)</h4>';
+                        html += '<div class="product-grid-select">';
+                        data.products.forEach(function(prod, idx) {
+                            html += '<div class="prod-select-card" onclick="selectScannedProduct(' + idx + ')">';
+                            if (prod.image) html += '<img src="' + prod.image + '" alt="">';
+                            else html += '<div style="aspect-ratio:16/10;background:#150508;border-radius:8px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);"><i class="fas fa-box"></i></div>';
+                            html += '<div class="p-title">' + (prod.title || 'Product') + '</div>';
+                            if (prod.price) html += '<div class="p-price">' + prod.price + '</div>';
+                            html += '</div>';
+                        });
+                        html += '</div>';
+                    }
+
+                    resultEl.innerHTML = html;
+                } else {
+                    statusEl.className = 'info-banner';
+                    statusEl.style.background = 'rgba(230, 21, 54, 0.08)';
+                    statusEl.style.borderColor = 'rgba(230, 21, 54, 0.2)';
+                    statusEl.innerHTML = '<i class="fas fa-exclamation-circle" style="color:var(--cherry-light)"></i> <div><h4>No Payhip Account Found</h4><p>Deep scan completed across TikTok bio, Linktree, and Guns.lol links. No Payhip or store link was found.</p></div>';
+
+                    resultEl.innerHTML = '<div style="margin-top:16px;padding:16px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:12px;text-align:center;">' +
+                        '<p style="font-size:0.84rem;color:var(--muted);margin-bottom:12px;">Please enter your Payhip product link manually in the input field.</p>' +
+                        '<button type="button" class="btn btn-ghost btn-sm" onclick="showManualPayhipInput()"><i class="fas fa-keyboard"></i> Enter Link Manually</button>' +
+                        '</div>';
+                }
+            } catch(e) {
+                statusEl.className = 'info-banner';
+                statusEl.innerHTML = '<i class="fas fa-exclamation-triangle" style="color:var(--cherry-light)"></i> <div><h4>Scan Failed</h4><p>Could not connect to scanner service. Please enter your product link manually.</p></div>';
+            }
+            btn.disabled = false;
+        }
+
+        function confirmPayhipAccount(payhipUrl) {
+            var linkInput = document.getElementById('payhipLink');
+            if (linkInput) {
+                linkInput.value = payhipUrl;
+                autoScrape();
+            }
+            alertMsg('Payhip account confirmed: ' + payhipUrl, false);
+            closeScannerModal();
+        }
+
+        function showManualPayhipInput() {
+            closeScannerModal();
+            var linkInput = document.getElementById('payhipLink');
+            if (linkInput) linkInput.focus();
+        }
+
+        function selectScannedProduct(idx) {
+            if (!window.scannedProducts || !window.scannedProducts[idx]) return;
+            var prod = window.scannedProducts[idx];
+            
+            if (prod.url) document.getElementById('payhipLink').value = prod.url;
+            if (prod.title) document.getElementById('productName').value = prod.title;
+            if (prod.image) {
+                var tu = document.getElementById('thumbUrl');
+                if (tu) tu.value = prod.image;
+            }
+            document.getElementById('scrapedBadge').style.display = 'flex';
+            updateLivePreview();
+            alertMsg('Auto-filled product: ' + prod.title, false);
+            closeScannerModal();
+
+            if (prod.url) scrapeProduct();
         }
 
         function updateLivePreview(){
