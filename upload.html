@@ -1072,8 +1072,21 @@
         }
 
         async function resolveSocial(){
-            var url = document.getElementById('creatorSocialUrl').value.trim();
-            if(!url || !url.includes('.')) return;
+            var rawInput = document.getElementById('creatorSocialUrl').value.trim();
+            if(!rawInput) return;
+
+            // Format URL properly for @username or full URL
+            var url = rawInput;
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                if (url.includes('payhip.com') || url.includes('boosty.to') || url.includes('linktr.ee') || url.includes('guns.lol')) {
+                    url = 'https://' + url;
+                } else if (url.startsWith('@')) {
+                    url = 'https://www.tiktok.com/' + url;
+                } else {
+                    url = 'https://www.tiktok.com/@' + url;
+                }
+            }
+
             var rawUser = '';
             try {
                 var clean = url.split('?')[0].replace(/\/$/, '');
