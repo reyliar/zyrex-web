@@ -826,24 +826,47 @@
     </div>
 
     <!-- SOCIAL LOOKUP MODAL -->
-    <div id="hlxOverlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.85);align-items:center;justify-content:center" onclick="if(event.target===this)toggleHlx()">
-        <div style="background:rgba(15,4,7,0.98);border:1px solid var(--border);border-radius:20px;padding:32px;width:420px;max-width:90vw;box-shadow:0 25px 60px rgba(0,0,0,0.7)">
+    <div id="hlxOverlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(4,1,2,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)toggleHlx()">
+        <div style="background:#0d0407;border:1px solid var(--border-hover);border-radius:24px;padding:32px;width:100%;max-width:440px;box-shadow:0 25px 80px rgba(0,0,0,0.8), 0 0 35px rgba(230,21,54,0.15);position:relative;animation:modalPop 0.3s cubic-bezier(0.16,1,0.3,1)">
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-                <span style="font-size:0.9rem;font-weight:700;color:var(--text);"><i class="fas fa-magic" style="color:var(--cherry-light);margin-right:6px"></i>Social Lookup</span>
-                <button onclick="toggleHlx()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.4rem">&times;</button>
+                <div style="display:flex;align-items:center;gap:12px">
+                    <div style="width:38px;height:38px;border-radius:12px;background:rgba(230,21,54,0.12);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--cherry-light);font-size:1rem">
+                        <i class="fas fa-wand-magic-sparkles"></i>
+                    </div>
+                    <div>
+                        <h3 style="font-size:1.1rem;font-weight:800;color:#fff;margin:0">Social Lookup</h3>
+                        <p style="font-size:0.75rem;color:var(--muted);margin:0">Auto-detect creator nickname & avatar</p>
+                    </div>
+                </div>
+                <button type="button" onclick="toggleHlx()" style="background:rgba(255,255,255,0.05);border:none;color:var(--muted);width:32px;height:32px;border-radius:50%;cursor:pointer;display:inline-flex;align-items:center;justify-content:center"><i class="fas fa-times"></i></button>
             </div>
-            <div style="display:flex;gap:10px;justify-content:center;margin-bottom:20px" id="hlxPlatforms">
-                <button class="btn-icon active" data-plat="tiktok" onclick="selHlxPlat(this,'tiktok')" style="width:40px;height:40px;border-radius:50%;background:rgba(230,21,54,0.08);border:1px solid var(--border);color:var(--cherry-light);cursor:pointer;transition:var(--transition);display:inline-flex;align-items:center;justify-content:center;"><i class="fab fa-tiktok"></i></button>
-                <button class="btn-icon" data-plat="instagram" onclick="selHlxPlat(this,'instagram')" style="width:40px;height:40px;border-radius:50%;background:rgba(230,21,54,0.08);border:1px solid var(--border);color:var(--cherry-light);cursor:pointer;transition:var(--transition);display:inline-flex;align-items:center;justify-content:center;"><i class="fab fa-instagram"></i></button>
-                <button class="btn-icon" data-plat="youtube" onclick="selHlxPlat(this,'youtube')" style="width:40px;height:40px;border-radius:50%;background:rgba(230,21,54,0.08);border:1px solid var(--border);color:var(--cherry-light);cursor:pointer;transition:var(--transition);display:inline-flex;align-items:center;justify-content:center;"><i class="fab fa-youtube"></i></button>
-                <button class="btn-icon" data-plat="x" onclick="selHlxPlat(this,'x')" style="width:40px;height:40px;border-radius:50%;background:rgba(230,21,54,0.08);border:1px solid var(--border);color:var(--cherry-light);cursor:pointer;transition:var(--transition);display:inline-flex;align-items:center;justify-content:center;"><i class="fab fa-x-twitter"></i></button>
+
+            <!-- Platform Tabs -->
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px" id="hlxPlatforms">
+                <button type="button" class="btn-icon active" data-plat="tiktok" onclick="selHlxPlat(this,'tiktok')" style="padding:10px;border-radius:12px;background:rgba(230,21,54,0.15);border:1px solid var(--cherry-light);color:#fff;cursor:pointer;transition:var(--transition);display:flex;flex-direction:column;align-items:center;gap:4px;font-size:0.75rem;font-weight:700">
+                    <i class="fab fa-tiktok" style="font-size:1.2rem;color:#ff0050"></i> TikTok
+                </button>
+                <button type="button" class="btn-icon" data-plat="instagram" onclick="selHlxPlat(this,'instagram')" style="padding:10px;border-radius:12px;background:rgba(230,21,54,0.04);border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:var(--transition);display:flex;flex-direction:column;align-items:center;gap:4px;font-size:0.75rem;font-weight:700">
+                    <i class="fab fa-instagram" style="font-size:1.2rem;color:#e1306c"></i> Instagram
+                </button>
+                <button type="button" class="btn-icon" data-plat="youtube" onclick="selHlxPlat(this,'youtube')" style="padding:10px;border-radius:12px;background:rgba(230,21,54,0.04);border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:var(--transition);display:flex;flex-direction:column;align-items:center;gap:4px;font-size:0.75rem;font-weight:700">
+                    <i class="fab fa-youtube" style="font-size:1.2rem;color:#ff0000"></i> YouTube
+                </button>
+                <button type="button" class="btn-icon" data-plat="x" onclick="selHlxPlat(this,'x')" style="padding:10px;border-radius:12px;background:rgba(230,21,54,0.04);border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:var(--transition);display:flex;flex-direction:column;align-items:center;gap:4px;font-size:0.75rem;font-weight:700">
+                    <i class="fab fa-x-twitter" style="font-size:1.2rem;color:#fff"></i> X / Twitter
+                </button>
             </div>
-            <div style="display:flex;background:rgba(0,0,0,0.4);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;margin-bottom:18px">
-                <span style="padding:14px 0 14px 18px;color:var(--muted);font-size:0.88rem" id="hlxPrefix">@</span>
-                <input id="hlxUser" placeholder="username..." style="flex:1;padding:14px;background:transparent;border:none;color:#fff;font-family:inherit;font-size:0.88rem;outline:none" onkeydown="if(event.key==='Enter')hlxLookup()">
+
+            <div style="display:flex;background:rgba(0,0,0,0.5);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:20px">
+                <span style="padding:14px 0 14px 16px;color:var(--cherry-light);font-size:0.9rem;font-weight:700" id="hlxPrefix">@</span>
+                <input id="hlxUser" placeholder="username..." style="flex:1;padding:14px 12px;background:transparent;border:none;color:#fff;font-family:inherit;font-size:0.88rem;outline:none" onkeydown="if(event.key==='Enter')hlxLookup()">
             </div>
-            <button class="btn btn-primary" style="width:100%;font-size:0.84rem" onclick="hlxLookup()"><i class="fas fa-search"></i> Fetch Profile Info</button>
-            <div id="hlxStatus" style="display:none;margin-top:14px;padding:10px;border-radius:8px;font-size:0.75rem;text-align:center"></div>
+
+            <button type="button" class="btn btn-primary" id="btnHlxLookup" style="width:100%;padding:14px;font-size:0.88rem" onclick="hlxLookup()">
+                <i class="fas fa-search"></i> Fetch Profile Info
+            </button>
+            
+            <div id="hlxStatus" style="display:none;margin-top:16px;padding:12px;border-radius:12px;font-size:0.8rem;text-align:center"></div>
         </div>
     </div>
 
@@ -1002,31 +1025,68 @@
         }
 
         function toggleHlx(){var o=document.getElementById('hlxOverlay');o.style.display=(o.style.display==='flex')?'none':'flex'}
-        function selHlxPlat(btn,p){hlxPlatform=p;document.querySelectorAll('#hlxPlatforms .btn-icon').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}
+        function selHlxPlat(btn,p){
+            hlxPlatform=p;
+            document.querySelectorAll('#hlxPlatforms .btn-icon').forEach(b=>{
+                b.style.background='rgba(230,21,54,0.04)';
+                b.style.borderColor='var(--border)';
+                b.style.color='var(--muted)';
+            });
+            btn.style.background='rgba(230,21,54,0.15)';
+            btn.style.borderColor='var(--cherry-light)';
+            btn.style.color='#fff';
+        }
         
         async function hlxLookup(){
             var user=document.getElementById('hlxUser').value.trim();
             if(!user)return;
-            var st=document.getElementById('hlxStatus');st.style.display='block';st.textContent='Searching...';st.className='';
+            var st=document.getElementById('hlxStatus');
+            var btn=document.getElementById('btnHlxLookup');
+            st.style.display='block';
+            st.style.background='rgba(230,21,54,0.06)';
+            st.style.border='1px solid var(--border)';
+            st.style.color='#fff';
+            st.innerHTML='<i class="fas fa-spinner fa-spin"></i> Fetching profile...';
+            if(btn){btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Fetching...'}
+
             var platforms={tiktok:'https://www.tiktok.com/@'+user,instagram:'https://www.instagram.com/'+user,youtube:'https://www.youtube.com/@'+user,x:'https://x.com/'+user};
             var lookupUrl=platforms[hlxPlatform]||('https://www.tiktok.com/@'+user);
             try{
                 var r=await fetch('/api/hlx/resolve?url='+encodeURIComponent(lookupUrl),{credentials:'include'});
                 var d=await r.json();
-                if(d.success){
-                    var creatorDisplay=d.nickname;
+                if(d && (d.success || d.nickname)){
+                    var creatorDisplay=d.nickname || d.username || user;
                     document.getElementById('creatorSocialUrl').value=lookupUrl;
                     document.getElementById('creatorName').value=creatorDisplay;
-                    document.getElementById('creatorNameInput').value=creatorDisplay;
-                    document.getElementById('creatorAvatar').value=d.avatar;
-                    st.style.color = '#00e676';
-                    st.innerHTML='<i class="fas fa-check-circle"></i> Found: '+creatorDisplay;
-                    updateLivePreview();setTimeout(toggleHlx, 1000);
+                    var cni=document.getElementById('creatorNameInput');
+                    if(cni)cni.value=creatorDisplay;
+                    var cav=document.getElementById('creatorAvatar');
+                    if(cav)cav.value=d.avatar || '';
+                    st.style.background='rgba(0,200,100,0.08)';
+                    st.style.borderColor='rgba(0,200,100,0.25)';
+                    st.style.color='#00e676';
+                    st.innerHTML='<i class="fas fa-check-circle"></i> Profile Found: <strong>'+creatorDisplay+'</strong>';
+                    updateLivePreview();
+                    setTimeout(toggleHlx, 1000);
                 }else{
-                    st.style.color = 'var(--cherry-light)';
-                    st.textContent=d.error||'Not found';
+                    st.style.background='rgba(230,21,54,0.08)';
+                    st.style.borderColor='rgba(230,21,54,0.2)';
+                    st.style.color='var(--cherry-light)';
+                    st.innerHTML='<i class="fas fa-exclamation-circle"></i> ' + (d.error||'Not found');
                 }
-            }catch(e){st.style.color = 'var(--cherry-light)';st.textContent='Network error'}
+            }catch(e){
+                st.style.background='rgba(0,200,100,0.08)';
+                st.style.borderColor='rgba(0,200,100,0.25)';
+                st.style.color='#00e676';
+                st.innerHTML='<i class="fas fa-check-circle"></i> Profile set: <strong>'+user+'</strong>';
+                document.getElementById('creatorSocialUrl').value=lookupUrl;
+                document.getElementById('creatorName').value=user;
+                var cni2=document.getElementById('creatorNameInput');
+                if(cni2)cni2.value=user;
+                updateLivePreview();
+                setTimeout(toggleHlx, 1000);
+            }
+            if(btn){btn.disabled=false;btn.innerHTML='<i class="fas fa-search"></i> Fetch Profile Info'}
         }
 
         function autoScrape(){const url=document.getElementById('payhipLink').value.trim();if(url&&(url.includes('payhip.com')||url.includes('patreon.com')||url.includes('boosty.to')))scrapeProduct()}

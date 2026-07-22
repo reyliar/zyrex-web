@@ -1191,6 +1191,59 @@ async function scanCreatorLinks(rawUrl) {
   return result;
 }
 
+// ============ SOCIAL PROFILE RESOLVER (HLX) ============
+async function resolveSocialProfile(targetUrl) {
+  if (!targetUrl) return { success: false, error: "URL is required" };
+
+  try {
+    let cleanUrl = String(targetUrl).trim();
+    if (!cleanUrl.startsWith("http://") && !cleanUrl.startsWith("https://")) {
+      if (cleanUrl.startsWith("@")) cleanUrl = `https://www.tiktok.com/${cleanUrl}`;
+      else cleanUrl = `https://www.tiktok.com/@${cleanUrl}`;
+    }
+
+    const resp = await fetch(cleanUrl, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9"
+      }
+    });
+
+    const parts = cleanUrl.replace(/\/$/, "").split("/");
+    const username = parts[parts.length - 1].replace("@", "");
+
+    if (!resp.ok) {
+      return { success: true, nickname: username, avatar: "", username };
+    }
+
+    const html = await resp.text();
+
+    let title = (html.match(/<meta\s+property="og:title"\s+content="([^"]+)"/i) || [])[1]
+             || (html.match(/<title>([^<]+)<\/title>/i) || [])[1] || "";
+    title = title.replace(/&amp;/g, "&").replace(/&#39;/g, "'");
+
+    let nickname = title.split("(")[0].replace(/[|\-–]\s*(TikTok|Instagram|YouTube|X).*/i, "").trim();
+    if (!nickname || nickname.toLowerCase().includes("tiktok") || nickname.toLowerCase().includes("instagram")) {
+      nickname = username;
+    }
+
+    let avatar = (html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i) || [])[1]
+              || (html.match(/<meta\s+name="twitter:image"\s+content="([^"]+)"/i) || [])[1] || "";
+
+    return {
+      success: true,
+      nickname: nickname || username,
+      avatar: avatar,
+      username: username
+    };
+  } catch (e) {
+    const parts = String(targetUrl).replace(/\/$/, "").split("/");
+    const fallbackName = parts[parts.length - 1]?.replace("@", "") || "Creator";
+    return { success: true, nickname: fallbackName, avatar: "", username: fallbackName };
+  }
+}
+
 // Upload thumbnail to R2 CDN (called after scraping)
 async function uploadThumbnailToCDN(env, imageUrl, productId) {
   if (!imageUrl || !productId) return imageUrl;
@@ -1368,6 +1421,20 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
       } catch(e) {
         return json({ success: false, error: e.message }, 500);
       }
+    }
+
+    if ((path === "/api/hlx/resolve" || path === "/api/hlx/resolve/") && request.method === "GET") {
+      const targetSocialUrl = url.searchParams.get("url") || "";
+      try {
+        const botResp = await fetch(`${BOT_API}${path}${url.search}`, { headers: corsHeaders });
+        if (botResp.ok) {
+          const data = await botResp.json();
+          if (data && data.success) return json(data);
+        }
+      } catch(e) {}
+      
+      const fallbackData = await resolveSocialProfile(targetSocialUrl);
+      return json(fallbackData);
     }
 
     // ============ AUDIO UPLOAD: direct file upload to R2 ============
