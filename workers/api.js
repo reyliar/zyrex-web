@@ -1435,9 +1435,11 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
       const targetSocialUrl = url.searchParams.get("url") || "";
       try {
         const botResp = await fetch(`${BOT_API}/api/hlx/resolve?url=${encodeURIComponent(targetSocialUrl)}`, { headers: corsHeaders });
-        if (botResp.ok) {
-          const data = await botResp.json();
-          if (data && data.success) return json(data);
+        const data = await botResp.json();
+        if (botResp.ok && data && data.success) {
+          return json(data);
+        } else if (data && data.error) {
+          return json(data, botResp.status || 400);
         }
       } catch(e) {}
       
