@@ -87,12 +87,12 @@ const teamMembers = [
     {
         userId: '1421177012814614548',
         role: 'Founder',
-        roleColor: '#72e7e9'
+        roleColor: '#184b61'
     },
     {
         userId: '1382421118098346174',
         role: 'Co-Founder',
-        roleColor: '#721818'
+        roleColor: '#d39f9f'
     }
 ];
 
