@@ -1054,20 +1054,24 @@ async function scanCreatorLinks(rawUrl) {
   let targetUrl = String(rawUrl || "").trim();
   if (!targetUrl) return { success: false, error: "URL or username is required" };
 
-  // Normalize URL
+  // Normalize URL & extract username
   if (!targetUrl.startsWith("http://") && !targetUrl.startsWith("https://")) {
     if (targetUrl.startsWith("@")) targetUrl = `https://www.tiktok.com/${targetUrl}`;
-    else if (/^(payhip|boosty|patreon|linktr|guns|beacons|bio\.link|carrd)\./i.test(targetUrl)) {
+    else if (/^(payhip|boosty|patreon|linktr|guns|beacons|bio\.link|carrd|solo|taplink|koji)\./i.test(targetUrl)) {
       targetUrl = `https://${targetUrl}`;
     } else {
       targetUrl = `https://www.tiktok.com/@${targetUrl}`;
     }
   }
 
+  // Extract raw username from the URL (works for tiktok.com/@name, linktr.ee/name, etc.)
+  const username = targetUrl.replace(/\/$/, "").split("/").pop().replace(/^@/, "").trim().toLowerCase();
+
   const result = {
     success: true,
     inputUrl: rawUrl,
     targetUrl,
+    username,
     found: false,
     storeUrl: null,
     payhipUrl: null,
@@ -1078,31 +1082,8 @@ async function scanCreatorLinks(rawUrl) {
     products: []
   };
 
-  // --- Helpers ---
   const STORE_DOMAINS = ["payhip.com", "boosty.to", "patreon.com"];
   const AGGREGATOR_DOMAINS = ["linktr.ee", "guns.lol", "bio.link", "beacons.ai", "carrd.co", "linkr.bio", "linkin.bio", "solo.to", "taplink.cc", "koji.to"];
-
-  function extractStoreLinks(text) {
-    const payhip  = (text.match(/https?:\/\/(?:www\.)?payhip\.com\/[a-zA-Z0-9_\-\/]+/i) || [])[0] || null;
-    const boosty  = (text.match(/https?:\/\/(?:www\.)?boosty\.to\/[a-zA-Z0-9_\-\/]+/i) || [])[0] || null;
-    const patreon = (text.match(/https?:\/\/(?:www\.)?patreon\.com\/[a-zA-Z0-9_\-\/]+/i) || [])[0] || null;
-    // Also match bare domain mentions like payhip.com/username
-    const payhipBare  = payhip  || ((text.match(/payhip\.com\/([a-zA-Z0-9_\-]+)/i) || [])[0] ? `https://payhip.com/${(text.match(/payhip\.com\/([a-zA-Z0-9_\-]+)/i)||[])[1]}` : null);
-    const boostyBare  = boosty  || ((text.match(/boosty\.to\/([a-zA-Z0-9_\-]+)/i) || [])[0] ? `https://boosty.to/${(text.match(/boosty\.to\/([a-zA-Z0-9_\-]+)/i)||[])[1]}` : null);
-    const patreonBare = patreon || ((text.match(/patreon\.com\/([a-zA-Z0-9_\-]+)/i) || [])[0] ? `https://patreon.com/${(text.match(/patreon\.com\/([a-zA-Z0-9_\-]+)/i)||[])[1]}` : null);
-    return { payhip: payhipBare, boosty: boostyBare, patreon: patreonBare };
-  }
-
-  function applyStore({ payhip, boosty, patreon }) {
-    if (payhip) {
-      result.found = true; result.payhipUrl = payhip; result.storeUrl = payhip; result.platform = "payhip";
-    } else if (boosty) {
-      result.found = true; result.boostyUrl = boosty; result.storeUrl = boosty; result.platform = "boosty";
-    } else if (patreon) {
-      result.found = true; result.patreonUrl = patreon; result.storeUrl = patreon; result.platform = "patreon";
-    }
-    return result.found;
-  }
 
   const FETCH_HEADERS = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
@@ -1110,124 +1091,149 @@ async function scanCreatorLinks(rawUrl) {
     "Accept-Language": "en-US,en;q=0.9"
   };
 
-  // Case 1: Input IS already a store link
+  function extractStoreLinks(text) {
+    const p = (text.match(/https?:\/\/(?:www\.)?payhip\.com\/[a-zA-Z0-9_\-\/]+/i) || [])[0] ||
+              (text.match(/payhip\.com\/([a-zA-Z0-9_\-]+)/i) ? `https://payhip.com/${(text.match(/payhip\.com\/([a-zA-Z0-9_\-]+)/i)||[])[1]}` : null);
+    const b = (text.match(/https?:\/\/(?:www\.)?boosty\.to\/[a-zA-Z0-9_\-\/]+/i) || [])[0] ||
+              (text.match(/boosty\.to\/([a-zA-Z0-9_\-]+)/i) ? `https://boosty.to/${(text.match(/boosty\.to\/([a-zA-Z0-9_\-]+)/i)||[])[1]}` : null);
+    const t = (text.match(/https?:\/\/(?:www\.)?patreon\.com\/[a-zA-Z0-9_\-\/]+/i) || [])[0] ||
+              (text.match(/patreon\.com\/([a-zA-Z0-9_\-]+)/i) ? `https://patreon.com/${(text.match(/patreon\.com\/([a-zA-Z0-9_\-]+)/i)||[])[1]}` : null);
+    return { payhip: p, boosty: b, patreon: t };
+  }
+
+  function applyStore({ payhip, boosty, patreon }) {
+    if (payhip && !payhip.includes("/login") && !payhip.includes("/signup")) {
+      result.found = true; result.payhipUrl = payhip; result.storeUrl = payhip; result.platform = "payhip";
+    } else if (boosty) {
+      result.found = true; result.boostyUrl = boosty; result.storeUrl = boosty; result.platform = "boosty";
+    } else if (patreon && !patreon.includes("/login") && !patreon.includes("/signup")) {
+      result.found = true; result.patreonUrl = patreon; result.storeUrl = patreon; result.platform = "patreon";
+    }
+    return result.found;
+  }
+
+  async function fetchText(url) {
+    try {
+      const r = await fetch(url, { headers: FETCH_HEADERS });
+      if (r.ok) return await r.text();
+    } catch(e) {}
+    return null;
+  }
+
+  // === CASE 1: Input is already a store link ===
   if (STORE_DOMAINS.some(d => targetUrl.includes(d))) {
-    const { payhip, boosty, patreon } = extractStoreLinks(targetUrl);
-    applyStore({ payhip, boosty, patreon });
+    applyStore(extractStoreLinks(targetUrl));
     if (!result.found) { result.found = true; result.storeUrl = targetUrl; result.platform = "unknown"; }
   }
 
-  // Case 2: Input is a link aggregator itself — crawl it directly
+  // === CASE 2: Input is already an aggregator link ===
   if (!result.found && AGGREGATOR_DOMAINS.some(d => targetUrl.includes(d))) {
-    try {
-      const r = await fetch(targetUrl, { headers: FETCH_HEADERS });
-      if (r.ok) {
-        const html = await r.text();
-        applyStore(extractStoreLinks(html));
-      }
-    } catch(e) {}
+    const html = await fetchText(targetUrl);
+    if (html) applyStore(extractStoreLinks(html));
   }
 
-  // Case 3: Social media profile — fetch HTML and scan
-  if (!result.found) {
-    try {
-      const resp = await fetch(targetUrl, { headers: FETCH_HEADERS });
-      if (resp.ok) {
-        const html = await resp.text();
+  // === CASE 3: Social media profile — username-based strategy ===
+  if (!result.found && username && username.length >= 2 && !username.includes(".")) {
 
-        // Priority 1: Profile "links" section — TikTok/Instagram embed their link list in JSON-LD or data attrs
-        // Try extracting all href targets in the profile page
-        const allLinks = [];
-        const linkHrefRe = /href=["']([^"']+)["']/gi;
+    // STRATEGY A: Probe all aggregators in parallel using the same username
+    // (This bypasses JS-rendering on TikTok/Instagram entirely)
+    const aggregatorProbes = [
+      `https://linktr.ee/${username}`,
+      `https://guns.lol/${username}`,
+      `https://bio.link/${username}`,
+      `https://beacons.ai/${username}`,
+      `https://solo.to/${username}`,
+      `https://taplink.cc/${username}`,
+    ];
+    result.bioLinks = aggregatorProbes;
+
+    const probeResults = await Promise.allSettled(
+      aggregatorProbes.map(url => fetchText(url))
+    );
+
+    for (let i = 0; i < probeResults.length; i++) {
+      if (probeResults[i].status === "fulfilled" && probeResults[i].value) {
+        const html = probeResults[i].value;
+        // Make sure this aggregator page actually exists (not a 404/empty page)
+        if (html.length < 500) continue; // Too short = not found page
+        if (applyStore(extractStoreLinks(html))) break;
+      }
+    }
+
+    // STRATEGY B: Try fetching the social profile HTML (works for some platforms)
+    // TikTok embeds data in __NEXT_DATA__ JSON even without JS
+    if (!result.found) {
+      const profileHtml = await fetchText(targetUrl);
+      if (profileHtml) {
+        // Check all URLs in JSON blobs (__NEXT_DATA__, JSON-LD, etc.)
+        const allUrlsInPage = [];
+        const urlRe = /"(https?:\/\/[^"]{5,200})"/g;
         let m;
-        while ((m = linkHrefRe.exec(html)) !== null) {
-          const href = m[1];
-          if (!href.startsWith("http")) continue;
-          if (STORE_DOMAINS.some(d => href.includes(d))) { allLinks.unshift(href); } // store links first
-          else if (AGGREGATOR_DOMAINS.some(d => href.includes(d))) { allLinks.push(href); }
-        }
-        // Also grab links from JSON-LD / __NEXT_DATA__ / script tags
-        const jsonLdMatches = html.match(/"url"\s*:\s*"(https:\/\/[^"]+)"/g) || [];
-        for (const jl of jsonLdMatches) {
-          const u = (jl.match(/"(https:\/\/[^"]+)"/) || [])[1];
-          if (!u) continue;
-          if (STORE_DOMAINS.some(d => u.includes(d))) allLinks.unshift(u);
-          else if (AGGREGATOR_DOMAINS.some(d => u.includes(d))) allLinks.push(u);
+        while ((m = urlRe.exec(profileHtml)) !== null) {
+          const u = m[1];
+          if (STORE_DOMAINS.some(d => u.includes(d))) allUrlsInPage.unshift(u);
+          else if (AGGREGATOR_DOMAINS.some(d => u.includes(d))) allUrlsInPage.push(u);
         }
 
-        // Check store links found directly on profile page
-        if (applyStore(extractStoreLinks(html))) {
+        // Try store links first
+        if (applyStore(extractStoreLinks(profileHtml))) {
           // done
         } else {
-          // Priority 2: Crawl aggregator links found on profile
-          const uniqueAggs = Array.from(new Set(allLinks.filter(u => AGGREGATOR_DOMAINS.some(d => u.includes(d)))));
-          result.bioLinks = uniqueAggs.slice(0, 8);
-
-          for (const aggUrl of result.bioLinks) {
-            try {
-              const aggResp = await fetch(aggUrl, { headers: FETCH_HEADERS });
-              if (aggResp.ok) {
-                const aggHtml = await aggResp.text();
-                if (applyStore(extractStoreLinks(aggHtml))) break;
-              }
-            } catch(e) {}
-          }
-        }
-
-        // Priority 3: Direct Payhip username probe (same username as the social profile)
-        if (!result.found) {
-          const username = targetUrl.replace(/\/$/, "").split("/").pop().replace(/^@/, "").trim();
-          if (username && username.length >= 2 && !username.includes(".")) {
-            try {
-              const probeUrl = `https://payhip.com/${username}`;
-              const pr = await fetch(probeUrl, { headers: FETCH_HEADERS });
-              if (pr.ok) {
-                const ph = await pr.text();
-                if (ph.includes("/b/") || ph.includes("payhip.com/b/")) {
-                  result.found = true; result.payhipUrl = probeUrl; result.storeUrl = probeUrl; result.platform = "payhip";
-                }
-              }
-            } catch(e) {}
+          // Crawl any aggregator links found in the page source
+          const aggLinks = Array.from(new Set(allUrlsInPage.filter(u => AGGREGATOR_DOMAINS.some(d => u.includes(d)))));
+          for (const aggUrl of aggLinks.slice(0, 5)) {
+            const aggHtml = await fetchText(aggUrl);
+            if (aggHtml && applyStore(extractStoreLinks(aggHtml))) break;
           }
         }
       }
-    } catch(e) {
-      console.error("Scan creator links error:", e.message);
+    }
+
+    // STRATEGY C: Direct Payhip/Boosty username probe
+    if (!result.found) {
+      const storeProbes = [
+        { url: `https://payhip.com/${username}`, check: (h) => h.includes("/b/") || h.includes("payhip.com/b/"), platform: "payhip" },
+        { url: `https://boosty.to/${username}`, check: (h) => h.includes("boosty.to") && h.length > 2000, platform: "boosty" },
+      ];
+      const storeResults = await Promise.allSettled(storeProbes.map(p => fetchText(p.url)));
+      for (let i = 0; i < storeProbes.length; i++) {
+        if (storeResults[i].status === "fulfilled" && storeResults[i].value) {
+          const html = storeResults[i].value;
+          if (storeProbes[i].check(html)) {
+            result.found = true;
+            result.storeUrl = storeProbes[i].url;
+            result.platform = storeProbes[i].platform;
+            if (storeProbes[i].platform === "payhip") result.payhipUrl = storeProbes[i].url;
+            if (storeProbes[i].platform === "boosty") result.boostyUrl = storeProbes[i].url;
+            break;
+          }
+        }
+      }
     }
   }
 
+  // === Fetch product catalog if Payhip store found ===
   if (result.found && result.payhipUrl && result.platform === "payhip") {
     try {
-      const storeResp = await fetch(result.payhipUrl, {
-        headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" }
-      });
-      if (storeResp.ok) {
-        const storeHtml = await storeResp.text();
+      const storeHtml = await fetchText(result.payhipUrl);
+      if (storeHtml) {
         const products = [];
-        
         const prodRegex = /<a[^>]+href="(\/b\/[a-zA-Z0-9_]+|https?:\/\/payhip\.com\/b\/[a-zA-Z0-9_]+)"[^>]*>([\s\S]*?)<\/a>/gi;
         let match;
         const seenUrls = new Set();
-
         while ((match = prodRegex.exec(storeHtml)) !== null && products.length < 12) {
           let pUrl = match[1];
           if (pUrl.startsWith("/")) pUrl = `https://payhip.com${pUrl}`;
           if (seenUrls.has(pUrl)) continue;
           seenUrls.add(pUrl);
-
           const cardSnippet = match[2];
           const titleMatch = cardSnippet.match(/(?:class="[^"]*title[^"]*"[^>]*|h3|h4)[^>]*>([^<]+)/i);
           const title = titleMatch ? titleMatch[1].trim() : "Product";
-          
           const imgMatch = cardSnippet.match(/src="(https:\/\/[^"]+)"/i);
           const image = imgMatch ? imgMatch[1] : "";
-
           const priceMatch = cardSnippet.match(/\$([\d.]+)/);
           const price = priceMatch ? `$${priceMatch[1]}` : "";
-
-          if (title && pUrl) {
-            products.push({ title, url: pUrl, image, price });
-          }
+          if (title && pUrl) products.push({ title, url: pUrl, image, price });
         }
         result.products = products;
       }
