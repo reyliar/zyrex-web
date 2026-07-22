@@ -1242,11 +1242,70 @@
             } else {
                 statusEl.style.background = 'rgba(230, 21, 54, 0.08)';
                 statusEl.style.borderColor = 'rgba(230, 21, 54, 0.2)';
-                statusEl.innerHTML = '<i class="fas fa-info-circle" style="color:var(--cherry-light)"></i> <div><h4>No Payhip Link Found in Bio</h4><p>Social profile metadata set successfully. Please paste your Payhip product link manually.</p></div>';
+                statusEl.innerHTML = '<i class="fas fa-info-circle" style="color:var(--cherry-light)"></i> <div><h4>No Payhip Link Found in Bio</h4><p>Social profile metadata set successfully. Enter your Payhip store link or product link manually below to load products:</p></div>';
+
+                var manualHtml = '<div style="margin-top:14px;padding:16px;background:rgba(255,255,255,0.02);border:1px solid var(--border);border-radius:14px;">' +
+                    '<label style="font-size:0.78rem;font-weight:700;color:var(--muted);display:block;margin-bottom:8px;"><i class="fas fa-store"></i> Enter Payhip Store / Product URL</label>' +
+                    '<div class="scrape-input-wrap">' +
+                    '<input type="url" id="manualStoreInput" placeholder="https://payhip.com/yourname or https://payhip.com/b/xxxxx">' +
+                    '<button type="button" class="btn btn-primary btn-sm" onclick="scanManualStore()"><i class="fas fa-magic"></i> Load Products</button>' +
+                    '</div>' +
+                    '</div>';
+                bodyEl.innerHTML += manualHtml;
             }
 
             btn.disabled = false;
             btn.innerHTML = '<i class="fas fa-rotate"></i> Re-Scan';
+        }
+
+        async function scanManualStore() {
+            var urlInput = document.getElementById('manualStoreInput');
+            if (!urlInput || !urlInput.value.trim()) {
+                alertMsg('Please enter a Payhip URL', true);
+                return;
+            }
+            var storeUrl = urlInput.value.trim();
+            document.getElementById('payhipLink').value = storeUrl;
+
+            var statusEl = document.getElementById('wizStatus');
+            var bodyEl = document.getElementById('wizBody');
+            statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <div><h4>Scanning Payhip Store Products...</h4><p>Fetching product catalog from ' + storeUrl + '</p></div>';
+
+            try {
+                var r = await fetch('/api/scan-creator-links?url=' + encodeURIComponent(storeUrl));
+                var scanData = await r.json();
+                if (scanData && scanData.products && scanData.products.length > 0) {
+                    setWizStep(3);
+                    window.scannedProducts = scanData.products;
+
+                    var prodHtml = '<h4 style="font-size:0.88rem;color:#fff;margin:16px 0 10px 0;"><i class="fas fa-store" style="color:var(--cherry-light)"></i> Select Store Product to Auto-Fill</h4>';
+                    prodHtml += '<div class="product-grid-select">';
+                    scanData.products.forEach(function(prod, idx) {
+                        prodHtml += '<div class="prod-select-card" onclick="selectWizProduct(' + idx + ')">';
+                        if (prod.image) prodHtml += '<img src="' + prod.image + '" alt="">';
+                        else prodHtml += '<div style="aspect-ratio:16/10;background:#150508;border-radius:8px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);"><i class="fas fa-box"></i></div>';
+                        prodHtml += '<div class="p-title">' + (prod.title || 'Product') + '</div>';
+                        if (prod.price) prodHtml += '<div class="p-price">' + prod.price + '</div>';
+                        prodHtml += '</div>';
+                    });
+                    prodHtml += '</div>';
+                    bodyEl.innerHTML = prodHtml;
+
+                    statusEl.style.background = 'rgba(0, 200, 100, 0.08)';
+                    statusEl.style.borderColor = 'rgba(0, 200, 100, 0.25)';
+                    statusEl.innerHTML = '<i class="fas fa-check-circle" style="color:#00e676"></i> <div><h4>Products Loaded!</h4><p>Click any product below to auto-fill details.</p></div>';
+                } else {
+                    if (storeUrl.includes('/b/')) {
+                        scrapeProduct();
+                        closeCreatorWizard();
+                        alertMsg('Payhip link set and single product scraped!', false);
+                    } else {
+                        alertMsg('No products found on this store page. Link set to: ' + storeUrl, false);
+                    }
+                }
+            } catch(e) {
+                alertMsg('Failed to scan store', true);
+            }
         }
 
         function selectWizProduct(idx) {
