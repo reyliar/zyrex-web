@@ -2184,3 +2184,146 @@ img { max-width: 100%; display: block; }
     box-shadow: 0 35px 75px rgba(0, 0, 0, 0.8), 0 0 40px rgba(230, 21, 54, 0.25), inset 0 1px 4px rgba(255, 255, 255, 0.1) !important;
     animation: rotateBorder 3s linear infinite !important;
 }
+
+/* ===================== REDESIGNED HERO GRID & ABOUT SECTION ===================== */
+
+.hero-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 0.8fr;
+    gap: 40px;
+    align-items: center;
+    position: relative;
+    z-index: 2;
+    padding: 80px 0;
+    width: 100%;
+}
+
+.hero-visual {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+/* Hyper-glossy floating logo showcase */
+.hero-logo-container {
+    position: relative;
+    width: 320px;
+    height: 320px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: var(--radius-xl);
+    background: rgba(12, 2, 4, 0.45);
+    border: 1px solid rgba(255, 77, 109, 0.15);
+    box-shadow: 
+        0 30px 60px rgba(0, 0, 0, 0.6),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    padding: 30px;
+    animation: heroFloat 6s ease-in-out infinite;
+    overflow: hidden;
+}
+
+.hero-logo-container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--radius-xl);
+    background: linear-gradient(135deg, rgba(255, 77, 109, 0.1) 0%, transparent 100%);
+    pointer-events: none;
+}
+
+.hero-logo-glow {
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(230, 21, 54, 0.35) 0%, transparent 70%);
+    filter: blur(20px);
+    z-index: 1;
+    animation: glowPulse 4s ease-in-out infinite alternate;
+}
+
+.hero-logo-img {
+    width: 80%;
+    height: auto;
+    max-height: 80%;
+    object-fit: contain;
+    z-index: 2;
+    filter: drop-shadow(0 15px 25px rgba(0, 0, 0, 0.5)) drop-shadow(0 0 15px rgba(230, 21, 54, 0.4));
+    transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hero-logo-container:hover .hero-logo-img {
+    transform: scale(1.08) rotate(3deg);
+}
+
+/* About General Info Section */
+.about-general-info {
+    margin-bottom: 50px;
+    padding: 45px;
+    border-radius: var(--radius-lg);
+    background: rgba(12, 2, 4, 0.60);
+    border: 1px solid rgba(138, 13, 34, 0.2);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    position: relative;
+    overflow: hidden;
+}
+
+.about-general-info::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -50%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(230, 21, 54, 0.08) 0%, transparent 70%);
+    filter: blur(30px);
+    pointer-events: none;
+}
+
+/* Animations */
+@keyframes heroFloat {
+    0%, 100% { transform: translateY(0) rotate(0deg); }
+    50% { transform: translateY(-15px) rotate(1.5deg); }
+}
+
+@keyframes glowPulse {
+    0% { transform: scale(0.9); opacity: 0.7; }
+    100% { transform: scale(1.1); opacity: 1; }
+}
+
+/* Media Queries for Hero Redesign & Info Section */
+@media (max-width: 991px) {
+    .hero-grid {
+        grid-template-columns: 1fr;
+        text-align: center;
+        gap: 50px;
+        padding: 60px 0;
+    }
+    .hero-content {
+        max-width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+    .hero-desc {
+        margin-left: auto;
+        margin-right: auto;
+    }
+    .hero-buttons {
+        justify-content: center;
+    }
+    .hero-logo-container {
+        width: 260px;
+        height: 260px;
+    }
+    .about-general-info {
+        padding: 24px;
+        margin-bottom: 30px;
+    }
+}
