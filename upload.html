@@ -1129,39 +1129,13 @@
                     var badgeTitle = document.getElementById('badgeTitle');
                     if (badgeTitle) badgeTitle.textContent = creatorDisplay;
                 }
-
-                // Step 2: Automatically scan bio links & link aggregators (Linktree/Guns.lol) for Payhip store
-                var r2 = await fetch('/api/scan-creator-links?url=' + encodeURIComponent(url));
-                var scanData = await r2.json();
-
-                if (scanData && scanData.success && scanData.found && (scanData.payhipUrl || scanData.boostyUrl)) {
-                    var storeUrl = scanData.payhipUrl || scanData.boostyUrl;
-                    document.getElementById('payhipLink').value = storeUrl;
-
-                    if (badgeStatus) {
-                        badgeStatus.style.color = '#00e676';
-                        badgeStatus.style.background = 'rgba(0,200,100,0.1)';
-                        badgeStatus.style.borderColor = 'rgba(0,200,100,0.2)';
-                        badgeStatus.innerHTML = '<i class="fas fa-store"></i> Payhip Store Linked!';
-                    }
-
-                    alertMsg('Payhip store detected: ' + storeUrl + '! Opening products menu...', false);
-
-                    // Auto-open products selection modal!
-                    openCreatorWizard(url);
-                } else {
-                    if (badgeStatus) {
-                        badgeStatus.style.color = '#ffb74d';
-                        badgeStatus.style.background = 'rgba(255,183,77,0.1)';
-                        badgeStatus.style.borderColor = 'rgba(255,183,77,0.2)';
-                        badgeStatus.innerHTML = '<i class="fas fa-check-circle"></i> Profile Set';
-                    }
-                    alertMsg('Profile set to: ' + creatorDisplay, false);
-                }
-
                 updateLivePreview();
+
+                // ALWAYS Launch Creator Wizard Modal for store bio scanning and product selection!
+                openCreatorWizard(url);
             } catch(e) {
                 if (rawUser) alertMsg('Profile set to: @' + rawUser, false);
+                openCreatorWizard(url);
             }
         }
 
