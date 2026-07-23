@@ -1091,7 +1091,10 @@ async function scanCreatorLinks(rawUrl) {
     "Accept-Language": "en-US,en;q=0.9"
   };
 
-  function extractStoreLinks(text) {
+  const HLX_KEY = "72d069e9e0c91b5ee59f9653eeb5aed77b49c3c5c6484e2dec19a415f5953b90";
+
+  function extractStoreLinks(rawText) {
+    const text = String(rawText || "").replace(/\\/g, ""); // Strip backslashes from Next.js JSON strings
     const p = (text.match(/https?:\/\/(?:www\.)?payhip\.com\/[a-zA-Z0-9_\-\/]+/i) || [])[0] ||
               (text.match(/payhip\.com\/([a-zA-Z0-9_\-]+)/i) ? `https://payhip.com/${(text.match(/payhip\.com\/([a-zA-Z0-9_\-]+)/i)||[])[1]}` : null);
     const b = (text.match(/https?:\/\/(?:www\.)?boosty\.to\/[a-zA-Z0-9_\-\/]+/i) || [])[0] ||
@@ -1134,59 +1137,51 @@ async function scanCreatorLinks(rawUrl) {
 
   // === CASE 3: Social media profile — multi-strategy scan ===
   if (!result.found && username && username.length >= 2 && !username.includes(".")) {
-
-    // STRATEGY A: Fetch actual profile HTML → extract real bio link from __NEXT_DATA__ or og tags
-    // This gets the CORRECT link even when linktree username ≠ social username
     let actualBioLink = null;
-    const profileHtml = await fetchText(targetUrl);
-    if (profileHtml) {
-      // Check if store link is directly in the profile page
-      if (applyStore(extractStoreLinks(profileHtml))) {
-        // done — store link was directly in bio text
-      } else {
-        // Extract the real bio link from __NEXT_DATA__ JSON
-        const nextDataMatch = profileHtml.match(/<script[^>]+id=["']__NEXT_DATA__["'][^>]*>([\s\S]*?)<\/script>/i);
-        if (nextDataMatch) {
-          try {
-            const nd = JSON.parse(nextDataMatch[1]);
-            const user = nd?.props?.pageProps?.userInfo?.user ||
-                         nd?.props?.pageProps?.user ||
-                         nd?.props?.initialProps?.user;
-            if (user?.bioLink?.link) actualBioLink = user.bioLink.link;
-            else if (user?.bio_link?.link) actualBioLink = user.bio_link.link;
-          } catch(e) {}
+
+    // STRATEGY A: Query HLX API directly for TikTok profiles (returns exact bioLink from TikTok profile)
+    if (targetUrl.includes("tiktok.com") || rawUrl.startsWith("@")) {
+      try {
+        const hlxResp = await fetch(`https://api.hlx.li/tiktok/profile?username=${encodeURIComponent(username)}&limit=1`, {
+          headers: { "X-API-Key": HLX_KEY, "User-Agent": FETCH_HEADERS["User-Agent"] }
+        });
+        if (hlxResp.ok) {
+          const hlxData = await hlxResp.json();
+          const bl = hlxData?.bioLink || hlxData?.bioLinkDetails?.link || "";
+          if (bl) {
+            actualBioLink = bl;
+            applyStore(extractStoreLinks(bl));
+          }
         }
-        // Fallback: scan raw HTML for bioLink JSON pattern
-        if (!actualBioLink) {
-          const m = profileHtml.match(/"bioLink"\s*:\s*\{[^}]*"link"\s*:\s*"(https?:\/\/[^"]+)"/i)
-                 || profileHtml.match(/"bio_link"\s*:\s*\{[^}]*"link"\s*:\s*"(https?:\/\/[^"]+)"/i)
-                 || profileHtml.match(/"external_url"\s*:\s*"(https?:\/\/[^"]+)"/i);
-          if (m) actualBioLink = m[1];
-        }
-        // Also scan for any store/aggregator URLs in the JSON blobs
-        const allUrlsInPage = [];
-        const urlRe = /"(https?:\/\/[^"]{5,200})"/g;
-        let mm;
-        while ((mm = urlRe.exec(profileHtml)) !== null) {
-          const u = mm[1];
-          if (STORE_DOMAINS.some(d => u.includes(d))) allUrlsInPage.unshift(u);
-          else if (AGGREGATOR_DOMAINS.some(d => u.includes(d))) allUrlsInPage.push(u);
-        }
-        // Try store links found in page JSON
-        if (!result.found) applyStore(extractStoreLinks(profileHtml));
-        // Crawl aggregator links found in page JSON
-        if (!result.found) {
-          const aggInPage = Array.from(new Set(allUrlsInPage.filter(u => AGGREGATOR_DOMAINS.some(d => u.includes(d)))));
-          if (!actualBioLink && aggInPage[0]) actualBioLink = aggInPage[0];
-          for (const aggUrl of aggInPage.slice(0, 3)) {
-            const aggHtml = await fetchText(aggUrl);
-            if (aggHtml && aggHtml.length > 500 && applyStore(extractStoreLinks(aggHtml))) break;
+      } catch(e) {}
+    }
+
+    // STRATEGY B: Fetch actual profile HTML as secondary check
+    if (!result.found && !actualBioLink) {
+      const profileHtml = await fetchText(targetUrl);
+      if (profileHtml) {
+        if (applyStore(extractStoreLinks(profileHtml))) {
+          // Store link directly in page source
+        } else {
+          const nextDataMatch = profileHtml.match(/<script[^>]+id=["']__NEXT_DATA__["'][^>]*>([\s\S]*?)<\/script>/i);
+          if (nextDataMatch) {
+            try {
+              const nd = JSON.parse(nextDataMatch[1]);
+              const user = nd?.props?.pageProps?.userInfo?.user || nd?.props?.pageProps?.user;
+              if (user?.bioLink?.link) actualBioLink = user.bioLink.link;
+              else if (user?.bio_link?.link) actualBioLink = user.bio_link.link;
+            } catch(e) {}
+          }
+          if (!actualBioLink) {
+            const m = profileHtml.match(/"bioLink"\s*:\s*\{[^}]*"link"\s*:\s*"(https?:\/\/[^"]+)"/i)
+                   || profileHtml.match(/"external_url"\s*:\s*"(https?:\/\/[^"]+)"/i);
+            if (m) actualBioLink = m[1];
           }
         }
       }
     }
 
-    // STRATEGY B: Crawl the ACTUAL bio link (correct linktree/guns.lol etc even with different username)
+    // STRATEGY C: Crawl the ACTUAL bio link obtained from HLX or profile
     if (!result.found && actualBioLink) {
       result.bioLinks = [actualBioLink];
       const bioHtml = await fetchText(actualBioLink);
@@ -1195,7 +1190,7 @@ async function scanCreatorLinks(rawUrl) {
       }
     }
 
-    // STRATEGY C: Username-based parallel probe (fast fallback when bio link not found)
+    // STRATEGY D: Username-based parallel probe (fallback when bio link is not set or not fetched)
     if (!result.found) {
       const aggregatorProbes = [
         `https://linktr.ee/${username}`,
@@ -1217,7 +1212,7 @@ async function scanCreatorLinks(rawUrl) {
       }
     }
 
-    // STRATEGY D: Direct Payhip/Boosty username probe
+    // STRATEGY E: Direct store username probe
     if (!result.found) {
       const storeProbes = [
         { url: `https://payhip.com/${username}`, check: (h) => h.includes("/b/") || h.includes("payhip.com/b/"), platform: "payhip" },
