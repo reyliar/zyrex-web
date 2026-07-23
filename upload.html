@@ -1404,10 +1404,12 @@
             }
         }
 
-        function initWizProductPagination(prods) {
+        function initWizProductPagination(prods, preservePage) {
             window.scannedProducts = prods || [];
-            window.wizProdPage = 1;
-            window.wizSearchQuery = '';
+            if (!preservePage) {
+                window.wizProdPage = 1;
+                window.wizSearchQuery = '';
+            }
             renderWizProductsContainer();
         }
 
@@ -1427,7 +1429,9 @@
 
         function changeWizPage(delta) {
             var curr = parseInt(window.wizProdPage) || 1;
-            window.wizProdPage = curr + delta;
+            var targetPage = curr + delta;
+            if (targetPage < 1) targetPage = 1;
+            window.wizProdPage = targetPage;
             renderWizProductsGrid();
             var gridEl = document.getElementById('wizProductGridSelect');
             if (gridEl) gridEl.scrollTop = 0;
@@ -1477,9 +1481,10 @@
             var pageSize = 6;
             var totalPages = Math.ceil(total / pageSize) || 1;
 
-            if (typeof window.wizProdPage !== 'number' || isNaN(window.wizProdPage)) window.wizProdPage = 1;
-            if (window.wizProdPage < 1) window.wizProdPage = 1;
-            if (window.wizProdPage > totalPages) window.wizProdPage = totalPages;
+            var reqPage = parseInt(window.wizProdPage) || 1;
+            if (reqPage < 1) reqPage = 1;
+            if (reqPage > totalPages) reqPage = totalPages;
+            window.wizProdPage = reqPage;
 
             var currentPage = window.wizProdPage;
             var startIdx = (currentPage - 1) * pageSize;
