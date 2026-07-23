@@ -1537,7 +1537,7 @@
             var prods = window.scannedProducts;
             for (var idx = 0; idx < prods.length; idx++) {
                 var prod = prods[idx];
-                if (!prod.title || prod.title === 'Product' || !prod.image) {
+                if (!prod.title || prod.title === 'Product' || prod.title === 'Patreon Post' || prod.title.indexOf('Post #') === 0 || !prod.image) {
                     try {
                         var r = await fetch('/api/scrape?url=' + encodeURIComponent(prod.url));
                         var data = await r.json();

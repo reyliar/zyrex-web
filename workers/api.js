@@ -1658,7 +1658,7 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
 
       // 4. Enrich products in controlled batches with real title, thumbnail image, and price
       if (workerRes && workerRes.products && workerRes.products.length > 0) {
-        const prodsToEnrich = workerRes.products.filter(p => !p.title || p.title === "Product" || !p.image).slice(0, 40);
+        const prodsToEnrich = workerRes.products.filter(p => !p.title || p.title === "Product" || p.title === "Patreon Post" || p.title.startsWith("Post #") || !p.image).slice(0, 40);
         const batchSize = 5;
         for (let i = 0; i < prodsToEnrich.length; i += batchSize) {
           const batch = prodsToEnrich.slice(i, i + batchSize);
