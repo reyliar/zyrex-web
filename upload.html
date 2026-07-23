@@ -1329,23 +1329,7 @@
 
                 if (prods.length > 0) {
                     setWizStep(3);
-                    window.scannedProducts = prods;
-
-                    var prodHtml = '<h4 style="font-size:0.88rem;color:#fff;margin:16px 0 10px 0;"><i class="fas fa-store" style="color:var(--cherry-light)"></i> Select a Product to Approve & Auto-Fill</h4>';
-                    prodHtml += '<div class="product-grid-select">';
-                    prods.forEach(function(prod, idx) {
-                        var cardTitle = (prod.title && prod.title !== 'Product') ? prod.title : ('Product #' + (idx + 1) + (prod.url ? ' (' + prod.url.split('/').pop() + ')' : ''));
-                        prodHtml += '<div class="prod-select-card" onclick="selectWizProduct(' + idx + ')">';
-                        if (prod.image) prodHtml += '<img src="' + prod.image + '" alt="">';
-                        else prodHtml += '<div style="aspect-ratio:16/10;background:#150508;border-radius:8px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);"><i class="fas fa-box"></i></div>';
-                        prodHtml += '<div class="p-title">' + cardTitle + '</div>';
-                        if (prod.price) prodHtml += '<div class="p-price">' + prod.price + '</div>';
-                        prodHtml += '<div class="p-btn"><i class="fas fa-check"></i> Approve & Select</div>';
-                        prodHtml += '</div>';
-                    });
-                    prodHtml += '</div>';
-                    bodyEl.innerHTML += prodHtml;
-                    enrichWizardProductCards();
+                    initWizProductPagination(prods);
                 } else {
                     bodyEl.innerHTML += '<div style="margin-top:12px;padding:14px;background:rgba(230,21,54,0.05);border:1px solid var(--border);border-radius:12px;color:var(--muted);font-size:0.8rem;">' +
                         '<i class="fas fa-info-circle" style="color:var(--cherry-light)"></i> Store found (<strong style="color:#fff">' + storeUrl + '</strong>), but products could not be listed automatically. Please paste direct product link below:' +
@@ -1401,23 +1385,7 @@
                 var scanData = await r.json();
                 if (scanData && scanData.products && scanData.products.length > 0) {
                     setWizStep(3);
-                    window.scannedProducts = scanData.products;
-
-                    var prodHtml = '<h4 style="font-size:0.88rem;color:#fff;margin:16px 0 10px 0;"><i class="fas fa-store" style="color:var(--cherry-light)"></i> Select Store Product to Approve & Auto-Fill</h4>';
-                    prodHtml += '<div class="product-grid-select">';
-                    scanData.products.forEach(function(prod, idx) {
-                        var cardTitle = (prod.title && prod.title !== 'Product') ? prod.title : ('Product #' + (idx + 1) + (prod.url ? ' (' + prod.url.split('/').pop() + ')' : ''));
-                        prodHtml += '<div class="prod-select-card" onclick="selectWizProduct(' + idx + ')">';
-                        if (prod.image) prodHtml += '<img src="' + prod.image + '" alt="">';
-                        else prodHtml += '<div style="aspect-ratio:16/10;background:#150508;border-radius:8px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);"><i class="fas fa-box"></i></div>';
-                        prodHtml += '<div class="p-title">' + cardTitle + '</div>';
-                        if (prod.price) prodHtml += '<div class="p-price">' + prod.price + '</div>';
-                        prodHtml += '<div class="p-btn"><i class="fas fa-check"></i> Approve & Select</div>';
-                        prodHtml += '</div>';
-                    });
-                    prodHtml += '</div>';
-                    bodyEl.innerHTML = prodHtml;
-                    enrichWizardProductCards();
+                    initWizProductPagination(scanData.products);
 
                     statusEl.style.background = 'rgba(0, 200, 100, 0.08)';
                     statusEl.style.borderColor = 'rgba(0, 200, 100, 0.25)';
@@ -1433,6 +1401,124 @@
                 }
             } catch(e) {
                 alertMsg('Failed to scan store', true);
+            }
+        }
+
+        function initWizProductPagination(prods) {
+            window.scannedProducts = prods || [];
+            window.wizProdPage = 1;
+            window.wizSearchQuery = '';
+            renderWizProductsContainer();
+        }
+
+        function filterWizProducts(query) {
+            window.wizSearchQuery = (query || '').trim().toLowerCase();
+            window.wizProdPage = 1;
+            var clearBtn = document.getElementById('wizClearSearchBtn');
+            if (clearBtn) clearBtn.style.display = window.wizSearchQuery ? 'block' : 'none';
+            renderWizProductsGrid();
+        }
+
+        function clearWizSearch() {
+            var inp = document.getElementById('wizSearchInput');
+            if (inp) inp.value = '';
+            filterWizProducts('');
+        }
+
+        function changeWizPage(delta) {
+            window.wizProdPage += delta;
+            renderWizProductsGrid();
+        }
+
+        function renderWizProductsContainer() {
+            var bodyEl = document.getElementById('wizBody');
+            if (!bodyEl) return;
+
+            var html = '<div style="margin:16px 0 12px 0;">' +
+                '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">' +
+                '<h4 style="font-size:0.88rem;color:#fff;margin:0;"><i class="fas fa-store" style="color:var(--cherry-light)"></i> Select Store Product</h4>' +
+                '<span id="wizProdCountBadge" style="font-size:0.75rem;color:var(--muted);font-weight:700;"></span>' +
+                '</div>' +
+                '<div style="background:rgba(0,0,0,0.5);border:1px solid var(--border);border-radius:12px;padding:6px 12px;display:flex;align-items:center;gap:8px;">' +
+                '<i class="fas fa-search" style="color:var(--muted);font-size:0.85rem;"></i>' +
+                '<input type="text" id="wizSearchInput" placeholder="Search products by title..." oninput="filterWizProducts(this.value)" style="background:transparent;border:none;color:#fff;font-size:0.8rem;width:100%;outline:none;padding:4px 0;">' +
+                '<button type="button" id="wizClearSearchBtn" onclick="clearWizSearch()" style="display:none;background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.85rem;"><i class="fas fa-times-circle"></i></button>' +
+                '</div>' +
+                '</div>' +
+                '<div id="wizProductGridSelect" class="product-grid-select"></div>' +
+                '<div id="wizPaginationBar" style="display:flex;align-items:center;justify-content:space-between;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);"></div>';
+
+            bodyEl.innerHTML = html;
+            renderWizProductsGrid();
+            enrichWizardProductCards();
+        }
+
+        function renderWizProductsGrid() {
+            var gridEl = document.getElementById('wizProductGridSelect');
+            var pagEl = document.getElementById('wizPaginationBar');
+            var badgeEl = document.getElementById('wizProdCountBadge');
+            if (!gridEl) return;
+
+            var all = window.scannedProducts || [];
+            var q = window.wizSearchQuery || '';
+
+            // Filter items
+            var filtered = all.filter(function(p, origIdx) {
+                p._origIdx = origIdx;
+                if (!q) return true;
+                var t = (p.title || '').toLowerCase();
+                var u = (p.url || '').toLowerCase();
+                return t.includes(q) || u.includes(q);
+            });
+
+            var total = filtered.length;
+            var pageSize = 6;
+            var totalPages = Math.ceil(total / pageSize) || 1;
+
+            if (window.wizProdPage < 1) window.wizProdPage = 1;
+            if (window.wizProdPage > totalPages) window.wizProdPage = totalPages;
+
+            var currentPage = window.wizProdPage;
+            var startIdx = (currentPage - 1) * pageSize;
+            var endIdx = Math.min(startIdx + pageSize, total);
+            var pageItems = filtered.slice(startIdx, endIdx);
+
+            // Update badge
+            if (badgeEl) {
+                if (total === 0) badgeEl.textContent = 'No products found';
+                else badgeEl.textContent = 'Showing ' + (startIdx + 1) + '-' + endIdx + ' of ' + total + (q ? ' (filtered)' : '');
+            }
+
+            // Render Grid
+            if (pageItems.length === 0) {
+                gridEl.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:24px;color:var(--muted);font-size:0.85rem;"><i class="fas fa-search" style="font-size:1.5rem;margin-bottom:8px;display:block;opacity:0.5;"></i>No products matching "' + q + '"</div>';
+            } else {
+                var html = '';
+                pageItems.forEach(function(prod) {
+                    var idx = prod._origIdx;
+                    var cardTitle = (prod.title && prod.title !== 'Product') ? prod.title : ('Product #' + (idx + 1) + (prod.url ? ' (' + prod.url.split('/').pop() + ')' : ''));
+                    html += '<div class="prod-select-card" onclick="selectWizProduct(' + idx + ')">';
+                    if (prod.image) html += '<img src="' + prod.image + '" alt="">';
+                    else html += '<div style="aspect-ratio:16/10;background:#150508;border-radius:8px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);"><i class="fas fa-box"></i></div>';
+                    html += '<div class="p-title">' + cardTitle + '</div>';
+                    if (prod.price) html += '<div class="p-price">' + prod.price + '</div>';
+                    html += '<div class="p-btn"><i class="fas fa-check"></i> Approve & Select</div>';
+                    html += '</div>';
+                });
+                gridEl.innerHTML = html;
+            }
+
+            // Render Pagination Bar
+            if (pagEl) {
+                if (totalPages <= 1) {
+                    pagEl.style.display = 'none';
+                } else {
+                    pagEl.style.display = 'flex';
+                    var pagHtml = '<button type="button" class="btn btn-ghost btn-sm" onclick="changeWizPage(-1)" ' + (currentPage <= 1 ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : '') + '><i class="fas fa-chevron-left"></i> Prev</button>';
+                    pagHtml += '<div style="font-size:0.78rem;font-weight:700;color:var(--muted);">Page <strong style="color:#fff">' + currentPage + '</strong> of ' + totalPages + '</div>';
+                    pagHtml += '<button type="button" class="btn btn-ghost btn-sm" onclick="changeWizPage(1)" ' + (currentPage >= totalPages ? 'disabled style="opacity:0.4;cursor:not-allowed;"' : '') + '>Next <i class="fas fa-chevron-right"></i></button>';
+                    pagEl.innerHTML = pagHtml;
+                }
             }
         }
 
