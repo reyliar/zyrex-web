@@ -1310,32 +1310,47 @@
                 var storeUrl = scanData.storeUrl;
                 var platformName = scanData.platform === 'boosty' ? 'Boosty' : scanData.platform === 'patreon' ? 'Patreon' : 'Payhip';
 
-                document.getElementById('payhipLink').value = storeUrl;
+                // NOTE: Do NOT write storeUrl to payhipLink! Store link is not product link.
 
                 statusEl.style.background = 'rgba(0,200,100,0.08)';
                 statusEl.style.borderColor = 'rgba(0,200,100,0.25)';
                 statusEl.innerHTML = '<i class="fas fa-check-circle" style="color:#00e676"></i> <div><h4>' + platformName + ' Store Found!</h4><p>Detected: <strong style="color:#fff">' + storeUrl + '</strong></p></div>';
 
-                if (scanData.products && scanData.products.length > 0) {
-                    setWizStep(3);
-                    window.scannedProducts = scanData.products;
+                var prods = scanData.products || [];
+                if (prods.length === 0 && storeUrl) {
+                    try {
+                        var storeScanResp = await fetch('/api/scan-creator-links?url=' + encodeURIComponent(storeUrl));
+                        var storeScanData = await storeScanResp.json();
+                        if (storeScanData && storeScanData.products && storeScanData.products.length > 0) {
+                            prods = storeScanData.products;
+                        }
+                    } catch(e) {}
+                }
 
-                    var prodHtml = '<h4 style="font-size:0.88rem;color:#fff;margin:16px 0 10px 0;"><i class="fas fa-store" style="color:var(--cherry-light)"></i> Select a Product to Auto-Fill</h4>';
+                if (prods.length > 0) {
+                    setWizStep(3);
+                    window.scannedProducts = prods;
+
+                    var prodHtml = '<h4 style="font-size:0.88rem;color:#fff;margin:16px 0 10px 0;"><i class="fas fa-store" style="color:var(--cherry-light)"></i> Select a Product to Approve & Auto-Fill</h4>';
                     prodHtml += '<div class="product-grid-select">';
-                    scanData.products.forEach(function(prod, idx) {
+                    prods.forEach(function(prod, idx) {
                         prodHtml += '<div class="prod-select-card" onclick="selectWizProduct(' + idx + ')">';
                         if (prod.image) prodHtml += '<img src="' + prod.image + '" alt="">';
                         else prodHtml += '<div style="aspect-ratio:16/10;background:#150508;border-radius:8px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);"><i class="fas fa-box"></i></div>';
                         prodHtml += '<div class="p-title">' + (prod.title || 'Product') + '</div>';
                         if (prod.price) prodHtml += '<div class="p-price">' + prod.price + '</div>';
-                        prodHtml += '<div class="p-btn"><i class="fas fa-bolt"></i> Auto-Fill</div>';
+                        prodHtml += '<div class="p-btn"><i class="fas fa-check"></i> Approve & Select</div>';
                         prodHtml += '</div>';
                     });
                     prodHtml += '</div>';
                     bodyEl.innerHTML += prodHtml;
                 } else {
-                    bodyEl.innerHTML += '<div style="margin-top:12px;padding:14px;background:rgba(0,200,100,0.04);border:1px solid rgba(0,200,100,0.15);border-radius:12px;color:#00e676;font-size:0.8rem;">' +
-                        '<i class="fas fa-check-circle"></i> Store linked! Click <strong>Scrape</strong> button in the form to load product details.' +
+                    bodyEl.innerHTML += '<div style="margin-top:12px;padding:14px;background:rgba(230,21,54,0.05);border:1px solid var(--border);border-radius:12px;color:var(--muted);font-size:0.8rem;">' +
+                        '<i class="fas fa-info-circle" style="color:var(--cherry-light)"></i> Store found (<strong style="color:#fff">' + storeUrl + '</strong>), but products could not be listed automatically. Please paste direct product link below:' +
+                        '</div>' +
+                        '<div style="margin-top:10px;display:flex;gap:8px;">' +
+                        '<input type="url" id="directProdLinkInput" placeholder="https://payhip.com/b/xxxxx" style="flex:1;background:rgba(0,0,0,0.4);border:1px solid var(--border);border-radius:10px;padding:8px 12px;color:#fff;font-size:0.8rem;">' +
+                        '<button type="button" class="btn btn-primary btn-sm" onclick="confirmDirectProductLink()"><i class="fas fa-check"></i> Approve</button>' +
                         '</div>';
                 }
             } else {
@@ -1365,10 +1380,18 @@
                 return;
             }
             var storeUrl = urlInput.value.trim();
-            document.getElementById('payhipLink').value = storeUrl;
 
             var statusEl = document.getElementById('wizStatus');
             var bodyEl = document.getElementById('wizBody');
+
+            if (storeUrl.includes('/b/')) {
+                document.getElementById('payhipLink').value = storeUrl;
+                await scrapeProduct();
+                closeCreatorWizard();
+                alertMsg('Product link set and scraped successfully!', false);
+                return;
+            }
+
             statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <div><h4>Scanning Payhip Store Products...</h4><p>Fetching product catalog from ' + storeUrl + '</p></div>';
 
             try {
@@ -1378,7 +1401,7 @@
                     setWizStep(3);
                     window.scannedProducts = scanData.products;
 
-                    var prodHtml = '<h4 style="font-size:0.88rem;color:#fff;margin:16px 0 10px 0;"><i class="fas fa-store" style="color:var(--cherry-light)"></i> Select Store Product to Auto-Fill</h4>';
+                    var prodHtml = '<h4 style="font-size:0.88rem;color:#fff;margin:16px 0 10px 0;"><i class="fas fa-store" style="color:var(--cherry-light)"></i> Select Store Product to Approve & Auto-Fill</h4>';
                     prodHtml += '<div class="product-grid-select">';
                     scanData.products.forEach(function(prod, idx) {
                         prodHtml += '<div class="prod-select-card" onclick="selectWizProduct(' + idx + ')">';
@@ -1386,6 +1409,7 @@
                         else prodHtml += '<div style="aspect-ratio:16/10;background:#150508;border-radius:8px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);"><i class="fas fa-box"></i></div>';
                         prodHtml += '<div class="p-title">' + (prod.title || 'Product') + '</div>';
                         if (prod.price) prodHtml += '<div class="p-price">' + prod.price + '</div>';
+                        prodHtml += '<div class="p-btn"><i class="fas fa-check"></i> Approve & Select</div>';
                         prodHtml += '</div>';
                     });
                     prodHtml += '</div>';
@@ -1393,22 +1417,35 @@
 
                     statusEl.style.background = 'rgba(0, 200, 100, 0.08)';
                     statusEl.style.borderColor = 'rgba(0, 200, 100, 0.25)';
-                    statusEl.innerHTML = '<i class="fas fa-check-circle" style="color:#00e676"></i> <div><h4>Products Loaded!</h4><p>Click any product below to auto-fill details.</p></div>';
+                    statusEl.innerHTML = '<i class="fas fa-check-circle" style="color:#00e676"></i> <div><h4>Products Loaded!</h4><p>Click any product below to approve and auto-fill details.</p></div>';
                 } else {
-                    if (storeUrl.includes('/b/')) {
-                        scrapeProduct();
-                        closeCreatorWizard();
-                        alertMsg('Payhip link set and single product scraped!', false);
-                    } else {
-                        alertMsg('No products found on this store page. Link set to: ' + storeUrl, false);
-                    }
+                    statusEl.style.background = 'rgba(230,21,54,0.08)';
+                    statusEl.style.borderColor = 'rgba(230,21,54,0.2)';
+                    statusEl.innerHTML = '<i class="fas fa-info-circle" style="color:var(--cherry-light)"></i> <div><h4>No Products Found</h4><p>Could not load products automatically. Please paste direct product link below:</p></div>';
+                    bodyEl.innerHTML = '<div style="margin-top:10px;display:flex;gap:8px;">' +
+                        '<input type="url" id="directProdLinkInput" placeholder="https://payhip.com/b/xxxxx" style="flex:1;background:rgba(0,0,0,0.4);border:1px solid var(--border);border-radius:10px;padding:8px 12px;color:#fff;font-size:0.8rem;">' +
+                        '<button type="button" class="btn btn-primary btn-sm" onclick="confirmDirectProductLink()"><i class="fas fa-check"></i> Approve</button>' +
+                        '</div>';
                 }
             } catch(e) {
                 alertMsg('Failed to scan store', true);
             }
         }
 
-        function selectWizProduct(idx) {
+        async function confirmDirectProductLink() {
+            var inp = document.getElementById('directProdLinkInput');
+            if (!inp || !inp.value.trim()) {
+                alertMsg('Please enter a valid product link', true);
+                return;
+            }
+            var prodUrl = inp.value.trim();
+            document.getElementById('payhipLink').value = prodUrl;
+            await scrapeProduct();
+            closeCreatorWizard();
+            alertMsg('Product link set and scraped!', false);
+        }
+
+        async function selectWizProduct(idx) {
             if (!window.scannedProducts || !window.scannedProducts[idx]) return;
             var prod = window.scannedProducts[idx];
             
@@ -1420,20 +1457,20 @@
             }
             document.getElementById('scrapedBadge').style.display = 'flex';
             updateLivePreview();
-            alertMsg('Auto-filled product: ' + prod.title, false);
+            alertMsg('Approved & auto-filled product: ' + prod.title, false);
 
             var statusEl = document.getElementById('wizStatus');
             if (statusEl) {
                 statusEl.className = 'info-banner';
                 statusEl.style.background = 'rgba(0, 200, 100, 0.1)';
                 statusEl.style.borderColor = 'rgba(0, 200, 100, 0.3)';
-                statusEl.innerHTML = '<i class="fas fa-check-circle" style="color:#00e676;font-size:1.4rem"></i> <div><h4>Product Details Auto-Filled!</h4><p>Selected: <strong style="color:#fff">' + prod.title + '</strong></p></div>';
+                statusEl.innerHTML = '<i class="fas fa-check-circle" style="color:#00e676;font-size:1.4rem"></i> <div><h4>Product Approved & Auto-Filled!</h4><p>Selected: <strong style="color:#fff">' + prod.title + '</strong></p></div>';
             }
 
+            if (prod.url) await scrapeProduct();
             setTimeout(function() {
                 closeCreatorWizard();
-                if (prod.url) scrapeProduct();
-            }, 1200);
+            }, 1000);
         }
 
         function updateLivePreview(){
