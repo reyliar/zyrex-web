@@ -1518,7 +1518,7 @@
                     var idx = prod._origIdx;
                     var cardTitle = (prod.title && prod.title !== 'Product') ? prod.title : ('Product #' + (idx + 1) + (prod.url ? ' (' + prod.url.split('/').pop() + ')' : ''));
                     html += '<div class="prod-select-card" data-orig-idx="' + idx + '" onclick="selectWizProduct(' + idx + ')">';
-                    if (prod.image) html += '<img src="' + prod.image + '" alt="">';
+                    if (prod.image) html += '<img src="' + prod.image + '" referrerpolicy="no-referrer" loading="lazy" alt="">';
                     else html += '<div style="aspect-ratio:16/10;background:#150508;border-radius:8px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);"><i class="fas fa-box"></i></div>';
                     html += '<div class="p-title">' + cardTitle + '</div>';
                     if (prod.price) html += '<div class="p-price">' + prod.price + '</div>';
@@ -1575,9 +1575,10 @@
                                 if (imgWrap && (data.image || (data.thumbnails && data.thumbnails[0]))) {
                                     var imgUrl = data.image || data.thumbnails[0];
                                     if (imgWrap.tagName === 'IMG') {
+                                        imgWrap.setAttribute('referrerpolicy', 'no-referrer');
                                         imgWrap.src = imgUrl;
                                     } else {
-                                        imgWrap.outerHTML = '<img src="' + imgUrl + '" alt="">';
+                                        imgWrap.outerHTML = '<img src="' + imgUrl + '" referrerpolicy="no-referrer" alt="">';
                                     }
                                 }
                             }
