@@ -1203,16 +1203,53 @@
             if (lB) lB.style.background = stepNum > 2 ? '#00e676' : 'rgba(230,21,54,0.15)';
         }
 
-        async function startCreatorWizard() {
+        async function startCreatorWizard(overridePlat) {
             var rawInput = document.getElementById('wizUrlInput').value.trim();
             if (!rawInput) {
                 alertMsg('Please enter a social media URL or @username', true);
                 return;
             }
 
+            if (overridePlat) window.selectedPlatform = overridePlat;
+
             var statusEl = document.getElementById('wizStatus');
             var bodyEl = document.getElementById('wizBody');
             var btn = document.getElementById('btnWizStart');
+
+            // If rawInput is a username without domain, and no platform override was picked yet:
+            var isFullUrl = rawInput.startsWith('http://') || rawInput.startsWith('https://') || /^(payhip|boosty|patreon|linktr|guns|beacons|tiktok|instagram|youtube|twitter|x)\./i.test(rawInput);
+
+            if (!isFullUrl && !window.selectedPlatform) {
+                statusEl.style.display = 'block';
+                statusEl.className = 'info-banner';
+                statusEl.style.background = 'rgba(230,21,54,0.05)';
+                statusEl.style.borderColor = 'var(--border)';
+                statusEl.innerHTML = '<i class="fas fa-layer-group" style="color:var(--cherry-light)"></i> <div><h4>Select Social Platform</h4><p>Choose the platform for <strong style="color:#fff">@' + rawInput.replace(/^@/, '') + '</strong> to continue scanning:</p></div>';
+
+                var platPickerHtml = '<div style="margin:16px 0;display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">' +
+                    '<button type="button" class="btn-plat-select" onclick="startCreatorWizard(\'tiktok\')" style="padding:16px;border-radius:14px;background:rgba(230,21,54,0.08);border:1px solid var(--border);color:#fff;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all 0.2s ease;">' +
+                    '<i class="fab fa-tiktok" style="font-size:1.5rem;color:#ff0050;"></i>' +
+                    '<div style="text-align:left;"><div style="font-size:0.9rem;font-weight:800;">TikTok</div><div style="font-size:0.7rem;color:var(--muted);">tiktok.com/@' + rawInput.replace(/^@/, '') + '</div></div>' +
+                    '</button>' +
+                    '<button type="button" class="btn-plat-select" onclick="startCreatorWizard(\'instagram\')" style="padding:16px;border-radius:14px;background:rgba(230,21,54,0.08);border:1px solid var(--border);color:#fff;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all 0.2s ease;">' +
+                    '<i class="fab fa-instagram" style="font-size:1.5rem;color:#e1306c;"></i>' +
+                    '<div style="text-align:left;"><div style="font-size:0.9rem;font-weight:800;">Instagram</div><div style="font-size:0.7rem;color:var(--muted);">instagram.com/' + rawInput.replace(/^@/, '') + '</div></div>' +
+                    '</button>' +
+                    '<button type="button" class="btn-plat-select" onclick="startCreatorWizard(\'youtube\')" style="padding:16px;border-radius:14px;background:rgba(230,21,54,0.08);border:1px solid var(--border);color:#fff;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all 0.2s ease;">' +
+                    '<i class="fab fa-youtube" style="font-size:1.5rem;color:#ff0000;"></i>' +
+                    '<div style="text-align:left;"><div style="font-size:0.9rem;font-weight:800;">YouTube</div><div style="font-size:0.7rem;color:var(--muted);">youtube.com/@' + rawInput.replace(/^@/, '') + '</div></div>' +
+                    '</button>' +
+                    '<button type="button" class="btn-plat-select" onclick="startCreatorWizard(\'twitter\')" style="padding:16px;border-radius:14px;background:rgba(230,21,54,0.08);border:1px solid var(--border);color:#fff;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all 0.2s ease;">' +
+                    '<i class="fab fa-x-twitter" style="font-size:1.5rem;color:#fff;"></i>' +
+                    '<div style="text-align:left;"><div style="font-size:0.9rem;font-weight:800;">X / Twitter</div><div style="font-size:0.7rem;color:var(--muted);">x.com/' + rawInput.replace(/^@/, '') + '</div></div>' +
+                    '</button>' +
+                    '</div>';
+
+                bodyEl.innerHTML = platPickerHtml;
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-magic"></i> Scan Profile';
+                return;
+            }
 
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
