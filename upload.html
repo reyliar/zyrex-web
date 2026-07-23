@@ -1062,15 +1062,11 @@
             var rawInput = document.getElementById('creatorSocialUrl').value.trim();
             if(!rawInput) return;
 
-            // Normalize URL
+            // Preserve full URL or handle
             var url = rawInput;
             if (!url.startsWith('http://') && !url.startsWith('https://')) {
                 if (/^(payhip|boosty|patreon|linktr|guns|beacons)\./i.test(url)) {
                     url = 'https://' + url;
-                } else if (url.startsWith('@')) {
-                    url = 'https://www.tiktok.com/' + url;
-                } else {
-                    url = 'https://www.tiktok.com/@' + url;
                 }
             }
 
@@ -1098,7 +1094,7 @@
                 if (badgeStatus) badgeStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scanning...';
             }
 
-            // Immediately open wizard modal and let it handle everything
+            // Immediately open wizard modal and let it prompt for platform if raw handle
             openCreatorWizard(url);
         }
 
