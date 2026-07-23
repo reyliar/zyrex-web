@@ -747,7 +747,7 @@
 
                                 <!-- Resolved Creator Live Badge -->
                                 <div id="creatorLiveBadge" style="display:none;margin-top:14px;padding:10px 14px;background:rgba(0,0,0,0.4);border:1px solid var(--border);border-radius:12px;align-items:center;gap:12px;">
-                                    <img id="badgeAvatar" src="" alt="" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--cherry);">
+                                    <img id="badgeAvatar" src="" alt="" referrerpolicy="no-referrer" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--cherry);">
                                     <div style="flex:1">
                                         <div id="badgeTitle" style="font-size:0.85rem;font-weight:800;color:#fff">Creator</div>
                                         <div id="badgeUrl" style="font-size:0.7rem;color:var(--muted)">URL</div>
@@ -1294,7 +1294,11 @@
                 profileData = await r1.json();
             } catch(e) {}
 
-            var creatorName = (profileData && profileData.nickname) || rawInput.replace(/^@/, '').split('/').pop();
+            var cleanUserFallback = rawInput.replace(/^@/, '').split('?')[0].replace(/\/$/, '').split('/').pop();
+            var creatorName = (profileData && profileData.nickname) || cleanUserFallback;
+            if (!creatorName || creatorName.toLowerCase() === 'instagram' || creatorName.toLowerCase().includes('instagram') || creatorName.toLowerCase() === 'tiktok' || creatorName.toLowerCase() === 'youtube') {
+                creatorName = cleanUserFallback;
+            }
             var creatorAv = (profileData && profileData.avatar) || '';
 
             // Fill hidden form fields

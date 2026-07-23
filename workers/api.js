@@ -1354,6 +1354,24 @@ async function scanCreatorLinks(rawUrl) {
   return result;
 }
 
+// Helper to sanitize extracted profile nickname
+function cleanSocialNickname(name, username) {
+  if (!name) return username;
+  let clean = String(name).trim();
+  clean = clean.replace(/\s*\(?@[\w\.-]+\)?/g, "");
+  clean = clean.replace(/\s*[•\|\-\–]\s*(Instagram|TikTok|YouTube|X|Twitter).*/i, "");
+  clean = clean.replace(/^\s*(Instagram|TikTok|YouTube|X|Twitter)\s*:\s*/i, "");
+  clean = clean.replace(/photos and videos/i, "");
+  clean = clean.replace(/on Instagram/i, "");
+  clean = clean.trim();
+
+  const lower = clean.toLowerCase();
+  if (!clean || lower === "instagram" || lower.includes("instagram") || lower === "tiktok" || lower === "youtube" || lower === "x" || lower.includes("înainte de a accesa")) {
+    return username;
+  }
+  return clean;
+}
+
 // ============ SOCIAL PROFILE RESOLVER (HLX) ============
 async function resolveSocialProfile(targetUrl) {
   if (!targetUrl) return { success: false, error: "URL is required" };
@@ -1365,11 +1383,12 @@ async function resolveSocialProfile(targetUrl) {
       else cleanUrl = `https://www.tiktok.com/@${cleanUrl}`;
     }
 
-    const parts = cleanUrl.replace(/\/$/, "").split("/");
-    let username = parts[parts.length - 1].replace("@", "");
+    const parts = cleanUrl.replace(/\/$/, "").split("?")[0].split("/");
+    let username = parts[parts.length - 1].replace("@", "") || "creator";
     if (cleanUrl.includes("instagram.com")) {
-      const igParts = cleanUrl.replace(/\/$/, "").split("/");
-      username = igParts[igParts.length - 1].replace("@", "") || username;
+      const igParts = cleanUrl.replace(/\/$/, "").split("?")[0].split("/");
+      username = igParts.filter(p => p && !p.includes("instagram.com") && !p.includes("http"))[0] || username;
+      username = username.replace("@", "");
     }
 
     // Try BOT_API first for headless / rich proxy resolution
@@ -1380,20 +1399,14 @@ async function resolveSocialProfile(targetUrl) {
       if (botRes.ok) {
         const botData = await botRes.json();
         if (botData && botData.success && botData.nickname) {
-          let bName = botData.nickname.trim();
-          bName = bName.replace(/\s*\(?@[\w\.-]+\)?/g, "");
-          bName = bName.replace(/\s*[•\|\-\–]\s*(Instagram|TikTok|YouTube|X|Twitter).*/i, "");
-          bName = bName.replace(/^\s*(Instagram|TikTok|YouTube|X|Twitter)\s*:\s*/i, "");
-          bName = bName.trim();
-          if (bName && bName.toLowerCase() !== "instagram" && !bName.includes("Înainte de a accesa")) {
-            return {
-              success: true,
-              nickname: bName,
-              avatar: botData.avatar || "",
-              username: botData.username || username,
-              bioLink: botData.bioLink || null
-            };
-          }
+          const sanitized = cleanSocialNickname(botData.nickname, username);
+          return {
+            success: true,
+            nickname: sanitized,
+            avatar: botData.avatar || "",
+            username: botData.username || username,
+            bioLink: botData.bioLink || null
+          };
         }
       }
     } catch(e) {}
@@ -1417,15 +1430,7 @@ async function resolveSocialProfile(targetUrl) {
              || (html.match(/<title>([^<]+)<\/title>/i) || [])[1] || "";
     title = title.replace(/&amp;/g, "&").replace(/&#39;/g, "'").replace(/&quot;/g, '"');
 
-    let nickname = title;
-    nickname = nickname.replace(/\s*\(?@[\w\.-]+\)?/g, "");
-    nickname = nickname.replace(/\s*[•\|\-\–]\s*(Instagram|TikTok|YouTube|X|Twitter).*/i, "");
-    nickname = nickname.replace(/^\s*(Instagram|TikTok|YouTube|X|Twitter)\s*:\s*/i, "");
-    nickname = nickname.trim();
-
-    if (!nickname || nickname.toLowerCase() === "instagram" || nickname.toLowerCase() === "tiktok" || nickname.toLowerCase() === "youtube" || nickname.toLowerCase() === "x" || nickname.includes("Înainte de a accesa")) {
-      nickname = username;
-    }
+    const nickname = cleanSocialNickname(title, username);
 
     let avatar = (html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i) || [])[1]
               || (html.match(/<meta\s+name="twitter:image"\s+content="([^"]+)"/i) || [])[1] || "";
@@ -1461,7 +1466,7 @@ async function resolveSocialProfile(targetUrl) {
       bioLink
     };
   } catch (e) {
-    const parts = String(targetUrl).replace(/\/$/, "").split("/");
+    const parts = String(targetUrl).replace(/\/$/, "").split("?")[0].split("/");
     const fallbackName = parts[parts.length - 1]?.replace("@", "") || "Creator";
     return { success: true, nickname: fallbackName, avatar: "", username: fallbackName, bioLink: null };
   }
