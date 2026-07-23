@@ -1428,7 +1428,7 @@
         }
 
         function changeWizPage(delta) {
-            var curr = parseInt(window.wizProdPage) || 1;
+            var curr = parseInt(window.wizProdPage, 10) || 1;
             var targetPage = curr + delta;
             if (targetPage < 1) targetPage = 1;
             window.wizProdPage = targetPage;
@@ -1481,8 +1481,8 @@
             var pageSize = 6;
             var totalPages = Math.ceil(total / pageSize) || 1;
 
-            var reqPage = parseInt(window.wizProdPage) || 1;
-            if (reqPage < 1) reqPage = 1;
+            var reqPage = parseInt(window.wizProdPage, 10);
+            if (isNaN(reqPage) || reqPage < 1) reqPage = 1;
             if (reqPage > totalPages) reqPage = totalPages;
             window.wizProdPage = reqPage;
 
@@ -1534,7 +1534,9 @@
 
         async function enrichWizardProductCards() {
             if (!window.scannedProducts || !window.scannedProducts.length) return;
-            window.scannedProducts.forEach(async function(prod, idx) {
+            var prods = window.scannedProducts;
+            for (var idx = 0; idx < prods.length; idx++) {
+                var prod = prods[idx];
                 if (!prod.title || prod.title === 'Product' || !prod.image) {
                     try {
                         var r = await fetch('/api/scrape?url=' + encodeURIComponent(prod.url));
@@ -1570,7 +1572,7 @@
                         }
                     } catch(e) {}
                 }
-            });
+            }
         }
 
         async function confirmDirectProductLink() {

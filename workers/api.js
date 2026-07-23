@@ -1280,32 +1280,75 @@ async function scanCreatorLinks(rawUrl) {
     }
   }
 
-  // === Fetch product catalog if Payhip store found ===
-  if (result.found && result.payhipUrl && result.platform === "payhip") {
-    try {
-      const storeHtml = await fetchText(result.payhipUrl);
-      if (storeHtml) {
-        const products = [];
-        const prodRegex = /<a[^>]+href="(\/b\/[a-zA-Z0-9_]+|https?:\/\/payhip\.com\/b\/[a-zA-Z0-9_]+)"[^>]*>([\s\S]*?)<\/a>/gi;
-        let match;
-        const seenUrls = new Set();
-        while ((match = prodRegex.exec(storeHtml)) !== null && products.length < 100) {
-          let pUrl = match[1];
-          if (pUrl.startsWith("/")) pUrl = `https://payhip.com${pUrl}`;
-          if (seenUrls.has(pUrl)) continue;
-          seenUrls.add(pUrl);
-          const cardSnippet = match[2];
-          const titleMatch = cardSnippet.match(/(?:class="[^"]*title[^"]*"[^>]*|h3|h4)[^>]*>([^<]+)/i);
-          const title = titleMatch ? titleMatch[1].trim() : "Product";
-          const imgMatch = cardSnippet.match(/src="(https:\/\/[^"]+)"/i);
-          const image = imgMatch ? imgMatch[1] : "";
-          const priceMatch = cardSnippet.match(/\$([\d.]+)/);
-          const price = priceMatch ? `$${priceMatch[1]}` : "";
-          if (title && pUrl) products.push({ title, url: pUrl, image, price });
+  // === Fetch product catalog if Payhip / Boosty / Patreon store found ===
+  if (result.found && result.storeUrl) {
+    if (result.platform === "payhip" || result.storeUrl.includes("payhip.com")) {
+      try {
+        const storeHtml = await fetchText(result.payhipUrl || result.storeUrl);
+        if (storeHtml) {
+          const products = [];
+          const prodRegex = /<a[^>]+href="(\/b\/[\w]+|https?:\/\/payhip\.com\/b\/[\w]+)"[^>]*>([\s\S]*?)<\/a>/gi;
+          let match;
+          const seenUrls = new Set();
+          while ((match = prodRegex.exec(storeHtml)) !== null && products.length < 100) {
+            let pUrl = match[1];
+            if (pUrl.startsWith("/")) pUrl = `https://payhip.com${pUrl}`;
+            if (seenUrls.has(pUrl)) continue;
+            seenUrls.add(pUrl);
+            const cardSnippet = match[2];
+            const titleMatch = cardSnippet.match(/(?:class="[^"]*title[^"]*"[^>]*|h3|h4)[^>]*>([^<]+)/i);
+            const title = titleMatch ? titleMatch[1].trim() : "Product";
+            const imgMatch = cardSnippet.match(/src="(https:\/\/[^"]+)"/i);
+            const image = imgMatch ? imgMatch[1] : "";
+            const priceMatch = cardSnippet.match(/\$([\d.]+)/);
+            const price = priceMatch ? `$${priceMatch[1]}` : "";
+            if (title && pUrl) products.push({ title, url: pUrl, image, price });
+          }
+          result.products = products;
         }
-        result.products = products;
-      }
-    } catch(e) {}
+      } catch(e) {}
+    } else if (result.platform === "boosty" || result.storeUrl.includes("boosty.to")) {
+      try {
+        const bName = result.storeUrl.replace(/\/$/, "").split("/").pop();
+        const bResp = await fetch(`https://api.boosty.to/v1/blog/${encodeURIComponent(bName)}/post/?limit=50`, {
+          headers: { "User-Agent": FETCH_HEADERS["User-Agent"] }
+        });
+        if (bResp.ok) {
+          const bData = await bResp.json();
+          const posts = bData?.data || [];
+          const bProducts = [];
+          for (const p of posts) {
+            if (!p || !p.id) continue;
+            const pUrl = `https://boosty.to/${bName}/posts/${p.id}`;
+            const title = p.title || `Post #${p.id.slice(0, 8)}`;
+            let image = "";
+            if (p.teaser && Array.isArray(p.teaser)) {
+              const imgObj = p.teaser.find(t => t.type === "image" && t.url);
+              if (imgObj) image = imgObj.url;
+            }
+            if (!image && p.data && Array.isArray(p.data)) {
+              const imgObj = p.data.find(t => t.type === "image" && t.url);
+              if (imgObj) image = imgObj.url;
+            }
+            const price = p.price ? `$${p.price}` : (p.hasAccess === false ? "Paid" : "Free");
+            bProducts.push({ title, url: pUrl, image, price });
+          }
+          result.products = bProducts;
+        }
+      } catch(e) {}
+    } else if (result.platform === "patreon" || result.storeUrl.includes("patreon.com")) {
+      try {
+        const pHtml = await fetchText(result.storeUrl);
+        if (pHtml) {
+          const pProducts = [];
+          const pMatches = Array.from(new Set(pHtml.match(/https?:\/\/(?:www\.)?patreon\.com\/posts\/[\w\-]+/g) || []));
+          for (const pUrl of pMatches) {
+            pProducts.push({ title: "Patreon Post", url: pUrl, image: "", price: "" });
+          }
+          result.products = pProducts;
+        }
+      } catch(e) {}
+    }
   }
 
   return result;
