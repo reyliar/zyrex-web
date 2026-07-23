@@ -3030,12 +3030,41 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
         return json({ success: false, error: "Create editor failed" }, 500);
       }
 
-      // ============ PRODUCTS: Transfer to Production (R2 direct) ============
+      // ============ PRODUCTS: Transfer to Production (R2 direct via FILE_API or Worker) ============
       if (path === "/api/products/transfer" && request.method === "POST") {
         const session = parseSession(request.headers.get("Cookie"));
         if (!session) return json({ error: "Not logged in" }, 401);
+        
+        const rawBody = await request.text();
+        let body = {};
+        try { body = JSON.parse(rawBody); } catch (e) {}
+
+        // 1. Try Python FILE_API on VPS (Supports >300MB files via S3 multipart copy with no RAM limit)
         try {
-          const body = await request.json();
+          const payload = {
+            discord_id: session.userId || "",
+            source_editor: body.source_editor,
+            source_resource: body.source_resource,
+            destination_editor: body.destination_editor,
+          };
+          const apiUrl = `${FILE_API}/api/files/transfer?token=zyrex-files-api-2026`;
+          const fileApiResp = await fetch(apiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (fileApiResp.ok) {
+            const result = await fileApiResp.json();
+            if (result.success) {
+              return json(result);
+            }
+          }
+        } catch (fileApiErr) {
+          console.warn("FILE_API transfer delegate failed/timed out, falling back to Worker R2 copy:", fileApiErr.message);
+        }
+
+        // 2. Fallback: Cloudflare Worker direct R2 copy (for smaller files)
+        try {
           const productId = body.product_id || "";
           const srcEditor = body.source_editor;
           const srcResource = body.source_resource;
@@ -3044,15 +3073,12 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
             return json({ success: false, error: "Missing required fields" }, 400);
           }
           
-          // SFTPGo username = Discord username (typical mapping)
           const username = session.username;
           if (!username) return json({ success: false, error: "No username in session" }, 400);
           
-          // Auto-detect SFTPGo username from staging bucket
           let srcPrefix = null;
           const stagingBucket = env.STORAGE;
           
-          // Scan top-level folders for files matching source_editor/source_resource
           const topList = await stagingBucket.list({ delimiter: "/" });
           for (const cp of topList.delimitedPrefixes || []) {
             const tryUser = cp.replace(/\/$/, "");
@@ -3064,7 +3090,6 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
             }
           }
           
-          // Fallback: try Discord username, then Discord ID pattern (SFTPGo naming)
           if (!srcPrefix) {
             srcPrefix = `${username}/${srcEditor}/${srcResource}/`;
             if (session.userId) {
@@ -3075,12 +3100,9 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
               }
             }
           }
-          // Production folder = editor/resource (clean structure)
           const dstPrefix = `${dstEditor}/${srcResource}/`;
-          
           const prodBucket = env.STORAGE_PROD || env.STORAGE;
           
-          // List files in staging (using r2List to support pagination and get all files recursively)
           const stagingObjects = await r2List(env, srcPrefix, false);
           const files = [];
           for (const obj of stagingObjects) {
@@ -3093,13 +3115,11 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
             return json({ success: false, error: `No files found in cloud: ${srcEditor}/${srcResource}` }, 404);
           }
           
-          // Copy each file/folder from staging to production
           let copied = 0;
           const failed = [];
           for (const f of files) {
             try {
               if (f.relPath.endsWith("/")) {
-                // Directory placeholder
                 await prodBucket.put(dstPrefix + f.relPath, new ArrayBuffer(0));
                 copied++;
               } else {
@@ -3120,7 +3140,6 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
             return json({ success: false, error: `Transfer failed: ${failed.length} files` }, 500);
           }
           
-          // Inject watermark files into production
           const wmNames = ["LEAKED BY ZYREX.txt", "Visit for more resources!.url"];
           let wmCount = 0;
           for (const wm of wmNames) {
@@ -3133,7 +3152,6 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
             } catch (e) { /* ignore */ }
           }
           
-          // Delete from staging
           for (const f of files) {
             try { await stagingBucket.delete(f.srcKey); } catch (e) { /* ignore */ }
           }
