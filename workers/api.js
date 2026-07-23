@@ -2063,12 +2063,28 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
           const size = url.searchParams.get("size") || "256";
           cdnUrl = `https://cdn.discordapp.com/avatars/${userId}/${hash}?size=${size}`;
         }
-        const imgResp = await fetch(cdnUrl);
+        const imgResp = await fetch(cdnUrl, {
+          headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" }
+        });
         if (imgResp.ok) {
           return new Response(imgResp.body, {
             status: 200,
             headers: {
               "Content-Type": imgResp.headers.get("Content-Type") || "image/png",
+              "Cache-Control": `public, max-age=${cacheTTL}`,
+              "Access-Control-Allow-Origin": "*",
+            },
+          });
+        }
+        // Fallback to default Discord avatar if user avatar fail
+        const defResp = await fetch("https://cdn.discordapp.com/embed/avatars/0.png", {
+          headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" }
+        });
+        if (defResp.ok) {
+          return new Response(defResp.body, {
+            status: 200,
+            headers: {
+              "Content-Type": "image/png",
               "Cache-Control": `public, max-age=${cacheTTL}`,
               "Access-Control-Allow-Origin": "*",
             },

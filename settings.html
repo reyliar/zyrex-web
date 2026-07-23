@@ -1480,6 +1480,28 @@
                     <label for="editProductThumbnail">Thumbnail URL</label>
                     <input type="url" id="editProductThumbnail" placeholder="https://cdn.discordapp.com/...">
                 </div>
+                <div style="border-top:1px solid rgba(255,255,255,0.08);margin:15px 0;padding-top:15px">
+                    <div style="font-weight:600;font-size:0.85rem;color:var(--cherry-light);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between">
+                        <span><i class="fas fa-user-edit"></i> Creator & Social Media Metadata</span>
+                        <button type="button" class="btn-tbl" onclick="fetchCreatorMetadataForModal()" title="Auto-Fetch Metadata from Social URL" style="font-size:0.75rem;padding:4px 10px;background:rgba(230,21,54,0.15);color:#fff">
+                            <i class="fas fa-magic"></i> Auto-Fetch Metadata
+                        </button>
+                    </div>
+                    <div class="form-group">
+                        <label for="editProductCreatorSocialUrl">Creator Social Media URL</label>
+                        <input type="url" id="editProductCreatorSocialUrl" placeholder="https://tiktok.com/@creator or https://instagram.com/creator">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editProductCreatorNickname">Creator Display Name</label>
+                            <input type="text" id="editProductCreatorNickname" placeholder="e.g. VamFFX">
+                        </div>
+                        <div class="form-group">
+                            <label for="editProductCreatorAvatar">Creator Avatar URL</label>
+                            <input type="text" id="editProductCreatorAvatar" placeholder="Avatar image URL">
+                        </div>
+                    </div>
+                </div>
                 <div class="form-actions">
                     <button type="button" class="logout-btn" onclick="closeEditModal()">Cancel</button>
                     <button type="submit" class="btn-action-primary">Save Changes</button>
@@ -2022,12 +2044,36 @@
             document.getElementById('editProductDesc').value = product.description || '';
             document.getElementById('editProductFilePath').value = product.file_path || '';
             document.getElementById('editProductThumbnail').value = product.thumbnail || '';
+            document.getElementById('editProductCreatorSocialUrl').value = product.creator_social_url || '';
+            document.getElementById('editProductCreatorNickname').value = product.creator_nickname || '';
+            document.getElementById('editProductCreatorAvatar').value = product.creator_avatar || '';
 
             document.getElementById('editProductModal').classList.add('active');
         }
 
         function closeEditModal() {
             document.getElementById('editProductModal').classList.remove('active');
+        }
+
+        async function fetchCreatorMetadataForModal() {
+            const url = document.getElementById('editProductCreatorSocialUrl').value.trim();
+            if (!url) {
+                alert("Please enter a creator social media URL first.");
+                return;
+            }
+            try {
+                const resp = await fetch(`/api/hlx/resolve?url=${encodeURIComponent(url)}`);
+                const data = await resp.json();
+                if (data.success) {
+                    if (data.nickname) document.getElementById('editProductCreatorNickname').value = data.nickname;
+                    if (data.avatar) document.getElementById('editProductCreatorAvatar').value = data.avatar;
+                    alert(`Metadata fetched successfully! Creator: ${data.nickname || 'Unknown'}`);
+                } else {
+                    alert("Could not fetch metadata from URL: " + (data.error || 'Unknown error'));
+                }
+            } catch (e) {
+                alert("Failed to connect to metadata resolver.");
+            }
         }
 
         async function saveProductEdits(e) {
@@ -2039,7 +2085,10 @@
                 category: document.getElementById('editProductCategory').value,
                 description: document.getElementById('editProductDesc').value,
                 file_path: document.getElementById('editProductFilePath').value,
-                thumbnail: document.getElementById('editProductThumbnail').value
+                thumbnail: document.getElementById('editProductThumbnail').value,
+                creator_social_url: document.getElementById('editProductCreatorSocialUrl').value,
+                creator_nickname: document.getElementById('editProductCreatorNickname').value,
+                creator_avatar: document.getElementById('editProductCreatorAvatar').value
             };
 
             try {
