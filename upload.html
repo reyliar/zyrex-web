@@ -1345,6 +1345,7 @@
                     });
                     prodHtml += '</div>';
                     bodyEl.innerHTML += prodHtml;
+                    enrichWizardProductCards();
                 } else {
                     bodyEl.innerHTML += '<div style="margin-top:12px;padding:14px;background:rgba(230,21,54,0.05);border:1px solid var(--border);border-radius:12px;color:var(--muted);font-size:0.8rem;">' +
                         '<i class="fas fa-info-circle" style="color:var(--cherry-light)"></i> Store found (<strong style="color:#fff">' + storeUrl + '</strong>), but products could not be listed automatically. Please paste direct product link below:' +
@@ -1416,6 +1417,7 @@
                     });
                     prodHtml += '</div>';
                     bodyEl.innerHTML = prodHtml;
+                    enrichWizardProductCards();
 
                     statusEl.style.background = 'rgba(0, 200, 100, 0.08)';
                     statusEl.style.borderColor = 'rgba(0, 200, 100, 0.25)';
@@ -1432,6 +1434,48 @@
             } catch(e) {
                 alertMsg('Failed to scan store', true);
             }
+        }
+
+        async function enrichWizardProductCards() {
+            if (!window.scannedProducts || !window.scannedProducts.length) return;
+            window.scannedProducts.forEach(async function(prod, idx) {
+                if (!prod.title || prod.title === 'Product' || !prod.image) {
+                    try {
+                        var r = await fetch('/api/scrape?url=' + encodeURIComponent(prod.url));
+                        var data = await r.json();
+                        if (data && data.success) {
+                            if (data.title) prod.title = data.title;
+                            if (data.image || (data.thumbnails && data.thumbnails[0])) prod.image = data.image || data.thumbnails[0];
+                            if (data.price) prod.price = data.price;
+                            
+                            var cards = document.querySelectorAll('.product-grid-select .prod-select-card');
+                            var cardEl = cards[idx];
+                            if (cardEl) {
+                                var titleEl = cardEl.querySelector('.p-title');
+                                if (titleEl && data.title) titleEl.textContent = data.title;
+                                var priceEl = cardEl.querySelector('.p-price');
+                                if (priceEl && data.price) {
+                                    priceEl.textContent = data.price;
+                                } else if (!priceEl && data.price) {
+                                    var newPrice = document.createElement('div');
+                                    newPrice.className = 'p-price';
+                                    newPrice.textContent = data.price;
+                                    cardEl.insertBefore(newPrice, cardEl.querySelector('.p-btn'));
+                                }
+                                var imgWrap = cardEl.querySelector('img, div');
+                                if (imgWrap && (data.image || (data.thumbnails && data.thumbnails[0]))) {
+                                    var imgUrl = data.image || data.thumbnails[0];
+                                    if (imgWrap.tagName === 'IMG') {
+                                        imgWrap.src = imgUrl;
+                                    } else {
+                                        imgWrap.outerHTML = '<img src="' + imgUrl + '" alt="">';
+                                    }
+                                }
+                            }
+                        }
+                    } catch(e) {}
+                }
+            });
         }
 
         async function confirmDirectProductLink() {

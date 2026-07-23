@@ -1531,6 +1531,27 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
         } catch(e) {}
       }
 
+      // 3. Enrich products concurrently with real title, thumbnail image, and price
+      if (workerRes && workerRes.products && workerRes.products.length > 0) {
+        const enrichPromises = workerRes.products.slice(0, 10).map(async (prod) => {
+          if (!prod.title || prod.title === "Product" || !prod.image) {
+            try {
+              const botScrape = await fetch(`${BOT_API}/api/scrape?url=${encodeURIComponent(prod.url)}`, { headers: corsHeaders });
+              if (botScrape.ok) {
+                const sData = await botScrape.json();
+                if (sData && sData.success) {
+                  if (sData.title) prod.title = sData.title;
+                  if (sData.image || (sData.thumbnails && sData.thumbnails[0])) prod.image = sData.image || sData.thumbnails[0];
+                  if (sData.price) prod.price = sData.price;
+                }
+              }
+            } catch(e) {}
+          }
+          return prod;
+        });
+        await Promise.all(enrichPromises);
+      }
+
       return json(workerRes);
     }
 
