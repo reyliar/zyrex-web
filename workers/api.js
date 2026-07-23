@@ -1499,23 +1499,30 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
       }
     }
 
-    // ============ TIKTOK & BIO CREATOR SCANNER API (Proxies to BOT_API, fallback to Worker) ============
+    // ============ TIKTOK & BIO CREATOR SCANNER API (Runs Worker scanner first, fallbacks to BOT_API) ============
     if ((path === "/api/scan-creator-links" || path === "/api/scan-creator-links/") && (request.method === "GET" || request.method === "POST")) {
       let scanUrl = url.searchParams.get("url") || "";
       if (request.method === "POST") {
         const body = await request.json().catch(() => ({}));
         scanUrl = body.url || scanUrl;
       }
+
+      // 1. Run Worker multi-strategy scanner first
+      const workerRes = await scanCreatorLinks(scanUrl);
+      if (workerRes && workerRes.found) {
+        return json(workerRes);
+      }
+
+      // 2. If Worker didn't find a store, try BOT_API backend
       try {
         const botResp = await fetch(`${BOT_API}/api/scan-creator-links?url=${encodeURIComponent(scanUrl)}`, { headers: corsHeaders });
         if (botResp.ok) {
           const data = await botResp.json();
-          if (data && data.success) return json(data);
+          if (data && data.success && data.found) return json(data);
         }
       } catch(e) {}
-      
-      const fallbackRes = await scanCreatorLinks(scanUrl);
-      return json(fallbackRes);
+
+      return json(workerRes);
     }
 
     if ((path === "/api/scrape" || path === "/api/scrape-payhip" || path === "/api/scrape/") && (request.method === "GET" || request.method === "POST")) {
