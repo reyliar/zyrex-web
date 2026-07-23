@@ -437,6 +437,23 @@
         .transfer-path { font-size: 0.8rem; color: var(--text); margin-bottom: 12px; }
         .transfer-path strong { color: var(--cherry-light); }
 
+        /* Transfer Progress Box */
+        .transfer-progress-box {
+            display: none;
+            background: rgba(15, 17, 26, 0.7);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            margin-top: 14px;
+        }
+        .tpb-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .tpb-title { font-size: 0.82rem; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 8px; }
+        .tpb-percent { font-size: 0.85rem; font-weight: 700; color: var(--cherry-light); font-family: monospace; }
+        .tpb-bar-bg { width: 100%; height: 8px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; margin-bottom: 10px; }
+        .tpb-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--cherry) 0%, var(--cherry-light) 100%); transition: width 0.4s ease; border-radius: 4px; }
+        .tpb-details { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--muted); }
+        .tpb-current-file { color: var(--text); font-weight: 500; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 70%; }
+
         /* === LOCK / ACCESS DENIED SCREEN === */
         .lock-container {
             display: flex; align-items: center; justify-content: center; min-height: calc(100vh - 160px); width: 100%;
@@ -1267,6 +1284,21 @@
                             <input type="text" id="cloudPath" readonly placeholder="No source folder selected" style="cursor:not-allowed;opacity:0.7">
                         </div>
                         <button class="btn btn-primary" style="width:100%;justify-content:center;padding:16px" id="btnTransfer" disabled onclick="transfer()"><i class="fas fa-cloud-arrow-up"></i> Package & Transfer to Production</button>
+                        
+                        <!-- Transfer Progress UI -->
+                        <div class="transfer-progress-box" id="transferProgressBox">
+                            <div class="tpb-header">
+                                <span class="tpb-title" id="tpbStatusTitle"><i class="fas fa-sync fa-spin"></i> Preparing Transfer...</span>
+                                <span class="tpb-percent" id="tpbPercent">0%</span>
+                            </div>
+                            <div class="tpb-bar-bg">
+                                <div class="tpb-bar-fill" id="tpbBarFill"></div>
+                            </div>
+                            <div class="tpb-details">
+                                <span class="tpb-current-file" id="tpbCurrentFile">Initialising cloud connection...</span>
+                                <span id="tpbFileCounts">0/0 files</span>
+                            </div>
+                        </div>
                     </div>
 
                     <div class="form-actions">
@@ -2255,12 +2287,59 @@
         async function transfer(){
             if(selRes===null||!selDstEditor)return;
             const res=cloudFiles[selRes],btn=document.getElementById('btnTransfer');
-            btn.disabled=true;
-            btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Transferring Files...';
+            const progressBox = document.getElementById('transferProgressBox');
+            const barFill = document.getElementById('tpbBarFill');
+            const percentText = document.getElementById('tpbPercent');
+            const statusTitle = document.getElementById('tpbStatusTitle');
+            const currentFile = document.getElementById('tpbCurrentFile');
+            const fileCounts = document.getElementById('tpbFileCounts');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Transferring Files...';
+            progressBox.style.display = 'block';
+            
+            // Reset progress UI
+            barFill.style.width = '5%';
+            percentText.innerText = '5%';
+            statusTitle.innerHTML = '<i class="fas fa-sync fa-spin"></i> Connecting to Cloud Storage...';
+            currentFile.innerText = `Source: ${res.editor}/${res.resource}`;
+            fileCounts.innerText = '0%';
+
+            // Simulate multi-stage visual progress while S3/R2 multipart copy runs in backend
+            let simulatedProgress = 5;
+            const progressInterval = setInterval(() => {
+                if (simulatedProgress < 90) {
+                    // Gradual increase up to 90% while waiting for backend
+                    const step = Math.max(1, Math.floor((90 - simulatedProgress) / 12));
+                    simulatedProgress += step;
+                    barFill.style.width = simulatedProgress + '%';
+                    percentText.innerText = simulatedProgress + '%';
+
+                    if (simulatedProgress < 30) {
+                        statusTitle.innerHTML = '<i class="fas fa-cloud-arrow-up fa-fade"></i> Copying Files to Production...';
+                        currentFile.innerText = 'Transferring R2 S3 objects & large multipart chunks...';
+                    } else if (simulatedProgress < 75) {
+                        statusTitle.innerHTML = '<i class="fas fa-microchip fa-spin"></i> Processing Bucket Transfer...';
+                        currentFile.innerText = 'Syncing cloud storage & preserving metadata...';
+                    } else {
+                        statusTitle.innerHTML = '<i class="fas fa-stamp fa-bounce"></i> Injecting Protection Watermarks...';
+                        currentFile.innerText = 'Applying Zyrex protection markers...';
+                    }
+                }
+            }, 600);
+
             try{
                 const r=await fetch('/api/products/transfer',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({product_id:prod.id,source_editor:res.editor,source_resource:res.resource,destination_editor:selDstEditor}),credentials:'include'});
                 const d=await r.json();
+                clearInterval(progressInterval);
+
                 if(d.success){
+                    barFill.style.width = '100%';
+                    percentText.innerText = '100%';
+                    statusTitle.innerHTML = '<i class="fas fa-check-circle" style="color:#2ec4b6"></i> Transfer & Packaging Completed!';
+                    currentFile.innerText = d.message || 'All files successfully copied and watermarked.';
+                    fileCounts.innerText = `${d.files_copied || 1} file(s)`;
+
                     transferred=d.file_path||'';
                     btn.innerHTML='<i class="fas fa-check-circle"></i> Packaging Complete';
                     btn.className='btn btn-ghost';
@@ -2269,11 +2348,20 @@
                     alertMsg('Transfer complete!',false);
                     document.getElementById('btnToStep3').disabled=false;
                 }else{
+                    barFill.style.width = '0%';
+                    percentText.innerText = 'Failed';
+                    statusTitle.innerHTML = '<i class="fas fa-exclamation-triangle" style="color:var(--cherry)"></i> Transfer Failed';
+                    currentFile.innerText = d.error || 'Cloud transfer encountered an error.';
                     alertMsg(d.error||'Transfer failed',true);
                     btn.disabled=false;
                     btn.innerHTML='<i class="fas fa-cloud-arrow-up"></i> Package & Transfer to Production';
                 }
             }catch(e){
+                clearInterval(progressInterval);
+                barFill.style.width = '0%';
+                percentText.innerText = 'Error';
+                statusTitle.innerHTML = '<i class="fas fa-exclamation-triangle" style="color:var(--cherry)"></i> Network Error';
+                currentFile.innerText = 'Failed to connect to transfer server.';
                 alertMsg('Network error',true);
                 btn.disabled=false;
                 btn.innerHTML='<i class="fas fa-cloud-arrow-up"></i> Package & Transfer to Production';
