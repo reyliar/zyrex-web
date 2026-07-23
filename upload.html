@@ -575,6 +575,14 @@
             60% { transform: scale(1.2); opacity: 1; }
             100% { transform: scale(1); opacity: 1; }
         }
+        @keyframes wizardCheckSlideUp {
+            0% { transform: translateY(80px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes wizardContentLift {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-60px); opacity: 0.15; }
+        }
         @keyframes wizardLineFill {
             from { width: 0%; }
             to { width: 100%; }
@@ -916,12 +924,16 @@
             display: flex; align-items: center; gap: 6px; margin-bottom: 10px;
         }
 
-        /* --- Checkmark Overlay (product selected) --- */
+        /* --- Checkmark Overlay (product selected — slides from bottom) --- */
         .wiz-check-overlay {
-            position: absolute; inset: 0; display: flex; flex-direction: column;
+            position: absolute; bottom: 0; left: 0; right: 0;
+            display: flex; flex-direction: column;
             align-items: center; justify-content: center; gap: 10px;
-            background: rgba(4, 1, 2, 0.85); backdrop-filter: blur(8px);
-            border-radius: 24px; z-index: 10; pointer-events: none;
+            padding: 32px 20px 40px;
+            background: linear-gradient(180deg, transparent 0%, rgba(4, 1, 2, 0.95) 30%);
+            border-radius: 0 0 24px 24px;
+            z-index: 10; pointer-events: none;
+            animation: wizardCheckSlideUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
         }
         .wiz-check-circle {
             width: 68px; height: 68px; border-radius: 50%;
@@ -929,7 +941,10 @@
             display: grid; place-items: center;
             box-shadow: 0 12px 35px rgba(0,230,118,0.45);
             color: #000; font-size: 2rem;
-            animation: wizardCheckPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            animation: wizardCheckPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.1s both;
+        }
+        .wiz-content-lift {
+            animation: wizardContentLift 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
         /* --- Product Count Badge --- */
@@ -1158,7 +1173,6 @@
                                 <label><i class="fas fa-shopping-cart"></i> Product Link / Payhip (optional)</label>
                                 <div class="scrape-input-wrap">
                                     <input type="url" id="payhipLink" placeholder="https://payhip.com/b/xxxxx" onblur="autoScrape()">
-                                    <button type="button" class="btn btn-ghost btn-sm" id="btnScanBio" onclick="openScannerModal()"><i class="fab fa-tiktok" style="color:#ff0050"></i> TikTok Scan</button>
                                     <button type="button" class="btn btn-ghost btn-sm" id="btnScrape" onclick="scrapeProduct()"><i class="fas fa-magic"></i> Scrape</button>
                                 </div>
                                 <div class="scraped-badge" id="scrapedBadge" style="display:none;align-items:center;gap:6px;margin-top:10px;padding:8px 12px;border-radius:8px;font-size:0.75rem;background:rgba(0,200,100,0.06);border:1px solid rgba(0,200,100,0.15);color:#00e676;">
@@ -1538,6 +1552,18 @@
         function openCreatorWizard(initialUrl) {
             var modal = document.getElementById('creatorWizardModal');
             if (!modal) return;
+
+            // Clean up any leftover overlay & reset lift animation
+            var ov = document.getElementById('wizCheckOverlay');
+            if (ov && ov.parentNode) ov.parentNode.removeChild(ov);
+            var modalContainer = document.getElementById('wizModalContainer');
+            if (modalContainer) {
+                var children = modalContainer.children;
+                for (var i = 0; i < children.length; i++) {
+                    children[i].classList.remove('wiz-content-lift');
+                }
+            }
+
             modal.classList.add('open');
 
             var val = initialUrl || (document.getElementById('creatorSocialUrl') || {}).value || '';
@@ -1554,6 +1580,16 @@
         function closeCreatorWizard() {
             var modal = document.getElementById('creatorWizardModal');
             if (modal) modal.classList.remove('open');
+            // Clean up check overlay & reset lift animation
+            var ov = document.getElementById('wizCheckOverlay');
+            if (ov && ov.parentNode) ov.parentNode.removeChild(ov);
+            var modalContainer = document.getElementById('wizModalContainer');
+            if (modalContainer) {
+                var children = modalContainer.children;
+                for (var i = 0; i < children.length; i++) {
+                    children[i].classList.remove('wiz-content-lift');
+                }
+            }
         }
 
         function toggleHlx() { openCreatorWizard(); }
@@ -2077,10 +2113,17 @@
             document.getElementById('scrapedBadge').style.display = 'flex';
             updateLivePreview();
 
-            // Show checkmark overlay on the modal
             var modalContainer = document.getElementById('wizModalContainer');
             if (modalContainer) {
-                // Create overlay
+                // Lift all direct children upward (header, stepper, inner content)
+                var children = modalContainer.children;
+                for (var i = 0; i < children.length; i++) {
+                    if (children[i].id !== 'wizCheckOverlay') {
+                        children[i].classList.add('wiz-content-lift');
+                    }
+                }
+
+                // Create bottom checkmark overlay — slides up from bottom
                 var overlay = document.createElement('div');
                 overlay.className = 'wiz-check-overlay';
                 overlay.id = 'wizCheckOverlay';
@@ -2090,14 +2133,16 @@
                 modalContainer.appendChild(overlay);
             }
 
-            alertMsg('Approved & auto-filled product: ' + prod.title, false);
-
             if (prod.url) scrapeProduct();
+            
+            var productTitle = prod.title;
             setTimeout(function() {
-                var ov = document.getElementById('wizCheckOverlay');
-                if (ov) ov.style.opacity = '0';
                 closeCreatorWizard();
-            }, 850);
+                // Show toast AFTER modal closes
+                setTimeout(function() {
+                    alertMsg('Approved & auto-filled: ' + productTitle, false);
+                }, 300);
+            }, 900);
         }
 
         function updateLivePreview(){
