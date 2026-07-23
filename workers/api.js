@@ -1082,11 +1082,15 @@ async function scanCreatorLinks(rawUrl) {
     products: []
   };
 
-  const STORE_DOMAINS = ["payhip.com", "boosty.to", "patreon.com"];
-  const AGGREGATOR_DOMAINS = ["linktr.ee", "guns.lol", "bio.link", "beacons.ai", "carrd.co", "linkr.bio", "linkin.bio", "solo.to", "taplink.cc", "koji.to"];
+  const STORE_DOMAINS = ["payhip.com", "boosty.to", "patreon.com", "gumroad.com", "stan.store", "ko-fi.com", "sellfy.com"];
+  const AGGREGATOR_DOMAINS = [
+    "linktr.ee", "guns.lol", "bio.link", "beacons.ai", "carrd.co",
+    "bento.me", "lit.link", "lnk.bio", "solo.to", "taplink.cc", "koji.to",
+    "allmylinks.com", "hoo.be", "snipfeed.co", "linkin.bio", "campsite.bio"
+  ];
 
   const FETCH_HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.9"
   };
@@ -1094,30 +1098,43 @@ async function scanCreatorLinks(rawUrl) {
   const HLX_KEY = "72d069e9e0c91b5ee59f9653eeb5aed77b49c3c5c6484e2dec19a415f5953b90";
 
   function extractStoreLinks(rawText) {
-    const text = String(rawText || "").replace(/\\/g, ""); // Strip backslashes from Next.js JSON strings
+    const text = String(rawText || "")
+      .replace(/\\/g, "")
+      .replace(/%2F/gi, "/")
+      .replace(/%3A/gi, ":")
+      .replace(/&amp;/g, "&");
+
     const p = (text.match(/https?:\/\/(?:www\.)?payhip\.com\/[a-zA-Z0-9_\-\/]+/i) || [])[0] ||
               (text.match(/payhip\.com\/([a-zA-Z0-9_\-]+)/i) ? `https://payhip.com/${(text.match(/payhip\.com\/([a-zA-Z0-9_\-]+)/i)||[])[1]}` : null);
     const b = (text.match(/https?:\/\/(?:www\.)?boosty\.to\/[a-zA-Z0-9_\-\/]+/i) || [])[0] ||
               (text.match(/boosty\.to\/([a-zA-Z0-9_\-]+)/i) ? `https://boosty.to/${(text.match(/boosty\.to\/([a-zA-Z0-9_\-]+)/i)||[])[1]}` : null);
     const t = (text.match(/https?:\/\/(?:www\.)?patreon\.com\/[a-zA-Z0-9_\-\/]+/i) || [])[0] ||
               (text.match(/patreon\.com\/([a-zA-Z0-9_\-]+)/i) ? `https://patreon.com/${(text.match(/patreon\.com\/([a-zA-Z0-9_\-]+)/i)||[])[1]}` : null);
-    return { payhip: p, boosty: b, patreon: t };
+    const g = (text.match(/https?:\/\/(?:www\.)?gumroad\.com\/[a-zA-Z0-9_\-\/]+/i) || [])[0] ||
+              (text.match(/([a-zA-Z0-9_\-]+)\.gumroad\.com/i) ? `https://${(text.match(/([a-zA-Z0-9_\-]+)\.gumroad\.com/i)||[])[1]}.gumroad.com` : null);
+    const s = (text.match(/https?:\/\/(?:www\.)?stan\.store\/[a-zA-Z0-9_\-\/]+/i) || [])[0];
+
+    return { payhip: p, boosty: b, patreon: t, gumroad: g, stan: s };
   }
 
-  function applyStore({ payhip, boosty, patreon }) {
+  function applyStore({ payhip, boosty, patreon, gumroad, stan }) {
     if (payhip && !payhip.includes("/login") && !payhip.includes("/signup")) {
       result.found = true; result.payhipUrl = payhip; result.storeUrl = payhip; result.platform = "payhip";
     } else if (boosty) {
       result.found = true; result.boostyUrl = boosty; result.storeUrl = boosty; result.platform = "boosty";
     } else if (patreon && !patreon.includes("/login") && !patreon.includes("/signup")) {
       result.found = true; result.patreonUrl = patreon; result.storeUrl = patreon; result.platform = "patreon";
+    } else if (gumroad) {
+      result.found = true; result.storeUrl = gumroad; result.platform = "gumroad";
+    } else if (stan) {
+      result.found = true; result.storeUrl = stan; result.platform = "stan";
     }
     return result.found;
   }
 
   async function fetchText(url) {
     try {
-      const r = await fetch(url, { headers: FETCH_HEADERS });
+      const r = await fetch(url, { headers: FETCH_HEADERS, redirect: "follow" });
       if (r.ok) return await r.text();
     } catch(e) {}
     return null;
@@ -1133,6 +1150,20 @@ async function scanCreatorLinks(rawUrl) {
   if (!result.found && AGGREGATOR_DOMAINS.some(d => targetUrl.includes(d))) {
     const html = await fetchText(targetUrl);
     if (html) applyStore(extractStoreLinks(html));
+
+    // Fallback to BOT_API for aggregator scanning (especially guns.lol / bento.me / lnk.bio)
+    if (!result.found) {
+      try {
+        const botAggResp = await fetch(`${BOT_API}/api/scan-creator-links?url=${encodeURIComponent(targetUrl)}`, { headers: corsHeaders });
+        if (botAggResp.ok) {
+          const data = await botAggResp.json();
+          if (data && data.success && data.found) {
+            applyStore(data);
+            if (data.products) result.products = data.products;
+          }
+        }
+      } catch(e) {}
+    }
   }
 
   // === CASE 3: Social media profile — multi-strategy scan ===
@@ -1185,18 +1216,33 @@ async function scanCreatorLinks(rawUrl) {
     if (!result.found && actualBioLink) {
       result.bioLinks = [actualBioLink];
       const bioHtml = await fetchText(actualBioLink);
-      if (bioHtml && bioHtml.length > 500) {
-        applyStore(extractStoreLinks(bioHtml));
+      if (bioHtml) applyStore(extractStoreLinks(bioHtml));
+
+      // Fallback: If bioHtml didn't yield store link (e.g. guns.lol / bento.me 307 or JS render), query BOT_API for the bio link!
+      if (!result.found) {
+        try {
+          const botBioResp = await fetch(`${BOT_API}/api/scan-creator-links?url=${encodeURIComponent(actualBioLink)}`, { headers: corsHeaders });
+          if (botBioResp.ok) {
+            const bData = await botBioResp.json();
+            if (bData && bData.success && bData.found) {
+              applyStore(bData);
+              if (bData.products) result.products = bData.products;
+            }
+          }
+        } catch(e) {}
       }
     }
 
     // STRATEGY D: Username-based parallel probe (fallback when bio link is not set or not fetched)
     if (!result.found) {
       const aggregatorProbes = [
-        `https://linktr.ee/${username}`,
         `https://guns.lol/${username}`,
+        `https://linktr.ee/${username}`,
         `https://bio.link/${username}`,
         `https://beacons.ai/${username}`,
+        `https://bento.me/${username}`,
+        `https://lnk.bio/${username}`,
+        `https://lit.link/${username}`,
         `https://solo.to/${username}`,
         `https://taplink.cc/${username}`,
       ];
@@ -1206,7 +1252,6 @@ async function scanCreatorLinks(rawUrl) {
       for (let i = 0; i < probeResults.length; i++) {
         if (probeResults[i].status === "fulfilled" && probeResults[i].value) {
           const html = probeResults[i].value;
-          if (html.length < 500) continue;
           if (applyStore(extractStoreLinks(html))) break;
         }
       }
