@@ -1064,7 +1064,7 @@ async function scanCreatorLinks(rawUrl) {
     }
   }
 
-  // Extract raw username from the URL (works for tiktok.com/@name, linktr.ee/name, etc.)
+  // Extract raw username from the URL (works for tiktok.com/@name, linktr.ee/name, guns.lol/name, etc.)
   const username = targetUrl.replace(/\/$/, "").split("/").pop().replace(/^@/, "").trim().toLowerCase();
 
   const result = {
@@ -1104,15 +1104,15 @@ async function scanCreatorLinks(rawUrl) {
       .replace(/%3A/gi, ":")
       .replace(/&amp;/g, "&");
 
-    const p = (text.match(/https?:\/\/(?:www\.)?payhip\.com\/[a-zA-Z0-9_\-\.\/]+/i) || [])[0] ||
-              (text.match(/payhip\.com\/([a-zA-Z0-9_\-\.]+)/i) ? `https://payhip.com/${(text.match(/payhip\.com\/([a-zA-Z0-9_\-\.]+)/i)||[])[1]}` : null);
-    const b = (text.match(/https?:\/\/(?:www\.)?boosty\.to\/[a-zA-Z0-9_\-\.\/]+/i) || [])[0] ||
-              (text.match(/boosty\.to\/([a-zA-Z0-9_\-\.]+)/i) ? `https://boosty.to/${(text.match(/boosty\.to\/([a-zA-Z0-9_\-\.]+)/i)||[])[1]}` : null);
-    const t = (text.match(/https?:\/\/(?:www\.)?patreon\.com\/[a-zA-Z0-9_\-\.\/]+/i) || [])[0] ||
-              (text.match(/patreon\.com\/([a-zA-Z0-9_\-\.]+)/i) ? `https://patreon.com/${(text.match(/patreon\.com\/([a-zA-Z0-9_\-\.]+)/i)||[])[1]}` : null);
-    const g = (text.match(/https?:\/\/(?:www\.)?gumroad\.com\/[a-zA-Z0-9_\-\.\/]+/i) || [])[0] ||
-              (text.match(/([a-zA-Z0-9_\-\.]+)\.gumroad\.com/i) ? `https://${(text.match(/([a-zA-Z0-9_\-\.]+)\.gumroad\.com/i)||[])[1]}.gumroad.com` : null);
-    const s = (text.match(/https?:\/\/(?:www\.)?stan\.store\/[a-zA-Z0-9_\-\.\/]+/i) || [])[0];
+    const p = (text.match(/https?:\/\/(?:www\.)?payhip\.com\/[\w\-\.\/]+/i) || [])[0] ||
+              (text.match(/payhip\.com\/([\w\-\.]+)/i) ? `https://payhip.com/${(text.match(/payhip\.com\/([\w\-\.]+)/i)||[])[1]}` : null);
+    const b = (text.match(/https?:\/\/(?:www\.)?boosty\.to\/[\w\-\.\/]+/i) || [])[0] ||
+              (text.match(/boosty\.to\/([\w\-\.]+)/i) ? `https://boosty.to/${(text.match(/boosty\.to\/([\w\-\.]+)/i)||[])[1]}` : null);
+    const t = (text.match(/https?:\/\/(?:www\.)?patreon\.com\/[\w\-\.\/]+/i) || [])[0] ||
+              (text.match(/patreon\.com\/([\w\-\.]+)/i) ? `https://patreon.com/${(text.match(/patreon\.com\/([\w\-\.]+)/i)||[])[1]}` : null);
+    const g = (text.match(/https?:\/\/(?:www\.)?gumroad\.com\/[\w\-\.\/]+/i) || [])[0] ||
+              (text.match(/([\w\-\.]+)\.gumroad\.com/i) ? `https://${(text.match(/([\w\-\.]+)\.gumroad\.com/i)||[])[1]}.gumroad.com` : null);
+    const s = (text.match(/https?:\/\/(?:www\.)?stan\.store\/[\w\-\.\/]+/i) || [])[0];
 
     return { payhip: p, boosty: b, patreon: t, gumroad: g, stan: s };
   }
@@ -1167,7 +1167,7 @@ async function scanCreatorLinks(rawUrl) {
   }
 
   // === CASE 3: Social media profile — multi-strategy scan ===
-  if (!result.found && username && username.length >= 2 && !username.includes(".")) {
+  if (!result.found && username && username.length >= 2) {
     let actualBioLink = null;
 
     // STRATEGY A: Query HLX API directly for TikTok profiles (returns exact bioLink from TikTok profile)
