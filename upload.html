@@ -1426,8 +1426,11 @@
         }
 
         function changeWizPage(delta) {
-            window.wizProdPage += delta;
+            var curr = parseInt(window.wizProdPage) || 1;
+            window.wizProdPage = curr + delta;
             renderWizProductsGrid();
+            var gridEl = document.getElementById('wizProductGridSelect');
+            if (gridEl) gridEl.scrollTop = 0;
         }
 
         function renderWizProductsContainer() {
@@ -1450,7 +1453,6 @@
 
             bodyEl.innerHTML = html;
             renderWizProductsGrid();
-            enrichWizardProductCards();
         }
 
         function renderWizProductsGrid() {
@@ -1475,6 +1477,7 @@
             var pageSize = 6;
             var totalPages = Math.ceil(total / pageSize) || 1;
 
+            if (typeof window.wizProdPage !== 'number' || isNaN(window.wizProdPage)) window.wizProdPage = 1;
             if (window.wizProdPage < 1) window.wizProdPage = 1;
             if (window.wizProdPage > totalPages) window.wizProdPage = totalPages;
 
@@ -1590,20 +1593,40 @@
             }
             document.getElementById('scrapedBadge').style.display = 'flex';
             updateLivePreview();
-            alertMsg('Approved & auto-filled product: ' + prod.title, false);
 
-            var statusEl = document.getElementById('wizStatus');
-            if (statusEl) {
-                statusEl.className = 'info-banner';
-                statusEl.style.background = 'rgba(0, 200, 100, 0.1)';
-                statusEl.style.borderColor = 'rgba(0, 200, 100, 0.3)';
-                statusEl.innerHTML = '<i class="fas fa-check-circle" style="color:#00e676;font-size:1.4rem"></i> <div><h4>Product Approved & Auto-Filled!</h4><p>Selected: <strong style="color:#fff">' + prod.title + '</strong></p></div>';
+            // Smooth upward slide animation for modal content & popup checkmark overlay
+            var modalContainer = document.querySelector('#wizModal > div') || document.querySelector('.creator-wiz-modal');
+            if (modalContainer) {
+                modalContainer.style.position = 'relative';
+                modalContainer.style.overflow = 'hidden';
+
+                var kids = modalContainer.children;
+                for (var k = 0; k < kids.length; k++) {
+                    kids[k].style.transition = 'transform 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease';
+                    kids[k].style.transform = 'translateY(-55px)';
+                    kids[k].style.opacity = '0';
+                }
+
+                var checkOverlay = document.createElement('div');
+                checkOverlay.style.cssText = 'position:absolute;top:50%;left:50%;transform:translate(-50%, 60px) scale(0.3);opacity:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;z-index:999;transition:all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);pointer-events:none;';
+                checkOverlay.innerHTML = '<div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg, #00e676, #00b0ff);display:grid;place-items:center;box-shadow:0 10px 30px rgba(0,230,118,0.4);color:#000;font-size:2.2rem;"><i class="fas fa-check"></i></div>' +
+                    '<div style="font-size:1.1rem;font-weight:800;color:#fff;text-align:center;">Product Approved!</div>' +
+                    '<div style="font-size:0.8rem;color:rgba(255,255,255,0.7);max-width:280px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (prod.title || 'Auto-filling details...') + '</div>';
+                
+                modalContainer.appendChild(checkOverlay);
+
+                setTimeout(function() {
+                    checkOverlay.style.transform = 'translate(-50%, -50%) scale(1)';
+                    checkOverlay.style.opacity = '1';
+                }, 40);
             }
 
-            if (prod.url) await scrapeProduct();
+            alertMsg('Approved & auto-filled product: ' + prod.title, false);
+
+            if (prod.url) scrapeProduct();
             setTimeout(function() {
                 closeCreatorWizard();
-            }, 1000);
+            }, 850);
         }
 
         function updateLivePreview(){
