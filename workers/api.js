@@ -1503,19 +1503,33 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
       }
 
       // 1. Run Worker multi-strategy scanner first
-      const workerRes = await scanCreatorLinks(scanUrl);
-      if (workerRes && workerRes.found) {
-        return json(workerRes);
-      }
+      let workerRes = await scanCreatorLinks(scanUrl);
 
-      // 2. If Worker didn't find a store, try BOT_API backend
-      try {
-        const botResp = await fetch(`${BOT_API}/api/scan-creator-links?url=${encodeURIComponent(scanUrl)}`, { headers: corsHeaders });
-        if (botResp.ok) {
-          const data = await botResp.json();
-          if (data && data.success && data.found) return json(data);
-        }
-      } catch(e) {}
+      // 2. If Worker found a store URL but couldn't parse products (e.g. Payhip edge 403), or didn't find store, query BOT_API backend
+      const hasProducts = workerRes && workerRes.products && workerRes.products.length > 0;
+      if (!hasProducts) {
+        try {
+          const targetForBot = (workerRes && workerRes.found && workerRes.storeUrl) ? workerRes.storeUrl : scanUrl;
+          const botResp = await fetch(`${BOT_API}/api/scan-creator-links?url=${encodeURIComponent(targetForBot)}`, { headers: corsHeaders });
+          if (botResp.ok) {
+            const data = await botResp.json();
+            if (data && data.success) {
+              if (data.products && data.products.length > 0) {
+                if (workerRes) {
+                  workerRes.products = data.products;
+                  if (!workerRes.storeUrl && data.storeUrl) workerRes.storeUrl = data.storeUrl;
+                  if (!workerRes.platform && data.platform) workerRes.platform = data.platform;
+                  workerRes.found = true;
+                } else {
+                  workerRes = data;
+                }
+              } else if (!workerRes || !workerRes.found) {
+                if (data.found) workerRes = data;
+              }
+            }
+          }
+        } catch(e) {}
+      }
 
       return json(workerRes);
     }

@@ -1334,10 +1334,11 @@
                     var prodHtml = '<h4 style="font-size:0.88rem;color:#fff;margin:16px 0 10px 0;"><i class="fas fa-store" style="color:var(--cherry-light)"></i> Select a Product to Approve & Auto-Fill</h4>';
                     prodHtml += '<div class="product-grid-select">';
                     prods.forEach(function(prod, idx) {
+                        var cardTitle = (prod.title && prod.title !== 'Product') ? prod.title : ('Product #' + (idx + 1) + (prod.url ? ' (' + prod.url.split('/').pop() + ')' : ''));
                         prodHtml += '<div class="prod-select-card" onclick="selectWizProduct(' + idx + ')">';
                         if (prod.image) prodHtml += '<img src="' + prod.image + '" alt="">';
                         else prodHtml += '<div style="aspect-ratio:16/10;background:#150508;border-radius:8px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);"><i class="fas fa-box"></i></div>';
-                        prodHtml += '<div class="p-title">' + (prod.title || 'Product') + '</div>';
+                        prodHtml += '<div class="p-title">' + cardTitle + '</div>';
                         if (prod.price) prodHtml += '<div class="p-price">' + prod.price + '</div>';
                         prodHtml += '<div class="p-btn"><i class="fas fa-check"></i> Approve & Select</div>';
                         prodHtml += '</div>';
@@ -1404,10 +1405,11 @@
                     var prodHtml = '<h4 style="font-size:0.88rem;color:#fff;margin:16px 0 10px 0;"><i class="fas fa-store" style="color:var(--cherry-light)"></i> Select Store Product to Approve & Auto-Fill</h4>';
                     prodHtml += '<div class="product-grid-select">';
                     scanData.products.forEach(function(prod, idx) {
+                        var cardTitle = (prod.title && prod.title !== 'Product') ? prod.title : ('Product #' + (idx + 1) + (prod.url ? ' (' + prod.url.split('/').pop() + ')' : ''));
                         prodHtml += '<div class="prod-select-card" onclick="selectWizProduct(' + idx + ')">';
                         if (prod.image) prodHtml += '<img src="' + prod.image + '" alt="">';
                         else prodHtml += '<div style="aspect-ratio:16/10;background:#150508;border-radius:8px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);"><i class="fas fa-box"></i></div>';
-                        prodHtml += '<div class="p-title">' + (prod.title || 'Product') + '</div>';
+                        prodHtml += '<div class="p-title">' + cardTitle + '</div>';
                         if (prod.price) prodHtml += '<div class="p-price">' + prod.price + '</div>';
                         prodHtml += '<div class="p-btn"><i class="fas fa-check"></i> Approve & Select</div>';
                         prodHtml += '</div>';
