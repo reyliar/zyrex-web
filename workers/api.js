@@ -1786,14 +1786,11 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
       if (workerRes && workerRes.found && workerRes.storeUrl && (workerRes.platform === "payhip" || workerRes.storeUrl.includes("payhip.com"))) {
         try {
           const storeBase = workerRes.storeUrl.replace(/\/$/, "");
-          const pageUrls = [
-            `${storeBase}/collection/all?page=1`,
-            `${storeBase}/collection/all?page=2`,
-            `${storeBase}/collection/all?page=3`,
-            `${storeBase}/collection/all?page=4`,
-            `${storeBase}/collection/all?page=5`,
-            `${storeBase}/collection/all?page=6`
-          ];
+          // Fetch up to 20 pages to capture all products
+          const pageUrls = [];
+          for (let p = 1; p <= 20; p++) {
+            pageUrls.push(`${storeBase}/collection/all?page=${p}`);
+          }
 
           const seenUrls = new Set((workerRes.products || []).map(p => p.url));
           const allProducts = [...(workerRes.products || [])];
@@ -1821,8 +1818,8 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
 
       // 4. Enrich products in controlled batches with real title, thumbnail image, and price
       if (workerRes && workerRes.products && workerRes.products.length > 0) {
-        const prodsToEnrich = workerRes.products.filter(p => !p.title || p.title === "Product" || p.title === "Patreon Post" || p.title.startsWith("Post #") || !p.image).slice(0, 40);
-        const batchSize = 5;
+        const prodsToEnrich = workerRes.products.filter(p => !p.title || p.title === "Product" || p.title === "Patreon Post" || p.title.startsWith("Post #") || !p.image);
+        const batchSize = 8;
         for (let i = 0; i < prodsToEnrich.length; i += batchSize) {
           const batch = prodsToEnrich.slice(i, i + batchSize);
           await Promise.all(batch.map(async (prod) => {
