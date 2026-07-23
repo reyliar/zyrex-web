@@ -1244,7 +1244,7 @@ async function scanCreatorLinks(rawUrl) {
         const prodRegex = /<a[^>]+href="(\/b\/[a-zA-Z0-9_]+|https?:\/\/payhip\.com\/b\/[a-zA-Z0-9_]+)"[^>]*>([\s\S]*?)<\/a>/gi;
         let match;
         const seenUrls = new Set();
-        while ((match = prodRegex.exec(storeHtml)) !== null && products.length < 12) {
+        while ((match = prodRegex.exec(storeHtml)) !== null && products.length < 100) {
           let pUrl = match[1];
           if (pUrl.startsWith("/")) pUrl = `https://payhip.com${pUrl}`;
           if (seenUrls.has(pUrl)) continue;
@@ -1533,7 +1533,7 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
 
       // 3. Enrich products concurrently with real title, thumbnail image, and price
       if (workerRes && workerRes.products && workerRes.products.length > 0) {
-        const enrichPromises = workerRes.products.slice(0, 10).map(async (prod) => {
+        const enrichPromises = workerRes.products.slice(0, 50).map(async (prod) => {
           if (!prod.title || prod.title === "Product" || !prod.image) {
             try {
               const botScrape = await fetch(`${BOT_API}/api/scrape?url=${encodeURIComponent(prod.url)}`, { headers: corsHeaders });
