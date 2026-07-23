@@ -1210,38 +1210,38 @@
                 return;
             }
 
-            if (overridePlat) window.selectedPlatform = overridePlat;
-
             var statusEl = document.getElementById('wizStatus');
             var bodyEl = document.getElementById('wizBody');
             var btn = document.getElementById('btnWizStart');
 
-            // If rawInput is a username without domain, and no platform override was picked yet:
+            // Check if rawInput is a full direct URL
             var isFullUrl = rawInput.startsWith('http://') || rawInput.startsWith('https://') || /^(payhip|boosty|patreon|linktr|guns|beacons|tiktok|instagram|youtube|twitter|x)\./i.test(rawInput);
 
-            if (!isFullUrl && !window.selectedPlatform) {
+            // If user entered @username or raw handle without full URL, and overridePlat was NOT clicked yet:
+            if (!isFullUrl && !overridePlat) {
+                var cleanHandle = rawInput.replace(/^@/, '');
                 statusEl.style.display = 'block';
                 statusEl.className = 'info-banner';
                 statusEl.style.background = 'rgba(230,21,54,0.05)';
                 statusEl.style.borderColor = 'var(--border)';
-                statusEl.innerHTML = '<i class="fas fa-layer-group" style="color:var(--cherry-light)"></i> <div><h4>Select Social Platform</h4><p>Choose the platform for <strong style="color:#fff">@' + rawInput.replace(/^@/, '') + '</strong> to continue scanning:</p></div>';
+                statusEl.innerHTML = '<i class="fas fa-layer-group" style="color:var(--cherry-light)"></i> <div><h4>Select Social Platform</h4><p>Choose which platform <strong style="color:#fff">@' + cleanHandle + '</strong> is on:</p></div>';
 
                 var platPickerHtml = '<div style="margin:16px 0;display:grid;grid-template-columns:repeat(2,1fr);gap:12px;">' +
                     '<button type="button" class="btn-plat-select" onclick="startCreatorWizard(\'tiktok\')" style="padding:16px;border-radius:14px;background:rgba(230,21,54,0.08);border:1px solid var(--border);color:#fff;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all 0.2s ease;">' +
                     '<i class="fab fa-tiktok" style="font-size:1.5rem;color:#ff0050;"></i>' +
-                    '<div style="text-align:left;"><div style="font-size:0.9rem;font-weight:800;">TikTok</div><div style="font-size:0.7rem;color:var(--muted);">tiktok.com/@' + rawInput.replace(/^@/, '') + '</div></div>' +
+                    '<div style="text-align:left;"><div style="font-size:0.9rem;font-weight:800;">TikTok</div><div style="font-size:0.7rem;color:var(--muted);">tiktok.com/@' + cleanHandle + '</div></div>' +
                     '</button>' +
                     '<button type="button" class="btn-plat-select" onclick="startCreatorWizard(\'instagram\')" style="padding:16px;border-radius:14px;background:rgba(230,21,54,0.08);border:1px solid var(--border);color:#fff;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all 0.2s ease;">' +
                     '<i class="fab fa-instagram" style="font-size:1.5rem;color:#e1306c;"></i>' +
-                    '<div style="text-align:left;"><div style="font-size:0.9rem;font-weight:800;">Instagram</div><div style="font-size:0.7rem;color:var(--muted);">instagram.com/' + rawInput.replace(/^@/, '') + '</div></div>' +
+                    '<div style="text-align:left;"><div style="font-size:0.9rem;font-weight:800;">Instagram</div><div style="font-size:0.7rem;color:var(--muted);">instagram.com/' + cleanHandle + '</div></div>' +
                     '</button>' +
                     '<button type="button" class="btn-plat-select" onclick="startCreatorWizard(\'youtube\')" style="padding:16px;border-radius:14px;background:rgba(230,21,54,0.08);border:1px solid var(--border);color:#fff;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all 0.2s ease;">' +
                     '<i class="fab fa-youtube" style="font-size:1.5rem;color:#ff0000;"></i>' +
-                    '<div style="text-align:left;"><div style="font-size:0.9rem;font-weight:800;">YouTube</div><div style="font-size:0.7rem;color:var(--muted);">youtube.com/@' + rawInput.replace(/^@/, '') + '</div></div>' +
+                    '<div style="text-align:left;"><div style="font-size:0.9rem;font-weight:800;">YouTube</div><div style="font-size:0.7rem;color:var(--muted);">youtube.com/@' + cleanHandle + '</div></div>' +
                     '</button>' +
                     '<button type="button" class="btn-plat-select" onclick="startCreatorWizard(\'twitter\')" style="padding:16px;border-radius:14px;background:rgba(230,21,54,0.08);border:1px solid var(--border);color:#fff;cursor:pointer;display:flex;align-items:center;gap:12px;transition:all 0.2s ease;">' +
                     '<i class="fab fa-x-twitter" style="font-size:1.5rem;color:#fff;"></i>' +
-                    '<div style="text-align:left;"><div style="font-size:0.9rem;font-weight:800;">X / Twitter</div><div style="font-size:0.7rem;color:var(--muted);">x.com/' + rawInput.replace(/^@/, '') + '</div></div>' +
+                    '<div style="text-align:left;"><div style="font-size:0.9rem;font-weight:800;">X / Twitter</div><div style="font-size:0.7rem;color:var(--muted);">x.com/' + cleanHandle + '</div></div>' +
                     '</button>' +
                     '</div>';
 
@@ -1256,22 +1256,15 @@
             statusEl.style.display = 'block';
             bodyEl.innerHTML = '';
 
-            // Normalize URL
+            // Construct full socialUrl using overridePlat or parsed input
             var socialUrl = rawInput;
-            if (!socialUrl.startsWith('http://') && !socialUrl.startsWith('https://')) {
+            if (!isFullUrl) {
                 var handle = rawInput.replace(/^@/, '');
-                var plat = window.selectedPlatform || 'tiktok';
-                if (/^(payhip|boosty|patreon|linktr|guns|beacons)\./i.test(socialUrl)) {
-                    socialUrl = 'https://' + socialUrl;
-                } else if (plat === 'instagram' || rawInput.includes('instagram')) {
-                    socialUrl = 'https://www.instagram.com/' + handle;
-                } else if (plat === 'youtube' || rawInput.includes('youtube')) {
-                    socialUrl = 'https://www.youtube.com/@' + handle;
-                } else if (plat === 'twitter' || plat === 'x' || rawInput.includes('twitter') || rawInput.includes('x.com')) {
-                    socialUrl = 'https://x.com/' + handle;
-                } else {
-                    socialUrl = 'https://www.tiktok.com/@' + handle;
-                }
+                var selectedPlat = overridePlat || window.selectedPlatform || 'tiktok';
+                if (selectedPlat === 'instagram') socialUrl = 'https://www.instagram.com/' + handle;
+                else if (selectedPlat === 'youtube') socialUrl = 'https://www.youtube.com/@' + handle;
+                else if (selectedPlat === 'twitter' || selectedPlat === 'x') socialUrl = 'https://x.com/' + handle;
+                else socialUrl = 'https://www.tiktok.com/@' + handle;
             }   
 
             // Case A: Direct Payhip Product Link (e.g. payhip.com/b/xxxxx)
