@@ -1864,19 +1864,36 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
 
     if ((path === "/api/hlx/resolve" || path === "/api/hlx/resolve/") && request.method === "GET") {
       const targetSocialUrl = url.searchParams.get("url") || "";
-      try {
-        const botResp = await fetch(`${BOT_API}/api/hlx/resolve?url=${encodeURIComponent(targetSocialUrl)}`, { headers: corsHeaders });
-        const data = await botResp.json();
-        if (botResp.ok && data && data.success) {
-          return json(data);
-        } else if (data && data.error) {
-          return json(data, botResp.status || 400);
-        }
-      } catch(e) {}
-      
+
+      // Helper: is this a real nickname or just boilerplate?
+      const isBoilerplate = (nickname, username) => {
+        if (!nickname) return true;
+        const low = nickname.toLowerCase().trim();
+        const boilerplates = ["instagram", "instagram photos and videos", "youtube", "twitter", "x", "tiktok", "facebook"];
+        if (boilerplates.includes(low)) return true;
+        if (low === (username || "").toLowerCase().trim()) return true;
+        return false;
+      };
+
+      // For TikTok: bot (via HLX) works well → use it
+      // For others: skip bot and go straight to resolveSocialProfile
+      const isTikTok = targetSocialUrl.includes("tiktok.com") || (targetSocialUrl.startsWith("@") && !targetSocialUrl.includes("."));
+      if (isTikTok) {
+        try {
+          const botResp = await fetch(`${BOT_API}/api/hlx/resolve?url=${encodeURIComponent(targetSocialUrl)}`, { headers: corsHeaders });
+          if (botResp.ok) {
+            const data = await botResp.json();
+            if (data && data.success && !isBoilerplate(data.nickname, data.username)) {
+              return json(data);
+            }
+          }
+        } catch(e) {}
+      }
+
       const fallbackData = await resolveSocialProfile(targetSocialUrl);
       return json(fallbackData);
     }
+
 
     // ============ AUDIO UPLOAD: direct file upload to R2 ============
     if (path === "/api/audio/upload" && request.method === "POST") {
