@@ -1352,7 +1352,7 @@
                     '<button type="button" class="btn btn-primary btn-sm" onclick="scanManualStore()"><i class="fas fa-magic"></i> Load Products</button>' +
                     '</div>' +
                     '</div>';
-                bodyEl.innerHTML += manualHtml;
+                bodyEl.innerHTML = html + manualHtml;
             }
 
             btn.disabled = false;
@@ -1406,7 +1406,7 @@
 
         function initWizProductPagination(prods, preservePage) {
             window.scannedProducts = prods || [];
-            if (!preservePage) {
+            if (!preservePage && typeof window.wizProdPage !== 'number') {
                 window.wizProdPage = 1;
                 window.wizSearchQuery = '';
             }
@@ -1452,6 +1452,11 @@
         function renderWizProductsContainer() {
             var bodyEl = document.getElementById('wizBody');
             if (!bodyEl) return;
+
+            if (document.getElementById('wizProductGridSelect')) {
+                renderWizProductsGrid();
+                return;
+            }
 
             var html = '<div style="margin:16px 0 12px 0;">' +
                 '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">' +
