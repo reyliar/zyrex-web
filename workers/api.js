@@ -1816,6 +1816,88 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
         } catch(e) {}
       }
 
+      // 3b. Direct Payhip HTML fallback: fetch collection pages and parse product cards
+      // This catches products that the BOT_API scraper might miss (e.g. last row)
+      if (workerRes && workerRes.found && workerRes.storeUrl && (workerRes.platform === "payhip" || workerRes.storeUrl.includes("payhip.com"))) {
+        try {
+          const storeBase = workerRes.storeUrl.replace(/\/$/, "");
+          const collectionUrl = `${storeBase}/collection/all`;
+          const htmlResp = await fetch(collectionUrl, {
+            headers: {
+              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+              "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
+            }
+          });
+          if (htmlResp.ok) {
+            const html = await htmlResp.text();
+            // Match ALL product URLs in the page: /b/XXXXX (in href, data-url, text content, etc.)
+            const rawUrlMatches = [...html.matchAll(/["'](https?:\/\/payhip\.com\/b\/([a-zA-Z0-9]+))["']/g)];
+            const allProdUrls = [...new Set(rawUrlMatches.map(m => m[1]))];
+
+            if (allProdUrls.length > 0) {
+              const seenUrls = new Set((workerRes.products || []).map(p => p.url));
+              for (const url of allProdUrls) {
+                if (!seenUrls.has(url)) {
+                  seenUrls.add(url);
+                  workerRes.products.push({ url, title: "", price: "", image: "" });
+                }
+              }
+            }
+
+            // Also try to extract titles & images from product cards
+            // Strategy: find blocks around each product URL and extract metadata
+            for (const prodUrl of allProdUrls) {
+              const prod = (workerRes.products || []).find(p => p.url === prodUrl);
+              if (!prod) continue;
+              if (prod.title && prod.image) continue; // already enriched
+
+              // Find the surrounding HTML context (500 chars before and after the URL)
+              const urlIdx = html.indexOf(prodUrl);
+              if (urlIdx === -1) continue;
+              const contextStart = Math.max(0, urlIdx - 800);
+              const contextEnd = Math.min(html.length, urlIdx + 1500);
+              const context = html.slice(contextStart, contextEnd);
+
+              // Extract image: look for <img> tags with src
+              if (!prod.image) {
+                const imgMatch = context.match(/<img[^>]+src="([^"]+)"[^>]*>/i);
+                if (imgMatch) {
+                  let imgSrc = imgMatch[1];
+                  if (imgSrc.startsWith("//")) imgSrc = "https:" + imgSrc;
+                  if (imgSrc.includes("payhip.com") || imgSrc.includes("cdn") || imgSrc.match(/\.(jpg|jpeg|png|webp|gif)/i)) {
+                    prod.image = imgSrc;
+                  }
+                }
+              }
+
+              // Extract title: look for alt text on image, or product name heading
+              if (!prod.title) {
+                const altMatch = context.match(/alt="([^"]{3,120})"/i);
+                if (altMatch) {
+                  const t = altMatch[1].trim();
+                  if (t.length > 2 && !t.startsWith("http") && !/^(Product|Image|Photo|Picture)$/i.test(t)) {
+                    prod.title = t;
+                  }
+                }
+                if (!prod.title) {
+                  const headingMatch = context.match(/<h[2-4][^>]*>([^<]{3,120})<\/h[2-4]>/i);
+                  if (headingMatch) {
+                    const t = headingMatch[1].trim();
+                    if (t.length > 2 && !t.startsWith("http")) prod.title = t;
+                  }
+                }
+              }
+
+              // Extract price
+              if (!prod.price) {
+                const priceMatch = context.match(/\$(\d+\.?\d{0,2})/);
+                if (priceMatch) prod.price = `$${priceMatch[1]}`;
+              }
+            }
+          }
+        } catch(e) {}
+      }
+
       // 4. Enrich products in controlled batches with real title, thumbnail image, and price
       if (workerRes && workerRes.products && workerRes.products.length > 0) {
         const prodsToEnrich = workerRes.products.filter(p => !p.title || p.title === "Product" || p.title === "Patreon Post" || p.title.startsWith("Post #") || !p.image);
