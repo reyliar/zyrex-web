@@ -1365,16 +1365,47 @@ async function resolveSocialProfile(targetUrl) {
       else cleanUrl = `https://www.tiktok.com/@${cleanUrl}`;
     }
 
+    const parts = cleanUrl.replace(/\/$/, "").split("/");
+    let username = parts[parts.length - 1].replace("@", "");
+    if (cleanUrl.includes("instagram.com")) {
+      const igParts = cleanUrl.replace(/\/$/, "").split("/");
+      username = igParts[igParts.length - 1].replace("@", "") || username;
+    }
+
+    // Try BOT_API first for headless / rich proxy resolution
+    try {
+      const botRes = await fetch(`${BOT_API}/api/hlx/resolve?url=${encodeURIComponent(cleanUrl)}`, {
+        headers: { "User-Agent": FETCH_HEADERS["User-Agent"] }
+      });
+      if (botRes.ok) {
+        const botData = await botRes.json();
+        if (botData && botData.success && botData.nickname) {
+          let bName = botData.nickname.trim();
+          bName = bName.replace(/\s*\(?@[\w\.-]+\)?/g, "");
+          bName = bName.replace(/\s*[•\|\-\–]\s*(Instagram|TikTok|YouTube|X|Twitter).*/i, "");
+          bName = bName.replace(/^\s*(Instagram|TikTok|YouTube|X|Twitter)\s*:\s*/i, "");
+          bName = bName.trim();
+          if (bName && bName.toLowerCase() !== "instagram" && !bName.includes("Înainte de a accesa")) {
+            return {
+              success: true,
+              nickname: bName,
+              avatar: botData.avatar || "",
+              username: botData.username || username,
+              bioLink: botData.bioLink || null
+            };
+          }
+        }
+      }
+    } catch(e) {}
+
+    // Fallback: direct edge fetch & HTML meta tag parsing
     const resp = await fetch(cleanUrl, {
       headers: {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        "User-Agent": FETCH_HEADERS["User-Agent"],
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "en-US,en;q=0.9"
       }
     });
-
-    const parts = cleanUrl.replace(/\/$/, "").split("/");
-    const username = parts[parts.length - 1].replace("@", "");
 
     if (!resp.ok) {
       return { success: true, nickname: username, avatar: "", username, bioLink: null };
@@ -1382,23 +1413,29 @@ async function resolveSocialProfile(targetUrl) {
 
     const html = await resp.text();
 
-    // --- og tags ---
     let title = (html.match(/<meta\s+property="og:title"\s+content="([^"]+)"/i) || [])[1]
              || (html.match(/<title>([^<]+)<\/title>/i) || [])[1] || "";
-    title = title.replace(/&amp;/g, "&").replace(/&#39;/g, "'");
-    let nickname = title.split("(")[0].replace(/[|\-–]\s*(TikTok|Instagram|YouTube|X).*/i, "").trim();
-    if (!nickname || nickname.toLowerCase().includes("tiktok") || nickname.toLowerCase().includes("instagram")) nickname = username;
+    title = title.replace(/&amp;/g, "&").replace(/&#39;/g, "'").replace(/&quot;/g, '"');
+
+    let nickname = title;
+    nickname = nickname.replace(/\s*\(?@[\w\.-]+\)?/g, "");
+    nickname = nickname.replace(/\s*[•\|\-\–]\s*(Instagram|TikTok|YouTube|X|Twitter).*/i, "");
+    nickname = nickname.replace(/^\s*(Instagram|TikTok|YouTube|X|Twitter)\s*:\s*/i, "");
+    nickname = nickname.trim();
+
+    if (!nickname || nickname.toLowerCase() === "instagram" || nickname.toLowerCase() === "tiktok" || nickname.toLowerCase() === "youtube" || nickname.toLowerCase() === "x" || nickname.includes("Înainte de a accesa")) {
+      nickname = username;
+    }
+
     let avatar = (html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i) || [])[1]
               || (html.match(/<meta\s+name="twitter:image"\s+content="([^"]+)"/i) || [])[1] || "";
 
-    // --- Extract REAL bio link from __NEXT_DATA__ / JSON-LD ---
+    // Extract bio link if present
     let bioLink = null;
-    // TikTok embeds profile data in a <script id="__NEXT_DATA__"> tag
     const nextDataMatch = html.match(/<script[^>]+id=["']__NEXT_DATA__["'][^>]*>([\s\S]*?)<\/script>/i);
     if (nextDataMatch) {
       try {
         const nextData = JSON.parse(nextDataMatch[1]);
-        // TikTok path: props.pageProps.userInfo.user.bioLink.link
         const user = nextData?.props?.pageProps?.userInfo?.user ||
                      nextData?.props?.pageProps?.user ||
                      nextData?.props?.initialProps?.user;
@@ -1406,13 +1443,11 @@ async function resolveSocialProfile(targetUrl) {
         else if (user?.bio_link?.link) bioLink = user.bio_link.link;
       } catch(e) {}
     }
-    // Fallback: search raw HTML for any "bioLink":"..." or "link":"https://..." near bio
     if (!bioLink) {
       const bioLinkMatch = html.match(/"bioLink"\s*:\s*\{[^}]*"link"\s*:\s*"(https?:\/\/[^"]+)"/i)
                         || html.match(/"bio_link"\s*:\s*\{[^}]*"link"\s*:\s*"(https?:\/\/[^"]+)"/i);
       if (bioLinkMatch) bioLink = bioLinkMatch[1];
     }
-    // Instagram: check for "external_url" in JSON blob
     if (!bioLink && cleanUrl.includes("instagram.com")) {
       const igMatch = html.match(/"external_url"\s*:\s*"(https?:\/\/[^"]+)"/i);
       if (igMatch) bioLink = igMatch[1];
@@ -1423,7 +1458,7 @@ async function resolveSocialProfile(targetUrl) {
       nickname: nickname || username,
       avatar,
       username,
-      bioLink  // The actual URL from their bio/links section
+      bioLink
     };
   } catch (e) {
     const parts = String(targetUrl).replace(/\/$/, "").split("/");

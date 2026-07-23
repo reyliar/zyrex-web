@@ -560,12 +560,18 @@
             var user=document.getElementById('hlxUser').value.trim();
             if(!user)return;
             var st=document.getElementById('hlxStatus');st.style.display='block';st.textContent='Searching...';st.className='';
-            var platforms={tiktok:'https://www.tiktok.com/@'+user,instagram:'https://www.instagram.com/'+user,youtube:'https://www.youtube.com/@'+user,x:'https://x.com/'+user};
-            var lookupUrl=platforms[hlxPlatform]||('https://www.tiktok.com/@'+user);
+            var cleanUser = user.replace(/^@/, '');
+            var platforms={
+                tiktok:'https://www.tiktok.com/@'+cleanUser,
+                instagram:'https://www.instagram.com/'+cleanUser,
+                youtube:'https://www.youtube.com/@'+cleanUser,
+                x:'https://x.com/'+cleanUser
+            };
+            var lookupUrl = (user.startsWith('http://') || user.startsWith('https://')) ? user : (platforms[hlxPlatform] || ('https://www.tiktok.com/@' + cleanUser));
             try{
                 var r=await fetch('/api/hlx/resolve?url='+encodeURIComponent(lookupUrl),{credentials:'include'});
                 var d=await r.json();
-                if(d.success){
+                if(d.success && d.nickname){
                     var creatorDisplay=d.nickname;
                     document.getElementById('socialUrl').value=lookupUrl;
                     document.getElementById('creatorName').value=creatorDisplay;
@@ -574,7 +580,7 @@
                     setTimeout(toggleHlx, 1000);
                 }else{
                     st.style.color = 'var(--cherry-light)';
-                    st.textContent=d.error||'Not found';
+                    st.textContent=(d && d.error)||"Could not resolve profile";
                 }
             }catch(e){st.style.color = 'var(--cherry-light)';st.textContent='Network error'}
         }

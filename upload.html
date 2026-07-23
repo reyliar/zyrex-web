@@ -1131,9 +1131,8 @@
             }catch(e){alertMsg('Scrape failed.', true)}
             btn.disabled=false;
             btn.innerHTML='<i class="fas fa-magic"></i> Scrape';
-        }
-
-        function setPlatFilter(plat) {
+        }        function setPlatFilter(plat) {
+            window.selectedPlatform = plat;
             document.querySelectorAll('#platformPillBar .plat-pill').forEach(function(pill) {
                 pill.classList.remove('active');
             });
@@ -1146,7 +1145,7 @@
                 if (plat === 'tiktok') input.placeholder = 'https://tiktok.com/@creator';
                 else if (plat === 'instagram') input.placeholder = 'https://instagram.com/creator';
                 else if (plat === 'youtube') input.placeholder = 'https://youtube.com/@channel';
-                else if (plat === 'twitter') input.placeholder = 'https://twitter.com/username';
+                else if (plat === 'twitter' || plat === 'x') input.placeholder = 'https://x.com/username';
                 input.focus();
             }
         }
@@ -1193,10 +1192,10 @@
                     if (dot) { dot.style.background = '#00e676'; dot.style.color = '#000'; dot.innerHTML = '<i class="fas fa-check"></i>'; }
                 } else if (num === stepNum) {
                     el.style.color = 'var(--cherry-light)';
-                    if (dot) { dot.style.background = 'var(--cherry)'; dot.style.color = '#fff'; dot.textContent = num; }
+                    if (dot) { dot.style.background = 'var(--cherry-light)'; dot.style.color = '#fff'; dot.textContent = num; }
                 } else {
                     el.style.color = 'var(--muted)';
-                    if (dot) { dot.style.background = 'rgba(230,21,54,0.1)'; dot.style.color = 'var(--muted)'; dot.textContent = num; }
+                    if (dot) { dot.style.background = 'rgba(255,255,255,0.1)'; dot.style.color = 'var(--muted)'; dot.textContent = num; }
                 }
             });
 
@@ -1223,14 +1222,20 @@
             // Normalize URL
             var socialUrl = rawInput;
             if (!socialUrl.startsWith('http://') && !socialUrl.startsWith('https://')) {
+                var handle = rawInput.replace(/^@/, '');
+                var plat = window.selectedPlatform || 'tiktok';
                 if (/^(payhip|boosty|patreon|linktr|guns|beacons)\./i.test(socialUrl)) {
                     socialUrl = 'https://' + socialUrl;
-                } else if (socialUrl.startsWith('@')) {
-                    socialUrl = 'https://www.tiktok.com/' + socialUrl;
+                } else if (plat === 'instagram' || rawInput.includes('instagram')) {
+                    socialUrl = 'https://www.instagram.com/' + handle;
+                } else if (plat === 'youtube' || rawInput.includes('youtube')) {
+                    socialUrl = 'https://www.youtube.com/@' + handle;
+                } else if (plat === 'twitter' || plat === 'x' || rawInput.includes('twitter') || rawInput.includes('x.com')) {
+                    socialUrl = 'https://x.com/' + handle;
                 } else {
-                    socialUrl = 'https://www.tiktok.com/@' + socialUrl;
+                    socialUrl = 'https://www.tiktok.com/@' + handle;
                 }
-            }
+            }   
 
             // Case A: Direct Payhip Product Link (e.g. payhip.com/b/xxxxx)
             if (socialUrl.includes('payhip.com/b/') || socialUrl.includes('boosty.to/p/')) {
