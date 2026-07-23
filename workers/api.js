@@ -1505,7 +1505,7 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
       // 1. Run Worker multi-strategy scanner first
       let workerRes = await scanCreatorLinks(scanUrl);
 
-      // 2. If Worker found a store URL but couldn't parse products (e.g. Payhip edge 403), or didn't find store, query BOT_API backend
+      // 2. Query BOT_API backend if no products found or to fetch multi-page products
       const hasProducts = workerRes && workerRes.products && workerRes.products.length > 0;
       if (!hasProducts) {
         try {
@@ -1531,7 +1531,44 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
         } catch(e) {}
       }
 
-      // 3. Enrich products concurrently with real title, thumbnail image, and price
+      // 3. Multi-page collection fetch for Payhip stores to unlock products beyond page 1 (12 items)
+      if (workerRes && workerRes.found && workerRes.storeUrl && (workerRes.platform === "payhip" || workerRes.storeUrl.includes("payhip.com"))) {
+        try {
+          const storeBase = workerRes.storeUrl.replace(/\/$/, "");
+          const pageUrls = [
+            `${storeBase}/collection/all?page=1`,
+            `${storeBase}/collection/all?page=2`,
+            `${storeBase}/collection/all?page=3`,
+            `${storeBase}/collection/all?page=4`,
+            `${storeBase}/collection/all?page=5`,
+            `${storeBase}/collection/all?page=6`
+          ];
+
+          const seenUrls = new Set((workerRes.products || []).map(p => p.url));
+          const allProducts = [...(workerRes.products || [])];
+
+          const pageFetches = pageUrls.map(pUrl =>
+            fetch(`${BOT_API}/api/scan-creator-links?url=${encodeURIComponent(pUrl)}`, { headers: corsHeaders })
+              .then(r => r.ok ? r.json() : null)
+              .catch(() => null)
+          );
+
+          const results = await Promise.all(pageFetches);
+          for (const res of results) {
+            if (res && res.success && res.products) {
+              for (const prod of res.products) {
+                if (prod && prod.url && !seenUrls.has(prod.url)) {
+                  seenUrls.add(prod.url);
+                  allProducts.push(prod);
+                }
+              }
+            }
+          }
+          workerRes.products = allProducts;
+        } catch(e) {}
+      }
+
+      // 4. Enrich products concurrently with real title, thumbnail image, and price
       if (workerRes && workerRes.products && workerRes.products.length > 0) {
         const enrichPromises = workerRes.products.slice(0, 50).map(async (prod) => {
           if (!prod.title || prod.title === "Product" || !prod.image) {
