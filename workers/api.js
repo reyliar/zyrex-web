@@ -1400,16 +1400,120 @@ async function resolveSocialProfile(targetUrl) {
         const botData = await botRes.json();
         if (botData && botData.success && botData.nickname) {
           const sanitized = cleanSocialNickname(botData.nickname, username);
-          return {
-            success: true,
-            nickname: sanitized,
-            avatar: botData.avatar || "",
-            username: botData.username || username,
-            bioLink: botData.bioLink || null
-          };
+          // Only use bot result if nickname is genuinely different from username (not boilerplate)
+          const igBoilerplate = ["instagram", "instagram photos and videos"];
+          if (!igBoilerplate.includes(sanitized.toLowerCase())) {
+            return {
+              success: true,
+              nickname: sanitized,
+              avatar: botData.avatar || "",
+              username: botData.username || username,
+              bioLink: botData.bioLink || null
+            };
+          }
         }
       }
     } catch(e) {}
+
+    // Dedicated Instagram profile resolver (runs for instagram.com URLs when bot returns nothing useful)
+    if (cleanUrl.includes("instagram.com")) {
+      let igNickname = username;
+      let igAvatar = "";
+      let igBioLink = null;
+
+      // Method A: Instagram private web API (works from Cloudflare edge IPs)
+      try {
+        const igApiUrl = `https://www.instagram.com/api/v1/users/web_profile_info/?username=${encodeURIComponent(username)}`;
+        const igRes = await fetch(igApiUrl, {
+          headers: {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "X-IG-App-ID": "936619743392459",
+            "X-Requested-With": "XMLHttpRequest",
+            "Accept": "application/json, text/javascript, */*; q=0.01",
+            "Referer": "https://www.instagram.com/",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Sec-Fetch-Dest": "empty",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-Site": "same-origin"
+          }
+        });
+        if (igRes.ok) {
+          const igData = await igRes.json();
+          const user = igData?.data?.user || igData?.user || {};
+          if (user.full_name) igNickname = user.full_name;
+          else if (user.username) igNickname = user.username;
+          if (user.profile_pic_url_hd) igAvatar = user.profile_pic_url_hd;
+          else if (user.profile_pic_url) igAvatar = user.profile_pic_url;
+          if (user.external_url) igBioLink = user.external_url;
+          else if (user.bio_links?.[0]?.url) igBioLink = user.bio_links[0].url;
+        }
+      } catch(e) {}
+
+      // Method B: i.instagram.com mobile API
+      if (igNickname === username || !igAvatar) {
+        try {
+          const igMobileUrl = `https://i.instagram.com/api/v1/users/web_profile_info/?username=${encodeURIComponent(username)}`;
+          const igMobileRes = await fetch(igMobileUrl, {
+            headers: {
+              "User-Agent": "Instagram 275.0.0.27.98 Android (33/13; 420dpi; 1080x2400; Google/google; Pixel 6; oriole; qcom; en_US; 458229258)",
+              "X-IG-App-ID": "936619743392459",
+              "Accept": "application/json"
+            }
+          });
+          if (igMobileRes.ok) {
+            const d = await igMobileRes.json();
+            const user = d?.data?.user || {};
+            if (user.full_name && igNickname === username) igNickname = user.full_name;
+            if (user.profile_pic_url_hd && !igAvatar) igAvatar = user.profile_pic_url_hd;
+            if (user.external_url && !igBioLink) igBioLink = user.external_url;
+          }
+        } catch(e) {}
+      }
+
+      // Method C: Fetch the profile page HTML from Instagram (server-side render for some regions)
+      if (igNickname === username || !igAvatar) {
+        try {
+          const profileRes = await fetch(`https://www.instagram.com/${encodeURIComponent(username)}/`, {
+            headers: {
+              "User-Agent": "facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)",
+              "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+              "Accept-Language": "en-US,en;q=0.5"
+            }
+          });
+          if (profileRes.ok) {
+            const html = await profileRes.text();
+            // Try Open Graph tags first (Facebook crawler gets server-rendered page)
+            const ogTitle = (html.match(/<meta\s+property="og:title"\s+content="([^"]+)"/i) || [])[1] || "";
+            const ogImg   = (html.match(/<meta\s+property="og:image"\s+content="([^"]+)"/i) || [])[1] || "";
+            if (ogTitle && igNickname === username) {
+              let t = ogTitle
+                .replace(/\s*[•|]\s*Instagram.*/i, "")
+                .replace(/Instagram photos and videos/i, "")
+                .replace(/on Instagram/i, "")
+                .replace(/\s*@[\w.]+\s*/g, "")
+                .trim();
+              if (t && !["instagram"].includes(t.toLowerCase())) igNickname = t;
+            }
+            if (ogImg && !igAvatar) igAvatar = ogImg;
+            // JSON blob extraction
+            const fnMatch = html.match(/"full_name"\s*:\s*"([^"]+)"/);
+            if (fnMatch && igNickname === username) igNickname = fnMatch[1];
+            const picMatch = html.match(/"profile_pic_url"\s*:\s*"([^"]+)"/);
+            if (picMatch && !igAvatar) igAvatar = picMatch[1].replace(/\\/g, "");
+            const extMatch = html.match(/"external_url"\s*:\s*"(https?:\/\/[^"]+)"/);
+            if (extMatch && !igBioLink) igBioLink = extMatch[1].replace(/\\/g, "");
+          }
+        } catch(e) {}
+      }
+
+      return {
+        success: true,
+        nickname: igNickname,
+        avatar: igAvatar,
+        username,
+        bioLink: igBioLink
+      };
+    }
 
     // Fallback: direct edge fetch & HTML meta tag parsing
     const resp = await fetch(cleanUrl, {
