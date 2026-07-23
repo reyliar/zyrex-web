@@ -1613,10 +1613,13 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
         } catch(e) {}
       }
 
-      // 4. Enrich products concurrently with real title, thumbnail image, and price
+      // 4. Enrich products in controlled batches with real title, thumbnail image, and price
       if (workerRes && workerRes.products && workerRes.products.length > 0) {
-        const enrichPromises = workerRes.products.slice(0, 50).map(async (prod) => {
-          if (!prod.title || prod.title === "Product" || !prod.image) {
+        const prodsToEnrich = workerRes.products.filter(p => !p.title || p.title === "Product" || !p.image).slice(0, 40);
+        const batchSize = 5;
+        for (let i = 0; i < prodsToEnrich.length; i += batchSize) {
+          const batch = prodsToEnrich.slice(i, i + batchSize);
+          await Promise.all(batch.map(async (prod) => {
             try {
               const botScrape = await fetch(`${BOT_API}/api/scrape?url=${encodeURIComponent(prod.url)}`, { headers: corsHeaders });
               if (botScrape.ok) {
@@ -1628,10 +1631,8 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
                 }
               }
             } catch(e) {}
-          }
-          return prod;
-        });
-        await Promise.all(enrichPromises);
+          }));
+        }
       }
 
       return json(workerRes);

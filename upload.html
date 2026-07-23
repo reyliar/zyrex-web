@@ -1497,7 +1497,7 @@
                 pageItems.forEach(function(prod) {
                     var idx = prod._origIdx;
                     var cardTitle = (prod.title && prod.title !== 'Product') ? prod.title : ('Product #' + (idx + 1) + (prod.url ? ' (' + prod.url.split('/').pop() + ')' : ''));
-                    html += '<div class="prod-select-card" onclick="selectWizProduct(' + idx + ')">';
+                    html += '<div class="prod-select-card" data-orig-idx="' + idx + '" onclick="selectWizProduct(' + idx + ')">';
                     if (prod.image) html += '<img src="' + prod.image + '" alt="">';
                     else html += '<div style="aspect-ratio:16/10;background:#150508;border-radius:8px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;color:var(--muted);"><i class="fas fa-box"></i></div>';
                     html += '<div class="p-title">' + cardTitle + '</div>';
@@ -1520,6 +1520,8 @@
                     pagEl.innerHTML = pagHtml;
                 }
             }
+
+            enrichWizardProductCards();
         }
 
         async function enrichWizardProductCards() {
@@ -1534,8 +1536,7 @@
                             if (data.image || (data.thumbnails && data.thumbnails[0])) prod.image = data.image || data.thumbnails[0];
                             if (data.price) prod.price = data.price;
                             
-                            var cards = document.querySelectorAll('.product-grid-select .prod-select-card');
-                            var cardEl = cards[idx];
+                            var cardEl = document.querySelector('.product-grid-select .prod-select-card[data-orig-idx="' + idx + '"]');
                             if (cardEl) {
                                 var titleEl = cardEl.querySelector('.p-title');
                                 if (titleEl && data.title) titleEl.textContent = data.title;
