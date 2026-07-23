@@ -1414,7 +1414,9 @@
         }
 
         function filterWizProducts(query) {
-            window.wizSearchQuery = (query || '').trim().toLowerCase();
+            var newQuery = (query || '').trim().toLowerCase();
+            if (newQuery === (window.wizSearchQuery || '')) return;
+            window.wizSearchQuery = newQuery;
             window.wizProdPage = 1;
             var clearBtn = document.getElementById('wizClearSearchBtn');
             if (clearBtn) clearBtn.style.display = window.wizSearchQuery ? 'block' : 'none';
@@ -1424,10 +1426,20 @@
         function clearWizSearch() {
             var inp = document.getElementById('wizSearchInput');
             if (inp) inp.value = '';
-            filterWizProducts('');
+            window.wizSearchQuery = '';
+            window.wizProdPage = 1;
+            var clearBtn = document.getElementById('wizClearSearchBtn');
+            if (clearBtn) clearBtn.style.display = 'none';
+            renderWizProductsGrid();
         }
 
         function changeWizPage(delta) {
+            if (window.event) {
+                try {
+                    window.event.preventDefault();
+                    window.event.stopPropagation();
+                } catch(e) {}
+            }
             var curr = parseInt(window.wizProdPage, 10) || 1;
             var targetPage = curr + delta;
             if (targetPage < 1) targetPage = 1;
