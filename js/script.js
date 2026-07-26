@@ -151,13 +151,30 @@ async function fetchTeamData() {
     return null;
 }
 
+function formatTeamAvatarUrl(url, userId) {
+    if (!url) return '';
+    if (url.includes('cdn.discordapp.com/avatars/')) {
+        var match = url.match(/\/avatars\/(\d+)\/([a-zA-Z0-9_]+)/);
+        if (match) {
+            return '/api/avatar/' + match[1] + '/' + match[2] + '.png?size=256';
+        }
+    }
+    return url;
+}
+
 function renderFamilyTree(founders, staff, container) {
     if (!container) return;
     
     if (!founders || founders.length === 0) {
         founders = [
-            { id: "1421177012814614548", username: "reyli", global_name: "Reyli", avatar: "", role: "Founder", role_color: "#184b61", status: "online" },
-            { id: "1382421118098346174", username: "zyrex", global_name: "Zyrex", avatar: "", role: "Co-Founder", role_color: "#d39f9f", status: "online" }
+            { id: "1421177012814614548", username: "reyli", global_name: "Reyli", avatar: "/api/avatar/1421177012814614548/66077819163365312e485b95e30001d8.png", role: "Founder", role_color: "#184b61", status: "online" },
+            { id: "1382421118098346174", username: "zyrex", global_name: "Zyrex", avatar: "/api/avatar/1382421118098346174/d6a983ec1a87e899b737422ee50fb441.png", role: "Co-Founder", role_color: "#d39f9f", status: "online" }
+        ];
+    }
+
+    if (!staff || staff.length === 0) {
+        staff = [
+            { id: "700282586026737694", username: "ugotherizz", global_name: "𝑱𝑰𝑵𝑨✧.*", avatar: "/api/avatar/700282586026737694/f358b6536d5aaf867c158c6c0ffb1463.png", role: "Staff Team", role_color: "#e61536", status: "online" }
         ];
     }
     
@@ -169,7 +186,8 @@ function renderFamilyTree(founders, staff, container) {
     html += '<div class="tier-nodes">';
     
     founders.forEach(function(m) {
-        var ava = m.avatar ? '<img src="' + m.avatar + '" alt="' + m.global_name + '">' : '<div class="avatar-placeholder"><i class="fas fa-crown"></i></div>';
+        var src = formatTeamAvatarUrl(m.avatar, m.id);
+        var ava = src ? '<img src="' + src + '" alt="' + (m.global_name || m.username) + '" onerror="this.onerror=null;this.src=\'assets/content.png\';">' : '<div class="avatar-placeholder"><i class="fas fa-crown"></i></div>';
         var isFounder = (m.role || '').toLowerCase().includes('founder');
         var roleBadgeClass = isFounder ? 'badge-founder' : 'badge-co-founder';
         
@@ -196,27 +214,21 @@ function renderFamilyTree(founders, staff, container) {
     html += '<div class="tier-label"><i class="fas fa-shield-halved"></i> Staff Team</div>';
     html += '<div class="tier-nodes">';
     
-    if (staff && staff.length > 0) {
-        staff.forEach(function(m) {
-            var ava = m.avatar ? '<img src="' + m.avatar + '" alt="' + m.global_name + '">' : '<div class="avatar-placeholder"><i class="fas fa-user-shield"></i></div>';
-            html += '<a href="https://discord.com/users/' + m.id + '" target="_blank" class="tree-node node-staff glass-card-enhanced shimmer-sweep">' +
-                '<div class="node-avatar-wrap">' +
-                    ava +
-                    '<span class="node-status status-' + (m.status || 'offline') + '"></span>' +
-                '</div>' +
-                '<div class="node-info">' +
-                    '<h4 class="node-name">' + (m.global_name || m.username) + '</h4>' +
-                    '<span class="node-username">@' + m.username + '</span>' +
-                    '<span class="node-role badge-staff"><i class="fas fa-shield-halved"></i> Staff Team</span>' +
-                '</div>' +
-            '</a>';
-        });
-    } else {
-        html += '<div class="tree-node node-staff node-placeholder glass-card-enhanced">' +
-            '<div class="node-avatar-wrap"><div class="avatar-placeholder"><i class="fas fa-shield-halved"></i></div></div>' +
-            '<div class="node-info"><h4 class="node-name">Staff Team</h4><span class="node-username">Zyrex Staff Members</span><span class="node-role badge-staff"><i class="fas fa-shield-halved"></i> Active Staff</span></div>' +
-        '</div>';
-    }
+    staff.forEach(function(m) {
+        var src = formatTeamAvatarUrl(m.avatar, m.id);
+        var ava = src ? '<img src="' + src + '" alt="' + (m.global_name || m.username) + '" onerror="this.onerror=null;this.src=\'assets/content.png\';">' : '<div class="avatar-placeholder"><i class="fas fa-user-shield"></i></div>';
+        html += '<a href="https://discord.com/users/' + m.id + '" target="_blank" class="tree-node node-staff glass-card-enhanced shimmer-sweep">' +
+            '<div class="node-avatar-wrap">' +
+                ava +
+                '<span class="node-status status-' + (m.status || 'online') + '"></span>' +
+            '</div>' +
+            '<div class="node-info">' +
+                '<h4 class="node-name">' + (m.global_name || m.username) + '</h4>' +
+                '<span class="node-username">@' + m.username + '</span>' +
+                '<span class="node-role badge-staff"><i class="fas fa-shield-halved"></i> Staff Team</span>' +
+            '</div>' +
+        '</a>';
+    });
     
     html += '</div></div>';
     html += '</div>';

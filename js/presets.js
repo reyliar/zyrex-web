@@ -8,16 +8,24 @@ var currentPresetPage = 1;
 var lastPresetRenderKey = '';
 var lastPresetRenderItems = [];
 
+var loaderStartTime = Date.now();
 function hideResourcesLoader() {
     var loader = document.getElementById('resources-loader');
-    if (loader && !loader.classList.contains('fade-out')) {
-        loader.classList.add('fade-out');
-        setTimeout(function() {
-            if (loader && loader.parentNode) {
-                loader.parentNode.removeChild(loader);
-            }
-        }, 550);
-    }
+    if (!loader || loader.classList.contains('fade-out')) return;
+    
+    var elapsed = Date.now() - loaderStartTime;
+    var minDelay = Math.max(0, 450 - elapsed);
+    
+    setTimeout(function() {
+        if (loader && !loader.classList.contains('fade-out')) {
+            loader.classList.add('fade-out');
+            setTimeout(function() {
+                if (loader && loader.parentNode) {
+                    loader.parentNode.removeChild(loader);
+                }
+            }, 600);
+        }
+    }, minDelay);
 }
 
 function getCachedProducts() {
