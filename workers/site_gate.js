@@ -139,9 +139,7 @@ function offlineResponse(request) {
 }
 
 function isApiRequest(pathname) {
-  return pathname === "/resources" ||
-    pathname === "/resources.html" ||
-    pathname.startsWith("/api/");
+  return pathname.startsWith("/api/");
 }
 
 function isAdminPublishPage(pathname) {

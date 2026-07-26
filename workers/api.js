@@ -1647,22 +1647,6 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     
-    // Inject search script into resources page (bypasses Cloudflare cache)
-    if ((url.pathname === "/resources" || url.pathname === "/resources.html") && request.method === "GET") {
-      try {
-        const pageResp = await fetch(`https://main.zyrexweb.pages.dev/resources.html`);
-        let html = await pageResp.text();
-        // Inject inline search script before </body>
-        const searchScript = `<script>
-(function(){var si={};fetch('/api/search/creator-index').then(function(r){return r.json()}).then(function(d){if(d&&d.success&&d.index)si=d.index}).catch(function(){});
-document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=='s')return;var s=inp.value.toLowerCase().trim();var data=window.presetsData||[];if(!s){if(typeof renderPresets==='function')renderPresets(data);return}var mi=null;if(Object.keys(si).length>0){if(si[s]){mi={};(Array.isArray(si[s])?si[s]:String(si[s]).split(' ')).forEach(function(id){mi[id]=true})}else{mi={};var found=false;for(var k in si){if(k.indexOf(s)!==-1){found=true;var r2=si[k];(Array.isArray(r2)?r2:String(r2).split(' ')).forEach(function(id){mi[id]=true})}}if(!found)mi=null}}var filtered=data.filter(function(r){if(mi&&mi[r.id])return true;var txt=[r.name,r.creator_nickname,r.author_name,r.creator_username,r.creator_social_url,r.tags,r.desc,r.description].join(' ').toLowerCase();return txt.indexOf(s)!==-1});if(typeof renderPresets==='function')renderPresets(filtered)})})();<\/script>`;
-        html = html.replace('</body>', searchScript + '</body>');
-        return new Response(html, {
-          headers: { "Content-Type": "text/html;charset=UTF-8", "Cache-Control": "no-cache, no-store, must-revalidate" }
-        });
-      } catch(e) { /* fall through to Pages */ }
-    }
-    
     // Bypass: dl subdomain serves static download page from Pages
     if (url.hostname === "dl.zyrexediting.xyz") {
       const newUrl = new URL(request.url);
