@@ -61,63 +61,56 @@ async function initPresets() {
         }
     } catch(e) {}
 
-    // Load creator username index for search (await to ensure ready before first search)
+    // Load creator username index for search
     await loadCreatorIndex();
-    
-    // Sync download counts + resource stats from API
+
     var apiCounts = {}, statsData = {};
-    try {
-        var r1 = await fetch("/api/downloads/counts", {credentials: 'include'});
-        var d1 = await r1.json();
-        if (d1.success && d1.counts) { apiCounts = d1.counts; localStorage.setItem("zyrex_downloads", JSON.stringify(d1.counts)); }
-    } catch(e) {}
-    try {
-        var r2 = await fetch("/api/resource-stats", {credentials: 'include'});
-        var d2 = await r2.json();
-        if (d2.success) statsData = d2;
-    } catch(e) {}
-    
-    // Try cached products first — render immediately if available
     var cachedProducts = getCachedProducts();
-    if (cachedProducts && Array.isArray(cachedProducts)) {
-        var staticPresets = window.presetsData || [];
-        var mergedCached = [...cachedProducts];
-        staticPresets.forEach(function(sp) {
-            if (!mergedCached.some(function(p) { return p.id === sp.id; })) mergedCached.push(sp);
-        });
-        var presetsOnlyCached = mergedCached.filter(function(p) { return !p.type || p.type === 'preset'; });
-        window.presetsData = presetsOnlyCached;
-        updatePresetStats(presetsOnlyCached, apiCounts, statsData);
-        renderPresets(presetsOnlyCached);
-        hideResourcesLoader();
-    }
-    
-    // Always fetch fresh data in background
+
     try {
-        const resp = await fetch('/api/products');
-        const data = await resp.json();
-        if (Array.isArray(data)) {
-            setCachedProducts(data);
-            const staticPresets = window.presetsData || [];
-            const merged = [...data];
-            staticPresets.forEach(sp => {
-                if (!merged.some(p => p.id === sp.id)) merged.push(sp);
-            });
-            const presetsOnly = merged.filter(p => !p.type || p.type === 'preset');
-            // Only re-render if data changed or wasn't cached
-            if (!cachedProducts || JSON.stringify(presetsOnly.map(function(p){return p.id}).sort()) !== JSON.stringify(presetsOnlyCached.map(function(p){return p.id}).sort())) {
-                window.presetsData = presetsOnly;
-                updatePresetStats(presetsOnly, apiCounts, statsData);
-                renderPresets(presetsOnly);
-            }
-        } else if (!cachedProducts) {
-            renderPresets(window.presetsData || []);
+        // Fetch stats, download counts and products in parallel
+        var [rCounts, rStats, rProducts] = await Promise.all([
+            fetch("/api/downloads/counts", {credentials: 'include'}).then(function(res){ return res.json(); }).catch(function(){ return null; }),
+            fetch("/api/resource-stats", {credentials: 'include'}).then(function(res){ return res.json(); }).catch(function(){ return null; }),
+            fetch("/api/products").then(function(res){ return res.json(); }).catch(function(){ return null; })
+        ]);
+
+        if (rCounts && rCounts.success && rCounts.counts) {
+            apiCounts = rCounts.counts;
+            localStorage.setItem("zyrex_downloads", JSON.stringify(rCounts.counts));
         }
+
+        if (rStats && rStats.success) {
+            statsData = rStats;
+        }
+
+        var productsData = Array.isArray(rProducts) ? rProducts : cachedProducts;
+        if (Array.isArray(rProducts)) {
+            setCachedProducts(rProducts);
+        }
+
+        var staticPresets = window.presetsData || [];
+        var merged = productsData ? [...productsData] : [];
+        staticPresets.forEach(function(sp) {
+            if (!merged.some(function(p) { return p.id === sp.id; })) merged.push(sp);
+        });
+        var presetsOnly = merged.filter(function(p) { return !p.type || p.type === 'preset'; });
+
+        window.presetsData = presetsOnly;
+
+        // 1. Update numerical data table / stats bar FIRST while loading screen is active
+        updatePresetStats(presetsOnly, apiCounts, statsData);
+
+        // 2. Render preset cards grid
+        renderPresets(presetsOnly);
+
     } catch(e) {
-        if (!cachedProducts) {
-            renderPresets(window.presetsData || []);
-        }
+        console.error("Error in initPresets:", e);
+        var fallbackPresets = (window.presetsData || []).filter(function(p) { return !p.type || p.type === 'preset'; });
+        updatePresetStats(fallbackPresets, {}, {});
+        renderPresets(fallbackPresets);
     } finally {
+        // 3. ONLY NOW, once numerical stats table AND grid are completely loaded & rendered, hide loader!
         hideResourcesLoader();
     }
 }
