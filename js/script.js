@@ -162,77 +162,51 @@ function formatTeamAvatarUrl(url, userId) {
     return url;
 }
 
-function renderFamilyTree(founders, staff, container) {
+function renderTeamMembers(founders, staff, container) {
     if (!container) return;
     
-    if (!founders || founders.length === 0) {
-        founders = [
-            { id: "1421177012814614548", username: "reyli", global_name: "Reyli", avatar: "/api/avatar/1421177012814614548/66077819163365312e485b95e30001d8.png", role: "Founder", role_color: "#184b61", status: "online" },
-            { id: "1382421118098346174", username: "zyrex", global_name: "Zyrex", avatar: "/api/avatar/1382421118098346174/d6a983ec1a87e899b737422ee50fb441.png", role: "Co-Founder", role_color: "#d39f9f", status: "online" }
-        ];
+    var allMembers = [];
+    
+    if (founders && founders.length > 0) {
+        founders.forEach(function(f) { allMembers.push(f); });
+    } else {
+        allMembers.push({ id: "1421177012814614548", username: "reyliar", global_name: "reyli", avatar: "/api/avatar/1421177012814614548/66077819163365312e485b95e30001d8.png", role: "Founder", status: "online" });
+        allMembers.push({ id: "1382421118098346174", username: "dvmonaep", global_name: "kerem", avatar: "/api/avatar/1382421118098346174/d6a983ec1a87e899b737422ee50fb441.png", role: "Co-Founder", status: "online" });
     }
 
-    if (!staff || staff.length === 0) {
-        staff = [
-            { id: "700282586026737694", username: "ugotherizz", global_name: "𝑱𝑰𝑵𝑨✧.*", avatar: "/api/avatar/700282586026737694/f358b6536d5aaf867c158c6c0ffb1463.png", role: "Staff Team", role_color: "#e61536", status: "online" }
-        ];
+    if (staff && staff.length > 0) {
+        staff.forEach(function(s) { allMembers.push(s); });
+    } else {
+        allMembers.push({ id: "700282586026737694", username: "ugotherizz", global_name: "𝑱𝑰𝑵𝑨✧.*", avatar: "/api/avatar/700282586026737694/f358b6536d5aaf867c158c6c0ffb1463.png", role: "Staff Team", status: "online" });
     }
-    
-    var html = '<div class="family-tree-wrapper">';
-    
-    // Tier 1: Founders / Leadership
-    html += '<div class="tree-tier tier-founders">';
-    html += '<div class="tier-label"><i class="fas fa-crown"></i> Leadership &amp; Founders</div>';
-    html += '<div class="tier-nodes">';
-    
-    founders.forEach(function(m) {
-        var src = formatTeamAvatarUrl(m.avatar, m.id);
-        var ava = src ? '<img src="' + src + '" alt="' + (m.global_name || m.username) + '" onerror="this.onerror=null;this.src=\'assets/content.png\';">' : '<div class="avatar-placeholder"><i class="fas fa-crown"></i></div>';
-        var isFounder = (m.role || '').toLowerCase().includes('founder');
-        var roleBadgeClass = isFounder ? 'badge-founder' : 'badge-co-founder';
+
+    var html = '';
+    allMembers.forEach(function(m) {
+        var roleStr = m.role || 'Staff Team';
+        var isFounder = roleStr.toLowerCase() === 'founder';
+        var isCoFounder = roleStr.toLowerCase() === 'co-founder';
         
-        html += '<a href="https://discord.com/users/' + m.id + '" target="_blank" class="tree-node node-founder glass-card-enhanced shimmer-sweep">' +
-            '<div class="node-avatar-wrap">' +
-                ava +
-                '<span class="node-status status-' + (m.status || 'online') + '"></span>' +
-            '</div>' +
-            '<div class="node-info">' +
-                '<h3 class="node-name">' + (m.global_name || m.username) + '</h3>' +
-                '<span class="node-username">@' + m.username + '</span>' +
-                '<span class="node-role ' + roleBadgeClass + '"><i class="fas fa-crown"></i> ' + m.role + '</span>' +
-            '</div>' +
-        '</a>';
-    });
-    
-    html += '</div></div>';
-    
-    // Tree Connector Line
-    html += '<div class="tree-connector-line"><div class="connector-pulse"></div></div>';
-    
-    // Tier 2: Staff Team
-    html += '<div class="tree-tier tier-staff">';
-    html += '<div class="tier-label"><i class="fas fa-shield-halved"></i> Staff Team</div>';
-    html += '<div class="tier-nodes">';
-    
-    staff.forEach(function(m) {
+        var roleClass = isFounder ? 'role-founder' : (isCoFounder ? 'role-co-founder' : 'role-staff-team');
+        var iconClass = (isFounder || isCoFounder) ? 'fa-crown' : 'fa-shield-halved';
         var src = formatTeamAvatarUrl(m.avatar, m.id);
-        var ava = src ? '<img src="' + src + '" alt="' + (m.global_name || m.username) + '" onerror="this.onerror=null;this.src=\'assets/content.png\';">' : '<div class="avatar-placeholder"><i class="fas fa-user-shield"></i></div>';
-        html += '<a href="https://discord.com/users/' + m.id + '" target="_blank" class="tree-node node-staff glass-card-enhanced shimmer-sweep">' +
-            '<div class="node-avatar-wrap">' +
-                ava +
-                '<span class="node-status status-' + (m.status || 'online') + '"></span>' +
-            '</div>' +
-            '<div class="node-info">' +
-                '<h4 class="node-name">' + (m.global_name || m.username) + '</h4>' +
-                '<span class="node-username">@' + m.username + '</span>' +
-                '<span class="node-role badge-staff"><i class="fas fa-shield-halved"></i> Staff Team</span>' +
-            '</div>' +
-        '</a>';
+        
+        var avaHtml = src 
+            ? '<img src="' + src + '" alt="' + (m.global_name || m.username) + '" onerror="this.onerror=null;this.src=\'assets/content.png\';">'
+            : '<div class="avatar-placeholder"><i class="fas ' + iconClass + '"></i></div>';
+
+        html += '<div class="team-card glass-card-enhanced shimmer-sweep">' +
+            '<a href="https://discord.com/users/' + m.id + '" target="_blank" class="team-card-link">' +
+                '<div class="team-avatar">' +
+                    avaHtml +
+                    '<span class="status-dot status-' + (m.status || 'online') + '"></span>' +
+                '</div>' +
+                '<h4>' + (m.global_name || m.username) + '</h4>' +
+                '<span class="team-discord-tag">@' + m.username + '</span>' +
+                '<span class="team-role ' + roleClass + '"><i class="fas ' + iconClass + '"></i> ' + roleStr + '</span>' +
+            '</a>' +
+        '</div>';
     });
-    
-    html += '</div></div>';
-    html += '</div>';
-    
+
     container.innerHTML = html;
 }
 
@@ -240,13 +214,13 @@ async function loadTeamMembers() {
     const teamGrid = document.getElementById('teamGrid');
     if (!teamGrid) return;
 
-    // 1. Render immediate default structure so there's zero delay
-    renderFamilyTree(null, null, teamGrid);
+    // 1. Render immediate default structure (Founders + Staff) so there's zero delay
+    renderTeamMembers(null, null, teamGrid);
 
     // 2. Fetch live data from bot API / worker
     var data = await fetchTeamData();
     if (data && data.success) {
-        renderFamilyTree(data.founders, data.staff, teamGrid);
+        renderTeamMembers(data.founders, data.staff, teamGrid);
     }
 }
 
