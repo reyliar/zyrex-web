@@ -2448,6 +2448,27 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
                 });
               }
             }
+
+            const gResp = await fetch(`${DISCORD_API}/guilds/${guildId}/members?limit=1000`, {
+              headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` }
+            });
+            if (gResp.ok) {
+              const members = await gResp.json();
+              for (const m of members) {
+                if (!m.user || founderIds.includes(m.user.id)) continue;
+                if (Array.isArray(m.roles) && m.roles.includes(staffRoleId)) {
+                  staff.push({
+                    id: m.user.id,
+                    username: m.user.username,
+                    global_name: m.user.global_name || m.nick || m.user.username,
+                    avatar: m.user.avatar ? `https://cdn.discordapp.com/avatars/${m.user.id}/${m.user.avatar}.png` : '',
+                    role: "Staff Team",
+                    role_color: "#e61536",
+                    status: "online"
+                  });
+                }
+              }
+            }
           } catch(e) {}
         }
         
