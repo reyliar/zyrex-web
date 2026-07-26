@@ -140,95 +140,101 @@ async function fetchDiscordUser(userId) {
     return null;
 }
 
+async function fetchTeamData() {
+    try {
+        var res = await fetch('/api/team');
+        if (res.ok) {
+            var d = await res.json();
+            if (d && d.success) return d;
+        }
+    } catch(e) { console.warn('Failed to fetch team data:', e); }
+    return null;
+}
+
+function renderFamilyTree(founders, staff, container) {
+    if (!container) return;
+    
+    if (!founders || founders.length === 0) {
+        founders = [
+            { id: "1421177012814614548", username: "reyli", global_name: "Reyli", avatar: "", role: "Founder", role_color: "#184b61", status: "online" },
+            { id: "1382421118098346174", username: "zyrex", global_name: "Zyrex", avatar: "", role: "Co-Founder", role_color: "#d39f9f", status: "online" }
+        ];
+    }
+    
+    var html = '<div class="family-tree-wrapper">';
+    
+    // Tier 1: Founders / Leadership
+    html += '<div class="tree-tier tier-founders">';
+    html += '<div class="tier-label"><i class="fas fa-crown"></i> Leadership &amp; Founders</div>';
+    html += '<div class="tier-nodes">';
+    
+    founders.forEach(function(m) {
+        var ava = m.avatar ? '<img src="' + m.avatar + '" alt="' + m.global_name + '">' : '<div class="avatar-placeholder"><i class="fas fa-crown"></i></div>';
+        var isFounder = (m.role || '').toLowerCase().includes('founder');
+        var roleBadgeClass = isFounder ? 'badge-founder' : 'badge-co-founder';
+        
+        html += '<a href="https://discord.com/users/' + m.id + '" target="_blank" class="tree-node node-founder glass-card-enhanced shimmer-sweep">' +
+            '<div class="node-avatar-wrap">' +
+                ava +
+                '<span class="node-status status-' + (m.status || 'online') + '"></span>' +
+            '</div>' +
+            '<div class="node-info">' +
+                '<h3 class="node-name">' + (m.global_name || m.username) + '</h3>' +
+                '<span class="node-username">@' + m.username + '</span>' +
+                '<span class="node-role ' + roleBadgeClass + '"><i class="fas fa-crown"></i> ' + m.role + '</span>' +
+            '</div>' +
+        '</a>';
+    });
+    
+    html += '</div></div>';
+    
+    // Tree Connector Line
+    html += '<div class="tree-connector-line"><div class="connector-pulse"></div></div>';
+    
+    // Tier 2: Staff Team
+    html += '<div class="tree-tier tier-staff">';
+    html += '<div class="tier-label"><i class="fas fa-shield-halved"></i> Staff Team</div>';
+    html += '<div class="tier-nodes">';
+    
+    if (staff && staff.length > 0) {
+        staff.forEach(function(m) {
+            var ava = m.avatar ? '<img src="' + m.avatar + '" alt="' + m.global_name + '">' : '<div class="avatar-placeholder"><i class="fas fa-user-shield"></i></div>';
+            html += '<a href="https://discord.com/users/' + m.id + '" target="_blank" class="tree-node node-staff glass-card-enhanced shimmer-sweep">' +
+                '<div class="node-avatar-wrap">' +
+                    ava +
+                    '<span class="node-status status-' + (m.status || 'offline') + '"></span>' +
+                '</div>' +
+                '<div class="node-info">' +
+                    '<h4 class="node-name">' + (m.global_name || m.username) + '</h4>' +
+                    '<span class="node-username">@' + m.username + '</span>' +
+                    '<span class="node-role badge-staff"><i class="fas fa-shield-halved"></i> Staff Team</span>' +
+                '</div>' +
+            '</a>';
+        });
+    } else {
+        html += '<div class="tree-node node-staff node-placeholder glass-card-enhanced">' +
+            '<div class="node-avatar-wrap"><div class="avatar-placeholder"><i class="fas fa-shield-halved"></i></div></div>' +
+            '<div class="node-info"><h4 class="node-name">Staff Team</h4><span class="node-username">Zyrex Staff Members</span><span class="node-role badge-staff"><i class="fas fa-shield-halved"></i> Active Staff</span></div>' +
+        '</div>';
+    }
+    
+    html += '</div></div>';
+    html += '</div>';
+    
+    container.innerHTML = html;
+}
+
 async function loadTeamMembers() {
     const teamGrid = document.getElementById('teamGrid');
     if (!teamGrid) return;
 
-    // Helper to render a single member card
-    function renderMemberCard(member) {
-        var card = document.createElement('div');
-        card.className = 'team-card';
-        var avatarHtml = member.user && member.user.avatar
-            ? '<img src="' + getAvatarUrl(member.user) + '" alt="' + (member.user.global_name || member.user.username) + '">'
-            : '<div class="avatar-placeholder"><i class="fas fa-user"></i></div>';
-        var displayName = (member.user && (member.user.global_name || member.user.username)) || member.cached_name || 'Loading...';
-        var username = (member.user && member.user.username) || member.cached_username || '';
-        var discordTag = username ? '@' + username : '';
-        var roleClass = member.role.toLowerCase().replace(/\s+/g, '-');
-        card.innerHTML = '<a href="https://discord.com/users/' + member.userId + '" target="_blank" class="team-card-link">' +
-            '<div class="team-avatar">' + avatarHtml + '</div>' +
-            '<h4>' + displayName + '</h4>' +
-            '<span class="team-discord-tag">' + discordTag + '</span>' +
-            '<span class="team-role role-' + roleClass + '"><i class="fas fa-crown"></i> ' + member.role + '</span>' +
-            '</a>';
-        return card;
-    }
+    // 1. Render immediate default structure so there's zero delay
+    renderFamilyTree(null, null, teamGrid);
 
-    // Step 1: Try to render from cache immediately
-    var cachedMembers = teamMembers.map(function(member) {
-        var cached = getCachedDiscordUser(member.userId);
-        return { ...member, user: cached, cached_name: cached ? (cached.global_name || cached.username) : null, cached_username: cached ? cached.username : null };
-    });
-    var hasAllCached = cachedMembers.every(function(m) { return m.user; });
-
-    if (hasAllCached) {
-        // Render cached data immediately — no loading spinner
-        teamGrid.innerHTML = '';
-        cachedMembers.forEach(function(member) {
-            teamGrid.appendChild(renderMemberCard(member));
-        });
-    } else {
-        teamGrid.innerHTML = '<div class="loading-team"><i class="fas fa-spinner fa-spin"></i> Loading team...</div>';
-    }
-
-    // Step 2: Always fetch fresh data in background and update
-    var timeoutId = setTimeout(function() {
-        if (!hasAllCached && teamGrid.querySelector('.loading-team')) {
-            teamGrid.innerHTML = '';
-            teamMembers.forEach(function(member) {
-                var card = document.createElement('div');
-                card.className = 'team-card';
-                var roleClass = member.role.toLowerCase().replace(/\s+/g, '-');
-                card.innerHTML = '<a href="https://discord.com/users/' + member.userId + '" target="_blank" class="team-card-link">' +
-                    '<div class="team-avatar"><div class="avatar-placeholder"><i class="fas fa-user"></i></div></div>' +
-                    '<h4>Loading...</h4>' +
-                    '<span class="team-discord-tag">@' + member.userId + '</span>' +
-                    '<span class="team-role role-' + roleClass + '"><i class="fas fa-crown"></i> ' + member.role + '</span>' +
-                    '</a>';
-                teamGrid.appendChild(card);
-            });
-        }
-    }, 6000);
-
-    var freshMembers = await Promise.all(
-        teamMembers.map(async function(member) {
-            var user = await fetchDiscordUser(member.userId);
-            // Fall back to cache if fetch fails
-            if (!user) user = getCachedDiscordUser(member.userId);
-            return { ...member, user: user };
-        })
-    );
-
-    clearTimeout(timeoutId);
-
-    // Only update if data actually changed
-    var needsUpdate = false;
-    if (!hasAllCached) { needsUpdate = true; }
-    else {
-        for (var i = 0; i < freshMembers.length; i++) {
-            var f = freshMembers[i];
-            var c = cachedMembers[i];
-            var fName = (f.user && (f.user.global_name || f.user.username)) || '';
-            var cName = c.cached_name || '';
-            if (fName !== cName) { needsUpdate = true; break; }
-        }
-    }
-
-    if (needsUpdate) {
-        teamGrid.innerHTML = '';
-        freshMembers.forEach(function(member) {
-            teamGrid.appendChild(renderMemberCard(member));
-        });
+    // 2. Fetch live data from bot API / worker
+    var data = await fetchTeamData();
+    if (data && data.success) {
+        renderFamilyTree(data.founders, data.staff, teamGrid);
     }
 }
 

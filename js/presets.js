@@ -8,6 +8,18 @@ var currentPresetPage = 1;
 var lastPresetRenderKey = '';
 var lastPresetRenderItems = [];
 
+function hideResourcesLoader() {
+    var loader = document.getElementById('resources-loader');
+    if (loader && !loader.classList.contains('fade-out')) {
+        loader.classList.add('fade-out');
+        setTimeout(function() {
+            if (loader && loader.parentNode) {
+                loader.parentNode.removeChild(loader);
+            }
+        }, 550);
+    }
+}
+
 function getCachedProducts() {
     try {
         var raw = localStorage.getItem(PRODUCTS_CACHE_KEY);
@@ -69,6 +81,7 @@ async function initPresets() {
         window.presetsData = presetsOnlyCached;
         updatePresetStats(presetsOnlyCached, apiCounts, statsData);
         renderPresets(presetsOnlyCached);
+        hideResourcesLoader();
     }
     
     // Always fetch fresh data in background
@@ -96,6 +109,8 @@ async function initPresets() {
         if (!cachedProducts) {
             renderPresets(window.presetsData || []);
         }
+    } finally {
+        hideResourcesLoader();
     }
 }
 

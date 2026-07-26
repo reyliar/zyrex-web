@@ -2415,6 +2415,58 @@ document.addEventListener('input',function(e){var inp=e.target;if(!inp||inp.id!=
         return json({ success: false, error: "User not found" });
       }
 
+      // TEAM HIERARCHY / FAMILY TREE - Proxy to Bot
+      if (path === "/api/team") {
+        try {
+          const resp = await fetch(`${BOT_API}/api/team`);
+          if (resp.ok) return json(await resp.json());
+        } catch(e) {}
+        
+        const guildId = env.GUILD_ID || "1518954946110685184";
+        const staffRoleId = "1523366782327459952";
+        const founderIds = ["1421177012814614548", "1382421118098346174"];
+        
+        let founders = [];
+        let staff = [];
+
+        if (env.DISCORD_BOT_TOKEN) {
+          try {
+            for (const fId of founderIds) {
+              const uResp = await fetch(`${DISCORD_API}/guilds/${guildId}/members/${fId}`, {
+                headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` }
+              });
+              if (uResp.ok) {
+                const m = await uResp.json();
+                founders.push({
+                  id: m.user.id,
+                  username: m.user.username,
+                  global_name: m.user.global_name || m.nick || m.user.username,
+                  avatar: m.user.avatar ? `https://cdn.discordapp.com/avatars/${m.user.id}/${m.user.avatar}.png` : '',
+                  role: m.user.id === "1421177012814614548" ? "Founder" : "Co-Founder",
+                  role_color: m.user.id === "1421177012814614548" ? "#184b61" : "#d39f9f",
+                  status: "online"
+                });
+              }
+            }
+          } catch(e) {}
+        }
+        
+        if (founders.length === 0) {
+          founders = [
+            { id: "1421177012814614548", username: "reyli", global_name: "Reyli", avatar: "", role: "Founder", role_color: "#184b61", status: "online" },
+            { id: "1382421118098346174", username: "zyrex", global_name: "Zyrex", avatar: "", role: "Co-Founder", role_color: "#d39f9f", status: "online" }
+          ];
+        }
+
+        return json({
+          success: true,
+          founders: founders,
+          staff: staff,
+          role_id: staffRoleId,
+          source: "worker-fallback"
+        });
+      }
+
       // DELETE PRODUCT (admin only)
       if (path === "/api/products/delete" && request.method === "POST") {
         const session = parseSession(request.headers.get("Cookie"));
