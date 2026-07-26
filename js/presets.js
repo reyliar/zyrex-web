@@ -44,31 +44,14 @@ function setCachedProducts(data) {
 }
 
 async function initPresets() {
-    // Sync locally deleted products to backend SQLite DB if user is admin
-    try {
-        var deletedIds = JSON.parse(localStorage.getItem('zyrex_deleted_products') || '[]');
-        var cachedUser = JSON.parse(localStorage.getItem('zyrex_auth_user') || '{}');
-        if (cachedUser && cachedUser.data && cachedUser.data.is_admin && deletedIds.length > 0) {
-            for (var i = 0; i < deletedIds.length; i++) {
-                var id = deletedIds[i];
-                await fetch('/api/products/delete', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id: id }),
-                    credentials: 'include'
-                }).catch(function(err) { console.error('Failed to sync delete for', id, err); });
-            }
-        }
-    } catch(e) {}
-
-    // Load creator username index for search
-    await loadCreatorIndex();
-
     var apiCounts = {}, statsData = {};
     var cachedProducts = getCachedProducts();
 
     try {
-        // Fetch stats, download counts and products in parallel
+        // Load creator username index for search
+        await loadCreatorIndex().catch(function(){});
+
+        // Fetch stats, download counts and products in parallel with individual fallbacks
         var [rCounts, rStats, rProducts] = await Promise.all([
             fetch("/api/downloads/counts", {credentials: 'include'}).then(function(res){ return res.json(); }).catch(function(){ return null; }),
             fetch("/api/resource-stats", {credentials: 'include'}).then(function(res){ return res.json(); }).catch(function(){ return null; }),
@@ -110,7 +93,7 @@ async function initPresets() {
         updatePresetStats(fallbackPresets, {}, {});
         renderPresets(fallbackPresets);
     } finally {
-        // 3. ONLY NOW, once numerical stats table AND grid are completely loaded & rendered, hide loader!
+        // 3. ALWAYS hide loader once data table is processed or on error
         hideResourcesLoader();
     }
 }

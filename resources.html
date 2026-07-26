@@ -235,18 +235,25 @@
     </style>
 </head>
 <body>
-    <!-- RESOURCES FULLSCREEN LOADER -->
+    <!-- RESOURCES FULLSCREEN LOADER (SPINNER ONLY) -->
     <div id="resources-loader" class="resources-loader-overlay">
         <div class="resources-loader-content">
             <div class="loader-logo-container">
                 <img src="assets/content.png" alt="Zyrex" class="loader-logo-img">
                 <div class="loader-pulse-ring"></div>
             </div>
-            <h2 class="loader-title">ZYREX <span class="cherry-text">RESOURCES</span></h2>
-            <p class="loader-subtitle">Preparing community assets &amp; presets...</p>
-            <div class="loader-bar-wrap"><div class="loader-bar-fill"></div></div>
         </div>
     </div>
+    <script>
+        // Failsafe timer: guarantee loader hides after 1.8s max even if network hangs
+        setTimeout(function() {
+            var loader = document.getElementById('resources-loader');
+            if (loader && !loader.classList.contains('fade-out')) {
+                loader.classList.add('fade-out');
+                setTimeout(function() { if (loader && loader.parentNode) loader.parentNode.removeChild(loader); }, 600);
+            }
+        }, 1800);
+    </script>
 
     <div class="bg-aura"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
     <nav class="navbar"><div class="container">
