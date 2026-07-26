@@ -166,19 +166,27 @@ function renderTeamMembers(founders, staff, container) {
     if (!container) return;
     
     var allMembers = [];
-    
-    if (founders && founders.length > 0) {
-        founders.forEach(function(f) { allMembers.push(f); });
-    } else {
-        allMembers.push({ id: "1421177012814614548", username: "reyliar", global_name: "reyli", avatar: "/api/avatar/1421177012814614548/66077819163365312e485b95e30001d8.png", role: "Founder", status: "online" });
-        allMembers.push({ id: "1382421118098346174", username: "dvmonaep", global_name: "kerem", avatar: "/api/avatar/1382421118098346174/d6a983ec1a87e899b737422ee50fb441.png", role: "Co-Founder", status: "online" });
-    }
+    var defaultFounders = [
+        { id: "1421177012814614548", username: "reyliar", global_name: "reyli", avatar: "/api/avatar/1421177012814614548/66077819163365312e485b95e30001d8.png", role: "Founder", status: "online" },
+        { id: "1382421118098346174", username: "dvmonaep", global_name: "kerem", avatar: "/api/avatar/1382421118098346174/d6a983ec1a87e899b737422ee50fb441.png", role: "Co-Founder", status: "online" }
+    ];
 
-    if (staff && staff.length > 0) {
-        staff.forEach(function(s) { allMembers.push(s); });
-    } else {
-        allMembers.push({ id: "700282586026737694", username: "ugotherizz", global_name: "𝑱𝑰𝑵𝑨✧.*", avatar: "/api/avatar/700282586026737694/f358b6536d5aaf867c158c6c0ffb1463.png", role: "Staff Team", status: "online" });
-    }
+    var defaultStaff = [
+        { id: "700282586026737694", username: "ugotherizz", global_name: "𝑱𝑰𝑵𝑨✧.*", avatar: "/api/avatar/700282586026737694/f358b6536d5aaf867c158c6c0ffb1463.png", role: "Staff Team", status: "online" }
+    ];
+
+    var activeFounders = (founders && founders.length > 0) ? founders : defaultFounders;
+    var activeStaff = (staff && staff.length > 0) ? staff : defaultStaff;
+
+    // Ensure default staff (JINA) is merged if missing from API array
+    defaultStaff.forEach(function(ds) {
+        if (!activeStaff.some(function(s) { return String(s.id) === String(ds.id); })) {
+            activeStaff.push(ds);
+        }
+    });
+
+    activeFounders.forEach(function(f) { allMembers.push(f); });
+    activeStaff.forEach(function(s) { allMembers.push(s); });
 
     var html = '';
     allMembers.forEach(function(m) {
@@ -222,6 +230,13 @@ async function loadTeamMembers() {
     if (data && data.success) {
         renderTeamMembers(data.founders, data.staff, teamGrid);
     }
+}
+
+// Auto-run team members load on DOM ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', loadTeamMembers);
+} else {
+    loadTeamMembers();
 }
 
 /* ===================== DISCORD GUILD STATS ===================== */

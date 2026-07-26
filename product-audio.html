@@ -497,6 +497,33 @@
         }
         .err .btn-b:hover { background: rgba(230, 21, 54, 0.12); transform: translateY(-1px); }
         
+        /* FULLSCREEN LOADER OVERLAY */
+        .resources-loader-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            width: 100vw; height: 100vh;
+            z-index: 9999999;
+            background: #080204;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        .resources-loader-overlay.fade-out {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
+        .resources-loader-content { text-align: center; display: flex; flex-direction: column; align-items: center; }
+        .loader-logo-container { position: relative; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; }
+        .loader-logo-img { width: 48px; height: 48px; object-fit: contain; z-index: 2; filter: drop-shadow(0 0 12px rgba(230, 21, 54, 0.7)); animation: loaderLogoPulse 1.8s ease-in-out infinite alternate; }
+        .loader-pulse-ring { position: absolute; inset: 0; border-radius: 50%; border: 2px solid rgba(230, 21, 54, 0.2); border-top-color: #e61536; animation: loaderSpin 1s linear infinite; }
+        @keyframes loaderSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes loaderLogoPulse { 0% { transform: scale(0.92); opacity: 0.8; } 100% { transform: scale(1.08); opacity: 1; } }
+
         .pulse { animation: pulse 2s ease-in-out infinite; }
         @keyframes pulse { 0%, 100% { opacity: .4; } 50% { opacity: 1; } }
         @keyframes fadeUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
@@ -507,6 +534,24 @@
     </style>
 </head>
 <body>
+    <!-- PRESET FULLSCREEN LOADER (SPINNER ONLY) -->
+    <div id="resources-loader" class="resources-loader-overlay">
+        <div class="resources-loader-content">
+            <div class="loader-logo-container">
+                <img src="assets/content.png" alt="Zyrex" class="loader-logo-img">
+                <div class="loader-pulse-ring"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        setTimeout(function() {
+            var loader = document.getElementById('resources-loader');
+            if (loader && !loader.classList.contains('fade-out')) {
+                loader.classList.add('fade-out');
+                setTimeout(function() { if (loader && loader.parentNode) loader.parentNode.removeChild(loader); }, 600);
+            }
+        }, 1800);
+    </script>
     <div class="bg-aura"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
     <nav class="navbar"><div class="container"><a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><ul class="nav-links" id="navLinks"><li><a href="/">Home</a></li><li><a href="/resources">Resources</a></li><li><a href="/plugins">Plugins</a></li><li><a href="/more">More</a></li><li><a href="/#contact">Contact</a></li></ul><div class="nav-actions"><div id="authBtn"></div><button class="hamburger" id="hamburger"><span></span><span></span><span></span></button></div></div></nav>
 
