@@ -1079,10 +1079,45 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing...';
             
+            const targetTab = window.open('about:blank', '_blank');
+            const requestUrl = buildTokenRequestUrl(Array.isArray(selectedFiles) ? selectedFiles : [], false);
+
             try {
-                btn.innerHTML = '<i class="fas fa-up-right-from-square"></i> Opening download...';
-                window.location.href = buildTokenRequestUrl(Array.isArray(selectedFiles) ? selectedFiles : [], true);
+                const resp = await fetch(requestUrl, { credentials: 'include' });
+                const data = await readApiJson(resp);
+
+                if (!resp.ok || !data.success) {
+                    if (targetTab) targetTab.close();
+                    resetDownloadButton(btn);
+                    if (resp.status === 401) {
+                        window.location.href = '/api/login?redirect=' + encodeURIComponent(location.pathname + location.search);
+                    } else if (resp.status === 403) {
+                        showState('st-verify');
+                    } else {
+                        showDownloadError('Download Error', data, 'Could not generate download link');
+                    }
+                    return;
+                }
+
+                const targetUrl = getSponsoredRedirectUrl(data);
+                if (targetTab && targetUrl) {
+                    targetTab.location.href = targetUrl;
+                    btn.innerHTML = '<i class="fas fa-up-right-from-square"></i> Tab Opened...';
+                    const checkTimer = setInterval(function() {
+                        if (!targetTab || targetTab.closed) {
+                            clearInterval(checkTimer);
+                            resetDownloadButton(btn);
+                        }
+                    }, 500);
+                } else if (targetUrl) {
+                    window.location.href = targetUrl;
+                } else {
+                    if (targetTab) targetTab.close();
+                    resetDownloadButton(btn);
+                    alert('No valid link received');
+                }
             } catch (e) {
+                if (targetTab) targetTab.close();
                 console.error('Download error:', e);
                 alert('Network error. Please try again.');
                 resetDownloadButton(btn);
@@ -1095,9 +1130,40 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
+            const targetTab = window.open('about:blank', '_blank');
+            const requestUrl = buildTokenRequestUrl([filePath], false);
+
             try {
-                window.location.href = buildTokenRequestUrl([filePath], true);
+                const resp = await fetch(requestUrl, { credentials: 'include' });
+                const data = await readApiJson(resp);
+
+                if (!resp.ok || !data.success) {
+                    if (targetTab) targetTab.close();
+                    btn.disabled = false;
+                    btn.innerHTML = origHtml;
+                    alert((data && data.error) || 'File download link failed');
+                    return;
+                }
+
+                const targetUrl = getSponsoredRedirectUrl(data);
+                if (targetTab && targetUrl) {
+                    targetTab.location.href = targetUrl;
+                    const checkTimer = setInterval(function() {
+                        if (!targetTab || targetTab.closed) {
+                            clearInterval(checkTimer);
+                            btn.disabled = false;
+                            btn.innerHTML = origHtml;
+                        }
+                    }, 500);
+                } else if (targetUrl) {
+                    window.location.href = targetUrl;
+                } else {
+                    if (targetTab) targetTab.close();
+                    btn.disabled = false;
+                    btn.innerHTML = origHtml;
+                }
             } catch (e) {
+                if (targetTab) targetTab.close();
                 console.error('File download error:', e);
                 alert('Network error. Please try again.');
                 btn.disabled = false;
