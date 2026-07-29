@@ -110,6 +110,46 @@ async function checkVerifiedRole(userId, env) {
   return false;
 }
 
+// Ad-Free Role Check (Role ID: 1519246344869380207)
+const AD_FREE_ROLE_ID = "1519246344869380207";
+const adFreeRoleCache = new Map();
+
+async function checkAdFreeRole(userId, env) {
+  if (!userId) return false;
+  
+  // Check cache
+  const cached = adFreeRoleCache.get(userId);
+  if (cached && Date.now() < cached.expiry) return cached.hasRole;
+  
+  try {
+    // Primary: bot API
+    const botResp = await fetch(`${BOT_API}/api/guild/check-role?userId=${encodeURIComponent(userId)}&roleId=${AD_FREE_ROLE_ID}`);
+    if (botResp.ok) {
+      const data = await botResp.json();
+      const result = !!(data && data.has_role);
+      adFreeRoleCache.set(userId, { hasRole: result, expiry: Date.now() + 30000 });
+      return result;
+    }
+  } catch (e) { console.error("Bot ad-free role check failed:", e.message); }
+  
+  // Fallback: Discord REST API
+  try {
+    const discordResp = await fetch(`${DISCORD_API}/guilds/${env.GUILD_ID || "1518954946110685184"}/members/${userId}`, {
+      headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` },
+    });
+    if (discordResp.ok) {
+      const member = await discordResp.json();
+      const result = !!(member.roles && member.roles.includes(AD_FREE_ROLE_ID));
+      adFreeRoleCache.set(userId, { hasRole: result, expiry: Date.now() + 30000 });
+      return result;
+    }
+  } catch (e) { console.error("Discord REST ad-free role check failed:", e.message); }
+  
+  // Default deny on error
+  adFreeRoleCache.set(userId, { hasRole: false, expiry: Date.now() + 15000 });
+  return false;
+}
+
 // Watermark files (embedded)
 const WATERMARKS = {
   "LEAKED BY ZYREX.txt": "ZYREX ZYREX ZYREX ZYREX ZYREX ZYREX ZYREX ZYREX \r\nZYREX ZYREX ZYREX ZYREX ZYREX ZYREX ZYREX ZYREX \r\n\r\n\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588   \u2588\u2588\u2588     \u2588\u2588\u2588  \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588   \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  \u2588\u2588\u2588     \u2588\u2588\u2588\r\n\u2580\u2580\u2580\u2580\u2580\u2580\u2588\u2588\u2588\u2580    \u2588\u2588\u2588     \u2588\u2588\u2588  \u2588\u2588\u2588    \u2588\u2588\u2588\u2588\u2588  \u2588\u2588\u2588\u2580\u2580\u2580\u2580\u2580\u2580\u2580\u2580   \u2588\u2588\u2588   \u2588\u2588\u2588 \r\n     \u2588\u2588\u2588       \u2588\u2588\u2588   \u2588\u2588\u2588   \u2588\u2588\u2588    \u2588\u2588\u2588\u2588\u2588  \u2588\u2588\u2588            \u2588\u2588\u2588 \u2588\u2588\u2588  \r\n    \u2588\u2588\u2588         \u2588\u2588\u2588 \u2588\u2588\u2588    \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588   \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588     \u2588\u2588\u2588\u2588\u2588   \r\n   \u2588\u2588\u2588           \u2588\u2588\u2588\u2588\u2588     \u2588\u2588\u2588    \u2588\u2588\u2588    \u2588\u2588\u2588\u2580\u2580\u2580\u2580\u2580\u2580\u2580\u2580     \u2588\u2588\u2588\u2588\u2588   \r\n  \u2588\u2588\u2588             \u2588\u2588\u2588      \u2588\u2588\u2588     \u2588\u2588\u2588   \u2588\u2588\u2588            \u2588\u2588\u2588 \u2588\u2588\u2588  \r\n \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588      \u2588\u2588\u2588      \u2588\u2588\u2588      \u2588\u2588\u2588  \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588   \u2588\u2588\u2588   \u2588\u2588\u2588 \r\n\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588      \u2588\u2588\u2588      \u2588\u2588\u2588       \u2588\u2588\u2588 \u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588\u2588  \u2588\u2588\u2588     \u2588\u2588\u2588\r\n\r\nThis resource leaked by ZYREX.\r\n\r\n- https://discord.gg/wvgbyBwNuG\r\n- zyrexediting.xyz\r\n\r\nZYREX ZYREX ZYREX ZYREX ZYREX ZYREX ZYREX ZYREX\r\nZYREX ZYREX ZYREX ZYREX ZYREX ZYREX ZYREX ZYREX\r\n",
@@ -2555,9 +2595,11 @@ export default {
         const session = parseSession(request.headers.get("Cookie"));
         if (!session) return json({ can_download: false, reason: "not_logged_in" });
         const hasRole = await checkVerifiedRole(session.userId, env);
+        const hasAdFree = await checkAdFreeRole(session.userId, env);
         return json({
           can_download: hasRole,
           reason: hasRole ? "ok" : "not_verified",
+          ad_free: hasAdFree,
           discord_id: session.userId,
           username: session.username,
         });
@@ -2609,11 +2651,17 @@ export default {
 
         let adUrl = "";
         const destinationUrl = buildTokenLandingUrl(token);
-        try {
-          adUrl = await createShrinkEarnLink(env, destinationUrl);
-        } catch (e) {
-          console.error("ShrinkEarn link error:", e.message);
-          return json({ success: false, error: "Sponsored link could not be created: " + e.message }, 502);
+        const isAdFree = await checkAdFreeRole(session.userId, env);
+
+        if (isAdFree) {
+          adUrl = destinationUrl;
+        } else {
+          try {
+            adUrl = await createShrinkEarnLink(env, destinationUrl);
+          } catch (e) {
+            console.error("ShrinkEarn link error:", e.message);
+            return json({ success: false, error: "Sponsored link could not be created: " + e.message }, 502);
+          }
         }
 
         if (shouldRedirect) {
@@ -2625,7 +2673,8 @@ export default {
           ad_url: adUrl,
           short_url: adUrl,
           url: adUrl,
-          provider: "shrinkearn",
+          provider: isAdFree ? "direct" : "shrinkearn",
+          ad_free: isAdFree,
           expires_in: TOKEN_EXPIRY,
           file_path: r2Prefix,
         });
