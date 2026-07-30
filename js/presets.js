@@ -106,10 +106,33 @@ function updatePresetStats(data, apiCounts, statsData){
     animateRes('statPresets', total);
     animateRes('statCreators', creators);
     animateRes('statDownloads', totalDl);
+
+    // Hero Real Statistics Counters
+    var pluginsCount = 0, presetsCount = 0, scenepacksCount = 0, audiosCount = 0;
+    (data || []).forEach(function(r) {
+        var cat = (r.category || '').toLowerCase();
+        var type = (r.type || '').toLowerCase();
+        if (type === 'plugin' || cat === 'plugin' || cat === 'adobe' || cat === 'ofx' || cat === 'software') {
+            pluginsCount++;
+        } else if (type === 'scenepack' || cat === 'scenepack') {
+            scenepacksCount++;
+        } else if (type === 'audio' || cat === 'audio') {
+            audiosCount++;
+        } else {
+            presetsCount++;
+        }
+    });
+
+    animateRes('heroStatTotal', total);
+    animateRes('heroStatPlugins', pluginsCount);
+    animateRes('heroStatPresets', presetsCount);
+    animateRes('heroStatScenepacks', scenepacksCount);
+    animateRes('heroStatAudios', audiosCount);
+
     // Update category pill counts
     var cats = {};
-    data.forEach(function(r){ var c = r.category || 'others'; cats[c] = (cats[c]||0)+1; });
-    var allCount = data.length;
+    (data || []).forEach(function(r){ var c = r.category || 'others'; cats[c] = (cats[c]||0)+1; });
+    var allCount = (data || []).length;
     document.querySelectorAll('.cp button').forEach(function(btn){
         var c = btn.dataset.c;
         var cnt = btn.querySelector('.cnt');
