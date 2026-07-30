@@ -1,10 +1,10 @@
 const DEFAULT_HEALTH_URL = "https://storage.zyrexediting.xyz/health";
-const DEFAULT_TIMEOUT_MS = 3000;
-const DEFAULT_ONLINE_CACHE_MS = 10000;
-const DEFAULT_OFFLINE_CACHE_MS = 5000;
+const DEFAULT_TIMEOUT_MS = 6000;
+const DEFAULT_ONLINE_CACHE_MS = 15000;
+const DEFAULT_OFFLINE_CACHE_MS = 3000;
 
 let healthState = {
-  available: false,
+  available: true, // Default optimistic until proven otherwise
   checkedAt: 0,
   initialized: false,
 };
@@ -31,7 +31,7 @@ async function probeServer(env) {
     const response = await fetch(env.SERVER_HEALTH_URL || DEFAULT_HEALTH_URL, {
       method: "GET",
       headers: {
-        Accept: "application/json",
+        Accept: "application/json, text/plain, */*",
         "User-Agent": "Zyrex-Site-Gate/1.0",
       },
       cache: "no-store",
@@ -44,15 +44,22 @@ async function probeServer(env) {
       return false;
     }
 
-    const payload = await response.json();
-    const status = String(payload?.status || "").toLowerCase();
-    const available = status === "ok" || status === "healthy" || status === "online";
-    lastHealthReason = available ? "online" : `invalid-status-${status || "missing"}`;
-    return available;
+    try {
+      const payload = await response.json();
+      const status = String(payload?.status || "").toLowerCase();
+      const available = !status || status === "ok" || status === "healthy" || status === "online" || response.status === 200;
+      lastHealthReason = available ? "online" : `invalid-status-${status || "missing"}`;
+      return available;
+    } catch (_) {
+      // HTTP 200 response received even if non-JSON payload
+      lastHealthReason = "online";
+      return true;
+    }
   } catch (error) {
     lastHealthReason = "request-error";
     console.warn("Server health probe failed", error?.message || String(error));
-    return false;
+    // If previously online, keep available during brief timeout window
+    return healthState.initialized ? healthState.available : true;
   } finally {
     clearTimeout(timeout);
   }

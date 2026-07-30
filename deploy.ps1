@@ -1,12 +1,27 @@
 # Zyrex Web — Deploy Script (PowerShell)
 # Run this script to sync .site-assets and deploy everything at once.
 
-# Sync all HTML files from root to .site-assets
-Write-Host "Syncing HTML files to .site-assets..." -ForegroundColor Cyan
+# Sync HTML, JS, CSS, Assets, Plugins, _headers, _redirects to .site-assets
+Write-Host "Syncing site files and folders to .site-assets..." -ForegroundColor Cyan
+
 Get-ChildItem -Path . -Filter "*.html" | ForEach-Object {
     Copy-Item -Path $_.FullName -Destination ".site-assets\$($_.Name)" -Force
-    Write-Host "  Synced $($_.Name)" -ForegroundColor Green
 }
+
+@("js", "css", "assets", "plugins") | ForEach-Object {
+    if (Test-Path $_) {
+        Copy-Item -Path $_ -Destination ".site-assets" -Recurse -Force
+        Write-Host "  Synced folder: $_" -ForegroundColor Green
+    }
+}
+
+@("_headers", "_redirects", "favicon.ico") | ForEach-Object {
+    if (Test-Path $_) {
+        Copy-Item -Path $_ -Destination ".site-assets\$_" -Force
+        Write-Host "  Synced file: $_" -ForegroundColor Green
+    }
+}
+Write-Host "  All site assets synced successfully!" -ForegroundColor Green
 
 # Deploy zyrex-api worker (scan-creator-links, scrape, etc.)
 Write-Host "`nDeploying zyrex-api worker..." -ForegroundColor Cyan
