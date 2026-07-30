@@ -1754,7 +1754,12 @@ export default {
 
     // ============ ZYREX API KEY SECURITY GATEKEEPER ============
     if (path.startsWith("/api/")) {
-      const isPublicEndpoint = path === "/api/login" || path === "/api/auth/callback" || path === "/api/auth/logout";
+      const isPublicEndpoint = path === "/api/login" || 
+                               path === "/api/auth/callback" || 
+                               path === "/api/auth/logout" || 
+                               path.startsWith("/api/avatar/") || 
+                               path.startsWith("/api/banner/");
+
       if (!isPublicEndpoint) {
         const apiKey = request.headers.get("X-Zyrex-Key") || request.headers.get("X-API-Key") || request.headers.get("x-zyrex-key") || request.headers.get("x-api-key") || "";
         const expectedKey = env.ZYREX_API_KEY || "zyrex_app_sec_k982f81a7b54c29013e9a";
