@@ -1,0 +1,713 @@
+<!-- preset-v5-20260708 -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Zyrex Resources - Preset detail">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://zyrexediting.xyz/preset">
+    <meta property="og:title" content="Zyrex | Preset">
+    <meta property="og:description" content="Premium editing presets on Zyrex">
+    <meta property="og:image" content="https://zyrexediting.xyz/assets/banner.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://zyrexediting.xyz/assets/banner.png">
+    <meta name="author" content="Zyrex">
+    <title>Zyrex | Preset</title>
+    <link rel="icon" type="image/png" href="/assets/content.png">
+    <link rel="stylesheet" href="css/style.css?v=24">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        /* FULLSCREEN LOADER OVERLAY */
+        .resources-loader-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            width: 100vw; height: 100vh;
+            z-index: 9999999;
+            background: #080204;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        .resources-loader-overlay.fade-out {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
+        .resources-loader-content { text-align: center; display: flex; flex-direction: column; align-items: center; }
+        .loader-logo-container { position: relative; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; }
+        .loader-logo-img { width: 48px; height: 48px; object-fit: contain; z-index: 2; filter: drop-shadow(0 0 12px rgba(230, 21, 54, 0.7)); animation: loaderLogoPulse 1.8s ease-in-out infinite alternate; }
+        .loader-pulse-ring { position: absolute; inset: 0; border-radius: 50%; border: 2px solid rgba(230, 21, 54, 0.2); border-top-color: #e61536; animation: loaderSpin 1s linear infinite; }
+        @keyframes loaderSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes loaderLogoPulse { 0% { transform: scale(0.92); opacity: 0.8; } 100% { transform: scale(1.08); opacity: 1; } }
+
+        :root { --gap: 20px; --card-bg: rgba(12,4,6,0.55); --card-border: rgba(var(--cherry-rgb),0.08); }
+        * { margin:0; padding:0; box-sizing:border-box }
+        body { background:var(--dark); background-image:radial-gradient(circle at 50% 10%, rgba(var(--cherry-rgb),.06) 0%, transparent 60%); color:var(--light); font-family:Poppins,sans-serif; min-height:100vh }
+        .page { padding:140px 0 80px }
+        .wrap { max-width:1060px; margin:0 auto; padding:0 24px }
+        .back { display:inline-flex; align-items:center; gap:8px; color:var(--gray); font-size:.85rem; text-decoration:none; margin-bottom:24px; transition:.2s }
+        .back:hover { color:var(--cherry) }
+        @keyframes up { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        .a1 { animation:up .5s ease forwards }
+        .a2 { animation:up .5s .1s ease both }
+        .a3 { animation:up .5s .2s ease both }
+        
+        /* Preset Hero */
+        .preset-hero { position:relative; border-radius:0; overflow:hidden; background:transparent; margin-bottom:24px; min-height:auto; display:block }
+        .hero-m { width:100%; max-width:780px; aspect-ratio:16/9; display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg,#0a0a1a,#14142a,#0a0a1a); position:relative; overflow:hidden; border-radius:20px; margin:0 auto; border:1px solid rgba(230,21,54,0.08); box-shadow:0 0 60px rgba(230,21,54,0.06) }
+        .hero-m::after { content:''; position:absolute; inset:0; background:linear-gradient(0deg,rgba(0,0,0,.65) 0%,transparent 35%); z-index:2; pointer-events:none }
+        .hero-m::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,rgba(230,21,54,.3),var(--rose-glow),rgba(230,21,54,.3),transparent); z-index:3; opacity:.8 }
+        .hero-m img { width:100%; height:100%; object-fit:contain; position:relative; z-index:1 }
+        .hero-m .ph { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font-size:5rem; color:var(--cherry); opacity:.08; z-index:0 }
+        .hero-b { position:absolute; bottom:20px; left:24px; z-index:3; display:flex; gap:8px; flex-wrap:wrap }
+        .badge { padding:6px 14px; border-radius:50px; font-size:.68rem; font-weight:700; text-transform:uppercase; letter-spacing:.8px; background:rgba(0,0,0,.7); backdrop-filter:blur(15px); border:1px solid rgba(255,255,255,.1); color:#fff; display:inline-flex; align-items:center; gap:6px }
+        .badge-f { background:rgba(0,200,100,.2); border-color:rgba(0,200,100,.3); color:#00e676 }
+        
+        /* Title + Creator Row */
+        .ir { display:flex; align-items:center; justify-content:space-between; gap:20px; flex-wrap:wrap; margin-bottom:20px }
+        .ir-l { flex:1; min-width:0 }
+        .ir-l h1 { font-size:2rem; font-weight:900; color:#fff; margin-bottom:4px; letter-spacing:-.5px; line-height:1.2; font-family:'Outfit',sans-serif }
+        .tags { display:flex; gap:6px; flex-wrap:wrap; margin-top:8px }
+        .tags span { padding:4px 12px; border-radius:6px; font-size:.65rem; font-weight:600; background:rgba(255,255,255,.03); color:var(--gray-dark); border:1px solid rgba(255,255,255,.08); letter-spacing:.3px }
+        .cr { display:flex; align-items:center; gap:14px; background:rgba(255,255,255,.025); border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:14px 20px; flex-shrink:0; transition:all .3s ease }
+        .cr:hover { border-color:rgba(230,21,54,.15); background:rgba(230,21,54,.03) }
+        .cr img { width:38px; height:38px; border-radius:50%; border:2px solid rgba(var(--cherry-rgb),.2); object-fit:cover }
+        .cr .cfb { width:38px; height:38px; border-radius:50%; background:rgba(var(--cherry-rgb),.15); display:flex; align-items:center; justify-content:center; color:var(--cherry); font-size:.8rem }
+        .cr strong { display:block; font-size:.82rem; color:var(--light) }
+        .cr a { font-size:.7rem; color:var(--cherry); text-decoration:none }
+        .cr a:hover { text-decoration:underline }
+        
+        /* Uploader */
+        .up { display:flex; align-items:center; gap:14px; padding:16px 20px; background:rgba(88,101,242,.05); border:1px solid rgba(88,101,242,.1); border-radius:16px; margin-bottom:20px; transition:all .3s ease }
+        .up:hover { background:rgba(88,101,242,.08); border-color:rgba(88,101,242,.18) }
+        .up img { width:36px; height:36px; border-radius:50%; border:2px solid rgba(88,101,242,.2); object-fit:cover }
+        .up .ufb { width:36px; height:36px; border-radius:50%; background:rgba(88,101,242,.15); display:flex; align-items:center; justify-content:center; color:#5865F2; font-size:.9rem }
+        .up strong { display:block; font-size:.82rem; color:var(--light) }
+        .up span { font-size:.7rem; color:var(--gray-dark) }
+        
+        /* Cards */
+        .card {
+            background: linear-gradient(145deg, rgba(30, 4, 10, 0.5) 0%, rgba(10, 2, 4, 0.8) 100%);
+            backdrop-filter: blur(30px) saturate(220%);
+            -webkit-backdrop-filter: blur(30px) saturate(220%);
+            border: 1px solid rgba(230, 21, 54, 0.12);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: var(--gap);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.04);
+            position: relative;
+            overflow: visible;
+            transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .card-inner {
+            position: relative;
+            z-index: 1;
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(230, 21, 54, 0.4), var(--rose-glow), rgba(230, 21, 54, 0.4), transparent);
+            opacity: 0.6;
+            z-index: 2;
+            pointer-events: none;
+        }
+        .card::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(ellipse at 50% 0%, rgba(230, 21, 54, 0.04) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 1;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+        }
+        .card:hover {
+            transform: translateY(-4px) scale(1.01);
+            border-color: rgba(230, 21, 54, 0.35);
+            box-shadow: 0 35px 75px rgba(0, 0, 0, 0.8), 0 0 45px rgba(230, 21, 54, 0.15), inset 0 1px 4px rgba(255, 255, 255, 0.08);
+        }
+        .card:hover::after {
+            opacity: 1;
+        }
+        .ct { font-size:.72rem; font-weight:700; color:var(--gray-dark); text-transform:uppercase; letter-spacing:1.5px; margin-bottom:16px; display:flex; align-items:center; gap:8px }
+        .ct i { color:var(--cherry-light); font-size:.8rem }
+        .desc { color:var(--gray); font-size:.9rem; line-height:1.8 }
+        
+        /* Sidebar */
+        .sidebar { position:sticky; top:100px }
+        .sidebar .card { padding:20px }
+        
+        /* Download button */
+        .dlb {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 18px 28px;
+            background: linear-gradient(135deg, #a81228 0%, #7a0a1e 100%);
+            border: 1px solid rgba(255, 77, 109, 0.25);
+            border-radius: 16px;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            margin-bottom: 6px;
+            box-shadow: 0 8px 30px rgba(168, 18, 40, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.12);
+            font-family: inherit;
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            letter-spacing: .3px;
+        }
+        .dlb::after {
+            content: '';
+            position: absolute;
+            top: 0; left: -150%;
+            width: 80%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.25), transparent);
+            transform: skewX(-30deg);
+            transition: none;
+        }
+        .dlb:hover::after {
+            left: 180%;
+            transition: all 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .dlb:hover {
+            transform: translateY(-3px) scale(1.02) !important;
+            border-color: rgba(255, 77, 109, 0.6) !important;
+            box-shadow: 0 15px 35px rgba(168, 18, 40, 0.65), 0 0 20px rgba(255, 77, 109, 0.3) !important;
+            filter: brightness(1.15);
+        }
+        .dlb:disabled { opacity:0.6; cursor:not-allowed; transform:none }
+        .dlb i { font-size:1.1rem }
+        .dls { text-align:center; font-size:.7rem; color:var(--gray-dark); margin-bottom:var(--gap) }
+        
+        /* Mirror links */
+        .dlg { display:grid; grid-template-columns:1fr; gap:8px; margin-bottom:20px }
+        .dll { display:flex; align-items:center; gap:10px; padding:13px 18px; background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.06); border-radius:12px; color:var(--light); text-decoration:none; font-size:.8rem; font-weight:500; transition:.25s }
+        .dll:hover { background:rgba(230,21,54,.05); border-color:rgba(230,21,54,.15); transform:translateX(3px) }
+        .dll i { color:var(--cherry); font-size:.85rem; flex-shrink:0 }
+        .dll span { color:var(--gray-dark); font-size:.7rem; margin-left:auto }
+        
+        /* Action buttons */
+        .actions { display:flex; gap:6px; margin-bottom:20px }
+        .act { flex:1; display:inline-flex; align-items:center; justify-content:center; gap:5px; padding:10px 8px; border-radius:12px; font-size:.75rem; font-weight:600; cursor:pointer; background:rgba(255,255,255,.02); border:1px solid rgba(255,255,255,.06); color:var(--gray); transition:.25s; font-family:inherit; text-decoration:none; overflow:hidden; min-width:0 }
+        .act span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap }
+        .act:hover { background:rgba(230,21,54,.05); border-color:rgba(230,21,54,.15); color:var(--light); transform:translateY(-1px) }
+        .act.liked { color:#ff3860; border-color:rgba(255,56,96,.25); background:rgba(255,56,96,.06) }
+        .act.bookmarked { color:#ffd700; border-color:rgba(255,215,0,.25); background:rgba(255,215,0,.06) }
+        .act i { font-size:.82rem; flex-shrink:0 }
+        
+        /* Password - removed */
+        .pw { display:inline-flex; align-items:center; gap:8px; padding:8px 14px; background:rgba(var(--cherry-rgb),.04); border:1px solid rgba(var(--cherry-rgb),.1); border-radius:8px; font-size:.75rem; margin-bottom:var(--gap); cursor:pointer; user-select:all }
+        .pw i { color:var(--cherry) }
+        .pw code { background:rgba(var(--cherry-rgb),.15); color:var(--cherry); padding:2px 8px; border-radius:4px; font-weight:700; cursor:pointer; font-size:.8rem }
+        
+        /* Grid — 2 columns: Main (with tabs) | Sidebar */
+        .grid { display:grid; grid-template-columns:1fr 340px; gap:var(--gap); align-items:start }
+        .grid-left { min-width:0 }
+        .grid-right { position:sticky; top:100px }
+        
+        /* Files */
+        .files { display:flex; flex-direction:column; gap:6px; max-height:420px; overflow-y:auto; padding-right:4px }
+        .files::-webkit-scrollbar { width:4px } .files::-webkit-scrollbar-thumb { background:rgba(255,255,255,.06); border-radius:2px }
+        .fi { display:flex; align-items:center; justify-content:space-between; padding:11px 16px; background:rgba(255,255,255,.015); border:1px solid rgba(255,255,255,.04); border-radius:12px; font-size:.82rem; transition:.2s }
+        .fi:hover { background:rgba(230,21,54,.03); border-color:rgba(230,21,54,.1); transform:translateX(2px) }
+        .fi .fl { display:flex; align-items:center; gap:10px; min-width:0 }
+        .fi .fl i { color:var(--cherry); font-size:.82rem; flex-shrink:0 }
+        .fi .fl span { white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--light) }
+        .fi .fs { color:var(--gray-dark); font-size:.72rem; flex-shrink:0; margin-left:8px }
+        
+        /* Stats */
+        .st { display:flex; justify-content:space-between; align-items:center; padding:12px 0; border-bottom:1px solid rgba(255,255,255,.03); font-size:.85rem }
+        .st:last-child { border-bottom:none }
+        .st .l { color:var(--gray); display:flex; align-items:center; gap:8px }
+        .st .l i { color:var(--cherry); width:16px; text-align:center; font-size:.8rem }
+        .st .v { color:var(--light); font-weight:600 }
+        
+        /* Tabs — Overview | Files */
+        .tabs { display:flex; gap:4px; margin-bottom:20px; background:rgba(255,255,255,.015); border-radius:12px; padding:5px; border:1px solid rgba(255,255,255,.04) }
+        .tab { flex:1; padding:11px 22px; font-size:.82rem; font-weight:600; color:var(--gray-dark); cursor:pointer; border-radius:10px; transition:all .25s ease; background:transparent; border:none; font-family:inherit; letter-spacing:.3px; text-align:center }
+        .tab:hover { color:var(--light); background:rgba(255,255,255,.03) }
+        .tab.active { color:#fff; background:rgba(230,21,54,.12); box-shadow:0 2px 10px rgba(0,0,0,.25); font-weight:700 }
+        .tab-content { display:none; animation:fadeSlide .3s ease }
+        .tab-content.active { display:block }
+        @keyframes fadeSlide { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+        
+        .load { text-align:center; padding:80px 20px; color:var(--gray) }
+        .load i { font-size:2.5rem; color:var(--cherry); opacity:.3; display:block; margin-bottom:15px }
+        .err { text-align:center; padding:60px 20px; color:var(--gray) }
+        .err i { font-size:3rem; color:var(--cherry); opacity:.25; display:block; margin-bottom:15px }
+        .btn-b { display:inline-flex; align-items:center; gap:6px; padding:10px 22px; border-radius:10px; background:rgba(var(--cherry-rgb),.1); border:1px solid rgba(var(--cherry-rgb),.2); color:var(--cherry); text-decoration:none; font-size:.85rem; font-weight:600; transition:.2s; font-family:inherit }
+        .btn-b:hover { background:rgba(var(--cherry-rgb),.18) }
+        
+        @media(max-width:900px) {
+            .grid { grid-template-columns:1fr }
+            .grid-right { position:static }
+            .sidebar { position:static }
+            .hero-m { max-width:100%; border-radius:12px }
+        }
+        @media(max-width:600px) {
+            .ir { flex-direction:column; align-items:flex-start }
+            .ir-l h1 { font-size:1.3rem }
+            .page { padding-top:100px }
+            .wrap { padding:0 12px }
+            .tabs { overflow-x:auto; gap:0 }
+            .tab { padding:10px 16px; font-size:.75rem; white-space:nowrap }
+            .card { padding:16px }
+            .hero-b { bottom:12px; left:14px }
+            .badge { font-size:.6rem; padding:4px 10px }
+            .dlb { padding:14px 18px; font-size:.9rem }
+            .dll { padding:10px 12px; font-size:.72rem }
+            .cr { padding:10px 14px }
+            .cr img, .cr .cfb { width:32px; height:32px }
+            .cr strong { font-size:.75rem }
+            .cr a { font-size:.65rem }
+            .up { padding:10px 14px }
+            .up img, .up .ufb { width:30px; height:30px }
+            .actions { flex-direction:column }
+            .act { font-size:.72rem; padding:8px 12px }
+            .files { max-height:250px }
+            .fi { padding:8px 10px; font-size:.75rem }
+            .st { font-size:.78rem }
+        }
+
+        /* Tree structure CSS */
+        .tree-folder-group { margin-bottom: 2px; text-align: left; }
+        .tree-folder-row { display: flex; align-items: center; gap: 8px; padding: 9px 12px; background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.02); border-radius: 10px; cursor: pointer; user-select: none; font-size: 0.8rem; transition: 0.15s; margin-bottom: 2px; }
+        .tree-folder-row:hover { background: rgba(var(--cherry-rgb), 0.03); border-color: rgba(var(--cherry-rgb), 0.1); }
+        .tree-arrow { display: inline-flex; align-items: center; justify-content: center; width: 12px; font-size: 0.65rem; color: var(--gray-dark); transition: transform 0.2s; }
+        .tree-icon-folder { color: #ffca28; font-size: 0.82rem; }
+        .tree-folder-name { font-weight: 600; color: var(--light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tree-folder-content { overflow: hidden; }
+        .tree-folder-content.collapsed { display: none; }
+        .creator-row .card img { width: 36px; height: 36px; border-radius: 50%; border: 2px solid rgba(var(--cherry-rgb),.2); object-fit: cover; }
+        .creator-row .card .cfb, .creator-row .card .ufb { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: .8rem; }
+        .creator-row .card .cfb { background: rgba(var(--cherry-rgb),.15); color: var(--cherry); }
+        .creator-row .card .ufb { background: rgba(88,101,242,.15); color: #5865F2; }
+        .creator-row .card strong { display: block; font-size: .82rem; color: var(--light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 110px; }
+        .creator-row .card a, .creator-row .card span { font-size: .7rem; color: var(--cherry); text-decoration: none; display: block; }
+        .creator-row .card span { color: var(--gray-dark); }
+        .grid-right .ct { margin-bottom: 12px; }
+    </style>
+</head>
+<body>
+    <!-- PRESET FULLSCREEN LOADER (SPINNER ONLY) -->
+    <div id="resources-loader" class="resources-loader-overlay">
+        <div class="resources-loader-content">
+            <div class="loader-logo-container">
+                <img src="assets/content.png" alt="Zyrex" class="loader-logo-img">
+                <div class="loader-pulse-ring"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        setTimeout(function() {
+            var loader = document.getElementById('resources-loader');
+            if (loader && !loader.classList.contains('fade-out')) {
+                loader.classList.add('fade-out');
+                setTimeout(function() { if (loader && loader.parentNode) loader.parentNode.removeChild(loader); }, 600);
+            }
+        }, 1800);
+    </script>
+    <div class="bg-aura"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
+    <nav class="navbar"><div class="container"><a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><ul class="nav-links" id="navLinks"><li><a href="/">Home</a></li><li><a href="/resources">Resources</a></li><li><a href="/plugins">Plugins</a></li><li><a href="/more">More</a></li><li><a href="/#contact">Contact</a></li></ul><div class="nav-actions"><div id="authBtn"></div><button class="hamburger" id="hamburger"><span></span><span></span><span></span></button></div></div></nav>
+    <section class="page"><div class="wrap">
+        <a href="/resources" class="back"><i class="fas fa-arrow-left"></i> Back to Resources</a>
+        <div class="load" id="load"><i class="fas fa-spinner fa-spin"></i><p>Loading preset...</p></div>
+        <div class="err" id="err" style="display:none"><i class="fas fa-exclamation-circle"></i><p id="errMsg">Preset not found.</p><a href="/resources" class="btn-b"><i class="fas fa-arrow-left"></i> Browse Resources</a></div>
+        <div id="root" style="display:none"></div>
+    </div></section>
+    <footer class="footer"><div class="container"><div class="footer-content"><div class="footer-brand"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><h3 style="font-size:1.8rem;font-weight:900;margin:0;letter-spacing:2px;background:linear-gradient(135deg,#fff,#9090a0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Editing</h3></div><p>Premium editing community &amp; resources.</p></div><div class="footer-links"><h4>Quick Links</h4><ul><li><a href="/">Home</a></li><li><a href="/resources">Resources</a></li><li><a href="/plugins">Plugins</a></li></ul></div><div class="footer-links"><h4>Legal</h4><ul><li><a href="/terms">Terms</a></li><li><a href="/privacy">Privacy</a></li><li><a href="/dmca">DMCA</a></li></ul></div><div class="footer-links"><h4>Community</h4><ul><li><a href="https://discord.gg/fAydSzpafA">Discord</a></li><li><a href="/#contact">Contact</a></li></ul></div><div class="footer-newsletter"><h4>Newsletter</h4><p>Stay updated with Zyrex Editing.</p><div class="newsletter-form"><input type="email" placeholder="Your email"><button type="submit"><i class="fas fa-arrow-right"></i></button></div></div></div><div class="footer-bottom"><p>&copy; 2026 Zyrex Editing. All rights reserved.</p></div></div></footer>
+    <script>window.__PRESET_VER='v4-20260703-'+Date.now()</script>
+    <script src="/js/auth.js?v=10"></script>
+    <script src="/js/script.js?v=5"></script>
+    <script src="/js/presets-data.js?v=5"></script>
+    <script>
+    async function fetchDiscordAvatar(userId) {
+        if (!userId) return '';
+        try {
+            var resp = await fetch('/api/discord-user?userId=' + userId);
+            var data = await resp.json();
+            if (data.success && data.user && data.user.avatar) {
+                var ext = data.user.avatar.startsWith('a_') ? 'gif' : 'png';
+                return '/api/avatar/' + userId + '/' + data.user.avatar + '.' + ext + '?size=128';
+            }
+        } catch(e) {}
+        // Fallback: default Discord avatar (works in all browsers)
+        var defIdx = 0;
+        try { defIdx = Number((BigInt(userId) >> 22n) % 6n); } catch(e) { defIdx = parseInt(userId) % 5; }
+        return '/api/avatar/default/' + defIdx + '.png';
+    }
+    window.refreshBrokenAvatar = async function(img) {
+      var socialUrl = img.getAttribute('data-social-url');
+      var productId = img.getAttribute('data-product-id');
+      if (!socialUrl) { showFallback(img); return; }
+      // Prevent infinite loop
+      img.onerror = null;
+      try {
+        var r = await fetch('/api/hlx/resolve?url=' + encodeURIComponent(socialUrl));
+        var d = await r.json();
+        if (d.success && d.avatar) {
+          img.src = d.avatar;
+          // Optionally persist the new avatar to DB
+          if (productId) {
+            fetch('/api/products/update-avatar', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ id: productId, creator_avatar: d.avatar }),
+              credentials: 'include'
+            }).catch(function(){});
+          }
+        } else {
+          showFallback(img);
+        }
+      } catch(e) { showFallback(img); }
+      function showFallback(el) {
+        el.style.display = 'none';
+        var fb = document.createElement('div');
+        fb.className = 'cfb';
+        fb.innerHTML = '<i class="fas fa-user"></i>';
+        el.parentNode.insertBefore(fb, el);
+      }
+    };
+    (async()=>{const p=new URLSearchParams(location.search);const id=p.get("id");if(!id)return E("Preset ID missing");let d=null;try{const r=await fetch("/api/products?id="+id);if(r.ok){const j=await r.json();if(j&&j.id)d=j}}catch(e){}if(!d&&window.presetsData)d=window.presetsData.find(x=>x.id===id);if(!d&&window.pluginsData)d=window.pluginsData.find(x=>x.id===id);if(!d)return E("Preset not found");if(d.type==='audio'||d.type==='scenepack')return E("This product type cannot be viewed here. <a href='/"+d.type+"' style='color:var(--cherry-light)'>Go to "+d.type+" page</a>");await R(d);setTimeout(function(){injectGridLayout(d)},50)})();
+    function E(m){document.getElementById("load").style.display="none";document.getElementById("err").style.display="block";document.getElementById("errMsg").innerHTML=m}
+    function R(p){return (async function(){document.getElementById("load").style.display="none";document.getElementById("root").style.display="block";document.title=(p.name||"Preset")+" - Zyrex";var L={"after-effects":"After Effects","premiere-pro":"Premiere Pro","photoshop":"Photoshop","video-star":"Video Star","topaz-labs":"Topaz Labs","others":"Others"};var I={"after-effects":"fa-film","premiere-pro":"fa-video","photoshop":"fa-image","video-star":"fa-star","topaz-labs":"fa-gem","others":"fa-folder"};var cat=L[p.category]||"Preset";var ic=I[p.category]||"fa-sliders";var av=p.creator_avatar||"";var nick=p.creator_nickname||p.author_name||"Zyrex Creator";var desc=p.description||p.desc||"";var tags=Array.isArray(p.tags)?p.tags:(typeof p.tags==="string"?p.tags.split(",").map(function(t){return t.trim()}).filter(Boolean):[]);var platform="both";var hasFile=p.file_path&&p.file_path.length>0;var dlToken=p.id?'<a href="#" id="dlBtn" class="dlb a3" onclick="genToken(event,\''+p.id+'\',\''+(p.file_path||'')+'\')"><i class="fas fa-cloud-arrow-down"></i> Generate Secure Download Link</a><div class="dls a3"><i class="fas fa-shield-halved"></i> One-time token &middot; 10 min expiry</div>':(p.links&&p.links.length>0?'<a href="'+p.links[0].url+'" target="_blank" class="dlb a3"><i class="fas fa-cloud-arrow-down"></i> Download Now</a>':"");var links=[];if(Array.isArray(p.links))links=links.concat(p.links);else{if(p.link)links.push({url:p.link,label:"Mirror"});if(p.link_2)links.push({url:p.link_2,label:"Mirror"});if(p.link_3)links.push({url:p.link_3,label:"Mirror"})}var mirrorHtml=links.length>0?'<div class="dlg a3">'+links.map(function(l){return'<a href="'+(l.url||l)+'" target="_blank" class="dll"><i class="fas fa-external-link-alt"></i> '+(l.label||"Mirror")+' <span>'+new URL(l.url||l).hostname+"</span></a>"}).join("")+"</div>":"";var filesHtml=p.files&&p.files.length>0?p.files.map(function(f){var sz=f.size?(f.size>1048576?(f.size/1048576).toFixed(1)+" MB":(f.size/1024).toFixed(1)+" KB"):"--";var fi=f.name.endsWith('.mp4')||f.name.endsWith('.mov')?'fa-file-video':f.name.endsWith('.mp3')||f.name.endsWith('.wav')?'fa-file-audio':f.name.endsWith('.png')||f.name.endsWith('.jpg')||f.name.endsWith('.jpeg')?'fa-file-image':'fa-file-lines';return'<div class="fi"><div class="fl"><i class="fas '+fi+'"></i><span title="'+f.name+'">'+f.name+'</span></div><span class="fs">'+sz+"</span></div>"}).join(""):"";var upAv=await fetchDiscordAvatar(p.author_id||"");if(p.uploader_avatar&&(p.uploader_avatar.includes('discordapp.com')||p.uploader_avatar.includes('discord.com')))upAv=p.uploader_avatar;var upHtml=(p.uploader_name||p.author_name)?'<div class="up a3">'+(upAv?'<img src="'+upAv+'" alt="">':'<div class="ufb"><i class="fab fa-discord"></i></div>')+"<div><strong>"+(p.uploader_name||p.author_name)+(p.uploader_is_admin?' <i class="fas fa-circle-check" style="color:#0095F6;font-size:0.85rem" title="Verified Admin"></i>':'')+"</strong><span>Community Uploader</span></div></div>":"";var heroImg=p.thumbnail?'<img src="'+p.thumbnail+'" alt="'+p.name+'" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">':"";var ph='<div class="ph" style="'+(p.thumbnail?"display:none":"")+'"><i class="fas '+ic+'"></i></div>';var hasTabs=(p.files&&p.files.length>0)||desc;var tabsHtml=hasTabs?'<div class="tabs a3"><button class="tab active" onclick="switchTab(\'overview\')">Overview</button>'+(p.files&&p.files.length>0?'<button class="tab" onclick="switchTab(\'files\')">Files ('+p.files.length+')</button>':'')+'</div>':'';var overviewHtml=(desc?'<div class="card"><div class="ct"><i class="fas fa-align-left"></i> Description</div><div class="desc">'+desc.replace(/\n/g,"<br>")+"</div></div>":"")+'<div class="card"><div class="ct"><i class="fas fa-circle-info"></i> Details</div><div class="st"><span class="l"><i class="fas fa-tag"></i> Category</span><span class="v">'+cat+'</span></div>'+'<div class="st"><span class="l"><i class="fas fa-download"></i> Downloads</span><span class="v" id="dlCountOverview">0</span></div>'+(p.created_at?'<div class="st"><span class="l"><i class="fas fa-calendar"></i> Added</span><span class="v">'+new Date(p.created_at).toLocaleDateString("en-US",{year:"numeric",month:"short",day:"numeric"})+"</span></div>":"")+"</div>";var filesTabHtml=p.files&&p.files.length>0?'<div class="card"><div class="ct"><i class="fas fa-folder-open"></i> Files ('+p.files.length+')</div><div class="files">'+filesHtml+"</div></div>":"";var tabContentHtml='';if(hasTabs){tabContentHtml='<div class="tab-content active" id="tab-overview">'+overviewHtml+"</div>";if(p.files&&p.files.length>0){tabContentHtml+='<div class="tab-content" id="tab-files">'+filesTabHtml+"</div>"}}else{tabContentHtml=overviewHtml}var likeKey="zyrex_like_"+p.id;var bookKey="zyrex_bookmark_"+p.id;var liked=localStorage.getItem(likeKey)==="1";var bookmarked=localStorage.getItem(bookKey)==="1";var likeCounts=JSON.parse(localStorage.getItem("zyrex_likes_count")||"{}");var bookCounts=JSON.parse(localStorage.getItem("zyrex_bookmarks_count")||"{}");var likeCount=likeCounts[p.id]||0;var bookCount=bookCounts[p.id]||0;var dlCounts=JSON.parse(localStorage.getItem("zyrex_downloads")||"{}");var dlCount=dlCounts[p.id]||0;document.getElementById("root").innerHTML='<div class="preset-hero a1"><div class="hero-m">'+heroImg+ph+'</div><div class="hero-b"><span class="badge"><i class="fas '+ic+'"></i> '+cat+'</span><span class="badge badge-f"><i class="fas fa-circle-check"></i> Free</span></div></div><div class="ir a2"><div class="ir-l"><h1>'+p.name+'</h1>'+(tags.length?'<div class="tags">'+tags.map(function(t){return"<span>"+t+"</span>"}).join("")+"</div>":"")+'</div></div><div class="cr">'+(av?'<img src="'+av+'" alt="">':'<div class="cfb"><i class="fas fa-user"></i></div>')+"<div><strong>"+nick+"</strong>"+(p.creator_social_url?'<a href="'+p.creator_social_url+'" target="_blank"><i class="fas fa-external-link-alt"></i> Profile</a>':'<span style="font-size:.7rem;color:var(--gray-dark)">Creator</span>')+"</div></div>"+upHtml+tabsHtml+'<div class="grid a3"><div class="grid-left">'+tabContentHtml+"</div><div class=\"grid-right\"><div class=\"sidebar\"><div class=\"card\">"+dlToken+mirrorHtml+'<div class="actions">'+'<button class="act'+(liked?' liked':'')+'" id="btnLike" onclick="toggleLike(\''+p.id+'\')"><i class="'+(liked?'fas':'far')+' fa-heart"></i> <span>'+(liked?'Liked':'Like')+'</span> <span id="likeCount" style="font-size:.7rem;opacity:.7">'+(likeCount>0?likeCount:'')+'</span></button><button class="act'+(bookmarked?' bookmarked':'')+'" id="btnBookmark" onclick="toggleBookmark(\''+p.id+'\')"><i class="'+(bookmarked?'fas':'far')+' fa-bookmark"></i> <span>'+(bookmarked?'Saved':'Bookmark')+'</span> <span id="bookmarkCount" style="font-size:.7rem;opacity:.7">'+(bookCount>0?bookCount:'')+'</span></button><button class="act" id="btnShare" onclick="copyShareLink(\''+p.id+'\',this)"><i class="fas fa-share-nodes"></i> <span>Share</span></button></div>'+'<div class="dls" style="margin-top:8px"><i class="fas fa-download"></i> <span id="dlCountSidebar">'+dlCount+'</span> downloads</div>'+"</div></div></div></div>";var dlo=document.getElementById("dlCountOverview");if(dlo)dlo.textContent=dlCount;})()}
+    window.genToken=function(e,pid,fp){e.preventDefault();var b=document.getElementById("dlBtn");if(!b)return;var origHtml=b.getAttribute("data-orig-html")||b.innerHTML;if(!b.getAttribute("data-orig-html"))b.setAttribute("data-orig-html",origHtml);function resetBtn(){if(!b)return;b.style.pointerEvents="";b.style.opacity="";b.innerHTML=b.getAttribute("data-orig-html")||'<i class="fas fa-cloud-arrow-down"></i> Generate Secure Download Link'}b.style.pointerEvents="none";b.style.opacity="0.6";b.innerHTML='<i class="fas fa-spinner fa-spin"></i> Generating...';var targetTab=window.open('about:blank','_blank');var q=new URLSearchParams();if(fp)q.set("file_path",fp);q.set("return_to",location.pathname+location.search);fetch("/api/downloads/request-token/"+encodeURIComponent(pid)+"?"+q.toString(),{credentials:"include"}).then(function(res){return res.json().then(function(data){if(!res.ok||!data.success){if(targetTab)targetTab.close();resetBtn();if(res.status===401){window.location.href="/api/login?redirect="+encodeURIComponent(location.pathname+location.search)}else if(res.status===403){window.location.href="/download?id="+encodeURIComponent(pid)}else{alert(data.error||"Could not generate download link")}return}var targetUrl=data.ad_url||data.short_url||data.url;if(targetTab&&targetUrl){targetTab.location.href=targetUrl;var checkInterval=setInterval(function(){if(!targetTab||targetTab.closed){clearInterval(checkInterval);resetBtn()}},500)}else if(targetUrl){window.location.href=targetUrl}else{if(targetTab)targetTab.close();resetBtn();alert("Invalid download link received")}})}).catch(function(err){if(targetTab)targetTab.close();resetBtn();alert("Network error. Please try again.")})};
+    function switchTab(tab){
+      var tabs=document.querySelectorAll('.tab');
+      var contents=document.querySelectorAll('.tab-content');
+      tabs.forEach(function(t){t.classList.remove('active')});
+      contents.forEach(function(c){c.classList.remove('active')});
+      var targetTab=document.querySelector('.tab[data-tab="'+tab+'"]');
+      if(targetTab)targetTab.classList.add('active');
+      var targetContent=document.getElementById('tab-'+tab);
+      if(targetContent){targetContent.classList.add('active');targetContent.style.animation='none';targetContent.offsetHeight;targetContent.style.animation=''}
+    }
+    function toggleLike(pid){var key="zyrex_like_"+pid;var liked=localStorage.getItem(key)==="1";var btn=document.getElementById("btnLike");if(!btn)return;var countKey="zyrex_likes_count";var counts=JSON.parse(localStorage.getItem(countKey)||"{}");if(liked){localStorage.removeItem(key);btn.classList.remove("liked");btn.innerHTML='<i class="far fa-heart"></i> <span>Like</span>';counts[pid]=Math.max(0,(counts[pid]||0)-1)}else{localStorage.setItem(key,"1");btn.classList.add("liked");btn.innerHTML='<i class="fas fa-heart"></i> <span>Liked</span>';counts[pid]=(counts[pid]||0)+1}localStorage.setItem(countKey,JSON.stringify(counts));updateLikeCount(pid)}
+    function toggleBookmark(pid){var key="zyrex_bookmark_"+pid;var bookmarked=localStorage.getItem(key)==="1";var btn=document.getElementById("btnBookmark");if(!btn)return;var countKey="zyrex_bookmarks_count";var counts=JSON.parse(localStorage.getItem(countKey)||"{}");if(bookmarked){localStorage.removeItem(key);btn.classList.remove("bookmarked");btn.innerHTML='<i class="far fa-bookmark"></i> <span>Bookmark</span>';counts[pid]=Math.max(0,(counts[pid]||0)-1)}else{localStorage.setItem(key,"1");btn.classList.add("bookmarked");btn.innerHTML='<i class="fas fa-bookmark"></i> <span>Saved</span>';counts[pid]=(counts[pid]||0)+1}localStorage.setItem(countKey,JSON.stringify(counts))}
+    window.copyShareLink = function(pid, btn) {
+        var url = window.location.origin + '/preset?id=' + pid;
+        navigator.clipboard.writeText(url).then(function() {
+            var oldHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check" style="color:#00c864"></i> <span style="color:#00c864">Copied!</span>';
+            setTimeout(function() {
+                btn.innerHTML = oldHtml;
+            }, 2500);
+        }).catch(function() {
+            alert('Link: ' + url);
+        });
+    };
+    function updateLikeCount(pid){var el=document.getElementById("likeCount");if(el){var counts=JSON.parse(localStorage.getItem("zyrex_likes_count")||"{}");el.textContent=counts[pid]||0}}
+    // Sync download counts from persistent API
+    (async function(){try{var dl=JSON.parse(localStorage.getItem("zyrex_downloads")||"{}");var r=await fetch("/api/downloads/counts");var d=await r.json();if(d.success&&d.counts){for(var k in d.counts){if(d.counts[k]>(dl[k]||0))dl[k]=d.counts[k]}localStorage.setItem("zyrex_downloads",JSON.stringify(dl))}}catch(e){}})();
+
+    function injectGridLayout(p) {
+      try {
+        var root = document.getElementById('root');
+        if (!root) return;
+        
+        var heroEl = root.querySelector('.preset-hero');
+        var irEl = root.querySelector('.ir');
+        var upEl = root.querySelector('.up');
+        var descCard = root.querySelector('.card');
+        var dlBtnEl = root.querySelector('.dlb');
+        var dlsEl = root.querySelector('.dls');
+        var mirrorEl = root.querySelector('.dlg');
+        var actionsEl = root.querySelector('.actions');
+        var stEls = root.querySelectorAll('.st');
+        var crEl = root.querySelector('.cr');
+
+        // Files — use p.files from API, fetch from R2 as enhancement
+        var fileList = [];
+        if (Array.isArray(p.files) && p.files.length > 0) {
+          fileList = p.files.filter(function(f) {
+            var n = (f.name || '').replace(/\\/g, '/');
+            return n && !n.endsWith('/');
+          });
+        }
+        
+        var filesHtml = '';
+        if (fileList.length > 0) {
+          var iconMap = {mp4:'fa-file-video',mov:'fa-file-video',webm:'fa-file-video',mp3:'fa-file-audio',wav:'fa-file-audio',aac:'fa-file-audio',png:'fa-file-image',jpg:'fa-file-image',jpeg:'fa-file-image',gif:'fa-file-image',webp:'fa-file-image',zip:'fa-file-zipper',rar:'fa-file-zipper','7z':'fa-file-zipper',pdf:'fa-file-pdf',aep:'fa-file-video',prproj:'fa-file-video',psd:'fa-file-image'};
+          filesHtml += '<div class="files" style="max-height:420px">';
+          fileList.forEach(function(f) {
+            var sz = f.size_formatted || (f.size ? (f.size > 1048576 ? (f.size/1048576).toFixed(1)+' MB' : (f.size/1024).toFixed(1)+' KB') : '--');
+            var ext = (f.name || '').split('.').pop().toLowerCase();
+            var fi = iconMap[ext] || 'fa-file-lines';
+            var fname = f.name || '';
+            filesHtml += '<div class="fi"><div class="fl"><i class="fas '+fi+'"></i><span title="'+fname+'">'+fname+'</span></div><span class="fs">'+sz+'</span></div>';
+          });
+          filesHtml += '</div>';
+        } else {
+          filesHtml = '<div style="text-align:center;padding:40px 20px;color:var(--gray-dark)"><i class="fas fa-folder-open" style="font-size:2rem;color:var(--cherry);opacity:.25;display:block;margin-bottom:12px"></i><span style="font-size:.78rem">No files available</span></div>';
+        }
+
+        // Source link
+        var sourceUrl = p.product_url || p.source_url || p.creator_social_url || '';
+        var sourceLinkHtml = '';
+        if (sourceUrl) {
+          var domain = '';
+          try { domain = new URL(sourceUrl).hostname.replace('www.', ''); } catch(e) {}
+          var iconHtml = '<i class="fas fa-arrow-up-right-from-square"></i>';
+          var pLabel = 'Source';
+          
+          var brandIcon = '';
+          if (domain.indexOf('payhip.com') !== -1) { brandIcon = 'payhip'; pLabel = 'Payhip'; }
+          else if (domain.indexOf('patreon.com') !== -1) { brandIcon = 'patreon'; pLabel = 'Patreon'; }
+          else if (domain.indexOf('boosty.to') !== -1) { brandIcon = 'boosty'; pLabel = 'Boosty'; }
+          else if (domain.indexOf('gumroad.com') !== -1) { brandIcon = 'gumroad'; pLabel = 'Gumroad'; }
+          else if (domain.indexOf('sellfy.com') !== -1) { brandIcon = 'sellfy'; pLabel = 'Sellfy'; }
+          else if (domain.indexOf('sellix.io') !== -1) { brandIcon = 'sellix'; pLabel = 'Sellix'; }
+          else if (domain.indexOf('tiktok.com') !== -1) { brandIcon = 'tiktok'; pLabel = 'TikTok'; }
+          else if (domain.indexOf('instagram.com') !== -1) { brandIcon = 'instagram'; pLabel = 'Instagram'; }
+          else if (domain.indexOf('youtube.com') !== -1 || domain.indexOf('youtu.be') !== -1) { brandIcon = 'youtube'; pLabel = 'YouTube'; }
+          else if (domain.indexOf('x.com') !== -1 || domain.indexOf('twitter.com') !== -1) { brandIcon = 'twitter'; pLabel = 'X / Twitter'; }
+          else if (domain.indexOf('twitch.tv') !== -1) { brandIcon = 'twitch'; pLabel = 'Twitch'; }
+          else if (domain.indexOf('discord.gg') !== -1 || domain.indexOf('discord.com') !== -1) { brandIcon = 'discord'; pLabel = 'Discord'; }
+          else if (domain.indexOf('t.me') !== -1 || domain.indexOf('telegram') !== -1) { brandIcon = 'telegram'; pLabel = 'Telegram'; }
+          
+          var faBrands = { patreon: 'fa-patreon', tiktok: 'fa-tiktok', instagram: 'fa-instagram', youtube: 'fa-youtube', twitter: 'fa-x-twitter', twitch: 'fa-twitch', discord: 'fa-discord', telegram: 'fa-telegram' };
+          var faviconPlatforms = { payhip: 'payhip.com', boosty: 'boosty.to', gumroad: 'gumroad.com', sellfy: 'sellfy.com', sellix: 'sellix.io' };
+          
+          if (brandIcon && faBrands[brandIcon]) {
+            iconHtml = '<i class="fab '+faBrands[brandIcon]+'"></i>';
+          } else if (brandIcon && faviconPlatforms[brandIcon]) {
+            var favDomain = faviconPlatforms[brandIcon];
+            iconHtml = '<img src="https://www.google.com/s2/favicons?domain='+favDomain+'&sz=32" alt="'+pLabel+'" style="width:16px;height:16px;vertical-align:middle;border-radius:2px">';
+          } else if (brandIcon) {
+            iconHtml = '<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--cherry);color:#fff;font-size:.6rem;font-weight:800;vertical-align:middle">'+pLabel.charAt(0)+'</span>';
+          }
+          
+          sourceLinkHtml = '<div class="st"><span class="l">'+iconHtml+' '+pLabel+'</span><a href="'+sourceUrl+'" target="_blank" class="v" style="text-decoration:none;color:var(--cherry);font-weight:600"><i class="fas fa-external-link-alt" style="font-size:.65rem;margin-right:4px"></i>Visit</a></div>';
+        }
+
+        var OC = function(t) { return "switchTab('"+t+"')"; };
+        var h = '';
+        h += '<div class="grid">';
+        
+        // Left Column (Thumbnail & details tabs)
+        h += '<div class="grid-left">';
+        if (heroEl) { h += '<div class="preset-hero">'+heroEl.innerHTML+'</div>'; heroEl.remove(); }
+        if (irEl) { h += irEl.outerHTML; irEl.remove(); }
+        h += '<div class="tabs">';
+        h += '<button class="tab active" data-tab="overview" onclick="'+OC('overview')+'">Overview</button>';
+        h += '<button class="tab" data-tab="files" onclick="'+OC('files')+'"><i class="fas fa-folder-tree"></i> Files</button>';
+        h += '</div>';
+        h += '<div class="tab-content active" id="tab-overview">';
+        if (descCard) { h += descCard.outerHTML; descCard.remove(); }
+        h += '</div>';
+        h += '<div class="tab-content" id="tab-files"><div class="card">';
+        h += filesHtml;
+        h += '</div></div>';
+        h += '</div>'; // End Left Column
+        
+        // Right Column (Sidebar)
+        h += '<div class="grid-right sidebar">';
+        
+        // 1. Download Card
+        h += '<div class="card">';
+        h += '<div class="ct"><i class="fas fa-download"></i> Download</div>';
+        if (dlBtnEl) { h += dlBtnEl.outerHTML; dlBtnEl.remove(); }
+        if (dlsEl) { h += dlsEl.outerHTML; dlsEl.remove(); }
+        if (mirrorEl) { h += mirrorEl.outerHTML; mirrorEl.remove(); }
+        if (actionsEl) { h += actionsEl.outerHTML; actionsEl.remove(); }
+        h += '</div>';
+        
+        // 2. Creator & Uploader Row (Side-by-side)
+        if (crEl || upEl) {
+          h += '<div class="creator-row" style="display:flex; gap:12px; margin-bottom: 20px;">';
+          if (crEl) {
+            h += '<div class="creator-card card" style="flex:1; margin-bottom:0; padding:15px; display:flex; align-items:center; gap:10px;">';
+            h += crEl.innerHTML;
+            h += '</div>';
+            crEl.remove();
+          }
+          if (upEl) {
+            h += '<div class="uploader-card card" style="flex:1; margin-bottom:0; padding:15px; display:flex; align-items:center; gap:10px;">';
+            h += upEl.innerHTML;
+            h += '</div>';
+            upEl.remove();
+          }
+          h += '</div>';
+        }
+        
+        // 3. Details Card
+        h += '<div class="card">';
+        h += '<div class="ct"><i class="fas fa-circle-info"></i> Details</div>';
+        if (stEls.length || sourceLinkHtml) {
+          stEls.forEach(function(el){
+            h += el.outerHTML;
+            el.remove();
+          });
+          h += sourceLinkHtml;
+        }
+        h += '</div>';
+        
+        h += '</div>'; // End Sidebar
+        h += '</div>'; // End Grid
+
+        root.innerHTML = h;
+
+        var nd = document.getElementById('dlBtn');
+        if (nd && p.id) nd.onclick = function(e) { window.genToken(e, p.id, p.file_path||''); };
+
+        // Fix broken creator avatars — add onerror handler
+        var crImg = root.querySelector('.cr img');
+        if (crImg && p.creator_social_url) {
+          crImg.setAttribute('data-social-url', p.creator_social_url);
+          crImg.setAttribute('data-product-id', p.id || '');
+          crImg.onerror = function() { window.refreshBrokenAvatar(this); };
+        }
+
+        // After grid is built, try fetching real files from R2
+        if ((!fileList || fileList.length === 0) && (p.id || p.file_path)) {
+          fetchFilesFromR2(p);
+        }
+      } catch(e) {
+        console.error('injectGridLayout error:', e);
+      }
+    }
+
+    async function fetchFilesFromR2(p) {
+      try {
+        var listUrl = '/api/files/list-path?product_id=' + encodeURIComponent(p.id || '');
+        if (p.file_path) listUrl += '&path=' + encodeURIComponent(p.file_path);
+        var resp = await fetch(listUrl);
+        if (resp.status === 401 || resp.status === 403) {
+          // Not logged in or not verified — show login prompt in files tab
+          var tabFiles = document.getElementById('tab-files');
+          if (tabFiles) {
+            var card = tabFiles.querySelector('.card');
+            var loginUrl = '/api/login?redirect=' + encodeURIComponent(location.pathname + location.search);
+            if (card) card.innerHTML = '<div style="text-align:center;padding:50px 20px"><i class="fas fa-lock" style="font-size:2.5rem;color:var(--cherry);opacity:.25;display:block;margin-bottom:14px"></i><p style="color:var(--gray);font-size:.85rem;margin-bottom:16px;line-height:1.5">Login required to view files.<br>Verify your Discord account to access downloads.</p><a href="'+loginUrl+'" class="btn-b"><i class="fab fa-discord"></i> Login with Discord</a></div>';
+          }
+          return;
+        }
+        var data = await resp.json();
+        if (data.success && data.files && data.files.length > 0) {
+          var iconMap = {mp4:'fa-file-video',mov:'fa-file-video',webm:'fa-file-video',mp3:'fa-file-audio',wav:'fa-file-audio',aac:'fa-file-audio',png:'fa-file-image',jpg:'fa-file-image',jpeg:'fa-file-image',gif:'fa-file-image',webp:'fa-file-image',zip:'fa-file-zipper',rar:'fa-file-zipper','7z':'fa-file-zipper',pdf:'fa-file-pdf',aep:'fa-file-video',prproj:'fa-file-video',psd:'fa-file-image'};
+          var html = '<div class="files" style="max-height:420px">';
+          var filtered = data.files.filter(function(f) {
+            var n = (f.name || '').replace(/\\/g, '/');
+            return n && !n.endsWith('/');
+          });
+          
+          // Helper functions for directory tree parsing and rendering
+          function buildTree(files) {
+              var root = { name: '', isFolder: true, children: {} };
+              files.forEach(function(f) {
+                  var nameStr = (f.name || '').replace(/\\/g, '/');
+                  var parts = nameStr.split('/');
+                  var current = root;
+                  parts.forEach(function(part, index) {
+                      if (!part) return;
+                      var isLast = index === parts.length - 1;
+                      if (!current.children[part]) {
+                          if (isLast) {
+                              current.children[part] = {
+                                  name: part,
+                                  isFolder: false,
+                                  size: f.size,
+                                  size_formatted: f.size_formatted,
+                                  fileObj: f
+                              };
+                          } else {
+                              current.children[part] = {
+                                  name: part,
+                                  isFolder: true,
+                                  children: {}
+                              };
+                          }
+                      }
+                      current = current.children[part];
+                  });
+              });
+              return root;
+          }
+
+          function renderTreeHTML(node, depth) {
+              var tHtml = '';
+              var keys = Object.keys(node.children).sort(function(a, b) {
+                  var nodeA = node.children[a];
+                  var nodeB = node.children[b];
+                  if (nodeA.isFolder && !nodeB.isFolder) return -1;
+                  if (!nodeA.isFolder && nodeB.isFolder) return 1;
+                  return a.localeCompare(b);
+              });
+              
+              keys.forEach(function(key) {
+                  var child = node.children[key];
+                  var indent = depth * 16;
+                  if (child.isFolder) {
+                      tHtml += '<div class="tree-folder-group">';
+                      tHtml += '<div class="tree-folder-row" style="padding-left: ' + (indent + 12) + 'px" onclick="toggleFolderCollapse(this)">';
+                      tHtml += '<span class="tree-arrow"><i class="fas fa-chevron-down"></i></span>';
+                      tHtml += '<i class="fas fa-folder tree-icon-folder"></i>';
+                      tHtml += '<span class="tree-folder-name" title="' + child.name + '">' + child.name + '</span>';
+                      tHtml += '</div>';
+                      tHtml += '<div class="tree-folder-content expanded">';
+                      tHtml += renderTreeHTML(child, depth + 1);
+                      tHtml += '</div>';
+                      tHtml += '</div>';
+                  } else {
+                      var fObj = child.fileObj;
+                      var sz = child.size_formatted || (fObj.size ? (fObj.size > 1048576 ? (fObj.size/1048576).toFixed(1)+' MB' : (fObj.size/1024).toFixed(1)+' KB') : '--');
+                      var ext = child.name.split('.').pop().toLowerCase();
+                      var fi = iconMap[ext] || 'fa-file-lines';
+                      
+                      tHtml += '<div class="fi" style="margin-left: ' + indent + 'px">';
+                      tHtml += '<div class="fl">';
+                      tHtml += '<i class="fas ' + fi + '"></i>';
+                      tHtml += '<span title="' + child.name + '">' + child.name + '</span>';
+                      tHtml += '</div>';
+                      tHtml += '<span class="fs">' + sz + '</span>';
+                      tHtml += '</div>';
+                  }
+              });
+              return tHtml;
+          }
+
+          window.toggleFolderCollapse = function(row) {
+              var group = row.closest('.tree-folder-group');
+              var content = group.querySelector('.tree-folder-content');
+              var arrow = row.querySelector('.tree-arrow i');
+              if (content.classList.contains('expanded')) {
+                  content.classList.remove('expanded');
+                  content.classList.add('collapsed');
+                  if (arrow) arrow.className = 'fas fa-chevron-right';
+              } else {
+                  content.classList.remove('collapsed');
+                  content.classList.add('expanded');
+                  if (arrow) arrow.className = 'fas fa-chevron-down';
+              }
+          };
+
+          var fileTree = buildTree(filtered);
+          html += renderTreeHTML(fileTree, 0);
+          html += '</div>';
+          var tabFiles = document.getElementById('tab-files');
+          if (tabFiles) {
+            var card = tabFiles.querySelector('.card');
+            if (card) card.innerHTML = html;
+          }
+          // Update tab count
+          var filesTab = document.querySelector('.tab[data-tab="files"]');
+          if (filesTab) filesTab.innerHTML = '<i class="fas fa-folder-tree"></i> Files ('+filtered.length+')';
+        }
+      } catch(e) {}
+    }
+    </script>
+</body>
+</html>

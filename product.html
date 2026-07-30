@@ -1,0 +1,1040 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Zyrex Resources - Product detail">
+    <meta name="author" content="Zyrex">
+    <title>Zyrex | Product</title>
+    <link rel="icon" type="image/png" href="/assets/content.png">
+    <link rel="stylesheet" href="css/style.css?v=24">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        /* FULLSCREEN LOADER OVERLAY */
+        .resources-loader-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            width: 100vw; height: 100vh;
+            z-index: 9999999;
+            background: #080204;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        .resources-loader-overlay.fade-out {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+        }
+        .resources-loader-content { text-align: center; display: flex; flex-direction: column; align-items: center; }
+        .loader-logo-container { position: relative; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; }
+        .loader-logo-img { width: 48px; height: 48px; object-fit: contain; z-index: 2; filter: drop-shadow(0 0 12px rgba(230, 21, 54, 0.7)); animation: loaderLogoPulse 1.8s ease-in-out infinite alternate; }
+        .loader-pulse-ring { position: absolute; inset: 0; border-radius: 50%; border: 2px solid rgba(230, 21, 54, 0.2); border-top-color: #e61536; animation: loaderSpin 1s linear infinite; }
+        @keyframes loaderSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes loaderLogoPulse { 0% { transform: scale(0.92); opacity: 0.8; } 100% { transform: scale(1.08); opacity: 1; } }
+
+        :root {
+            --cherry: #e61536;
+            --cherry-rgb: 230, 21, 54;
+            --cherry-light: #ff4d6d;
+            --rose-glow: rgba(230, 21, 54, 0.15);
+            --dark: #070203;
+            --light: #fcedf0;
+            --gray: #d4b0b8;
+            --gray-dark: #8a6570;
+            --card-bg: rgba(12, 2, 4, 0.45);
+            --card-border: rgba(230, 21, 54, 0.08);
+            --transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .product-page {
+            padding-top: 160px;
+            min-height: 100vh;
+            background: var(--dark);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .product-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--gray-dark);
+            font-size: 0.82rem;
+            text-decoration: none;
+            margin-bottom: 28px;
+            transition: var(--transition);
+            font-weight: 500;
+            animation: fadeSlideIn 0.5s ease forwards;
+        }
+        .product-back:hover {
+            color: var(--cherry-light);
+            transform: translateX(-2px);
+        }
+
+        .product-card {
+            max-width: 900px;
+            margin: 0 auto 60px;
+            background: linear-gradient(160deg, rgba(30, 4, 10, 0.5) 0%, rgba(10, 2, 4, 0.8) 100%);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 40px;
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 40px;
+            text-align: left;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.7), 0 0 30px rgba(230, 21, 54, 0.05);
+            transition: var(--transition);
+        }
+        .product-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, var(--cherry-light), transparent);
+            z-index: 2;
+            pointer-events: none;
+        }
+
+        .product-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(230, 21, 54, 0.25);
+            box-shadow: 0 40px 90px rgba(0, 0, 0, 0.8), 0 0 40px rgba(230, 21, 54, 0.12);
+        }
+
+        .product-left-col {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            padding-right: 30px;
+        }
+        .product-right-col {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        @media (max-width: 800px) {
+            .product-page { padding-top: 120px; }
+            .product-card {
+                grid-template-columns: 1fr;
+                padding: 30px 20px;
+                gap: 30px;
+            }
+            .product-left-col {
+                border-right: none;
+                padding-right: 0;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                padding-bottom: 24px;
+                gap: 20px;
+            }
+        }
+
+        @keyframes fadeSlideUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeSlideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        .product-thumb-large {
+            width: 110px;
+            height: 110px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, rgba(230, 21, 54, 0.15), rgba(230, 21, 54, 0.03));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            overflow: hidden;
+            border: 1px solid rgba(230, 21, 54, 0.12);
+            box-shadow: 0 8px 30px rgba(0,0,0,.4), 0 0 20px rgba(230, 21, 54, 0.1);
+            transition: var(--transition);
+        }
+        .product-thumb-large:hover {
+            transform: scale(1.04);
+            border-color: rgba(230, 21, 54, 0.3);
+        }
+        .product-thumb-large img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .product-thumb-large .thumb-fallback {
+            font-size: 2.2rem;
+            color: var(--cherry-light);
+            opacity: 0.5;
+        }
+
+        .product-category-badge {
+            display: inline-block;
+            padding: 4px 16px;
+            background: rgba(230, 21, 54, 0.08);
+            border: 1px solid rgba(230, 21, 54, 0.15);
+            border-radius: 50px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--cherry-light);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .product-desc {
+            color: var(--gray);
+            font-size: 0.92rem;
+            line-height: 1.6;
+        }
+
+        .product-platform-tags {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .product-platform-tags span {
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .product-platform-tags .tag-win {
+            background: rgba(0, 200, 100, 0.08);
+            color: #00c864;
+            border: 1px solid rgba(0, 200, 100, 0.15);
+        }
+        .product-platform-tags .tag-mac {
+            background: rgba(0, 122, 255, 0.08);
+            color: #007aff;
+            border: 1px solid rgba(0, 122, 255, 0.15);
+        }
+
+        /* Windows SVG Mask Icon */
+        .win11-logo {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            background-color: currentColor;
+            -webkit-mask: url(/assets/windows11.svg) no-repeat center;
+            -webkit-mask-size: contain;
+            mask: url(/assets/windows11.svg) no-repeat center;
+            mask-size: contain;
+        }
+
+        /* Creator blocks */
+        .creator-block {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 12px;
+            backdrop-filter: blur(10px);
+        }
+        .creator-block .cb-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 1px solid rgba(230, 21, 54, 0.15);
+            flex-shrink: 0;
+            background: rgba(230, 21, 54, 0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .creator-block .cb-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .creator-block .cb-avatar i {
+            color: var(--cherry-light);
+            font-size: 1.1rem;
+        }
+        .creator-block .cb-info strong {
+            display: block;
+            font-size: 0.82rem;
+            color: var(--light);
+            font-family: 'Outfit', sans-serif;
+        }
+        .creator-block .cb-info span {
+            display: block;
+            font-size: 0.65rem;
+            color: var(--gray-dark);
+        }
+        .creator-block .cb-info a {
+            font-size: 0.7rem;
+            color: var(--cherry-light);
+            text-decoration: none;
+            transition: var(--transition);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 2px;
+        }
+        .creator-block .cb-info a:hover {
+            color: #fff;
+            text-decoration: underline;
+        }
+
+        .product-password-box {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 18px;
+            background: rgba(230, 21, 54, 0.04);
+            border: 1px solid rgba(230, 21, 54, 0.12);
+            border-radius: 12px;
+            margin-bottom: 8px;
+        }
+        .product-password-box i {
+            color: var(--cherry-light);
+            font-size: 0.85rem;
+        }
+        .product-password-box span {
+            color: var(--gray);
+            font-size: 0.8rem;
+        }
+        .product-password-box code {
+            background: rgba(230, 21, 54, 0.12);
+            color: var(--cherry-light);
+            padding: 3px 10px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.82rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .product-password-box code:hover {
+            background: rgba(230, 21, 54, 0.22);
+            color: #fff;
+        }
+
+        .product-notes {
+            background: rgba(255, 193, 7, 0.03);
+            border: 1px solid rgba(255, 193, 7, 0.08);
+            border-radius: 12px;
+            padding: 12px 18px;
+            margin-top: 8px;
+            font-size: 0.78rem;
+            color: var(--gray);
+            line-height: 1.5;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+        .product-notes i {
+            color: #ffc107;
+            margin-top: 2px;
+        }
+
+        .product-downloads-title {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--gray-dark);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .product-downloads {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .product-dl-btn {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 20px;
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            text-decoration: none;
+            transition: var(--transition);
+            text-align: left;
+            opacity: 0;
+            animation: fadeSlideUp 0.5s ease forwards;
+        }
+        .product-dl-btn:hover {
+            border-color: rgba(230, 21, 54, 0.2);
+            transform: translateX(4px);
+            background: rgba(230, 21, 54, 0.04);
+            box-shadow: 0 8px 24px rgba(0,0,0,.4);
+        }
+
+        .product-dl-btn .dl-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background: rgba(230, 21, 54, 0.06);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            flex-shrink: 0;
+            border: 1px solid rgba(230, 21, 54, 0.08);
+        }
+        .product-dl-btn .dl-icon.pixeldrain { color: #00c864; background: rgba(0, 200, 100, 0.05); }
+        .product-dl-btn .dl-icon.gofile { color: #ff6b8b; background: rgba(255, 107, 139, 0.05); }
+        .product-dl-btn .dl-icon.mediafire { color: #ff9f43; background: rgba(255, 159, 67, 0.05); }
+        .product-dl-btn .dl-icon.default { color: var(--cherry-light); }
+
+        .product-dl-btn .dl-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .product-dl-btn .dl-info strong {
+            display: block;
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: var(--light);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .product-dl-btn .dl-info span {
+            display: block;
+            font-size: 0.72rem;
+            color: var(--gray-dark);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .product-dl-btn .dl-arrow {
+            color: var(--gray-dark);
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+        .product-dl-btn:hover .dl-arrow {
+            color: var(--cherry-light);
+            transform: translateX(2px);
+        }
+
+        .product-loading {
+            text-align: center;
+            padding: 100px 20px;
+            color: var(--gray);
+        }
+        .product-loading i {
+            font-size: 2.2rem;
+            color: var(--cherry-light);
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .product-error {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--gray);
+        }
+        .product-error i {
+            font-size: 3rem;
+            color: var(--cherry-light);
+            opacity: 0.4;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        /* Admin controls */
+        .admin-bar {
+            display: flex;
+            gap: 10px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .admin-bar .btn-admin {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: .8rem;
+            font-weight: 700;
+            cursor: pointer;
+            border: none;
+            font-family: inherit;
+            transition: var(--transition);
+            color: #fff;
+        }
+        .btn-admin-edit { background: rgba(255, 180, 0, 0.12); border: 1px solid rgba(255, 180, 0, 0.2); color: #ffb400; }
+        .btn-admin-edit:hover { background: rgba(255, 180, 0, 0.22); transform: translateY(-1px); }
+        .btn-admin-delete { background: rgba(255, 56, 96, 0.1); border: 1px solid rgba(255, 56, 96, 0.2); color: #ff3860; }
+        .btn-admin-delete:hover { background: rgba(255, 56, 96, 0.2); transform: translateY(-1px); }
+
+        .admin-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 20000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            backdrop-filter: blur(8px);
+        }
+        .admin-modal {
+            background: rgba(12, 2, 4, 0.95);
+            border: 1px solid rgba(230, 21, 54, 0.15);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+        }
+        .admin-modal h3 { font-size: 1.1rem; font-weight: 800; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; font-family: 'Outfit', sans-serif; }
+        .admin-modal .form-group { margin-bottom: 16px; }
+        .admin-modal .form-group label { display: block; font-size: .7rem; font-weight: 700; margin-bottom: 6px; color: var(--gray-dark); text-transform: uppercase; letter-spacing: 1px; }
+        .admin-modal .form-group input, .admin-modal .form-group textarea, .admin-modal .form-group select { width: 100%; padding: 10px 14px; background: rgba(12, 2, 4, 0.5); border: 1px solid rgba(230, 21, 54, 0.12); border-radius: 8px; color: var(--light); font-family: inherit; font-size: .85rem; outline: none; transition: var(--transition); }
+        .admin-modal .form-group input:focus, .admin-modal .form-group textarea:focus, .admin-modal .form-group select:focus { border-color: var(--cherry-light); }
+        .admin-modal .form-group textarea { min-height: 80px; resize: vertical; }
+    </style>
+</head>
+<body>
+    <!-- PRESET FULLSCREEN LOADER (SPINNER ONLY) -->
+    <div id="resources-loader" class="resources-loader-overlay">
+        <div class="resources-loader-content">
+            <div class="loader-logo-container">
+                <img src="assets/content.png" alt="Zyrex" class="loader-logo-img">
+                <div class="loader-pulse-ring"></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        setTimeout(function() {
+            var loader = document.getElementById('resources-loader');
+            if (loader && !loader.classList.contains('fade-out')) {
+                loader.classList.add('fade-out');
+                setTimeout(function() { if (loader && loader.parentNode) loader.parentNode.removeChild(loader); }, 600);
+            }
+        }, 1800);
+    </script>
+    <div class="bg-aura"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo">
+                <img src="assets/content.png" alt="ZYREX" class="logo-img">
+                <span class="logo-text">yrex</span>
+            </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="/">Home</a></li>
+                <li><a href="/resources">Resources</a></li>
+                <li><a href="/plugins">Plugins</a></li>
+                <li><a href="/more">More</a></li>
+                <li><a href="/#contact">Contact</a></li>
+            </ul>
+            <div class="nav-actions">
+                <div id="authBtn"></div>
+
+                <button class="hamburger" id="hamburger" aria-label="Menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <section class="product-page">
+        <div class="container" id="productContainer">
+            <div class="product-loading" id="productLoading">
+                <i class="fas fa-spinner fa-spin"></i>
+                Loading product...
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+                        <a href="/" class="logo">
+                            <img src="assets/content.png" alt="ZYREX" class="logo-img">
+                            <span class="logo-text">yrex</span>
+                        </a>
+                        <h3 style="font-size:1.8rem;font-weight:900;margin:0;letter-spacing:2px;background:linear-gradient(135deg,#ffffff,#9090a0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Editing</h3>
+                    </div>
+                    <p>Premium editing community & resources.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="resources">Resources</a></li>
+                        <li><a href="plugins">Plugins</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="/terms">Terms of Service</a></li>
+                        <li><a href="/privacy">Privacy Policy</a></li>
+                        <li><a href="/dmca">DMCA</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="https://discord.gg/fAydSzpafA">Discord</a></li>
+                        <li><a href="/#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-newsletter">
+                    <h4>Newsletter</h4>
+                    <p>Stay updated with Zyrex Editing.</p>
+                    <div class="newsletter-form">
+                        <input type="email" placeholder="Your email">
+                        <button type="submit"><i class="fas fa-arrow-right"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Zyrex Editing. All rights reserved. | <a href="/terms">Terms of Service</a> | <a href="/privacy">Privacy Policy</a> | <a href="/dmca">DMCA</a></p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/auth.js?v=10"></script>
+    <script src="js/script.js?v=5"></script>
+    <script src="js/plugins-data.js?v=4"></script>
+    <script src="js/presets-data.js?v=4"></script>
+    <script>
+    /* ===================== PRODUCT PAGE RENDER ===================== */
+    document.addEventListener('DOMContentLoaded', async () => {
+        const params = new URLSearchParams(window.location.search);
+        const productId = params.get('id');
+
+        const container = document.getElementById('productContainer');
+        const loading = document.getElementById('productLoading');
+
+        if (!productId) {
+            showError("Product ID missing");
+            return;
+        }
+
+        let product = null;
+        let isDbProduct = false;
+
+        // 1. Try to fetch from backend database first
+        try {
+            const resp = await fetch(`/api/products?id=${productId}`);
+            if (resp.ok) {
+                const dbProduct = await resp.json();
+                if (dbProduct && dbProduct.id) {
+                    product = dbProduct;
+                    isDbProduct = true;
+                }
+            }
+        } catch(e) {
+            console.warn("Could not load product from DB:", e);
+        }
+
+        // 2. Fallback to local static arrays
+        if (!product) {
+            product = window.pluginsData ? window.pluginsData.find(p => p.id === productId) : null;
+            if (!product) {
+                product = window.presetsData ? window.presetsData.find(p => p.id === productId) : null;
+            }
+            // 3. Fallback to newly published products (from admin-upload)
+            if (!product) {
+                try {
+                    const newProducts = JSON.parse(localStorage.getItem('zyrex_new_products') || '[]');
+                    product = newProducts.find(p => p.id === productId);
+                    if (product) isDbProduct = false; // local product, mark as non-DB
+                } catch(e) {}
+            }
+        }
+
+        if (!product) {
+            showError("Product not found");
+            return;
+        }
+
+        // Apply any local edits from admin
+        try {
+            const edits = JSON.parse(localStorage.getItem('zyrex_edited_products') || '{}');
+            if (edits[productId]) {
+                const e = edits[productId];
+                product.name = e.name || product.name;
+                product.type = e.type || product.type;
+                product.category = e.category || product.category;
+                product.platform = e.platform || product.platform;
+                product.description = e.description || product.description;
+                product.desc = e.description || product.desc;
+                product.password = e.password !== undefined ? e.password : product.password;
+                product.links = e.links || product.links;
+                product.notes = e.notes || product.notes;
+            }
+        } catch(e) {}
+
+        renderProductDetail(product, isDbProduct);
+
+        // ── ADMIN CONTROLS ──
+        let currentUser = null;
+        try {
+            const meResp = await fetch('/api/me', { credentials: 'include' });
+            if (meResp.ok) currentUser = await meResp.json();
+        } catch(e) {}
+
+        if (currentUser && currentUser.is_admin && productId) {
+            const adminBar = document.createElement('div');
+            adminBar.className = 'admin-bar';
+            adminBar.innerHTML = `
+                <button class="btn-admin btn-admin-edit" onclick="openEditModal()"><i class="fas fa-pen"></i> Edit</button>
+                <button class="btn-admin btn-admin-delete" onclick="confirmDelete()"><i class="fas fa-trash"></i> Delete</button>
+            `;
+            container.appendChild(adminBar);
+
+            window._productData = { product, isDbProduct, productId };
+
+            // Edit modal
+            window.openEditModal = function() {
+                const p = window._productData.product;
+                const modal = document.createElement('div');
+                modal.className = 'admin-modal-overlay';
+                modal.id = 'editModal';
+                modal.innerHTML = `
+                    <div class="admin-modal">
+                        <h3><i class="fas fa-pen" style="color:#ffb400"></i> Edit Product</h3>
+                        <div class="form-group"><label>Name</label><input id="edName" value="${(p.name||'').replace(/"/g,'&quot;')}"></div>
+                        <div class="form-group"><label>Category</label><select id="edCat">
+                            <option value="software" ${p.category==='software'?'selected':''}>Software</option>
+                            <option value="adobe-plugin" ${p.category==='adobe-plugin'?'selected':''}>Adobe Plugin</option>
+                            <option value="ofx-plugin" ${p.category==='ofx-plugin'?'selected':''}>OFX Plugin</option>
+                            <option value="avx" ${p.category==='avx'?'selected':''}>AVX</option>
+                            <option value="extensions-scripts" ${p.category==='extensions-scripts'?'selected':''}>Extensions & Scripts</option>
+                        </select></div>
+                        <div class="form-group"><label>Platform</label><select id="edPlat">
+                            <option value="win" ${p.platform==='win'?'selected':''}>Windows</option>
+                            <option value="mac" ${p.platform==='mac'?'selected':''}>Mac</option>
+                            <option value="both" ${p.platform==='both'?'selected':''}>Both</option>
+                        </select></div>
+                        <div class="form-group"><label>Description</label><textarea id="edDesc">${(p.desc||p.description||'').replace(/"/g,'&quot;')}</textarea></div>
+                        <div class="form-group"><label>ZIP Password</label><input id="edPw" value="${p.password||''}"></div>
+                        <div class="form-group"><label>Download URL</label><input id="edUrl" value="${(p.links&&p.links[0]?p.links[0].url:p.downloadUrl||'')}"></div>
+                        <div class="form-group"><label>Notes</label><input id="edNotes" value="${(p.notes||'').replace(/"/g,'&quot;')}"></div>
+                        <div style="display:flex;gap:10px;margin-top:20px">
+                            <button class="btn-admin btn-admin-edit" style="flex:1;justify-content:center" onclick="submitEdit()"><i class="fas fa-save"></i> Save Changes</button>
+                            <button class="btn-admin btn-admin-delete" style="flex:1;justify-content:center" onclick="document.getElementById('editModal').remove()"><i class="fas fa-times"></i> Cancel</button>
+                        </div>
+                    </div>`;
+                document.body.appendChild(modal);
+                modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+            };
+
+            window.submitEdit = async function() {
+                const p = window._productData.product;
+                const data = {
+                    id: productId,
+                    name: document.getElementById('edName').value.trim(),
+                    type: p.type || 'plugin',
+                    category: document.getElementById('edCat').value,
+                    platform: document.getElementById('edPlat').value,
+                    description: document.getElementById('edDesc').value.trim(),
+                    password: document.getElementById('edPw').value.trim() || (p.password || null),
+                    links: [{ url: document.getElementById('edUrl').value.trim(), label: 'Download' }],
+                    notes: document.getElementById('edNotes').value.trim() || null
+                };
+                try {
+                    const resp = await fetch(`/api/products/edit/${productId}`, {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(data), credentials: 'include'
+                    });
+                    if (resp.ok) {
+                        // Persist edit to localStorage so it survives static JS reload
+                        try {
+                            const key = 'zyrex_edited_products';
+                            const edits = JSON.parse(localStorage.getItem(key) || '{}');
+                            edits[productId] = data;
+                            localStorage.setItem(key, JSON.stringify(edits));
+                        } catch(e) {}
+                        alert('Updated! Reloading...'); location.reload();
+                    }
+                    else alert('Update failed: ' + (await resp.text()));
+                } catch(e) { alert('Error: ' + e.message); }
+            };
+
+            window.confirmDelete = function() {
+                if (confirm('Delete "' + product.name + '"? This cannot be undone.')) {
+                    fetch('/api/products/delete', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ id: productId }), credentials: 'include'
+                    }).then(r => {
+                        if (r.ok) {
+                            // Persist deletion in localStorage so it survives static data reloads
+                            try {
+                                const key = 'zyrex_deleted_products';
+                                const ids = JSON.parse(localStorage.getItem(key) || '[]');
+                                if (!ids.includes(productId)) { ids.push(productId); localStorage.setItem(key, JSON.stringify(ids)); }
+                            } catch(e) {}
+                            alert('Deleted!');
+                            location.href = 'resources';
+                        } else alert('Delete failed');
+                    });
+                }
+            };
+        }
+
+        function showError(msg) {
+            loading.innerHTML = `
+                <div class="product-error">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <h3>${msg}</h3>
+                    <p style="margin-top:10px;color:var(--gray-dark)">The requested product could not be loaded.</p>
+                    <a href="resources" class="btn btn-primary" style="margin-top:20px;display:inline-flex">Back to Resources</a>
+                </div>
+            `;
+        }
+
+        function linkifyUrls(text) {
+            if (!text) return '';
+            var escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+            escaped = escaped.replace(/(https?:\/\/[^\s<>\[\]()]+)/gi, '<a href="$1" target="_blank" rel="noopener" style="color:var(--cherry-light);text-decoration:underline">$1</a>');
+            escaped = escaped.replace(/\n/g, '<br>');
+            return escaped;
+        }
+
+        function renderProductDetail(p, isDb) {
+            let backLink = 'resources';
+            if (p.type === 'plugin' || p.type === 'software') backLink = 'plugins';
+            if (p.type === 'audio') backLink = 'audio';
+            if (p.type === 'scenepack') backLink = 'scenepack';
+
+            const platformTags = [];
+            if (p.platform === 'win' || p.platform === 'both') platformTags.push('<span class="tag-win"><span class="win11-logo"></span> WIN</span>');
+            if (p.platform === 'mac' || p.platform === 'both') platformTags.push('<span class="tag-mac"><i class="fab fa-apple"></i> MAC</span>');
+
+            const categoryLabels = {
+                'software': 'Software',
+                'adobe-plugin': 'Adobe Plugin',
+                'ofx-plugin': 'OFX Plugin',
+                'others': 'Others'
+            };
+
+            const notesHtml = p.notes
+                ? `<div class="product-notes"><i class="fas fa-circle-info"></i> ${p.notes}</div>`
+                : '';
+
+            // Handle thumbnail
+            let thumbHtml = '';
+            if (p.thumbnail) {
+                thumbHtml = `<img src="${p.thumbnail}" alt="">`;
+            } else {
+                thumbHtml = `<img src="/assets/content.png" alt="" style="width:56px;height:56px;object-fit:contain">`;
+            }
+
+            // Creator details (original preset author) — only show if creator info exists
+            const hasCreator = p.creator_nickname || p.creator_social_url;
+            const creatorNickname = p.creator_nickname || p.author_name || '';
+            const creatorAvatarHtml = p.creator_avatar
+                ? `<img src="${p.creator_avatar}">`
+                : `<i class="fas fa-user"></i>`;
+            const creatorSocialHtml = p.creator_social_url
+                ? `<a href="${p.creator_social_url}" target="_blank"><i class="fas fa-external-link-alt" style="font-size:0.6rem"></i> View Profile</a>`
+                : '';
+            const creatorSectionHtml = hasCreator ? `
+                <div style="margin-top:10px">
+                    <div style="font-size:0.75rem;font-weight:700;color:var(--gray-dark);text-transform:uppercase;letter-spacing:1px">Creator</div>
+                    <div class="creator-block">
+                        <div class="cb-avatar">${creatorAvatarHtml}</div>
+                        <div class="cb-info">
+                            <strong>${creatorNickname}</strong>
+                            ${creatorSocialHtml}
+                        </div>
+                    </div>
+                </div>
+            ` : '';
+
+            // Uploader details (Discord user who leaked)
+            const uploaderName = p.uploader_name || '';
+            const uploaderAvatarUrl = p.uploader_avatar || '';
+            const uploaderAvatarHtml = uploaderAvatarUrl
+                ? `<img src="${uploaderAvatarUrl}">`
+                : `<i class="fab fa-discord" style="color:#5865F2;font-size:1.1rem"></i>`;
+
+            const uploaderSectionHtml = uploaderName ? `
+                <div style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05)">
+                    <div style="font-size:0.75rem;font-weight:700;color:var(--gray-dark);text-transform:uppercase;letter-spacing:1px">Shared by</div>
+                    <div class="creator-block" style="background:rgba(88,101,242,0.03);border-color:rgba(88,101,242,0.08)">
+                        <div class="cb-avatar" style="border-color:rgba(88,101,242,0.2);background:rgba(88,101,242,0.08)">${uploaderAvatarHtml}</div>
+                        <div class="cb-info">
+                            <strong>${uploaderName}</strong>
+                            <span style="font-size:0.65rem;color:rgba(88,101,242,0.8)">Uploader</span>
+                        </div>
+                    </div>
+                </div>
+            ` : '';
+
+            // Build downloads block
+            let dlHtml = '';
+            if (p.type === 'audio' && p.file_url) {
+                const downloadUrl = p.file_url + (p.file_url.includes('?') ? '&' : '?') + 'download=1';
+                dlHtml = `
+                    <div class="product-dl-btn" style="flex-direction:column;align-items:flex-start;gap:10px;padding:16px;cursor:default">
+                        <div style="display:flex;align-items:center;gap:12px;width:100%">
+                            <div class="dl-icon default" style="background:rgba(var(--cherry-rgb),0.1)"><i class="fas fa-play" style="color:var(--light)"></i></div>
+                            <div class="dl-info"><strong style="color:var(--light)">Audio Preview</strong><span style="color:var(--gray)">${p.name}</span></div>
+                        </div>
+                        <audio controls style="width:100%;height:36px;border-radius:8px"><source src="${p.file_url}" type="audio/mpeg"></audio>
+                        <a href="${downloadUrl}" download class="btn btn-primary" style="padding:8px 18px;font-size:.78rem;text-decoration:none;width:auto" onclick="fetch('/api/downloads/track', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product_id: '${p.id}' }) }).catch(function(){})">Download Audio</a>
+                    </div>
+                `;
+            } else if (p.type === 'scenepack' && p.source_url) {
+                dlHtml = `
+                    <a href="${p.source_url}" target="_blank" rel="noopener" class="product-dl-btn" style="background:var(--gradient-accent)!important;border:1px solid rgba(var(--cherry-rgb),0.15)!important;box-shadow:0 4px 15px rgba(var(--cherry-rgb),0.35),inset 0 1px 1px rgba(var(--cherry-rgb),0.3)!important;">
+                        <div class="dl-icon default" style="background:rgba(var(--cherry-rgb),0.1)"><i class="fas fa-external-link-alt" style="color:var(--light)"></i></div>
+                        <div class="dl-info"><strong style="color:var(--light)">Download Scenepack</strong><span style="color:var(--gray)">External Link</span></div>
+                        <i class="fas fa-arrow-right dl-arrow" style="color:var(--light)"></i>
+                    </a>
+                `;
+            } else if (isDb && p.file_path) {
+                const filename = p.file_path.split('/').pop() || 'Download File';
+                dlHtml = `
+                    <a href="https://dl.zyrexediting.xyz/?id=${p.id}" target="_blank" rel="noopener" class="product-dl-btn" style="background:var(--gradient-accent) !important;border:1px solid rgba(var(--cherry-rgb),0.15) !important;box-shadow:0 4px 15px rgba(var(--cherry-rgb),0.35), inset 0 1px 1px rgba(var(--cherry-rgb),0.3) !important;">
+                        <div class="dl-icon default" style="background:rgba(var(--cherry-rgb),0.1)">
+                            <i class="fas fa-cloud-arrow-down" style="color:var(--light)"></i>
+                        </div>
+                        <div class="dl-info">
+                            <strong style="color:var(--light)">Download ZIP / Resource</strong>
+                            <span style="color:var(--gray)">${filename}</span>
+                        </div>
+                        <i class="fas fa-arrow-right dl-arrow" style="color:var(--light)"></i>
+                    </a>
+                `;
+            } else if (p.links && p.links.length) {
+                function getDlClass(label) {
+                    const l = label.toLowerCase();
+                    if (l.includes('pixel')) return 'pixeldrain';
+                    if (l.includes('gofile') || l.includes('go')) return 'gofile';
+                    if (l.includes('media')) return 'mediafire';
+                    return 'default';
+                }
+                function getDlIcon(label) {
+                    const l = label.toLowerCase();
+                    if (l.includes('pixel')) return 'fa-cloud-arrow-down';
+                    if (l.includes('gofile') || l.includes('go')) return 'fa-cloud';
+                    if (l.includes('media')) return 'fa-file-zipper';
+                    return 'fa-download';
+                }
+                dlHtml = p.links.map(link => `
+                    <a href="${link.url}" target="_blank" rel="noopener" class="product-dl-btn">
+                        <div class="dl-icon ${getDlClass(link.label)}">
+                            <i class="fas ${getDlIcon(link.label)}"></i>
+                        </div>
+                        <div class="dl-info">
+                            <strong>${link.label}</strong>
+                            <span>${new URL(link.url).hostname}</span>
+                        </div>
+                        <i class="fas fa-arrow-right dl-arrow"></i>
+                    </a>
+                `).join('');
+            } else {
+                dlHtml = `<div style="color:var(--gray-dark);font-size:0.85rem">No download links available for this product.</div>`;
+            }
+
+            container.innerHTML = `
+                <div style="max-width:960px;margin:0 auto">
+                    <a href="javascript:if(document.referrer && document.referrer.includes(window.location.hostname)){history.back();}else{window.location.href='/plugins';}" class="product-back">
+                        <i class="fas fa-arrow-left"></i> Back to Plugins
+                    </a>
+
+                    <div class="product-card glass-card-enhanced shimmer-sweep">
+                        <!-- Left Column (Metadata) -->
+                        <div class="product-left-col">
+                            <div class="product-thumb-large">${thumbHtml}</div>
+                            <div style="text-align:center">
+                                <span class="product-category-badge">${categoryLabels[p.category] || p.category}</span>
+                            </div>
+
+                            ${platformTags.length ? `
+                            <div style="margin-top:10px">
+                                <div style="font-size:0.75rem;font-weight:700;color:var(--gray-dark);text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">Compatibility</div>
+                                <div class="product-platform-tags" style="justify-content:flex-start">${platformTags.join('')}</div>
+                            </div>
+                            ` : ''}
+
+                            <!-- Creator profile block -->
+                            ${creatorSectionHtml}
+
+                            <!-- Uploader profile block -->
+                            ${uploaderSectionHtml}
+
+                            <!-- VirusTotal Security Badge -->
+                            ${p.vt_scan ? `
+                            <div style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05)">
+                                <div style="font-size:0.75rem;font-weight:700;color:var(--gray-dark);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px">Security Scan</div>
+                                <a href="https://www.virustotal.com/gui/url/${p.vt_scan.id}" target="_blank" rel="noopener" class="creator-block" style="background:${p.vt_scan.malicious > 0 ? 'rgba(255,56,96,0.03)' : 'rgba(0,200,100,0.03)'};border-color:${p.vt_scan.malicious > 0 ? 'rgba(255,56,96,0.08)' : 'rgba(0,200,100,0.08)'};text-decoration:none">
+                                    <div class="cb-avatar" style="border-color:${p.vt_scan.malicious > 0 ? 'rgba(255,56,96,0.2)' : 'rgba(0,200,100,0.2)'};background:${p.vt_scan.malicious > 0 ? 'rgba(255,56,96,0.08)' : 'rgba(0,200,100,0.08)'};display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                                        <img src="https://cdn.simpleicons.org/virustotal/${p.vt_scan.malicious > 0 ? 'ff3860' : '00c864'}" alt="VirusTotal" style="width:16px;height:16px;object-fit:contain">
+                                    </div>
+                                    <div class="cb-info">
+                                        <strong style="color:var(--light)">Scanned by VirusTotal</strong>
+                                        <span style="font-size:0.65rem;color:${p.vt_scan.malicious > 0 ? '#ff3860' : '#00c864'}">
+                                            ${p.vt_scan.malicious > 0 ? `${p.vt_scan.malicious} threat${p.vt_scan.malicious > 1 ? 's' : ''} detected` : 'No threats detected'}
+                                        </span>
+                                    </div>
+                                </a>
+                            </div>
+                            ` : ''}
+                        </div>
+
+                        <!-- Right Column (Details & Download) -->
+                        <div class="product-right-col">
+                            <div>
+                                <h1 style="font-size:2.2rem;font-weight:900;margin:0 0 10px;letter-spacing:-0.5px;line-height:1.2;color:#fff">${p.name}</h1>
+                                ${p.description || p.desc ? `<p class="product-desc" style="font-size:0.92rem;line-height:1.6;color:var(--gray);margin:0">${linkifyUrls(p.description || p.desc)}</p>` : ''}
+                            </div>
+
+                            ${p.password ? `
+                            <div style="display:flex;align-items:center;gap:15px;flex-wrap:wrap">
+                                <div class="product-password-box" style="margin-bottom:0;padding:8px 18px">
+                                    <i class="fas fa-lock"></i>
+                                    <span>Zip Password:</span>
+                                    <code onclick="navigator.clipboard.writeText('${p.password.replace(/'/g,"\\'")}');this.textContent='Copied!';setTimeout(()=>this.textContent='${p.password.replace(/'/g,"\\'")}',1500)">${p.password}</code>
+                                </div>
+                            </div>
+                            ` : ''}
+
+                            ${notesHtml}
+
+                            <div style="margin-top:10px">
+                                <div class="product-downloads-title" style="margin-bottom:12px"><i class="fas fa-cloud-arrow-down"></i> Installation Package</div>
+                                <div class="product-downloads">
+                                    ${dlHtml}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    });
+    </script>
+</body>
+</html>
