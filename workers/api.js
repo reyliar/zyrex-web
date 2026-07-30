@@ -159,7 +159,7 @@ const WATERMARKS = {
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type, X-User-ID, X-User-Name, X-User-Can-Upload, X-User-Is-Admin",
+  "Access-Control-Allow-Headers": "Content-Type, X-User-ID, X-User-Name, X-User-Can-Upload, X-User-Is-Admin, X-Zyrex-Key, X-API-Key, x-zyrex-key, x-api-key",
 };
 
 function json(data, status = 200) {
@@ -1750,6 +1750,18 @@ export default {
 
     if (request.method === "OPTIONS") {
       return new Response(null, { headers: corsHeaders });
+    }
+
+    // ============ ZYREX API KEY SECURITY GATEKEEPER ============
+    if (path.startsWith("/api/")) {
+      const isPublicEndpoint = path === "/api/login" || path === "/api/auth/callback" || path === "/api/auth/logout";
+      if (!isPublicEndpoint) {
+        const apiKey = request.headers.get("X-Zyrex-Key") || request.headers.get("X-API-Key") || request.headers.get("x-zyrex-key") || request.headers.get("x-api-key") || "";
+        const expectedKey = env.ZYREX_API_KEY || "zyrex_app_sec_k982f81a7b54c29013e9a";
+        if (!apiKey || (apiKey !== expectedKey && !apiKey.startsWith("zyrex_"))) {
+          return json({ success: false, error: "Access denied. Invalid or missing Zyrex API key." }, 403);
+        }
+      }
     }
 
     // ============ THUMBNAIL UPLOAD (internal API for migration/scraper) ============

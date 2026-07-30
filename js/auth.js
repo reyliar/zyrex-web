@@ -1,9 +1,32 @@
-/* ===================== DISCORD AUTH BUTTON ===================== */
-// Tries API first, falls back to Discord invite
 
-// Cache helpers for auth user data
+/* ===================== ZYREX SECURE API FETCH INTERCEPTOR ===================== */
+(function() {
+    window.ZYREX_API_KEY = "zyrex_app_sec_k982f81a7b54c29013e9a";
+    var origFetch = window.fetch;
+    if (origFetch) {
+        window.fetch = function(input, init) {
+            init = init || {};
+            var urlStr = typeof input === 'string' ? input : (input && input.url ? input.url : '');
+            if (urlStr && (urlStr.indexOf('/api/') !== -1 || urlStr.startsWith('/api/'))) {
+                init.headers = init.headers || {};
+                if (typeof Headers !== 'undefined' && init.headers instanceof Headers) {
+                    init.headers.set('X-Zyrex-Key', window.ZYREX_API_KEY);
+                    init.headers.set('X-API-Key', window.ZYREX_API_KEY);
+                } else if (Array.isArray(init.headers)) {
+                    init.headers.push(['X-Zyrex-Key', window.ZYREX_API_KEY]);
+                    init.headers.push(['X-API-Key', window.ZYREX_API_KEY]);
+                } else {
+                    init.headers['X-Zyrex-Key'] = window.ZYREX_API_KEY;
+                    init.headers['X-API-Key'] = window.ZYREX_API_KEY;
+                }
+            }
+            return origFetch.call(this, input, init);
+        };
+    }
+})();
+
 var AUTH_USER_CACHE_KEY = 'zyrex_auth_user';
-var AUTH_USER_CACHE_TTL = 10 * 60 * 1000; // 10 minutes (frequently re-validated)
+var AUTH_USER_CACHE_TTL = 10 * 60 * 1000;
 
 // Avatar proxy helper — bypasses Discord CDN blocks (e.g. Turkey)
 function avatarProxyUrl(userId, avatarHash, size) {
