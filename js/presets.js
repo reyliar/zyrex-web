@@ -99,10 +99,10 @@ async function initPresets() {
 }
 
 function updatePresetStats(data, apiCounts, statsData){
-    var total = statsData.total_resources || data.length;
-    var creators = statsData.unique_creators || new Set(data.map(function(r){return (r.creator_nickname||r.author_name||'').toLowerCase()}).filter(Boolean)).size;
+    var total = (data && data.length > 0) ? data.length : (statsData.total_resources || 0);
+    var creators = (data && data.length > 0) ? new Set(data.map(function(r){return (r.creator_nickname||r.author_name||'').toLowerCase()}).filter(Boolean)).size : (statsData.unique_creators || 0);
     var totalDl = statsData.total_downloads || 0;
-    if(!statsData.total_downloads){ data.forEach(function(r){ totalDl += (apiCounts[r.id]||0); }); }
+    if(!statsData.total_downloads){ (data||[]).forEach(function(r){ totalDl += (apiCounts[r.id]||0); }); }
     animateRes('statPresets', total);
     animateRes('statCreators', creators);
     animateRes('statDownloads', totalDl);
