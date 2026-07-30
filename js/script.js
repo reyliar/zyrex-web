@@ -307,11 +307,20 @@ function fetchResourceStatsForHero() {
         products.forEach(function(r) {
             var cat = (r.category || '').toLowerCase();
             var type = (r.type || '').toLowerCase();
-            if (type === 'plugin' || cat === 'plugin' || cat === 'adobe' || cat === 'ofx' || cat === 'software') {
+            var isPlugin = type === 'plugin' || 
+                           cat.includes('plugin') || 
+                           cat.includes('soft') || 
+                           cat.includes('software') || 
+                           cat.includes('extension') || 
+                           cat.includes('script') || 
+                           cat.includes('ofx') || 
+                           cat.includes('adobe');
+
+            if (isPlugin) {
                 pluginsCount++;
-            } else if (type === 'scenepack' || cat === 'scenepack') {
+            } else if (type === 'scenepack' || cat.includes('scenepack')) {
                 scenepacksCount++;
-            } else if (type === 'audio' || cat === 'audio') {
+            } else if (type === 'audio' || cat.includes('audio')) {
                 audiosCount++;
             } else {
                 presetsCount++;
@@ -319,14 +328,14 @@ function fetchResourceStatsForHero() {
         });
 
         if (products.length === 0 && rStats.category_counts) {
-            presetsCount = rStats.category_counts.presets || 38;
-            pluginsCount = rStats.category_counts.plugins || 22;
-            scenepacksCount = rStats.category_counts.scenepacks || 8;
+            presetsCount = rStats.category_counts.presets || 72;
+            pluginsCount = rStats.category_counts.plugins || 28;
+            scenepacksCount = rStats.category_counts.scenepacks || 6;
             audiosCount = rStats.category_counts.audios || 4;
         } else if (products.length === 0) {
-            presetsCount = 38;
-            pluginsCount = 22;
-            scenepacksCount = 8;
+            presetsCount = 72;
+            pluginsCount = 28;
+            scenepacksCount = 6;
             audiosCount = 4;
         }
 
