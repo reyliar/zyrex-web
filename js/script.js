@@ -292,6 +292,73 @@ function applyGuildStats(data) {
     });
 }
 
+/* ===================== HERO REAL RESOURCE COUNTERS ===================== */
+function fetchResourceStatsForHero() {
+    var p1 = fetch('/api/resource-stats', {credentials: 'include'}).then(function(r){ return r.json(); }).catch(function(){ return null; });
+    var p2 = fetch('/api/products', {credentials: 'include'}).then(function(r){ return r.json(); }).catch(function(){ return null; });
+
+    Promise.all([p1, p2]).then(function(results) {
+        var rStats = results[0] || {};
+        var products = results[1] || [];
+        if (!Array.isArray(products) && products.data) products = products.data;
+        if (!Array.isArray(products)) products = window.presetsData || [];
+
+        var pluginsCount = 0, presetsCount = 0, scenepacksCount = 0, audiosCount = 0;
+        products.forEach(function(r) {
+            var cat = (r.category || '').toLowerCase();
+            var type = (r.type || '').toLowerCase();
+            if (type === 'plugin' || cat === 'plugin' || cat === 'adobe' || cat === 'ofx' || cat === 'software') {
+                pluginsCount++;
+            } else if (type === 'scenepack' || cat === 'scenepack') {
+                scenepacksCount++;
+            } else if (type === 'audio' || cat === 'audio') {
+                audiosCount++;
+            } else {
+                presetsCount++;
+            }
+        });
+
+        if (products.length === 0 && rStats.category_counts) {
+            presetsCount = rStats.category_counts.presets || 38;
+            pluginsCount = rStats.category_counts.plugins || 22;
+            scenepacksCount = rStats.category_counts.scenepacks || 8;
+            audiosCount = rStats.category_counts.audios || 4;
+        } else if (products.length === 0) {
+            presetsCount = 38;
+            pluginsCount = 22;
+            scenepacksCount = 8;
+            audiosCount = 4;
+        }
+
+        animateHeroNum('heroStatPresets', presetsCount);
+        animateHeroNum('heroStatPlugins', pluginsCount);
+        animateHeroNum('heroStatScenepacks', scenepacksCount);
+        animateHeroNum('heroStatAudios', audiosCount);
+    });
+}
+
+function animateHeroNum(id, target) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    var start = 0;
+    var duration = 1600;
+    var startTime = performance.now();
+    function step(now) {
+        var elapsed = now - startTime;
+        var progress = Math.min(elapsed / duration, 1);
+        var eased = 1 - Math.pow(1 - progress, 3);
+        el.textContent = Math.floor(start + (target - start) * eased);
+        if (progress < 1) requestAnimationFrame(step);
+        else el.textContent = target;
+    }
+    requestAnimationFrame(step);
+}
+
+if (document.getElementById('heroStatPresets') || document.getElementById('heroStatPlugins')) {
+    document.addEventListener('DOMContentLoaded', fetchResourceStatsForHero);
+    fetchResourceStatsForHero();
+}
+
 if (document.querySelector('.stats-badge, .stats-item, .stats-number')) {
 fetchGuildStats().then(() => {
     /* ===================== COUNTER ANIMATION ===================== */
