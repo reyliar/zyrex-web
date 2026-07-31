@@ -206,9 +206,7 @@ export default {
 
     if (url.hostname === "dl.zyrexediting.xyz" && !isApiRequest(pathname)) {
       if (pathname === "/" || pathname === "" || pathname === "/download" || pathname === "/download.html") {
-        const dlUrl = new URL("/download.html", request.url);
-        dlUrl.search = url.search;
-        return env.ASSETS.fetch(new Request(dlUrl.toString(), request));
+        return env.ASSETS.fetch(new Request("https://zyrexediting.xyz/download.html" + url.search, request));
       }
       return env.ASSETS.fetch(request);
     }
