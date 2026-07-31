@@ -1688,15 +1688,16 @@ export default {
     const url = new URL(request.url);
     
     // Bypass: dl subdomain serves static download page from Pages
+    // Subdomain dl.zyrexediting.xyz serves the download.html page via ASSETS
     if (url.hostname === "dl.zyrexediting.xyz") {
-      const newUrl = new URL(request.url);
-      if (!newUrl.pathname.startsWith("/api/")) {
-        if (newUrl.pathname === "/") {
-          newUrl.pathname = "/download.html";
+      if (!url.pathname.startsWith("/api/")) {
+        if (env.ASSETS) {
+          const assetsUrl = new URL(request.url);
+          if (assetsUrl.pathname === "/" || assetsUrl.pathname === "") {
+            assetsUrl.pathname = "/download.html";
+          }
+          return env.ASSETS.fetch(new Request(assetsUrl.toString(), request));
         }
-        // Fetch directly from Pages.dev deployment to bypass custom domain cache
-        const pageUrl = `https://main.zyrexweb.pages.dev${newUrl.pathname}`;
-        return fetch(pageUrl, { cf: { cacheTtl: 0 } });
       }
     }
     // Thumbnail CDN: serve images from R2 via thumbnail.zyrexediting.xyz
