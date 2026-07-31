@@ -3,176 +3,277 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zyrex | Admin - Add Plugin</title>
+    <meta name="robots" content="noindex,nofollow">
+    <title>Zyrex | Admin — Add Plugin</title>
     <link rel="icon" type="image/png" href="/assets/content.png">
-    <link rel="stylesheet" href="css/style.css?v=24">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         :root {
-            --cherry-glow: rgba(230, 21, 54, 0.15);
-            --card-bg: rgba(12, 2, 4, 0.45);
-            --card-border: rgba(230, 21, 54, 0.08);
-            --card-hover-border: rgba(230, 21, 54, 0.25);
-            --transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            --cherry-light: #ff2b52;
+            --glass-bg: rgba(14,10,18,0.82);
+            --glass-border: rgba(255,255,255,0.12);
+            --text-muted: rgba(255,255,255,0.5);
+            --ok: #34d399;
+            --warn: #fbbf24;
+            --danger: #f87171;
         }
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{
-            background:var(--dark);
-            background-image:radial-gradient(circle at 50% 0%, rgba(230, 21, 54, 0.06) 0%, transparent 60%);
-            color:var(--light);font-family:'Poppins',sans-serif;min-height:100vh;padding-top:100px;
+        body {
+            background: #070209;
+            color: #f8f5f6;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            padding-top: 80px;
         }
-        .admin-header{
-            background:rgba(12,2,4,0.6);backdrop-filter:blur(25px) saturate(210%);
-            -webkit-backdrop-filter:blur(25px) saturate(210%);
-            border-bottom:1px solid rgba(230, 21, 54, 0.1);
-            box-shadow:0 4px 30px rgba(0,0,0,0.5);padding:16px 30px;
-            display:flex;align-items:center;justify-content:space-between;
-            position:fixed;top:0;left:0;width:100%;z-index:10000;
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background:
+                radial-gradient(circle at 15% 0%, rgba(255,43,82,0.16) 0%, transparent 40%),
+                radial-gradient(circle at 85% 20%, rgba(120,0,40,0.1) 0%, transparent 35%),
+                radial-gradient(circle at 50% 100%, rgba(60,0,20,0.08) 0%, transparent 50%);
         }
-        .admin-header .logo{display:flex;align-items:center;gap:10px;text-decoration:none;color:var(--light);font-family:'Outfit',sans-serif;}
-        .admin-header .logo img{height:36px}
-        .admin-header .logo span{font-weight:800;font-size:1.1rem;letter-spacing:1px;color:var(--cherry-light)}
-        .admin-badge{font-size:.65rem;font-weight:700;background:var(--cherry);color:#fff;padding:3px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:1px}
-        .wizard-container{max-width:900px;margin:40px auto;padding:40px;
-            background:var(--card-bg);backdrop-filter:blur(20px);
-            -webkit-backdrop-filter:blur(20px);
-            border:1px solid var(--card-border);border-radius:20px;
-            box-shadow:0 25px 60px rgba(0,0,0,0.5),0 0 30px rgba(230, 21, 54, 0.03);position:relative;overflow:hidden;
-            transition:var(--transition);
+
+        /* ── TOPBAR ── */
+        .topbar {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 clamp(18px, 4vw, 48px); height: 68px;
+            background: rgba(7,2,9,0.88);
+            backdrop-filter: blur(28px) saturate(200%);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
         }
-        .wizard-container::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
-            background:linear-gradient(90deg,rgba(230, 21, 54,0) 0%,rgba(230, 21, 54,.35) 50%,rgba(230, 21, 54,0) 100%);z-index:2}
-        .section-title{font-size:1.6rem;font-weight:900;margin-bottom:8px;display:flex;align-items:center;gap:12px;font-family:'Outfit',sans-serif;letter-spacing:-0.5px}
-        .section-title i{color:var(--cherry-light)}
-        .section-sub{font-size:.85rem;color:var(--gray-dark);margin-bottom:30px}
-        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px}
-        @media(max-width:768px) {
-            .wizard-container { padding: 24px 18px; margin: 20px 12px; border-radius: 16px }
-            .section-title { font-size: 1.3rem }
-            .section-sub { font-size: .78rem }
-            .btn { padding: 10px 20px; font-size: .78rem }
-            .admin-header { padding: 12px 16px }
-            .admin-header .logo span { font-size: .9rem }
+        .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: #fff; font-family: 'Outfit', sans-serif; font-weight: 800; }
+        .brand img { height: 32px; }
+        .brand-badge { font-size: 0.58rem; font-weight: 800; background: linear-gradient(135deg, #ff2b52, #c8002a); color: #fff; padding: 3px 9px; border-radius: 999px; letter-spacing: 1.2px; text-transform: uppercase; }
+        .top-nav { display: flex; align-items: center; gap: 10px; }
+        .top-nav a { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border: 1px solid rgba(255,255,255,0.12); border-radius: 999px; background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.8); text-decoration: none; font-size: 0.8rem; font-weight: 600; transition: all 0.2s ease; }
+        .top-nav a:hover { background: rgba(255,255,255,0.12); }
+
+        /* ── SHELL ── */
+        .shell { width: min(960px, calc(100% - 40px)); margin: 40px auto 90px; display: flex; flex-direction: column; gap: 20px; }
+
+        /* ── GLASS PANEL ── */
+        .panel {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 28px;
+            padding: 36px 40px;
+            backdrop-filter: blur(32px) saturate(210%);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.12);
         }
-        @media(max-width:600px){.form-row{grid-template-columns:1fr}}
-        .form-group{margin-bottom:20px}
-        .form-group label{display:block;font-size:.7rem;font-weight:700;margin-bottom:8px;color:var(--gray-dark);text-transform:uppercase;letter-spacing:1px}
-        .form-group input,.form-group textarea,.form-group select{
-            width:100%;padding:14px 18px;background:rgba(12,2,4,0.45);border:1px solid var(--card-border);
-            border-radius:12px;color:var(--light);font-family:inherit;font-size:.88rem;outline:none;transition:var(--transition);
-            backdrop-filter:blur(10px);
+
+        /* ── HERO HEADER ── */
+        .panel-hero { display: flex; align-items: center; gap: 18px; margin-bottom: 30px; padding-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+        .panel-icon { width: 54px; height: 54px; border-radius: 17px; display: flex; align-items: center; justify-content: center; font-size: 1.35rem; flex-shrink: 0; }
+        .panel-hero h2 { font-family: 'Outfit', sans-serif; font-size: 1.4rem; font-weight: 900; color: #fff; letter-spacing: -0.3px; margin-bottom: 4px; }
+        .panel-hero p { font-size: 0.83rem; color: var(--text-muted); }
+
+        /* ── FORM ── */
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .form-group { margin-bottom: 18px; }
+        .form-group label {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
         }
-        .form-group input:focus,.form-group textarea:focus,.form-group select:focus{
-            border-color:var(--cherry-light);background:rgba(230, 21, 54,.03);box-shadow:0 0 20px rgba(230, 21, 54, 0.05);
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 13px 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 14px;
+            background: rgba(0,0,0,0.4);
+            color: #fff;
+            font: 500 0.85rem 'Inter', sans-serif;
+            outline: none;
+            transition: all 0.2s ease;
         }
-        .form-group textarea{min-height:80px;resize:vertical}
-        .form-group select{appearance:none;cursor:pointer}
-        .form-group select option{background:#0e0e12;color:var(--light)}
-        .btn-row{display:flex;gap:12px;margin-top:25px;padding-top:20px;border-top:1px solid var(--card-border);flex-wrap:wrap}
-        .btn{display:inline-flex;align-items:center;gap:8px;padding:12px 28px;border-radius:10px;font-size:.85rem;font-weight:700;cursor:pointer;border:none;font-family:inherit;transition:var(--transition);text-decoration:none}
-        .btn-primary{background:linear-gradient(180deg,#7a081e 0%,#42020d 50%,#300109 100%);border:1px solid rgba(230, 21, 54,.25);color:#fff;box-shadow:0 4px 15px rgba(122,8,30,.35),inset 0 1px 1px rgba(255,255,255,.1)}
-        .btn-primary:hover{box-shadow:0 6px 20px rgba(122,8,30,.5);transform:translateY(-1px)}
-        .btn-secondary{background:rgba(230, 21, 54,.06);color:var(--light);border:1px solid rgba(230, 21, 54,.12)}
-        .btn-secondary:hover{background:rgba(230, 21, 54,.12);transform:translateY(-1px)}
-        .btn-success{background:linear-gradient(180deg,#00c864 0%,#008a3a 100%);border:1px solid rgba(0,200,100,.25);color:#fff;box-shadow:0 4px 15px rgba(0,200,100,.2)}
-        .btn-success:hover{transform:translateY(-1px)}
-        .code-output{background:#0a0a0f;border:1px solid var(--card-border);border-radius:12px;padding:20px;margin-top:20px;font-family:'Consolas','Courier New',monospace;font-size:.8rem;color:#00c864;white-space:pre-wrap;overflow-x:auto;max-height:400px;overflow-y:auto;display:none}
-        .code-output.show{display:block}
-        .code-output .key{color:#ffb400}.code-output .str{color:#00c864}.code-output .num{color:#5284ff}
-        .alert{background:rgba(230, 21, 54,.1);border:1px solid rgba(230, 21, 54,.2);border-radius:12px;padding:14px 20px;margin-bottom:20px;font-size:.85rem;color:var(--cherry-light);display:none;font-weight:600}
-        .alert.show{display:block}.alert-success{background:rgba(0,200,100,.1);border-color:rgba(0,200,100,.2);color:#00c864}
-        .preview-card{border:1px dashed var(--card-border);border-radius:12px;padding:20px;margin-top:25px;display:none;background:rgba(12, 2, 4, 0.25)}
-        .preview-card.show{display:block}
-        .preview-card h4{font-size:.8rem;color:var(--gray-dark);margin-bottom:12px;text-transform:uppercase;letter-spacing:1px;font-family:'Outfit',sans-serif}
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: rgba(255,43,82,0.45);
+            box-shadow: 0 0 0 3px rgba(255,43,82,0.1);
+        }
+        .form-group textarea { min-height: 90px; resize: vertical; }
+        .form-group select { appearance: none; cursor: pointer; }
+        .form-group select option { background: #0e0a14; }
+
+        /* ── ALERT ── */
+        .alert {
+            padding: 14px 18px;
+            border-radius: 14px;
+            font-size: 0.84rem;
+            font-weight: 600;
+            margin-bottom: 22px;
+            display: none;
+            border: 1px solid rgba(248,113,113,0.3);
+            background: rgba(248,113,113,0.1);
+            color: var(--danger);
+        }
+        .alert.show { display: block; }
+        .alert.alert-success { border-color: rgba(52,211,153,0.3); background: rgba(52,211,153,0.1); color: var(--ok); }
+
+        /* ── PREVIEW CARD ── */
+        .preview-card {
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 18px;
+            padding: 22px 24px;
+            margin-top: 24px;
+            background: rgba(0,0,0,0.25);
+        }
+        .preview-card h4 {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 800;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        /* ── CODE OUTPUT ── */
+        .code-output {
+            background: rgba(0,0,0,0.6);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 16px;
+            padding: 20px 22px;
+            margin-top: 20px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.8rem;
+            color: var(--ok);
+            white-space: pre-wrap;
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+        }
+        .code-output.show { display: block; }
+
+        /* ── BUTTONS ── */
+        .btn-row { display: flex; gap: 10px; margin-top: 28px; padding-top: 22px; border-top: 1px solid rgba(255,255,255,0.07); flex-wrap: wrap; }
+        .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border-radius: 999px; font: 700 0.84rem 'Inter', sans-serif; cursor: pointer; border: none; text-decoration: none; transition: all 0.3s cubic-bezier(0.16,1,0.3,1); }
+        .btn-primary { background: linear-gradient(135deg, #ff2b52, #c8002a); color: #fff; box-shadow: 0 8px 20px rgba(255,43,82,0.35); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(255,43,82,0.5); }
+        .btn-secondary { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.8); border: 1px solid rgba(255,255,255,0.13); }
+        .btn-secondary:hover { background: rgba(255,255,255,0.13); }
+        .btn-success { background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; box-shadow: 0 8px 20px rgba(34,197,94,0.3); }
+        .btn-success:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(34,197,94,0.45); }
+
+        @media (max-width: 640px) {
+            .form-row { grid-template-columns: 1fr; }
+            .panel { padding: 24px 20px; }
+            .btn-row { flex-direction: column; }
+            .btn { justify-content: center; }
+        }
     </style>
 </head>
 <body>
-    <div class="bg-aura"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
-    <div class="admin-header">
-        <a href="/" class="logo"><img src="assets/content.png" alt=""><span>Admin</span></a>
-        <div style="display:flex;align-items:center;gap:12px">
-            <span class="admin-badge"><i class="fas fa-crown"></i> Admin Panel</span>
-            <a href="/api/logout" style="color:var(--gray-dark);font-size:.8rem;text-decoration:none"><i class="fas fa-sign-out-alt"></i></a>
-        </div>
-    </div>
+    <header class="topbar">
+        <a class="brand" href="/">
+            <img src="/assets/content.png" alt="Zyrex">
+            <span>ZYREX</span>
+            <span class="brand-badge">Admin</span>
+        </a>
+        <nav class="top-nav">
+            <a href="/settings"><i class="fas fa-arrow-left"></i> Settings</a>
+            <a href="/api/logout"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </nav>
+    </header>
 
-    <div class="wizard-container">
-        <div id="alertBox" class="alert"></div>
-        
-        <div class="section-title"><i class="fas fa-puzzle-piece"></i> Add Plugin / Software</div>
-        <p class="section-sub">Generate a new entry for <code>plugins-data.js</code> or publish dynamically. Fill the form to get started.</p>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label>Product Name *</label>
-                <input type="text" id="prodName" placeholder="e.g. BorisFX Sapphire AE 2026.5" oninput="updatePreview()">
+    <main class="shell">
+        <div class="panel">
+            <div class="panel-hero">
+                <div class="panel-icon" style="background:linear-gradient(135deg,rgba(99,102,241,0.25),rgba(60,60,200,0.12));color:#818cf8;box-shadow:0 8px 20px rgba(99,102,241,0.2)">
+                    <i class="fas fa-puzzle-piece"></i>
+                </div>
+                <div>
+                    <h2>Add Plugin / Software</h2>
+                    <p>Generate a new entry for <code style="background:rgba(255,255,255,0.07);padding:2px 7px;border-radius:6px;font-size:0.8rem">plugins-data.js</code> or publish dynamically. Fill the form to get started.</p>
+                </div>
             </div>
+
+            <div id="alertBox" class="alert"></div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label><i class="fas fa-tag" style="margin-right:5px;opacity:0.7"></i>Product Name *</label>
+                    <input type="text" id="prodName" placeholder="e.g. BorisFX Sapphire AE 2026.5" oninput="updatePreview()">
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-folder" style="margin-right:5px;opacity:0.7"></i>Category *</label>
+                    <select id="prodCategory" onchange="updatePreview()">
+                        <option value="">Select...</option>
+                        <option value="software">Software</option>
+                        <option value="adobe-plugin">Adobe Plugin</option>
+                        <option value="ofx-plugin">OFX Plugin</option>
+                        <option value="avx">AVX</option>
+                        <option value="extensions-scripts">Extensions & Scripts</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label><i class="fas fa-desktop" style="margin-right:5px;opacity:0.7"></i>Platform *</label>
+                    <select id="prodPlatform" onchange="updatePreview()">
+                        <option value="">Select...</option>
+                        <option value="win">Windows</option>
+                        <option value="mac">Mac</option>
+                        <option value="both">Both (Win + Mac)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-key" style="margin-right:5px;opacity:0.7"></i>ZIP Password</label>
+                    <input type="text" id="prodPassword" placeholder="Leave empty if none" oninput="updatePreview()">
+                </div>
+            </div>
+
             <div class="form-group">
-                <label>Category *</label>
-                <select id="prodCategory" onchange="updatePreview()">
-                    <option value="">Select...</option>
-                    <option value="software">Software</option>
-                    <option value="adobe-plugin">Adobe Plugin</option>
-                    <option value="ofx-plugin">OFX Plugin</option>
-                    <option value="avx">AVX</option>
-                    <option value="extensions-scripts">Extensions & Scripts</option>
-                </select>
+                <label><i class="fas fa-align-left" style="margin-right:5px;opacity:0.7"></i>Description</label>
+                <textarea id="prodDesc" placeholder="Describe the plugin/software..." oninput="updatePreview()"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label><i class="fas fa-circle-info" style="margin-right:5px;opacity:0.7"></i>Notes (optional)</label>
+                <input type="text" id="prodNotes" placeholder="e.g. Compatible with AE 2025+" oninput="updatePreview()">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label><i class="fas fa-link" style="margin-right:5px;opacity:0.7"></i>Download URL *</label>
+                    <input type="url" id="prodUrl" placeholder="https://..." oninput="updatePreview()">
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-tag" style="margin-right:5px;opacity:0.7"></i>Link Label</label>
+                    <input type="text" id="prodLabel" placeholder="e.g. GoFile (direct)" value="GoFile (direct)" oninput="updatePreview()">
+                </div>
+            </div>
+
+            <!-- PREVIEW -->
+            <div class="preview-card" id="previewCard">
+                <h4><i class="fas fa-eye" style="color:var(--cherry-light)"></i> Live Preview</h4>
+                <div id="previewContent" style="font-family:Consolas,monospace;font-size:0.79rem;color:rgba(255,255,255,0.5);line-height:1.7"></div>
+            </div>
+
+            <!-- CODE OUTPUT -->
+            <div class="code-output" id="codeOutput"></div>
+
+            <div class="btn-row">
+                <button class="btn btn-primary" onclick="publishLive()"><i class="fas fa-rocket"></i> Publish Live</button>
+                <button class="btn btn-secondary" onclick="generateCode()"><i class="fas fa-code"></i> Generate Code</button>
+                <button class="btn btn-success" id="btnCopy" onclick="copyCode()" style="display:none"><i class="fas fa-copy"></i> Copy</button>
+                <button class="btn btn-secondary" onclick="clearForm()"><i class="fas fa-undo"></i> Clear</button>
+                <a href="/settings" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
             </div>
         </div>
-
-        <div class="form-row">
-            <div class="form-group">
-                <label>Platform *</label>
-                <select id="prodPlatform" onchange="updatePreview()">
-                    <option value="">Select...</option>
-                    <option value="win">Windows</option>
-                    <option value="mac">Mac</option>
-                    <option value="both">Both (Win + Mac)</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label>ZIP Password</label>
-                <input type="text" id="prodPassword" placeholder="Leave empty if none" oninput="updatePreview()">
-            </div>
-        </div>
-
-        <div class="form-group">
-            <label>Description</label>
-            <textarea id="prodDesc" placeholder="Describe the plugin/software..." oninput="updatePreview()"></textarea>
-        </div>
-
-        <div class="form-group">
-            <label>Notes (optional)</label>
-            <input type="text" id="prodNotes" placeholder="e.g. Compatible with AE 2025+" oninput="updatePreview()">
-        </div>
-
-        <div class="form-group">
-            <label>Download URL *</label>
-            <input type="url" id="prodUrl" placeholder="https://..." oninput="updatePreview()">
-        </div>
-        <div class="form-group">
-            <label>Link Label</label>
-            <input type="text" id="prodLabel" placeholder="e.g. GoFile (direct)" value="GoFile (direct)" oninput="updatePreview()">
-        </div>
-
-        <!-- PREVIEW -->
-        <div class="preview-card show" id="previewCard">
-            <h4><i class="fas fa-eye" style="color:var(--cherry)"></i> Live Preview</h4>
-            <div id="previewContent" style="font-family:Consolas,monospace;font-size:.78rem;color:var(--gray);line-height:1.6"></div>
-        </div>
-
-        <!-- CODE OUTPUT -->
-        <div class="code-output" id="codeOutput"></div>
-
-        <div class="btn-row">
-            <button class="btn btn-primary" onclick="publishLive()"><i class="fas fa-rocket"></i> Publish Live</button>
-            <button class="btn btn-secondary" onclick="generateCode()"><i class="fas fa-code"></i> Generate Code</button>
-            <button class="btn btn-success" id="btnCopy" onclick="copyCode()" style="display:none"><i class="fas fa-copy"></i> Copy</button>
-            <button class="btn btn-secondary" onclick="clearForm()"><i class="fas fa-undo"></i> Clear</button>
-            <a href="/settings" class="btn btn-secondary"><i class="fas fa-arrow-left"></i> Back</a>
-        </div>
-    </div>
+    </main>
 
     <script src="js/auth.js?v=10"></script>
     <script>
@@ -183,7 +284,7 @@
                 if (!resp.ok) { redirectToLogin(); return; }
                 const user = await resp.json();
                 if (!user.is_admin) {
-                    document.body.innerHTML = `<div style="text-align:center;padding:150px 20px;color:var(--gray)"><i class="fas fa-lock" style="font-size:4rem;color:var(--cherry);opacity:.3;display:block;margin-bottom:20px"></i><h2>Access Denied</h2><p style="margin-top:10px">Admin only.</p><a href="/" style="color:var(--cherry);margin-top:20px;display:inline-block">Go Home</a></div>`;
+                    document.body.innerHTML = `<div style="text-align:center;padding:150px 20px;color:rgba(255,255,255,0.5)"><i class="fas fa-lock" style="font-size:4rem;color:#ff2b52;opacity:.3;display:block;margin-bottom:20px"></i><h2 style="font-family:Outfit,sans-serif;color:#fff">Access Denied</h2><p style="margin-top:10px">Admin only.</p><a href="/" style="color:#ff2b52;margin-top:20px;display:inline-block">Go Home</a></div>`;
                 }
             } catch(e) { redirectToLogin(); }
         });
@@ -200,13 +301,13 @@
 
             const preview = document.getElementById('previewContent');
             preview.innerHTML = `
-<span style="color:#ffb400">{</span>
-  <span style="color:#ffb400">id:</span> <span style="color:#00c864">makeId('${n}')</span>,
-  <span style="color:#ffb400">name:</span> <span style="color:#00c864">'${n}'</span>,
-  <span style="color:#ffb400">category:</span> <span style="color:#00c864">'${c}'</span>, <span style="color:#ffb400">platform:</span> <span style="color:#00c864">'${p}'</span>, <span style="color:#ffb400">password:</span> <span style="color:#5284ff">${pw ? "'" + pw + "'" : 'null'}</span>,
-  <span style="color:#ffb400">desc:</span> <span style="color:#00c864">'${d.replace(/'/g,"\\'")}'</span>,
-  ${nt ? `<span style="color:#ffb400">notes:</span> <span style="color:#00c864">'${nt.replace(/'/g,"\\'")}'</span>,\n  ` : ''}<span style="color:#ffb400">links:</span> [{ <span style="color:#ffb400">url:</span> <span style="color:#00c864">'${u}'</span>, <span style="color:#ffb400">label:</span> <span style="color:#00c864">'${l}'</span> }]
-<span style="color:#ffb400">}</span>`;
+<span style="color:#fbbf24">{</span>
+  <span style="color:#fbbf24">id:</span> <span style="color:#34d399">makeId('${n}')</span>,
+  <span style="color:#fbbf24">name:</span> <span style="color:#34d399">'${n}'</span>,
+  <span style="color:#fbbf24">category:</span> <span style="color:#34d399">'${c}'</span>, <span style="color:#fbbf24">platform:</span> <span style="color:#34d399">'${p}'</span>, <span style="color:#fbbf24">password:</span> <span style="color:#60a5fa">${pw ? "'" + pw + "'" : 'null'}</span>,
+  <span style="color:#fbbf24">desc:</span> <span style="color:#34d399">'${d.replace(/'/g,"\\'")}' </span>,
+  ${nt ? `<span style="color:#fbbf24">notes:</span> <span style="color:#34d399">'${nt.replace(/'/g,"\\'")}' </span>,\n  ` : ''}<span style="color:#fbbf24">links:</span> [{ <span style="color:#fbbf24">url:</span> <span style="color:#34d399">'${u}'</span>, <span style="color:#fbbf24">label:</span> <span style="color:#34d399">'${l}'</span> }]
+<span style="color:#fbbf24">}</span>`;
         }
 
         function generateCode() {
@@ -284,18 +385,12 @@
             const l = document.getElementById('prodLabel').value.trim() || 'Download';
 
             const payload = {
-                name: n,
-                category: c,
-                platform: p,
-                description: d,
-                password: pw || null,
-                notes: nt || null,
-                links: [{ url: u, label: l }],
-                // Auto-generated fields
-                type: 'plugin'
+                name: n, category: c, platform: p, description: d,
+                password: pw || null, notes: nt || null,
+                links: [{ url: u, label: l }], type: 'plugin'
             };
 
-            showAlert('<i class="fas fa-shield-halved fa-spin" style="color:var(--cherry-light);margin-right:6px"></i> Scanning download link with VirusTotal & publishing...', false);
+            showAlert('<i class="fas fa-shield-halved fa-spin" style="color:#ff2b52;margin-right:6px"></i> Scanning download link with VirusTotal & publishing...', false);
             try {
                 const resp = await fetch('/api/products/submit', {
                     method: 'POST',
@@ -306,15 +401,13 @@
                 const result = await resp.json();
                 if (resp.ok && result.success) {
                     const newId = result.id || makeId(n);
-                    // Also add to localStorage so it appears on plugins page immediately
                     try {
                         const key = 'zyrex_new_products';
                         const items = JSON.parse(localStorage.getItem(key) || '[]');
                         items.push({ id: newId, name: n, type: 'plugin', category: c, platform: p, desc: d, password: pw||null, notes: nt||null, links: [{url:u,label:l}] });
                         localStorage.setItem(key, JSON.stringify(items));
                     } catch(e) {}
-                    
-                    showAlert(`Published! View at product page.`, false);
+                    showAlert('Published! Redirecting to product page...', false);
                     setTimeout(() => { window.location.href = '/product?id=' + newId; }, 1500);
                 } else {
                     showAlert('Publish failed: ' + (result.error || 'Unknown error'), true);
@@ -322,6 +415,10 @@
             } catch(e) {
                 showAlert('Network error: ' + e.message, true);
             }
+        }
+
+        function makeId(name) {
+            return name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
         }
 
         updatePreview();

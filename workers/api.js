@@ -2597,7 +2597,19 @@ export default {
             headers: proxyHeaders,
             body: JSON.stringify(payload)
           });
-          const botData = await botResp.json();
+          const rawText = await botResp.text();
+          let botData;
+          try {
+            botData = JSON.parse(rawText);
+          } catch {
+            // Bot returned non-JSON (e.g., plain text success/error message)
+            // Treat 2xx as success
+            if (botResp.ok) {
+              botData = { success: true, message: rawText.trim() || "Updated successfully" };
+            } else {
+              botData = { success: false, error: rawText.trim() || `Bot returned status ${botResp.status}` };
+            }
+          }
           return json(botData, botResp.status);
         } catch(e) {
           return json({ success: false, error: e.message }, 502);
