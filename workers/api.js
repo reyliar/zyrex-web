@@ -2641,21 +2641,8 @@ export default {
         const productId = path.split("/api/downloads/request-token/")[1];
         if (!productId) return json({ error: "Product ID required" }, 400);
         
-        let r2Prefix = "";
-        let productHint = null;
-        const selectedFiles = getRequestedFileSet(url);
-        try {
-          const hintPath = url.searchParams.get("file_path");
-          productHint = await fetchProductHint(productId, session);
-          r2Prefix = await resolveProductionPrefix(env, productId, hintPath, productHint);
-          
-          if (!r2Prefix) {
-            return json({ success: false, error: "Resource not found in production storage. Transfer may not have completed yet." }, 404);
-          }
-        } catch (e) {
-          console.error("R2 token search error:", e.message);
-          return json({ success: false, error: "Storage search failed" }, 500);
-        }
+        let r2Prefix = url.searchParams.get("file_path") || productId;
+        const selectedFiles = getRequestedFileSet ? getRequestedFileSet(url) : null;
         
         // Generate self-contained download token
         const token = encodeToken({

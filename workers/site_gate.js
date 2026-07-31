@@ -208,6 +208,13 @@ export default {
       return env.API.fetch(request);
     }
 
+    // Clean URL normalization for ASSETS fetch: remove trailing slash for non-root routes to avoid redirect loops
+    if (pathname.length > 1 && pathname.endsWith('/')) {
+      const cleanUrl = new URL(request.url);
+      cleanUrl.pathname = pathname.slice(0, -1);
+      return Response.redirect(cleanUrl.toString(), 301);
+    }
+
     return env.ASSETS.fetch(request);
   },
 };
