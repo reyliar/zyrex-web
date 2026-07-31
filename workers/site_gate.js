@@ -205,10 +205,11 @@ export default {
     }
 
     if (url.hostname === "dl.zyrexediting.xyz" && !isApiRequest(pathname)) {
+      const assetUrl = new URL(request.url);
       if (pathname === "/" || pathname === "" || pathname === "/download" || pathname === "/download.html") {
-        return env.ASSETS.fetch(new Request("https://zyrexediting.xyz/download.html" + url.search, request));
+        assetUrl.pathname = "/download.html";
       }
-      return env.ASSETS.fetch(request);
+      return env.ASSETS.fetch(assetUrl.toString(), request);
     }
 
     if ((url.hostname === "dl.zyrexediting.xyz" || isApiRequest(pathname)) && env.API) {
