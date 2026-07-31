@@ -19,39 +19,35 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --cherry: #a80f2d;
-            --cherry-rgb: 168,15,45;
-            --blurple: #5865F2;
-            --blurple-rgb: 88,101,242;
+            --cherry: #ff2b52;
+            --cherry-rgb: 255,43,82;
             --dark: #060608;
-            --card: #0a0a10;
-            --light: #e8e8ed;
-            --gray: #8888a0;
-            --gray-dark: #55556a;
+            --card: rgba(14, 10, 18, 0.76);
+            --light: #ffffff;
+            --gray: rgba(255, 255, 255, 0.5);
+            --gray-dark: rgba(255, 255, 255, 0.25);
         }
         * { margin:0; padding:0; box-sizing:border-box }
         body {
-            background: var(--dark);
-            background-image: radial-gradient(circle at 50% 20%, rgba(var(--cherry-rgb),.03) 0%, transparent 55%);
+            background: #060608;
             color: var(--light);
             font-family: 'Poppins', sans-serif;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
+            overflow-x: hidden;
         }
         .bg-grid {
             position: fixed; inset:0; pointer-events: none; z-index:0;
-            background-image: linear-gradient(rgba(255,255,255,.01) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.01) 1px, transparent 1px);
-            background-size: 80px 80px;
-            mask-image: radial-gradient(ellipse at center, black 25%, transparent 70%);
+            background-image: radial-gradient(circle at 50% 30%, rgba(255,43,82,0.14) 0%, transparent 65%);
         }
         .glow {
             position: fixed;
-            width: 400px; height: 400px;
+            width: 450px; height: 450px;
             border-radius: 50%;
-            filter: blur(100px);
-            opacity: .06;
+            filter: blur(120px);
+            opacity: .12;
             pointer-events: none;
         }
         .glow-top { background: var(--cherry); top: 5%; left: 50%; transform: translate(-50%,0) }
@@ -97,7 +93,48 @@
         .verify-steps .step-num { width:28px; height:28px; border-radius:50%; background:rgba(var(--cherry-rgb),.12); display:flex; align-items:center; justify-content:center; flex-shrink:0; color:var(--cherry-light); font-weight:700; font-size:.75rem }
         .verify-steps .step-text strong { display:block; color:var(--light); font-size:.8rem; margin-bottom:2px }
         .verify-status { display:inline-flex; align-items:center; gap:6px; padding:6px 14px; border-radius:50px; font-size:.7rem; font-weight:600; margin-bottom:16px }
-        .verify-status.not-verified { background:rgba(255,56,96,.1); border:1px solid rgba(255,56,96,.2); color:#ff3860 }
+        /* iOS 26 GLASS CARD CONTAINER */
+        .card-box {
+            background: rgba(14, 10, 18, 0.78);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 28px;
+            padding: 36px 30px;
+            width: 100%;
+            backdrop-filter: blur(36px) saturate(200%);
+            -webkit-backdrop-filter: blur(36px) saturate(200%);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+            position: relative;
+            overflow: hidden;
+        }
+        .card-box::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 15%; right: 15%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.25), transparent);
+            pointer-events: none;
+        }
+        
+        .btn-home {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: 999px;
+            background: rgba(255, 43, 82, 0.14);
+            border: 1px solid rgba(255, 43, 82, 0.35);
+            color: #fff;
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            backdrop-filter: blur(16px);
+        }
+        .btn-home:hover {
+            background: rgba(255, 43, 82, 0.25);
+            transform: scale(1.03);
+            box-shadow: 0 8px 24px rgba(255, 43, 82, 0.3);
+        }
         .verify-status.checking { background:rgba(255,180,0,.1); border:1px solid rgba(255,180,0,.2); color:#ffb700 }
         .verify-status.verified { background:rgba(0,200,100,.1); border:1px solid rgba(0,200,100,.2); color:#00e676 }
 

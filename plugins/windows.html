@@ -12,11 +12,11 @@
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {
-            --cherry-glow: rgba(230, 21, 54, 0.15);
-            --card-bg: rgba(12, 2, 4, 0.45);
-            --card-border: rgba(230, 21, 54, 0.08);
-            --card-hover-border: rgba(230, 21, 54, 0.25);
-            --transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            --cherry-glow: rgba(255, 43, 82, 0.15);
+            --card-bg: rgba(14, 10, 18, 0.72);
+            --card-border: rgba(255, 255, 255, 0.09);
+            --card-hover-border: rgba(255, 43, 82, 0.35);
+            --transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
         }
         body {
             background: var(--dark);
@@ -32,11 +32,11 @@
         }
         .pg-hero {
             text-align: center;
-            padding: 150px 24px 24px;
+            padding: 160px 24px 24px;
             position: relative;
         }
         .pg-hero h1 {
-            font-size: clamp(2rem, 5vw, 2.8rem);
+            font-size: clamp(2rem, 5vw, 3rem);
             font-weight: 900;
             font-family: 'Outfit', sans-serif;
             letter-spacing: -0.5px;
@@ -44,14 +44,14 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            color: #fff;
         }
         .pg-hero .sub {
-            color: var(--gray);
-            font-size: 1rem;
-            margin: 0;
-            max-width: 600px;
+            color: rgba(255, 255, 255, 0.45);
+            font-size: 0.95rem;
             margin: 0 auto;
-            line-height: 1.5;
+            max-width: 600px;
+            line-height: 1.55;
         }
         .breadcrumb {
             text-align: center;
@@ -59,15 +59,15 @@
             font-size: 0.8rem;
         }
         .breadcrumb a {
-            color: var(--gray-dark);
+            color: rgba(255, 255, 255, 0.4);
             text-decoration: none;
             transition: var(--transition);
         }
         .breadcrumb a:hover {
-            color: var(--cherry-light);
+            color: #ff6b8b;
         }
         .breadcrumb span {
-            color: var(--gray-dark);
+            color: rgba(255, 255, 255, 0.25);
             margin: 0 8px;
         }
         
@@ -81,27 +81,30 @@
         .stat-card {
             background: var(--card-bg);
             border: 1px solid var(--card-border);
-            border-radius: 18px;
-            padding: 20px 14px;
+            border-radius: 24px;
+            padding: 22px 14px;
             text-align: center;
             transition: var(--transition);
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(28px) saturate(200%);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08);
         }
         .stat-card:hover {
             border-color: var(--card-hover-border);
-            background: rgba(230, 21, 54, 0.02);
+            background: rgba(255, 43, 82, 0.06);
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4), 0 0 25px rgba(255,43,82,0.1);
         }
         .stat-card .stat-num {
             font-size: 2rem;
             font-weight: 900;
-            color: var(--cherry-light);
+            color: #fff;
             line-height: 1;
             margin-bottom: 5px;
             font-family: 'Outfit', sans-serif;
         }
         .stat-card .stat-label {
-            font-size: 0.68rem;
-            color: var(--gray-dark);
+            font-size: 0.65rem;
+            color: rgba(255, 255, 255, 0.4);
             text-transform: uppercase;
             letter-spacing: 1.5px;
             font-weight: 700;
@@ -118,35 +121,34 @@
             left: 18px;
             top: 50%;
             transform: translateY(-50%);
-            color: var(--gray-dark);
-            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.35);
+            font-size: 0.85rem;
             pointer-events: none;
-            z-index: 1;
         }
         .search-wrap input {
             width: 100%;
-            padding: 14px 16px 14px 48px;
-            background: rgba(12, 2, 4, 0.5);
-            border: 1px solid var(--card-border);
-            border-radius: 16px;
-            color: var(--light);
+            padding: 13px 20px 13px 46px;
+            background: rgba(14, 10, 18, 0.78);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 999px;
+            color: #fff;
+            font-size: 0.88rem;
             font-family: inherit;
-            font-size: 0.9rem;
             outline: none;
             transition: var(--transition);
-            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08);
+            backdrop-filter: blur(20px);
         }
         .search-wrap input:focus {
-            border-color: var(--cherry-light);
-            box-shadow: 0 0 25px rgba(230, 21, 54, 0.12);
-            background: rgba(230, 21, 54, 0.02);
+            border-color: rgba(255, 43, 82, 0.45);
+            box-shadow: 0 0 0 3px rgba(255, 43, 82, 0.12), 0 4px 16px rgba(0,0,0,0.3);
         }
 
         /* Products Grid */
         .pg-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 12px;
+            gap: 14px;
             padding-bottom: 80px;
             min-height: 200px;
         }
@@ -154,33 +156,33 @@
             display: flex;
             align-items: center;
             gap: 16px;
-            padding: 18px 22px;
+            padding: 20px 24px;
             background: var(--card-bg);
             border: 1px solid var(--card-border);
-            border-radius: 18px;
+            border-radius: 22px;
             text-decoration: none;
             color: inherit;
             transition: var(--transition);
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(28px) saturate(200%);
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08);
         }
         .pg-card:hover {
-            background: rgba(230, 21, 54, 0.03);
+            background: rgba(255, 43, 82, 0.06);
             border-color: var(--card-hover-border);
-            transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 30px rgba(255,43,82,0.12);
         }
         .pg-card .pc-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 13px;
-            background: rgba(230, 21, 54, 0.06);
-            border: 1px solid rgba(230, 21, 54, 0.1);
+            width: 48px;
+            height: 48px;
+            border-radius: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-shrink: 0;
-            font-size: 1rem;
-            color: var(--cherry-light);
+            color: #ff6b8b;
+            font-size: 1.1rem;
             transition: var(--transition);
         }
         .pg-card:hover .pc-icon {

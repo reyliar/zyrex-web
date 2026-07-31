@@ -128,46 +128,56 @@
             box-shadow: 0 8px 24px rgba(255, 43, 82, 0.35);
         }
 
-        /* === DASHBOARD LAYOUT === */
+        /* === DASHBOARD LAYOUT & iOS 26 LIQUID SIDEBAR === */
         .dash-wrapper {
             display: flex;
             flex: 1;
             width: 100%;
             max-width: 1500px;
-            margin: 20px auto 0;
+            margin: 24px auto 0;
             position: relative;
+            gap: 24px;
+            padding: 0 20px;
         }
         .dash-sidebar {
             width: 290px;
-            background: transparent;
-            border-right: none;
-            padding: 20px 16px;
+            background: rgba(14, 10, 18, 0.72);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            border-radius: 28px;
+            padding: 24px 16px;
             display: flex;
             flex-direction: column;
             gap: 16px;
             flex-shrink: 0;
+            backdrop-filter: blur(32px) saturate(210%);
+            -webkit-backdrop-filter: blur(32px) saturate(210%);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+            position: sticky;
+            top: 94px;
+            height: calc(100vh - 120px);
+            overflow-y: auto;
         }
         .dash-content {
             flex: 1;
-            padding: 20px 32px 40px;
-            overflow-y: auto;
+            padding: 0 12px 40px;
+            min-width: 0;
         }
 
         /* === iOS 26 INSET PROFILE BANNER CARD === */
         .profile-header-banner {
-            background: rgba(18, 14, 24, 0.75);
-            border: 1px solid rgba(255, 255, 255, 0.10);
-            border-radius: 24px;
-            padding: 26px 32px;
+            background: rgba(14, 10, 18, 0.76);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 28px;
+            padding: 28px 34px;
             display: flex;
             align-items: center;
             gap: 24px;
             margin-bottom: 30px;
             position: relative;
             overflow: hidden;
-            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.45);
-            backdrop-filter: blur(30px) saturate(190%);
-            -webkit-backdrop-filter: blur(30px) saturate(190%);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+            backdrop-filter: blur(36px) saturate(200%);
+            -webkit-backdrop-filter: blur(36px) saturate(200%);
         }
         .profile-header-banner::after {
             content: '';
@@ -176,20 +186,20 @@
             right: -10%;
             width: 320px;
             height: 320px;
-            background: radial-gradient(circle, rgba(255, 43, 82, 0.10) 0%, transparent 70%);
+            background: radial-gradient(circle, rgba(255, 43, 82, 0.14) 0%, transparent 70%);
             pointer-events: none;
         }
         .profile-banner-avatar {
-            width: 84px;
-            height: 84px;
+            width: 88px;
+            height: 88px;
             border-radius: 50%;
-            border: 3px solid rgba(255, 43, 82, 0.35);
+            border: 3px solid rgba(255, 43, 82, 0.45);
             display: flex;
             align-items: center;
             justify-content: center;
-            background: rgba(255, 43, 82, 0.10);
+            background: rgba(255, 43, 82, 0.12);
             overflow: hidden;
-            box-shadow: 0 0 25px rgba(255, 43, 82, 0.25);
+            box-shadow: 0 0 30px rgba(255, 43, 82, 0.35);
             flex-shrink: 0;
         }
         .profile-banner-avatar img {
@@ -207,7 +217,7 @@
             flex: 1;
         }
         .profile-banner-info h1 {
-            font-size: 1.85rem;
+            font-size: 1.95rem;
             font-weight: 800;
             margin: 0 0 4px 0;
             color: #fff;
@@ -233,15 +243,16 @@
         .role-pill {
             display: inline-flex;
             align-items: center;
-            padding: 4px 14px;
+            padding: 5px 16px;
             border-radius: 999px;
             font-size: 0.65rem;
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.8px;
-            background: rgba(255, 43, 82, 0.12);
-            border: 1px solid rgba(255, 43, 82, 0.30);
+            background: rgba(255, 43, 82, 0.14);
+            border: 1px solid rgba(255, 43, 82, 0.35);
             color: #ffffff;
+            box-shadow: 0 2px 10px rgba(255, 43, 82, 0.2);
         }
         .role-pill.role-uploader {
             border-color: rgba(0, 230, 118, 0.35);
@@ -259,30 +270,28 @@
             font-size: 0.68rem;
             text-transform: uppercase;
             letter-spacing: 1.5px;
-            color: rgba(255, 255, 255, 0.35);
+            color: rgba(255, 255, 255, 0.40);
             font-weight: 800;
-            margin: 22px 0 8px 12px;
+            margin: 16px 0 8px 12px;
         }
         .sidebar-menu {
             display: flex;
             flex-direction: column;
             gap: 6px;
             list-style: none;
-            padding: 0;
+            padding: 8px;
             margin: 0;
-            background: rgba(18, 14, 24, 0.70);
+            background: rgba(255, 255, 255, 0.03);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 24px;
-            padding: 10px;
-            backdrop-filter: blur(24px);
+            border-radius: 20px;
         }
         .menu-item button {
             width: 100%;
             background: transparent;
-            border: none;
-            color: var(--text-muted);
-            padding: 11px 16px;
-            border-radius: 16px;
+            border: 1px solid transparent;
+            color: rgba(255, 255, 255, 0.6);
+            padding: 12px 16px;
+            border-radius: 999px;
             font-family: inherit;
             font-size: 0.88rem;
             font-weight: 600;
@@ -294,33 +303,106 @@
             text-align: left;
         }
         .menu-item button i {
-            width: 28px;
-            height: 28px;
-            border-radius: 8px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
             background: rgba(255, 255, 255, 0.06);
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.85rem;
+            font-size: 0.88rem;
             color: #ffffff;
             transition: var(--transition);
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
         .menu-item button:hover {
             color: #fff;
-            background: rgba(255, 255, 255, 0.06);
+            background: rgba(255, 43, 82, 0.08);
+            border-color: rgba(255, 43, 82, 0.20);
         }
         .menu-item.active button {
             color: #fff;
-            background: rgba(255, 43, 82, 0.16);
+            background: rgba(255, 43, 82, 0.18);
+            border-color: rgba(255, 43, 82, 0.35);
             font-weight: 700;
+            box-shadow: 0 4px 16px rgba(255, 43, 82, 0.22);
         }
         .menu-item.active button i {
-            background: var(--bordeaux-vivid);
+            background: rgba(255, 43, 82, 0.35);
             color: #ffffff;
-            box-shadow: 0 0 12px rgba(255, 43, 82, 0.35);
+            border-color: rgba(255, 43, 82, 0.5);
+            box-shadow: 0 0 14px rgba(255, 43, 82, 0.4);
         }
 
-        /* === TAB CONTENT PANELS === */
+        /* === SIDEBAR ACTION BUTTONS === */
+        .sidebar-action-btn {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 999px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: var(--transition);
+            margin-top: 6px;
+            backdrop-filter: blur(16px);
+        }
+        .sidebar-action-btn i {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+        .sidebar-action-btn.btn-publish {
+            background: rgba(255, 43, 82, 0.12);
+            border: 1px solid rgba(255, 43, 82, 0.30);
+            color: #ff6b8b;
+        }
+        .sidebar-action-btn.btn-publish i {
+            background: rgba(255, 43, 82, 0.2);
+            color: #fff;
+        }
+        .sidebar-action-btn.btn-publish:hover {
+            background: rgba(255, 43, 82, 0.22);
+            transform: scale(1.02);
+            box-shadow: 0 4px 16px rgba(255, 43, 82, 0.3);
+        }
+        .sidebar-action-btn.btn-vt {
+            background: rgba(0, 200, 100, 0.10);
+            border: 1px solid rgba(0, 200, 100, 0.28);
+            color: #00e676;
+        }
+        .sidebar-action-btn.btn-vt i {
+            background: rgba(0, 200, 100, 0.2);
+            color: #fff;
+        }
+        .sidebar-action-btn.btn-vt:hover {
+            background: rgba(0, 200, 100, 0.20);
+            transform: scale(1.02);
+            box-shadow: 0 4px 16px rgba(0, 200, 100, 0.25);
+        }
+        .sidebar-action-btn.btn-add {
+            background: rgba(88, 101, 242, 0.12);
+            border: 1px solid rgba(88, 101, 242, 0.30);
+            color: #7983f5;
+        }
+        .sidebar-action-btn.btn-add i {
+            background: rgba(88, 101, 242, 0.25);
+            color: #fff;
+        }
+        .sidebar-action-btn.btn-add:hover {
+            background: rgba(88, 101, 242, 0.22);
+            transform: scale(1.02);
+            box-shadow: 0 4px 16px rgba(88, 101, 242, 0.3);
+        }
+
+        /* === TAB CONTENT PANELS & GLASS SECTIONS === */
         .tab-panel {
             display: none;
             animation: paneFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
@@ -329,17 +411,18 @@
             display: block;
         }
         @keyframes paneFadeIn {
-            from { opacity: 0; transform: translateY(12px); }
+            from { opacity: 0; transform: translateY(14px); }
             to { opacity: 1; transform: translateY(0); }
         }
         .pane-title {
-            font-size: 1.6rem;
-            font-weight: 800;
+            font-size: 1.65rem;
+            font-weight: 900;
             margin-bottom: 28px;
             padding-left: 16px;
             border-left: 4px solid var(--cherry-light);
             font-family: 'Outfit', sans-serif;
-            letter-spacing: -0.3px;
+            letter-spacing: -0.5px;
+            color: #fff;
         }
 
         /* === GLASS CARDS === */
@@ -350,27 +433,28 @@
             margin-bottom: 32px;
         }
         .card {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: 24px 26px;
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            background: rgba(14, 10, 18, 0.72);
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            border-radius: 24px;
+            padding: 26px 28px;
+            backdrop-filter: blur(28px) saturate(200%);
+            -webkit-backdrop-filter: blur(28px) saturate(200%);
             transition: var(--transition);
             position: relative;
             overflow: hidden;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08);
         }
         .card::before {
             content: '';
             position: absolute;
             inset: 0;
-            background: radial-gradient(circle at top left, rgba(230, 21, 54, 0.08), transparent 70%);
+            background: radial-gradient(circle at top left, rgba(255, 43, 82, 0.08), transparent 70%);
             pointer-events: none;
         }
         .card:hover {
-            border-color: rgba(230, 21, 54, 0.25);
-            transform: translateY(-3px);
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.3), 0 0 15px rgba(230, 21, 54, 0.05);
+            border-color: rgba(255, 43, 82, 0.35);
+            transform: translateY(-4px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 25px rgba(255, 43, 82, 0.12);
         }
         .card h4 {
             font-size: 0.8rem;
@@ -530,13 +614,14 @@
 
         /* === PANELS & TABLES === */
         .panel-box {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 20px;
-            padding: 26px;
+            background: rgba(14, 10, 18, 0.72);
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            border-radius: 28px;
+            padding: 30px;
             margin-bottom: 30px;
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(28px) saturate(200%);
+            -webkit-backdrop-filter: blur(28px) saturate(200%);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
         .panel-box-header {
             display: flex;
@@ -1106,18 +1191,21 @@
                         <button onclick="switchTab('logs')"><i class="fas fa-terminal"></i> Bot System Logs</button>
                     </li>
                     <li class="menu-item">
-                        <a href="/admin-publish" style="display:flex;align-items:center;gap:10px;width:100%;padding:12px 16px;border:none;background:rgba(230,21,54,0.08);border:1px solid rgba(230,21,54,0.2);color:var(--cherry-light);font-family:inherit;font-size:0.85rem;cursor:pointer;border-radius:10px;text-decoration:none;transition:all 0.3s;font-weight:600;margin-top:8px">
-                            <i class="fas fa-cloud-arrow-up"></i> Publish Production Presets
+                        <a href="/admin-publish" class="sidebar-action-btn btn-publish">
+                            <i class="fas fa-cloud-arrow-up"></i>
+                            <span>Publish Production</span>
                         </a>
                     </li>
                     <li class="menu-item">
-                        <a href="admin-vt-scan" style="display:flex;align-items:center;gap:10px;width:100%;padding:12px 16px;border:none;background:rgba(230,21,54,0.08);border:1px solid rgba(230,21,54,0.2);color:var(--cherry-light);font-family:inherit;font-size:0.85rem;cursor:pointer;border-radius:10px;text-decoration:none;transition:all 0.3s;font-weight:600;margin-top:8px">
-                            <i class="fas fa-shield-virus"></i> VirusTotal Link Scanner
+                        <a href="admin-vt-scan" class="sidebar-action-btn btn-vt">
+                            <i class="fas fa-shield-virus"></i>
+                            <span>VirusTotal Scanner</span>
                         </a>
                     </li>
                     <li class="menu-item">
-                        <a href="admin-upload" style="display:flex;align-items:center;gap:10px;width:100%;padding:12px 16px;border:none;background:rgba(230,21,54,0.08);border:1px solid rgba(230,21,54,0.2);color:var(--cherry-light);font-family:inherit;font-size:0.85rem;cursor:pointer;border-radius:10px;text-decoration:none;transition:all 0.3s;font-weight:600;margin-top:8px">
-                            <i class="fas fa-plus-circle"></i> Add Plugin / Software
+                        <a href="admin-upload" class="sidebar-action-btn btn-add">
+                            <i class="fas fa-plus-circle"></i>
+                            <span>Add Plugin / Software</span>
                         </a>
                     </li>
                 </div>

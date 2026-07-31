@@ -462,7 +462,8 @@ function filterPresets() {
         console.log('🔎 Filtered from', data.length, 'to', filtered.length, 'matchedIds:', matchedIds ? matchedIds.size : 'none');
     }
     
-    // Sort
+    // Sort (shallow copy first to avoid mutating window.presetsData array)
+    filtered = [...filtered];
     if (currentSort === 'recent') {
         filtered.sort((a, b) => (b.id || '').localeCompare(a.id || ''));
     } else if (currentSort === 'downloads') {
