@@ -460,11 +460,26 @@
                         initialSelectedFiles = Array.isArray(validateData.selected_files) ? validateData.selected_files : [];
                         var expiresIn = validateData.expires_in || 0;
                         await loadProduct(validateData.product_id);
-                        if (product && resolvedFilePath && !product.file_path) product.file_path = resolvedFilePath;
-                        if (product) { await render(); if (expiresIn > 0) startCountdown(expiresIn); return; }
+                        if (!product) {
+                            // Construct synthetic product from token metadata so page renders
+                            product = {
+                                id: validateData.product_id || 'product',
+                                name: (validateData.product_id || 'Editing Resource').toUpperCase(),
+                                category: 'others',
+                                file_path: resolvedFilePath,
+                                description: 'Download package generated for your account.'
+                            };
+                        }
+                        if (resolvedFilePath && !product.file_path) product.file_path = resolvedFilePath;
+                        await render(); 
+                        if (expiresIn > 0) startCountdown(expiresIn); 
+                        return;
+                    } else if (validateData.error) {
+                        showError(validateData.error);
+                        return;
                     }
                     // Token invalid/expired — fall through to auth check
-                } catch (e) { /* fall through */ }
+                } catch (e) { console.error("Validation error:", e); }
             }
 
             if (!productId) {
