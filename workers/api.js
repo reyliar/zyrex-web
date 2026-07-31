@@ -32,12 +32,17 @@ const TOKEN_EXPIRY = 600;  // 10 minutes
 // Self-contained token helpers (Workers are stateless — tokens carry their own data)
 function encodeToken(data) {
   const payload = JSON.stringify({ ...data, exp: Date.now() + TOKEN_EXPIRY * 1000 });
-  return btoa(String.fromCharCode(...new TextEncoder().encode(payload)));
+  const bytes = new TextEncoder().encode(payload);
+  const base64 = btoa(String.fromCharCode(...bytes));
+  return base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
 function decodeToken(token) {
   try {
-    const json = new TextDecoder().decode(Uint8Array.from(atob(token), c => c.charCodeAt(0)));
+    if (!token) return null;
+    let base64 = token.replace(/-/g, '+').replace(/_/g, '/');
+    while (base64.length % 4) { base64 += '='; }
+    const json = new TextDecoder().decode(Uint8Array.from(atob(base64), c => c.charCodeAt(0)));
     const data = JSON.parse(json);
     if (Date.now() > data.exp) return null;  // expired
     return data;
