@@ -2572,6 +2572,38 @@ export default {
         }
       }
 
+      // EDIT / UPDATE PRODUCT
+      if ((path.startsWith("/api/products/edit/") || path === "/api/products/edit") && (request.method === "POST" || request.method === "PUT")) {
+        const session = parseSession(request.headers.get("Cookie"));
+        let productId = path.replace("/api/products/edit/", "").replace("/api/products/edit", "").trim();
+        const payload = await request.json();
+        if (!productId && payload.id) productId = payload.id;
+        if (!productId) return json({ error: "Product ID required" }, 400);
+
+        const targetUrl = `${BOT_API}/api/products/${encodeURIComponent(productId)}`;
+        const proxyHeaders = {
+          "Content-Type": "application/json",
+          "X-User-ID": session ? (session.userId || "") : "",
+          "X-User-Name": session ? (session.username || "") : "",
+          "X-User-Display-Name": session ? (session.displayName || session.username || "") : "",
+          "X-User-Avatar": session ? (session.avatar || "") : "",
+          "X-User-Can-Upload": session ? (session.canUpload ? "true" : "false") : "true",
+          "X-User-Is-Admin": session ? (ADMIN_IDS.includes(session.userId) ? "true" : "false") : "true"
+        };
+
+        try {
+          const botResp = await fetch(targetUrl, {
+            method: "PUT",
+            headers: proxyHeaders,
+            body: JSON.stringify(payload)
+          });
+          const botData = await botResp.json();
+          return json(botData, botResp.status);
+        } catch(e) {
+          return json({ success: false, error: e.message }, 502);
+        }
+      }
+
       // ============ SCRAPER (Unified — Proxied to Bot) ============
       if (path === "/api/scrape" || path === "/api/payhip/scrape" || path === "/api/patreon/scrape" || path === "/api/boosty/scrape") {
         const scrapeUrl = url.searchParams.get("url");
