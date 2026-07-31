@@ -3,28 +3,88 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zyrex | More</title>
+    <title>Zyrex | More Resources</title>
     <link rel="icon" type="image/png" href="/assets/content.png">
     <link rel="stylesheet" href="css/style.css?v=24">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        :root{--cherry:#a80f2d;--cherry-rgb:168,15,45;--cherry-light:#e8456a;--dark:#060608;--light:#e8e8ed;--gray:#8888a0;--gray-dark:#55556a}
+        :root{--cherry:#ff2b52;--cherry-rgb:255,43,82;--cherry-light:#ff6b8b;--dark:#060608;--light:#ffffff;--gray:rgba(255,255,255,0.45);--gray-dark:rgba(255,255,255,0.25)}
         body{background:var(--dark);color:var(--light);font-family:'Poppins',sans-serif;min-height:100vh}
-        .page-wrap{max-width:900px;margin:0 auto;padding:140px 24px 60px;text-align:center}
-        .page-wrap h1{font-size:2.5rem;font-weight:900;margin-bottom:8px;letter-spacing:-1px}
-        .page-wrap .subtitle{color:var(--gray);font-size:.95rem;margin-bottom:50px}
-        .hub-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:700px;margin:0 auto}
-        @media(max-width:600px){.hub-grid{grid-template-columns:1fr}}
-        .hub-card{position:relative;background:rgba(12,4,8,0.55);border:1px solid rgba(var(--cherry-rgb),.1);border-radius:18px;padding:40px 28px;text-decoration:none;color:var(--light);transition:all .35s cubic-bezier(.16,1,.3,1);overflow:hidden;text-align:center}
-        .hub-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(var(--cherry-rgb),.4),transparent)}
-        .hub-card::after{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 0%,rgba(var(--cherry-rgb),.06),transparent 70%);pointer-events:none}
-        .hub-card:hover{transform:translateY(-4px);border-color:rgba(var(--cherry-rgb),.3);box-shadow:0 20px 60px rgba(0,0,0,.4),0 0 30px rgba(var(--cherry-rgb),.1)}
-        .hub-card .hc-icon{font-size:3rem;margin-bottom:16px;display:block}
-        .hub-card h2{font-size:1.3rem;font-weight:800;margin-bottom:6px}
-        .hub-card p{color:var(--gray);font-size:.82rem;line-height:1.6}
-        .hub-card .hc-badge{display:inline-block;margin-top:14px;padding:6px 16px;border-radius:50px;font-size:.68rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;background:rgba(var(--cherry-rgb),.12);border:1px solid rgba(var(--cherry-rgb),.18);color:var(--cherry-light)}
-        @media(max-width:600px){.page-wrap{padding-top:100px}}
+        .page-wrap{max-width:960px;margin:0 auto;padding:140px 24px 80px;text-align:center}
+        
+        .page-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+        .page-logo {
+            width: 72px;
+            height: 72px;
+            margin-bottom: 16px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 16px rgba(255,43,82,0.5));
+        }
+
+        .page-wrap h1{font-size:2.8rem;font-weight:900;font-family:'Outfit',sans-serif;margin-bottom:8px;letter-spacing:-1px}
+        .page-wrap .subtitle{color:var(--gray);font-size:.95rem;margin-bottom:50px;max-width:500px;margin-left:auto;margin-right:auto}
+        
+        .hub-grid{display:grid;grid-template-columns:1fr 1fr;gap:28px;max-width:800px;margin:0 auto}
+        @media(max-width:640px){.hub-grid{grid-template-columns:1fr}}
+        
+        /* iOS 26 LIQUID GLASS CARDS */
+        .hub-card{
+            position:relative;
+            background: rgba(14, 10, 18, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 28px;
+            padding: 44px 32px;
+            text-decoration: none;
+            color: var(--light);
+            transition: all .35s cubic-bezier(.16,1,.3,1);
+            backdrop-filter: blur(32px) saturate(210%);
+            -webkit-backdrop-filter: blur(32px) saturate(210%);
+            overflow: hidden;
+            text-align: center;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.15);
+        }
+        .hub-card:hover{
+            transform: translateY(-8px) scale(1.02);
+            border-color: rgba(255, 43, 82, 0.4);
+            box-shadow: 0 30px 70px rgba(0,0,0,0.7), 0 0 30px rgba(255,43,82,0.25);
+        }
+        .hub-card .hc-icon{
+            font-size: 3.2rem;
+            margin-bottom: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 80px;
+            height: 80px;
+            border-radius: 22px;
+            background: rgba(255,43,82,0.12);
+            border: 1px solid rgba(255,43,82,0.25);
+        }
+        .hub-card h2{font-size:1.4rem;font-weight:800;font-family:'Outfit',sans-serif;margin-bottom:8px}
+        .hub-card p{color:var(--gray);font-size:.85rem;line-height:1.6}
+        .hub-card .hc-badge{
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 20px;
+            padding: 8px 22px;
+            border-radius: 999px;
+            font-size: .72rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            background: rgba(255, 43, 82, 0.16);
+            border: 1px solid rgba(255, 43, 82, 0.35);
+            color: #fff;
+            backdrop-filter: blur(12px);
+        }
+        @media(max-width:600px){.page-wrap{padding-top:110px}}
     </style>
 </head>
 <body>
@@ -32,25 +92,28 @@
     <nav class="navbar"><div class="container"><a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><ul class="nav-links" id="navLinks"><li><a href="/">Home</a></li><li><a href="/resources">Resources</a></li><li><a href="/plugins">Plugins</a></li><li><a href="/more" class="active">More</a></li><li><a href="/#contact">Contact</a></li></ul><div class="nav-actions"><div id="authBtn"></div><button class="hamburger" id="hamburger"><span></span><span></span><span></span></button></div></div></nav>
 
     <div class="page-wrap">
-        <h1><span style="color:var(--cherry-light)">More</span></h1>
-        <p class="subtitle">Explore additional resources for your editing workflow.</p>
+        <div class="page-header">
+            <img src="assets/content.png" alt="Zyrex" class="page-logo">
+            <h1><span style="color:var(--cherry-light)">More</span> Hub</h1>
+            <p class="subtitle">Explore additional specialized libraries & editing media assets.</p>
+        </div>
         <div class="hub-grid">
             <a href="/audio" class="hub-card">
-                <span class="hc-icon"><i class="fas fa-music" style="color:var(--cherry-light);font-size:2.8rem"></i></span>
+                <span class="hc-icon"><i class="fas fa-music" style="color:var(--cherry-light)"></i></span>
                 <h2>Audio Library</h2>
-                <p>Premium audios by top creators.</p>
-                <span class="hc-badge">Browse Audio</span>
+                <p>High quality editing audios, sound effects & trending beats.</p>
+                <span class="hc-badge"><i class="fas fa-play"></i> Browse Audio</span>
             </a>
             <a href="/scenepack" class="hub-card">
-                <span class="hc-icon"><i class="fas fa-clapperboard" style="color:var(--cherry-light);font-size:2.8rem"></i></span>
+                <span class="hc-icon"><i class="fas fa-clapperboard" style="color:var(--cherry-light)"></i></span>
                 <h2>Scenepacks</h2>
-                <p>Premium scenepacks by top creators.</p>
-                <span class="hc-badge">Browse Scenepacks</span>
+                <p>High quality anime, movie & show scene clips for editors.</p>
+                <span class="hc-badge"><i class="fas fa-film"></i> Browse Scenepacks</span>
             </a>
         </div>
     </div>
 
-    <footer class="footer"><div class="container"><div class="footer-content"><div class="footer-brand"><div style="display:flex;align-items:center;gap:12px"><a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><h3 style="font-size:1.8rem;font-weight:900;margin:0">Editing</h3></div><p>Premium editing community & resources.</p></div><div class="footer-links"><h4>Quick Links</h4><ul><li><a href="/">Home</a></li><li><a href="resources">Resources</a></li><li><a href="plugins">Plugins</a></li><li><a href="more">More</a></li></ul></div><div class="footer-links"><h4>Legal</h4><ul><li><a href="/terms">Terms</a></li><li><a href="/privacy">Privacy</a></li><li><a href="/dmca">DMCA</a></li></ul></div><div class="footer-links"><h4>Community</h4><ul><li><a href="https://discord.gg/fAydSzpafA">Discord</a></li><li><a href="/#contact">Contact</a></li></ul></div></div><div class="footer-bottom"><p>&copy; 2026 Zyrex Editing. | <a href="/dmca">DMCA</a></p></div></div></footer>
+    <footer class="footer"><div class="container"><div class="footer-content"><div class="footer-brand"><div style="display:flex;align-items:center;gap:12px"><a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><h3 style="font-size:1.8rem;font-weight:900;margin:0">Editing</h3></div><p>Premium editing community & resources.</p></div><div class="footer-links"><h4>Quick Links</h4><ul><li><a href="/">Home</a></li><li><a href="/resources">Resources</a></li><li><a href="/plugins">Plugins</a></li><li><a href="/more">More</a></li></ul></div><div class="footer-links"><h4>Legal</h4><ul><li><a href="/terms">Terms</a></li><li><a href="/privacy">Privacy</a></li><li><a href="/dmca">DMCA</a></li></ul></div><div class="footer-links"><h4>Community</h4><ul><li><a href="https://discord.gg/fAydSzpafA">Discord</a></li><li><a href="/#contact">Contact</a></li></ul></div></div><div class="footer-bottom"><p>&copy; 2026 Zyrex Editing. | <a href="/dmca">DMCA</a></p></div></div></footer>
 
     <script src="js/auth.js?v=10"></script>
     <script src="js/script.js?v=5"></script>

@@ -55,13 +55,43 @@ function clearAuthCache() {
 function renderLoginUI(btn) {
     if (!btn) return;
     btn.classList.remove('auth-ready', 'menu-open');
-    btn.innerHTML = '<a href="/api/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search) + '" class="auth-login-btn"><i class="fab fa-discord"></i><span>Login</span></a>';
+    btn.innerHTML = '<button type="button" onclick="openLoginModal()" class="auth-login-btn"><i class="fab fa-discord"></i><span>Login</span></button>';
+}
+
+function openLoginModal() {
+    var modal = document.getElementById('loginModal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'loginModal';
+        modal.className = 'login-modal-overlay';
+        modal.innerHTML = 
+            '<div class="login-modal-card">' +
+                '<button type="button" class="login-modal-close" onclick="closeLoginModal()">&times;</button>' +
+                '<img src="/assets/content.png" alt="Zyrex" class="login-modal-logo">' +
+                '<h2>Welcome to Zyrex</h2>' +
+                '<p>Sign in with Discord to access premium presets, plugins, and cloud downloads.</p>' +
+                '<a href="/api/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search) + '" class="login-discord-btn">' +
+                    '<i class="fab fa-discord"></i> Login with Discord' +
+                '</a>' +
+            '</div>';
+        document.body.appendChild(modal);
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) closeLoginModal();
+        });
+    }
+    setTimeout(function(){ modal.classList.add('active'); }, 10);
+}
+
+function closeLoginModal() {
+    var modal = document.getElementById('loginModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
 }
 
 function redirectToLogin(returnTo) {
     clearAuthCache();
-    const target = returnTo || (window.location.pathname + window.location.search);
-    window.location.href = '/api/login?redirect=' + encodeURIComponent(target);
+    openLoginModal();
 }
 
 // Render auth UI from user data (reusable for both cached & fresh)

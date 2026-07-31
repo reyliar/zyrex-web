@@ -232,11 +232,11 @@ function setCookie(data, maxAge = 86400) {
   // btoa only handles ASCII; use TextEncoder for Unicode safety
   const bytes = new TextEncoder().encode(json);
   const val = btoa(String.fromCharCode(...bytes));
-  return `zyrex_session=${val}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}; Secure`;
+  return `zyrex_session=${val}; Domain=.zyrexediting.xyz; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAge}; Secure`;
 }
 
 function clearCookie() {
-  return "zyrex_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0; Secure";
+  return "zyrex_session=; Domain=.zyrexediting.xyz; Path=/; HttpOnly; SameSite=Lax; Max-Age=0; Secure";
 }
 
 // ============ R2 FILE HELPERS ============

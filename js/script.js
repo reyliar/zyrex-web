@@ -308,20 +308,22 @@ function fetchResourceStatsForHero() {
             var cat = (r.category || '').toLowerCase();
             var type = (r.type || '').toLowerCase();
             var isPlugin = type === 'plugin' || 
+                           type === 'software' || 
                            cat.includes('plugin') || 
                            cat.includes('soft') || 
                            cat.includes('software') || 
                            cat.includes('extension') || 
                            cat.includes('script') || 
                            cat.includes('ofx') || 
-                           cat.includes('adobe');
+                           cat.includes('adobe') ||
+                           cat.includes('avx');
 
-            if (isPlugin) {
-                pluginsCount++;
-            } else if (type === 'scenepack' || cat.includes('scenepack')) {
-                scenepacksCount++;
-            } else if (type === 'audio' || cat.includes('audio')) {
+            if (type === 'audio' || cat.includes('audio') || cat.includes('sound') || cat.includes('music')) {
                 audiosCount++;
+            } else if (type === 'scenepack' || cat.includes('scenepack') || cat.includes('scene')) {
+                scenepacksCount++;
+            } else if (isPlugin) {
+                pluginsCount++;
             } else {
                 presetsCount++;
             }
