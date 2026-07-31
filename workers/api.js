@@ -1763,14 +1763,19 @@ export default {
       const isPublicEndpoint = path === "/api/login" || 
                                path === "/api/auth/callback" || 
                                path === "/api/auth/logout" || 
+                               path === "/api/me" ||
+                               path.startsWith("/api/downloads/") ||
                                path.startsWith("/api/avatar/") || 
                                path.startsWith("/api/banner/");
 
-      if (!isPublicEndpoint) {
+      const origin = request.headers.get("Origin") || request.headers.get("Referer") || "";
+      const isSiteInternal = origin.includes("zyrexediting.xyz") || origin.includes("localhost") || origin.includes("127.0.0.1");
+
+      if (!isPublicEndpoint && !isSiteInternal) {
         const apiKey = request.headers.get("X-Zyrex-Key") || request.headers.get("X-API-Key") || request.headers.get("x-zyrex-key") || request.headers.get("x-api-key") || "";
         const expectedKey = env.ZYREX_API_KEY || "zyrex_app_sec_k982f81a7b54c29013e9a";
         if (!apiKey || (apiKey !== expectedKey && !apiKey.startsWith("zyrex_"))) {
-          return json({ success: false, error: "Access denied. Invalid or missing Zyrex API key." }, 403);
+          return json({ success: false, error: "Access denied. External API access restricted." }, 403);
         }
       }
     }
