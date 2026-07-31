@@ -2749,11 +2749,19 @@ export default {
         if (!r2Prefix) return json({ success: false, error: "Token does not contain a storage path" }, 400);
         
         try {
-          const allObjects = await r2List(env, r2Prefix, true);  // useProd=true
-          const fileObjects = allObjects.filter(o => isDownloadableR2Object(o, r2Prefix));
+          let allObjects = await r2List(env, r2Prefix, true);  // try STORAGE_PROD first
+          let isProdBucket = true;
+          let fileObjects = allObjects.filter(o => isDownloadableR2Object(o, r2Prefix));
           
           if (fileObjects.length === 0) {
-            return json({ success: false, error: "No files found" }, 404);
+            // Fallback: try STORAGE staging bucket
+            allObjects = await r2List(env, r2Prefix, false);
+            fileObjects = allObjects.filter(o => isDownloadableR2Object(o, r2Prefix));
+            isProdBucket = false;
+          }
+          
+          if (fileObjects.length === 0) {
+            return json({ success: false, error: "No files found in storage" }, 404);
           }
           
           const selectedObjects = selectedSet
@@ -2785,7 +2793,7 @@ export default {
                 const fname = relativeR2Name(obj.key, r2Prefix);
                 if (!fname) continue;
                 
-                const fileData = await r2Get(env, obj.key, true);  // useProd=true
+                const fileData = await r2Get(env, obj.key, isProdBucket);
                 if (!fileData) continue;
                 
                 let fileBytes;
