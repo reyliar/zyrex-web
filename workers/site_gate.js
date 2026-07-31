@@ -204,6 +204,14 @@ export default {
       if (denied) return denied;
     }
 
+    if (url.hostname === "dl.zyrexediting.xyz" && !isApiRequest(pathname)) {
+      if (pathname === "/" || pathname === "") {
+        const dlUrl = new URL("/download.html", request.url);
+        return env.ASSETS.fetch(new Request(dlUrl.toString(), request));
+      }
+      return env.ASSETS.fetch(request);
+    }
+
     if ((url.hostname === "dl.zyrexediting.xyz" || isApiRequest(pathname)) && env.API) {
       return env.API.fetch(request);
     }
