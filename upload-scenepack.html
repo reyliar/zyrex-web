@@ -487,25 +487,60 @@
         </div>
     </div>
 
-    <!-- SOCIAL LOOKUP MODAL -->
-    <div id="hlxOverlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,0.85);align-items:center;justify-content:center" onclick="if(event.target===this)toggleHlx()">
-        <div style="background:rgba(15,4,7,0.98);border:1px solid var(--border);border-radius:20px;padding:32px;width:420px;max-width:90vw;box-shadow:0 25px 60px rgba(0,0,0,0.7)">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-                <span style="font-size:0.9rem;font-weight:700;color:var(--text);"><i class="fas fa-magic" style="color:var(--cherry-light);margin-right:6px"></i>Social Lookup</span>
-                <button onclick="toggleHlx()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.4rem">&times;</button>
+    <!-- SOCIAL LOOKUP MODAL (Presets style without TikTok) -->
+    <div id="hlxOverlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(4,1,2,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)toggleHlx()">
+        <div style="background:#0d0407;border:1px solid var(--border);border-radius:24px;padding:28px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 25px 80px rgba(0,0,0,0.8), 0 0 35px rgba(230,21,54,0.15);position:relative">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+                <div style="display:flex;align-items:center;gap:12px">
+                    <div style="width:38px;height:38px;border-radius:12px;background:rgba(230,21,54,0.12);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--cherry-light);font-size:1rem">
+                        <i class="fas fa-wand-magic-sparkles"></i>
+                    </div>
+                    <div>
+                        <h3 style="font-size:1.1rem;font-weight:800;color:#fff;margin:0">Social Lookup</h3>
+                        <p style="font-size:0.75rem;color:var(--muted);margin:0">Fetch profile info & select posts (YouTube, IG, X)</p>
+                    </div>
+                </div>
+                <button type="button" onclick="toggleHlx()" style="background:rgba(255,255,255,0.05);border:none;color:var(--muted);width:32px;height:32px;border-radius:50%;cursor:pointer;display:inline-flex;align-items:center;justify-content:center"><i class="fas fa-times"></i></button>
             </div>
-            <div style="display:flex;gap:10px;justify-content:center;margin-bottom:20px" id="hlxPlatforms">
-                <button class="btn-icon active" data-plat="youtube" onclick="selHlxPlat(this,'youtube')" style="width:40px;height:40px;border-radius:50%;background:rgba(230, 21, 54, 0.08);border:1px solid var(--border);color:var(--cherry-light);cursor:pointer;transition:var(--transition);display:inline-flex;align-items:center;justify-content:center;"><i class="fab fa-youtube"></i></button>
-                <button class="btn-icon" data-plat="instagram" onclick="selHlxPlat(this,'instagram')" style="width:40px;height:40px;border-radius:50%;background:rgba(230, 21, 54, 0.08);border:1px solid var(--border);color:var(--cherry-light);cursor:pointer;transition:var(--transition);display:inline-flex;align-items:center;justify-content:center;"><i class="fab fa-instagram"></i></button>
-                <button class="btn-icon" data-plat="x" onclick="selHlxPlat(this,'x')" style="width:40px;height:40px;border-radius:50%;background:rgba(230, 21, 54, 0.08);border:1px solid var(--border);color:var(--cherry-light);cursor:pointer;transition:var(--transition);display:inline-flex;align-items:center;justify-content:center;"><i class="fab fa-x-twitter"></i></button>
-                <button class="btn-icon" data-plat="tiktok" onclick="selHlxPlat(this,'tiktok')" style="width:40px;height:40px;border-radius:50%;background:rgba(230, 21, 54, 0.08);border:1px solid var(--border);color:var(--cherry-light);cursor:pointer;transition:var(--transition);display:inline-flex;align-items:center;justify-content:center;"><i class="fab fa-tiktok"></i></button>
+
+            <!-- Platform Tabs (No TikTok) -->
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px" id="hlxPlatforms">
+                <button type="button" class="btn-icon active" data-plat="youtube" onclick="selHlxPlat(this,'youtube')" style="padding:10px;border-radius:12px;background:rgba(230,21,54,0.15);border:1px solid var(--cherry-light);color:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:0.75rem;font-weight:700">
+                    <i class="fab fa-youtube" style="font-size:1.2rem;color:#ff0000"></i> YouTube
+                </button>
+                <button type="button" class="btn-icon" data-plat="instagram" onclick="selHlxPlat(this,'instagram')" style="padding:10px;border-radius:12px;background:rgba(230,21,54,0.04);border:1px solid var(--border);color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:0.75rem;font-weight:700">
+                    <i class="fab fa-instagram" style="font-size:1.2rem;color:#e1306c"></i> Instagram
+                </button>
+                <button type="button" class="btn-icon" data-plat="x" onclick="selHlxPlat(this,'x')" style="padding:10px;border-radius:12px;background:rgba(230,21,54,0.04);border:1px solid var(--border);color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:0.75rem;font-weight:700">
+                    <i class="fab fa-x-twitter" style="font-size:1.2rem;color:#fff"></i> X / Twitter
+                </button>
             </div>
-            <div style="display:flex;background:rgba(0,0,0,0.4);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;margin-bottom:18px">
-                <span style="padding:14px 0 14px 18px;color:var(--muted);font-size:0.88rem" id="hlxPrefix">@</span>
-                <input id="hlxUser" placeholder="URL or @username..." style="flex:1;padding:14px;background:transparent;border:none;color:#fff;font-family:inherit;font-size:0.88rem;outline:none" onkeydown="if(event.key==='Enter')hlxLookup()">
+
+            <div style="display:flex;background:rgba(0,0,0,0.5);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px">
+                <span style="padding:12px 0 12px 14px;color:var(--cherry-light);font-size:0.9rem;font-weight:700" id="hlxPrefix">@</span>
+                <input id="hlxUser" placeholder="URL or @username..." style="flex:1;padding:12px;background:transparent;border:none;color:#fff;font-family:inherit;font-size:0.88rem;outline:none" onkeydown="if(event.key==='Enter')hlxLookup()">
             </div>
-            <button class="btn btn-primary" style="width:100%;font-size:0.84rem" onclick="hlxLookup()"><i class="fas fa-search"></i> Fetch Profile & Content Info</button>
-            <div id="hlxStatus" style="display:none;margin-top:14px;padding:10px;border-radius:8px;font-size:0.75rem;text-align:center"></div>
+
+            <button type="button" class="btn btn-primary" id="btnHlxLookup" style="width:100%;padding:12px;font-size:0.88rem" onclick="hlxLookup()">
+                <i class="fas fa-search"></i> Fetch Profile & List Content
+            </button>
+            
+            <div id="hlxStatus" style="display:none;margin-top:14px;padding:10px;border-radius:10px;font-size:0.78rem;text-align:center"></div>
+
+            <!-- Profile Info Header & Posts Selection List -->
+            <div id="hlxResultsArea" style="display:none;margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.08)">
+                <div id="hlxProfileBox" style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.03);padding:12px;border-radius:14px;margin-bottom:14px">
+                    <img id="hlxProfileAvatar" src="" alt="" style="width:40px;height:40px;border-radius:50%;object-fit:cover;background:rgba(255,43,82,0.1)">
+                    <div style="flex:1;min-width:0">
+                        <strong id="hlxProfileName" style="color:#fff;font-size:0.88rem;display:block"></strong>
+                        <span id="hlxProfileHandle" style="color:var(--muted);font-size:0.75rem"></span>
+                    </div>
+                    <button type="button" onclick="applyProfileOnly()" class="btn btn-ghost" style="padding:6px 12px;font-size:0.72rem">Use Profile</button>
+                </div>
+
+                <div style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px">Recent Content / Posts (Click to select)</div>
+                <div id="hlxPostsGrid" style="display:flex;flex-direction:column;gap:10px"></div>
+            </div>
         </div>
     </div>
 
@@ -513,6 +548,8 @@
     <script>
         var currentUser = null;
         var hlxPlatform = 'youtube';
+        var fetchedProfileData = null;
+        var fetchedPosts = [];
 
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('open');
@@ -524,7 +561,6 @@
                 if (!meResp.ok) { window.location.href = '/api/login?redirect=' + encodeURIComponent(location.pathname); return; }
                 currentUser = await meResp.json();
                 
-                // Show profile footer
                 document.getElementById('userProfile').style.display = 'flex';
                 if(currentUser.avatar && currentUser.id) {
                     document.getElementById('userAvatar').src = avatarProxyUrl(currentUser.id, currentUser.avatar, 64);
@@ -538,7 +574,6 @@
                     return;
                 }
 
-                // Check roles
                 const roles=[
                     {id:'1519624224476762122',label:'Preset Uploader'},
                     {id:'1522976282688880720',label:'Audio Uploader'},
@@ -551,7 +586,6 @@
                     return;
                 }
                 
-                // Update sidebar items
                 if(!checks[0]){
                     document.getElementById('sidebarPreset').innerHTML = '<span class="locked-item"><i class="fas fa-lock"></i> <span>Preset Uploader</span> <span class="lock-badge">Locked</span></span>';
                 }
@@ -582,63 +616,141 @@
             `;
         }
 
-        function toggleHlx(){var o=document.getElementById('hlxOverlay');o.style.display=(o.style.display==='flex')?'none':'flex'}
-        function selHlxPlat(btn,p){hlxPlatform=p;document.querySelectorAll('#hlxPlatforms .btn-icon').forEach(b=>b.classList.remove('active'));btn.classList.add('active')}
+        function toggleHlx(){
+            var o=document.getElementById('hlxOverlay');
+            o.style.display=(o.style.display==='flex')?'none':'flex';
+        }
+        function selHlxPlat(btn,p){
+            hlxPlatform=p;
+            document.querySelectorAll('#hlxPlatforms .btn-icon').forEach(b=>{
+                b.classList.remove('active');
+                b.style.background = 'rgba(230,21,54,0.04)';
+                b.style.borderColor = 'var(--border)';
+                b.style.color = 'var(--muted)';
+            });
+            btn.classList.add('active');
+            btn.style.background = 'rgba(230,21,54,0.15)';
+            btn.style.borderColor = 'var(--cherry-light)';
+            btn.style.color = '#fff';
+        }
         
         async function hlxLookup(){
             var user=document.getElementById('hlxUser').value.trim();
             if(!user) return;
             var st=document.getElementById('hlxStatus');
             st.style.display='block';
-            st.textContent='Fetching profile & post details...';
-            st.className='';
+            st.textContent='Fetching profile & scanning posts...';
+            st.style.background = 'rgba(230,21,54,0.1)';
+            st.style.color = '#fff';
             
             var cleanUser = user.replace(/^@/, '').split('?')[0].replace(/\/$/, '').split('/').pop();
             var platforms = {
                 youtube: 'https://www.youtube.com/@' + cleanUser,
                 instagram: 'https://www.instagram.com/' + cleanUser,
-                x: 'https://x.com/' + cleanUser,
-                tiktok: 'https://www.tiktok.com/@' + cleanUser
+                x: 'https://x.com/' + cleanUser
             };
             var lookupUrl = (user.startsWith('http://') || user.startsWith('https://')) ? user : (platforms[hlxPlatform] || ('https://www.youtube.com/@' + cleanUser));
             
             try {
-                // Fetch profile metadata and page scrape in parallel
-                var [rProfile, rScrape, rScan] = await Promise.all([
+                var [rProfile, rScrape] = await Promise.all([
                     fetch('/api/hlx/resolve?url='+encodeURIComponent(lookupUrl), {credentials:'include'}).then(res => res.json()).catch(() => ({})),
-                    fetch('/api/scrape?url='+encodeURIComponent(lookupUrl), {credentials:'include'}).then(res => res.json()).catch(() => ({})),
-                    fetch('/api/scan-creator-links?url='+encodeURIComponent(lookupUrl), {credentials:'include'}).then(res => res.json()).catch(() => ({}))
+                    fetch('/api/scrape?url='+encodeURIComponent(lookupUrl), {credentials:'include'}).then(res => res.json()).catch(() => ({}))
                 ]);
 
-                var creatorDisplay = rProfile.nickname || rScrape.author_name || rScrape.creator_nickname || (rScan && rScan.nickname) || cleanUser;
-                if (!creatorDisplay || ['instagram','tiktok','youtube','x','twitter'].includes(creatorDisplay.toLowerCase())) {
+                var creatorDisplay = rProfile.nickname || rScrape.author_name || rScrape.creator_nickname || cleanUser;
+                if (!creatorDisplay || ['instagram','youtube','x','twitter'].includes(creatorDisplay.toLowerCase())) {
                     creatorDisplay = cleanUser;
                 }
                 var avatarUrl = rProfile.avatar || rScrape.avatar || '';
-                var postTitle = rScrape.title || rScrape.name || '';
-                var postDesc = rScrape.description || rScrape.desc || '';
-                var postThumb = rScrape.cdn_thumbnail || rScrape.image || (rScrape.thumbnails && rScrape.thumbnails[0]) || rProfile.thumbnail || '';
 
-                document.getElementById('socialUrl').value = lookupUrl;
-                if (creatorDisplay) document.getElementById('creatorName').value = creatorDisplay;
-                if (postTitle && (!document.getElementById('spName').value.trim() || document.getElementById('spName').value === 'Untitled Scenepack')) {
-                    document.getElementById('spName').value = postTitle;
+                fetchedProfileData = {
+                    nickname: creatorDisplay,
+                    avatar: avatarUrl,
+                    url: lookupUrl
+                };
+
+                // Show profile box
+                document.getElementById('hlxResultsArea').style.display = 'block';
+                document.getElementById('hlxProfileName').textContent = creatorDisplay;
+                document.getElementById('hlxProfileHandle').textContent = lookupUrl;
+                var pImg = document.getElementById('hlxProfileAvatar');
+                if (avatarUrl) {
+                    pImg.src = avatarUrl;
+                    pImg.style.display = 'block';
+                } else {
+                    pImg.style.display = 'none';
                 }
-                if (postDesc && !document.getElementById('spDesc').value.trim()) {
-                    document.getElementById('spDesc').value = postDesc;
+
+                // Gather extracted items/posts array
+                fetchedPosts = [];
+                if (rScrape.title || rScrape.name) {
+                    fetchedPosts.push({
+                        title: rScrape.title || rScrape.name,
+                        desc: rScrape.description || rScrape.desc || '',
+                        thumb: rScrape.cdn_thumbnail || rScrape.image || (rScrape.thumbnails && rScrape.thumbnails[0]) || '',
+                        url: lookupUrl
+                    });
                 }
-                if (postThumb) {
-                    document.getElementById('spThumb').value = postThumb;
-                    previewThumb(postThumb);
+                if (rScrape.items && Array.isArray(rScrape.items)) {
+                    rScrape.items.forEach(it => {
+                        if (it && (it.title || it.name)) {
+                            fetchedPosts.push({
+                                title: it.title || it.name,
+                                desc: it.description || it.desc || '',
+                                thumb: it.cdn_thumbnail || it.image || (it.thumbnails && it.thumbnails[0]) || '',
+                                url: it.url || lookupUrl
+                            });
+                        }
+                    });
+                }
+
+                var grid = document.getElementById('hlxPostsGrid');
+                if (fetchedPosts.length > 0) {
+                    grid.innerHTML = fetchedPosts.map((post, idx) => `
+                        <div onclick="selectHlxPost(${idx})" style="display:flex;align-items:center;gap:12px;padding:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;cursor:pointer;transition:all 0.2s ease" onmouseover="this.style.borderColor='var(--cherry-light)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)'">
+                            ${post.thumb ? `<img src="${post.thumb}" style="width:54px;height:40px;object-fit:cover;border-radius:8px;flex-shrink:0" alt="">` : `<div style="width:54px;height:40px;border-radius:8px;background:rgba(255,43,82,0.15);display:flex;align-items:center;justify-content:center;color:var(--cherry-light);flex-shrink:0"><i class="fas fa-video"></i></div>`}
+                            <div style="flex:1;min-width:0">
+                                <strong style="color:#fff;font-size:0.82rem;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${post.title}</strong>
+                                <span style="color:var(--muted);font-size:0.72rem;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${post.desc || 'Click to select this post content'}</span>
+                            </div>
+                            <i class="fas fa-plus-circle" style="color:var(--cherry-light);font-size:1rem;margin-left:auto"></i>
+                        </div>
+                    `).join('');
+                } else {
+                    grid.innerHTML = `<div style="text-align:center;color:var(--muted);font-size:0.78rem;padding:12px">Profile fetched! Click "Use Profile" to apply creator info.</div>`;
                 }
 
                 st.style.color = '#00e676';
-                st.innerHTML = '<i class="fas fa-check-circle"></i> Profile & Content Extracted: ' + creatorDisplay;
-                setTimeout(toggleHlx, 1200);
+                st.innerHTML = '<i class="fas fa-check-circle"></i> Profile & Posts Ready!';
             } catch(e) {
                 st.style.color = 'var(--cherry-light)';
                 st.textContent = 'Network error during lookup';
             }
+        }
+
+        function applyProfileOnly() {
+            if (!fetchedProfileData) return;
+            document.getElementById('socialUrl').value = fetchedProfileData.url;
+            document.getElementById('creatorName').value = fetchedProfileData.nickname;
+            alertMsg('Applied creator profile: ' + fetchedProfileData.nickname, false);
+            toggleHlx();
+        }
+
+        function selectHlxPost(idx) {
+            var post = fetchedPosts[idx];
+            if (!post) return;
+            if (fetchedProfileData) {
+                document.getElementById('socialUrl').value = post.url || fetchedProfileData.url;
+                document.getElementById('creatorName').value = fetchedProfileData.nickname;
+            }
+            if (post.title) document.getElementById('spName').value = post.title;
+            if (post.desc) document.getElementById('spDesc').value = post.desc;
+            if (post.thumb) {
+                document.getElementById('spThumb').value = post.thumb;
+                previewThumb(post.thumb);
+            }
+            alertMsg('Selected content: ' + post.title, false);
+            toggleHlx();
         }
 
         async function resolveCreator(){
