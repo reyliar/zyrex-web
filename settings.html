@@ -2586,22 +2586,34 @@
         }
 
         async function fetchCreatorMetadataForModal() {
-            const url = document.getElementById('editProductCreatorSocialUrl').value.trim();
+            const urlInput = document.getElementById('editProductCreatorSocialUrl');
+            const url = urlInput ? urlInput.value.trim() : '';
             if (!url) {
                 alert("Please enter a creator social media URL first.");
                 return;
             }
+            
+            const cleanUser = url.replace(/^@/, '').split('?')[0].replace(/\/$/, '').split('/').pop();
             try {
-                const resp = await fetch(`/api/hlx/resolve?url=${encodeURIComponent(url)}`);
-                const data = await resp.json();
-                if (data.success) {
-                    if (data.nickname) document.getElementById('editProductCreatorNickname').value = data.nickname;
-                    if (data.avatar) document.getElementById('editProductCreatorAvatar').value = data.avatar;
-                    alert(`Metadata fetched successfully! Creator: ${data.nickname || 'Unknown'}`);
-                } else {
-                    alert("Could not fetch metadata from URL: " + (data.error || 'Unknown error'));
-                }
-            } catch (e) {
+                const [rProfile, rScrape] = await Promise.all([
+                    fetch('/api/hlx/resolve?url='+encodeURIComponent(url)).then(res => res.json()).catch(() => ({})),
+                    fetch('/api/scrape?url='+encodeURIComponent(url)).then(res => res.json()).catch(() => ({}))
+                ]);
+
+                const creatorDisplay = rProfile.nickname || rScrape.author_name || rScrape.creator_nickname || cleanUser;
+                const avatarUrl = rProfile.cdn_avatar || rProfile.avatar || rScrape.avatar || '';
+                const title = rScrape.title || rScrape.name || '';
+                const desc = rScrape.description || rScrape.desc || '';
+                const thumb = rScrape.cdn_thumbnail || rScrape.image || (rScrape.thumbnails && rScrape.thumbnails[0]) || '';
+
+                if (creatorDisplay) setModalVal('editProductCreatorNickname', creatorDisplay);
+                if (avatarUrl) setModalVal('editProductCreatorAvatar', avatarUrl);
+                if (title && !document.getElementById('editProductName').value.trim()) setModalVal('editProductName', title);
+                if (desc && !document.getElementById('editProductDesc').value.trim()) setModalVal('editProductDesc', desc);
+                if (thumb && !document.getElementById('editProductThumbnail').value.trim()) setModalVal('editProductThumbnail', thumb);
+
+                alert(`Creator Metadata fetched successfully!\n\nCreator: ${creatorDisplay}\n${title ? 'Extracted Title: ' + title : ''}`);
+            } catch(e) {
                 alert("Failed to connect to metadata resolver.");
             }
         }
