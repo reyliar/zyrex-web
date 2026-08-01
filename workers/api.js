@@ -2641,6 +2641,15 @@ async function storeAndProxyImage(env, imageUrl) {
         if (!productId && payload.id) productId = payload.id;
         if (!productId) return json({ error: "Product ID required" }, 400);
 
+        if (payload.thumbnail && typeof payload.thumbnail === 'string' && !payload.thumbnail.includes("thumbnail.zyrexediting.xyz")) {
+          try {
+            const cdnThumb = await storeAndProxyImage(env, payload.thumbnail);
+            if (cdnThumb && cdnThumb.includes("thumbnail.zyrexediting.xyz")) {
+              payload.thumbnail = cdnThumb;
+            }
+          } catch(e) {}
+        }
+
         const proxyHeaders = {
           "Content-Type": "application/json",
           "X-User-ID": session ? (session.userId || "") : "",
@@ -3565,35 +3574,21 @@ async function storeAndProxyImage(env, imageUrl) {
         const targetUrl = `${BOT_API}${path}${url.search}`;
         let body = request.method !== "GET" && request.method !== "HEAD" ? await request.text() : undefined;
         
-        // Convert thumbnail to CDN on product submit
+        // Convert thumbnail to CDN on product submit (Scenepack, Preset, Audio, Plugin)
         if (path === "/api/products/submit" && request.method === "POST" && body) {
           try {
             const submitData = JSON.parse(body);
-            const originalThumb = submitData.thumbnail || ""; // preserve original before any conversion
-            // Prefer CDN thumbnail from scraper if already cached in R2
-            if (submitData.cdn_thumbnail && submitData.cdn_thumbnail.includes("thumbnail.zyrexediting.xyz")) {
-              const cdnFilename = submitData.cdn_thumbnail.split('/').pop();
-              const existing = await env.STORAGE.get("thumbnails/" + cdnFilename);
-              if (existing) {
-                // CDN cached — safe to use
-                submitData.thumbnail = submitData.cdn_thumbnail;
-              } else if (originalThumb && !originalThumb.includes("thumbnail.zyrexediting.xyz")) {
-                // CDN cache missing — try to upload original now
-                const cdnUrl = await uploadThumbnailToCDN(env, originalThumb, submitData.id || ("submit-" + Date.now().toString(36)));
-                if (cdnUrl && cdnUrl.includes("thumbnail.zyrexediting.xyz")) {
-                  submitData.thumbnail = cdnUrl;
-                }
-                // else: keep originalThumb as-is (don't use broken CDN URL)
-              }
-              // else: no original thumb either, drop thumbnail
-            }
-            // Otherwise, upload the original thumbnail to CDN
-            if (submitData.thumbnail && !submitData.thumbnail.includes("thumbnail.zyrexediting.xyz")) {
-              const cdnUrl = await uploadThumbnailToCDN(env, submitData.thumbnail, submitData.id || ("submit-" + Date.now().toString(36)));
-              if (cdnUrl && cdnUrl.includes("thumbnail.zyrexediting.xyz")) {
-                submitData.thumbnail = cdnUrl;
+            const rawThumb = submitData.thumbnail || submitData.cdn_thumbnail || "";
+            if (rawThumb && !rawThumb.includes("thumbnail.zyrexediting.xyz")) {
+              const cdnThumb = await storeAndProxyImage(env, rawThumb);
+              if (cdnThumb && cdnThumb.includes("thumbnail.zyrexediting.xyz")) {
+                submitData.thumbnail = cdnThumb;
+                submitData.cdn_thumbnail = cdnThumb;
               }
             }
+            body = JSON.stringify(submitData);
+          } catch(e) {}
+        }
 
             // VirusTotal scan integration
             const firstLink = submitData.links && submitData.links[0] ? submitData.links[0].url : "";
