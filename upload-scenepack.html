@@ -687,47 +687,49 @@
                     if (pFb) pFb.style.display = 'flex';
                 }
 
-                // Gather extracted items/posts array
+                // Build extracted posts array (always guarantee at least 1-2 selectable cards)
                 fetchedPosts = [];
-                if (rScrape.title || rScrape.name) {
-                    fetchedPosts.push({
-                        title: rScrape.title || rScrape.name,
-                        desc: rScrape.description || rScrape.desc || '',
-                        thumb: rScrape.cdn_thumbnail || rScrape.image || (rScrape.thumbnails && rScrape.thumbnails[0]) || '',
-                        url: lookupUrl
-                    });
-                }
+
+                var mainTitle = rScrape.title || rScrape.name || (creatorDisplay + ' Scenepack');
+                var mainThumb = rScrape.cdn_thumbnail || rScrape.image || (rScrape.thumbnails && rScrape.thumbnails[0]) || avatarUrl || '';
+                var mainDesc = rScrape.description || rScrape.desc || ('Official scenepack media from ' + creatorDisplay);
+
+                fetchedPosts.push({
+                    title: mainTitle,
+                    desc: mainDesc,
+                    thumb: mainThumb,
+                    url: lookupUrl,
+                    badge: 'Scraped Content'
+                });
+
                 if (rScrape.items && Array.isArray(rScrape.items)) {
                     rScrape.items.forEach(it => {
                         if (it && (it.title || it.name)) {
                             fetchedPosts.push({
                                 title: it.title || it.name,
                                 desc: it.description || it.desc || '',
-                                thumb: it.cdn_thumbnail || it.image || (it.thumbnails && it.thumbnails[0]) || '',
-                                url: it.url || lookupUrl
+                                thumb: it.cdn_thumbnail || it.image || (it.thumbnails && it.thumbnails[0]) || mainThumb,
+                                url: it.url || lookupUrl,
+                                badge: 'Recent Post'
                             });
                         }
                     });
                 }
 
                 var grid = document.getElementById('hlxPostsGrid');
-                if (fetchedPosts.length > 0) {
-                    grid.innerHTML = fetchedPosts.map((post, idx) => `
-                        <div onclick="selectHlxPost(${idx})" style="display:flex;align-items:center;gap:12px;padding:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;cursor:pointer;transition:all 0.2s ease" onmouseover="this.style.borderColor='var(--cherry-light)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)'">
-                            ${post.thumb ? `<img src="${post.thumb}" style="width:54px;height:40px;object-fit:cover;border-radius:8px;flex-shrink:0" alt="">` : `<div style="width:54px;height:40px;border-radius:8px;background:rgba(255,43,82,0.15);display:flex;align-items:center;justify-content:center;color:var(--cherry-light);flex-shrink:0"><i class="fas fa-video"></i></div>`}
-                            <div style="flex:1;min-width:0">
-                                <strong style="color:#fff;font-size:0.82rem;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${post.title}</strong>
-                                <span style="color:var(--muted);font-size:0.72rem;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${post.desc || 'Click to select this post content'}</span>
-                            </div>
-                            <i class="fas fa-plus-circle" style="color:var(--cherry-light);font-size:1rem;margin-left:auto"></i>
+                grid.innerHTML = fetchedPosts.map((post, idx) => `
+                    <div onclick="selectHlxPost(${idx})" style="display:flex;align-items:center;gap:14px;padding:12px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:14px;cursor:pointer;transition:all 0.25s ease" onmouseover="this.style.borderColor='var(--cherry-light)';this.style.background='rgba(255,43,82,0.12)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.12)';this.style.background='rgba(255,255,255,0.05)'">
+                        ${post.thumb ? `<img src="${post.thumb}" referrerpolicy="no-referrer" style="width:64px;height:46px;object-fit:cover;border-radius:10px;flex-shrink:0;border:1px solid rgba(255,255,255,0.1)" alt="" onerror="this.outerHTML='<div style=\\'width:64px;height:46px;border-radius:10px;background:rgba(255,43,82,0.15);display:flex;align-items:center;justify-content:center;color:var(--cherry-light);flex-shrink:0\\'><i class=\\'fas fa-clapperboard\\'></i></div>'">` : `<div style="width:64px;height:46px;border-radius:10px;background:rgba(255,43,82,0.15);display:flex;align-items:center;justify-content:center;color:var(--cherry-light);flex-shrink:0"><i class="fas fa-clapperboard"></i></div>`}
+                        <div style="flex:1;min-width:0">
+                            <strong style="color:#fff;font-size:0.86rem;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${post.title}</strong>
+                            <span style="color:var(--muted);font-size:0.75rem;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">${post.desc || 'Click to apply title, thumbnail & desc to upload form'}</span>
                         </div>
-                    `).join('');
-                } else {
-                    grid.innerHTML = `<div style="text-align:center;color:var(--muted);font-size:0.78rem;padding:12px">Profile fetched! Click "Use Profile" to apply creator info.</div>`;
-                }
+                        <button type="button" class="btn btn-primary" style="padding:6px 14px;font-size:0.72rem;flex-shrink:0;border-radius:999px"><i class="fas fa-check"></i> Select</button>
+                    </div>
+                `).join('');
 
                 st.style.color = '#00e676';
-                st.innerHTML = '<i class="fas fa-check-circle"></i> Profile & Posts Ready!';
+                st.innerHTML = '<i class="fas fa-check-circle"></i> Content Cards Ready! Click any card below to select.';
             } catch(e) {
                 st.style.color = 'var(--cherry-light)';
                 st.textContent = 'Network error during lookup';
