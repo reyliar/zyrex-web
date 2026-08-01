@@ -401,15 +401,30 @@
         html += '</div>';
 
         // Creators Section
-        var uploaderName = p.uploader_name || p.author_name || '';
+        function buildDiscordAvatarUrl(userId, avatarHash) {
+            if (!avatarHash) return '';
+            if (avatarHash.startsWith('http://') || avatarHash.startsWith('https://')) return avatarHash;
+            if (userId && typeof avatarProxyUrl === 'function') {
+                return avatarProxyUrl(userId, avatarHash, 128);
+            }
+            if (userId) {
+                const ext = avatarHash.startsWith('a_') ? 'gif' : 'png';
+                return 'https://cdn.discordapp.com/avatars/' + userId + '/' + avatarHash + '.' + ext;
+            }
+            return '';
+        }
+
+        var uploaderName = p.uploader_name || p.author_name || p.creator_nickname || '';
+        var uploaderId = p.uploader_id || p.author_id || '';
+        var uploaderAvatar = p.uploader_avatar || p.author_avatar || '';
         var hasUploader = !!uploaderName;
         var hasCreator = !!(p.creator_nickname || p.creator_social_url);
 
         if (hasUploader || hasCreator) {
             html += '<div class="creators-flex">';
             if (hasUploader) {
-                var uploaderAvatarSrc = p.uploader_avatar || (p.uploader_id ? (typeof avatarProxyUrl === 'function' ? avatarProxyUrl(p.uploader_id, p.uploader_avatar, 64) : '') : '');
-                html += '<div class="creator-card"><div class="creator-avatar">' + (uploaderAvatarSrc ? '<img src="' + esc(uploaderAvatarSrc) + '" onerror="this.outerHTML=\'<i class=\\\'fab fa-discord\\\'></i>\'">' : '<i class="fab fa-discord" style="color:#5865F2"></i>') + '</div><div class="creator-info"><strong>' + esc(uploaderName) + '</strong><span>Uploaded by (Discord)</span></div></div>';
+                var uploaderAvatarSrc = buildDiscordAvatarUrl(uploaderId, uploaderAvatar);
+                html += '<div class="creator-card"><div class="creator-avatar">' + (uploaderAvatarSrc ? '<img src="' + esc(uploaderAvatarSrc) + '" onerror="this.outerHTML=\'<i class=\\\'fab fa-discord\\\'></i>\'">' : '<i class="fab fa-discord" style="color:#5865F2;font-size:1.5rem"></i>') + '</div><div class="creator-info"><strong>' + esc(uploaderName) + '</strong><span>Uploaded by (Discord)</span></div></div>';
             }
             if (hasCreator) {
                 html += '<div class="creator-card"><div class="creator-avatar">' + (p.creator_avatar ? '<img src="' + esc(p.creator_avatar) + '" onerror="this.outerHTML=\'<i class=\\\'fas fa-user\\\'></i>\'">' : '<i class="fas fa-user"></i>') + '</div><div class="creator-info"><strong>' + esc(p.creator_nickname || 'Creator') + '</strong>' + (p.creator_social_url ? '<a href="' + esc(p.creator_social_url) + '" target="_blank">View Social Profile</a>' : '<span>Original Creator</span>') + '</div></div>';

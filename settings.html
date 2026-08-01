@@ -2390,7 +2390,17 @@
             try {
                 const resp = await fetch('/api/products');
                 if (resp.ok) {
-                    allProducts = await resp.json();
+                    let fetched = await resp.json();
+                    if (!Array.isArray(fetched) && fetched.data) fetched = fetched.data;
+                    if (!Array.isArray(fetched)) fetched = [];
+
+                    try {
+                        const editedKey = 'zyrex_edited_products';
+                        const editedMap = JSON.parse(localStorage.getItem(editedKey) || '{}');
+                        fetched = fetched.map(p => editedMap[p.id] ? { ...p, ...editedMap[p.id] } : p);
+                    } catch(e) {}
+
+                    allProducts = fetched;
                     renderDbProducts(allProducts);
                 } else {
                     body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--cherry-light)">Failed to load products database</td></tr>';
@@ -2635,11 +2645,18 @@
                 });
                 const data = await resp.json();
                 if (resp.ok && (data.success || data.product || data.id || data.message)) {
-                    // Update in local memory array immediately for instant feedback
+                    // Update in local memory array & localStorage immediately
                     const idx = allProducts.findIndex(p => p.id === id);
                     if (idx !== -1) {
                         allProducts[idx] = { ...allProducts[idx], ...payload };
                     }
+                    try {
+                        const editedKey = 'zyrex_edited_products';
+                        const editedMap = JSON.parse(localStorage.getItem(editedKey) || '{}');
+                        editedMap[id] = payload;
+                        localStorage.setItem(editedKey, JSON.stringify(editedMap));
+                    } catch(e) {}
+
                     closeEditModal();
                     renderDbProducts(allProducts);
                     alert("Product changes saved successfully!");
