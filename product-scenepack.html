@@ -298,10 +298,22 @@
         if (!id) return showErr('Scenepack ID missing');
         try {
             var r = await fetch('/api/products?id=' + encodeURIComponent(id));
-            if (!r.ok) { showErr('Scenepack not found'); return; }
-            var data = await r.json();
+            var data = null;
+            if (r.ok) data = await r.json();
+
+            if (Array.isArray(data)) {
+                data = data.find(x => String(x.id) === String(id)) || data[0];
+            }
+            if (data && data.data && !data.id) data = data.data;
+
+            if (!data || !data.id) {
+                try {
+                    var editedMap = JSON.parse(localStorage.getItem('zyrex_edited_products') || '{}');
+                    if (editedMap[id]) data = editedMap[id];
+                } catch(e) {}
+            }
+
             if (!data || !data.id) { showErr('Scenepack not found'); return; }
-            if (data.type && data.type !== 'scenepack') { showErr('This product is not a scenepack. <a href="/'+data.type+'" style="color:var(--cherry-light)">View on '+data.type+' page</a>'); return; }
             render(data);
         } catch(e) { showErr('Failed to load scenepack'); }
     })();

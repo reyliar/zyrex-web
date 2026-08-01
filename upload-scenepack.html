@@ -843,8 +843,15 @@
 
                 if (resp.ok && (data.success || data.id || data.product_id || data.product)) {
                     var finalId = data.id || data.product_id || (data.product && data.product.id) || generatedId;
+                    payload.id = finalId;
+                    try {
+                        var editedMap = JSON.parse(localStorage.getItem('zyrex_edited_products') || '{}');
+                        editedMap[finalId] = payload;
+                        localStorage.setItem('zyrex_edited_products', JSON.stringify(editedMap));
+                    } catch(e) {}
+
                     alertMsg('Published! Redirecting to scenepack page...', false);
-                    setTimeout(function(){ window.location.href = '/product-scenepack?id=' + encodeURIComponent(finalId); }, 1200);
+                    setTimeout(function(){ window.location.href = '/product-scenepack?id=' + encodeURIComponent(finalId); }, 1000);
                 } else {
                     throw new Error(data.error || data.message || 'Submit failed');
                 }
