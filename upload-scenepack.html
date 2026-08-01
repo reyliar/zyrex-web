@@ -687,32 +687,51 @@
                     if (pFb) pFb.style.display = 'flex';
                 }
 
-                // Build extracted posts array (always guarantee at least 1-2 selectable cards)
+                // Gather extracted items/posts array
                 fetchedPosts = [];
 
-                var mainTitle = rScrape.title || rScrape.name || (creatorDisplay + ' Scenepack');
-                var mainThumb = rScrape.cdn_thumbnail || rScrape.image || (rScrape.thumbnails && rScrape.thumbnails[0]) || avatarUrl || '';
-                var mainDesc = rScrape.description || rScrape.desc || ('Official scenepack media from ' + creatorDisplay);
+                // 1. Add real posts from profile if returned (e.g. Instagram posts array)
+                if (rProfile.posts && Array.isArray(rProfile.posts) && rProfile.posts.length > 0) {
+                    rProfile.posts.forEach(p => {
+                        if (p && (p.title || p.desc || p.thumb)) {
+                            fetchedPosts.push({
+                                title: p.title || (creatorDisplay + ' Post'),
+                                desc: p.desc || '',
+                                thumb: p.thumb || avatarUrl,
+                                url: p.url || lookupUrl,
+                                badge: 'Instagram Post'
+                            });
+                        }
+                    });
+                }
 
-                fetchedPosts.push({
-                    title: mainTitle,
-                    desc: mainDesc,
-                    thumb: mainThumb,
-                    url: lookupUrl,
-                    badge: 'Scraped Content'
-                });
-
+                // 2. Add scraped items if returned
                 if (rScrape.items && Array.isArray(rScrape.items)) {
                     rScrape.items.forEach(it => {
                         if (it && (it.title || it.name)) {
                             fetchedPosts.push({
                                 title: it.title || it.name,
                                 desc: it.description || it.desc || '',
-                                thumb: it.cdn_thumbnail || it.image || (it.thumbnails && it.thumbnails[0]) || mainThumb,
+                                thumb: it.cdn_thumbnail || it.image || (it.thumbnails && it.thumbnails[0]) || avatarUrl,
                                 url: it.url || lookupUrl,
                                 badge: 'Recent Post'
                             });
                         }
+                    });
+                }
+
+                // 3. Fallback main post if no timeline posts found
+                if (fetchedPosts.length === 0) {
+                    var mainTitle = rScrape.title || rScrape.name || (creatorDisplay + ' Scenepack');
+                    var mainThumb = rScrape.cdn_thumbnail || rScrape.image || (rScrape.thumbnails && rScrape.thumbnails[0]) || avatarUrl || '';
+                    var mainDesc = rScrape.description || rScrape.desc || ('Official scenepack media from ' + creatorDisplay);
+
+                    fetchedPosts.push({
+                        title: mainTitle,
+                        desc: mainDesc,
+                        thumb: mainThumb,
+                        url: lookupUrl,
+                        badge: 'Scraped Content'
                     });
                 }
 

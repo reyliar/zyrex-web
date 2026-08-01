@@ -1480,7 +1480,7 @@ async function resolveSocialProfile(targetUrl) {
 
     // ── Instagram: web_profile_info + facebookexternalhit OG fallback ────────────
     if (platform === "instagram") {
-      let igNickname = username, igAvatar = "", igBioLink = null;
+      let igNickname = username, igAvatar = "", igBioLink = null, igPosts = [];
 
       // Method A: Instagram web_profile_info (works from Cloudflare edge nodes)
       try {
@@ -1505,6 +1505,25 @@ async function resolveSocialProfile(targetUrl) {
           else if (user.profile_pic_url) igAvatar = user.profile_pic_url;
           if (user.external_url) igBioLink = user.external_url;
           else if (user.bio_links?.[0]?.url) igBioLink = user.bio_links[0].url;
+
+          // Parse real Instagram posts!
+          const edges = user.edge_owner_to_timeline_media?.edges || [];
+          for (const edge of edges) {
+            const node = edge?.node || {};
+            const caption = node.edge_media_to_caption?.edges?.[0]?.node?.text || "";
+            const thumb = node.display_url || node.thumbnail_src || "";
+            const shortcode = node.shortcode || "";
+            if (thumb || caption) {
+              const lines = caption.split('\n').map(l => l.trim()).filter(Boolean);
+              const title = lines[0] || `${igNickname} Post`;
+              igPosts.push({
+                title: title.slice(0, 120),
+                desc: caption,
+                thumb: thumb,
+                url: shortcode ? `https://www.instagram.com/p/${shortcode}/` : `https://www.instagram.com/${username}/`
+              });
+            }
+          }
         }
       } catch(e) {}
 
@@ -1547,7 +1566,7 @@ async function resolveSocialProfile(targetUrl) {
         } catch(e) {}
       }
 
-      return { success: true, platform, nickname: igNickname, avatar: igAvatar, username, bioLink: igBioLink };
+      return { success: true, platform, nickname: igNickname, avatar: igAvatar, username, bioLink: igBioLink, posts: igPosts };
     }
 
     // ── YouTube: oEmbed API (free, no key required) ──────────────────────────────
