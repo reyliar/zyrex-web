@@ -587,46 +587,54 @@
         
         async function hlxLookup(){
             var user=document.getElementById('hlxUser').value.trim();
-            if(!user)return;
-            var st=document.getElementById('hlxStatus');st.style.display='block';st.textContent='Fetching profile & post details...';st.className='';
-            var cleanUser = user.replace(/^@/, '');
-            var platforms={
-                youtube:'https://www.youtube.com/@'+cleanUser,
-                instagram:'https://www.instagram.com/'+cleanUser,
-                x:'https://x.com/'+cleanUser
+            if(!user) return;
+            var st=document.getElementById('hlxStatus');
+            st.style.display='block';
+            st.textContent='Fetching profile & post details...';
+            st.className='';
+            
+            var cleanUser = user.replace(/^@/, '').split('?')[0].replace(/\/$/, '').split('/').pop();
+            var platforms = {
+                youtube: 'https://www.youtube.com/@' + cleanUser,
+                instagram: 'https://www.instagram.com/' + cleanUser,
+                x: 'https://x.com/' + cleanUser,
+                tiktok: 'https://www.tiktok.com/@' + cleanUser
             };
             var lookupUrl = (user.startsWith('http://') || user.startsWith('https://')) ? user : (platforms[hlxPlatform] || ('https://www.youtube.com/@' + cleanUser));
             
             try {
-                // Fetch profile & post info
-                var [rProfile, rScrape] = await Promise.all([
+                // Fetch profile metadata and page scrape in parallel
+                var [rProfile, rScrape, rScan] = await Promise.all([
                     fetch('/api/hlx/resolve?url='+encodeURIComponent(lookupUrl), {credentials:'include'}).then(res => res.json()).catch(() => ({})),
-                    fetch('/api/scrape?url='+encodeURIComponent(lookupUrl), {credentials:'include'}).then(res => res.json()).catch(() => ({}))
+                    fetch('/api/scrape?url='+encodeURIComponent(lookupUrl), {credentials:'include'}).then(res => res.json()).catch(() => ({})),
+                    fetch('/api/scan-creator-links?url='+encodeURIComponent(lookupUrl), {credentials:'include'}).then(res => res.json()).catch(() => ({}))
                 ]);
 
-                var creatorDisplay = rProfile.nickname || rScrape.author_name || rScrape.creator_nickname || cleanUser;
+                var creatorDisplay = rProfile.nickname || rScrape.author_name || rScrape.creator_nickname || (rScan && rScan.nickname) || cleanUser;
+                if (!creatorDisplay || ['instagram','tiktok','youtube','x','twitter'].includes(creatorDisplay.toLowerCase())) {
+                    creatorDisplay = cleanUser;
+                }
                 var avatarUrl = rProfile.avatar || rScrape.avatar || '';
                 var postTitle = rScrape.title || rScrape.name || '';
                 var postDesc = rScrape.description || rScrape.desc || '';
-                var postThumb = rScrape.cdn_thumbnail || rScrape.image || (rScrape.thumbnails && rScrape.thumbnails[0]) || '';
+                var postThumb = rScrape.cdn_thumbnail || rScrape.image || (rScrape.thumbnails && rScrape.thumbnails[0]) || rProfile.thumbnail || '';
 
-                if (creatorDisplay || postTitle) {
-                    document.getElementById('socialUrl').value = lookupUrl;
-                    if (creatorDisplay) document.getElementById('creatorName').value = creatorDisplay;
-                    if (postTitle && !document.getElementById('spName').value.trim()) document.getElementById('spName').value = postTitle;
-                    if (postDesc && !document.getElementById('spDesc').value.trim()) document.getElementById('spDesc').value = postDesc;
-                    if (postThumb) {
-                        document.getElementById('spThumb').value = postThumb;
-                        previewThumb(postThumb);
-                    }
-
-                    st.style.color = '#00e676';
-                    st.innerHTML = '<i class="fas fa-check-circle"></i> Extracted Profile & Content: ' + (creatorDisplay || postTitle);
-                    setTimeout(toggleHlx, 1200);
-                } else {
-                    st.style.color = 'var(--cherry-light)';
-                    st.textContent = "Could not fetch content details from this link";
+                document.getElementById('socialUrl').value = lookupUrl;
+                if (creatorDisplay) document.getElementById('creatorName').value = creatorDisplay;
+                if (postTitle && (!document.getElementById('spName').value.trim() || document.getElementById('spName').value === 'Untitled Scenepack')) {
+                    document.getElementById('spName').value = postTitle;
                 }
+                if (postDesc && !document.getElementById('spDesc').value.trim()) {
+                    document.getElementById('spDesc').value = postDesc;
+                }
+                if (postThumb) {
+                    document.getElementById('spThumb').value = postThumb;
+                    previewThumb(postThumb);
+                }
+
+                st.style.color = '#00e676';
+                st.innerHTML = '<i class="fas fa-check-circle"></i> Profile & Content Extracted: ' + creatorDisplay;
+                setTimeout(toggleHlx, 1200);
             } catch(e) {
                 st.style.color = 'var(--cherry-light)';
                 st.textContent = 'Network error during lookup';
@@ -639,9 +647,10 @@
             try {
                 var r = await fetch('/api/hlx/resolve?url='+encodeURIComponent(url),{credentials:'include'});
                 var d = await r.json();
-                if (d.success && d.nickname) {
-                    document.getElementById('creatorName').value = d.nickname;
-                    alertMsg('Social resolved: ' + d.nickname, false);
+                if (d && (d.nickname || d.success)) {
+                    var nick = d.nickname || url.replace(/^@/,'').split('/').pop();
+                    document.getElementById('creatorName').value = nick;
+                    alertMsg('Social resolved: ' + nick, false);
                 }
             } catch(e) {}
         }
@@ -649,7 +658,7 @@
         function previewThumb(url) {
             var box = document.getElementById('thumbPreviewBox');
             var img = document.getElementById('thumbPreviewImg');
-            if (url && url.includes('.')) {
+            if (url && (url.includes('.') || url.startsWith('http'))) {
                 img.src = url;
                 box.classList.add('show');
             } else {
@@ -661,24 +670,28 @@
             var btn = document.getElementById('btnSubmit');
             var name = document.getElementById('spName').value.trim();
             var link = document.getElementById('spLink').value.trim();
-            if (!name) return alertMsg('Name is required', true);
+            if (!name) return alertMsg('Scenepack Name is required', true);
             if (!link) return alertMsg('Download link is required', true);
             
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting pack...';
             
+            var generatedId = 'scenepack-' + Date.now().toString(36);
+
             try {
                 var payload = {
+                    id: generatedId,
                     type: 'scenepack',
                     name: name,
                     category: 'scenepack',
                     description: document.getElementById('spDesc').value.trim(),
                     source_url: link,
+                    product_url: link,
+                    file_url: link,
                     thumbnail: document.getElementById('spThumb').value.trim(),
                     creator_nickname: document.getElementById('creatorName').value.trim(),
                     creator_social_url: document.getElementById('socialUrl').value.trim(),
-                    file_path: '',
-                    file_url: ''
+                    file_path: ''
                 };
                 
                 var resp = await fetch('/api/products/submit', {
@@ -688,14 +701,16 @@
                     credentials: 'include'
                 });
                 var data = await resp.json();
-                if (resp.ok && data.success) {
+
+                if (resp.ok && (data.success || data.id || data.product_id || data.product)) {
+                    var finalId = data.id || data.product_id || (data.product && data.product.id) || generatedId;
                     alertMsg('Published! Redirecting to scenepack page...', false);
-                    setTimeout(function(){ window.location.href = '/product-scenepack?id='+data.id; }, 1500);
+                    setTimeout(function(){ window.location.href = '/product-scenepack?id=' + encodeURIComponent(finalId); }, 1200);
                 } else {
-                    throw new Error(data.error || 'Submit failed');
+                    throw new Error(data.error || data.message || 'Submit failed');
                 }
             } catch(e) {
-                alertMsg(e.message, true);
+                alertMsg(e.message || 'Submission error', true);
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-upload"></i> Publish Scenepack';
             }
