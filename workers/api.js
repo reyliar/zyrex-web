@@ -1993,10 +1993,44 @@ export default {
       return json(res);
     }
 
+// Download & store image in R2 to serve via thumbnail.zyrexediting.xyz
+async function storeAndProxyImage(env, imageUrl) {
+  if (!imageUrl || typeof imageUrl !== 'string') return '';
+  if (imageUrl.includes("thumbnail.zyrexediting.xyz")) return imageUrl;
+  if (!env || !env.STORAGE) return imageUrl;
+
+  try {
+    const hash = await hashImageUrl(imageUrl);
+    const ext = (imageUrl.split('.').pop()?.split('?')[0] || 'jpg').toLowerCase().slice(0, 4);
+    const cleanExt = ['jpg', 'jpeg', 'png', 'webp', 'gif'].includes(ext) ? ext : 'jpg';
+    const filename = `${hash}.${cleanExt}`;
+    const cdnUrl = `https://thumbnail.zyrexediting.xyz/${filename}`;
+
+    const existing = await env.STORAGE.get(`thumbnails/${filename}`);
+    if (existing) return cdnUrl;
+
+    const headers = {
+      "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+      "Accept": "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8"
+    };
+
+    const resp = await fetch(imageUrl, { headers });
+    if (resp.ok) {
+      const buffer = await resp.arrayBuffer();
+      await env.STORAGE.put(`thumbnails/${filename}`, new Uint8Array(buffer), {
+        httpMetadata: { contentType: resp.headers.get("Content-Type") || "image/jpeg" }
+      });
+      return cdnUrl;
+    }
+  } catch(e) {
+    console.error("storeAndProxyImage failed:", e.message);
+  }
+  return imageUrl;
+}
+
     if ((path === "/api/hlx/resolve" || path === "/api/hlx/resolve/") && request.method === "GET") {
       const targetSocialUrl = url.searchParams.get("url") || "";
 
-      // Helper: is this a real nickname or just boilerplate?
       const isBoilerplate = (nickname, username) => {
         if (!nickname) return true;
         const low = nickname.toLowerCase().trim();
@@ -2006,8 +2040,6 @@ export default {
         return false;
       };
 
-      // For TikTok: bot (via HLX) works well → use it
-      // For others: skip bot and go straight to resolveSocialProfile
       const isTikTok = targetSocialUrl.includes("tiktok.com") || (targetSocialUrl.startsWith("@") && !targetSocialUrl.includes("."));
       if (isTikTok) {
         try {
@@ -2022,6 +2054,11 @@ export default {
       }
 
       const fallbackData = await resolveSocialProfile(targetSocialUrl);
+      if (fallbackData && fallbackData.avatar && !isTikTok) {
+        const cdnAvatar = await storeAndProxyImage(env, fallbackData.avatar);
+        fallbackData.avatar = cdnAvatar;
+        fallbackData.cdn_avatar = cdnAvatar;
+      }
       return json(fallbackData);
     }
 
