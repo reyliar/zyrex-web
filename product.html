@@ -858,14 +858,14 @@
             }
 
             // Creator details (original preset author) — only show if creator info exists
-            const hasCreator = p.creator_nickname || p.creator_social_url;
-            const creatorNickname = p.creator_nickname || p.author_name || '';
+            const hasCreator = p.creator_nickname || p.creator_social_url || p.creator_avatar;
+            const creatorNickname = p.creator_nickname || p.author_name || 'Creator';
             const creatorAvatarHtml = p.creator_avatar
-                ? `<img src="${p.creator_avatar}">`
+                ? `<img src="${p.creator_avatar}" onerror="this.outerHTML='<i class=\\'fas fa-user\\'></i>'">`
                 : `<i class="fas fa-user"></i>`;
             const creatorSocialHtml = p.creator_social_url
                 ? `<a href="${p.creator_social_url}" target="_blank"><i class="fas fa-external-link-alt" style="font-size:0.6rem"></i> View Profile</a>`
-                : '';
+                : '<span>Original Creator</span>';
             const creatorSectionHtml = hasCreator ? `
                 <div style="margin-top:10px">
                     <div style="font-size:0.75rem;font-weight:700;color:var(--gray-dark);text-transform:uppercase;letter-spacing:1px">Creator</div>
@@ -881,9 +881,12 @@
 
             // Uploader details (Discord user who leaked)
             const uploaderName = p.uploader_name || '';
-            const uploaderAvatarUrl = p.uploader_avatar || '';
+            const uploaderAvatarRaw = p.uploader_avatar || '';
+            const uploaderAvatarUrl = uploaderAvatarRaw
+                ? (uploaderAvatarRaw.startsWith('http') ? uploaderAvatarRaw : (p.uploader_id && typeof avatarProxyUrl === 'function' ? avatarProxyUrl(p.uploader_id, uploaderAvatarRaw, 64) : `https://cdn.discordapp.com/avatars/${p.uploader_id}/${uploaderAvatarRaw}.png`))
+                : '';
             const uploaderAvatarHtml = uploaderAvatarUrl
-                ? `<img src="${uploaderAvatarUrl}">`
+                ? `<img src="${uploaderAvatarUrl}" onerror="this.outerHTML='<i class=\\'fab fa-discord\\' style=\\'color:#5865F2\\'></i>'">`
                 : `<i class="fab fa-discord" style="color:#5865F2;font-size:1.1rem"></i>`;
 
             const uploaderSectionHtml = uploaderName ? `

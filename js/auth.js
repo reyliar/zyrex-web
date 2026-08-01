@@ -20,7 +20,35 @@
                     init.headers['X-API-Key'] = window.ZYREX_API_KEY;
                 }
             }
-            return origFetch.call(this, input, init);
+            
+            var p = origFetch.call(this, input, init);
+            if (urlStr && urlStr.indexOf('/api/products') !== -1 && (!init.method || init.method.toUpperCase() === 'GET')) {
+                return p.then(function(response) {
+                    if (!response.ok) return response;
+                    var clone = response.clone();
+                    return clone.json().then(function(jsonObj) {
+                        try {
+                            var editedKey = 'zyrex_edited_products';
+                            var editedMap = JSON.parse(localStorage.getItem(editedKey) || '{}');
+                            if (Object.keys(editedMap).length > 0) {
+                                if (Array.isArray(jsonObj)) {
+                                    jsonObj = jsonObj.map(function(item) {
+                                        return (item && item.id && editedMap[item.id]) ? Object.assign({}, item, editedMap[item.id]) : item;
+                                    });
+                                } else if (jsonObj && jsonObj.id && editedMap[jsonObj.id]) {
+                                    jsonObj = Object.assign({}, jsonObj, editedMap[jsonObj.id]);
+                                }
+                            }
+                        } catch(e) {}
+                        return new Response(JSON.stringify(jsonObj), {
+                            status: response.status,
+                            statusText: response.statusText,
+                            headers: response.headers
+                        });
+                    }).catch(function() { return response; });
+                });
+            }
+            return p;
         };
     }
 })();

@@ -20,11 +20,9 @@
             --cherry: #ff2b52;
             --cherry-rgb: 255, 43, 82;
             --cherry-light: #ff6b85;
-            --cherry-dark: #c8002a;
             --glass-bg: rgba(14, 10, 18, 0.82);
-            --glass-border: rgba(255, 255, 255, 0.12);
+            --glass-border: rgba(255, 255, 255, 0.11);
             --text-muted: rgba(255, 255, 255, 0.5);
-            --ok: #34d399;
         }
 
         body {
@@ -54,7 +52,7 @@
         }
 
         .wrap {
-            max-width: 920px;
+            max-width: 900px;
             margin: 0 auto;
             padding: 0 24px;
         }
@@ -81,7 +79,7 @@
             transform: translateX(-3px);
         }
 
-        /* Glass Hero Card */
+        /* Minimalist Glass Card */
         .glass-card {
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
@@ -94,52 +92,45 @@
             position: relative;
             overflow: hidden;
         }
-        .glass-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
-        }
 
-        .hero-layout {
+        .hero-flex {
             display: flex;
             align-items: center;
             gap: 32px;
         }
         @media (max-width: 768px) {
-            .hero-layout { flex-direction: column; text-align: center; }
+            .hero-flex { flex-direction: column; text-align: center; }
         }
 
-        .preview-box {
-            width: 200px;
-            height: 140px;
-            border-radius: 22px;
+        .sp-preview {
+            width: 220px;
+            height: 145px;
+            border-radius: 20px;
             overflow: hidden;
             background: linear-gradient(135deg, rgba(255, 43, 82, 0.2), rgba(10, 2, 8, 0.8));
             border: 1px solid rgba(255, 43, 82, 0.25);
-            box-shadow: 0 12px 35px rgba(255, 43, 82, 0.25);
+            box-shadow: 0 12px 35px rgba(255, 43, 82, 0.22);
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-            position: relative;
         }
-        .preview-box img {
+        .sp-preview img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-        .preview-box i.ph {
+        .sp-preview i.ph {
             font-size: 3rem;
             color: var(--cherry-light);
             opacity: 0.5;
         }
 
-        .sp-details {
+        .sp-meta {
             flex: 1;
             min-width: 0;
         }
+
         .type-badge {
             display: inline-flex;
             align-items: center;
@@ -156,21 +147,21 @@
             margin-bottom: 12px;
         }
 
-        .sp-details h1 {
+        .sp-meta h1 {
             font-family: 'Outfit', sans-serif;
-            font-size: 1.8rem;
+            font-size: 1.85rem;
             font-weight: 900;
             color: #fff;
             margin-bottom: 8px;
-            line-height: 1.25;
+            line-height: 1.2;
         }
-        .sp-details p.desc {
+        .sp-meta p.desc {
             font-size: 0.86rem;
             color: var(--text-muted);
             line-height: 1.6;
         }
 
-        /* Single Download CTA Box */
+        /* Minimal Single CTA */
         .cta-box {
             display: flex;
             align-items: center;
@@ -206,37 +197,7 @@
             box-shadow: 0 14px 35px rgba(255, 43, 82, 0.55);
         }
 
-        /* Meta Grid */
-        .meta-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-top: 24px;
-        }
-        .meta-item {
-            padding: 18px 20px;
-            border-radius: 18px;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.06);
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-        .meta-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-            background: rgba(255,43,82,0.12);
-            color: var(--cherry-light);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-        }
-        .meta-text strong { display: block; font-size: 0.88rem; color: #fff; font-family: 'Outfit', sans-serif; }
-        .meta-text span { font-size: 0.72rem; color: var(--text-muted); }
-
-        /* Uploader & Creator */
+        /* Uploader & Creator (Audio Page Style) */
         .creators-flex {
             display: flex;
             gap: 18px;
@@ -340,7 +301,7 @@
             if (!r.ok) { showErr('Scenepack not found'); return; }
             var data = await r.json();
             if (!data || !data.id) { showErr('Scenepack not found'); return; }
-            if (data.type !== 'scenepack') { showErr('This product is not a scenepack. <a href="/'+data.type+'" style="color:var(--cherry-light)">View on '+data.type+' page</a>'); return; }
+            if (data.type && data.type !== 'scenepack') { showErr('This product is not a scenepack. <a href="/'+data.type+'" style="color:var(--cherry-light)">View on '+data.type+' page</a>'); return; }
             render(data);
         } catch(e) { showErr('Failed to load scenepack'); }
     })();
@@ -358,35 +319,33 @@
         document.getElementById('root').style.display = 'block';
         document.title = (p.name || 'Scenepack') + ' \u2014 Zyrex Scenepacks';
 
-        var downloadUrl = p.source_url || p.file_url || '';
+        var downloadUrl = p.source_url || p.file_url || p.url || '';
         var hostname = '';
         try { hostname = new URL(downloadUrl).hostname.replace('www.', ''); } catch(e) {}
 
         var html = '';
 
-        // Glass Hero Section
-        html += '<div class="glass-card"><div class="hero-layout">';
-        html += '<div class="preview-box">';
+        // Glass Minimalist Card
+        html += '<div class="glass-card"><div class="hero-flex">';
+        html += '<div class="sp-preview">';
         if (p.thumbnail) {
-            html += '<img src="' + esc(p.thumbnail) + '" alt="">';
+            html += '<img src="' + esc(p.thumbnail) + '" alt="" onerror="this.outerHTML=\'<i class=\\\'fas fa-film ph\\\'></i>\'">';
         } else {
             html += '<i class="fas fa-film ph"></i>';
         }
         html += '</div>';
 
-        html += '<div class="sp-details">';
+        html += '<div class="sp-meta">';
         html += '<span class="type-badge"><i class="fas fa-clapperboard"></i> Scenepack</span>';
         html += '<h1>' + esc(p.name || 'Untitled Scenepack') + '</h1>';
-        if (p.description || p.desc) {
-            html += '<p class="desc">' + esc(p.description || p.desc) + '</p>';
-        }
+        html += '<p class="desc">' + esc(p.description || p.desc || 'No description provided for this scenepack.') + '</p>';
         html += '</div></div></div>';
 
-        // CTA Section (Single Download Link)
+        // Single Minimal CTA & Creators
         html += '<div class="glass-card">';
         html += '<div class="cta-box"><div>';
-        html += '<h3 style="font-family:Outfit,sans-serif;font-size:1.1rem;color:#fff;margin-bottom:4px">Ready to Download</h3>';
-        html += '<p style="font-size:0.8rem;color:var(--text-muted);margin:0">Source: ' + esc(hostname || 'External Link') + '</p></div>';
+        html += '<h3 style="font-family:Outfit,sans-serif;font-size:1.1rem;color:#fff;margin-bottom:4px">Download Scenepack</h3>';
+        html += '<p style="font-size:0.8rem;color:var(--text-muted);margin:0">Host: ' + esc(hostname || 'External Direct Link') + '</p></div>';
         if (downloadUrl) {
             html += '<a href="' + esc(downloadUrl) + '" target="_blank" rel="noopener" class="btn-download"><i class="fas fa-download"></i> Download Scenepack</a>';
         } else {
@@ -394,41 +353,47 @@
         }
         html += '</div>';
 
-        // Meta Grid
-        html += '<div class="meta-grid">';
-        html += '<div class="meta-item"><div class="meta-icon"><i class="fas fa-calendar-alt"></i></div><div class="meta-text"><strong>' + (p.created_at ? new Date(p.created_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : 'Recently') + '</strong><span>Published</span></div></div>';
-        html += '<div class="meta-item"><div class="meta-icon"><i class="fas fa-cloud"></i></div><div class="meta-text"><strong>' + esc(hostname || 'External') + '</strong><span>Source Host</span></div></div>';
-        html += '</div>';
-
-        // Creators Section
-        function buildDiscordAvatarUrl(userId, avatarHash) {
-            if (!avatarHash) return '';
-            if (avatarHash.startsWith('http://') || avatarHash.startsWith('https://')) return avatarHash;
-            if (userId && typeof avatarProxyUrl === 'function') {
-                return avatarProxyUrl(userId, avatarHash, 128);
-            }
-            if (userId) {
-                const ext = avatarHash.startsWith('a_') ? 'gif' : 'png';
-                return 'https://cdn.discordapp.com/avatars/' + userId + '/' + avatarHash + '.' + ext;
-            }
-            return '';
-        }
-
-        var uploaderName = p.uploader_name || p.author_name || p.creator_nickname || '';
-        var uploaderId = p.uploader_id || p.author_id || '';
-        var uploaderAvatar = p.uploader_avatar || p.author_avatar || '';
+        // Creators & Uploaders (Same exact logic as Audio Page)
+        var uploaderName = p.uploader_name || p.author_name || '';
+        var creatorName = p.creator_nickname || '';
         var hasUploader = !!uploaderName;
-        var hasCreator = !!(p.creator_nickname || p.creator_social_url);
+        var hasCreator = !!(creatorName || p.creator_social_url || p.creator_avatar);
 
         if (hasUploader || hasCreator) {
             html += '<div class="creators-flex">';
+            
+            // Discord Uploader Card
             if (hasUploader) {
-                var uploaderAvatarSrc = buildDiscordAvatarUrl(uploaderId, uploaderAvatar);
-                html += '<div class="creator-card"><div class="creator-avatar">' + (uploaderAvatarSrc ? '<img src="' + esc(uploaderAvatarSrc) + '" onerror="this.outerHTML=\'<i class=\\\'fab fa-discord\\\'></i>\'">' : '<i class="fab fa-discord" style="color:#5865F2;font-size:1.5rem"></i>') + '</div><div class="creator-info"><strong>' + esc(uploaderName) + '</strong><span>Uploaded by (Discord)</span></div></div>';
+                var uploaderAvatar = p.uploader_avatar || '';
+                var uploaderId = p.uploader_id || '';
+                var uploaderImg = uploaderAvatar ? (uploaderAvatar.startsWith('http') ? uploaderAvatar : (uploaderId && typeof avatarProxyUrl === 'function' ? avatarProxyUrl(uploaderId, uploaderAvatar, 64) : `https://cdn.discordapp.com/avatars/${uploaderId}/${uploaderAvatar}.png`)) : '';
+
+                html += '<div class="creator-card"><div class="creator-avatar">';
+                if (uploaderImg) {
+                    html += '<img src="' + esc(uploaderImg) + '" onerror="this.outerHTML=\'<i class=\\\'fab fa-discord\\\'></i>\'">';
+                } else {
+                    html += '<i class="fab fa-discord" style="color:#5865F2"></i>';
+                }
+                html += '</div><div class="creator-info"><strong>' + esc(uploaderName) + '</strong><span>Uploaded by (Discord)</span></div></div>';
             }
+
+            // Original Creator Card
             if (hasCreator) {
-                html += '<div class="creator-card"><div class="creator-avatar">' + (p.creator_avatar ? '<img src="' + esc(p.creator_avatar) + '" onerror="this.outerHTML=\'<i class=\\\'fas fa-user\\\'></i>\'">' : '<i class="fas fa-user"></i>') + '</div><div class="creator-info"><strong>' + esc(p.creator_nickname || 'Creator') + '</strong>' + (p.creator_social_url ? '<a href="' + esc(p.creator_social_url) + '" target="_blank">View Social Profile</a>' : '<span>Original Creator</span>') + '</div></div>';
+                html += '<div class="creator-card"><div class="creator-avatar">';
+                if (p.creator_avatar) {
+                    html += '<img src="' + esc(p.creator_avatar) + '" onerror="this.outerHTML=\'<i class=\\\'fas fa-user\\\'></i>\'">';
+                } else {
+                    html += '<i class="fas fa-user"></i>';
+                }
+                html += '</div><div class="creator-info"><strong>' + esc(creatorName || 'Original Creator') + '</strong>';
+                if (p.creator_social_url) {
+                    html += '<a href="' + esc(p.creator_social_url) + '" target="_blank">View Social Profile</a>';
+                } else {
+                    html += '<span>Original Creator</span>';
+                }
+                html += '</div></div>';
             }
+
             html += '</div>';
         }
 
