@@ -495,16 +495,16 @@
                 <button onclick="toggleHlx()" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.4rem">&times;</button>
             </div>
             <div style="display:flex;gap:10px;justify-content:center;margin-bottom:20px" id="hlxPlatforms">
-                <button class="btn-icon active" data-plat="tiktok" onclick="selHlxPlat(this,'tiktok')" style="width:40px;height:40px;border-radius:50%;background:rgba(230, 21, 54, 0.08);border:1px solid var(--border);color:var(--cherry-light);cursor:pointer;transition:var(--transition);display:inline-flex;align-items:center;justify-content:center;"><i class="fab fa-tiktok"></i></button>
+                <button class="btn-icon active" data-plat="youtube" onclick="selHlxPlat(this,'youtube')" style="width:40px;height:40px;border-radius:50%;background:rgba(230, 21, 54, 0.08);border:1px solid var(--border);color:var(--cherry-light);cursor:pointer;transition:var(--transition);display:inline-flex;align-items:center;justify-content:center;"><i class="fab fa-youtube"></i></button>
                 <button class="btn-icon" data-plat="instagram" onclick="selHlxPlat(this,'instagram')" style="width:40px;height:40px;border-radius:50%;background:rgba(230, 21, 54, 0.08);border:1px solid var(--border);color:var(--cherry-light);cursor:pointer;transition:var(--transition);display:inline-flex;align-items:center;justify-content:center;"><i class="fab fa-instagram"></i></button>
-                <button class="btn-icon" data-plat="youtube" onclick="selHlxPlat(this,'youtube')" style="width:40px;height:40px;border-radius:50%;background:rgba(230, 21, 54, 0.08);border:1px solid var(--border);color:var(--cherry-light);cursor:pointer;transition:var(--transition);display:inline-flex;align-items:center;justify-content:center;"><i class="fab fa-youtube"></i></button>
                 <button class="btn-icon" data-plat="x" onclick="selHlxPlat(this,'x')" style="width:40px;height:40px;border-radius:50%;background:rgba(230, 21, 54, 0.08);border:1px solid var(--border);color:var(--cherry-light);cursor:pointer;transition:var(--transition);display:inline-flex;align-items:center;justify-content:center;"><i class="fab fa-x-twitter"></i></button>
+                <button class="btn-icon" data-plat="tiktok" onclick="selHlxPlat(this,'tiktok')" style="width:40px;height:40px;border-radius:50%;background:rgba(230, 21, 54, 0.08);border:1px solid var(--border);color:var(--cherry-light);cursor:pointer;transition:var(--transition);display:inline-flex;align-items:center;justify-content:center;"><i class="fab fa-tiktok"></i></button>
             </div>
             <div style="display:flex;background:rgba(0,0,0,0.4);border:1px solid var(--border);border-radius:var(--radius-md);overflow:hidden;margin-bottom:18px">
                 <span style="padding:14px 0 14px 18px;color:var(--muted);font-size:0.88rem" id="hlxPrefix">@</span>
-                <input id="hlxUser" placeholder="username..." style="flex:1;padding:14px;background:transparent;border:none;color:#fff;font-family:inherit;font-size:0.88rem;outline:none" onkeydown="if(event.key==='Enter')hlxLookup()">
+                <input id="hlxUser" placeholder="URL or @username..." style="flex:1;padding:14px;background:transparent;border:none;color:#fff;font-family:inherit;font-size:0.88rem;outline:none" onkeydown="if(event.key==='Enter')hlxLookup()">
             </div>
-            <button class="btn btn-primary" style="width:100%;font-size:0.84rem" onclick="hlxLookup()"><i class="fas fa-search"></i> Fetch Profile Info</button>
+            <button class="btn btn-primary" style="width:100%;font-size:0.84rem" onclick="hlxLookup()"><i class="fas fa-search"></i> Fetch Profile & Content Info</button>
             <div id="hlxStatus" style="display:none;margin-top:14px;padding:10px;border-radius:8px;font-size:0.75rem;text-align:center"></div>
         </div>
     </div>
@@ -512,7 +512,7 @@
     <script src="js/auth.js?v=10"></script>
     <script>
         var currentUser = null;
-        var hlxPlatform = 'tiktok';
+        var hlxPlatform = 'youtube';
 
         function toggleSidebar() {
             document.getElementById('sidebar').classList.toggle('open');
@@ -588,30 +588,49 @@
         async function hlxLookup(){
             var user=document.getElementById('hlxUser').value.trim();
             if(!user)return;
-            var st=document.getElementById('hlxStatus');st.style.display='block';st.textContent='Searching...';st.className='';
+            var st=document.getElementById('hlxStatus');st.style.display='block';st.textContent='Fetching profile & post details...';st.className='';
             var cleanUser = user.replace(/^@/, '');
             var platforms={
-                tiktok:'https://www.tiktok.com/@'+cleanUser,
-                instagram:'https://www.instagram.com/'+cleanUser,
                 youtube:'https://www.youtube.com/@'+cleanUser,
+                instagram:'https://www.instagram.com/'+cleanUser,
                 x:'https://x.com/'+cleanUser
             };
-            var lookupUrl = (user.startsWith('http://') || user.startsWith('https://')) ? user : (platforms[hlxPlatform] || ('https://www.tiktok.com/@' + cleanUser));
-            try{
-                var r=await fetch('/api/hlx/resolve?url='+encodeURIComponent(lookupUrl),{credentials:'include'});
-                var d=await r.json();
-                if(d.success && d.nickname){
-                    var creatorDisplay=d.nickname;
-                    document.getElementById('socialUrl').value=lookupUrl;
-                    document.getElementById('creatorName').value=creatorDisplay;
+            var lookupUrl = (user.startsWith('http://') || user.startsWith('https://')) ? user : (platforms[hlxPlatform] || ('https://www.youtube.com/@' + cleanUser));
+            
+            try {
+                // Fetch profile & post info
+                var [rProfile, rScrape] = await Promise.all([
+                    fetch('/api/hlx/resolve?url='+encodeURIComponent(lookupUrl), {credentials:'include'}).then(res => res.json()).catch(() => ({})),
+                    fetch('/api/scrape?url='+encodeURIComponent(lookupUrl), {credentials:'include'}).then(res => res.json()).catch(() => ({}))
+                ]);
+
+                var creatorDisplay = rProfile.nickname || rScrape.author_name || rScrape.creator_nickname || cleanUser;
+                var avatarUrl = rProfile.avatar || rScrape.avatar || '';
+                var postTitle = rScrape.title || rScrape.name || '';
+                var postDesc = rScrape.description || rScrape.desc || '';
+                var postThumb = rScrape.cdn_thumbnail || rScrape.image || (rScrape.thumbnails && rScrape.thumbnails[0]) || '';
+
+                if (creatorDisplay || postTitle) {
+                    document.getElementById('socialUrl').value = lookupUrl;
+                    if (creatorDisplay) document.getElementById('creatorName').value = creatorDisplay;
+                    if (postTitle && !document.getElementById('spName').value.trim()) document.getElementById('spName').value = postTitle;
+                    if (postDesc && !document.getElementById('spDesc').value.trim()) document.getElementById('spDesc').value = postDesc;
+                    if (postThumb) {
+                        document.getElementById('spThumb').value = postThumb;
+                        previewThumb(postThumb);
+                    }
+
                     st.style.color = '#00e676';
-                    st.innerHTML='<i class="fas fa-check-circle"></i> Found: '+creatorDisplay;
-                    setTimeout(toggleHlx, 1000);
-                }else{
+                    st.innerHTML = '<i class="fas fa-check-circle"></i> Extracted Profile & Content: ' + (creatorDisplay || postTitle);
+                    setTimeout(toggleHlx, 1200);
+                } else {
                     st.style.color = 'var(--cherry-light)';
-                    st.textContent=(d && d.error)||"Could not resolve profile";
+                    st.textContent = "Could not fetch content details from this link";
                 }
-            }catch(e){st.style.color = 'var(--cherry-light)';st.textContent='Network error'}
+            } catch(e) {
+                st.style.color = 'var(--cherry-light)';
+                st.textContent = 'Network error during lookup';
+            }
         }
 
         async function resolveCreator(){

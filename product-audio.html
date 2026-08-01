@@ -13,779 +13,538 @@
     <link rel="icon" type="image/png" href="/assets/content.png">
     <link rel="stylesheet" href="css/style.css?v=24">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         :root {
-            --accent: #e61536;
-            --accent-rgb: 230, 21, 54;
-            --accent-light: #ff4d6d;
-            --accent-glow: rgba(230, 21, 54, 0.18);
-            --dark: #070203;
-            --light: #fcedf0;
-            --gray: #d4b0b8;
-            --gray-dark: #8a6570;
-            --card-bg: rgba(12, 2, 4, 0.45);
-            --card-border: rgba(230, 21, 54, 0.08);
-            --transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            --cherry: #ff2b52;
+            --cherry-rgb: 255, 43, 82;
+            --cherry-light: #ff6b85;
+            --cherry-dark: #c8002a;
+            --glass-bg: rgba(14, 10, 18, 0.82);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --text-muted: rgba(255, 255, 255, 0.5);
+            --ok: #34d399;
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
-            background: var(--dark);
-            color: var(--light);
-            font-family: 'Poppins', sans-serif;
+            background: #070209;
+            color: #f8f5f6;
+            font-family: 'Inter', sans-serif;
             min-height: 100vh;
             overflow-x: hidden;
         }
-        
-        .audio-page {
-            padding: 160px 0 80px;
-            min-height: 100vh;
-            position: relative;
-            overflow: hidden;
-        }
-        .audio-page::before {
+        body::before {
             content: '';
             position: fixed;
             inset: 0;
-            background: radial-gradient(circle at 30% 20%, rgba(var(--accent-rgb), 0.08) 0%, transparent 60%), radial-gradient(circle at 70% 70%, rgba(var(--accent-rgb), 0.03) 0%, transparent 50%);
-            pointer-events: none;
             z-index: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(circle at 20% 0%, rgba(255, 43, 82, 0.16) 0%, transparent 45%),
+                radial-gradient(circle at 80% 80%, rgba(120, 0, 40, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(60, 0, 20, 0.08) 0%, transparent 50%);
         }
-        
-        .wrap {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 0 24px;
+
+        .audio-page {
+            padding: 130px 0 90px;
+            min-height: 100vh;
             position: relative;
             z-index: 1;
         }
+
+        .wrap {
+            max-width: 920px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
         .back {
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            color: var(--gray-dark);
-            font-size: 0.8rem;
+            padding: 10px 18px;
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 999px;
+            background: rgba(255,255,255,0.05);
+            color: rgba(255,255,255,0.8);
+            font-size: 0.82rem;
+            font-weight: 600;
             text-decoration: none;
-            margin-bottom: 28px;
-            transition: var(--transition);
-            font-weight: 500;
+            margin-bottom: 32px;
+            backdrop-filter: blur(20px);
+            transition: all 0.25s ease;
         }
         .back:hover {
-            color: var(--accent-light);
-            transform: translateX(-2px);
+            background: rgba(255,255,255,0.12);
+            color: #fff;
+            transform: translateX(-3px);
         }
-        
-        /* Waveform decoration */
-        .wave-deco {
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 200px;
-            overflow: hidden;
-            pointer-events: none;
-            opacity: .04;
-            z-index: 0;
-        }
-        .wave-deco::after {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: repeating-linear-gradient(90deg, var(--accent-light) 0px, var(--accent-light) 2px, transparent 2px, transparent 4px);
-            mask-image: linear-gradient(to bottom, transparent 0%, white 50%, transparent 100%);
-            -webkit-mask-image: linear-gradient(to bottom, transparent 0%, white 50%, transparent 100%);
-        }
-        
-        /* Hero card */
-        .hero-card {
-            position: relative;
-            border-radius: 24px;
+
+        /* Glass Cards */
+        .glass-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 28px;
+            padding: 36px;
+            backdrop-filter: blur(32px) saturate(210%);
+            -webkit-backdrop-filter: blur(32px) saturate(210%);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.12);
             margin-bottom: 24px;
-            background: linear-gradient(160deg, rgba(30,4,10,0.5), rgba(10,2,4,0.8));
-            border: 1px solid var(--card-border);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 30px rgba(230, 21, 54, 0.05);
+            position: relative;
             overflow: hidden;
         }
-        .hero-card::after {
+        .glass-card::before {
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--accent-light), var(--accent), transparent);
-            z-index: 2;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
         }
-        
-        .hero-inner {
-            padding: 40px;
+
+        /* Audio Player Hero */
+        .player-hero {
             display: flex;
-            gap: 36px;
             align-items: center;
-            backdrop-filter: blur(20px);
+            gap: 32px;
         }
-        
-        @media(max-width: 768px) {
-            .hero-inner {
-                flex-direction: column;
-                padding: 30px 20px;
-                gap: 20px;
-                text-align: center;
-            }
-            .audio-page { padding-top: 120px; }
+        @media (max-width: 768px) {
+            .player-hero { flex-direction: column; text-align: center; }
         }
-        
-        /* Album art */
-        .art-wrap { flex-shrink: 0; }
-        .art {
+
+        .cover-box {
             width: 160px;
             height: 160px;
-            border-radius: 20px;
+            border-radius: 22px;
             overflow: hidden;
-            background: linear-gradient(135deg, rgba(230, 21, 54, 0.15), rgba(230, 21, 54, 0.03));
+            background: linear-gradient(135deg, rgba(255, 43, 82, 0.2), rgba(10, 2, 8, 0.8));
+            border: 1px solid rgba(255, 43, 82, 0.25);
+            box-shadow: 0 12px 35px rgba(255, 43, 82, 0.25);
             display: flex;
             align-items: center;
             justify-content: center;
-            border: 1px solid rgba(230, 21, 54, 0.15);
-            box-shadow: 0 0 30px var(--accent-glow), 0 10px 25px rgba(0,0,0,0.3);
+            flex-shrink: 0;
             position: relative;
-            transition: var(--transition);
         }
-        .art:hover {
-            transform: scale(1.03);
-            border-color: rgba(230, 21, 54, 0.3);
-            box-shadow: 0 0 40px rgba(230, 21, 54, 0.25), 0 10px 30px rgba(0,0,0,0.4);
-        }
-        .art img {
+        .cover-box img {
             width: 100%;
             height: 100%;
             object-fit: cover;
         }
-        /* Vinyl Record */
-        .vinyl-record {
-            width: 130px;
-            height: 130px;
-            border-radius: 50%;
-            background: radial-gradient(circle, 
-                #181818 0%, 
-                #111 20%, 
-                #1c1c1c 21%, 
-                #0c0c0c 24%, 
-                #222 28%, 
-                #111 34%, 
-                #2a2a2a 35%, 
-                #0d0d0d 39%, 
-                #1c1c1c 45%, 
-                #080808 49%, 
-                #222 55%, 
-                #111 60%, 
-                #181818 65%, 
-                #080808 70%
-            );
-            box-shadow: 0 8px 24px rgba(0,0,0,0.5), inset 0 0 12px rgba(255,255,255,0.08);
-            position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            animation: spin 16s linear infinite;
-        }
-        .vinyl-label {
-            width: 46px;
-            height: 46px;
-            border-radius: 50%;
-            background: #120204;
-            border: 1.5px solid #000;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            box-shadow: inset 0 2px 4px rgba(255,255,255,0.3);
-            overflow: hidden;
-        }
-        .vinyl-logo {
-            width: 75%;
-            height: 75%;
-            object-fit: contain;
-            pointer-events: none;
-            z-index: 1;
-        }
-        .vinyl-label::after {
-            content: '';
-            position: absolute;
-            width: 8px;
-            height: 8px;
-            background: var(--dark);
-            border-radius: 50%;
-            border: 1px solid rgba(255,255,255,0.15);
-            box-shadow: inset 0 1px 2px rgba(0,0,0,0.8);
-            z-index: 2;
-        }
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        .creator-card .cc-info a.cc-discord-link {
-            color: #5865F2;
-        }
-        .creator-card .cc-info a.cc-discord-link:hover {
-            color: #7289da;
-            text-decoration: underline;
-        }
-        @media(max-width: 768px) {
-            .art { width: 130px; height: 130px; }
-            .vinyl-record { width: 100px; height: 100px; }
-            .vinyl-label { width: 32px; height: 32px; }
-            .vinyl-label::after { width: 6px; height: 6px; }
-        }
-        
-        .info {
-            flex: 1;
-            min-width: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .info .type-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 3px 12px;
-            border-radius: 50px;
-            font-size: 0.65rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            background: rgba(230, 21, 54, 0.08);
-            border: 1px solid rgba(230, 21, 54, 0.15);
-            color: var(--accent-light);
-            width: fit-content;
-            margin-bottom: 2px;
-        }
-        @media(max-width: 768px) {
-            .info .type-badge { margin: 0 auto 4px; }
-        }
-        .info h1 {
-            font-size: clamp(1.5rem, 4vw, 2.2rem);
-            font-weight: 900;
-            line-height: 1.1;
-            font-family: 'Outfit', sans-serif;
-            color: #fff;
-        }
-        .info .desc {
-            color: var(--gray);
-            font-size: 0.88rem;
-            line-height: 1.6;
-        }
-        .info .tags {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-top: 4px;
-        }
-        @media(max-width: 768px) {
-            .info .tags { justify-content: center; }
-        }
-        .info .tags span {
-            padding: 4px 10px;
-            border-radius: 6px;
-            font-size: 0.65rem;
-            font-weight: 700;
-            background: rgba(230, 21, 54, 0.05);
-            border: 1px solid rgba(230, 21, 54, 0.08);
-            color: var(--accent-light);
-        }
-        
-        /* Player card */
-        .player-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 20px;
-            padding: 20px 24px;
-            margin-bottom: 24px;
-            backdrop-filter: blur(20px);
-        }
-        .player-card audio {
-            width: 100%;
-            height: 40px;
-            border-radius: 12px;
-            outline: none;
-        }
-        
-        /* Download button */
-        .dl-section {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-bottom: 24px;
-        }
-        .btn-dl {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            padding: 14px 28px;
-            border-radius: 14px;
-            font-size: .85rem;
-            font-weight: 700;
-            cursor: pointer;
-            text-decoration: none;
-            transition: var(--transition);
-            font-family: inherit;
-            border: none;
-            position: relative;
-            overflow: hidden;
-            flex: 1;
-            min-width: 160px;
-        }
-        .btn-dl-primary {
-            background: linear-gradient(135deg, #a81228 0%, #5c0613 100%);
-            border: 1px solid rgba(255, 77, 109, 0.2);
-            color: #fff;
-            box-shadow: 0 6px 20px rgba(168, 18, 40, 0.3), inset 0 1px 1px rgba(255, 255, 255, 0.1);
-        }
-        .btn-dl-primary::after {
-            content: '';
-            position: absolute;
-            top: 0; left: -150%;
-            width: 80%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
-            transform: skewX(-30deg);
-        }
-        .btn-dl-primary:hover::after {
-            left: 180%;
-            transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .btn-dl-primary:hover {
-            transform: translateY(-2px);
-            border-color: rgba(255, 77, 109, 0.4);
-            box-shadow: 0 10px 25px rgba(168, 18, 40, 0.5), 0 0 15px rgba(255, 77, 109, 0.2);
-            filter: brightness(1.1);
-        }
-        .btn-dl-secondary {
-            background: rgba(230, 21, 54, 0.05);
-            border: 1px solid rgba(230, 21, 54, 0.12);
-            color: var(--accent-light);
-            flex: 0 0 auto;
-            min-width: auto;
-        }
-        .btn-dl-secondary:hover {
-            background: rgba(230, 21, 54, 0.1);
-            transform: translateY(-2px);
-            border-color: var(--accent-light);
-        }
-        
-        /* Meta grid */
-        .meta-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 12px;
-            margin-bottom: 24px;
-        }
-        .meta-item {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 16px;
-            padding: 16px 20px;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            backdrop-filter: blur(20px);
-        }
-        .meta-item .mi-icon {
-            width: 38px;
-            height: 38px;
-            border-radius: 10px;
-            background: rgba(230, 21, 54, 0.06);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.85rem;
-            color: var(--accent-light);
-            flex-shrink: 0;
-            border: 1px solid rgba(230, 21, 54, 0.1);
-        }
-        .meta-item .mi-info strong {
-            display: block;
-            font-size: 0.8rem;
-            color: var(--light);
-            font-family: 'Outfit', sans-serif;
-        }
-        .meta-item .mi-info span {
-            font-size: 0.7rem;
-            color: var(--gray-dark);
-        }
-        
-        /* Creator list container */
-        .creator-section {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 14px;
-            margin-bottom: 24px;
-        }
-        @media(max-width: 600px) {
-            .creator-section { grid-template-columns: 1fr; }
+        .cover-box i.cover-ph {
+            font-size: 3rem;
+            color: var(--cherry-light);
+            opacity: 0.6;
         }
 
-        /* Creator card */
-        .creator-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 20px;
-            padding: 20px;
+        .player-details {
+            flex: 1;
+            min-width: 0;
+        }
+        .type-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 14px;
+            border-radius: 999px;
+            background: rgba(255, 43, 82, 0.12);
+            border: 1px solid rgba(255, 43, 82, 0.25);
+            color: var(--cherry-light);
+            font-size: 0.72rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .player-details h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 900;
+            color: #fff;
+            margin-bottom: 8px;
+            line-height: 1.25;
+        }
+        .player-details p.desc {
+            font-size: 0.86rem;
+            color: var(--text-muted);
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        /* Player Controls */
+        .controls-row {
             display: flex;
             align-items: center;
             gap: 16px;
-            backdrop-filter: blur(20px);
         }
-        .creator-card .cc-avatar {
-            width: 46px;
-            height: 46px;
-            border-radius: 50%;
-            overflow: hidden;
-            border: 1px solid rgba(230, 21, 54, 0.15);
-            flex-shrink: 0;
-            background: rgba(230, 21, 54, 0.05);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        @media (max-width: 768px) {
+            .controls-row { justify-content: center; width: 100%; }
         }
-        .creator-card .cc-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .creator-card .cc-avatar i {
-            color: var(--accent-light);
-            font-size: 1.2rem;
-        }
-        .creator-card .cc-info strong {
-            display: block;
-            font-size: 0.85rem;
-            color: var(--light);
-            font-family: 'Outfit', sans-serif;
-        }
-        .creator-card .cc-info a {
-            font-size: 0.72rem;
-            color: var(--accent-light);
-            text-decoration: none;
-            transition: var(--transition);
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            margin-top: 2px;
-        }
-        .creator-card .cc-info a:hover {
-            color: #fff;
-            text-decoration: underline;
-        }
-        
-        .load { text-align: center; padding: 100px 20px; color: var(--gray); }
-        .load i { font-size: 2.2rem; color: var(--accent-light); opacity: .4; display: block; margin-bottom: 15px; }
-        .err { text-align: center; padding: 80px 20px; color: var(--gray); }
-        .err i { font-size: 2.5rem; color: var(--accent-light); opacity: .3; display: block; margin-bottom: 15px; }
-        .err .btn-b {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 10px 22px;
-            border-radius: 10px;
-            background: rgba(230, 21, 54, 0.06);
-            border: 1px solid rgba(230, 21, 54, 0.15);
-            color: var(--accent-light);
-            text-decoration: none;
-            font-size: 0.8rem;
-            font-weight: 700;
-            transition: var(--transition);
-            font-family: inherit;
-            margin-top: 16px;
-        }
-        .err .btn-b:hover { background: rgba(230, 21, 54, 0.12); transform: translateY(-1px); }
-        
-        /* FULLSCREEN LOADER OVERLAY */
-        .resources-loader-overlay {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            width: 100vw; height: 100vh;
-            z-index: 9999999;
-            background: #080204;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-direction: column;
-            opacity: 1;
-            visibility: visible;
-            transition: opacity 0.5s ease, visibility 0.5s ease;
-        }
-        .resources-loader-overlay.fade-out {
-            opacity: 0 !important;
-            visibility: hidden !important;
-            pointer-events: none !important;
-        }
-        .resources-loader-content { text-align: center; display: flex; flex-direction: column; align-items: center; }
-        .loader-logo-container { position: relative; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; }
-        .loader-logo-img { width: 48px; height: 48px; object-fit: contain; z-index: 2; filter: drop-shadow(0 0 12px rgba(230, 21, 54, 0.7)); animation: loaderLogoPulse 1.8s ease-in-out infinite alternate; }
-        .loader-pulse-ring { position: absolute; inset: 0; border-radius: 50%; border: 2px solid rgba(230, 21, 54, 0.2); border-top-color: #e61536; animation: loaderSpin 1s linear infinite; }
-        @keyframes loaderSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @keyframes loaderLogoPulse { 0% { transform: scale(0.92); opacity: 0.8; } 100% { transform: scale(1.08); opacity: 1; } }
 
-        .pulse { animation: pulse 2s ease-in-out infinite; }
-        @keyframes pulse { 0%, 100% { opacity: .4; } 50% { opacity: 1; } }
-        @keyframes fadeUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
-        .anim-1 { animation: fadeUp .5s ease forwards; }
-        .anim-2 { animation: fadeUp .5s .1s ease both; }
-        .anim-3 { animation: fadeUp .5s .2s ease both; }
-        .anim-4 { animation: fadeUp .5s .3s ease both; }
+        .btn-play {
+            width: 58px;
+            height: 58px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff2b52, #c8002a);
+            border: none;
+            color: #fff;
+            font-size: 1.3rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 10px 25px rgba(255, 43, 82, 0.45);
+            transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+            flex-shrink: 0;
+        }
+        .btn-play:hover {
+            transform: scale(1.06);
+            box-shadow: 0 14px 35px rgba(255, 43, 82, 0.6);
+        }
+
+        .wave-progress-bar {
+            flex: 1;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 999px;
+            overflow: hidden;
+            cursor: pointer;
+            position: relative;
+        }
+        .wave-progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ff2b52, #ff6b85);
+            border-radius: 999px;
+            transition: width 0.1s linear;
+        }
+
+        .time-display {
+            font-family: ui-monospace, monospace;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            min-width: 70px;
+            text-align: right;
+        }
+
+        /* CTA Section */
+        .cta-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 24px 32px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 22px;
+            margin-top: 10px;
+        }
+        @media (max-width: 640px) {
+            .cta-box { flex-direction: column; text-align: center; }
+        }
+
+        .btn-download {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 28px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #ff2b52, #c8002a);
+            color: #fff;
+            text-decoration: none;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 800;
+            font-size: 0.92rem;
+            box-shadow: 0 10px 25px rgba(255, 43, 82, 0.4);
+            transition: all 0.3s ease;
+        }
+        .btn-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 35px rgba(255, 43, 82, 0.55);
+        }
+
+        /* Meta Grid */
+        .meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 24px;
+        }
+        .meta-item {
+            padding: 18px 20px;
+            border-radius: 18px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .meta-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: rgba(255,43,82,0.12);
+            color: var(--cherry-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+        }
+        .meta-text strong { display: block; font-size: 0.88rem; color: #fff; font-family: 'Outfit', sans-serif; }
+        .meta-text span { font-size: 0.72rem; color: var(--text-muted); }
+
+        /* Uploader & Creator */
+        .creators-flex {
+            display: flex;
+            gap: 18px;
+            flex-wrap: wrap;
+            margin-top: 24px;
+        }
+        .creator-card {
+            flex: 1;
+            min-width: 240px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 16px 20px;
+            border-radius: 20px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.07);
+        }
+        .creator-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 2px solid var(--cherry);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,43,82,0.15);
+            color: #fff;
+            flex-shrink: 0;
+        }
+        .creator-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .creator-info strong { display: block; font-size: 0.9rem; color: #fff; font-family: 'Outfit', sans-serif; }
+        .creator-info span { font-size: 0.74rem; color: var(--text-muted); }
+        .creator-info a { color: var(--cherry-light); text-decoration: none; font-size: 0.75rem; font-weight: 600; margin-top: 2px; display: inline-block; }
+        .creator-info a:hover { text-decoration: underline; }
+
+        .load-state, .err-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: var(--text-muted);
+        }
+        .load-state i, .err-state i { font-size: 2.5rem; color: var(--cherry-light); margin-bottom: 16px; display: block; }
     </style>
 </head>
 <body>
-    <!-- PRESET FULLSCREEN LOADER (SPINNER ONLY) -->
-    <div id="resources-loader" class="resources-loader-overlay">
-        <div class="resources-loader-content">
-            <div class="loader-logo-container">
-                <img src="assets/content.png" alt="Zyrex" class="loader-logo-img">
-                <div class="loader-pulse-ring"></div>
+    <!-- HEADER NAVBAR -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo">
+                <img src="assets/content.png" alt="ZYREX" class="logo-img">
+                <span class="logo-text">yrex</span>
+            </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="/">Home</a></li>
+                <li><a href="/resources">Resources</a></li>
+                <li><a href="/audio.html">Audio</a></li>
+                <li><a href="/plugins">Plugins</a></li>
+                <li><a href="/more">More</a></li>
+            </ul>
+            <div class="nav-actions">
+                <div id="authBtn"></div>
+                <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
             </div>
         </div>
-    </div>
-    <script>
-        setTimeout(function() {
-            var loader = document.getElementById('resources-loader');
-            if (loader && !loader.classList.contains('fade-out')) {
-                loader.classList.add('fade-out');
-                setTimeout(function() { if (loader && loader.parentNode) loader.parentNode.removeChild(loader); }, 600);
-            }
-        }, 1800);
-    </script>
-    <div class="bg-aura"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
-    <nav class="navbar"><div class="container"><a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><ul class="nav-links" id="navLinks"><li><a href="/">Home</a></li><li><a href="/resources">Resources</a></li><li><a href="/plugins">Plugins</a></li><li><a href="/more">More</a></li><li><a href="/#contact">Contact</a></li></ul><div class="nav-actions"><div id="authBtn"></div><button class="hamburger" id="hamburger"><span></span><span></span><span></span></button></div></div></nav>
+    </nav>
 
-    <section class="audio-page">
+    <main class="audio-page">
         <div class="wrap">
-            <a href="/audio" class="back anim-1"><i class="fas fa-arrow-left"></i> Back to Audio</a>
-            <div class="load" id="load"><i class="fas fa-compact-disc fa-spin pulse"></i><p>Loading audio...</p></div>
-            <div class="err" id="err" style="display:none"><i class="fas fa-exclamation-circle"></i><p id="errMsg">Audio not found.</p><a href="/audio" class="btn-b"><i class="fas fa-arrow-left"></i> Browse Audio</a></div>
-            <div id="root" style="display:none"></div>
-        </div>
-    </section>
+            <a href="/audio.html" class="back"><i class="fas fa-arrow-left"></i> Back to Audio Packs</a>
 
-    <footer class="footer"><div class="container"><div class="footer-content"><div class="footer-brand"><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><h3 style="font-size:1.8rem;font-weight:900;margin:0;letter-spacing:2px;background:linear-gradient(135deg,#fff,#9090a0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Editing</h3></div><p>Premium editing community &amp; resources.</p></div><div class="footer-links"><h4>Quick Links</h4><ul><li><a href="/">Home</a></li><li><a href="/resources">Resources</a></li><li><a href="/plugins">Plugins</a></li><li><a href="/more">More</a></li></ul></div><div class="footer-links"><h4>Legal</h4><ul><li><a href="/terms">Terms</a></li><li><a href="/privacy">Privacy</a></li><li><a href="/dmca">DMCA</a></li></ul></div><div class="footer-links"><h4>Community</h4><ul><li><a href="https://discord.gg/fAydSzpafA">Discord</a></li><li><a href="/#contact">Contact</a></li></ul></div><div class="footer-newsletter"><h4>Newsletter</h4><p>Stay updated with Zyrex Editing.</p><div class="newsletter-form"><input type="email" placeholder="Your email"><button type="submit"><i class="fas fa-arrow-right"></i></button></div></div></div><div class="footer-bottom"><p>&copy; 2026 Zyrex Editing. All rights reserved.</p></div></div></footer>
+            <div id="loading" class="load-state">
+                <i class="fas fa-compact-disc fa-spin"></i>
+                <p>Loading audio product details...</p>
+            </div>
+
+            <div id="error" class="err-state" style="display:none">
+                <i class="fas fa-triangle-exclamation"></i>
+                <h2 style="font-family:Outfit,sans-serif;color:#fff;margin-bottom:8px" id="errMsg">Audio product not found</h2>
+                <a href="/audio.html" class="btn-download" style="margin-top:16px"><i class="fas fa-music"></i> Browse Audio Packs</a>
+            </div>
+
+            <div id="content" style="display:none">
+                <!-- HERO & PLAYER CARD -->
+                <div class="glass-card">
+                    <div class="player-hero">
+                        <div class="cover-box" id="coverContainer">
+                            <i class="fas fa-music cover-ph" id="coverIcon"></i>
+                            <img id="coverImg" style="display:none" alt="">
+                        </div>
+                        <div class="player-details">
+                            <span class="type-badge"><i class="fas fa-compact-disc"></i> Audio Resource</span>
+                            <h1 id="audioTitle">Title</h1>
+                            <p class="desc" id="audioDesc">Description</p>
+
+                            <div class="controls-row">
+                                <button class="btn-play" id="playBtn" onclick="togglePlay()"><i class="fas fa-play" id="playIcon"></i></button>
+                                <div class="wave-progress-bar" onclick="seekAudio(event)">
+                                    <div class="wave-progress-fill" id="progressFill"></div>
+                                </div>
+                                <div class="time-display" id="timeDisplay">0:00 / 0:00</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <audio id="audioElement" preload="metadata"></audio>
+                </div>
+
+                <!-- CTA & METADATA -->
+                <div class="glass-card">
+                    <div class="cta-box">
+                        <div>
+                            <h3 style="font-family:Outfit,sans-serif;font-size:1.1rem;color:#fff;margin-bottom:4px">Ready to Download</h3>
+                            <p style="font-size:0.8rem;color:var(--text-muted);margin:0">High quality audio resource package.</p>
+                        </div>
+                        <a href="#" id="downloadBtn" target="_blank" rel="noopener" class="btn-download"><i class="fas fa-download"></i> Download Audio</a>
+                    </div>
+
+                    <div class="meta-grid">
+                        <div class="meta-item">
+                            <div class="meta-icon"><i class="fas fa-folder"></i></div>
+                            <div class="meta-text"><strong id="metaCategory">Audio</strong><span>Category</span></div>
+                        </div>
+                        <div class="meta-item">
+                            <div class="meta-icon"><i class="fas fa-calendar-alt"></i></div>
+                            <div class="meta-text"><strong id="metaDate">Recently</strong><span>Added</span></div>
+                        </div>
+                    </div>
+
+                    <div class="creators-flex" id="creatorsContainer"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-bottom"><p>&copy; 2026 Zyrex Editing. All rights reserved.</p></div>
+        </div>
+    </footer>
 
     <script src="js/auth.js?v=10"></script>
     <script src="js/script.js?v=5"></script>
     <script>
-    async function fetchDiscordAvatar(userId) {
-        if (!userId) return '';
+    let audioObj = document.getElementById('audioElement');
+    let isPlaying = false;
+
+    document.addEventListener('DOMContentLoaded', async () => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const id = urlParams.get('id');
+        if (!id) { showError('Audio ID missing.'); return; }
+
         try {
-            var resp = await fetch('/api/discord-user?userId=' + userId);
-            var data = await resp.json();
-            if (data.success && data.user && data.user.avatar) {
-                var ext = data.user.avatar.startsWith('a_') ? 'gif' : 'png';
-                return '/api/avatar/' + userId + '/' + data.user.avatar + '.' + ext + '?size=128';
-            }
-        } catch(e) {}
-        // Fallback: default Discord avatar (works in all browsers)
-        var defIdx = 0;
-        try { defIdx = Number((BigInt(userId) >> 22n) % 6n); } catch(e) { defIdx = parseInt(userId) % 5; }
-        return '/api/avatar/default/' + defIdx + '.png';
+            const resp = await fetch(`/api/products?id=${encodeURIComponent(id)}`);
+            if (!resp.ok) { showError('Audio product not found.'); return; }
+            const data = await resp.json();
+            if (!data || !data.id) { showError('Audio product not found.'); return; }
+            renderProduct(data);
+        } catch(e) {
+            showError('Failed to load audio product.');
+        }
+    });
+
+    function showError(msg) {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('error').style.display = 'block';
+        document.getElementById('errMsg').textContent = msg;
     }
 
-    (async function(){
-        var p = new URLSearchParams(location.search);
-        var id = p.get('id');
-        if (!id) return showErr('Audio ID missing');
-        try {
-            var r = await fetch('/api/products?id=' + encodeURIComponent(id));
-            if (!r.ok) { showErr('Audio not found'); return; }
-            var data = await r.json();
-            if (!data || !data.id) { showErr('Audio not found'); return; }
-            if (data.type !== 'audio') { showErr('This product is not an audio. <a href="/'+data.type+'" style="color:var(--accent-light)">View on '+data.type+' page</a>'); return; }
-            await render(data);
-        } catch(e) { showErr('Failed to load audio'); }
-    })();
+    function renderProduct(p) {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('content').style.display = 'block';
+        document.title = `${p.name || 'Audio'} — Zyrex Audio`;
 
-    function showErr(m) {
-        document.getElementById('load').style.display = 'none';
-        document.getElementById('err').style.display = 'block';
-        document.getElementById('errMsg').innerHTML = m;
-    }
-
-    function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
-
-    async function render(p) {
-        document.getElementById('load').style.display = 'none';
-        document.getElementById('root').style.display = 'block';
-        document.title = (p.name || 'Audio') + ' \u2014 Zyrex Audio';
-
-        var cats = (p.category || '').split(',').map(function(c){ return c.trim(); }).filter(Boolean);
-        var catNames = { hot: 'Hot', soft: 'Soft', aesthetic: 'Aesthetic', cinematic: 'Cinematic', velocity: 'Velocity', others: 'Audio' };
-
-        // Build HTML piece by piece
-        var h = '';
+        document.getElementById('audioTitle').textContent = p.name || 'Untitled Audio';
+        document.getElementById('audioDesc').textContent = p.description || p.desc || 'No description provided for this audio resource.';
+        document.getElementById('metaCategory').textContent = p.category || 'Audio';
+        document.getElementById('metaDate').textContent = p.created_at ? new Date(p.created_at).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' }) : 'Recently';
 
         // Thumbnail
-        h += '<div class="art-wrap"><div class="art">';
         if (p.thumbnail) {
-            h += '<img src="' + esc(p.thumbnail) + '" alt="" data-fallback="music">';
+            const img = document.getElementById('coverImg');
+            img.src = p.thumbnail;
+            img.style.display = 'block';
+            document.getElementById('coverIcon').style.display = 'none';
+        }
+
+        // Audio Stream URL
+        const streamUrl = p.source_url || p.file_url || p.url || '';
+        if (streamUrl) {
+            audioObj.src = streamUrl;
+            document.getElementById('downloadBtn').href = streamUrl;
         } else {
-            h += '<div class="vinyl-record"><div class="vinyl-label"><img src="assets/content.png" alt="" class="vinyl-logo"></div></div>';
-        }
-        h += '</div></div>';
-
-        // Info section
-        h += '<div class="info">';
-        h += '<span class="type-badge"><i class="fas fa-music"></i> Audio</span>';
-        h += '<h1>' + esc(p.name || 'Untitled') + '</h1>';
-        if (p.description || p.desc) {
-            h += '<p class="desc">' + esc(p.description || p.desc) + '</p>';
-        }
-        if (cats.length > 0) {
-            h += '<div class="tags">';
-            cats.forEach(function(c) { h += '<span>' + esc(catNames[c] || c) + '</span>'; });
-            h += '</div>';
-        }
-        h += '</div>';
-
-        // Hero card
-        var heroHtml = '<div class="hero-card anim-1"><div class="hero-inner">' + h + '</div></div>';
-        document.getElementById('root').innerHTML = heroHtml;
-
-        // Attach onerror handlers to all images with data-fallback
-        var imgs = document.querySelectorAll('#root img[data-fallback]');
-        for (var i = 0; i < imgs.length; i++) {
-            imgs[i].onerror = function() {
-                var fb = this.getAttribute('data-fallback') || 'user';
-                var parent = this.parentElement;
-                if (fb === 'music') {
-                    parent.innerHTML = '<div class="vinyl-record"><div class="vinyl-label"><img src="assets/content.png" alt="" class="vinyl-logo"></div></div>';
-                } else {
-                    var icon = fb === 'user' ? 'fa-user' : 'fa-music';
-                    parent.innerHTML = '<div class="ph"><i class="fas ' + icon + '"></i></div><div class="disc"></div>';
-                }
-            };
+            document.getElementById('downloadBtn').style.display = 'none';
         }
 
-        // Player card
-        var playerHtml = '';
-        var audioSrc = p.file_url || '';
-        if (audioSrc) {
-            playerHtml = '<div class="player-card anim-2"><audio controls preload="metadata"><source src="' + esc(audioSrc) + '" type="audio/mpeg"></audio></div>';
-            document.getElementById('root').innerHTML += playerHtml;
+        // Setup audio events
+        audioObj.ontimeupdate = updateProgress;
+        audioObj.onloadedmetadata = updateProgress;
+        audioObj.onended = () => {
+            isPlaying = false;
+            document.getElementById('playIcon').className = 'fas fa-play';
+        };
+
+        // Creators
+        const creatorsBox = document.getElementById('creatorsContainer');
+        let html = '';
+        if (p.uploader_name || p.author_name) {
+            html += `<div class="creator-card"><div class="creator-avatar"><i class="fab fa-discord"></i></div><div class="creator-info"><strong>${p.uploader_name || p.author_name}</strong><span>Uploaded by</span></div></div>`;
         }
+        if (p.creator_nickname || p.creator_social_url) {
+            html += `<div class="creator-card"><div class="creator-avatar">${p.creator_avatar ? `<img src="${p.creator_avatar}">` : `<i class="fas fa-user"></i>`}</div><div class="creator-info"><strong>${p.creator_nickname || 'Creator'}</strong>${p.creator_social_url ? `<a href="${p.creator_social_url}" target="_blank">View Social Profile</a>` : '<span>Original Creator</span>'}</div></div>`;
+        }
+        creatorsBox.innerHTML = html;
+    }
 
-        // Meta grid
-        var filename = '';
-        try { filename = decodeURIComponent(new URL(audioSrc).pathname.split('/').pop().split('?')[0]); } catch(e) {}
-        var metaHtml = '<div class="meta-grid anim-3">';
-        metaHtml += '<div class="meta-item"><div class="mi-icon"><i class="fas fa-folder"></i></div><div class="mi-info"><strong>Categories</strong><span>' + esc(cats.length ? cats.map(function(c){ return catNames[c] || c; }).join(', ') : 'General') + '</span></div></div>';
-        metaHtml += '<div class="meta-item"><div class="mi-icon"><i class="fas fa-calendar"></i></div><div class="mi-info"><strong>Published</strong><span>' + (p.created_at ? new Date(p.created_at).toLocaleDateString('en-US',{year:'numeric',month:'short',day:'numeric'}) : 'Recently') + '</span></div></div>';
-        metaHtml += '<div class="meta-item"><div class="mi-icon"><i class="fas fa-file-audio"></i></div><div class="mi-info"><strong>File</strong><span>' + esc(filename || 'audio.mp3') + '</span></div></div>';
-        metaHtml += '</div>';
-        document.getElementById('root').innerHTML += metaHtml;
-
-        // Download buttons
-        if (audioSrc) {
-            var dlName = (p.name || 'audio') + ' - ' + (p.author_name || 'Zyrex');
-            var dlExt = audioSrc.split('.').pop().split('?')[0] || 'mp3';
-            var safeDlName = dlName.replace(/[\/\\:*?"<>|]/g, '').trim().substring(0, 80) + '.' + dlExt;
-            var downloadUrl = esc(audioSrc) + (audioSrc.indexOf('?') === -1 ? '?' : '&') + 'download=1';
-            
-            // Define trackDownload inline if not defined
-            if (!window.trackDownload) {
-                window.trackDownload = function(pid) {
-                    fetch('/api/downloads/track', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ product_id: pid })
-                    }).catch(function(){});
-                };
-            }
-
-            var dlHtml = '<div class="dl-section anim-3">';
-            dlHtml += '<a href="' + downloadUrl + '" download="' + esc(safeDlName) + '" class="btn-dl btn-dl-primary" onclick="trackDownload(\'' + esc(p.id) + '\')"><i class="fas fa-download"></i> Download Audio</a>';
-            dlHtml += '<button class="btn-dl btn-dl-secondary" id="btnCopyLink"><i class="fas fa-copy"></i> Copy Link</button>';
-            dlHtml += '</div>';
-            document.getElementById('root').innerHTML += dlHtml;
-            // Attach copy handler after DOM is ready
-            setTimeout(function() {
-                var btn = document.getElementById('btnCopyLink');
-                if (btn) {
-                    btn.onclick = function() {
-                        navigator.clipboard.writeText(audioSrc).then(function() {
-                            btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-                            setTimeout(function() { btn.innerHTML = '<i class="fas fa-copy"></i> Copy Link'; }, 2000);
-                        });
-                    };
-                }
-            }, 50);
+    function togglePlay() {
+        if (!audioObj.src) return;
+        if (isPlaying) {
+            audioObj.pause();
+            isPlaying = false;
+            document.getElementById('playIcon').className = 'fas fa-play';
         } else {
-            document.getElementById('root').innerHTML += '<p style="color:var(--gray-dark);font-size:.85rem">No audio file available.</p>';
+            audioObj.play();
+            isPlaying = true;
+            document.getElementById('playIcon').className = 'fas fa-pause';
         }
+    }
 
-        // Uploader & Creator Section
-        var uploaderName = p.uploader_name || p.author_name || '';
-        var hasUploader = !!uploaderName;
-        var hasCreator = !!(p.creator_nickname || p.creator_social_url);
-        
-        if (hasUploader || hasCreator) {
-            var uploaderAvatar = '';
-            if (hasUploader) {
-                if (p.uploader_avatar && (p.uploader_avatar.includes('discordapp.com') || p.uploader_avatar.includes('discord.com'))) {
-                    uploaderAvatar = p.uploader_avatar;
-                } else {
-                    uploaderAvatar = await fetchDiscordAvatar(p.author_id || '');
-                }
-            }
+    function updateProgress() {
+        if (!audioObj.duration) return;
+        const cur = audioObj.currentTime;
+        const dur = audioObj.duration;
+        const pct = (cur / dur) * 100;
+        document.getElementById('progressFill').style.width = pct + '%';
+        document.getElementById('timeDisplay').textContent = `${formatTime(cur)} / ${formatTime(dur)}`;
+    }
 
-            var sectionHtml = '<div class="creator-section anim-4">';
-            
-            if (hasUploader) {
-                sectionHtml += '<div class="creator-card"><div class="cc-avatar" style="background:rgba(88,101,242,.06);border-color:rgba(88,101,242,.15)">';
-                if (uploaderAvatar) {
-                    sectionHtml += '<img src="' + esc(uploaderAvatar) + '" alt="" data-fallback="user">';
-                } else {
-                    sectionHtml += '<i class="fab fa-discord" style="color:#5865F2"></i>';
-                }
-                sectionHtml += '</div><div class="cc-info"><strong>' + esc(uploaderName) + '</strong>';
-                if (p.author_id) {
-                    sectionHtml += '<a href="https://discord.com/users/' + esc(p.author_id) + '" target="_blank" class="cc-discord-link"><i class="fab fa-discord"></i> View Profile</a>';
-                } else {
-                    sectionHtml += '<span style="font-size:.68rem;color:var(--gray-dark)">Uploaded by</span>';
-                }
-                sectionHtml += '</div></div>';
-            }
-            
-            if (hasCreator) {
-                sectionHtml += '<div class="creator-card"><div class="cc-avatar">';
-                if (p.creator_avatar) {
-                    sectionHtml += '<img src="' + esc(p.creator_avatar) + '" alt="" data-fallback="user">';
-                } else {
-                    sectionHtml += '<i class="fas fa-user"></i>';
-                }
-                sectionHtml += '</div><div class="cc-info"><strong>' + esc(p.creator_nickname || p.author_name || 'Unknown Creator') + '</strong>';
-                if (p.creator_social_url) {
-                    sectionHtml += '<a href="' + esc(p.creator_social_url) + '" target="_blank"><i class="fas fa-external-link-alt"></i> View Profile</a>';
-                }
-                sectionHtml += '</div></div>';
-            }
-            
-            sectionHtml += '</div>';
-            document.getElementById('root').innerHTML += sectionHtml;
-            
-            // Attach fallback handlers for all images
-            var cardImgs = document.querySelectorAll('#root .creator-card img[data-fallback]');
-            for (var j = 0; j < cardImgs.length; j++) {
-                cardImgs[j].onerror = function() {
-                    var fb = this.getAttribute('data-fallback') || 'user';
-                    var icon = fb === 'music' ? 'fa-music' : 'fa-user';
-                    var parent = this.parentElement;
-                    if (parent.classList.contains('cc-avatar') || parent.classList.contains('cb-avatar')) {
-                        parent.innerHTML = '<i class="fas ' + icon + '"></i>';
-                    } else {
-                        if (fb === 'music') {
-                            parent.innerHTML = '<div class="vinyl-record"><div class="vinyl-label"><img src="assets/content.png" alt="" class="vinyl-logo"></div></div>';
-                        } else {
-                            parent.innerHTML = '<div class="ph"><i class="fas ' + icon + '"></i></div><div class="disc"></div>';
-                        }
-                    }
-                };
-            }
-        }
+    function seekAudio(e) {
+        if (!audioObj.duration) return;
+        const rect = e.currentTarget.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const pct = clickX / rect.width;
+        audioObj.currentTime = pct * audioObj.duration;
+    }
+
+    function formatTime(sec) {
+        if (isNaN(sec)) return '0:00';
+        const m = Math.floor(sec / 60);
+        const s = Math.floor(sec % 60);
+        return `${m}:${s < 10 ? '0' : ''}${s}`;
     }
     </script>
 </body>
