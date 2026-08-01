@@ -3574,7 +3574,7 @@ async function storeAndProxyImage(env, imageUrl) {
         const targetUrl = `${BOT_API}${path}${url.search}`;
         let body = request.method !== "GET" && request.method !== "HEAD" ? await request.text() : undefined;
         
-        // Convert thumbnail to CDN on product submit (Scenepack, Preset, Audio, Plugin)
+        // Convert thumbnail to CDN & VirusTotal scan on product submit (Scenepack, Preset, Audio, Plugin)
         if (path === "/api/products/submit" && request.method === "POST" && body) {
           try {
             const submitData = JSON.parse(body);
@@ -3586,9 +3586,6 @@ async function storeAndProxyImage(env, imageUrl) {
                 submitData.cdn_thumbnail = cdnThumb;
               }
             }
-            body = JSON.stringify(submitData);
-          } catch(e) {}
-        }
 
             // VirusTotal scan integration
             const firstLink = submitData.links && submitData.links[0] ? submitData.links[0].url : "";
@@ -3607,30 +3604,28 @@ async function storeAndProxyImage(env, imageUrl) {
                 });
                 
                 if (vtResp.status === 404) {
-                  await fetch("https://www.virustotal.com/api/v3/urls", {
+                  const formData = new URLSearchParams();
+                  formData.append("url", cleanUrl);
+                  vtResp = await fetch("https://www.virustotal.com/api/v3/urls", {
                     method: "POST",
                     headers: {
                       "x-apikey": vtApiKey,
                       "Content-Type": "application/x-www-form-urlencoded"
                     },
-                    body: "url=" + encodeURIComponent(cleanUrl)
-                  });
-                  await new Promise(resolve => setTimeout(resolve, 5000));
-                  vtResp = await fetch(`https://www.virustotal.com/api/v3/urls/${base64Url}`, {
-                    headers: { "x-apikey": vtApiKey }
+                    body: formData.toString()
                   });
                 }
                 
-                if (vtResp.status === 200) {
-                  const vtData = await vtResp.json();
-                  const stats = vtData?.data?.attributes?.last_analysis_stats;
-                  if (stats) {
-                    submitData.vt_scan = {
-                      id: base64Url,
-                      harmless: stats.harmless || 0,
-                      malicious: stats.malicious || 0
-                    };
-                  }
+                if (vtResp.ok) {
+                  const vtJson = await vtResp.json();
+                  const stats = vtJson.data?.attributes?.last_analysis_stats || vtJson.data?.attributes?.stats || {};
+                  submitData.vt_scan = {
+                    id: base64Url,
+                    harmless: stats.harmless || 0,
+                    malicious: stats.malicious || 0,
+                    suspicious: stats.suspicious || 0,
+                    undetected: stats.undetected || 0
+                  };
                 } else {
                   submitData.vt_scan = {
                     id: base64Url,
