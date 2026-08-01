@@ -451,6 +451,7 @@
             if (!resp.ok) { showError('Audio product not found.'); return; }
             const data = await resp.json();
             if (!data || !data.id) { showError('Audio product not found.'); return; }
+            if (data.type && data.type !== 'audio') { showError(`This product is not an audio file. <a href="/${data.type}" style="color:var(--cherry-light)">View on ${data.type} page</a>`); return; }
             renderProduct(data);
         } catch(e) {
             showError('Failed to load audio product.');
@@ -460,7 +461,7 @@
     function showError(msg) {
         document.getElementById('loading').style.display = 'none';
         document.getElementById('error').style.display = 'block';
-        document.getElementById('errMsg').textContent = msg;
+        document.getElementById('errMsg').innerHTML = msg;
     }
 
     function renderProduct(p) {
@@ -479,6 +480,10 @@
             img.src = p.thumbnail;
             img.style.display = 'block';
             document.getElementById('coverIcon').style.display = 'none';
+            img.onerror = () => {
+                img.style.display = 'none';
+                document.getElementById('coverIcon').style.display = 'block';
+            };
         }
 
         // Audio Stream URL
