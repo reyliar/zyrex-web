@@ -402,9 +402,19 @@
             // Description
             document.getElementById('spModalDesc').textContent = p.description || p.desc || 'No description available for this scene pack.';
             
-            // Creator & Downloads
-            document.getElementById('spModalCreator').textContent = p.creator_nickname || p.author_name || 'Zyrex';
+            // Creator & Downloads & Uploader Avatar
+            document.getElementById('spModalCreator').textContent = p.creator_nickname || p.author_name || p.uploader_name || 'Zyrex';
             document.getElementById('spModalDownloads').textContent = p.downloads || 0;
+            var uploaderAvatarEl = document.getElementById('spModalUploaderAvatar');
+            if (uploaderAvatarEl) {
+                var upAvatar = p.uploader_avatar || p.creator_avatar || (p.uploader_id && typeof avatarProxyUrl==='function' ? avatarProxyUrl(p.uploader_id, p.uploader_avatar, 64) : '');
+                if (upAvatar) {
+                    uploaderAvatarEl.src = upAvatar;
+                    uploaderAvatarEl.style.display = 'block';
+                } else {
+                    uploaderAvatarEl.style.display = 'none';
+                }
+            }
             
             // Smart details
             var nameLower = p.name.toLowerCase();

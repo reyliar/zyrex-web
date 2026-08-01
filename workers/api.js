@@ -2573,14 +2573,18 @@ export default {
       }
 
       // EDIT / UPDATE PRODUCT
-      if ((path.startsWith("/api/products/edit/") || path === "/api/products/edit") && (request.method === "POST" || request.method === "PUT")) {
+      if ((path.startsWith("/api/products/edit/") || path === "/api/products/edit" || path.startsWith("/api/products/")) && (request.method === "POST" || request.method === "PUT" || request.method === "OPTIONS")) {
+        if (request.method === "OPTIONS") {
+          return new Response(null, { status: 204, headers: corsHeaders });
+        }
+
         const session = parseSession(request.headers.get("Cookie"));
-        let productId = path.replace("/api/products/edit/", "").replace("/api/products/edit", "").trim();
-        const payload = await request.json();
+        let productId = path.replace("/api/products/edit/", "").replace("/api/products/edit", "").replace("/api/products/", "").trim();
+        let payload = {};
+        try { payload = await request.json(); } catch(_) {}
         if (!productId && payload.id) productId = payload.id;
         if (!productId) return json({ error: "Product ID required" }, 400);
 
-        const targetUrl = `${BOT_API}/api/products/${encodeURIComponent(productId)}`;
         const proxyHeaders = {
           "Content-Type": "application/json",
           "X-User-ID": session ? (session.userId || "") : "",
@@ -2592,18 +2596,35 @@ export default {
         };
 
         try {
-          const botResp = await fetch(targetUrl, {
+          // Attempt 1: PUT to Bot API
+          let targetUrl = `${BOT_API}/api/products/${encodeURIComponent(productId)}`;
+          let botResp = await fetch(targetUrl, {
             method: "PUT",
             headers: proxyHeaders,
             body: JSON.stringify(payload)
           });
+
+          // Attempt 2: If 405, fallback to POST
+          if (botResp.status === 405) {
+            botResp = await fetch(`${BOT_API}/api/products/edit/${encodeURIComponent(productId)}`, {
+              method: "POST",
+              headers: proxyHeaders,
+              body: JSON.stringify(payload)
+            });
+            if (botResp.status === 405) {
+              botResp = await fetch(`${BOT_API}/api/products/${encodeURIComponent(productId)}`, {
+                method: "POST",
+                headers: proxyHeaders,
+                body: JSON.stringify(payload)
+              });
+            }
+          }
+
           const rawText = await botResp.text();
           let botData;
           try {
             botData = JSON.parse(rawText);
           } catch {
-            // Bot returned non-JSON (e.g., plain text success/error message)
-            // Treat 2xx as success
             if (botResp.ok) {
               botData = { success: true, message: rawText.trim() || "Updated successfully" };
             } else {

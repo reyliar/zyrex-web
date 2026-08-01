@@ -304,7 +304,20 @@ function fetchResourceStatsForHero() {
         if (!Array.isArray(products)) products = window.presetsData || [];
 
         var pluginsCount = 0, presetsCount = 0, scenepacksCount = 0, audiosCount = 0;
+        var seenIds = new Set();
+
+        // 1. Process static/cached pluginsData (software, plugins, scripts)
+        var staticPlugins = window.pluginsData || [];
+        staticPlugins.forEach(function(p) {
+            if (p.id) seenIds.add(p.id);
+            pluginsCount++;
+        });
+
+        // 2. Process dynamic products from DB
         products.forEach(function(r) {
+            if (r.id && seenIds.has(r.id)) return; // prevent duplicate counting
+            if (r.id) seenIds.add(r.id);
+
             var cat = (r.category || '').toLowerCase();
             var type = (r.type || '').toLowerCase();
             var isPlugin = type === 'plugin' || 
@@ -329,16 +342,11 @@ function fetchResourceStatsForHero() {
             }
         });
 
-        if (products.length === 0 && rStats.category_counts) {
-            presetsCount = rStats.category_counts.presets || 72;
-            pluginsCount = rStats.category_counts.plugins || 28;
-            scenepacksCount = rStats.category_counts.scenepacks || 6;
-            audiosCount = rStats.category_counts.audios || 4;
-        } else if (products.length === 0) {
-            presetsCount = 72;
-            pluginsCount = 28;
-            scenepacksCount = 6;
-            audiosCount = 4;
+        // 3. Fallbacks if stats API returns direct category counts
+        if (rStats && rStats.category_counts) {
+            if (rStats.category_counts.presets) presetsCount = rStats.category_counts.presets;
+            if (rStats.category_counts.scenepacks) scenepacksCount = rStats.category_counts.scenepacks;
+            if (rStats.category_counts.audios) audiosCount = rStats.category_counts.audios;
         }
 
         animateHeroNum('heroStatPresets', presetsCount);

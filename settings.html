@@ -1814,15 +1814,15 @@
 
     <!-- MODAL: Edit Product -->
     <div class="modal" id="editProductModal">
-        <div class="modal-content" style="max-width:660px">
+        <div class="modal-content" style="max-width:680px">
             <div class="modal-header">
                 <div style="display:flex;align-items:center;gap:14px">
                     <div style="width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,rgba(255,43,82,0.3),rgba(180,0,40,0.15));display:flex;align-items:center;justify-content:center;font-size:1.1rem;color:#ff2b52;flex-shrink:0">
                         <i class="fas fa-pen-to-square"></i>
                     </div>
                     <div>
-                        <h3 style="-webkit-text-fill-color:unset;background:none;color:#fff;font-size:1.15rem">Edit Product</h3>
-                        <p style="font-size:0.78rem;color:rgba(255,255,255,0.45);margin:2px 0 0">Update all product metadata fields below</p>
+                        <h3 style="-webkit-text-fill-color:unset;background:none;color:#fff;font-size:1.15rem" id="editModalHeaderTitle">Edit Product</h3>
+                        <p style="font-size:0.78rem;color:rgba(255,255,255,0.45);margin:2px 0 0" id="editModalHeaderSub">Update product metadata and configuration</p>
                     </div>
                 </div>
                 <button class="modal-close" onclick="closeEditModal()">&times;</button>
@@ -1838,15 +1838,11 @@
                 <div class="form-row">
                     <div class="form-group">
                         <label for="editProductType"><i class="fas fa-layer-group" style="margin-right:5px;opacity:0.7"></i>Resource Type *</label>
-                        <select id="editProductType" required>
+                        <select id="editProductType" onchange="updateModalFieldsForType(this.value)" required>
                             <option value="preset">Preset</option>
-                            <option value="plugin">Plugin</option>
-                            <option value="software">Software</option>
-                            <option value="audio">Audio</option>
-                            <option value="sound">Sound</option>
-                            <option value="music">Music</option>
-                            <option value="lut">LUT</option>
-                            <option value="effect">Effect</option>
+                            <option value="plugin">Plugin / Software</option>
+                            <option value="audio">Audio Resource</option>
+                            <option value="scenepack">Scenepack</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -1856,23 +1852,51 @@
                         </select>
                     </div>
                 </div>
+
                 <div class="form-group">
                     <label for="editProductDesc"><i class="fas fa-align-left" style="margin-right:5px;opacity:0.7"></i>Description</label>
                     <textarea id="editProductDesc" placeholder="Describe the product in detail..."></textarea>
                 </div>
+
+                <!-- Common Links & Thumbnail -->
                 <div class="form-row">
-                    <div class="form-group">
-                        <label for="editProductFilePath"><i class="fas fa-file-zipper" style="margin-right:5px;opacity:0.7"></i>SFTP File Path</label>
-                        <input type="text" id="editProductFilePath" placeholder="u1421177.../file.zip">
+                    <div class="form-group" id="groupSourceUrl">
+                        <label for="editProductSourceUrl"><i class="fas fa-link" style="margin-right:5px;opacity:0.7"></i>Source / Download Link *</label>
+                        <input type="url" id="editProductSourceUrl" placeholder="https://...">
                     </div>
-                    <div class="form-group">
+                    <div class="form-group" id="groupThumbnail">
                         <label for="editProductThumbnail"><i class="fas fa-image" style="margin-right:5px;opacity:0.7"></i>Thumbnail URL</label>
                         <input type="url" id="editProductThumbnail" placeholder="https://cdn.discordapp.com/...">
                     </div>
                 </div>
 
-                <!-- Creator Section -->
-                <div class="form-section-divider">
+                <!-- PLUGIN / SOFTWARE SPECIFIC FIELDS -->
+                <div id="sectionPluginSpecific" style="display:none" class="form-section-divider">
+                    <div class="form-section-label">
+                        <span><i class="fas fa-puzzle-piece" style="margin-right:7px"></i>Plugin &amp; Software Configuration</span>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editProductPlatform"><i class="fas fa-desktop" style="margin-right:5px;opacity:0.7"></i>Platform</label>
+                            <select id="editProductPlatform">
+                                <option value="win">Windows</option>
+                                <option value="mac">Mac</option>
+                                <option value="both">Both (Win + Mac)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="editProductPassword"><i class="fas fa-key" style="margin-right:5px;opacity:0.7"></i>ZIP Password</label>
+                            <input type="text" id="editProductPassword" placeholder="e.g. VR4ALL or leave empty">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="editProductNotes"><i class="fas fa-info-circle" style="margin-right:5px;opacity:0.7"></i>Compatibility Notes</label>
+                        <input type="text" id="editProductNotes" placeholder="e.g. Compatible with AE 2025+">
+                    </div>
+                </div>
+
+                <!-- PRESET / SCENEPACK CREATOR SECTION -->
+                <div id="sectionCreatorInfo" class="form-section-divider">
                     <div class="form-section-label">
                         <span><i class="fas fa-user-edit" style="margin-right:7px"></i>Creator &amp; Social Media</span>
                         <button type="button" onclick="fetchCreatorMetadataForModal()" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:999px;background:rgba(255,43,82,0.15);border:1px solid rgba(255,43,82,0.3);color:#fff;font-size:0.78rem;font-weight:700;cursor:pointer;transition:all 0.2s">
@@ -1893,6 +1917,12 @@
                             <input type="text" id="editProductCreatorAvatar" placeholder="https://...avatar.jpg">
                         </div>
                     </div>
+                </div>
+
+                <!-- SFTP FILE PATH -->
+                <div class="form-group" id="groupFilePath">
+                    <label for="editProductFilePath"><i class="fas fa-file-zipper" style="margin-right:5px;opacity:0.7"></i>SFTP Storage Path</label>
+                    <input type="text" id="editProductFilePath" placeholder="u1421177.../file.zip">
                 </div>
 
                 <div class="form-actions">
@@ -2440,20 +2470,68 @@
             var catOptions = isPlugin
                 ? [['software','Software'],['adobe-plugin','Adobe Plugin'],['ofx-plugin','OFX Plugin'],['others','Others']]
                 : [['after-effects','After Effects'],['premiere-pro','Premiere Pro'],['photoshop','Photoshop'],['video-star','Video Star'],['topaz-labs','Topaz Labs'],['others','Others']];
-            catOptions.forEach(function(opt) {
-                var o = document.createElement('option');
-                o.value = opt[0]; o.textContent = opt[1];
-                if (opt[0] === (product.category || 'others')) o.selected = true;
-                catSelect.appendChild(o);
-            });
-            document.getElementById('editProductDesc').value = product.description || '';
+            const prodType = product.type || 'preset';
+            document.getElementById('editProductType').value = prodType;
+            
+            // Populate category select options based on type
+            populateModalCategories(prodType, product.category);
+            updateModalFieldsForType(prodType);
+
+            document.getElementById('editProductDesc').value = product.description || product.desc || '';
             document.getElementById('editProductFilePath').value = product.file_path || '';
             document.getElementById('editProductThumbnail').value = product.thumbnail || '';
+            document.getElementById('editProductSourceUrl').value = product.source_url || product.product_url || product.file_url || (product.links && product.links[0] ? product.links[0].url : '') || '';
+            
+            // Plugin fields
+            document.getElementById('editProductPlatform').value = product.platform || 'win';
+            document.getElementById('editProductPassword').value = product.password || '';
+            document.getElementById('editProductNotes').value = product.notes || '';
+
+            // Creator fields
             document.getElementById('editProductCreatorSocialUrl').value = product.creator_social_url || '';
             document.getElementById('editProductCreatorNickname').value = product.creator_nickname || '';
             document.getElementById('editProductCreatorAvatar').value = product.creator_avatar || '';
 
             document.getElementById('editProductModal').classList.add('active');
+        }
+
+        function populateModalCategories(type, currentCategory) {
+            const catSelect = document.getElementById('editProductCategory');
+            let options = [];
+            const t = (type || 'preset').toLowerCase();
+            
+            if (t === 'plugin' || t === 'software') {
+                options = [
+                    { val: 'software', label: 'Software' },
+                    { val: 'adobe-plugin', label: 'Adobe Plugin' },
+                    { val: 'ofx-plugin', label: 'OFX Plugin' },
+                    { val: 'avx', label: 'AVX' },
+                    { val: 'extensions-scripts', label: 'Extensions & Scripts' }
+                ];
+            } else if (t === 'audio' || t === 'sound' || t === 'music') {
+                options = [
+                    { val: 'audio', label: 'Audio Pack' },
+                    { val: 'sound', label: 'Sound Effect (SFX)' },
+                    { val: 'music', label: 'Music / Beat' }
+                ];
+            } else if (t === 'scenepack') {
+                options = [
+                    { val: 'scenepack', label: 'Scenepack' },
+                    { val: 'raw-footage', label: 'Raw Footage' }
+                ];
+            } else {
+                options = [
+                    { val: 'after-effects', label: 'After Effects' },
+                    { val: 'premiere-pro', label: 'Premiere Pro' },
+                    { val: 'photoshop', label: 'Photoshop' },
+                    { val: 'video-star', label: 'Video Star' },
+                    { val: 'topaz-labs', label: 'Topaz Labs' },
+                    { val: 'others', label: 'Others' }
+                ];
+            }
+
+            catSelect.innerHTML = options.map(o => `<option value="${o.val}"${o.val === currentCategory ? ' selected' : ''}>${o.label}</option>`).join('');
+            if (!catSelect.value && options.length > 0) catSelect.value = options[0].val;
         }
 
         function closeEditModal() {
@@ -2487,18 +2565,30 @@
             if (saveBtn) { saveBtn.disabled = true; saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...'; }
             
             const id = document.getElementById('editProductId').value;
+            const type = document.getElementById('editProductType').value;
+            const sourceUrl = document.getElementById('editProductSourceUrl').value;
+
             const payload = {
                 id: id,
                 name: document.getElementById('editProductName').value,
-                type: document.getElementById('editProductType').value,
+                type: type,
                 category: document.getElementById('editProductCategory').value,
                 description: document.getElementById('editProductDesc').value,
                 file_path: document.getElementById('editProductFilePath').value,
                 thumbnail: document.getElementById('editProductThumbnail').value,
+                source_url: sourceUrl,
+                product_url: sourceUrl,
+                platform: document.getElementById('editProductPlatform').value,
+                password: document.getElementById('editProductPassword').value,
+                notes: document.getElementById('editProductNotes').value,
                 creator_social_url: document.getElementById('editProductCreatorSocialUrl').value,
                 creator_nickname: document.getElementById('editProductCreatorNickname').value,
                 creator_avatar: document.getElementById('editProductCreatorAvatar').value
             };
+
+            if (type === 'plugin' || type === 'software') {
+                payload.links = [{ url: sourceUrl || '', label: 'Download' }];
+            }
 
             try {
                 const resp = await fetch(`/api/products/edit/${id}`, {
@@ -2507,7 +2597,7 @@
                     body: JSON.stringify(payload)
                 });
                 const data = await resp.json();
-                if (resp.ok && (data.success || data.product || data.id)) {
+                if (resp.ok && (data.success || data.product || data.id || data.message)) {
                     // Update in local memory array immediately for instant feedback
                     const idx = allProducts.findIndex(p => p.id === id);
                     if (idx !== -1) {
@@ -2520,7 +2610,7 @@
                     alert("Update failed: " + (data.error || data.message || 'Unknown error'));
                 }
             } catch(err) {
-                alert("Server request failed. Please check connection.");
+                alert("Server request failed: " + err.message);
             } finally {
                 if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = 'Save Changes'; }
             }

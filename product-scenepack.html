@@ -408,10 +408,11 @@
         if (hasUploader || hasCreator) {
             html += '<div class="creators-flex">';
             if (hasUploader) {
-                html += '<div class="creator-card"><div class="creator-avatar"><i class="fab fa-discord"></i></div><div class="creator-info"><strong>' + esc(uploaderName) + '</strong><span>Uploaded by</span></div></div>';
+                var uploaderAvatarSrc = p.uploader_avatar || (p.uploader_id ? (typeof avatarProxyUrl === 'function' ? avatarProxyUrl(p.uploader_id, p.uploader_avatar, 64) : '') : '');
+                html += '<div class="creator-card"><div class="creator-avatar">' + (uploaderAvatarSrc ? '<img src="' + esc(uploaderAvatarSrc) + '" onerror="this.outerHTML=\'<i class=\\\'fab fa-discord\\\'></i>\'">' : '<i class="fab fa-discord" style="color:#5865F2"></i>') + '</div><div class="creator-info"><strong>' + esc(uploaderName) + '</strong><span>Uploaded by (Discord)</span></div></div>';
             }
             if (hasCreator) {
-                html += '<div class="creator-card"><div class="creator-avatar">' + (p.creator_avatar ? '<img src="' + esc(p.creator_avatar) + '">' : '<i class="fas fa-user"></i>') + '</div><div class="creator-info"><strong>' + esc(p.creator_nickname || 'Creator') + '</strong>' + (p.creator_social_url ? '<a href="' + esc(p.creator_social_url) + '" target="_blank">View Social Profile</a>' : '<span>Original Creator</span>') + '</div></div>';
+                html += '<div class="creator-card"><div class="creator-avatar">' + (p.creator_avatar ? '<img src="' + esc(p.creator_avatar) + '" onerror="this.outerHTML=\'<i class=\\\'fas fa-user\\\'></i>\'">' : '<i class="fas fa-user"></i>') + '</div><div class="creator-info"><strong>' + esc(p.creator_nickname || 'Creator') + '</strong>' + (p.creator_social_url ? '<a href="' + esc(p.creator_social_url) + '" target="_blank">View Social Profile</a>' : '<span>Original Creator</span>') + '</div></div>';
             }
             html += '</div>';
         }
