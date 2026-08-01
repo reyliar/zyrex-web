@@ -530,7 +530,10 @@
             <!-- Profile Info Header & Posts Selection List -->
             <div id="hlxResultsArea" style="display:none;margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.08)">
                 <div id="hlxProfileBox" style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.03);padding:12px;border-radius:14px;margin-bottom:14px">
-                    <img id="hlxProfileAvatar" src="" alt="" style="width:40px;height:40px;border-radius:50%;object-fit:cover;background:rgba(255,43,82,0.1)">
+                    <div style="position:relative;width:40px;height:40px;flex-shrink:0">
+                        <img id="hlxProfileAvatar" src="" alt="" referrerpolicy="no-referrer" style="width:40px;height:40px;border-radius:50%;object-fit:cover;background:rgba(255,43,82,0.1)" onerror="this.style.display='none';var fb=document.getElementById('hlxProfileAvatarFallback');if(fb)fb.style.display='flex';">
+                        <div id="hlxProfileAvatarFallback" style="display:none;width:40px;height:40px;border-radius:50%;background:rgba(255,43,82,0.15);border:1px solid rgba(255,43,82,0.3);align-items:center;justify-content:center;color:var(--cherry-light)"><i class="fas fa-user"></i></div>
+                    </div>
                     <div style="flex:1;min-width:0">
                         <strong id="hlxProfileName" style="color:#fff;font-size:0.88rem;display:block"></strong>
                         <span id="hlxProfileHandle" style="color:var(--muted);font-size:0.75rem"></span>
@@ -674,11 +677,14 @@
                 document.getElementById('hlxProfileName').textContent = creatorDisplay;
                 document.getElementById('hlxProfileHandle').textContent = lookupUrl;
                 var pImg = document.getElementById('hlxProfileAvatar');
+                var pFb = document.getElementById('hlxProfileAvatarFallback');
                 if (avatarUrl) {
                     pImg.src = avatarUrl;
                     pImg.style.display = 'block';
+                    if (pFb) pFb.style.display = 'none';
                 } else {
                     pImg.style.display = 'none';
+                    if (pFb) pFb.style.display = 'flex';
                 }
 
                 // Gather extracted items/posts array
