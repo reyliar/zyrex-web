@@ -2455,48 +2455,41 @@
             }
         }
 
-        // Modal triggers for editing product
-        function openEditModal(productId) {
-            const product = allProducts.find(p => p.id === productId);
-            if (!product) return;
+        // Modal helper functions
+        function updateModalFieldsForType(type) {
+            const pluginSection = document.getElementById('sectionPluginSpecific');
+            const creatorSection = document.getElementById('sectionCreatorInfo');
+            const groupFilePath = document.getElementById('groupFilePath');
+            const groupSourceUrl = document.getElementById('groupSourceUrl');
+            const titleEl = document.getElementById('editModalHeaderTitle');
+            const subEl = document.getElementById('editModalHeaderSub');
 
-            document.getElementById('editProductId').value = product.id;
-            document.getElementById('editProductName').value = product.name || '';
-            document.getElementById('editProductType').value = product.type || 'preset';
-            
-            var catSelect = document.getElementById('editProductCategory');
-            catSelect.innerHTML = '';
-            var isPlugin = (product.type === 'plugin');
-            var catOptions = isPlugin
-                ? [['software','Software'],['adobe-plugin','Adobe Plugin'],['ofx-plugin','OFX Plugin'],['others','Others']]
-                : [['after-effects','After Effects'],['premiere-pro','Premiere Pro'],['photoshop','Photoshop'],['video-star','Video Star'],['topaz-labs','Topaz Labs'],['others','Others']];
-            const prodType = product.type || 'preset';
-            document.getElementById('editProductType').value = prodType;
-            
-            // Populate category select options based on type
-            populateModalCategories(prodType, product.category);
-            updateModalFieldsForType(prodType);
+            if (pluginSection) pluginSection.style.display = 'none';
+            if (creatorSection) creatorSection.style.display = 'block';
+            if (groupFilePath) groupFilePath.style.display = 'block';
+            if (groupSourceUrl) groupSourceUrl.style.display = 'block';
 
-            document.getElementById('editProductDesc').value = product.description || product.desc || '';
-            document.getElementById('editProductFilePath').value = product.file_path || '';
-            document.getElementById('editProductThumbnail').value = product.thumbnail || '';
-            document.getElementById('editProductSourceUrl').value = product.source_url || product.product_url || product.file_url || (product.links && product.links[0] ? product.links[0].url : '') || '';
-            
-            // Plugin fields
-            document.getElementById('editProductPlatform').value = product.platform || 'win';
-            document.getElementById('editProductPassword').value = product.password || '';
-            document.getElementById('editProductNotes').value = product.notes || '';
-
-            // Creator fields
-            document.getElementById('editProductCreatorSocialUrl').value = product.creator_social_url || '';
-            document.getElementById('editProductCreatorNickname').value = product.creator_nickname || '';
-            document.getElementById('editProductCreatorAvatar').value = product.creator_avatar || '';
-
-            document.getElementById('editProductModal').classList.add('active');
+            const cleanType = (type || 'preset').toLowerCase();
+            if (cleanType === 'plugin' || cleanType === 'software') {
+                if (titleEl) titleEl.textContent = 'Edit Plugin / Software';
+                if (subEl) subEl.textContent = 'Configure platform, password, notes, download links and metadata';
+                if (pluginSection) pluginSection.style.display = 'block';
+                if (creatorSection) creatorSection.style.display = 'none';
+            } else if (cleanType === 'audio' || cleanType === 'sound' || cleanType === 'music') {
+                if (titleEl) titleEl.textContent = 'Edit Audio Resource';
+                if (subEl) subEl.textContent = 'Configure audio stream URL, category, description and uploader info';
+            } else if (cleanType === 'scenepack') {
+                if (titleEl) titleEl.textContent = 'Edit Scenepack';
+                if (subEl) subEl.textContent = 'Configure scenepack source link, thumbnail, description and creator info';
+            } else {
+                if (titleEl) titleEl.textContent = 'Edit Preset Package';
+                if (subEl) subEl.textContent = 'Configure preset category, creator social profile, thumbnail and description';
+            }
         }
 
         function populateModalCategories(type, currentCategory) {
             const catSelect = document.getElementById('editProductCategory');
+            if (!catSelect) return;
             let options = [];
             const t = (type || 'preset').toLowerCase();
             
@@ -2510,9 +2503,9 @@
                 ];
             } else if (t === 'audio' || t === 'sound' || t === 'music') {
                 options = [
-                    { val: 'audio', label: 'Audio Pack' },
-                    { val: 'sound', label: 'Sound Effect (SFX)' },
-                    { val: 'music', label: 'Music / Beat' }
+                    { val: 'hot', label: 'Hot' },
+                    { val: 'soft', label: 'Soft' },
+                    { val: 'velocity', label: 'Velocity' }
                 ];
             } else if (t === 'scenepack') {
                 options = [
@@ -2532,6 +2525,50 @@
 
             catSelect.innerHTML = options.map(o => `<option value="${o.val}"${o.val === currentCategory ? ' selected' : ''}>${o.label}</option>`).join('');
             if (!catSelect.value && options.length > 0) catSelect.value = options[0].val;
+        }
+
+        function setModalVal(id, val) {
+            const el = document.getElementById(id);
+            if (el) el.value = val || '';
+        }
+
+        // Modal triggers for editing product
+        function openEditModal(productId) {
+            const product = allProducts.find(p => String(p.id) === String(productId));
+            if (!product) {
+                console.error("Product not found:", productId);
+                alert("Product details not found for ID: " + productId);
+                return;
+            }
+
+            const prodType = product.type || 'preset';
+            setModalVal('editProductId', product.id);
+            setModalVal('editProductName', product.name || '');
+            setModalVal('editProductType', prodType);
+            
+            // Populate category select options & update fields for type
+            populateModalCategories(prodType, product.category);
+            updateModalFieldsForType(prodType);
+
+            setModalVal('editProductDesc', product.description || product.desc || '');
+            setModalVal('editProductFilePath', product.file_path || '');
+            setModalVal('editProductThumbnail', product.thumbnail || '');
+            setModalVal('editProductSourceUrl', product.source_url || product.product_url || product.file_url || (product.links && product.links[0] ? product.links[0].url : '') || '');
+            
+            // Plugin fields
+            setModalVal('editProductPlatform', product.platform || 'win');
+            setModalVal('editProductPassword', product.password || '');
+            setModalVal('editProductNotes', product.notes || '');
+
+            // Creator fields
+            setModalVal('editProductCreatorSocialUrl', product.creator_social_url || '');
+            setModalVal('editProductCreatorNickname', product.creator_nickname || '');
+            setModalVal('editProductCreatorAvatar', product.creator_avatar || '');
+
+            const modal = document.getElementById('editProductModal');
+            if (modal) {
+                modal.classList.add('active');
+            }
         }
 
         function closeEditModal() {
