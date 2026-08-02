@@ -3344,9 +3344,7 @@ async function storeAndProxyImage(env, imageUrl) {
           });
           if (fileApiResp.ok) {
             const result = await fileApiResp.json();
-            if (result.success) {
-              return json(result);
-            }
+            return json(result);
           }
         } catch (fileApiErr) {
           console.warn("FILE_API transfer delegate failed/timed out, falling back to Worker R2 copy:", fileApiErr.message);
