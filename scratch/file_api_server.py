@@ -690,17 +690,23 @@ class FileAPIHandler(BaseHTTPRequestHandler):
                 return
             
             username = get_sftpgo_username(discord_id)
-            if not username:
-                self._send_json({"success": False, "error": "No SFTPGo account linked"}, 404)
-                return
+            source_prefix = f"{username}/{source_editor}/{source_resource}/" if username else ""
+            staging_objects = r2_list_objects(source_prefix, bucket=R2_STAGING_BUCKET) if source_prefix else []
             
-            # R2 staging prefix: username/source_editor/source_resource/
-            source_prefix = f"{username}/{source_editor}/{source_resource}/"
-            # R2 production prefix: dest_editor/source_resource/
-            dest_prefix = f"{dest_editor}/{source_resource}/"
+            # Fallback: scan top-level staging folders if not found by DB username
+            if not staging_objects:
+                top_objs = r2_list_objects("", delimiter="/", bucket=R2_STAGING_BUCKET)
+                for obj in top_objs:
+                    if obj.get("is_folder"):
+                        try_user = obj["key"].rstrip("/")
+                        try_prefix = f"{try_user}/{source_editor}/{source_resource}/"
+                        check = r2_list_objects(try_prefix, bucket=R2_STAGING_BUCKET)
+                        if check:
+                            source_prefix = try_prefix
+                            staging_objects = check
+                            username = try_user
+                            break
             
-            # Check source exists in staging R2
-            staging_objects = r2_list_objects(source_prefix, bucket=R2_STAGING_BUCKET)
             file_objects = [o for o in staging_objects]
             if not file_objects:
                 self._send_json({"success": False, "error": f"Source not found in cloud: {source_editor}/{source_resource}"}, 404)

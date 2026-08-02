@@ -3289,8 +3289,9 @@ async function storeAndProxyImage(env, imageUrl) {
       if (path === "/api/products/create-editor" && request.method === "POST") {
         const session = parseSession(request.headers.get("Cookie"));
         if (!session) return json({ error: "Not logged in" }, 401);
+        let body = {};
         try {
-          const body = await request.json();
+          body = await request.json();
           const safeName = (body.name || "").replace(/[^a-zA-Z0-9 _\-.]/g, "").trim();
           if (!safeName) return json({ success: false, error: "Invalid folder name" }, 400);
           
@@ -3306,7 +3307,6 @@ async function storeAndProxyImage(env, imageUrl) {
         } catch (e) {
           console.error("R2 create-editor error:", e.message);
           try {
-            const body = await request.clone().json();
             const apiUrl = `${FILE_API}/api/files/create-editor?token=zyrex-files-api-2026`;
             const resp = await fetch(apiUrl, {
               method: "POST",

@@ -1314,7 +1314,7 @@
                             <div class="field" style="margin:0">
                                 <label>Or Register New Namespace</label>
                                 <div style="display:flex;gap:8px">
-                                    <input type="text" id="newEditor" placeholder="e.g. REYLIFFX" style="flex:1">
+                                    <input type="text" id="newEditor" placeholder="e.g. REYLIFFX" style="flex:1" oninput="checkConflict()">
                                     <button class="btn btn-primary btn-sm" onclick="createEditor()" style="white-space:nowrap"><i class="fas fa-folder-plus"></i> Create</button>
                                 </div>
                             </div>
@@ -2322,7 +2322,14 @@
                 const d=await r.json();
                 if(d.success){
                     alertMsg('Folder created!',false);
+                    if(!allEditors.includes(name)) allEditors.push(name);
+                    allEditors.sort();
+                    populateEditors(allEditors);
+                    document.getElementById('dstEditor').value=name;
                     await loadEditors();
+                    if(!allEditors.includes(name)) allEditors.push(name);
+                    allEditors.sort();
+                    populateEditors(allEditors);
                     document.getElementById('dstEditor').value=name;
                     checkConflict();
                 }else alertMsg(d.error||'Failed to create folder',true)
