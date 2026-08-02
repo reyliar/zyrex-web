@@ -2307,13 +2307,23 @@
         }
 
         function checkConflict(){
-            const editor=document.getElementById('dstEditor').value||document.getElementById('newEditor').value.trim();
-            if(editor&&selRes!==null){
-                document.getElementById('btnTransfer').disabled=false;
-                selDstEditor=editor;
-                document.getElementById('destPath').innerHTML='Destination Path: <strong>'+editor+'/'+(cloudFiles[selRes]?.resource||'')+'</strong>'
-            }else{
-                document.getElementById('btnTransfer').disabled=true
+            const selVal = document.getElementById('dstEditor').value;
+            const newVal = document.getElementById('newEditor').value.trim();
+            const btnT = document.getElementById('btnTransfer');
+            const destP = document.getElementById('destPath');
+
+            if(selVal && selRes !== null){
+                btnT.disabled = false;
+                selDstEditor = selVal;
+                destP.innerHTML = 'Destination Path: <strong>' + selVal + '/' + (cloudFiles[selRes]?.resource || '') + '</strong>';
+            } else if(newVal && !selVal && selRes !== null){
+                btnT.disabled = true;
+                selDstEditor = '';
+                destP.innerHTML = '<span style="color:var(--cherry-light)"><i class="fas fa-arrow-up"></i> Please click "Create" button to register folder "' + newVal + '" first</span>';
+            } else {
+                btnT.disabled = true;
+                selDstEditor = '';
+                destP.innerHTML = 'Destination Path: <strong>--</strong>';
             }
         }
 
@@ -2329,11 +2339,13 @@
                     allEditors.sort();
                     populateEditors(allEditors);
                     document.getElementById('dstEditor').value=name;
+                    document.getElementById('newEditor').value='';
                     await loadEditors();
                     if(!allEditors.includes(name)) allEditors.push(name);
                     allEditors.sort();
                     populateEditors(allEditors);
                     document.getElementById('dstEditor').value=name;
+                    document.getElementById('newEditor').value='';
                     checkConflict();
                 }else alertMsg(d.error||'Failed to create folder',true)
             }catch(e){alertMsg('Network error',true)}
