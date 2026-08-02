@@ -2337,7 +2337,10 @@
         }
 
         async function transfer(){
-            if(selRes===null||!selDstEditor)return;
+            var dst = selDstEditor || (document.getElementById('dstEditor')||{}).value || ((document.getElementById('newEditor')||{}).value||'').trim();
+            if(selRes===null){ alertMsg('Please select a cloud folder first',true); return; }
+            if(!dst){ alertMsg('Please select or enter a destination folder name',true); return; }
+            selDstEditor = dst;
             const res=cloudFiles[selRes],btn=document.getElementById('btnTransfer');
             const progressBox = document.getElementById('transferProgressBox');
             const barFill = document.getElementById('tpbBarFill');

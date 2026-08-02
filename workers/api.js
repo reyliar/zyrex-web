@@ -3286,7 +3286,7 @@ async function storeAndProxyImage(env, imageUrl) {
       }
 
       // ============ PRODUCTS: Create Editor Folder (R2 prod bucket) ============
-      if (path === "/api/products/create-editor" && request.method === "POST") {
+      if (path === "/api/products/create-editor" && (request.method === "POST" || request.method === "PUT")) {
         const session = parseSession(request.headers.get("Cookie"));
         if (!session) return json({ error: "Not logged in" }, 401);
         let body = {};
@@ -3320,7 +3320,7 @@ async function storeAndProxyImage(env, imageUrl) {
       }
 
       // ============ PRODUCTS: Transfer to Production (R2 direct via FILE_API or Worker) ============
-      if (path === "/api/products/transfer" && request.method === "POST") {
+      if (path === "/api/products/transfer" && (request.method === "POST" || request.method === "PUT")) {
         const session = parseSession(request.headers.get("Cookie"));
         if (!session) return json({ error: "Not logged in" }, 401);
         
@@ -3373,7 +3373,7 @@ async function storeAndProxyImage(env, imageUrl) {
             const tryUser = cp.replace(/\/$/, "");
             const tryPrefix = `${tryUser}/${srcEditor}/${srcResource}/`;
             const check = await stagingBucket.list({ prefix: tryPrefix });
-            if (check.objects.some(o => !o.key.endsWith("/"))) {
+            if (check && check.objects && check.objects.some(o => !o.key.endsWith("/"))) {
               srcPrefix = tryPrefix;
               break;
             }
@@ -3384,7 +3384,7 @@ async function storeAndProxyImage(env, imageUrl) {
             if (session.userId) {
               const altPrefix = `${username}_${session.userId}/${srcEditor}/${srcResource}/`;
               const altCheck = await stagingBucket.list({ prefix: altPrefix, limit: 1 });
-              if (altCheck.objects.some(o => !o.key.endsWith("/"))) {
+              if (altCheck && altCheck.objects && altCheck.objects.some(o => !o.key.endsWith("/"))) {
                 srcPrefix = altPrefix;
               }
             }
