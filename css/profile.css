@@ -1,0 +1,706 @@
+/* Profile Pages Stylesheet (Deep Bordo & Pastel Blue Themes, Wide Horizontal Layout, 3D Parallax & Custom Cursors) */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap');
+
+:root {
+    --font-primary: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-secondary: 'Poppins', sans-serif;
+}
+
+/* Theme: Deep Bordo / Dark Burgundy (/kerem) */
+body.theme-bordo {
+    --bg-main: #050103;
+    --card-bg: rgba(14, 3, 7, 0.94);
+    --card-glow: rgba(140, 14, 45, 0.28);
+    --neon-1: #9e0f35;
+    --neon-2: #c41847;
+    --neon-3: #4a0518;
+    --text-primary: #ffffff;
+    --text-secondary: #c295a4;
+    --accent-color: #a81238;
+    --accent-glow: rgba(168, 18, 56, 0.45);
+    --badge-bg: linear-gradient(135deg, rgba(90, 10, 30, 0.55), rgba(168, 18, 56, 0.25));
+    --badge-border: rgba(185, 30, 70, 0.45);
+    --badge-text: #e691a8;
+    --btn-bg: rgba(24, 5, 12, 0.88);
+    --btn-border: rgba(168, 18, 56, 0.4);
+    --btn-hover-bg: #8a0e2e;
+    --btn-hover-glow: rgba(168, 18, 56, 0.65);
+    --star-color-1: rgba(180, 40, 75, 0.85);
+    --star-color-2: rgba(255, 255, 255, 0.85);
+}
+
+/* Theme: Pastel Blue (/reyli) */
+body.theme-pastel-blue {
+    --bg-main: #040914;
+    --card-bg: rgba(8, 18, 34, 0.92);
+    --card-glow: rgba(96, 165, 250, 0.28);
+    --neon-1: #60a5fa;
+    --neon-2: #93c5fd;
+    --neon-3: #1d4ed8;
+    --text-primary: #ffffff;
+    --text-secondary: #a3c7f7;
+    --accent-color: #60a5fa;
+    --accent-glow: rgba(96, 165, 250, 0.5);
+    --badge-bg: linear-gradient(135deg, rgba(30, 80, 150, 0.45), rgba(96, 165, 250, 0.2));
+    --badge-border: rgba(147, 197, 253, 0.45);
+    --badge-text: #93c5fd;
+    --btn-bg: rgba(14, 28, 52, 0.85);
+    --btn-border: rgba(96, 165, 250, 0.4);
+    --btn-hover-bg: #60a5fa;
+    --btn-hover-glow: rgba(96, 165, 250, 0.7);
+    --star-color-1: rgba(120, 190, 255, 0.9);
+    --star-color-2: rgba(255, 255, 255, 0.85);
+}
+
+/* Global Reset & Base */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow-x: hidden;
+    font-family: var(--font-primary);
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+}
+
+/* Hide default cursor on desktop for custom aesthetic cursor */
+@media (pointer: fine) {
+    body, a, button, input {
+        cursor: none !important;
+    }
+}
+
+/* CUSTOM AESTHETIC THEME CURSOR */
+.custom-cursor-dot {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: var(--accent-color);
+    box-shadow: 0 0 10px var(--accent-color), 0 0 20px var(--accent-glow);
+    pointer-events: none;
+    z-index: 999999;
+    transform: translate(-50%, -50%);
+    transition: width 0.2s ease, height 0.2s ease, background-color 0.2s ease;
+}
+
+.custom-cursor-ring {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1.5px solid var(--accent-color);
+    box-shadow: 0 0 15px var(--accent-glow);
+    pointer-events: none;
+    z-index: 999998;
+    transform: translate(-50%, -50%);
+    transition: width 0.25s ease, height 0.25s ease, border-color 0.25s ease, opacity 0.25s ease;
+    opacity: 0.7;
+}
+
+/* Cursor Hover State over Interactive Elements */
+body.cursor-hover .custom-cursor-dot {
+    width: 11px;
+    height: 11px;
+    background-color: #ffffff;
+    box-shadow: 0 0 15px #ffffff, 0 0 25px var(--accent-color);
+}
+
+body.cursor-hover .custom-cursor-ring {
+    width: 52px;
+    height: 52px;
+    border-color: #ffffff;
+    opacity: 0.9;
+}
+
+/* LOADING OVERLAY SCREEN */
+.loader-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: var(--bg-main);
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1);
+    transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), 
+                visibility 0.8s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.loader-screen.fade-out {
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(1.06);
+    pointer-events: none;
+}
+
+.loader-spinner {
+    width: 48px;
+    height: 48px;
+    border: 4px solid rgba(255, 255, 255, 0.08);
+    border-top-color: var(--accent-color);
+    border-radius: 50%;
+    animation: spinLoader 0.75s linear infinite;
+    box-shadow: 0 0 20px var(--accent-glow);
+}
+
+@keyframes spinLoader {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loader-text {
+    font-size: 0.95rem;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    opacity: 0.9;
+}
+
+/* BOTTOM-LEFT FIXED PAGE CORNER COPYRIGHT */
+.page-corner-copyright {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 10000;
+    color: rgba(255, 255, 255, 0.42);
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 0.3s ease;
+    pointer-events: auto !important;
+}
+
+.page-corner-copyright:hover {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+/* Canvas Background */
+#starfield {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* Background Ambient Glow Orbs */
+.bg-glow-orb {
+    position: fixed;
+    border-radius: 50%;
+    filter: blur(140px);
+    pointer-events: none;
+    z-index: 1;
+    opacity: 0.28;
+    animation: orbPulse 8s ease-in-out infinite alternate;
+}
+
+body.theme-bordo .bg-glow-orb-1 {
+    top: 10%;
+    left: 15%;
+    width: 450px;
+    height: 450px;
+    background: radial-gradient(circle, #8a0e2e 0%, rgba(60, 4, 18, 0) 70%);
+}
+
+body.theme-bordo .bg-glow-orb-2 {
+    bottom: 10%;
+    right: 15%;
+    width: 480px;
+    height: 480px;
+    background: radial-gradient(circle, #4a0518 0%, rgba(20, 0, 6, 0) 70%);
+}
+
+body.theme-pastel-blue .bg-glow-orb-1 {
+    top: 10%;
+    left: 15%;
+    width: 450px;
+    height: 450px;
+    background: radial-gradient(circle, #60a5fa 0%, rgba(30, 80, 160, 0) 70%);
+}
+
+body.theme-pastel-blue .bg-glow-orb-2 {
+    bottom: 10%;
+    right: 15%;
+    width: 480px;
+    height: 480px;
+    background: radial-gradient(circle, #3b82f6 0%, rgba(10, 30, 70, 0) 70%);
+}
+
+@keyframes orbPulse {
+    0% { transform: scale(1) translate(0, 0); opacity: 0.2; }
+    100% { transform: scale(1.25) translate(20px, -20px); opacity: 0.38; }
+}
+
+/* Page Layout */
+.profile-wrapper {
+    position: relative;
+    z-index: 10;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem 1.5rem;
+    perspective: 1000px;
+    overflow: visible;
+}
+
+/* WIDE ROTATING NEON BORDER CARD CONTAINER */
+.neon-card-container {
+    position: relative;
+    width: 100%;
+    max-width: 620px;
+    border-radius: 28px;
+    padding: 2px;
+    overflow: visible; /* Allows floating tooltips to render without clipping */
+    box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85),
+                0 0 45px var(--card-glow);
+    animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+    will-change: transform;
+    transition: transform 0.08s ease-out, box-shadow 0.3s ease;
+    pointer-events: auto;
+}
+
+.neon-card-container:hover {
+    box-shadow: 0 35px 85px rgba(0, 0, 0, 0.95),
+                0 0 70px var(--card-glow);
+}
+
+/* Inner neon background mask */
+.neon-card-inner-mask {
+    position: absolute;
+    inset: 0;
+    border-radius: 28px;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Rotating Neon Light Beam 1 */
+.neon-card-inner-mask::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(
+        transparent,
+        var(--neon-1),
+        var(--neon-2),
+        transparent 30%
+    );
+    animation: rotateNeon 3.5s linear infinite;
+    pointer-events: none;
+    z-index: 0;
+}
+
+/* Rotating Neon Light Beam 2 (Blurred Glow) */
+.neon-card-inner-mask::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: conic-gradient(
+        transparent,
+        var(--neon-1),
+        var(--neon-2),
+        transparent 30%
+    );
+    animation: rotateNeon 3.5s linear infinite;
+    filter: blur(14px);
+    opacity: 0.85;
+    pointer-events: none;
+    z-index: 0;
+}
+
+@keyframes rotateNeon {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px) scale(0.96);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Inner Profile Card */
+.profile-card {
+    position: relative;
+    z-index: 2;
+    width: 100%;
+    background: var(--card-bg);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    border-radius: 26px;
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+    pointer-events: auto;
+}
+
+/* TOP PROFILE BANNER */
+.profile-banner-wrapper {
+    position: relative;
+    width: 100%;
+    height: 175px;
+    overflow: hidden;
+    background: #080204;
+    border-top-left-radius: 26px;
+    border-top-right-radius: 26px;
+}
+
+.profile-banner-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    filter: brightness(0.92) contrast(1.05);
+    transition: transform 0.6s ease;
+}
+
+.neon-card-container:hover .profile-banner-img {
+    transform: scale(1.04);
+}
+
+/* Banner Overlay Gradient Shadow */
+.profile-banner-wrapper::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 70px;
+    background: linear-gradient(to top, var(--card-bg), transparent);
+    pointer-events: none;
+}
+
+/* PROFILE CONTENT AREA BELOW BANNER - Expanded Bottom Padding for Tooltip Breathing Room */
+.profile-content {
+    position: relative;
+    width: 100%;
+    padding: 0 2rem 3.6rem 2rem; /* Expanded bottom padding so tooltips never clip */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+/* HEADER ROW: Avatar overlapping banner + User details */
+.profile-header-row {
+    width: 100%;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-top: -55px;
+    margin-bottom: 1.5rem;
+    gap: 1.5rem;
+}
+
+/* Avatar Section */
+.avatar-container {
+    position: relative;
+    width: 115px;
+    height: 115px;
+    flex-shrink: 0;
+}
+
+.avatar-wrapper {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    overflow: hidden;
+    padding: 3.5px;
+    background: linear-gradient(135deg, var(--accent-color), rgba(255, 255, 255, 0.3));
+    box-shadow: 0 0 30px var(--accent-glow), 0 8px 20px rgba(0, 0, 0, 0.6);
+    transition: transform 0.3s ease;
+}
+
+.neon-card-container:hover .avatar-wrapper {
+    transform: scale(1.04);
+}
+
+.discord-avatar-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    background: #111;
+}
+
+/* Online / Offline Status Dot */
+.status-dot-badge {
+    position: absolute;
+    bottom: 5px;
+    right: 5px;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    border: 3.5px solid #0c0408;
+    background-color: #747f8d;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+    transition: background-color 0.3s ease;
+}
+
+.status-dot-badge.online {
+    background-color: #23a55a;
+    box-shadow: 0 0 12px rgba(35, 165, 90, 0.85);
+}
+
+.status-dot-badge.idle {
+    background-color: #f0b232;
+    box-shadow: 0 0 12px rgba(240, 178, 50, 0.85);
+}
+
+.status-dot-badge.dnd {
+    background-color: #f23f43;
+    box-shadow: 0 0 12px rgba(242, 63, 67, 0.85);
+}
+
+.status-dot-badge.offline {
+    background-color: #80848e;
+}
+
+/* Header Details: Display Name, Username, Badge */
+.header-details {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-end;
+    flex-grow: 1;
+    padding-bottom: 4px;
+}
+
+.display-name {
+    font-size: 1.85rem;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    color: var(--text-primary);
+    line-height: 1.15;
+    margin-bottom: 0.15rem;
+}
+
+.username-tag {
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-bottom: 0.6rem;
+    opacity: 0.85;
+}
+
+/* Role Badge */
+.role-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0.38rem 1.15rem;
+    border-radius: 20px;
+    background: var(--badge-bg);
+    border: 1px solid var(--badge-border);
+    color: var(--badge-text);
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.role-badge-icon {
+    width: 17px;
+    height: 17px;
+    object-fit: contain;
+    filter: drop-shadow(0 0 4px var(--accent-glow));
+}
+
+/* Live Discord Presence Box */
+.presence-box {
+    width: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+    padding: 0.85rem 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 1.75rem;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+.presence-icon {
+    font-size: 1.05rem;
+    color: var(--accent-color);
+}
+
+.presence-text {
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 420px;
+}
+
+/* Textless Link Buttons Container */
+.links-grid {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    flex-wrap: wrap;
+    position: relative;
+    z-index: 100;
+    pointer-events: auto;
+}
+
+/* Textless Icon Button */
+.icon-link-btn {
+    position: relative;
+    z-index: 101;
+    width: 60px;
+    height: 60px;
+    border-radius: 18px;
+    background: var(--btn-bg);
+    border: 1px solid var(--btn-border);
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: all 0.25s cubic-bezier(0.2, 0.8, 0.2, 1);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+    pointer-events: auto !important;
+    user-select: none;
+}
+
+.icon-link-btn svg {
+    width: 27px;
+    height: 27px;
+    fill: currentColor;
+    transition: transform 0.25s ease;
+    pointer-events: none;
+}
+
+.icon-link-btn:hover {
+    background: var(--btn-hover-bg);
+    border-color: var(--btn-hover-bg);
+    color: #ffffff;
+    transform: scale(1.1);
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5),
+                0 0 25px var(--btn-hover-glow);
+}
+
+.icon-link-btn:hover svg {
+    transform: scale(1.1);
+}
+
+/* Floating Tooltip - Positioned & Styled to Never Overflow */
+.icon-link-btn::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: -42px;
+    left: 50%;
+    transform: translateX(-50%) translateY(4px);
+    background: rgba(8, 8, 12, 0.94);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+    font-size: 0.78rem;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 9px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: all 0.22s cubic-bezier(0.2, 0.8, 0.2, 1);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6), 0 0 12px var(--accent-glow);
+    z-index: 99999;
+}
+
+.icon-link-btn:hover::after {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* Responsive Layout Adjustments */
+@media (max-width: 540px) {
+    .neon-card-container {
+        max-width: 100%;
+    }
+
+    .profile-banner-wrapper {
+        height: 135px;
+    }
+
+    .profile-content {
+        padding: 0 1.25rem 2.8rem 1.25rem;
+    }
+
+    .profile-header-row {
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        margin-top: -50px;
+        gap: 0.75rem;
+    }
+
+    .header-details {
+        align-items: center;
+        text-align: center;
+    }
+
+    .display-name {
+        font-size: 1.6rem;
+    }
+
+    .presence-text {
+        max-width: 260px;
+    }
+    
+    .icon-link-btn {
+        width: 52px;
+        height: 52px;
+    }
+
+    .icon-link-btn svg {
+        width: 23px;
+        height: 23px;
+    }
+
+    .page-corner-copyright {
+        bottom: 16px;
+        left: 16px;
+        font-size: 0.75rem;
+    }
+}
