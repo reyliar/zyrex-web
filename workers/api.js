@@ -1796,7 +1796,30 @@ async function handlePresenceAPI(request, env) {
       return;
     }
 
-    // 1. Check Gateway R2 storage first
+    // 1. Primary: Fetch live presence directly from VPS Bot HTTP API (storage.zyrexediting.xyz/api/presence/:id)
+    let vpsPresence = null;
+    try {
+      const vpsRes = await fetch(`https://storage.zyrexediting.xyz/api/presence/${id}`, {
+        headers: { "Accept": "application/json", "User-Agent": "ZyrexWorker/1.0" },
+        cf: { cacheTtl: 2 }
+      });
+      if (vpsRes.ok) {
+        const vpsJson = await vpsRes.json();
+        if (vpsJson && vpsJson.success && vpsJson.data) {
+          vpsPresence = vpsJson.data;
+        }
+      }
+    } catch (e) {
+      console.error(`VPS Presence fetch error for ${id}:`, e.message);
+    }
+
+    if (vpsPresence && vpsPresence.status) {
+      presenceCache.set(id, { data: vpsPresence, expiry: Date.now() + 2000 });
+      results[id] = vpsPresence;
+      return;
+    }
+
+    // 2. Fallback: Check Gateway R2 storage
     let r2Presence = null;
     if (env.STORAGE) {
       try {
