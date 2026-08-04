@@ -407,11 +407,17 @@
 
         const { discord_user, discord_status, activities, spotify } = data;
 
-        if (discord_user && discord_user.avatar) {
-            const ext = discord_user.avatar.startsWith('a_') ? 'gif' : 'png';
-            avatarImg.src = `https://cdn.discordapp.com/avatars/${discord_user.id}/${discord_user.avatar}.${ext}?size=256`;
+        // Avatar Update
+        if (avatarImg && discord_user && discord_user.avatar) {
+            if (discord_user.avatar.startsWith('http://') || discord_user.avatar.startsWith('https://')) {
+                avatarImg.src = discord_user.avatar;
+            } else {
+                const ext = discord_user.avatar.startsWith('a_') ? 'gif' : 'png';
+                avatarImg.src = `https://cdn.discordapp.com/avatars/${discord_user.id}/${discord_user.avatar}.${ext}?size=256`;
+            }
         }
 
+        // Display Name & Username Tag
         if (discord_user) {
             if (discord_user.global_name && displayNameEl) {
                 displayNameEl.textContent = discord_user.global_name;
@@ -421,23 +427,26 @@
             }
         }
 
+        // Status Badge Dot (online, idle, dnd, offline)
         if (statusDot && discord_status) {
             statusDot.className = 'status-dot-badge ' + discord_status;
             statusDot.setAttribute('title', discord_status.toUpperCase());
         }
 
+        // Presence & Activity Text
         if (presenceText) {
-            if (spotify) {
-                presenceText.innerHTML = `<i class="fab fa-spotify" style="color:#1db954"></i> Listening to <b>${escapeHtml(spotify.song)}</b> by ${escapeHtml(spotify.artist)}`;
+            if (spotify && spotify.song) {
+                presenceText.innerHTML = `<i class="fab fa-spotify" style="color:#1db954"></i> Listening to <b>${escapeHtml(spotify.song)}</b> by ${escapeHtml(spotify.artist || 'Artist')}`;
             } else if (activities && activities.length > 0) {
                 const customStatus = activities.find(a => a.type === 4);
                 const gameActivity = activities.find(a => a.type !== 4);
 
-                if (customStatus && customStatus.state) {
+                if (customStatus && (customStatus.state || customStatus.name)) {
                     const emojiStr = customStatus.emoji ? `${customStatus.emoji.name} ` : '';
-                    presenceText.textContent = `${emojiStr}${customStatus.state}`;
+                    const textStr = customStatus.state || customStatus.name || '';
+                    presenceText.textContent = `${emojiStr}${textStr}`;
                 } else if (gameActivity) {
-                    const actionName = gameActivity.type === 1 ? 'Streaming' : 'Playing';
+                    const actionName = gameActivity.type === 1 ? 'Streaming' : (gameActivity.type === 2 ? 'Listening to' : 'Playing');
                     presenceText.textContent = `${actionName} ${gameActivity.name}`;
                 } else {
                     presenceText.textContent = getStatusText(discord_status);
@@ -466,7 +475,6 @@
 
     async function fetchNativePresenceData() {
         try {
-            // Primary: Query native Zyrex API endpoint /api/presence/:id
             const resp = await fetch(`/api/presence/${discordUserId}`);
             if (resp.ok) {
                 const json = await resp.json();
@@ -477,13 +485,12 @@
                             id: d.id,
                             username: d.username,
                             global_name: d.global_name,
-                            avatar: d.avatar ? (d.avatar.split('/').pop()?.split('.')[0] || '') : null
+                            avatar: d.avatar
                         },
-                        discord_status: d.status,
+                        discord_status: d.status || (d.online ? 'online' : 'offline'),
                         activities: d.activities || [],
                         spotify: d.spotify || null
                     });
-                    if (d.avatar && avatarImg) avatarImg.src = d.avatar;
                     return;
                 }
             }
@@ -491,7 +498,6 @@
             console.log('Native Presence API fallback:', e.message);
         }
 
-        // Secondary Fallback: Direct Lanyard REST API
         try {
             const resp = await fetch(`https://api.lanyard.rest/v1/users/${discordUserId}`);
             if (resp.ok) {
@@ -503,7 +509,7 @@
         } catch (e) {}
     }
     fetchNativePresenceData();
-    setInterval(fetchNativePresenceData, 6000);
+    setInterval(fetchNativePresenceData, 5000);
 
     function connectLanyardWS() {
         let ws;
