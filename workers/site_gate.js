@@ -192,12 +192,17 @@ async function authorizeAdminPublish(request, env) {
 
 export default {
   async fetch(request, env) {
-    if (!(await isServerAvailable(env))) {
-      return offlineResponse(request);
-    }
-
     const url = new URL(request.url);
     const pathname = url.pathname;
+
+    // Cloudflare-native API endpoints bypass local server health check
+    const isCloudflareNativeEndpoint = pathname.startsWith("/api/presence") || 
+                                       pathname.startsWith("/api/avatar/") || 
+                                       pathname.startsWith("/api/banner/");
+
+    if (!isCloudflareNativeEndpoint && !(await isServerAvailable(env))) {
+      return offlineResponse(request);
+    }
 
     if (isAdminPublishPage(pathname)) {
       const denied = await authorizeAdminPublish(request, env);

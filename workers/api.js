@@ -1707,6 +1707,146 @@ async function cacheThumbnail(env, imageUrl, filename) {
   }
 }
 
+// ============ REAL-TIME PRESENCE & STATUS API ============
+const presenceCache = new Map();
+
+async function handlePresenceAPI(request, env) {
+  const url = new URL(request.url);
+  
+  // Extract user ID from /api/presence/:id or /api/presence?id=... or /api/presence?ids=...
+  let idsParam = url.searchParams.get("ids") || url.searchParams.get("id");
+  if (!idsParam) {
+    const parts = url.pathname.split("/").filter(Boolean);
+    if (parts.length >= 3 && parts[1] === "presence") {
+      idsParam = parts[2];
+    }
+  }
+  
+  if (!idsParam) {
+    // Default founder IDs
+    idsParam = "1382421118098346174,1421177012814614548";
+  }
+
+  const ids = idsParam.split(",").map(i => i.trim()).filter(Boolean);
+  if (ids.length === 0) {
+    return json({ success: false, error: "No user ID specified" }, 400);
+  }
+
+  const results = {};
+
+  await Promise.all(ids.map(async (id) => {
+    // Check 5-second TTL in-memory cache
+    const cached = presenceCache.get(id);
+    if (cached && Date.now() < cached.expiry) {
+      results[id] = cached.data;
+      return;
+    }
+
+    let presenceData = null;
+
+    // Method 1: Query Lanyard API (Primary)
+    try {
+      const lanyardResp = await fetch(`https://api.lanyard.rest/v1/users/${id}`, {
+        headers: { "Accept": "application/json", "User-Agent": "ZyrexPresenceAPI/1.0" }
+      });
+      if (lanyardResp.ok) {
+        const lJson = await lanyardResp.json();
+        if (lJson && lJson.success && lJson.data) {
+          const d = lJson.data;
+          presenceData = {
+            id: d.discord_user?.id || id,
+            username: d.discord_user?.username || "",
+            global_name: d.discord_user?.global_name || d.discord_user?.username || "",
+            avatar: d.discord_user?.avatar 
+              ? `https://cdn.discordapp.com/avatars/${d.discord_user.id}/${d.discord_user.avatar}.${d.discord_user.avatar.startsWith('a_') ? 'gif' : 'png'}?size=256` 
+              : `https://cdn.discordapp.com/embed/avatars/0.png`,
+            status: d.discord_status || "offline",
+            online: d.discord_status !== "offline",
+            active_on_discord_web: !!d.active_on_discord_web,
+            active_on_discord_desktop: !!d.active_on_discord_desktop,
+            active_on_discord_mobile: !!d.active_on_discord_mobile,
+            listening_to_spotify: !!d.listening_to_spotify,
+            spotify: d.spotify ? {
+              song: d.spotify.song,
+              artist: d.spotify.artist,
+              album: d.spotify.album,
+              album_art_url: d.spotify.album_art_url,
+              track_id: d.spotify.track_id
+            } : null,
+            activities: (d.activities || []).map(act => ({
+              name: act.name,
+              type: act.type,
+              state: act.state || null,
+              details: act.details || null,
+              emoji: act.emoji || null,
+              created_at: act.created_at
+            })),
+            kv: d.kv || {},
+            updated_at: Date.now()
+          };
+        }
+      }
+    } catch (e) {
+      console.error(`Presence fetch error for ${id} (Lanyard):`, e.message);
+    }
+
+    // Method 2: Fallback to Discord Guild Member REST API
+    if (!presenceData && env.DISCORD_BOT_TOKEN) {
+      try {
+        const guildId = env.GUILD_ID || "1518954946110685184";
+        const memberResp = await fetch(`https://discord.com/api/v10/guilds/${guildId}/members/${id}`, {
+          headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` }
+        });
+        if (memberResp.ok) {
+          const m = await memberResp.json();
+          const u = m.user || {};
+          presenceData = {
+            id: u.id || id,
+            username: u.username || "",
+            global_name: u.global_name || m.nick || u.username || "",
+            avatar: u.avatar 
+              ? `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.${u.avatar.startsWith('a_') ? 'gif' : 'png'}?size=256` 
+              : `https://cdn.discordapp.com/embed/avatars/0.png`,
+            status: "online",
+            online: true,
+            activities: [],
+            spotify: null,
+            updated_at: Date.now()
+          };
+        }
+      } catch (e) {
+        console.error(`Presence fetch error for ${id} (Discord REST):`, e.message);
+      }
+    }
+
+    // Default fallback structure
+    if (!presenceData) {
+      presenceData = {
+        id,
+        username: "User",
+        global_name: "User",
+        avatar: "https://cdn.discordapp.com/embed/avatars/0.png",
+        status: "offline",
+        online: false,
+        activities: [],
+        spotify: null,
+        updated_at: Date.now()
+      };
+    }
+
+    // Cache for 5 seconds
+    presenceCache.set(id, { data: presenceData, expiry: Date.now() + 5000 });
+    results[id] = presenceData;
+  }));
+
+  // If single ID requested directly
+  if (ids.length === 1) {
+    return json({ success: true, data: results[ids[0]] });
+  }
+
+  return json({ success: true, count: ids.length, data: results });
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -1785,7 +1925,8 @@ export default {
                                path === "/api/me" ||
                                path.startsWith("/api/downloads/") ||
                                path.startsWith("/api/avatar/") || 
-                               path.startsWith("/api/banner/");
+                               path.startsWith("/api/banner/") ||
+                               path.startsWith("/api/presence");
 
       const origin = request.headers.get("Origin") || request.headers.get("Referer") || "";
       const isSiteInternal = origin.includes("zyrexediting.xyz") || origin.includes("localhost") || origin.includes("127.0.0.1");
@@ -1797,6 +1938,11 @@ export default {
           return json({ success: false, error: "Access denied. External API access restricted." }, 403);
         }
       }
+    }
+
+    // ============ REAL-TIME PRESENCE & STATUS API ============
+    if (path.startsWith("/api/presence")) {
+      return handlePresenceAPI(request, env);
     }
 
     // ============ THUMBNAIL UPLOAD (internal API for migration/scraper) ============

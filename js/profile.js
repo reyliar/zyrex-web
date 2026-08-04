@@ -464,7 +464,34 @@
         });
     }
 
-    async function fetchLanyardData() {
+    async function fetchNativePresenceData() {
+        try {
+            // Primary: Query native Zyrex API endpoint /api/presence/:id
+            const resp = await fetch(`/api/presence/${discordUserId}`);
+            if (resp.ok) {
+                const json = await resp.json();
+                if (json.success && json.data) {
+                    const d = json.data;
+                    updateDiscordUI({
+                        discord_user: {
+                            id: d.id,
+                            username: d.username,
+                            global_name: d.global_name,
+                            avatar: d.avatar ? (d.avatar.split('/').pop()?.split('.')[0] || '') : null
+                        },
+                        discord_status: d.status,
+                        activities: d.activities || [],
+                        spotify: d.spotify || null
+                    });
+                    if (d.avatar && avatarImg) avatarImg.src = d.avatar;
+                    return;
+                }
+            }
+        } catch (e) {
+            console.log('Native Presence API fallback:', e.message);
+        }
+
+        // Secondary Fallback: Direct Lanyard REST API
         try {
             const resp = await fetch(`https://api.lanyard.rest/v1/users/${discordUserId}`);
             if (resp.ok) {
@@ -473,11 +500,10 @@
                     updateDiscordUI(json.data);
                 }
             }
-        } catch (e) {
-            console.log('Lanyard REST API notice:', e.message);
-        }
+        } catch (e) {}
     }
-    fetchLanyardData();
+    fetchNativePresenceData();
+    setInterval(fetchNativePresenceData, 6000);
 
     function connectLanyardWS() {
         let ws;
