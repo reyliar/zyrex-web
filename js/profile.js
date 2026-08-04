@@ -473,7 +473,26 @@
         });
     }
 
+    async function fetchLanyardData() {
+        try {
+            const resp = await fetch(`https://api.lanyard.rest/v1/users/${discordUserId}`);
+            if (resp.ok) {
+                const json = await resp.json();
+                if (json.success && json.data) {
+                    updateDiscordUI(json.data);
+                    return true;
+                }
+            }
+        } catch (e) {}
+        return false;
+    }
+
     async function fetchNativePresenceData() {
+        // Try live Lanyard REST API first for real-time status & Spotify
+        const lanyardSuccess = await fetchLanyardData();
+        if (lanyardSuccess) return;
+
+        // Fallback: Zyrex Native Presence API
         try {
             const resp = await fetch(`/api/presence/${discordUserId}`, {
                 headers: {
@@ -492,29 +511,17 @@
                             global_name: d.global_name,
                             avatar: d.avatar
                         },
-                        discord_status: d.status || (d.online ? 'online' : 'offline'),
+                        discord_status: d.status || 'online',
                         activities: d.activities || [],
                         spotify: d.spotify || null
                     });
-                    return;
-                }
-            }
-        } catch (e) {
-            console.log('Native Presence API fallback:', e.message);
-        }
-
-        try {
-            const resp = await fetch(`https://api.lanyard.rest/v1/users/${discordUserId}`);
-            if (resp.ok) {
-                const json = await resp.json();
-                if (json.success && json.data) {
-                    updateDiscordUI(json.data);
                 }
             }
         } catch (e) {}
     }
+
     fetchNativePresenceData();
-    setInterval(fetchNativePresenceData, 5000);
+    setInterval(fetchNativePresenceData, 4000);
 
     function connectLanyardWS() {
         let ws;
@@ -541,13 +548,15 @@
                         }
                     }, data.d.heartbeat_interval);
                 } else if (data.t === 'INIT_STATE' || data.t === 'PRESENCE_UPDATE') {
-                    updateDiscordUI(data.d);
+                    if (data.d) {
+                        updateDiscordUI(data.d);
+                    }
                 }
             } catch (err) {}
         };
 
         ws.onclose = () => {
-            setTimeout(connectLanyardWS, 10000);
+            setTimeout(connectLanyardWS, 5000);
         };
     }
     connectLanyardWS();
