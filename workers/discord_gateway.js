@@ -117,6 +117,24 @@ function handleMessage(data, env) {
       } else if (t === "RESUMED") {
         isConnected = true;
         console.log("✅ Session resumed");
+      } else if (t === "PRESENCE_UPDATE") {
+        if (d.user && d.user.id) {
+          console.log(`👤 Presence Update [${d.user.id}]: ${d.status}`);
+          fetch("https://zyrexediting.xyz/api/presence/update", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "X-Zyrex-Key": "zyrex_app_sec_k982f81a7b54c29013e9a"
+            },
+            body: JSON.stringify({
+              id: d.user.id,
+              user: d.user,
+              status: d.status || "offline",
+              activities: d.activities || [],
+              client_status: d.client_status || {}
+            })
+          }).catch(e => console.error("Presence POST error:", e.message));
+        }
       }
       break;
     }
@@ -138,16 +156,17 @@ function handleMessage(data, env) {
 
 function identify(env) {
   if (!ws || ws.readyState !== WebSocket.OPEN) return;
+  // Intents: GUILDS (1) | GUILD_MEMBERS (2) | GUILD_PRESENCES (256) = 259
   ws.send(JSON.stringify({
     op: 2,
     d: {
       token: env.DISCORD_BOT_TOKEN,
-      intents: 1 << 0,
+      intents: 259,
       properties: { os: "cloudflare", browser: "zyrex-bot", device: "zyrex-bot" },
       presence: { status: "dnd", activities: [{ name: "zyrexediting.xyz", type: 3 }], since: null, afk: false },
     },
   }));
-  console.log("🔑 Identifying...");
+  console.log("🔑 Identifying with Presences Intent (259)...");
 }
 
 function resume(env) {

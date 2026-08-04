@@ -1728,6 +1728,46 @@ const FOUNDER_PROFILES = {
 
 async function handlePresenceAPI(request, env) {
   const url = new URL(request.url);
+
+  // POST /api/presence/update: receive Gateway presence update and save to R2 + cache
+  if (request.method === "POST" && (url.pathname === "/api/presence/update" || url.pathname === "/api/presence/update/")) {
+    try {
+      const body = await request.json();
+      const { id, user, status, activities, client_status } = body;
+      if (!id) return json({ error: "id required" }, 400);
+
+      const knownFallback = FOUNDER_PROFILES[id] || { id, username: "User", global_name: "User" };
+      const existing = presenceCache.get(id)?.data || knownFallback;
+
+      let avatarUrl = existing.avatar || knownFallback.avatar;
+      if (user && user.avatar) {
+        const ext = String(user.avatar).startsWith("a_") ? "gif" : "png";
+        avatarUrl = `https://cdn.discordapp.com/avatars/${id}/${user.avatar}.${ext}?size=256`;
+      }
+
+      const updated = {
+        ...existing,
+        id,
+        username: user?.username || existing.username || knownFallback.username,
+        global_name: user?.global_name || user?.username || existing.global_name || knownFallback.global_name,
+        avatar: avatarUrl,
+        status: status || existing.status || "offline",
+        online: (status || existing.status) !== "offline",
+        activities: activities || existing.activities || [],
+        client_status: client_status || {},
+        updated_at: Date.now()
+      };
+
+      presenceCache.set(id, { data: updated, expiry: Date.now() + 60000 });
+      if (env.STORAGE) {
+        await env.STORAGE.put("presence/" + id, JSON.stringify(updated)).catch(() => {});
+      }
+
+      return json({ success: true, id, status: updated.status });
+    } catch(e) {
+      return json({ error: e.message }, 500);
+    }
+  }
   
   let idsParam = url.searchParams.get("ids") || url.searchParams.get("id");
   if (!idsParam) {
@@ -1754,6 +1794,17 @@ async function handlePresenceAPI(request, env) {
     if (cached && Date.now() < cached.expiry) {
       results[id] = cached.data;
       return;
+    }
+
+    // Check R2 storage for Gateway-updated presence
+    let r2Presence = null;
+    if (env.STORAGE) {
+      try {
+        const obj = await env.STORAGE.get("presence/" + id);
+        if (obj) {
+          r2Presence = await obj.json();
+        }
+      } catch(e) {}
     }
 
     let discordUserObj = null;
@@ -1794,8 +1845,8 @@ async function handlePresenceAPI(request, env) {
       avatar: "https://cdn.discordapp.com/embed/avatars/0.png"
     };
 
-    const u = discordUserObj || lanyardData?.discord_user || knownFallback;
-    const status = lanyardData?.discord_status || (discordUserObj ? "online" : "dnd");
+    const u = discordUserObj || r2Presence || lanyardData?.discord_user || knownFallback;
+    const status = r2Presence?.status || lanyardData?.discord_status || (discordUserObj ? "online" : "dnd");
 
     // Construct full CDN avatar URL
     let avatarUrl = knownFallback.avatar;
@@ -1814,6 +1865,24 @@ async function handlePresenceAPI(request, env) {
       bannerUrl = `https://cdn.discordapp.com/banners/${u.id || id}/${u.banner}.${ext}?size=600`;
     }
 
+    const activities = (r2Presence?.activities && r2Presence.activities.length > 0)
+      ? r2Presence.activities
+      : (lanyardData?.activities || []).map(act => ({
+          name: act.name,
+          type: act.type,
+          state: act.state || null,
+          details: act.details || null,
+          emoji: act.emoji || null
+        }));
+
+    const spotify = r2Presence?.spotify || (lanyardData?.spotify ? {
+      song: lanyardData.spotify.song,
+      artist: lanyardData.spotify.artist,
+      album: lanyardData.spotify.album,
+      album_art_url: lanyardData.spotify.album_art_url,
+      track_id: lanyardData.spotify.track_id
+    } : null);
+
     const presenceData = {
       id: u.id || id,
       username: u.username || knownFallback.username,
@@ -1825,21 +1894,9 @@ async function handlePresenceAPI(request, env) {
       active_on_discord_web: !!lanyardData?.active_on_discord_web,
       active_on_discord_desktop: !!lanyardData?.active_on_discord_desktop,
       active_on_discord_mobile: !!lanyardData?.active_on_discord_mobile,
-      listening_to_spotify: !!lanyardData?.listening_to_spotify,
-      spotify: lanyardData?.spotify ? {
-        song: lanyardData.spotify.song,
-        artist: lanyardData.spotify.artist,
-        album: lanyardData.spotify.album,
-        album_art_url: lanyardData.spotify.album_art_url,
-        track_id: lanyardData.spotify.track_id
-      } : null,
-      activities: (lanyardData?.activities || []).map(act => ({
-        name: act.name,
-        type: act.type,
-        state: act.state || null,
-        details: act.details || null,
-        emoji: act.emoji || null
-      })),
+      listening_to_spotify: !!spotify,
+      spotify: spotify,
+      activities: activities,
       updated_at: Date.now()
     };
 
