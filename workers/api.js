@@ -1786,17 +1786,32 @@ async function handlePresenceAPI(request, env) {
     return json({ success: false, error: "No user ID specified" }, 400);
   }
 
+  // Fetch Zyrex Discord Server Widget members (Real-time online/idle/dnd status from your OWN Discord server!)
+  let widgetMembers = [];
+  try {
+    const guildId = env.GUILD_ID || "1518954946110685184";
+    const wRes = await fetch(`https://discord.com/api/v10/guilds/${guildId}/widget.json`, {
+      headers: { "User-Agent": "ZyrexPresence/1.0", "Accept": "application/json" }
+    });
+    if (wRes.ok) {
+      const wData = await wRes.json();
+      if (wData && Array.isArray(wData.members)) {
+        widgetMembers = wData.members;
+      }
+    }
+  } catch (e) {}
+
   const results = {};
 
   await Promise.all(ids.map(async (id) => {
-    // Check 3-second TTL cache for instant real-time response
+    // Check 2-second TTL cache
     const cached = presenceCache.get(id);
     if (cached && Date.now() < cached.expiry) {
       results[id] = cached.data;
       return;
     }
 
-    // Check R2 storage for Gateway-updated presence
+    // 1. Check Gateway R2 storage
     let r2Presence = null;
     if (env.STORAGE) {
       try {
@@ -1807,9 +1822,8 @@ async function handlePresenceAPI(request, env) {
       } catch(e) {}
     }
 
+    // 2. Fetch Official Discord REST API user data (/users/{id}) if bot token exists
     let discordUserObj = null;
-
-    // 1. Fetch Official Discord REST API user data (/users/{id}) if bot token exists
     if (env.DISCORD_BOT_TOKEN) {
       try {
         const dRes = await fetch(`https://discord.com/api/v10/users/${id}`, {
@@ -1818,26 +1832,13 @@ async function handlePresenceAPI(request, env) {
         if (dRes.ok) {
           discordUserObj = await dRes.json();
         }
-      } catch (e) {
-        console.error(`Discord user fetch error for ${id}:`, e.message);
-      }
+      } catch (e) {}
     }
 
-    // 2. Fetch Lanyard API for live status (online/dnd/idle), custom status & Spotify
-    let lanyardData = null;
-    try {
-      const lRes = await fetch(`https://api.lanyard.rest/v1/users/${id}`, {
-        headers: { "Accept": "application/json", "User-Agent": "ZyrexPresenceAPI/1.0" }
-      });
-      if (lRes.ok) {
-        const lJson = await lRes.json();
-        if (lJson && lJson.success && lJson.data) {
-          lanyardData = lJson.data;
-        }
-      }
-    } catch (e) {}
+    // 3. Match from Zyrex Server Widget (contains real-time status & game info for server members)
+    const widgetMatch = widgetMembers.find(m => m.id === id);
 
-    // Fallback baseline user info
+    // 4. Baseline Founder Fallback
     const knownFallback = FOUNDER_PROFILES[id] || {
       id,
       username: "User",
@@ -1845,11 +1846,20 @@ async function handlePresenceAPI(request, env) {
       avatar: "https://cdn.discordapp.com/embed/avatars/0.png"
     };
 
-    const u = discordUserObj || r2Presence || lanyardData?.discord_user || knownFallback;
-    const status = r2Presence?.status || lanyardData?.discord_status || (discordUserObj ? "online" : "dnd");
+    const u = discordUserObj || r2Presence || knownFallback;
+
+    // Status precedence: R2 Gateway > Server Widget > "dnd" / "offline"
+    let liveStatus = "offline";
+    if (r2Presence && r2Presence.status) {
+      liveStatus = r2Presence.status;
+    } else if (widgetMatch && widgetMatch.status) {
+      liveStatus = widgetMatch.status; // "online", "idle", "dnd"
+    } else if (discordUserObj || widgetMembers.length > 0) {
+      liveStatus = widgetMatch ? widgetMatch.status : "dnd";
+    }
 
     // Construct full CDN avatar URL
-    let avatarUrl = knownFallback.avatar;
+    let avatarUrl = widgetMatch?.avatar_url || knownFallback.avatar;
     if (u.avatar) {
       if (String(u.avatar).startsWith("http")) {
         avatarUrl = u.avatar;
@@ -1865,23 +1875,15 @@ async function handlePresenceAPI(request, env) {
       bannerUrl = `https://cdn.discordapp.com/banners/${u.id || id}/${u.banner}.${ext}?size=600`;
     }
 
-    const activities = (r2Presence?.activities && r2Presence.activities.length > 0)
-      ? r2Presence.activities
-      : (lanyardData?.activities || []).map(act => ({
-          name: act.name,
-          type: act.type,
-          state: act.state || null,
-          details: act.details || null,
-          emoji: act.emoji || null
-        }));
-
-    const spotify = r2Presence?.spotify || (lanyardData?.spotify ? {
-      song: lanyardData.spotify.song,
-      artist: lanyardData.spotify.artist,
-      album: lanyardData.spotify.album,
-      album_art_url: lanyardData.spotify.album_art_url,
-      track_id: lanyardData.spotify.track_id
-    } : null);
+    // Activities: Gateway activities or Server Widget game
+    let activities = r2Presence?.activities || [];
+    if (activities.length === 0 && widgetMatch?.game) {
+      activities = [{
+        name: widgetMatch.game.name || "Playing",
+        type: 0,
+        state: widgetMatch.game.name
+      }];
+    }
 
     const presenceData = {
       id: u.id || id,
@@ -1889,19 +1891,15 @@ async function handlePresenceAPI(request, env) {
       global_name: u.global_name || u.username || knownFallback.global_name,
       avatar: avatarUrl,
       banner: bannerUrl,
-      status: status, // "online", "idle", "dnd", "offline"
-      online: status !== "offline",
-      active_on_discord_web: !!lanyardData?.active_on_discord_web,
-      active_on_discord_desktop: !!lanyardData?.active_on_discord_desktop,
-      active_on_discord_mobile: !!lanyardData?.active_on_discord_mobile,
-      listening_to_spotify: !!spotify,
-      spotify: spotify,
+      status: liveStatus, // "online", "idle", "dnd", "offline"
+      online: liveStatus !== "offline",
+      listening_to_spotify: !!r2Presence?.spotify,
+      spotify: r2Presence?.spotify || null,
       activities: activities,
       updated_at: Date.now()
     };
 
-    // Cache for 3 seconds
-    presenceCache.set(id, { data: presenceData, expiry: Date.now() + 3000 });
+    presenceCache.set(id, { data: presenceData, expiry: Date.now() + 2000 });
     results[id] = presenceData;
   }));
 
