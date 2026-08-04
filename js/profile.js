@@ -403,23 +403,16 @@
     const usernameEl = document.getElementById('username');
 
     let lastKnownValidStatus = 'online';
-    let offlineCounter = 0;
 
     function updateDiscordUI(data) {
         if (!data) return;
 
         let { discord_user, discord_status, activities, spotify } = data;
 
-        // Anti-flicker status hysteresis: require 3 consecutive offline responses before switching status dot to offline
-        if (discord_status === 'offline') {
-            offlineCounter++;
-            if (offlineCounter < 3 && lastKnownValidStatus !== 'offline') {
-                discord_status = lastKnownValidStatus;
-            } else {
-                lastKnownValidStatus = 'offline';
-            }
-        } else if (discord_status) {
-            offlineCounter = 0;
+        // Ensure status never evaluates to offline if user is active
+        if (!discord_status || discord_status === 'offline') {
+            discord_status = lastKnownValidStatus || 'online';
+        } else {
             lastKnownValidStatus = discord_status;
         }
 
@@ -494,6 +487,7 @@
                     const actionName = gameActivity.type === 1 ? 'Streaming' : (gameActivity.type === 2 ? 'Listening to' : 'Playing');
                     const gameName = gameActivity.name || 'Game';
                     const details = gameActivity.details || gameActivity.state || '';
+                    const assetImg = gameActivity.image_url || null;
                     
                     html = `
                         <div class="presence-header">
@@ -502,7 +496,11 @@
                         </div>
                         <div class="activity-card">
                             <div class="activity-icon-wrapper">
-                                <i class="fas ${gameActivity.type === 1 ? 'fa-broadcast-tower' : 'fa-gamepad'}" style="color:var(--accent-color); font-size:1.15rem"></i>
+                                ${assetImg 
+                                    ? `<img src="${escapeHtml(assetImg)}" alt="${escapeHtml(gameName)}" class="activity-icon-img" onerror="this.style.display='none';this.nextElementSibling.style.display='grid';">
+                                       <div class="activity-icon-fallback" style="display:none;width:100%;height:100%;place-items:center;"><i class="fas fa-gamepad" style="color:var(--accent-color);font-size:1.15rem"></i></div>`
+                                    : `<i class="fas ${gameActivity.type === 1 ? 'fa-broadcast-tower' : 'fa-gamepad'}" style="color:var(--accent-color); font-size:1.15rem"></i>`
+                                }
                             </div>
                             <div class="activity-info">
                                 <span class="activity-title">${actionName} <b>${escapeHtml(gameName)}</b></span>
