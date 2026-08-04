@@ -388,7 +388,7 @@
     });
 
     // ----------------------------------------------------
-    // 4. LIVE DISCORD LANYARD PRESENCE SYNC
+    // 4. LIVE DISCORD PRESENCE SYNC (INSTANT LOCALSTORAGE CACHE)
     // ----------------------------------------------------
     const profileCard = document.querySelector('.profile-card');
     if (!profileCard) return;
@@ -402,9 +402,21 @@
     const displayNameEl = document.getElementById('displayName');
     const usernameEl = document.getElementById('username');
 
+    const LOCAL_CACHE_KEY = 'zyrex_presence_v2_' + discordUserId;
     let lastKnownValidStatus = 'online';
 
-    function updateDiscordUI(data) {
+    // 1. Instant LocalStorage Load for Zero-Delay Page Rendering
+    try {
+        const cachedRaw = localStorage.getItem(LOCAL_CACHE_KEY);
+        if (cachedRaw) {
+            const cachedParsed = JSON.parse(cachedRaw);
+            if (cachedParsed && cachedParsed.discord_user) {
+                updateDiscordUI(cachedParsed, false);
+            }
+        }
+    } catch (e) {}
+
+    function updateDiscordUI(data, saveCache = true) {
         if (!data) return;
 
         let { discord_user, discord_status, activities, spotify } = data;
@@ -414,6 +426,15 @@
             discord_status = lastKnownValidStatus || 'online';
         } else {
             lastKnownValidStatus = discord_status;
+        }
+
+        // Save fresh state to LocalStorage for instant render next visit
+        if (saveCache && discord_user) {
+            try {
+                localStorage.setItem(LOCAL_CACHE_KEY, JSON.stringify({
+                    discord_user, discord_status, activities, spotify, timestamp: Date.now()
+                }));
+            } catch (e) {}
         }
 
         // Avatar Update
@@ -477,34 +498,45 @@
                 let headerText = getStatusText(discord_status);
                 let customText = '';
 
-                if (customStatus && (customStatus.state || customStatus.name)) {
-                    const emojiStr = customStatus.emoji ? `${customStatus.emoji.name} ` : '';
-                    customText = `${emojiStr}${customStatus.state || customStatus.name || ''}`;
+                if (customStatus) {
+                    let emojiMarkup = '';
+                    if (customStatus.emoji) {
+                        if (customStatus.emoji.url) {
+                            emojiMarkup = `<img src="${escapeHtml(customStatus.emoji.url)}" class="custom-emoji-img" alt="emoji" style="width:18px;height:18px;vertical-align:middle;margin-right:4px;">`;
+                        } else if (customStatus.emoji.name) {
+                            emojiMarkup = `${customStatus.emoji.name} `;
+                        }
+                    }
+                    customText = `${emojiMarkup}${escapeHtml(customStatus.state || customStatus.name || '')}`;
                 }
 
                 // 2. Active Game or Streaming Card
                 if (gameActivity) {
                     const actionName = gameActivity.type === 1 ? 'Streaming' : (gameActivity.type === 2 ? 'Listening to' : 'Playing');
                     const gameName = gameActivity.name || 'Game';
-                    const details = gameActivity.details || gameActivity.state || '';
-                    const assetImg = gameActivity.image_url || null;
+                    const details = gameActivity.details || '';
+                    const state = gameActivity.state || '';
+                    const largeImgUrl = gameActivity.large_image_url || gameActivity.image_url || null;
+                    const smallImgUrl = gameActivity.small_image_url || null;
                     
                     html = `
                         <div class="presence-header">
                             <i class="fas ${gameActivity.type === 1 ? 'fa-broadcast-tower' : 'fa-gamepad'} presence-icon"></i>
-                            <span class="presence-text">${escapeHtml(customText || headerText)}</span>
+                            <span class="presence-text">${customText || headerText}</span>
                         </div>
                         <div class="activity-card">
                             <div class="activity-icon-wrapper">
-                                ${assetImg 
-                                    ? `<img src="${escapeHtml(assetImg)}" alt="${escapeHtml(gameName)}" class="activity-icon-img" onerror="this.style.display='none';this.nextElementSibling.style.display='grid';">
+                                ${largeImgUrl 
+                                    ? `<img src="${escapeHtml(largeImgUrl)}" alt="${escapeHtml(gameName)}" class="activity-icon-img" onerror="this.style.display='none';this.nextElementSibling.style.display='grid';">
                                        <div class="activity-icon-fallback" style="display:none;width:100%;height:100%;place-items:center;"><i class="fas fa-gamepad" style="color:var(--accent-color);font-size:1.15rem"></i></div>`
                                     : `<i class="fas ${gameActivity.type === 1 ? 'fa-broadcast-tower' : 'fa-gamepad'}" style="color:var(--accent-color); font-size:1.15rem"></i>`
                                 }
+                                ${smallImgUrl ? `<img src="${escapeHtml(smallImgUrl)}" class="activity-small-icon" title="${escapeHtml(gameActivity.small_text || '')}">` : ''}
                             </div>
                             <div class="activity-info">
                                 <span class="activity-title">${actionName} <b>${escapeHtml(gameName)}</b></span>
                                 ${details ? `<span class="activity-details">${escapeHtml(details)}</span>` : ''}
+                                ${state ? `<span class="activity-state">${escapeHtml(state)}</span>` : ''}
                             </div>
                         </div>
                     `;
@@ -512,7 +544,7 @@
                     html = `
                         <div class="presence-header">
                             <i class="fas fa-signal presence-icon"></i>
-                            <span class="presence-text">${escapeHtml(customText || headerText)}</span>
+                            <span class="presence-text">${customText || headerText}</span>
                         </div>
                     `;
                 }
@@ -534,7 +566,7 @@
             case 'online': return 'Online on Discord';
             case 'idle': return 'Idle / Away';
             case 'dnd': return 'Do Not Disturb';
-            default: return 'Offline';
+            default: return 'Online on Discord';
         }
     }
 
@@ -545,26 +577,8 @@
         });
     }
 
-    async function fetchLanyardData() {
-        try {
-            const resp = await fetch(`https://api.lanyard.rest/v1/users/${discordUserId}`);
-            if (resp.ok) {
-                const json = await resp.json();
-                if (json.success && json.data) {
-                    updateDiscordUI(json.data);
-                    return true;
-                }
-            }
-        } catch (e) {}
-        return false;
-    }
-
     async function fetchNativePresenceData() {
-        // Try live Lanyard REST API first for real-time status & Spotify
-        const lanyardSuccess = await fetchLanyardData();
-        if (lanyardSuccess) return;
-
-        // Fallback: Zyrex Native Presence API
+        // PRIMARY: Fetch directly from Zyrex Native VPS Bot API first!
         try {
             const resp = await fetch(`/api/presence/${discordUserId}`, {
                 headers: {
@@ -587,6 +601,18 @@
                         activities: d.activities || [],
                         spotify: d.spotify || null
                     });
+                    return;
+                }
+            }
+        } catch (e) {}
+
+        // Fallback to Lanyard if VPS API is initializing
+        try {
+            const resp = await fetch(`https://api.lanyard.rest/v1/users/${discordUserId}`);
+            if (resp.ok) {
+                const json = await resp.json();
+                if (json.success && json.data) {
+                    updateDiscordUI(json.data);
                 }
             }
         } catch (e) {}
