@@ -13,18 +13,16 @@
     <link rel="icon" type="image/png" href="/assets/content.png">
     <link rel="stylesheet" href="css/style.css?v=24">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         :root {
             --cherry: #ff2b52;
             --cherry-rgb: 255, 43, 82;
             --cherry-light: #ff6b85;
-            --cherry-dark: #c8002a;
-            --glass-bg: rgba(14, 10, 18, 0.82);
+            --glass-bg: rgba(14, 10, 18, 0.78);
             --glass-border: rgba(255, 255, 255, 0.12);
-            --text-muted: rgba(255, 255, 255, 0.5);
-            --ok: #34d399;
+            --text-muted: rgba(255, 255, 255, 0.55);
         }
 
         body {
@@ -41,8 +39,8 @@
             z-index: 0;
             pointer-events: none;
             background:
-                radial-gradient(circle at 20% 0%, rgba(255, 43, 82, 0.16) 0%, transparent 45%),
-                radial-gradient(circle at 80% 80%, rgba(120, 0, 40, 0.12) 0%, transparent 40%),
+                radial-gradient(circle at 20% 0%, rgba(255, 43, 82, 0.18) 0%, transparent 45%),
+                radial-gradient(circle at 80% 80%, rgba(120, 0, 40, 0.14) 0%, transparent 40%),
                 radial-gradient(circle at 50% 50%, rgba(60, 0, 20, 0.08) 0%, transparent 50%);
         }
 
@@ -63,17 +61,19 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            padding: 10px 18px;
-            border: 1px solid rgba(255,255,255,0.12);
+            padding: 10px 20px;
+            border: 1px solid var(--glass-border);
             border-radius: 999px;
             background: rgba(255,255,255,0.05);
-            color: rgba(255,255,255,0.8);
-            font-size: 0.82rem;
+            color: rgba(255,255,255,0.85);
+            font-size: 0.84rem;
             font-weight: 600;
             text-decoration: none;
             margin-bottom: 32px;
-            backdrop-filter: blur(20px);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
             transition: all 0.25s ease;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
         }
         .back:hover {
             background: rgba(255,255,255,0.12);
@@ -81,7 +81,7 @@
             transform: translateX(-3px);
         }
 
-        /* Glass Cards */
+        /* LIQUID GLASS CARD */
         .glass-card {
             background: var(--glass-bg);
             border: 1px solid var(--glass-border);
@@ -89,20 +89,13 @@
             padding: 36px;
             backdrop-filter: blur(32px) saturate(210%);
             -webkit-backdrop-filter: blur(32px) saturate(210%);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.12);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.15);
             margin-bottom: 24px;
             position: relative;
             overflow: hidden;
         }
-        .glass-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
-        }
 
-        /* Audio Player Hero */
+        /* AUDIO PLAYER HERO */
         .player-hero {
             display: flex;
             align-items: center;
@@ -117,8 +110,8 @@
             height: 160px;
             border-radius: 22px;
             overflow: hidden;
-            background: linear-gradient(135deg, rgba(255, 43, 82, 0.2), rgba(10, 2, 8, 0.8));
-            border: 1px solid rgba(255, 43, 82, 0.25);
+            background: linear-gradient(135deg, rgba(255, 43, 82, 0.25), rgba(10, 2, 8, 0.85));
+            border: 1px solid rgba(255, 43, 82, 0.3);
             box-shadow: 0 12px 35px rgba(255, 43, 82, 0.25);
             display: flex;
             align-items: center;
@@ -134,7 +127,7 @@
         .cover-box i.cover-ph {
             font-size: 3rem;
             color: var(--cherry-light);
-            opacity: 0.6;
+            opacity: 0.7;
         }
 
         .player-details {
@@ -147,8 +140,8 @@
             gap: 6px;
             padding: 5px 14px;
             border-radius: 999px;
-            background: rgba(255, 43, 82, 0.12);
-            border: 1px solid rgba(255, 43, 82, 0.25);
+            background: rgba(255, 43, 82, 0.15);
+            border: 1px solid rgba(255, 43, 82, 0.3);
             color: var(--cherry-light);
             font-size: 0.72rem;
             font-weight: 800;
@@ -159,20 +152,20 @@
 
         .player-details h1 {
             font-family: 'Outfit', sans-serif;
-            font-size: 1.8rem;
+            font-size: 1.9rem;
             font-weight: 900;
             color: #fff;
             margin-bottom: 8px;
             line-height: 1.25;
         }
         .player-details p.desc {
-            font-size: 0.86rem;
+            font-size: 0.88rem;
             color: var(--text-muted);
             line-height: 1.6;
             margin-bottom: 24px;
         }
 
-        /* Player Controls */
+        /* PLAYER CONTROLS */
         .controls-row {
             display: flex;
             align-items: center;
@@ -199,7 +192,7 @@
             flex-shrink: 0;
         }
         .btn-play:hover {
-            transform: scale(1.06);
+            transform: scale(1.08);
             box-shadow: 0 14px 35px rgba(255, 43, 82, 0.6);
         }
 
@@ -226,16 +219,17 @@
             color: var(--text-muted);
             min-width: 70px;
             text-align: right;
+            font-weight: 600;
         }
 
-        /* CTA Section */
+        /* CTA SECTION */
         .cta-box {
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 20px;
             padding: 24px 32px;
-            background: rgba(0,0,0,0.3);
+            background: rgba(0,0,0,0.35);
             border: 1px solid rgba(255,255,255,0.08);
             border-radius: 22px;
             margin-top: 10px;
@@ -248,14 +242,14 @@
             display: inline-flex;
             align-items: center;
             gap: 10px;
-            padding: 14px 28px;
+            padding: 14px 32px;
             border-radius: 999px;
             background: linear-gradient(135deg, #ff2b52, #c8002a);
             color: #fff;
             text-decoration: none;
             font-family: 'Outfit', sans-serif;
             font-weight: 800;
-            font-size: 0.92rem;
+            font-size: 0.94rem;
             box-shadow: 0 10px 25px rgba(255, 43, 82, 0.4);
             transition: all 0.3s ease;
         }
@@ -264,7 +258,7 @@
             box-shadow: 0 14px 35px rgba(255, 43, 82, 0.55);
         }
 
-        /* Meta Grid */
+        /* META GRID */
         .meta-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -291,10 +285,10 @@
             justify-content: center;
             font-size: 1.1rem;
         }
-        .meta-text strong { display: block; font-size: 0.88rem; color: #fff; font-family: 'Outfit', sans-serif; }
+        .meta-text strong { display: block; font-size: 0.9rem; color: #fff; font-family: 'Outfit', sans-serif; }
         .meta-text span { font-size: 0.72rem; color: var(--text-muted); }
 
-        /* Uploader & Creator */
+        /* UPLOADER & CREATOR */
         .creators-flex {
             display: flex;
             gap: 18px;
@@ -326,7 +320,7 @@
             flex-shrink: 0;
         }
         .creator-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .creator-info strong { display: block; font-size: 0.9rem; color: #fff; font-family: 'Outfit', sans-serif; }
+        .creator-info strong { display: block; font-size: 0.92rem; color: #fff; font-family: 'Outfit', sans-serif; }
         .creator-info span { font-size: 0.74rem; color: var(--text-muted); }
         .creator-info a { color: var(--cherry-light); text-decoration: none; font-size: 0.75rem; font-weight: 600; margin-top: 2px; display: inline-block; }
         .creator-info a:hover { text-decoration: underline; }
@@ -440,6 +434,55 @@
     <script>
     let audioObj = document.getElementById('audioElement');
     let isPlaying = false;
+    var discordAvatarCache = {};
+
+    // Fetch Discord profile photo via Zyrex VPS Bot API
+    async function fetchZyrexBotAvatar(uploaderId, fallbackHashOrUrl) {
+        if (!uploaderId) {
+            if (fallbackHashOrUrl && fallbackHashOrUrl.startsWith('http')) return fallbackHashOrUrl;
+            if (fallbackHashOrUrl) return '/api/avatar/0/' + fallbackHashOrUrl + '.png?size=128';
+            return 'https://cdn.discordapp.com/embed/avatars/0.png';
+        }
+        if (discordAvatarCache[uploaderId]) return discordAvatarCache[uploaderId];
+
+        try {
+            var controller = new AbortController();
+            var timer = setTimeout(function(){ controller.abort(); }, 2500);
+
+            var resp = await fetch('/api/presence/' + uploaderId, {
+                headers: {
+                    "X-Zyrex-Key": "zyrex_app_sec_k982f81a7b54c29013e9a",
+                    "Accept": "application/json"
+                },
+                signal: controller.signal
+            });
+            clearTimeout(timer);
+
+            if (resp.ok) {
+                var json = await resp.json();
+                var d = json.data || json[uploaderId] || json;
+                var u = d.discord_user || d;
+                if (u && u.avatar) {
+                    var avatarUrl = '';
+                    if (u.avatar.startsWith('http://') || u.avatar.startsWith('https://')) {
+                        avatarUrl = u.avatar;
+                    } else {
+                        var ext = u.avatar.startsWith('a_') ? 'gif' : 'png';
+                        avatarUrl = '/api/avatar/' + uploaderId + '/' + u.avatar + '.' + ext + '?size=128';
+                    }
+                    discordAvatarCache[uploaderId] = avatarUrl;
+                    return avatarUrl;
+                }
+            }
+        } catch(e) {}
+
+        if (fallbackHashOrUrl) {
+            if (fallbackHashOrUrl.startsWith('http')) return fallbackHashOrUrl;
+            var ext = fallbackHashOrUrl.startsWith('a_') ? 'gif' : 'png';
+            return '/api/avatar/' + uploaderId + '/' + fallbackHashOrUrl + '.' + ext + '?size=128';
+        }
+        return 'https://cdn.discordapp.com/embed/avatars/0.png';
+    }
 
     document.addEventListener('DOMContentLoaded', async () => {
         const urlParams = new URLSearchParams(window.location.search);
@@ -452,7 +495,7 @@
             const data = await resp.json();
             if (!data || !data.id) { showError('Audio product not found.'); return; }
             if (data.type && data.type !== 'audio') { showError(`This product is not an audio file. <a href="/${data.type}" style="color:var(--cherry-light)">View on ${data.type} page</a>`); return; }
-            renderProduct(data);
+            await renderProduct(data);
         } catch(e) {
             showError('Failed to load audio product.');
         }
@@ -464,7 +507,7 @@
         document.getElementById('errMsg').innerHTML = msg;
     }
 
-    function renderProduct(p) {
+    async function renderProduct(p) {
         document.getElementById('loading').style.display = 'none';
         document.getElementById('content').style.display = 'block';
         document.title = `${p.name || 'Audio'} — Zyrex Audio`;
@@ -503,11 +546,15 @@
             document.getElementById('playIcon').className = 'fas fa-play';
         };
 
-        // Creators
+        // Creators & Uploader (Zyrex VPS Bot API avatar + "Uploaded by")
         const creatorsBox = document.getElementById('creatorsContainer');
         let html = '';
-        if (p.uploader_name || p.author_name) {
-            html += `<div class="creator-card"><div class="creator-avatar"><i class="fab fa-discord"></i></div><div class="creator-info"><strong>${p.uploader_name || p.author_name}</strong><span>Uploaded by</span></div></div>`;
+        var uploaderId = p.uploader_id || p.author_id || '';
+        var uploaderName = p.uploader_name || p.author_name || '';
+
+        if (uploaderName) {
+            var uploaderAv = await fetchZyrexBotAvatar(uploaderId, p.uploader_avatar);
+            html += `<div class="creator-card"><div class="creator-avatar"><img src="${uploaderAv}" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'"></div><div class="creator-info"><strong>${uploaderName}</strong><span>Uploaded by</span></div></div>`;
         }
         if (p.creator_nickname || p.creator_social_url) {
             html += `<div class="creator-card"><div class="creator-avatar">${p.creator_avatar ? `<img src="${p.creator_avatar}">` : `<i class="fas fa-user"></i>`}</div><div class="creator-info"><strong>${p.creator_nickname || 'Creator'}</strong>${p.creator_social_url ? `<a href="${p.creator_social_url}" target="_blank">View Social Profile</a>` : '<span>Original Creator</span>'}</div></div>`;
