@@ -71,19 +71,20 @@
                     </div>
 
                     <!-- Live Discord Presence / Activity Box -->
-                    <div class="presence-box">
+                    <div class="presence-box" id="presenceBox">
                         <script>
                             (function(){
                                 try {
-                                    var cachedHtml = localStorage.getItem('zyrex_presence_html_v3_1382421118098346174');
-                                    if (cachedHtml) {
-                                        document.write(cachedHtml);
+                                    var uid = '1382421118098346174';
+                                    var hidden = localStorage.getItem('zyrex_presence_box_hidden_' + uid);
+                                    var cachedHtml = localStorage.getItem('zyrex_presence_html_v3_' + uid);
+                                    var box = document.currentScript.parentElement;
+                                    if (hidden === '1' || !cachedHtml) {
+                                        box.style.display = 'none';
                                     } else {
-                                        document.write('<div class="presence-header"><i class="fas fa-signal presence-icon"></i><span class="presence-text">Online on Discord</span></div>');
+                                        document.write(cachedHtml);
                                     }
-                                } catch(e) {
-                                    document.write('<div class="presence-header"><i class="fas fa-signal presence-icon"></i><span class="presence-text">Online on Discord</span></div>');
-                                }
+                                } catch(e) {}
                             })();
                         </script>
                     </div>

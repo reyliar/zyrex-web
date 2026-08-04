@@ -1895,13 +1895,46 @@ async function handlePresenceAPI(request, env) {
 
     const activities = (r2Presence?.activities && r2Presence.activities.length > 0)
       ? r2Presence.activities
-      : (lanyardData?.activities || []).map(act => ({
-          name: act.name,
-          type: act.type,
-          state: act.state || null,
-          details: act.details || null,
-          emoji: act.emoji || null
-        }));
+      : (lanyardData?.activities || []).map(act => {
+          const appId = act.application_id || null;
+          function lanyardKeyToUrl(key) {
+            if (!key) return null;
+            const k = String(key);
+            if (k.startsWith("spotify:")) return `https://i.scdn.co/image/${k.replace("spotify:", "")}`;
+            if (k.startsWith("mp:external/")) {
+              const raw = k.replace("mp:external/", "");
+              if (raw.startsWith("https/")) return "https://" + raw.slice(6);
+              if (raw.startsWith("http/")) return "http://" + raw.slice(5);
+              return `https://media.discordapp.net/external/${raw}`;
+            }
+            if (appId) return `https://cdn.discordapp.com/app-assets/${appId}/${k}.png`;
+            return null;
+          }
+          const largeKey = act.assets?.large_image || null;
+          const smallKey = act.assets?.small_image || null;
+          let largeUrl = lanyardKeyToUrl(largeKey);
+          const smallUrl = lanyardKeyToUrl(smallKey);
+          if (!largeUrl && appId) largeUrl = `https://cdn.discordapp.com/app-icons/${appId}/icon.png`;
+          let startTs = act.timestamps?.start || null;
+          if (startTs && typeof startTs === "number" && startTs < 10000000000) startTs = startTs * 1000;
+          let endTs = act.timestamps?.end || null;
+          if (endTs && typeof endTs === "number" && endTs < 10000000000) endTs = endTs * 1000;
+          return {
+            name: act.name,
+            type: act.type,
+            state: act.state || null,
+            details: act.details || null,
+            emoji: act.emoji || null,
+            large_image_url: largeUrl,
+            image_url: largeUrl,
+            small_image_url: smallUrl,
+            large_text: act.assets?.large_text || null,
+            small_text: act.assets?.small_text || null,
+            start_timestamp: startTs,
+            end_timestamp: endTs,
+            application_id: appId ? String(appId) : null
+          };
+        });
 
     const spotify = r2Presence?.spotify || (lanyardData?.spotify ? {
       song: lanyardData.spotify.song,

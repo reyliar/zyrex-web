@@ -91,12 +91,14 @@
     }
 
     // ----------------------------------------------------
-    // 2. CUSTOM AESTHETIC THEME CURSOR ENGINE
+    // 2. CUSTOM AESTHETIC THEME CURSOR ENGINE (Desktop Only)
     // ----------------------------------------------------
+    const isMobile = /Mobi|Android|iPhone|iPad|iPod|Touch/i.test(navigator.userAgent) || window.matchMedia('(pointer: coarse)').matches;
+
     const cursorDot = document.getElementById('customCursorDot');
     const cursorRing = document.getElementById('customCursorRing');
 
-    if (cursorDot && cursorRing) {
+    if (!isMobile && cursorDot && cursorRing) {
         let mouseX = -100;
         let mouseY = -100;
         let ringX = -100;
@@ -110,7 +112,6 @@
             cursorDot.style.top = `${mouseY}px`;
         });
 
-        // Smooth Lerp loop for magnetic ring follower
         function renderCursorRing() {
             ringX += (mouseX - ringX) * 0.22;
             ringY += (mouseY - ringY) * 0.22;
@@ -122,7 +123,6 @@
         }
         requestAnimationFrame(renderCursorRing);
 
-        // Hover expansion over interactive elements
         function setupCursorHover() {
             document.querySelectorAll('a, button, .icon-link-btn, .page-corner-copyright').forEach(el => {
                 el.addEventListener('mouseenter', () => document.body.classList.add('cursor-hover'));
@@ -135,6 +135,9 @@
         } else {
             setupCursorHover();
         }
+    } else if (isMobile && cursorDot) {
+        cursorDot.style.display = 'none';
+        if (cursorRing) cursorRing.style.display = 'none';
     }
 
     // ----------------------------------------------------
@@ -403,7 +406,6 @@
     const usernameEl = document.getElementById('username');
 
     const LOCAL_CACHE_KEY = 'zyrex_presence_v2_' + discordUserId;
-    let lastKnownValidStatus = 'online';
 
     // 1. Instant LocalStorage Load for Zero-Delay Page Rendering
     try {
@@ -444,12 +446,8 @@
 
         let { discord_user, discord_status, activities, spotify } = data;
 
-        // Ensure status never evaluates to offline if user is active
-        if (!discord_status || discord_status === 'offline') {
-            discord_status = lastKnownValidStatus || 'online';
-        } else {
-            lastKnownValidStatus = discord_status;
-        }
+        // Use exact status as received — never override offline with online
+        if (!discord_status) discord_status = 'offline';
 
         // Save fresh state to LocalStorage for instant render next visit
         if (saveCache && discord_user) {
@@ -571,26 +569,19 @@
                             </div>
                         </div>
                     `;
-                } else {
-                    html = `
-                        <div class="presence-header">
-                            <i class="fas fa-signal presence-icon"></i>
-                            <span class="presence-text">${customText || headerText}</span>
-                        </div>
-                    `;
+                } else if (customText) {
+                    // Only custom status (no game) — show it
+                    html = `<div class="presence-header"><span class="presence-status-text">${customText}</span></div>`;
                 }
-            } else {
-                html = `
-                    <div class="presence-header">
-                        <i class="fas fa-signal presence-icon"></i>
-                        <span class="presence-text">${getStatusText(discord_status)}</span>
-                    </div>
-                `;
+                // else: no game and no custom text — hide the box
             }
+            // else: no activities at all — hide the box (show nothing)
 
             presenceBox.innerHTML = html;
+            presenceBox.style.display = html ? '' : 'none';
             try {
                 localStorage.setItem('zyrex_presence_html_v3_' + discordUserId, html);
+                localStorage.setItem('zyrex_presence_box_hidden_' + discordUserId, html ? '0' : '1');
             } catch (e) {}
         }
     }
@@ -694,10 +685,10 @@
     connectLanyardWS();
 
     // ----------------------------------------------------
-    // 5. FAST 3D PARALLAX TILT ENGINE
+    // 5. FAST 3D PARALLAX TILT ENGINE (Desktop Only)
     // ----------------------------------------------------
     const neonCard = document.querySelector('.neon-card-container');
-    if (neonCard) {
+    if (neonCard && !isMobile) {
         let currentTiltX = 0;
         let currentTiltY = 0;
         let targetTiltX = 0;
@@ -706,7 +697,6 @@
         function updateTiltPhysics() {
             currentTiltX += (targetTiltX - currentTiltX) * 0.24;
             currentTiltY += (targetTiltY - currentTiltY) * 0.24;
-
             neonCard.style.transform = `rotateX(${currentTiltX.toFixed(2)}deg) rotateY(${currentTiltY.toFixed(2)}deg)`;
             requestAnimationFrame(updateTiltPhysics);
         }
@@ -715,27 +705,11 @@
         window.addEventListener('mousemove', (e) => {
             const centerX = window.innerWidth / 2;
             const centerY = window.innerHeight / 2;
-
             const deltaX = (e.clientX - centerX) / centerX;
             const deltaY = (e.clientY - centerY) / centerY;
-
             const maxTilt = 22;
             targetTiltX = -deltaY * maxTilt;
             targetTiltY = deltaX * maxTilt;
-        });
-
-        window.addEventListener('touchmove', (e) => {
-            if (e.touches.length > 0) {
-                const touch = e.touches[0];
-                const centerX = window.innerWidth / 2;
-                const centerY = window.innerHeight / 2;
-
-                const deltaX = (touch.clientX - centerX) / centerX;
-                const deltaY = (touch.clientY - centerY) / centerY;
-
-                targetTiltX = -deltaY * 16;
-                targetTiltY = deltaX * 16;
-            }
         });
 
         document.addEventListener('mouseleave', () => {
