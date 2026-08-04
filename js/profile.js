@@ -402,10 +402,26 @@
     const displayNameEl = document.getElementById('displayName');
     const usernameEl = document.getElementById('username');
 
+    let lastKnownValidStatus = 'online';
+    let offlineCounter = 0;
+
     function updateDiscordUI(data) {
         if (!data) return;
 
-        const { discord_user, discord_status, activities, spotify } = data;
+        let { discord_user, discord_status, activities, spotify } = data;
+
+        // Anti-flicker status hysteresis: require 3 consecutive offline responses before switching status dot to offline
+        if (discord_status === 'offline') {
+            offlineCounter++;
+            if (offlineCounter < 3 && lastKnownValidStatus !== 'offline') {
+                discord_status = lastKnownValidStatus;
+            } else {
+                lastKnownValidStatus = 'offline';
+            }
+        } else if (discord_status) {
+            offlineCounter = 0;
+            lastKnownValidStatus = discord_status;
+        }
 
         // Avatar Update
         if (avatarImg && discord_user && discord_user.avatar) {
@@ -433,27 +449,85 @@
             statusDot.setAttribute('title', discord_status.toUpperCase());
         }
 
-        // Presence & Activity Text
-        if (presenceText) {
+        // Dynamic Rich Presence Box & Card Rendering
+        const presenceBox = document.querySelector('.presence-box');
+        if (presenceBox) {
+            let html = '';
+
+            // 1. Live Spotify Card with Equalizer
             if (spotify && spotify.song) {
-                presenceText.innerHTML = `<i class="fab fa-spotify" style="color:#1db954"></i> Listening to <b>${escapeHtml(spotify.song)}</b> by ${escapeHtml(spotify.artist || 'Artist')}`;
+                const artUrl = spotify.album_art_url || 'assets/content.png';
+                html = `
+                    <div class="presence-header">
+                        <i class="fab fa-spotify presence-icon" style="color:#1db954"></i>
+                        <span class="presence-text" style="color:#1db954; font-weight:700">Listening to Spotify</span>
+                    </div>
+                    <div class="spotify-card">
+                        <img src="${escapeHtml(artUrl)}" alt="Album Art" class="spotify-album-art" onerror="this.src='assets/content.png';">
+                        <div class="spotify-details">
+                            <span class="spotify-song">${escapeHtml(spotify.song)}</span>
+                            <span class="spotify-artist">by ${escapeHtml(spotify.artist || 'Unknown Artist')}</span>
+                            ${spotify.album ? `<span class="spotify-album">${escapeHtml(spotify.album)}</span>` : ''}
+                        </div>
+                        <div class="equalizer">
+                            <div class="equalizer-bar"></div>
+                            <div class="equalizer-bar"></div>
+                            <div class="equalizer-bar"></div>
+                            <div class="equalizer-bar"></div>
+                        </div>
+                    </div>
+                `;
             } else if (activities && activities.length > 0) {
                 const customStatus = activities.find(a => a.type === 4);
                 const gameActivity = activities.find(a => a.type !== 4);
 
+                let headerText = getStatusText(discord_status);
+                let customText = '';
+
                 if (customStatus && (customStatus.state || customStatus.name)) {
                     const emojiStr = customStatus.emoji ? `${customStatus.emoji.name} ` : '';
-                    const textStr = customStatus.state || customStatus.name || '';
-                    presenceText.textContent = `${emojiStr}${textStr}`;
-                } else if (gameActivity) {
+                    customText = `${emojiStr}${customStatus.state || customStatus.name || ''}`;
+                }
+
+                // 2. Active Game or Streaming Card
+                if (gameActivity) {
                     const actionName = gameActivity.type === 1 ? 'Streaming' : (gameActivity.type === 2 ? 'Listening to' : 'Playing');
-                    presenceText.textContent = `${actionName} ${gameActivity.name}`;
+                    const gameName = gameActivity.name || 'Game';
+                    const details = gameActivity.details || gameActivity.state || '';
+                    
+                    html = `
+                        <div class="presence-header">
+                            <i class="fas ${gameActivity.type === 1 ? 'fa-broadcast-tower' : 'fa-gamepad'} presence-icon"></i>
+                            <span class="presence-text">${escapeHtml(customText || headerText)}</span>
+                        </div>
+                        <div class="activity-card">
+                            <div class="activity-icon-wrapper">
+                                <i class="fas ${gameActivity.type === 1 ? 'fa-broadcast-tower' : 'fa-gamepad'}" style="color:var(--accent-color); font-size:1.15rem"></i>
+                            </div>
+                            <div class="activity-info">
+                                <span class="activity-title">${actionName} <b>${escapeHtml(gameName)}</b></span>
+                                ${details ? `<span class="activity-details">${escapeHtml(details)}</span>` : ''}
+                            </div>
+                        </div>
+                    `;
                 } else {
-                    presenceText.textContent = getStatusText(discord_status);
+                    html = `
+                        <div class="presence-header">
+                            <i class="fas fa-signal presence-icon"></i>
+                            <span class="presence-text">${escapeHtml(customText || headerText)}</span>
+                        </div>
+                    `;
                 }
             } else {
-                presenceText.textContent = getStatusText(discord_status);
+                html = `
+                    <div class="presence-header">
+                        <i class="fas fa-signal presence-icon"></i>
+                        <span class="presence-text">${getStatusText(discord_status)}</span>
+                    </div>
+                `;
             }
+
+            presenceBox.innerHTML = html;
         }
     }
 
