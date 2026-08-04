@@ -475,7 +475,12 @@
 
     async function fetchNativePresenceData() {
         try {
-            const resp = await fetch(`/api/presence/${discordUserId}`);
+            const resp = await fetch(`/api/presence/${discordUserId}`, {
+                headers: {
+                    "X-Zyrex-Key": "zyrex_app_sec_k982f81a7b54c29013e9a",
+                    "Accept": "application/json"
+                }
+            });
             if (resp.ok) {
                 const json = await resp.json();
                 if (json.success && json.data) {

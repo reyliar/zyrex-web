@@ -1710,6 +1710,22 @@ async function cacheThumbnail(env, imageUrl, filename) {
 // ============ REAL-TIME PRESENCE & STATUS API ============
 const presenceCache = new Map();
 
+// Known fallback profiles for founders
+const FOUNDER_PROFILES = {
+  "1382421118098346174": {
+    id: "1382421118098346174",
+    username: "dvmonaep",
+    global_name: "kerem",
+    avatar: "https://cdn.discordapp.com/avatars/1382421118098346174/d6a983ec1a87e899b737422ee50fb441.png?size=256"
+  },
+  "1421177012814614548": {
+    id: "1421177012814614548",
+    username: "reyliar",
+    global_name: "reyli",
+    avatar: "https://cdn.discordapp.com/avatars/1421177012814614548/66077819163365312e485b95e30001d8.png?size=256"
+  }
+};
+
 async function handlePresenceAPI(request, env) {
   const url = new URL(request.url);
   
@@ -1742,7 +1758,7 @@ async function handlePresenceAPI(request, env) {
 
     let discordUserObj = null;
 
-    // 1. Fetch Official Discord REST API user data (/users/{id})
+    // 1. Fetch Official Discord REST API user data (/users/{id}) if bot token exists
     if (env.DISCORD_BOT_TOKEN) {
       try {
         const dRes = await fetch(`https://discord.com/api/v10/users/${id}`, {
@@ -1770,15 +1786,26 @@ async function handlePresenceAPI(request, env) {
       }
     } catch (e) {}
 
-    // Combine best available live data
-    const u = discordUserObj || lanyardData?.discord_user || {};
-    const status = lanyardData?.discord_status || (discordUserObj ? "online" : "offline");
+    // Fallback baseline user info
+    const knownFallback = FOUNDER_PROFILES[id] || {
+      id,
+      username: "User",
+      global_name: "User",
+      avatar: "https://cdn.discordapp.com/embed/avatars/0.png"
+    };
 
-    // Construct full CDN avatar URL (GIF if animated, PNG otherwise)
-    let avatarUrl = "https://cdn.discordapp.com/embed/avatars/0.png";
+    const u = discordUserObj || lanyardData?.discord_user || knownFallback;
+    const status = lanyardData?.discord_status || (discordUserObj ? "online" : "dnd");
+
+    // Construct full CDN avatar URL
+    let avatarUrl = knownFallback.avatar;
     if (u.avatar) {
-      const ext = String(u.avatar).startsWith("a_") ? "gif" : "png";
-      avatarUrl = `https://cdn.discordapp.com/avatars/${u.id || id}/${u.avatar}.${ext}?size=256`;
+      if (String(u.avatar).startsWith("http")) {
+        avatarUrl = u.avatar;
+      } else {
+        const ext = String(u.avatar).startsWith("a_") ? "gif" : "png";
+        avatarUrl = `https://cdn.discordapp.com/avatars/${u.id || id}/${u.avatar}.${ext}?size=256`;
+      }
     }
 
     let bannerUrl = null;
@@ -1789,8 +1816,8 @@ async function handlePresenceAPI(request, env) {
 
     const presenceData = {
       id: u.id || id,
-      username: u.username || (id === "1382421118098346174" ? "dvmonaep" : "reyliar"),
-      global_name: u.global_name || u.username || (id === "1382421118098346174" ? "kerem" : "reyli"),
+      username: u.username || knownFallback.username,
+      global_name: u.global_name || u.username || knownFallback.global_name,
       avatar: avatarUrl,
       banner: bannerUrl,
       status: status, // "online", "idle", "dnd", "offline"
