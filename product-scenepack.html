@@ -20,7 +20,7 @@
             --cherry: #ff2b52;
             --cherry-rgb: 255, 43, 82;
             --cherry-light: #ff6b85;
-            --glass-bg: rgba(14, 10, 18, 0.82);
+            --glass-bg: rgba(14, 10, 18, 0.85);
             --glass-border: rgba(255, 255, 255, 0.11);
             --text-muted: rgba(255, 255, 255, 0.5);
         }
@@ -52,7 +52,7 @@
         }
 
         .wrap {
-            max-width: 900px;
+            max-width: 960px;
             margin: 0 auto;
             padding: 0 24px;
         }
@@ -93,42 +93,80 @@
             overflow: hidden;
         }
 
-        .hero-flex {
-            display: flex;
-            align-items: center;
-            gap: 32px;
-        }
-        @media (max-width: 768px) {
-            .hero-flex { flex-direction: column; text-align: center; }
-        }
-
-        .sp-preview {
-            width: 220px;
-            height: 145px;
-            border-radius: 20px;
+        /* WIDESCREEN 16:9 LANDSCAPE THUMBNAIL HERO CONTAINER */
+        .sp-widescreen-hero {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            max-height: 480px;
+            border-radius: 24px;
             overflow: hidden;
-            background: linear-gradient(135deg, rgba(255, 43, 82, 0.2), rgba(10, 2, 8, 0.8));
-            border: 1px solid rgba(255, 43, 82, 0.25);
-            box-shadow: 0 12px 35px rgba(255, 43, 82, 0.22);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
+            background: #080206;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(255, 43, 82, 0.15);
+            margin-bottom: 28px;
         }
-        .sp-preview img {
+        .sp-widescreen-hero img.hero-bg-blur {
+            position: absolute;
+            inset: -20px;
+            width: calc(100% + 40px);
+            height: calc(100% + 40px);
+            object-fit: cover;
+            filter: blur(28px) brightness(0.4);
+            opacity: 0.8;
+            pointer-events: none;
+        }
+        .sp-widescreen-hero img.hero-main-img {
+            position: relative;
             width: 100%;
             height: 100%;
             object-fit: cover;
+            z-index: 2;
+            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
-        .sp-preview i.ph {
-            font-size: 3rem;
-            color: var(--cherry-light);
-            opacity: 0.5;
+        .sp-widescreen-hero:hover img.hero-main-img {
+            transform: scale(1.03);
+        }
+        .sp-hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(0,0,0,0.2) 0%, transparent 50%, rgba(7, 2, 9, 0.9) 100%);
+            z-index: 3;
         }
 
-        .sp-meta {
-            flex: 1;
-            min-width: 0;
+        /* Play Button Overlay */
+        .sp-hero-play {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: rgba(255, 43, 82, 0.9);
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            box-shadow: 0 0 30px rgba(255, 43, 82, 0.7);
+            z-index: 4;
+            transition: all 0.3s ease;
+            pointer-events: none;
+        }
+        .sp-widescreen-hero:hover .sp-hero-play {
+            transform: translate(-50%, -50%) scale(1.12);
+            box-shadow: 0 0 45px rgba(255, 43, 82, 0.9);
+        }
+
+        /* Hero Badges */
+        .sp-hero-badges {
+            position: absolute;
+            top: 18px;
+            left: 20px;
+            display: flex;
+            gap: 8px;
+            z-index: 4;
         }
 
         .type-badge {
@@ -137,28 +175,28 @@
             gap: 6px;
             padding: 5px 14px;
             border-radius: 999px;
-            background: rgba(255, 43, 82, 0.12);
-            border: 1px solid rgba(255, 43, 82, 0.25);
+            background: rgba(255, 43, 82, 0.15);
+            border: 1px solid rgba(255, 43, 82, 0.3);
             color: var(--cherry-light);
             font-size: 0.72rem;
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 1px;
-            margin-bottom: 12px;
+            backdrop-filter: blur(8px);
         }
 
         .sp-meta h1 {
             font-family: 'Outfit', sans-serif;
-            font-size: 1.85rem;
+            font-size: 2rem;
             font-weight: 900;
             color: #fff;
-            margin-bottom: 8px;
-            line-height: 1.2;
+            margin-bottom: 12px;
+            line-height: 1.25;
         }
         .sp-meta p.desc {
-            font-size: 0.86rem;
+            font-size: 0.92rem;
             color: var(--text-muted);
-            line-height: 1.6;
+            line-height: 1.65;
         }
 
         /* Minimal Single CTA */
@@ -168,7 +206,7 @@
             justify-content: space-between;
             gap: 20px;
             padding: 24px 32px;
-            background: rgba(0,0,0,0.3);
+            background: rgba(0,0,0,0.35);
             border: 1px solid rgba(255,255,255,0.08);
             border-radius: 22px;
             margin-top: 10px;
@@ -188,7 +226,7 @@
             text-decoration: none;
             font-family: 'Outfit', sans-serif;
             font-weight: 800;
-            font-size: 0.92rem;
+            font-size: 0.94rem;
             box-shadow: 0 10px 25px rgba(255, 43, 82, 0.4);
             transition: all 0.3s ease;
         }
@@ -197,7 +235,7 @@
             box-shadow: 0 14px 35px rgba(255, 43, 82, 0.55);
         }
 
-        /* Uploader & Creator (Audio Page Style) */
+        /* Creators & Uploaders (Audio Page Style) */
         .creators-flex {
             display: flex;
             gap: 18px;
@@ -229,7 +267,7 @@
             flex-shrink: 0;
         }
         .creator-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .creator-info strong { display: block; font-size: 0.9rem; color: #fff; font-family: 'Outfit', sans-serif; }
+        .creator-info strong { display: block; font-size: 0.92rem; color: #fff; font-family: 'Outfit', sans-serif; }
         .creator-info span { font-size: 0.74rem; color: var(--text-muted); }
         .creator-info a { color: var(--cherry-light); text-decoration: none; font-size: 0.75rem; font-weight: 600; margin-top: 2px; display: inline-block; }
         .creator-info a:hover { text-decoration: underline; }
@@ -292,6 +330,56 @@
     <script src="js/auth.js?v=10"></script>
     <script src="js/script.js?v=5"></script>
     <script>
+    var discordAvatarCache = {};
+
+    // Fetch Discord profile photo via Zyrex VPS Bot API (with 2.5s timeout for fast loads)
+    async function fetchZyrexBotAvatar(uploaderId, fallbackHashOrUrl) {
+        if (!uploaderId) {
+            if (fallbackHashOrUrl && fallbackHashOrUrl.startsWith('http')) return fallbackHashOrUrl;
+            if (fallbackHashOrUrl) return '/api/avatar/0/' + fallbackHashOrUrl + '.png?size=128';
+            return 'https://cdn.discordapp.com/embed/avatars/0.png';
+        }
+        if (discordAvatarCache[uploaderId]) return discordAvatarCache[uploaderId];
+
+        try {
+            var controller = new AbortController();
+            var timer = setTimeout(function(){ controller.abort(); }, 2500);
+
+            var resp = await fetch('/api/presence/' + uploaderId, {
+                headers: {
+                    "X-Zyrex-Key": "zyrex_app_sec_k982f81a7b54c29013e9a",
+                    "Accept": "application/json"
+                },
+                signal: controller.signal
+            });
+            clearTimeout(timer);
+
+            if (resp.ok) {
+                var json = await resp.json();
+                var d = json.data || json[uploaderId] || json;
+                var u = d.discord_user || d;
+                if (u && u.avatar) {
+                    var avatarUrl = '';
+                    if (u.avatar.startsWith('http://') || u.avatar.startsWith('https://')) {
+                        avatarUrl = u.avatar;
+                    } else {
+                        var ext = u.avatar.startsWith('a_') ? 'gif' : 'png';
+                        avatarUrl = '/api/avatar/' + uploaderId + '/' + u.avatar + '.' + ext + '?size=128';
+                    }
+                    discordAvatarCache[uploaderId] = avatarUrl;
+                    return avatarUrl;
+                }
+            }
+        } catch(e) {}
+
+        if (fallbackHashOrUrl) {
+            if (fallbackHashOrUrl.startsWith('http')) return fallbackHashOrUrl;
+            var ext = fallbackHashOrUrl.startsWith('a_') ? 'gif' : 'png';
+            return '/api/avatar/' + uploaderId + '/' + fallbackHashOrUrl + '.' + ext + '?size=128';
+        }
+        return 'https://cdn.discordapp.com/embed/avatars/0.png';
+    }
+
     (async function(){
         var p = new URLSearchParams(location.search);
         var id = p.get('id');
@@ -314,7 +402,7 @@
             }
 
             if (!data || !data.id) { showErr('Scenepack not found'); return; }
-            render(data);
+            await render(data);
         } catch(e) { showErr('Failed to load scenepack'); }
     })();
 
@@ -326,7 +414,7 @@
 
     function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
 
-    function render(p) {
+    async function render(p) {
         document.getElementById('load').style.display = 'none';
         document.getElementById('root').style.display = 'block';
         document.title = (p.name || 'Scenepack') + ' \u2014 Zyrex Scenepacks';
@@ -337,27 +425,29 @@
 
         var html = '';
 
-        // Glass Minimalist Card
-        html += '<div class="glass-card"><div class="hero-flex">';
-        html += '<div class="sp-preview">';
-        if (p.thumbnail) {
-            html += '<img src="' + esc(p.thumbnail) + '" alt="" onerror="this.outerHTML=\'<i class=\\\'fas fa-film ph\\\'></i>\'">';
-        } else {
-            html += '<i class="fas fa-film ph"></i>';
-        }
+        // 1. WIDESCREEN 16:9 LANDSCAPE THUMBNAIL HERO SHOWCASE
+        var thumbUrl = p.thumbnail || 'assets/content.png';
+        html += '<div class="sp-widescreen-hero">';
+        html += '<img src="' + esc(thumbUrl) + '" class="hero-bg-blur" alt="">';
+        html += '<img src="' + esc(thumbUrl) + '" class="hero-main-img" alt="' + esc(p.name) + '" onerror="this.src=\'assets/content.png\'">';
+        html += '<div class="sp-hero-overlay"></div>';
+        html += '<div class="sp-hero-play"><i class="fas fa-play"></i></div>';
+        html += '<div class="sp-hero-badges">';
+        html += '<span class="type-badge"><i class="fas fa-clapperboard"></i> Scenepack</span>';
+        html += '</div>';
         html += '</div>';
 
+        // 2. MAIN GLASS DETAILS CARD
+        html += '<div class="glass-card">';
         html += '<div class="sp-meta">';
-        html += '<span class="type-badge"><i class="fas fa-clapperboard"></i> Scenepack</span>';
         html += '<h1>' + esc(p.name || 'Untitled Scenepack') + '</h1>';
         html += '<p class="desc">' + esc(p.description || p.desc || 'No description provided for this scenepack.') + '</p>';
-        html += '</div></div></div>';
+        html += '</div>';
 
-        // Single Minimal CTA & Creators
-        html += '<div class="glass-card">';
+        // 3. CTA DOWNLOAD BOX
         html += '<div class="cta-box"><div>';
         html += '<h3 style="font-family:Outfit,sans-serif;font-size:1.1rem;color:#fff;margin-bottom:4px">Download Scenepack</h3>';
-        html += '<p style="font-size:0.8rem;color:var(--text-muted);margin:0">Host: ' + esc(hostname || 'External Direct Link') + '</p></div>';
+        html += '<p style="font-size:0.8rem;color:var(--text-muted);margin:0">Host: ' + esc(hostname || 'Direct Link / External Host') + '</p></div>';
         if (downloadUrl) {
             html += '<a href="' + esc(downloadUrl) + '" target="_blank" rel="noopener" class="btn-download"><i class="fas fa-download"></i> Download Scenepack</a>';
         } else {
@@ -365,8 +455,9 @@
         }
         html += '</div>';
 
-        // Creators & Uploaders (Same exact logic as Audio Page)
+        // 4. CREATORS & UPLOADERS SECTION (ZYREX VPS BOT API DISCORD AVATAR)
         var uploaderName = p.uploader_name || p.author_name || '';
+        var uploaderId = p.uploader_id || p.author_id || '';
         var creatorName = p.creator_nickname || '';
         var hasUploader = !!uploaderName;
         var hasCreator = !!(creatorName || p.creator_social_url || p.creator_avatar);
@@ -374,19 +465,17 @@
         if (hasUploader || hasCreator) {
             html += '<div class="creators-flex">';
             
-            // Discord Uploader Card
+            // Uploader Card (Using Zyrex VPS Bot API for Discord Avatar & NO "(discord)" text)
             if (hasUploader) {
-                var uploaderAvatar = p.uploader_avatar || '';
-                var uploaderId = p.uploader_id || '';
-                var uploaderImg = uploaderAvatar ? (uploaderAvatar.startsWith('http') ? uploaderAvatar : (uploaderId && typeof avatarProxyUrl === 'function' ? avatarProxyUrl(uploaderId, uploaderAvatar, 64) : `https://cdn.discordapp.com/avatars/${uploaderId}/${uploaderAvatar}.png`)) : '';
+                var uploaderImg = await fetchZyrexBotAvatar(uploaderId, p.uploader_avatar);
 
                 html += '<div class="creator-card"><div class="creator-avatar">';
                 if (uploaderImg) {
-                    html += '<img src="' + esc(uploaderImg) + '" onerror="this.outerHTML=\'<i class=\\\'fab fa-discord\\\'></i>\'">';
+                    html += '<img src="' + esc(uploaderImg) + '" onerror="this.src=\'https://cdn.discordapp.com/embed/avatars/0.png\'">';
                 } else {
                     html += '<i class="fab fa-discord" style="color:#5865F2"></i>';
                 }
-                html += '</div><div class="creator-info"><strong>' + esc(uploaderName) + '</strong><span>Uploaded by (Discord)</span></div></div>';
+                html += '</div><div class="creator-info"><strong>' + esc(uploaderName) + '</strong><span>Uploaded by</span></div></div>';
             }
 
             // Original Creator Card

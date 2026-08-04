@@ -1,5 +1,5 @@
 const DEFAULT_HEALTH_URL = "https://storage.zyrexediting.xyz/health";
-const DEFAULT_TIMEOUT_MS = 6000;
+const DEFAULT_TIMEOUT_MS = 1500;
 const DEFAULT_ONLINE_CACHE_MS = 15000;
 const DEFAULT_OFFLINE_CACHE_MS = 3000;
 
@@ -51,14 +51,12 @@ async function probeServer(env) {
       lastHealthReason = available ? "online" : `invalid-status-${status || "missing"}`;
       return available;
     } catch (_) {
-      // HTTP 200 response received even if non-JSON payload
       lastHealthReason = "online";
       return true;
     }
   } catch (error) {
     lastHealthReason = "request-error";
     console.warn("Server health probe failed", error?.message || String(error));
-    // If previously online, keep available during brief timeout window
     return healthState.initialized ? healthState.available : true;
   } finally {
     clearTimeout(timeout);
@@ -195,15 +193,6 @@ export default {
     const url = new URL(request.url);
     const pathname = url.pathname;
 
-    // Cloudflare-native API endpoints bypass local server health check
-    const isCloudflareNativeEndpoint = pathname.startsWith("/api/presence") || 
-                                       pathname.startsWith("/api/avatar/") || 
-                                       pathname.startsWith("/api/banner/");
-
-    if (!isCloudflareNativeEndpoint && !(await isServerAvailable(env))) {
-      return offlineResponse(request);
-    }
-
     if (isAdminPublishPage(pathname)) {
       const denied = await authorizeAdminPublish(request, env);
       if (denied) return denied;
@@ -214,9 +203,16 @@ export default {
     }
 
     if ((url.hostname === "dl.zyrexediting.xyz" || isApiRequest(pathname)) && env.API) {
+      const isCloudflareNativeEndpoint = pathname.startsWith("/api/presence") || 
+                                         pathname.startsWith("/api/avatar/") || 
+                                         pathname.startsWith("/api/banner/");
+      if (!isCloudflareNativeEndpoint && !(await isServerAvailable(env))) {
+        return offlineResponse(request);
+      }
       return env.API.fetch(request);
     }
 
+    // Static site assets (HTML, CSS, JS) are served instantly from Cloudflare CDN with ZERO blocking delay!
     return env.ASSETS.fetch(request);
   },
 };
