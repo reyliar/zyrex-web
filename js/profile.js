@@ -416,6 +416,29 @@
         }
     } catch (e) {}
 
+    function formatElapsed(startMs) {
+        if (!startMs) return '';
+        const diffSec = Math.max(0, Math.floor((Date.now() - startMs) / 1000));
+        const hours = Math.floor(diffSec / 3600);
+        const mins = Math.floor((diffSec % 3600) / 60);
+        const secs = diffSec % 60;
+        if (hours > 0) {
+            return `${hours}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+        return `${mins}:${String(secs).padStart(2, '0')}`;
+    }
+
+    // Live 1-second Ticking Timer for Elapsed Activity Time
+    setInterval(() => {
+        document.querySelectorAll('.activity-timer').forEach(timerEl => {
+            const startMs = parseInt(timerEl.getAttribute('data-start'));
+            const textEl = timerEl.querySelector('.timer-text');
+            if (startMs && textEl) {
+                textEl.textContent = formatElapsed(startMs);
+            }
+        });
+    }, 1000);
+
     function updateDiscordUI(data, saveCache = true) {
         if (!data) return;
 
@@ -510,33 +533,41 @@
                     customText = `${emojiMarkup}${escapeHtml(customStatus.state || customStatus.name || '')}`;
                 }
 
-                // 2. Active Game or Streaming Card
+                // 2. Active Game or Streaming Card (Matches Discord Desktop Profile Card!)
                 if (gameActivity) {
-                    const actionName = gameActivity.type === 1 ? 'Streaming' : (gameActivity.type === 2 ? 'Listening to' : 'Playing');
+                    const actionCategory = gameActivity.type === 1 ? 'Streaming' : (gameActivity.type === 2 ? 'Listening to' : 'Playing');
                     const gameName = gameActivity.name || 'Game';
                     const details = gameActivity.details || '';
                     const state = gameActivity.state || '';
                     const largeImgUrl = gameActivity.large_image_url || gameActivity.image_url || null;
                     const smallImgUrl = gameActivity.small_image_url || null;
-                    
+                    const startMs = gameActivity.start_timestamp || null;
+
+                    let timerHtml = '';
+                    if (startMs) {
+                        const timeStr = formatElapsed(startMs);
+                        timerHtml = `<div class="activity-timer" data-start="${startMs}"><i class="fas fa-gamepad" style="color:#57f287; margin-right:4px;"></i> <span class="timer-text">${timeStr}</span></div>`;
+                    }
+
                     html = `
                         <div class="presence-header">
-                            <i class="fas ${gameActivity.type === 1 ? 'fa-broadcast-tower' : 'fa-gamepad'} presence-icon"></i>
-                            <span class="presence-text">${customText || headerText}</span>
+                            <span class="presence-category-title">${actionCategory}</span>
+                            ${customText ? `<div class="presence-text" style="width:100%;margin-top:2px;">${customText}</div>` : ''}
                         </div>
                         <div class="activity-card">
                             <div class="activity-icon-wrapper">
                                 ${largeImgUrl 
                                     ? `<img src="${escapeHtml(largeImgUrl)}" alt="${escapeHtml(gameName)}" class="activity-icon-img" onerror="this.style.display='none';this.nextElementSibling.style.display='grid';">
-                                       <div class="activity-icon-fallback" style="display:none;width:100%;height:100%;place-items:center;"><i class="fas fa-gamepad" style="color:var(--accent-color);font-size:1.15rem"></i></div>`
-                                    : `<i class="fas ${gameActivity.type === 1 ? 'fa-broadcast-tower' : 'fa-gamepad'}" style="color:var(--accent-color); font-size:1.15rem"></i>`
+                                       <div class="activity-icon-fallback" style="display:none;width:100%;height:100%;place-items:center;"><i class="fas fa-gamepad" style="color:var(--accent-color);font-size:1.4rem"></i></div>`
+                                    : `<i class="fas ${gameActivity.type === 1 ? 'fa-broadcast-tower' : 'fa-gamepad'}" style="color:var(--accent-color); font-size:1.4rem"></i>`
                                 }
                                 ${smallImgUrl ? `<img src="${escapeHtml(smallImgUrl)}" class="activity-small-icon" title="${escapeHtml(gameActivity.small_text || '')}">` : ''}
                             </div>
                             <div class="activity-info">
-                                <span class="activity-title">${actionName} <b>${escapeHtml(gameName)}</b></span>
+                                <span class="activity-title">${escapeHtml(gameName)}</span>
                                 ${details ? `<span class="activity-details">${escapeHtml(details)}</span>` : ''}
                                 ${state ? `<span class="activity-state">${escapeHtml(state)}</span>` : ''}
+                                ${timerHtml}
                             </div>
                         </div>
                     `;
@@ -558,6 +589,9 @@
             }
 
             presenceBox.innerHTML = html;
+            try {
+                localStorage.setItem('zyrex_presence_html_v3_' + discordUserId, html);
+            } catch (e) {}
         }
     }
 

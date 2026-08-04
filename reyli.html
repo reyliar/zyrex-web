@@ -72,8 +72,20 @@
 
                     <!-- Live Discord Presence / Activity Box -->
                     <div class="presence-box">
-                        <i class="fas fa-signal presence-icon"></i>
-                        <span class="presence-text" id="presenceText">Founder @ Zyrex Editing</span>
+                        <script>
+                            (function(){
+                                try {
+                                    var cachedHtml = localStorage.getItem('zyrex_presence_html_v3_1421177012814614548');
+                                    if (cachedHtml) {
+                                        document.write(cachedHtml);
+                                    } else {
+                                        document.write('<div class="presence-header"><i class="fas fa-signal presence-icon"></i><span class="presence-text">Online on Discord</span></div>');
+                                    }
+                                } catch(e) {
+                                    document.write('<div class="presence-header"><i class="fas fa-signal presence-icon"></i><span class="presence-text">Online on Discord</span></div>');
+                                }
+                            })();
+                        </script>
                     </div>
 
                     <!-- Textless Theme-Matched Link Buttons (High Quality Vector SVGs) -->
