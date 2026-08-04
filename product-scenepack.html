@@ -95,18 +95,22 @@
             overflow: hidden;
         }
 
-        /* 16:9 WIDESCREEN HERO SHOWCASE */
+        /* OPTIMIZED COMPACT ORIGINAL-DIMENSIONS HERO SHOWCASE */
         .sp-widescreen-hero {
             position: relative;
             width: 100%;
-            aspect-ratio: 16 / 9;
-            max-height: 480px;
-            border-radius: 24px;
+            min-height: 220px;
+            max-height: 330px;
+            border-radius: 22px;
             overflow: hidden;
             background: #080206;
             border: 1px solid rgba(255, 255, 255, 0.12);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(255, 43, 82, 0.15);
-            margin-bottom: 28px;
+            box-shadow: 0 16px 50px rgba(0, 0, 0, 0.6), 0 0 25px rgba(255, 43, 82, 0.12);
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px;
         }
         .sp-widescreen-hero img.hero-bg-blur {
             position: absolute;
@@ -114,58 +118,38 @@
             width: calc(100% + 40px);
             height: calc(100% + 40px);
             object-fit: cover;
-            filter: blur(28px) brightness(0.4);
-            opacity: 0.8;
+            filter: blur(32px) brightness(0.35);
+            opacity: 0.75;
             pointer-events: none;
         }
         .sp-widescreen-hero img.hero-main-img {
             position: relative;
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+            max-width: 100%;
+            max-height: 300px;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            border-radius: 14px;
             z-index: 2;
-            transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .sp-widescreen-hero:hover img.hero-main-img {
-            transform: scale(1.03);
+            transform: scale(1.02);
         }
         .sp-hero-overlay {
             position: absolute;
             inset: 0;
-            background: linear-gradient(180deg, rgba(0,0,0,0.2) 0%, transparent 50%, rgba(7, 2, 9, 0.9) 100%);
+            background: linear-gradient(180deg, rgba(0,0,0,0.15) 0%, transparent 60%, rgba(7, 2, 9, 0.7) 100%);
             z-index: 3;
-        }
-
-        /* Play Button Overlay */
-        .sp-hero-play {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            background: rgba(255, 43, 82, 0.9);
-            color: #fff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.4rem;
-            box-shadow: 0 0 30px rgba(255, 43, 82, 0.7);
-            z-index: 4;
-            transition: all 0.3s ease;
             pointer-events: none;
-        }
-        .sp-widescreen-hero:hover .sp-hero-play {
-            transform: translate(-50%, -50%) scale(1.12);
-            box-shadow: 0 0 45px rgba(255, 43, 82, 0.9);
         }
 
         /* Hero Badges */
         .sp-hero-badges {
             position: absolute;
-            top: 18px;
-            left: 20px;
+            top: 16px;
+            left: 18px;
             display: flex;
             gap: 8px;
             z-index: 4;
@@ -427,13 +411,12 @@
 
         var html = '';
 
-        // 1. WIDESCREEN 16:9 LANDSCAPE THUMBNAIL HERO SHOWCASE
+        // 1. COMPACT ORIGINAL-DIMENSIONS THUMBNAIL HERO SHOWCASE
         var thumbUrl = p.thumbnail || 'assets/content.png';
         html += '<div class="sp-widescreen-hero">';
         html += '<img src="' + esc(thumbUrl) + '" class="hero-bg-blur" alt="">';
         html += '<img src="' + esc(thumbUrl) + '" class="hero-main-img" alt="' + esc(p.name) + '" onerror="this.src=\'assets/content.png\'">';
         html += '<div class="sp-hero-overlay"></div>';
-        html += '<div class="sp-hero-play"><i class="fas fa-play"></i></div>';
         html += '<div class="sp-hero-badges">';
         html += '<span class="type-badge"><i class="fas fa-clapperboard"></i> Scenepack</span>';
         html += '</div>';
