@@ -1707,7 +1707,7 @@ async function cacheThumbnail(env, imageUrl, filename) {
   }
 }
 
-// ============ REAL-TIME PRESENCE & STATUS API ============
+// ============ REAL-TIME PRESENCE & STATUS API (HLX API + Discord REST + Lanyard) ============
 const presenceCache = new Map();
 
 async function handlePresenceAPI(request, env) {
@@ -1732,10 +1732,11 @@ async function handlePresenceAPI(request, env) {
     return json({ success: false, error: "No user ID specified" }, 400);
   }
 
+  const hlxKey = (env.HLX_API_KEY || url.searchParams.get("hlx_key") || "").trim();
   const results = {};
 
   await Promise.all(ids.map(async (id) => {
-    // Check 5-second TTL in-memory cache
+    // Check 5-second TTL cache
     const cached = presenceCache.get(id);
     if (cached && Date.now() < cached.expiry) {
       results[id] = cached.data;
@@ -1744,92 +1745,115 @@ async function handlePresenceAPI(request, env) {
 
     let presenceData = null;
 
-    // Method 1: Query Lanyard API (Primary)
-    try {
-      const lanyardResp = await fetch(`https://api.lanyard.rest/v1/users/${id}`, {
-        headers: { "Accept": "application/json", "User-Agent": "ZyrexPresenceAPI/1.0" }
-      });
-      if (lanyardResp.ok) {
-        const lJson = await lanyardResp.json();
-        if (lJson && lJson.success && lJson.data) {
-          const d = lJson.data;
-          presenceData = {
-            id: d.discord_user?.id || id,
-            username: d.discord_user?.username || "",
-            global_name: d.discord_user?.global_name || d.discord_user?.username || "",
-            avatar: d.discord_user?.avatar 
-              ? `https://cdn.discordapp.com/avatars/${d.discord_user.id}/${d.discord_user.avatar}.${d.discord_user.avatar.startsWith('a_') ? 'gif' : 'png'}?size=256` 
-              : `https://cdn.discordapp.com/embed/avatars/0.png`,
-            status: d.discord_status || "offline",
-            online: d.discord_status !== "offline",
-            active_on_discord_web: !!d.active_on_discord_web,
-            active_on_discord_desktop: !!d.active_on_discord_desktop,
-            active_on_discord_mobile: !!d.active_on_discord_mobile,
-            listening_to_spotify: !!d.listening_to_spotify,
-            spotify: d.spotify ? {
-              song: d.spotify.song,
-              artist: d.spotify.artist,
-              album: d.spotify.album,
-              album_art_url: d.spotify.album_art_url,
-              track_id: d.spotify.track_id
-            } : null,
-            activities: (d.activities || []).map(act => ({
-              name: act.name,
-              type: act.type,
-              state: act.state || null,
-              details: act.details || null,
-              emoji: act.emoji || null,
-              created_at: act.created_at
-            })),
-            kv: d.kv || {},
-            updated_at: Date.now()
-          };
-        }
-      }
-    } catch (e) {
-      console.error(`Presence fetch error for ${id} (Lanyard):`, e.message);
-    }
-
-    // Method 2: Fallback to Discord Guild Member REST API
-    if (!presenceData && env.DISCORD_BOT_TOKEN) {
+    // STRATEGY 1: HLX API (https://api.hlx.li/discord/user)
+    if (hlxKey) {
       try {
-        const guildId = env.GUILD_ID || "1518954946110685184";
-        const memberResp = await fetch(`https://discord.com/api/v10/guilds/${guildId}/members/${id}`, {
-          headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` }
-        });
-        if (memberResp.ok) {
-          const m = await memberResp.json();
-          const u = m.user || {};
-          presenceData = {
-            id: u.id || id,
-            username: u.username || "",
-            global_name: u.global_name || m.nick || u.username || "",
-            avatar: u.avatar 
-              ? `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.${u.avatar.startsWith('a_') ? 'gif' : 'png'}?size=256` 
-              : `https://cdn.discordapp.com/embed/avatars/0.png`,
-            status: "online",
-            online: true,
-            activities: [],
-            spotify: null,
-            updated_at: Date.now()
-          };
+        const hlxEndpoints = [
+          `https://api.hlx.li/discord/user?user_id=${id}`,
+          `https://api.hlx.li/discord/user/${id}`,
+          `https://api.hlx.li/v1/discord/user/${id}`
+        ];
+
+        for (const ep of hlxEndpoints) {
+          const hRes = await fetch(ep, {
+            headers: {
+              "Authorization": `Bearer ${hlxKey}`,
+              "x-api-key": hlxKey,
+              "Accept": "application/json",
+              "User-Agent": "ZyrexWorker/1.0"
+            }
+          });
+          if (hRes.ok) {
+            const hJson = await hRes.json();
+            const d = hJson.data || hJson.user || hJson;
+            if (d && (d.id || d.username || d.global_name)) {
+              presenceData = {
+                id: d.id || id,
+                username: d.username || "",
+                global_name: d.global_name || d.display_name || d.username || "",
+                avatar: d.avatar_url || (d.avatar ? `https://cdn.discordapp.com/avatars/${id}/${d.avatar}.png?size=256` : `https://cdn.discordapp.com/embed/avatars/0.png`),
+                banner: d.banner_url || (d.banner ? `https://cdn.discordapp.com/banners/${id}/${d.banner}.png?size=600` : null),
+                status: d.status || d.discord_status || "online",
+                online: (d.status || d.discord_status || "offline") !== "offline",
+                activities: d.activities || [],
+                spotify: d.spotify || null,
+                provider: "hlx.li",
+                updated_at: Date.now()
+              };
+              break;
+            }
+          }
         }
       } catch (e) {
-        console.error(`Presence fetch error for ${id} (Discord REST):`, e.message);
+        console.error(`HLX API fetch error for ${id}:`, e.message);
       }
     }
 
-    // Default fallback structure
+    // STRATEGY 2: Official Discord REST API (/users/{id}) for exact real username, display name & avatar
+    let discordUserObj = null;
+    if (env.DISCORD_BOT_TOKEN) {
+      try {
+        const dRes = await fetch(`https://discord.com/api/v10/users/${id}`, {
+          headers: { "Authorization": `Bot ${env.DISCORD_BOT_TOKEN}` }
+        });
+        if (dRes.ok) {
+          discordUserObj = await dRes.json();
+        }
+      } catch (e) {
+        console.error(`Discord REST API fetch error for ${id}:`, e.message);
+      }
+    }
+
+    // STRATEGY 3: Lanyard API (api.lanyard.rest) for live status, custom status & Spotify
+    let lanyardData = null;
+    try {
+      const lRes = await fetch(`https://api.lanyard.rest/v1/users/${id}`, {
+        headers: { "Accept": "application/json", "User-Agent": "ZyrexPresenceAPI/1.0" }
+      });
+      if (lRes.ok) {
+        const lJson = await lRes.json();
+        if (lJson && lJson.success && lJson.data) {
+          lanyardData = lJson.data;
+        }
+      }
+    } catch (e) {}
+
+    // Combine best available real-time data from Discord REST + Lanyard + HLX
     if (!presenceData) {
+      const u = discordUserObj || lanyardData?.discord_user || {};
+      const status = lanyardData?.discord_status || "online";
+
       presenceData = {
-        id,
-        username: "User",
-        global_name: "User",
-        avatar: "https://cdn.discordapp.com/embed/avatars/0.png",
-        status: "offline",
-        online: false,
-        activities: [],
-        spotify: null,
+        id: u.id || id,
+        username: u.username || (id === "1382421118098346174" ? "dvmonaep" : "reyliar"),
+        global_name: u.global_name || u.username || (id === "1382421118098346174" ? "kerem" : "reyli"),
+        avatar: u.avatar 
+          ? `https://cdn.discordapp.com/avatars/${u.id || id}/${u.avatar}.${String(u.avatar).startsWith('a_') ? 'gif' : 'png'}?size=256`
+          : `https://cdn.discordapp.com/embed/avatars/0.png`,
+        banner: u.banner 
+          ? `https://cdn.discordapp.com/banners/${u.id || id}/${u.banner}.${String(u.banner).startsWith('a_') ? 'gif' : 'png'}?size=600`
+          : null,
+        status: status,
+        online: status !== "offline",
+        active_on_discord_web: !!lanyardData?.active_on_discord_web,
+        active_on_discord_desktop: !!lanyardData?.active_on_discord_desktop,
+        active_on_discord_mobile: !!lanyardData?.active_on_discord_mobile,
+        listening_to_spotify: !!lanyardData?.listening_to_spotify,
+        spotify: lanyardData?.spotify ? {
+          song: lanyardData.spotify.song,
+          artist: lanyardData.spotify.artist,
+          album: lanyardData.spotify.album,
+          album_art_url: lanyardData.spotify.album_art_url,
+          track_id: lanyardData.spotify.track_id
+        } : null,
+        activities: (lanyardData?.activities || []).map(act => ({
+          name: act.name,
+          type: act.type,
+          state: act.state || null,
+          details: act.details || null,
+          emoji: act.emoji || null
+        })),
+        provider: lanyardData ? "lanyard+discord" : "discord_rest",
         updated_at: Date.now()
       };
     }
