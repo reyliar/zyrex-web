@@ -308,10 +308,13 @@ function renderPresets(items) {
             '<div class="rc-img">' +
             thumbHtml +
             '<div class="roverlay"></div>' +
-            '<div class="rbadge"><span class="' + catClass + '">' + cat + '</span><span class="tag-free">Free</span></div>' +
+            '<div class="rbadge grid-badge"><span class="' + catClass + '">' + cat + '</span><span class="tag-free">Free</span></div>' +
             '</div>' +
             '<div class="rc-content">' +
+            '<div class="rc-head">' +
             '<h3 class="rc-title" title="' + item.name + '">' + item.name + '</h3>' +
+            '<div class="rbadge list-badge"><span class="' + catClass + '">' + cat + '</span><span class="tag-free">Free</span></div>' +
+            '</div>' +
             (shortDesc ? '<p class="rc-desc">' + shortDesc + '</p>' : '') +
             '<div class="rc-footer">' +
             '<div class="rc-meta">' +
