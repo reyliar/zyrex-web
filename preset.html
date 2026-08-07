@@ -581,7 +581,7 @@
       try {
         var listUrl = '/api/files/list-path?product_id=' + encodeURIComponent(p.id || '');
         if (p.file_path) listUrl += '&path=' + encodeURIComponent(p.file_path);
-        var resp = await fetch(listUrl);
+        var resp = await fetch(listUrl, { credentials: 'include' });
         if (resp.status === 401 || resp.status === 403) {
           // Not logged in or not verified — show login prompt in files tab
           var tabFiles = document.getElementById('tab-files');
