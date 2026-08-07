@@ -651,8 +651,12 @@
             </a>
         </div>
 
-        <div class="browse-heading">
-            <h2>Browse Categories</h2>
+        <div class="browse-heading" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;">
+            <h2 style="margin:0;">Browse Categories</h2>
+            <div class="tb-v">
+                <button class="active" data-view="grid" title="Grid View"><i class="fas fa-th"></i></button>
+                <button data-view="list" title="List View"><i class="fas fa-list"></i></button>
+            </div>
         </div>
 
         <!-- Category Grid Layout -->
@@ -735,17 +739,16 @@
         </div>
     </div>
 
-    <!-- Footer -->
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
                 <div class="footer-brand">
-                    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><a href="/" class="logo"><img
-                                src="assets/content.png" alt="ZYREX" class="logo-img"><span
-                                class="logo-text">yrex</span></a>
-                        <h3
-                            style="font-size:1.8rem;font-weight:900;margin:0;letter-spacing:2px;background:linear-gradient(135deg,#ffffff,#9090a0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">
-                            Editing</h3>
+                    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+                        <a href="/" class="logo">
+                            <img src="assets/content.png" alt="ZYREX" class="logo-img">
+                            <span class="logo-text">yrex</span>
+                        </a>
+                        <h3 style="font-size:1.8rem;font-weight:900;margin:0;letter-spacing:2px;background:linear-gradient(135deg,#ffffff,#9090a0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Editing</h3>
                     </div>
                     <p>Premium editing community &amp; resources.</p>
                 </div>
@@ -753,16 +756,16 @@
                     <h4>Quick Links</h4>
                     <ul>
                         <li><a href="/">Home</a></li>
-                        <li><a href="resources">Resources</a></li>
-                        <li><a href="plugins">Plugins</a></li>
-                        <li><a href="more">More</a></li>
+                        <li><a href="/resources">Resources</a></li>
+                        <li><a href="/plugins">Plugins</a></li>
+                        <li><a href="/more">More</a></li>
                     </ul>
                 </div>
                 <div class="footer-links">
                     <h4>Legal</h4>
                     <ul>
-                        <li><a href="/terms">Terms</a></li>
-                        <li><a href="/privacy">Privacy</a></li>
+                        <li><a href="/terms">Terms of Service</a></li>
+                        <li><a href="/privacy">Privacy Policy</a></li>
                         <li><a href="/dmca">DMCA</a></li>
                     </ul>
                 </div>
@@ -773,10 +776,17 @@
                         <li><a href="/#contact">Contact</a></li>
                     </ul>
                 </div>
+                <div class="footer-newsletter">
+                    <h4>Newsletter</h4>
+                    <p>Stay updated with Zyrex Editing.</p>
+                    <div class="newsletter-form">
+                        <input type="email" placeholder="Your email">
+                        <button type="submit" aria-label="Subscribe"><i class="fas fa-arrow-right"></i></button>
+                    </div>
+                </div>
             </div>
             <div class="footer-bottom">
-                <p>&copy; 2026 Zyrex Editing. | <a href="/terms">Terms</a> | <a href="/privacy">Privacy</a> | <a
-                        href="/dmca">DMCA</a></p>
+                <p>&copy; 2026 Zyrex Editing. All rights reserved.</p>
             </div>
         </div>
     </footer>
@@ -841,12 +851,35 @@
         // Shortcut search trigger
         document.addEventListener('keydown', function (e) { if ((e.ctrlKey || e.metaKey) && e.key === 'k') { e.preventDefault(); var i = document.getElementById('pluginSearch'); if (i) i.focus() } });
 
+        // View mode persistence
+        var currentPluginView = localStorage.getItem('zyrex_plugin_view') || 'grid';
+        function applyPluginView(view) {
+            currentPluginView = view || 'grid';
+            localStorage.setItem('zyrex_plugin_view', currentPluginView);
+            var catGrid = document.querySelector('.cat-grid');
+            if (catGrid) {
+                if (currentPluginView === 'list') catGrid.classList.add('list-view');
+                else catGrid.classList.remove('list-view');
+            }
+            document.querySelectorAll('.tb-v button').forEach(function(b) {
+                if (b.dataset.view === currentPluginView) b.classList.add('active');
+                else b.classList.remove('active');
+            });
+        }
+        document.addEventListener('DOMContentLoaded', function() {
+            applyPluginView(currentPluginView);
+            document.querySelectorAll('.tb-v button').forEach(function(b) {
+                b.addEventListener('click', function() {
+                    if (this.dataset.view) applyPluginView(this.dataset.view);
+                });
+            });
+        });
+
         // Search trigger redirection/filtering
         document.getElementById('pluginSearch')?.addEventListener('keyup', function (e) {
             if (e.key === 'Enter') {
                 var query = this.value.trim();
                 if (query) {
-                    // Redirect to windows subpage with query or filter locally if needed
                     location.href = '/plugins/windows?search=' + encodeURIComponent(query);
                 }
             }

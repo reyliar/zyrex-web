@@ -288,9 +288,15 @@
             <div class="stat-card"><div class="stat-num" id="statPlugins">0</div><div class="stat-label">Mac</div></div>
         </div>
 
-        <div class="search-wrap">
-            <i class="fas fa-search"></i>
-            <input type="text" id="search" placeholder="Search extensions & workflow utilities..." oninput="render()">
+        <div style="display:flex;gap:12px;align-items:center;margin-bottom:24px;">
+            <div class="search-wrap" style="flex:1;margin-bottom:0;">
+                <i class="fas fa-search"></i>
+                <input type="text" id="search" placeholder="Search extensions & workflow utilities..." oninput="render()">
+            </div>
+            <div class="tb-v">
+                <button class="active" data-view="grid" title="Grid View"><i class="fas fa-th"></i></button>
+                <button data-view="list" title="List View"><i class="fas fa-list"></i></button>
+            </div>
         </div>
 
         <div class="pg-grid" id="grid">
@@ -302,7 +308,57 @@
     </div>
 
     <!-- Footer -->
-    <footer class="footer"><div class="container"><div class="footer-content"><div class="footer-brand"><div style="display:flex;align-items:center;gap:12px;flex-wrap:nowrap"><a href="/" class="logo"><img src="/assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><h3 style="font-size:1.8rem;font-weight:900;margin:0;letter-spacing:2px;background:linear-gradient(135deg,#ffffff,#9090a0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Editing</h3></div><p>Premium editing community &amp; resources.</p></div><div class="footer-links"><h4>Quick Links</h4><ul><li><a href="/">Home</a></li><li><a href="/resources">Resources</a></li><li><a href="/plugins">Plugins</a></li><li><a href="/more">More</a></li></ul></div><div class="footer-links"><h4>Legal</h4><ul><li><a href="/terms">Terms</a></li><li><a href="/privacy">Privacy</a></li><li><a href="/dmca">DMCA</a></li></ul></div><div class="footer-links"><h4>Community</h4><ul><li><a href="https://discord.gg/fAydSzpafA">Discord</a></li><li><a href="/#contact">Contact</a></li></ul></div></div><div class="footer-bottom"><p>&copy; 2026 Zyrex Editing. | <a href="/terms">Terms</a> | <a href="/privacy">Privacy</a> | <a href="/dmca">DMCA</a></p></div></div></footer>
+        <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+                        <a href="/" class="logo">
+                            <img src="/assets/content.png" alt="ZYREX" class="logo-img">
+                            <span class="logo-text">yrex</span>
+                        </a>
+                        <h3 style="font-size:1.8rem;font-weight:900;margin:0;letter-spacing:2px;background:linear-gradient(135deg,#ffffff,#9090a0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Editing</h3>
+                    </div>
+                    <p>Premium editing community &amp; resources.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/resources">Resources</a></li>
+                        <li><a href="/plugins">Plugins</a></li>
+                        <li><a href="/more">More</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="/terms">Terms of Service</a></li>
+                        <li><a href="/privacy">Privacy Policy</a></li>
+                        <li><a href="/dmca">DMCA</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="https://discord.gg/fAydSzpafA">Discord</a></li>
+                        <li><a href="/#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-newsletter">
+                    <h4>Newsletter</h4>
+                    <p>Stay updated with Zyrex Editing.</p>
+                    <div class="newsletter-form">
+                        <input type="email" placeholder="Your email">
+                        <button type="submit" aria-label="Subscribe"><i class="fas fa-arrow-right"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Zyrex Editing. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
 
     <script src="/js/plugins-data.js?v=3"></script>
     <script src="/js/auth.js?v=10"></script>
@@ -372,33 +428,45 @@
             render();
         }
 
+        var currentPluginView = localStorage.getItem('zyrex_plugin_view') || 'grid';
+        function applyPluginView(v) {
+            currentPluginView = v || 'grid';
+            localStorage.setItem('zyrex_plugin_view', currentPluginView);
+            var g = document.getElementById('grid');
+            if (g) {
+                if (currentPluginView === 'list') g.classList.add('list-view');
+                else g.classList.remove('list-view');
+            }
+            document.querySelectorAll('.tb-v button').forEach(function(b) {
+                if (b.dataset.view === currentPluginView) b.classList.add('active');
+                else b.classList.remove('active');
+            });
+        }
+
         function render() {
             var s = (document.getElementById('search')?.value || '').toLowerCase().trim();
             
             var f = all.filter(function(p){
-                // Filter by page-specific logic
                 var c=(p.category||'').toLowerCase(); return c==='extensions'||c==='scripts'||c==='extensions-scripts';
             });
 
-            // Apply search filter
             if (s) {
                 f = f.filter(function(p){
                     return (p.name||'').toLowerCase().includes(s) || (p.desc||'').toLowerCase().includes(s);
                 });
             }
 
-            // Render stats
-            
-            var wn = f.filter(function(p){ var pl=(p.platform||'').toLowerCase(); return pl==='win'||pl==='windows'||pl==='both' }).length;
-            var mc = f.filter(function(p){ var pl=(p.platform||'').toLowerCase(); return pl==='mac'||pl==='both' }).length;
+            var win = f.filter(function(p){ var pl=(p.platform||'').toLowerCase(); return pl==='win'||pl==='windows'||pl==='both' }).length;
+            var mac = f.filter(function(p){ var pl=(p.platform||'').toLowerCase(); return pl==='mac'||pl==='both' }).length;
             document.getElementById('statTotal').textContent = f.length;
-            document.getElementById('statSoftware').textContent = wn;
-            document.getElementById('statPlugins').textContent = mc;
+            document.getElementById('statSoftware').textContent = win;
+            document.getElementById('statPlugins').textContent = mac;
         
 
             var g = document.getElementById('grid');
             if(!f.length) {
                 g.innerHTML = '<div class="empty"><i class="fas fa-search-minus"></i><p>No extensions or scripts found.</p></div>';
+                applyPluginView(currentPluginView);
                 return;
             }
 
@@ -412,6 +480,7 @@
                        '<i class="fas fa-chevron-right pc-arrow"></i>' +
                        '</a>';
             }).join('');
+            applyPluginView(currentPluginView);
         }
 
         function tryLoad() {
@@ -422,8 +491,14 @@
             }
         }
 
-        // Handle search parameter from URL
         document.addEventListener('DOMContentLoaded', function() {
+            applyPluginView(currentPluginView);
+            document.querySelectorAll('.tb-v button').forEach(function(b) {
+                b.addEventListener('click', function() {
+                    if (this.dataset.view) applyPluginView(this.dataset.view);
+                });
+            });
+
             var p = new URLSearchParams(location.search);
             var q = p.get('search');
             if (q) {

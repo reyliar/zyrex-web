@@ -251,6 +251,8 @@ function renderPresets(items) {
     
     const grid = document.getElementById('pg') || document.getElementById('presetsGrid');
     if (!grid) return;
+    if (typeof currentViewMode !== 'undefined' && currentViewMode === 'list') grid.classList.add('list-view');
+    else grid.classList.remove('list-view');
 
     const paginate = shouldPaginatePresetGrid(grid);
     const renderKey = items.map(function(p) { return p.id || ''; }).join('|');
@@ -482,8 +484,35 @@ function filterPresets() {
     } catch(e) { console.error('filterPresets error:', e); }
 }
 
+let currentViewMode = localStorage.getItem('zyrex_resource_view') || 'grid';
+
+function applyPresetViewMode(mode) {
+    currentViewMode = mode || 'grid';
+    localStorage.setItem('zyrex_resource_view', currentViewMode);
+    const grid = document.getElementById('pg') || document.getElementById('presetsGrid');
+    if (grid) {
+        if (currentViewMode === 'list') grid.classList.add('list-view');
+        else grid.classList.remove('list-view');
+    }
+    document.querySelectorAll('.tb-v button').forEach(btn => {
+        if (btn.dataset.view === currentViewMode) btn.classList.add('active');
+        else btn.classList.remove('active');
+    });
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     initPresets();
+    applyPresetViewMode(currentViewMode);
+
+    // View toggle buttons
+    document.querySelectorAll('.tb-v button').forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (btn.dataset.view) {
+                applyPresetViewMode(btn.dataset.view);
+            }
+        });
+    });
+
     // Category pills
     document.querySelectorAll('.cp button').forEach(tab => {
         tab.addEventListener('click', () => {
