@@ -3332,3 +3332,258 @@ img { max-width: 100%; display: block; }
     .about-pillars-grid { grid-template-columns: 1fr; }
 }
 
+/* ===================== COMPREHENSIVE MOBILE RESPONSIVE ENGINE ===================== */
+
+/* Base Overflow & Touch Safety */
+html, body {
+    overflow-x: hidden !important;
+    width: 100%;
+    -webkit-tap-highlight-color: transparent;
+}
+
+/* Hamburger Toggle Button */
+.hamburger {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    width: 40px;
+    height: 40px;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    z-index: 10005;
+}
+
+.hamburger span {
+    display: block;
+    width: 20px;
+    height: 2px;
+    background-color: #ffffff;
+    border-radius: 2px;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.hamburger:hover {
+    background: rgba(255, 43, 82, 0.15);
+    border-color: rgba(255, 43, 82, 0.35);
+}
+
+.hamburger.active span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+}
+.hamburger.active span:nth-child(2) {
+    opacity: 0;
+    transform: scaleX(0);
+}
+.hamburger.active span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+}
+
+@keyframes mobileNavSlideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-12px) scale(0.98);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Mobile Breakpoint: Tablet & Phones (<= 768px) */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 16px;
+    }
+
+    .hamburger {
+        display: flex;
+    }
+
+    /* Floating Capsule Navbar Adaptation */
+    .navbar {
+        top: 10px;
+        padding: 0 12px;
+    }
+    
+    .navbar .container {
+        padding: 6px 12px;
+        border-radius: 20px !important;
+    }
+
+    .logo-text {
+        font-size: 1.2rem;
+    }
+
+    /* Mobile Navigation Drawer */
+    .nav-links {
+        display: none !important;
+    }
+
+    .nav-links.open,
+    .nav-links.active {
+        display: flex !important;
+        flex-direction: column !important;
+        position: fixed !important;
+        top: 70px !important;
+        left: 12px !important;
+        right: 12px !important;
+        background: rgba(12, 10, 16, 0.96) !important;
+        backdrop-filter: blur(30px) saturate(210%) !important;
+        -webkit-backdrop-filter: blur(30px) saturate(210%) !important;
+        border: 1px solid rgba(255, 43, 82, 0.30) !important;
+        border-radius: 20px !important;
+        padding: 16px !important;
+        gap: 8px !important;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(255, 43, 82, 0.15) !important;
+        z-index: 9999 !important;
+        animation: mobileNavSlideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .nav-links.open a,
+    .nav-links.active a {
+        display: flex !important;
+        width: 100% !important;
+        padding: 12px 18px !important;
+        font-size: 0.92rem !important;
+        border-radius: 12px !important;
+        justify-content: flex-start !important;
+    }
+
+    /* Hero Section Mobile Polish */
+    .heroModern {
+        padding-top: 110px !important;
+        padding-bottom: 50px !important;
+    }
+
+    .hero-inner h1 {
+        font-size: 2.2rem !important;
+        line-height: 1.15 !important;
+    }
+
+    .hero-inner .lead {
+        font-size: 0.95rem !important;
+        margin-bottom: 24px !important;
+    }
+
+    .hero-actions {
+        flex-direction: column !important;
+        width: 100% !important;
+        gap: 12px !important;
+    }
+
+    .hero-actions .btn {
+        width: 100% !important;
+        justify-content: center !important;
+        padding: 13px 20px !important;
+        font-size: 0.90rem !important;
+    }
+
+    .hero-stats-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 12px !important;
+        margin-top: 36px !important;
+    }
+
+    .stat-box {
+        padding: 16px 14px !important;
+        border-radius: 16px !important;
+    }
+
+    .stat-box .number {
+        font-size: 1.6rem !important;
+    }
+
+    .stat-box .label {
+        font-size: 0.78rem !important;
+    }
+
+    /* Generic Section Headers */
+    .section-title {
+        font-size: 1.85rem !important;
+    }
+
+    .section-subtitle {
+        font-size: 0.75rem !important;
+        letter-spacing: 2px !important;
+    }
+
+    .section-padding {
+        padding: 60px 0 !important;
+    }
+
+    /* Search & Filter Bar Mobile Reflow */
+    .search-filter-bar,
+    .filter-wrapper {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 12px !important;
+    }
+
+    .search-box-wrap {
+        width: 100% !important;
+    }
+
+    .tags-scroll-wrap {
+        width: 100% !important;
+        overflow-x: auto !important;
+        padding-bottom: 6px !important;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Product Cards & Grid Layouts */
+    .resource-grid,
+    .plugins-grid,
+    .presets-grid,
+    .scenepack-grid,
+    .audio-grid,
+    .hub-grid {
+        grid-template-columns: 1fr !important;
+        gap: 16px !important;
+    }
+
+    /* Footer Mobile Polish */
+    .footer-content {
+        grid-template-columns: 1fr !important;
+        gap: 32px !important;
+        text-align: center !important;
+    }
+
+    .footer-brand {
+        align-items: center !important;
+    }
+
+    .footer-bottom {
+        flex-direction: column !important;
+        gap: 12px !important;
+        text-align: center !important;
+    }
+}
+
+/* Extra Small Phones (<= 480px) */
+@media (max-width: 480px) {
+    .hero-inner h1 {
+        font-size: 1.85rem !important;
+    }
+
+    .hero-stats-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .auth-login-btn {
+        height: 38px;
+        padding: 0 14px;
+        font-size: 0.80rem;
+    }
+
+    .auth-login-btn span {
+        display: none;
+    }
+}
+
+
