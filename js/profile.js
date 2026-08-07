@@ -146,24 +146,39 @@
     const canvas = document.getElementById('starfield');
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext('2d', { alpha: true });
     let width = (canvas.width = window.innerWidth);
     let height = (canvas.height = window.innerHeight);
 
     const isBordo = document.body.classList.contains('theme-bordo');
     const dotGlowColor = isBordo ? '#ff2a6d' : '#60a5fa';
 
+    // Pre-calculated normalized star shapes for speed
+    const baseOuterVertices = [];
+    const baseInnerVertices = [];
+    (function precomputeBaseVertices() {
+        const numPoints = 5;
+        for (let i = 0; i < numPoints * 2; i++) {
+            const angle = -Math.PI / 2 + (i * Math.PI) / numPoints;
+            baseOuterVertices.push({ cos: Math.cos(angle), sin: Math.sin(angle), isOuter: i % 2 === 0 });
+        }
+    })();
+
     function getStarVertices(outerRadius, rotation) {
         const innerRadius = outerRadius * 0.44;
-        const numPoints = 5;
+        const cosR = Math.cos(rotation);
+        const sinR = Math.sin(rotation);
         const vertices = [];
 
-        for (let i = 0; i < numPoints * 2; i++) {
-            const angle = -Math.PI / 2 + (i * Math.PI) / numPoints + rotation;
-            const r = (i % 2 === 0) ? outerRadius : innerRadius;
+        for (let i = 0; i < baseOuterVertices.length; i++) {
+            const base = baseOuterVertices[i];
+            const r = base.isOuter ? outerRadius : innerRadius;
+            const x = base.cos * r;
+            const y = base.sin * r;
+            // Apply rotation
             vertices.push({
-                x: Math.cos(angle) * r,
-                y: Math.sin(angle) * r
+                x: x * cosR - y * sinR,
+                y: x * sinR + y * cosR
             });
         }
         return vertices;
@@ -199,11 +214,8 @@
         const verticesOuter = getStarVertices(outerRadius, rotation);
         const verticesInner = getStarVertices(Math.max(4, outerRadius - innerOffset), rotation);
 
-        const dotSpacing = Math.max(3.2, outerRadius * 0.075);
+        const dotSpacing = Math.max(4.5, outerRadius * 0.1);
         const dotSize = Math.max(1.8, Math.min(3.4, outerRadius * 0.048));
-
-        ctx.shadowBlur = Math.min(14, outerRadius * 0.2);
-        ctx.shadowColor = dotGlowColor;
 
         ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
         const dotsOuter = getTrackDotPositions(verticesOuter, dotSpacing);
@@ -242,12 +254,8 @@
 
         draw() {
             if (this.alpha > 0.01) {
-                ctx.save();
-                ctx.shadowBlur = 6;
-                ctx.shadowColor = dotGlowColor;
                 ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha})`;
                 ctx.fillRect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
-                ctx.restore();
             }
         }
     }
@@ -267,11 +275,11 @@
 
             const r = Math.random();
             if (r > 0.8) {
-                this.baseRadius = Math.random() * 20 + 56;
+                this.baseRadius = Math.random() * 16 + 46;
             } else if (r > 0.4) {
-                this.baseRadius = Math.random() * 14 + 36;
+                this.baseRadius = Math.random() * 12 + 30;
             } else {
-                this.baseRadius = Math.random() * 10 + 20;
+                this.baseRadius = Math.random() * 8 + 18;
             }
 
             this.rotation = (Math.random() - 0.5) * 0.5;
@@ -298,19 +306,20 @@
             const innerOffset = Math.max(3.5, this.baseRadius * 0.09);
             const verticesOuter = getStarVertices(this.baseRadius, this.rotation);
             const verticesInner = getStarVertices(Math.max(4, this.baseRadius - innerOffset), this.rotation);
-            const dotSpacing = Math.max(3.2, this.baseRadius * 0.075);
+            const dotSpacing = Math.max(4.5, this.baseRadius * 0.1);
             const dotSize = Math.max(1.8, Math.min(3.4, this.baseRadius * 0.048));
 
             const dotsOuter = getTrackDotPositions(verticesOuter, dotSpacing);
             const dotsInner = getTrackDotPositions(verticesInner, dotSpacing);
             const allDots = [...dotsOuter, ...dotsInner];
 
-            for (let i = 0; i < allDots.length; i++) {
+            const limitCount = Math.min(allDots.length, 30);
+            for (let i = 0; i < limitCount; i++) {
                 const worldX = this.x + allDots[i].x;
                 const worldY = this.y + allDots[i].y;
 
                 const angle = Math.atan2(allDots[i].y, allDots[i].x) + (Math.random() - 0.5) * 0.6;
-                const speed = Math.random() * 3.8 + 2.0;
+                const speed = Math.random() * 3.2 + 1.8;
 
                 const vx = Math.cos(angle) * speed;
                 const vy = Math.sin(angle) * speed;
@@ -348,8 +357,8 @@
     }
 
     const stars = [];
-    const cols = 4;
-    const rows = 4;
+    const cols = 3;
+    const rows = 3;
     const cellW = width / cols;
     const cellH = height / rows;
     let starIndex = 0;
@@ -365,7 +374,15 @@
         }
     }
 
-    function animate() {
+    let lastFrameTime = performance.now();
+    function animate(now) {
+        // Frame cap to max 60fps / prevent heavy delta loops
+        if (now - lastFrameTime < 14) {
+            requestAnimationFrame(animate);
+            return;
+        }
+        lastFrameTime = now;
+
         ctx.clearRect(0, 0, width, height);
 
         for (let i = flyingParticles.length - 1; i >= 0; i--) {
@@ -383,7 +400,7 @@
         }
         requestAnimationFrame(animate);
     }
-    animate();
+    requestAnimationFrame(animate);
 
     window.addEventListener('resize', () => {
         width = canvas.width = window.innerWidth;
