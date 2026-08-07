@@ -115,8 +115,8 @@ async function checkVerifiedRole(userId, env) {
   return false;
 }
 
-// Ad-Free Role Check (Role ID: 1519246344869380207)
-const AD_FREE_ROLE_ID = "1519246344869380207";
+// Ad-Free Role Check (Role IDs: 1519246344869380207, 1535219942553690154)
+const AD_FREE_ROLE_IDS = ["1519246344869380207", "1535219942553690154"];
 const adFreeRoleCache = new Map();
 
 async function checkAdFreeRole(userId, env) {
@@ -127,13 +127,16 @@ async function checkAdFreeRole(userId, env) {
   if (cached && Date.now() < cached.expiry) return cached.hasRole;
   
   try {
-    // Primary: bot API
-    const botResp = await fetch(`${BOT_API}/api/guild/check-role?userId=${encodeURIComponent(userId)}&roleId=${AD_FREE_ROLE_ID}`);
-    if (botResp.ok) {
-      const data = await botResp.json();
-      const result = !!(data && data.has_role);
-      adFreeRoleCache.set(userId, { hasRole: result, expiry: Date.now() + 30000 });
-      return result;
+    // Primary: bot API - check each ad-free role
+    for (const roleId of AD_FREE_ROLE_IDS) {
+      const botResp = await fetch(`${BOT_API}/api/guild/check-role?userId=${encodeURIComponent(userId)}&roleId=${roleId}`);
+      if (botResp.ok) {
+        const data = await botResp.json();
+        if (data && data.has_role) {
+          adFreeRoleCache.set(userId, { hasRole: true, expiry: Date.now() + 30000 });
+          return true;
+        }
+      }
     }
   } catch (e) { console.error("Bot ad-free role check failed:", e.message); }
   
@@ -144,7 +147,7 @@ async function checkAdFreeRole(userId, env) {
     });
     if (discordResp.ok) {
       const member = await discordResp.json();
-      const result = !!(member.roles && member.roles.includes(AD_FREE_ROLE_ID));
+      const result = !!(member.roles && member.roles.some(r => AD_FREE_ROLE_IDS.includes(r)));
       adFreeRoleCache.set(userId, { hasRole: result, expiry: Date.now() + 30000 });
       return result;
     }
