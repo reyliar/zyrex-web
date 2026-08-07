@@ -453,6 +453,18 @@ function saveConsent(analytics, personalization) {
     try {
         localStorage.setItem('zyrex_cookie_consent', JSON.stringify(preferences));
     } catch(e) {}
+    
+    const banner = document.getElementById('cookieConsentBanner');
+    if (banner) {
+        banner.classList.remove('show');
+        setTimeout(() => banner.classList.add('hidden'), 350);
+    }
+}
+
+function openCookieSettings() {
+    window.location.href = '/settings?tab=general';
+}
+
 function injectCookiePreferencesLink() {
     const footerBottom = document.querySelector('.footer-bottom');
     if (footerBottom) {
