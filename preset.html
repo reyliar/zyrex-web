@@ -1016,17 +1016,13 @@
                 </div>
             </div>
 
-            <!-- COMMENTS DECK (TWO-WAY DISCORD SYNC) -->
+            <!-- COMMENTS DECK -->
             <div class="preset-comments-deck" id="commentsSection">
                 <div class="comments-deck-header">
                     <div style="display:flex;align-items:center;gap:10px">
                         <i class="fas fa-comments" style="color:var(--cherry-neon);font-size:1.2rem"></i>
                         <h3 style="margin:0;font-size:1.15rem;font-weight:700;color:#fff">Community Discussion</h3>
                         <span class="comments-badge" id="commentsCountBadge">0</span>
-                    </div>
-                    <div style="font-size:0.75rem;color:var(--text-sub);display:flex;align-items:center;gap:6px">
-                        <i class="fab fa-discord" style="color:#5865f2;font-size:0.9rem"></i>
-                        <span>Synced with Discord #1537750551679340554</span>
                     </div>
                 </div>
 
@@ -1048,7 +1044,6 @@
 
     let currentCommentsPresetId = null;
     let currentUserData = null;
-    window.mainTurnstileToken = null;
 
     async function initPresetComments(productId) {
         currentCommentsPresetId = productId;
@@ -1080,10 +1075,6 @@
         } catch(e) {}
     }
 
-    window.onMainTurnstileSuccess = function(token) {
-        window.mainTurnstileToken = token;
-    };
-
     function renderCommentInputBox() {
         const box = document.getElementById('commentInputContainer');
         if (!box) return;
@@ -1095,24 +1086,15 @@
             const dName = currentUserData.global_name || currentUserData.displayName || currentUserData.username || 'Zyrex Member';
 
             box.innerHTML = `
-                <form onsubmit="handleCommentSubmit(event)" style="margin:0">
+                <form id="mainCommentForm" onsubmit="handleCommentSubmit(event)" style="margin:0">
                     <div style="display:flex;align-items:flex-start;gap:14px">
                         <img src="${avatarUrl}" alt="${dName}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:1px solid rgba(255,255,255,0.12)" onerror="window.handleAvatarError(this)">
                         <div style="flex:1;min-width:0">
                             <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:0.82rem;color:var(--text-sub)">
                                 <strong style="color:#fff">${dName}</strong>
-                                <span>•</span>
-                                <span>Posting as Discord account</span>
                             </div>
-                            <textarea id="mainCommentText" class="comment-textarea" placeholder="Share your feedback, questions, or tips on this preset..." required maxlength="1000"></textarea>
-                            
-                            <!-- CLOUDFLARE TURNSTILE VERIFICATION -->
-                            <div style="margin:12px 0 8px;min-height:65px">
-                                <div class="cf-turnstile" id="cfTurnstileMain" data-sitekey="1x00000000000000000000AA" data-theme="dark" data-callback="onMainTurnstileSuccess"></div>
-                            </div>
-
-                            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap;gap:8px">
-                                <span style="font-size:0.72rem;color:var(--text-sub)"><i class="fab fa-discord" style="color:#5865f2"></i> Automatically mirrors to Discord</span>
+                            <textarea id="mainCommentText" class="comment-textarea" placeholder="Write a comment... (Enter to send, Shift+Enter for new line)" required maxlength="1000" onkeydown="handleCommentKeydown(event, this)"></textarea>
+                            <div style="display:flex;align-items:center;justify-content:flex-end;margin-top:10px;gap:8px">
                                 <button type="submit" id="btnSubmitComment" class="comment-btn-submit">
                                     <i class="fas fa-paper-plane"></i> Post Comment
                                 </button>
@@ -1121,21 +1103,6 @@
                     </div>
                 </form>
             `;
-
-            // Explicitly render Turnstile if window.turnstile is ready
-            setTimeout(() => {
-                try {
-                    if (window.turnstile && document.getElementById('cfTurnstileMain') && !document.getElementById('cfTurnstileMain').hasChildNodes()) {
-                        turnstile.render('#cfTurnstileMain', {
-                            sitekey: '1x00000000000000000000AA',
-                            theme: 'dark',
-                            callback: function(token) {
-                                window.mainTurnstileToken = token;
-                            }
-                        });
-                    }
-                } catch(e) {}
-            }, 100);
         } else {
             const redirectUrl = encodeURIComponent(window.location.pathname + window.location.search);
             box.innerHTML = `
@@ -1232,7 +1199,7 @@
                     <!-- INLINE REPLY BOX -->
                     <div id="replyBox-${c.id}" class="reply-box-inline" style="display:none">
                         <form onsubmit="handleReplySubmit(event, '${c.id}')" style="margin:0">
-                            <textarea id="replyText-${c.id}" class="comment-textarea" style="min-height:50px;font-size:0.85rem" placeholder="Write a reply..." required maxlength="1000"></textarea>
+                            <textarea id="replyText-${c.id}" class="comment-textarea" style="min-height:50px;font-size:0.85rem" placeholder="Write a reply... (Enter to send, Shift+Enter for new line)" required maxlength="1000" onkeydown="handleReplyKeydown(event, '${c.id}')"></textarea>
                             <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:8px">
                                 <button type="button" class="comment-act-btn" onclick="toggleReplyBox('${c.id}')">Cancel</button>
                                 <button type="submit" class="comment-btn-submit" style="padding:6px 16px;font-size:0.78rem">
@@ -1247,6 +1214,28 @@
             </div>
         `;
     }
+
+    window.handleCommentKeydown = function(e, textarea) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            const form = textarea.closest('form');
+            if (form) {
+                if (typeof form.requestSubmit === 'function') form.requestSubmit();
+                else form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+            }
+        }
+    };
+
+    window.handleReplyKeydown = function(e, parentId) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            const form = e.target.closest('form');
+            if (form) {
+                if (typeof form.requestSubmit === 'function') form.requestSubmit();
+                else form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+            }
+        }
+    };
 
     window.toggleReplyBox = function(commentId) {
         const box = document.getElementById('replyBox-' + commentId);
@@ -1265,13 +1254,6 @@
         const btn = document.getElementById('btnSubmitComment');
         if (!ta || !ta.value.trim() || !currentCommentsPresetId) return;
 
-        let cfToken = window.mainTurnstileToken;
-        if (window.turnstile) {
-            try {
-                cfToken = cfToken || turnstile.getResponse('#cfTurnstileMain') || turnstile.getResponse();
-            } catch(e) {}
-        }
-
         btn.disabled = true;
         const origText = btn.innerHTML;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
@@ -1282,17 +1264,12 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     preset_id: currentCommentsPresetId,
-                    content: ta.value.trim(),
-                    turnstile_token: cfToken
+                    content: ta.value.trim()
                 })
             });
             const data = await res.json();
             if (res.ok && data.success) {
                 ta.value = '';
-                if (window.turnstile) {
-                    try { turnstile.reset('#cfTurnstileMain'); } catch(e) {}
-                    window.mainTurnstileToken = null;
-                }
                 await loadCommentsData(currentCommentsPresetId);
             } else {
                 alert(data.error || 'Failed to post comment');
