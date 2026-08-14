@@ -4107,8 +4107,8 @@ async function storeAndProxyImage(env, imageUrl) {
         }
       }
 
-      // ============ BOT PROXY (admin, cloud link/unlink, downloads, hlx, verify, products) ============
-      if (path.startsWith("/api/products") || path.startsWith("/api/admin/") || path.startsWith("/api/cloud/") || path.startsWith("/api/downloads/") || path.startsWith("/api/hlx/") || path.startsWith("/api/verify") || path.startsWith("/api/sftpgo/") || path.startsWith("/api/search/") || path === "/api/resource-stats") {
+      // ============ BOT PROXY (admin, comments, cloud link/unlink, downloads, hlx, verify, products) ============
+      if (path.startsWith("/api/comments") || path.startsWith("/api/products") || path.startsWith("/api/admin/") || path.startsWith("/api/cloud/") || path.startsWith("/api/downloads/") || path.startsWith("/api/hlx/") || path.startsWith("/api/verify") || path.startsWith("/api/sftpgo/") || path.startsWith("/api/search/") || path === "/api/resource-stats") {
         const session = parseSession(request.headers.get("Cookie"));
         const proxyHeaders = {
           "Content-Type": "application/json",

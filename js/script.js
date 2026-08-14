@@ -681,39 +681,7 @@ window.showToast = function(title, message, type = 'success') {
         renderGlobalNotifications();
     }
 
-    const defaultNotifs = [
-        {
-            id: "notif_comments_live",
-            title: "Live Preset Comments",
-            desc: "Preset comments are now live with 2-way Discord sync and instant replies!",
-            time: "Just now",
-            icon: "fa-comments",
-            bg: "linear-gradient(135deg, #ff2b52, #8b0028)",
-            color: "#fff",
-            link: "/presets"
-        },
-        {
-            id: "notif_presets_lib",
-            title: "Preset Library Updated",
-            desc: "Explore fresh Premiere Pro, After Effects, and Vegas presets & LUTs.",
-            time: "1 hour ago",
-            icon: "fa-fire",
-            bg: "linear-gradient(135deg, #ff758f, #ff2b52)",
-            color: "#fff",
-            link: "/presets"
-        },
-        {
-            id: "notif_discord_comm",
-            title: "Zyrex Discord Server",
-            desc: "Join our creator editing community, share presets, and get VIP roles.",
-            time: "Today",
-            icon: "fa-discord",
-            iconBrand: true,
-            bg: "linear-gradient(135deg, #5865f2, #3b429f)",
-            color: "#fff",
-            link: "https://discord.gg/zyrex"
-        }
-    ];
+    const defaultNotifs = [];
 
     function getReadIds() {
         try {
@@ -742,7 +710,7 @@ window.showToast = function(title, message, type = 'success') {
         }
 
         if (defaultNotifs.length === 0) {
-            list.innerHTML = `<div class="notif-empty-state"><i class="fas fa-check-circle" style="font-size:2rem;color:var(--cherry-neon);margin-bottom:8px"></i><div>All caught up! No notifications.</div></div>`;
+            list.innerHTML = `<div style="text-align:center;padding:36px 16px;color:rgba(255,255,255,0.45);font-size:0.84rem"><i class="fas fa-bell-slash" style="font-size:1.8rem;margin-bottom:10px;opacity:0.35;display:block;color:var(--cherry-neon)"></i><div>No new notifications</div></div>`;
             return;
         }
 
