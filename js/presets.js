@@ -294,7 +294,8 @@ function renderPresets(items) {
         const descriptionText = item.description || item.desc || '';
         const shortDesc = descriptionText ? descriptionText.substring(0, 80) + (descriptionText.length > 80 ? '...' : '') : '';
         const avatarUrl = item.creator_avatar || '';
-        const avatarHtml = avatarUrl ? `<img src="${avatarUrl}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'"><i class="fas fa-user" style="display:none;font-size:.5rem"></i>` : `<i class="fas fa-user" style="font-size:.5rem"></i>`;
+        const unknownSvg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a0a0b0'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E";
+        const avatarHtml = avatarUrl ? `<img src="${avatarUrl}" alt="" onerror="this.onerror=null;this.src='${unknownSvg}'">` : `<img src="${unknownSvg}" alt="" style="opacity:0.6">`;
         const nickname = item.creator_nickname || item.author_name || 'Zyrex';
         const dlCount = downloadCounts[item.id] || item.downloads || 0;
         const likeCount = likeCounts[item.id] || 0;
