@@ -3774,11 +3774,265 @@ html, body {
     .rg.list-view .rc-title {
         font-size: 0.84rem !important;
     }
-    .pg-grid.list-view .pg-card .pc-info {
-        flex-direction: column !important;
-        align-items: flex-start !important;
-        gap: 4px !important;
+/* ===================== GLOBAL FLOATING HUB (NOTIFICATIONS & SCROLL TOP) ===================== */
+.global-floating-hub {
+    position: fixed;
+    bottom: 26px;
+    right: 26px;
+    z-index: 99999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    pointer-events: auto;
+}
+
+.floating-hub-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: rgba(15, 8, 20, 0.88);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 43, 82, 0.18);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    outline: none;
+}
+
+.floating-hub-btn:hover {
+    transform: translateY(-3px) scale(1.05);
+    background: rgba(26, 12, 32, 0.95);
+    border-color: rgba(255, 43, 82, 0.6);
+    color: #ff2b52;
+    box-shadow: 0 14px 35px rgba(0, 0, 0, 0.6), 0 0 28px rgba(255, 43, 82, 0.4);
+}
+
+.floating-hub-btn:active {
+    transform: scale(0.95);
+}
+
+.notif-bubble-badge {
+    position: absolute;
+    top: -3px;
+    right: -3px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #ff2b52, #ff0055);
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid #08030b;
+    box-shadow: 0 0 12px rgba(255, 43, 82, 0.8);
+    animation: pulseBadge 2s infinite ease-in-out;
+}
+
+@keyframes pulseBadge {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.12); }
+}
+
+/* Scroll To Top Button Animation */
+.scroll-top-btn {
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(16px) scale(0.8);
+    transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s;
+    background: rgba(18, 9, 24, 0.88);
+    border-color: rgba(255, 43, 82, 0.35);
+    color: #ff2b52;
+}
+
+.scroll-top-btn.visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+}
+
+/* Global Notifications Overlay Panel */
+.global-notif-panel {
+    position: fixed;
+    bottom: 86px;
+    right: 26px;
+    width: 360px;
+    max-width: calc(100vw - 32px);
+    max-height: 480px;
+    background: rgba(11, 6, 15, 0.94);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    border: 1px solid rgba(255, 255, 255, 0.11);
+    border-radius: 20px;
+    box-shadow: 0 25px 65px rgba(0, 0, 0, 0.75), 0 0 35px rgba(255, 43, 82, 0.16);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 99998;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(14px) scale(0.95);
+    transform-origin: bottom right;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.global-notif-panel.open {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0) scale(1);
+}
+
+.notif-panel-header {
+    padding: 16px 18px;
+    background: rgba(255, 255, 255, 0.025);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.notif-panel-header h4 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.notif-panel-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.notif-header-act-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-sub);
+    font-size: 0.8rem;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.notif-header-act-btn:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.notif-panel-body {
+    padding: 10px;
+    overflow-y: auto;
+    max-height: 380px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.notif-item {
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    display: flex;
+    gap: 12px;
+    text-decoration: none;
+    color: inherit;
+    transition: all 0.25s ease;
+    position: relative;
+}
+
+.notif-item.unread {
+    background: rgba(255, 43, 82, 0.05);
+    border-color: rgba(255, 43, 82, 0.25);
+}
+
+.notif-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 43, 82, 0.45);
+    transform: translateY(-1px);
+}
+
+.notif-icon-circle {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+}
+
+.notif-content-wrap {
+    flex: 1;
+    min-width: 0;
+}
+
+.notif-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2px;
+}
+
+.notif-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.notif-time {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.4);
+    flex-shrink: 0;
+}
+
+.notif-desc {
+    font-size: 0.75rem;
+    color: var(--text-sub);
+    line-height: 1.35;
+}
+
+.notif-empty-state {
+    padding: 32px 16px;
+    text-align: center;
+    color: var(--text-sub);
+}
+
+@media (max-width: 600px) {
+    .global-floating-hub {
+        bottom: 18px;
+        right: 18px;
+        gap: 10px;
+    }
+    .floating-hub-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 1rem;
+    }
+    .global-notif-panel {
+        bottom: 74px;
+        right: 16px;
+        width: calc(100vw - 32px);
     }
 }
+
 
 

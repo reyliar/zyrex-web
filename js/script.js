@@ -613,4 +613,186 @@ window.showToast = function(title, message, type = 'success') {
     }, 4500);
 };
 
+/* ===================== GLOBAL NOTIFICATIONS & SCROLL-TO-TOP HUB ===================== */
+(function initGlobalFloatingHub() {
+    function setupHub() {
+        if (document.getElementById('globalFloatingHub')) return;
+
+        // Create Panel
+        const panel = document.createElement('div');
+        panel.id = 'globalNotifPanel';
+        panel.className = 'global-notif-panel';
+        panel.innerHTML = `
+            <div class="notif-panel-header">
+                <h4><i class="fas fa-bell" style="color:var(--cherry-neon)"></i> Notifications <span class="notif-bubble-badge" id="panelNotifBadge" style="position:static;display:inline-flex;margin-left:4px">3</span></h4>
+                <div class="notif-panel-actions">
+                    <button class="notif-header-act-btn" onclick="window.markAllNotifsRead()" title="Mark all as read"><i class="fas fa-check-double"></i> Read All</button>
+                    <button class="notif-header-act-btn" onclick="window.toggleGlobalNotifPanel()" title="Close"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+            <div class="notif-panel-body" id="globalNotifList"></div>
+        `;
+        document.body.appendChild(panel);
+
+        // Create Floating Action Buttons (Notifications & Scroll to Top)
+        const hub = document.createElement('div');
+        hub.id = 'globalFloatingHub';
+        hub.className = 'global-floating-hub';
+        hub.innerHTML = `
+            <button id="globalNotifBtn" class="floating-hub-btn" onclick="window.toggleGlobalNotifPanel()" title="Notifications" aria-label="Notifications">
+                <i class="fas fa-bell"></i>
+                <span class="notif-bubble-badge" id="floatingNotifBadge">3</span>
+            </button>
+            <button id="globalScrollTopBtn" class="floating-hub-btn scroll-top-btn" onclick="window.scrollToTopSmooth()" title="Back to Top" aria-label="Back to Top">
+                <i class="fas fa-arrow-up"></i>
+            </button>
+        `;
+        document.body.appendChild(hub);
+
+        // Scroll listener for back to top button
+        window.addEventListener('scroll', () => {
+            const btn = document.getElementById('globalScrollTopBtn');
+            if (btn) {
+                if (window.scrollY > 280) {
+                    btn.classList.add('visible');
+                } else {
+                    btn.classList.remove('visible');
+                }
+            }
+        }, { passive: true });
+
+        // Close panel when clicking outside
+        document.addEventListener('click', (e) => {
+            const p = document.getElementById('globalNotifPanel');
+            const btn = document.getElementById('globalNotifBtn');
+            if (p && p.classList.contains('open') && !p.contains(e.target) && !btn.contains(e.target)) {
+                p.classList.remove('open');
+            }
+        });
+
+        // Load notifications data
+        renderGlobalNotifications();
+    }
+
+    const defaultNotifs = [
+        {
+            id: "notif_comments_live",
+            title: "Live Preset Comments",
+            desc: "Preset comments are now live with 2-way Discord sync and instant replies!",
+            time: "Just now",
+            icon: "fa-comments",
+            bg: "linear-gradient(135deg, #ff2b52, #8b0028)",
+            color: "#fff",
+            link: "/presets"
+        },
+        {
+            id: "notif_presets_lib",
+            title: "Preset Library Updated",
+            desc: "Explore fresh Premiere Pro, After Effects, and Vegas presets & LUTs.",
+            time: "1 hour ago",
+            icon: "fa-fire",
+            bg: "linear-gradient(135deg, #ff758f, #ff2b52)",
+            color: "#fff",
+            link: "/presets"
+        },
+        {
+            id: "notif_discord_comm",
+            title: "Zyrex Discord Server",
+            desc: "Join our creator editing community, share presets, and get VIP roles.",
+            time: "Today",
+            icon: "fa-discord",
+            iconBrand: true,
+            bg: "linear-gradient(135deg, #5865f2, #3b429f)",
+            color: "#fff",
+            link: "https://discord.gg/zyrex"
+        }
+    ];
+
+    function getReadIds() {
+        try {
+            return JSON.parse(localStorage.getItem('zyrex_read_notifs') || '[]');
+        } catch(e) {
+            return [];
+        }
+    }
+
+    function renderGlobalNotifications() {
+        const list = document.getElementById('globalNotifList');
+        const badge1 = document.getElementById('floatingNotifBadge');
+        const badge2 = document.getElementById('panelNotifBadge');
+        if (!list) return;
+
+        const readIds = getReadIds();
+        const unreadCount = defaultNotifs.filter(n => !readIds.includes(n.id)).length;
+
+        if (badge1) {
+            badge1.textContent = unreadCount;
+            badge1.style.display = unreadCount > 0 ? 'flex' : 'none';
+        }
+        if (badge2) {
+            badge2.textContent = unreadCount;
+            badge2.style.display = unreadCount > 0 ? 'inline-flex' : 'none';
+        }
+
+        if (defaultNotifs.length === 0) {
+            list.innerHTML = `<div class="notif-empty-state"><i class="fas fa-check-circle" style="font-size:2rem;color:var(--cherry-neon);margin-bottom:8px"></i><div>All caught up! No notifications.</div></div>`;
+            return;
+        }
+
+        list.innerHTML = defaultNotifs.map(n => {
+            const isUnread = !readIds.includes(n.id);
+            const iconClass = n.iconBrand ? `fab ${n.icon}` : `fas ${n.icon}`;
+            return `
+                <a href="${n.link}" class="notif-item ${isUnread ? 'unread' : ''}" onclick="window.markNotifRead('${n.id}')">
+                    <div class="notif-icon-circle" style="background:${n.bg};color:${n.color}">
+                        <i class="${iconClass}"></i>
+                    </div>
+                    <div class="notif-content-wrap">
+                        <div class="notif-title-row">
+                            <span class="notif-title">${n.title}</span>
+                            <span class="notif-time">${n.time}</span>
+                        </div>
+                        <div class="notif-desc">${n.desc}</div>
+                    </div>
+                </a>
+            `;
+        }).join('');
+    }
+
+    window.toggleGlobalNotifPanel = function() {
+        const panel = document.getElementById('globalNotifPanel');
+        if (panel) {
+            panel.classList.toggle('open');
+        }
+    };
+
+    window.scrollToTopSmooth = function() {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    };
+
+    window.markNotifRead = function(id) {
+        const readIds = getReadIds();
+        if (!readIds.includes(id)) {
+            readIds.push(id);
+            localStorage.setItem('zyrex_read_notifs', JSON.stringify(readIds));
+            renderGlobalNotifications();
+        }
+    };
+
+    window.markAllNotifsRead = function() {
+        const allIds = defaultNotifs.map(n => n.id);
+        localStorage.setItem('zyrex_read_notifs', JSON.stringify(allIds));
+        renderGlobalNotifications();
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', setupHub);
+    } else {
+        setupHub();
+    }
+})();
+
 console.log('Zyrex - Website loaded successfully!');
