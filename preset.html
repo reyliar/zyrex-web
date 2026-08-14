@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="/css/style.css?v=26">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
     <style>
         :root {
             --cherry-neon: #ff2b52;
@@ -1047,33 +1048,51 @@
 
     let currentCommentsPresetId = null;
     let currentUserData = null;
+    window.mainTurnstileToken = null;
 
     async function initPresetComments(productId) {
         currentCommentsPresetId = productId;
         
+        // 1. Instant check from localStorage
         try {
-            const authRes = await fetch('/api/auth/me');
-            if (authRes.ok) {
-                const authData = await authRes.json();
-                if (authData && authData.user) {
-                    currentUserData = authData.user;
-                }
+            const raw = localStorage.getItem('zyrex_auth_user');
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (parsed && parsed.data) currentUserData = parsed.data;
+                else if (parsed && (parsed.id || parsed.username)) currentUserData = parsed;
             }
         } catch(e) {}
 
+        // Render immediately with cached session
         renderCommentInputBox();
         loadCommentsData(productId);
+
+        // 2. Fetch fresh user data from /api/me
+        try {
+            const authRes = await fetch('/api/me', { credentials: 'include' });
+            if (authRes.ok) {
+                const u = await authRes.json();
+                if (u && (u.id || u.username)) {
+                    currentUserData = u;
+                    renderCommentInputBox();
+                }
+            }
+        } catch(e) {}
     }
+
+    window.onMainTurnstileSuccess = function(token) {
+        window.mainTurnstileToken = token;
+    };
 
     function renderCommentInputBox() {
         const box = document.getElementById('commentInputContainer');
         if (!box) return;
 
-        if (currentUserData && currentUserData.id) {
+        if (currentUserData && (currentUserData.id || currentUserData.username)) {
             const avatarUrl = currentUserData.avatar
-                ? `https://cdn.discordapp.com/avatars/${currentUserData.id}/${currentUserData.avatar}.png?size=64`
+                ? (currentUserData.avatar.startsWith('http') ? currentUserData.avatar : `https://cdn.discordapp.com/avatars/${currentUserData.id}/${currentUserData.avatar}.png?size=64`)
                 : `https://cdn.discordapp.com/embed/avatars/${(parseInt(currentUserData.id) || 0) % 5}.png`;
-            const dName = currentUserData.global_name || currentUserData.username || 'Zyrex Member';
+            const dName = currentUserData.global_name || currentUserData.displayName || currentUserData.username || 'Zyrex Member';
 
             box.innerHTML = `
                 <form onsubmit="handleCommentSubmit(event)" style="margin:0">
@@ -1086,6 +1105,12 @@
                                 <span>Posting as Discord account</span>
                             </div>
                             <textarea id="mainCommentText" class="comment-textarea" placeholder="Share your feedback, questions, or tips on this preset..." required maxlength="1000"></textarea>
+                            
+                            <!-- CLOUDFLARE TURNSTILE VERIFICATION -->
+                            <div style="margin:12px 0 8px;min-height:65px">
+                                <div class="cf-turnstile" id="cfTurnstileMain" data-sitekey="1x00000000000000000000AA" data-theme="dark" data-callback="onMainTurnstileSuccess"></div>
+                            </div>
+
                             <div style="display:flex;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap;gap:8px">
                                 <span style="font-size:0.72rem;color:var(--text-sub)"><i class="fab fa-discord" style="color:#5865f2"></i> Automatically mirrors to Discord</span>
                                 <button type="submit" id="btnSubmitComment" class="comment-btn-submit">
@@ -1096,6 +1121,21 @@
                     </div>
                 </form>
             `;
+
+            // Explicitly render Turnstile if window.turnstile is ready
+            setTimeout(() => {
+                try {
+                    if (window.turnstile && document.getElementById('cfTurnstileMain') && !document.getElementById('cfTurnstileMain').hasChildNodes()) {
+                        turnstile.render('#cfTurnstileMain', {
+                            sitekey: '1x00000000000000000000AA',
+                            theme: 'dark',
+                            callback: function(token) {
+                                window.mainTurnstileToken = token;
+                            }
+                        });
+                    }
+                } catch(e) {}
+            }, 100);
         } else {
             const redirectUrl = encodeURIComponent(window.location.pathname + window.location.search);
             box.innerHTML = `
@@ -1225,6 +1265,13 @@
         const btn = document.getElementById('btnSubmitComment');
         if (!ta || !ta.value.trim() || !currentCommentsPresetId) return;
 
+        let cfToken = window.mainTurnstileToken;
+        if (window.turnstile) {
+            try {
+                cfToken = cfToken || turnstile.getResponse('#cfTurnstileMain') || turnstile.getResponse();
+            } catch(e) {}
+        }
+
         btn.disabled = true;
         const origText = btn.innerHTML;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
@@ -1235,12 +1282,17 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     preset_id: currentCommentsPresetId,
-                    content: ta.value.trim()
+                    content: ta.value.trim(),
+                    turnstile_token: cfToken
                 })
             });
             const data = await res.json();
             if (res.ok && data.success) {
                 ta.value = '';
+                if (window.turnstile) {
+                    try { turnstile.reset('#cfTurnstileMain'); } catch(e) {}
+                    window.mainTurnstileToken = null;
+                }
                 await loadCommentsData(currentCommentsPresetId);
             } else {
                 alert(data.error || 'Failed to post comment');
