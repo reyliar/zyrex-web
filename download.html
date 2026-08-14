@@ -729,7 +729,7 @@
                             var isImage = ['png','jpg','jpeg','gif','webp'].includes(ext);
                             var customIcon = getFileExtIcon(child.name);
                             var iconDisplay = customIcon 
-                                ? '<img src="' + customIcon + '" alt="" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;flex-shrink:0" onerror="this.outerHTML=\'<i class=\\\'fas ' + fi + '\\\'></i>\'">' 
+                                ? '<img src="' + customIcon + '" alt="" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;flex-shrink:0" onerror="this.style.display=\'none\';if(this.nextElementSibling)this.nextElementSibling.style.display=\'inline-block\'"><i class="fas ' + fi + '" style="display:none"></i>' 
                                 : '<i class="fas ' + fi + '"></i>';
                             
                             tHtml += '<div class="file-item" style="padding-left: ' + (indent + 12) + 'px" data-filename="' + child.fullName.replace(/"/g, '&quot;') + '" data-filesize="' + sz + '" data-fileicon="' + fi + '" data-isimage="' + (isImage ? '1' : '0') + '" data-sizebytes="' + (fObj.size||0) + '">';
@@ -958,10 +958,10 @@
             
             var thumbEl = panel.querySelector('.fp-thumb-container') || panel.querySelector('.file-preview-thumb');
             var ext = (filename || '').split('.').pop().toLowerCase();
-            var extIcon = getFileExtIcon(filename);
+            var extIcon = window.getFileExtIcon(filename);
 
             if (extIcon) {
-                thumbEl.innerHTML = '<img src="' + extIcon + '" alt="" style="width:100%;height:100%;object-fit:contain;padding:4px" onerror="this.outerHTML=\'<i class=\\\'fas ' + iconClass + ' fp-icon\\\'></i>\'">';
+                thumbEl.innerHTML = '<img src="' + extIcon + '" alt="" style="width:100%;height:100%;object-fit:contain;padding:4px" onerror="this.style.display=\'none\';if(this.nextElementSibling)this.nextElementSibling.style.display=\'block\'"><i class="fas ' + iconClass + ' fp-icon" style="display:none"></i>';
             } else {
                 thumbEl.innerHTML = '<i class="fas ' + iconClass + ' fp-icon"></i>';
             }
@@ -985,10 +985,10 @@
                 '&file=' + encodeURIComponent(filename);
 
             // 1. Video preview (protected from saving)
-            if (['mp4', 'webm', 'mov'].includes(ext)) {
+            if (['mp4', 'webm', 'mov', 'm4v'].includes(ext)) {
                 mediaContainer.style.display = 'block';
                 mediaContainer.innerHTML = '<div style="background:#000;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);box-shadow:0 10px 30px rgba(0,0,0,0.7)">' +
-                    '<video controls controlsList="nodownload nofullscreen noremoteplayback" disablePictureInPicture oncontextmenu="return false;" style="width:100%;max-height:240px;display:block;outline:none" preload="metadata" src="' + streamUrl + '"></video>' +
+                    '<video controls controlsList="nodownload nofullscreen noremoteplayback" disablePictureInPicture playsinline webkit-playsinline oncontextmenu="return false;" style="width:100%;max-height:240px;display:block;outline:none" preload="auto" src="' + streamUrl + '"></video>' +
                     '</div>';
             } 
             // 2. Audio preview

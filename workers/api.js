@@ -3175,8 +3175,11 @@ async function storeAndProxyImage(env, imageUrl) {
         if (r2Prefix) {
           candidateKeys.push(r2Prefix + cleanRequested);
           candidateKeys.push(r2Prefix + cleanRequested.replace(/^\/+/, ""));
+          candidateKeys.push("production/" + r2Prefix + cleanRequested);
+          candidateKeys.push("production/" + r2Prefix + cleanRequested.replace(/^\/+/, ""));
         }
         candidateKeys.push(cleanRequested);
+        candidateKeys.push("production/" + cleanRequested);
 
         // 1. Try direct get across candidate keys and buckets
         for (const key of candidateKeys) {
@@ -3194,21 +3197,25 @@ async function storeAndProxyImage(env, imageUrl) {
 
         // 2. Fallback: Search relative key matching in bucket list
         if (!fileObj && r2Prefix) {
-          let listObjs = await r2List(env, r2Prefix, true); // try STORAGE_PROD first
-          if (listObjs.length === 0) listObjs = await r2List(env, r2Prefix, false);
-          const matched = listObjs.find(o => {
-            const rel = relativeR2Name(o.key, r2Prefix);
-            return rel === cleanRequested || rel.endsWith("/" + cleanRequested) || o.key.endsWith("/" + cleanRequested);
-          });
-          if (matched) {
-            for (const b of bucketsToTry) {
-              try {
-                fileObj = await b.get(matched.key, {
-                  range: request.headers.get("Range") || undefined
-                });
-                if (fileObj) break;
-              } catch(e) {}
+          const prefixesToList = [r2Prefix, "production/" + r2Prefix, "production/"];
+          for (const pref of prefixesToList) {
+            let listObjs = await r2List(env, pref, true); // try STORAGE_PROD first
+            if (listObjs.length === 0) listObjs = await r2List(env, pref, false);
+            const matched = listObjs.find(o => {
+              const rel = relativeR2Name(o.key, pref);
+              return rel === cleanRequested || rel.endsWith("/" + cleanRequested) || o.key.endsWith("/" + cleanRequested) || o.key.split("/").pop() === cleanRequested.split("/").pop();
+            });
+            if (matched) {
+              for (const b of bucketsToTry) {
+                try {
+                  fileObj = await b.get(matched.key, {
+                    range: request.headers.get("Range") || undefined
+                  });
+                  if (fileObj) break;
+                } catch(e) {}
+              }
             }
+            if (fileObj) break;
           }
         }
 
