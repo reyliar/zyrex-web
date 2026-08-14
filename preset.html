@@ -1094,7 +1094,11 @@
                                 <strong style="color:#fff">${dName}</strong>
                             </div>
                             <textarea id="mainCommentText" class="comment-textarea" placeholder="Write a comment... (Enter to send, Shift+Enter for new line)" required maxlength="1000" onkeydown="handleCommentKeydown(event, this)"></textarea>
-                            <div style="display:flex;align-items:center;justify-content:flex-end;margin-top:10px;gap:8px">
+                            
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;flex-wrap:wrap;gap:12px">
+                                <div style="min-height:65px;overflow:hidden;border-radius:8px">
+                                    <div id="cfTurnstileMain" class="cf-turnstile" data-sitekey="0x4AAAAAAAxk8x7m_1Y_zJkL" data-theme="dark" data-size="compact"></div>
+                                </div>
                                 <button type="submit" id="btnSubmitComment" class="comment-btn-submit">
                                     <i class="fas fa-paper-plane"></i> Post Comment
                                 </button>
@@ -1103,6 +1107,21 @@
                     </div>
                 </form>
             `;
+
+            setTimeout(() => {
+                try {
+                    if (window.turnstile && document.getElementById('cfTurnstileMain') && !document.getElementById('cfTurnstileMain').hasChildNodes()) {
+                        turnstile.render('#cfTurnstileMain', {
+                            sitekey: '0x4AAAAAAAxk8x7m_1Y_zJkL',
+                            theme: 'dark',
+                            size: 'compact',
+                            callback: function(token) {
+                                window.mainTurnstileToken = token;
+                            }
+                        });
+                    }
+                } catch(e) {}
+            }, 100);
         } else {
             const redirectUrl = encodeURIComponent(window.location.pathname + window.location.search);
             box.innerHTML = `
