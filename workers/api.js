@@ -3168,54 +3168,52 @@ async function storeAndProxyImage(env, imageUrl) {
         const cleanRequested = normalizeSelectedName(requestedFile);
         if (!cleanRequested) return json({ success: false, error: "File parameter required" }, 400);
 
-        const targetKey = r2Prefix + cleanRequested;
         let fileObj = null;
+        const bucketsToTry = [env.STORAGE_PROD, env.STORAGE].filter(Boolean); // STORAGE_PROD is zyrexediting-staging (Production)
 
-        // 1. Primary: Try direct get on env.STORAGE (zyrexediting production)
-        if (env.STORAGE) {
-          try {
-            fileObj = await env.STORAGE.get(targetKey, {
-              range: request.headers.get("Range") || undefined,
-              onlyIf: request.headers
-            });
-          } catch(e) {}
+        const candidateKeys = [];
+        if (r2Prefix) {
+          candidateKeys.push(r2Prefix + cleanRequested);
+          candidateKeys.push(r2Prefix + cleanRequested.replace(/^\/+/, ""));
+        }
+        candidateKeys.push(cleanRequested);
+
+        // 1. Try direct get across candidate keys and buckets
+        for (const key of candidateKeys) {
+          for (const b of bucketsToTry) {
+            try {
+              fileObj = await b.get(key, {
+                range: request.headers.get("Range") || undefined,
+                onlyIf: request.headers
+              });
+              if (fileObj) break;
+            } catch(e) {}
+          }
+          if (fileObj) break;
         }
 
-        // 2. Secondary: Try env.STORAGE_PROD
-        if (!fileObj && env.STORAGE_PROD) {
-          try {
-            fileObj = await env.STORAGE_PROD.get(targetKey, {
-              range: request.headers.get("Range") || undefined,
-              onlyIf: request.headers
-            });
-          } catch(e) {}
-        }
-
-        // 3. Fallback: Search relative key matching in bucket list
-        if (!fileObj) {
-          let listObjs = await r2List(env, r2Prefix, false);
-          if (listObjs.length === 0) listObjs = await r2List(env, r2Prefix, true);
-          const matched = listObjs.find(o => relativeR2Name(o.key, r2Prefix) === cleanRequested);
+        // 2. Fallback: Search relative key matching in bucket list
+        if (!fileObj && r2Prefix) {
+          let listObjs = await r2List(env, r2Prefix, true); // try STORAGE_PROD first
+          if (listObjs.length === 0) listObjs = await r2List(env, r2Prefix, false);
+          const matched = listObjs.find(o => {
+            const rel = relativeR2Name(o.key, r2Prefix);
+            return rel === cleanRequested || rel.endsWith("/" + cleanRequested) || o.key.endsWith("/" + cleanRequested);
+          });
           if (matched) {
-            if (env.STORAGE) {
+            for (const b of bucketsToTry) {
               try {
-                fileObj = await env.STORAGE.get(matched.key, {
+                fileObj = await b.get(matched.key, {
                   range: request.headers.get("Range") || undefined
                 });
-              } catch(e) {}
-            }
-            if (!fileObj && env.STORAGE_PROD) {
-              try {
-                fileObj = await env.STORAGE_PROD.get(matched.key, {
-                  range: request.headers.get("Range") || undefined
-                });
+                if (fileObj) break;
               } catch(e) {}
             }
           }
         }
 
         if (!fileObj) {
-          return json({ success: false, error: "File not found in storage" }, 404);
+          return json({ success: false, error: "File not found in storage", path: r2Prefix, file: cleanRequested }, 404);
         }
 
         // Determine MIME type

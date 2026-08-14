@@ -205,7 +205,10 @@ export default {
     if ((url.hostname === "dl.zyrexediting.xyz" || isApiRequest(pathname)) && env.API) {
       const isCloudflareNativeEndpoint = pathname.startsWith("/api/presence") || 
                                          pathname.startsWith("/api/avatar/") || 
-                                         pathname.startsWith("/api/banner/");
+                                         pathname.startsWith("/api/banner/") ||
+                                         pathname.startsWith("/api/downloads/") ||
+                                         pathname.startsWith("/api/files/") ||
+                                         pathname.startsWith("/api/thumbnails/");
       if (!isCloudflareNativeEndpoint && !(await isServerAvailable(env))) {
         return offlineResponse(request);
       }
