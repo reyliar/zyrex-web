@@ -90,19 +90,20 @@
         /* HERO SHOWCASE CARD */
         .preset-cinematic-hero {
             position: relative;
-            background: rgba(12, 8, 16, 0.90);
+            background: rgba(12, 8, 16, 0.85);
             border: 1px solid var(--card-border);
-            border-radius: 28px;
+            border-radius: 24px;
             overflow: hidden;
-            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.12);
-            margin-bottom: 28px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+            max-width: 820px;
+            margin: 0 auto 28px;
         }
 
         .preset-hero-stage {
             position: relative;
             width: 100%;
             aspect-ratio: 16/9;
-            max-height: 460px;
+            max-height: 310px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -497,7 +498,7 @@
             </a>
             <ul class="nav-links" id="navLinks">
                 <li><a href="/">Home</a></li>
-                <li><a href="/resources">Resources</a></li>
+                <li><a href="/presets" class="active">Presets</a></li>
                 <li><a href="/plugins">Plugins</a></li>
                 <li><a href="/more">More</a></li>
                 <li><a href="/#contact">Contact</a></li>
@@ -518,7 +519,7 @@
         <div class="breadcrumb-bar">
             <a href="/"><i class="fas fa-house"></i> Home</a>
             <span class="sep">/</span>
-            <a href="/resources"><i class="fas fa-sliders"></i> Resources</a>
+            <a href="/presets"><i class="fas fa-sliders"></i> Presets</a>
             <span class="sep">/</span>
             <span class="current" id="breadPresetName">Preset</span>
         </div>
@@ -527,7 +528,7 @@
             <i class="fas fa-triangle-exclamation" style="font-size: 3rem; color: var(--cherry-neon); margin-bottom: 16px;"></i>
             <h2 style="font-size: 1.6rem; color: #fff; margin-bottom: 8px;">Preset Not Found</h2>
             <p id="errMsgText" style="color: rgba(255,255,255,0.6); margin-bottom: 24px;">The requested preset could not be loaded.</p>
-            <a href="/resources" class="btn btn-primary"><i class="fas fa-arrow-left"></i> Browse Resources</a>
+            <a href="/presets" class="btn btn-primary"><i class="fas fa-arrow-left"></i> Browse Presets</a>
         </div>
 
         <div id="presetRoot" style="display: none;"></div>
@@ -551,7 +552,7 @@
                     <h4>Quick Links</h4>
                     <ul>
                         <li><a href="/">Home</a></li>
-                        <li><a href="/resources">Resources</a></li>
+                        <li><a href="/presets" class="active">Presets</a></li>
                         <li><a href="/plugins">Plugins</a></li>
                         <li><a href="/more">More</a></li>
                     </ul>
@@ -716,6 +717,52 @@
                 return '<a href="' + (l.url || l) + '" target="_blank" class="mirror-pill"><span style="display:flex;align-items:center;gap:8px"><i class="fas fa-arrow-up-right-from-square" style="color:var(--cherry-neon)"></i> ' + (l.label || "Mirror") + '</span><span style="font-size:0.72rem;opacity:0.6">' + hostname + '</span></a>';
             }).join("") + '</div>' : '';
 
+        // Source link
+        var sourceUrl = p.product_url || p.source_url || p.creator_social_url || '';
+        var sourceLinkHtml = '';
+        if (sourceUrl) {
+            var domain = '';
+            try { domain = new URL(sourceUrl).hostname.replace('www.', ''); } catch(e) {}
+            var iconHtml = '<i class="fas fa-arrow-up-right-from-square"></i>';
+            var pLabel = 'Source';
+            
+            var brandIcon = '';
+            if (domain.indexOf('payhip.com') !== -1) { brandIcon = 'payhip'; pLabel = 'Payhip'; }
+            else if (domain.indexOf('patreon.com') !== -1) { brandIcon = 'patreon'; pLabel = 'Patreon'; }
+            else if (domain.indexOf('boosty.to') !== -1) { brandIcon = 'boosty'; pLabel = 'Boosty'; }
+            else if (domain.indexOf('gumroad.com') !== -1) { brandIcon = 'gumroad'; pLabel = 'Gumroad'; }
+            else if (domain.indexOf('sellfy.com') !== -1) { brandIcon = 'sellfy'; pLabel = 'Sellfy'; }
+            else if (domain.indexOf('sellix.io') !== -1) { brandIcon = 'sellix'; pLabel = 'Sellix'; }
+            else if (domain.indexOf('tiktok.com') !== -1) { brandIcon = 'tiktok'; pLabel = 'TikTok'; }
+            else if (domain.indexOf('instagram.com') !== -1) { brandIcon = 'instagram'; pLabel = 'Instagram'; }
+            else if (domain.indexOf('youtube.com') !== -1 || domain.indexOf('youtu.be') !== -1) { brandIcon = 'youtube'; pLabel = 'YouTube'; }
+            else if (domain.indexOf('x.com') !== -1 || domain.indexOf('twitter.com') !== -1) { brandIcon = 'twitter'; pLabel = 'X / Twitter'; }
+            else if (domain.indexOf('twitch.tv') !== -1) { brandIcon = 'twitch'; pLabel = 'Twitch'; }
+            else if (domain.indexOf('discord.gg') !== -1 || domain.indexOf('discord.com') !== -1) { brandIcon = 'discord'; pLabel = 'Discord'; }
+            else if (domain.indexOf('t.me') !== -1 || domain.indexOf('telegram') !== -1) { brandIcon = 'telegram'; pLabel = 'Telegram'; }
+            
+            var faBrands = { patreon: 'fa-patreon', tiktok: 'fa-tiktok', instagram: 'fa-instagram', youtube: 'fa-youtube', twitter: 'fa-x-twitter', twitch: 'fa-twitch', discord: 'fa-discord', telegram: 'fa-telegram' };
+            var faviconPlatforms = { payhip: 'payhip.com', boosty: 'boosty.to', gumroad: 'gumroad.com', sellfy: 'sellfy.com', sellix: 'sellix.io' };
+            
+            if (brandIcon && faBrands[brandIcon]) {
+                iconHtml = '<i class="fab ' + faBrands[brandIcon] + '"></i>';
+            } else if (brandIcon && faviconPlatforms[brandIcon]) {
+                var favDomain = faviconPlatforms[brandIcon];
+                iconHtml = '<img src="https://www.google.com/s2/favicons?domain=' + favDomain + '&sz=32" alt="' + pLabel + '" style="width:16px;height:16px;vertical-align:middle;border-radius:3px">';
+            } else if (brandIcon) {
+                iconHtml = '<span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--cherry-neon);color:#fff;font-size:.6rem;font-weight:800;vertical-align:middle">' + pLabel.charAt(0) + '</span>';
+            }
+            
+            sourceLinkHtml = `
+                <div class="spec-item-row">
+                    <span class="s-label">${iconHtml} ${pLabel}</span>
+                    <a href="${sourceUrl}" target="_blank" rel="noopener" class="s-val" style="color:var(--cherry-neon);text-decoration:none;display:inline-flex;align-items:center;gap:4px">
+                        <span>Visit</span> <i class="fas fa-arrow-up-right-from-square" style="font-size:0.7rem"></i>
+                    </a>
+                </div>
+            `;
+        }
+
         // Hero Media
         var heroImg = p.thumbnail 
             ? '<img src="' + p.thumbnail + '" alt="' + p.name + '" class="bg-glow-img"><img src="' + p.thumbnail + '" alt="' + p.name + '" class="main-preset-img" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'block\'"><div class="ph-placeholder" style="display:none"><i class="fas ' + catIcon + '"></i></div>'
@@ -729,7 +776,7 @@
             <div class="preset-cinematic-hero">
                 <div class="hero-floating-badges">
                     <span class="hero-badge"><i class="fas ${catIcon}"></i> ${cat}</span>
-                    <span class="hero-badge hero-badge-free"><i class="fas fa-circle-check"></i> Free Download</span>
+                    <span class="hero-badge hero-badge-free"><i class="fas fa-circle-check"></i> Free</span>
                 </div>
                 <div class="preset-hero-stage">
                     ${heroImg}
@@ -838,10 +885,7 @@
                                 <span class="s-label"><i class="fas fa-download"></i> Total Downloads</span>
                                 <span class="s-val" id="sidebarDlCount">${dlCount}</span>
                             </div>
-                            <div class="spec-item-row">
-                                <span class="s-label"><i class="fas fa-circle-check" style="color:#00ff88"></i> Community Status</span>
-                                <span class="s-val" style="color:#00ff88">Verified Clean</span>
-                            </div>
+                            ${sourceLinkHtml}
                         </div>
                     </div>
                 </div>
