@@ -3144,10 +3144,13 @@ async function storeAndProxyImage(env, imageUrl) {
 
         let r2Prefix = "";
         if (token) {
-          const data = decodeToken(token);
-          if (data && data.file_path) {
-            r2Prefix = normalizeR2Prefix(data.file_path);
-          }
+          try {
+            let base64 = token.replace(/-/g, '+').replace(/_/g, '/');
+            while (base64.length % 4) { base64 += '='; }
+            const jsonStr = new TextDecoder().decode(Uint8Array.from(atob(base64), c => c.charCodeAt(0)));
+            const d = JSON.parse(jsonStr);
+            if (d && d.file_path) r2Prefix = normalizeR2Prefix(d.file_path);
+          } catch(e) {}
         }
         if (!r2Prefix && filePathParam) {
           r2Prefix = normalizeR2Prefix(filePathParam);
@@ -3163,25 +3166,24 @@ async function storeAndProxyImage(env, imageUrl) {
           } catch(e) {}
         }
 
-        if (!r2Prefix) return json({ success: false, error: "Storage path not found" }, 400);
-
         const cleanRequested = normalizeSelectedName(requestedFile);
         if (!cleanRequested) return json({ success: false, error: "File parameter required" }, 400);
 
         let fileObj = null;
-        const bucketsToTry = [env.STORAGE_PROD, env.STORAGE].filter(Boolean); // STORAGE_PROD is zyrexediting-staging (Production)
+        const bucketsToTry = [env.STORAGE_PROD, env.STORAGE].filter(Boolean);
 
+        // 1. Direct candidate keys
         const candidateKeys = [];
         if (r2Prefix) {
+          const rawFolder = r2Prefix.replace(/\/+$/, "");
           candidateKeys.push(r2Prefix + cleanRequested);
-          candidateKeys.push(r2Prefix + cleanRequested.replace(/^\/+/, ""));
+          candidateKeys.push(rawFolder + "/" + cleanRequested);
           candidateKeys.push("production/" + r2Prefix + cleanRequested);
-          candidateKeys.push("production/" + r2Prefix + cleanRequested.replace(/^\/+/, ""));
+          candidateKeys.push("production/" + rawFolder + "/" + cleanRequested);
         }
         candidateKeys.push(cleanRequested);
         candidateKeys.push("production/" + cleanRequested);
 
-        // 1. Try direct get across candidate keys and buckets
         for (const key of candidateKeys) {
           for (const b of bucketsToTry) {
             try {
@@ -3195,26 +3197,36 @@ async function storeAndProxyImage(env, imageUrl) {
           if (fileObj) break;
         }
 
-        // 2. Fallback: Search relative key matching in bucket list
-        if (!fileObj && r2Prefix) {
-          const prefixesToList = [r2Prefix, "production/" + r2Prefix, "production/"];
-          for (const pref of prefixesToList) {
-            let listObjs = await r2List(env, pref, true); // try STORAGE_PROD first
-            if (listObjs.length === 0) listObjs = await r2List(env, pref, false);
-            const matched = listObjs.find(o => {
-              const rel = relativeR2Name(o.key, pref);
-              return rel === cleanRequested || rel.endsWith("/" + cleanRequested) || o.key.endsWith("/" + cleanRequested) || o.key.split("/").pop() === cleanRequested.split("/").pop();
-            });
-            if (matched) {
-              for (const b of bucketsToTry) {
-                try {
-                  fileObj = await b.get(matched.key, {
-                    range: request.headers.get("Range") || undefined
-                  });
-                  if (fileObj) break;
-                } catch(e) {}
-              }
-            }
+        // 2. Deep search in R2 buckets
+        if (!fileObj) {
+          const folderHint = r2Prefix ? r2Prefix.replace(/\/+$/, "").split("/").pop().toLowerCase() : "";
+          const targetFilename = cleanRequested.split("/").pop().toLowerCase();
+          
+          for (const b of bucketsToTry) {
+            try {
+              let cursor;
+              do {
+                const list = await b.list({ limit: 500, cursor });
+                for (const obj of list.objects) {
+                  const k = obj.key;
+                  if (k.endsWith("/.placeholder") || isWatermarkName(k)) continue;
+                  const kLow = k.toLowerCase();
+                  
+                  const isMatch = (folderHint && kLow.includes(folderHint) && kLow.endsWith(targetFilename)) ||
+                                  kLow.endsWith("/" + targetFilename) ||
+                                  kLow === targetFilename ||
+                                  (folderHint && kLow.includes(folderHint));
+                  if (isMatch) {
+                    fileObj = await b.get(k, {
+                      range: request.headers.get("Range") || undefined
+                    });
+                    if (fileObj) break;
+                  }
+                }
+                if (fileObj) break;
+                cursor = list.cursor;
+              } while (cursor);
+            } catch(e) {}
             if (fileObj) break;
           }
         }
@@ -3260,6 +3272,10 @@ async function storeAndProxyImage(env, imageUrl) {
         headers.set("Access-Control-Allow-Headers", "*");
         headers.set("Accept-Ranges", "bytes");
         headers.set("Cache-Control", "public, max-age=7200");
+
+        if (request.method === "OPTIONS") {
+          return new Response(null, { status: 204, headers });
+        }
 
         if (fileObj.range) {
           headers.set("Content-Range", `bytes ${fileObj.range.offset}-${fileObj.range.end || (fileObj.size - 1)}/${fileObj.size}`);

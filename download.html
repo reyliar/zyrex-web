@@ -984,11 +984,12 @@
                 '&file_path=' + encodeURIComponent(fpVal) + 
                 '&file=' + encodeURIComponent(filename);
 
-            // 1. Video preview (protected from saving)
+            // 1. Video preview (protected from saving with modern glass frame)
             if (['mp4', 'webm', 'mov', 'm4v'].includes(ext)) {
                 mediaContainer.style.display = 'block';
-                mediaContainer.innerHTML = '<div style="background:#000;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);box-shadow:0 10px 30px rgba(0,0,0,0.7)">' +
-                    '<video controls controlsList="nodownload nofullscreen noremoteplayback" disablePictureInPicture playsinline webkit-playsinline oncontextmenu="return false;" style="width:100%;max-height:240px;display:block;outline:none" preload="auto" src="' + streamUrl + '"></video>' +
+                mediaContainer.innerHTML = '<div style="position:relative;background:#000;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.12);box-shadow:0 12px 36px rgba(0,0,0,0.8)">' +
+                    '<div id="videoLoadingSpinner" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);z-index:2;color:var(--cherry-light);font-size:1.5rem"><i class="fas fa-spinner fa-spin"></i></div>' +
+                    '<video controls controlsList="nodownload nofullscreen noremoteplayback" disablePictureInPicture playsinline webkit-playsinline oncontextmenu="return false;" style="width:100%;max-height:260px;display:block;outline:none;background:#000" preload="auto" src="' + streamUrl + '" oncanplay="var s=document.getElementById(\'videoLoadingSpinner\');if(s)s.style.display=\'none\'" onerror="var s=document.getElementById(\'videoLoadingSpinner\');if(s)s.innerHTML=\'<span style=\\\'font-size:0.75rem;color:#ff6b8b\\\'>Video preview unavailable</span>\'"></video>' +
                     '</div>';
             } 
             // 2. Audio preview
