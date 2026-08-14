@@ -215,9 +215,9 @@
         .file-preview-panel .fp-header i { color: var(--cherry-light); font-size: .75rem }
         .file-preview-panel .fp-header span { font-size: .7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--cherry-light) }
         .file-preview-panel .fp-body { display: flex; gap: 16px; align-items: flex-start; padding: 18px }
-        .file-preview-thumb { width: 100px; height: 70px; border-radius: 10px; background: rgba(0,0,0,.4); border: 1px solid rgba(255,255,255,.08); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0 }
-        .file-preview-thumb img { width: 100%; height: 100%; object-fit: cover }
-        .file-preview-thumb .fp-icon { font-size: 2rem; color: var(--cherry); opacity: .4 }
+        .file-preview-thumb { width: 90px; height: 75px; border-radius: 12px; background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.1); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; padding: 4px }
+        .file-preview-thumb img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5)) }
+        .file-preview-thumb .fp-icon { font-size: 2.2rem; color: var(--cherry); opacity: .6 }
         .file-preview-info { flex: 1; min-width: 0 }
         .file-preview-info .fp-name { font-size: .88rem; font-weight: 700; color: var(--light); margin-bottom: 4px; text-align: left; overflow-wrap: break-word }
         .file-preview-info .fp-meta { font-size: .72rem; color: var(--gray-dark); display: flex; gap: 12px; flex-wrap: wrap }
@@ -381,6 +381,18 @@
             if (!img) return;
             img.onerror = null;
             img.src = window.DEFAULT_AVATAR;
+        };
+
+        window.getFileExtIcon = function(filename) {
+            if (!filename) return '';
+            var ext = String(filename).trim().split('.').pop().toLowerCase();
+            var icons = {
+                'ffx': '/assets/ffx.png',
+                'aep': '/assets/Adobe-Icon_Adobe_After_Effects_Filetype_AEP.png',
+                'prproj': '/assets/free-adobe-premiere-pro-file-icon-svg-download-png-3516520.webp',
+                'psd': '/assets/PSD_file_icon.svg.webp'
+            };
+            return icons[ext] || '';
         };
 
         const params = new URLSearchParams(window.location.search);
@@ -963,10 +975,14 @@
             mediaContainer.innerHTML = '';
             mediaContainer.style.display = 'none';
 
-            const tokenVal = downloadToken || (new URLSearchParams(window.location.search)).get('token');
-            if (!tokenVal) return;
+            const tokenVal = downloadToken || (new URLSearchParams(window.location.search)).get('token') || '';
+            const pidVal = productId || (product ? product.id : '') || '';
+            const fpVal = resolvedFilePath || (product ? product.file_path : '') || '';
 
-            const streamUrl = '/api/downloads/download?token=' + encodeURIComponent(tokenVal) + '&file=' + encodeURIComponent(filename);
+            const streamUrl = '/api/downloads/preview?token=' + encodeURIComponent(tokenVal) + 
+                '&id=' + encodeURIComponent(pidVal) + 
+                '&file_path=' + encodeURIComponent(fpVal) + 
+                '&file=' + encodeURIComponent(filename);
 
             // 1. Video preview (protected from saving)
             if (['mp4', 'webm', 'mov'].includes(ext)) {

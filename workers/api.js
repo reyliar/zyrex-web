@@ -3135,6 +3135,137 @@ async function storeAndProxyImage(env, imageUrl) {
         } catch (e) { return json({ success: false, error: "Bot API unreachable" }, 502); }
       }
 
+      // ============ R2 FILE PREVIEW: Direct Stream from Cloudflare R2 Production/Staging Bucket ============
+      if (path === "/api/downloads/preview" || path === "/api/files/preview") {
+        const token = url.searchParams.get("token");
+        const filePathParam = url.searchParams.get("file_path") || url.searchParams.get("path");
+        const requestedFile = url.searchParams.get("file") || "";
+        const productId = url.searchParams.get("id") || url.searchParams.get("product_id");
+
+        let r2Prefix = "";
+        if (token) {
+          const data = decodeToken(token);
+          if (data && data.file_path) {
+            r2Prefix = normalizeR2Prefix(data.file_path);
+          }
+        }
+        if (!r2Prefix && filePathParam) {
+          r2Prefix = normalizeR2Prefix(filePathParam);
+        }
+        if (!r2Prefix && productId) {
+          try {
+            const resp = await fetch(`${BOT_API}/api/products?id=${encodeURIComponent(productId)}`);
+            if (resp.ok) {
+              const pData = await resp.json();
+              const p = (Array.isArray(pData) ? pData[0] : pData);
+              if (p && p.file_path) r2Prefix = normalizeR2Prefix(p.file_path);
+            }
+          } catch(e) {}
+        }
+
+        if (!r2Prefix) return json({ success: false, error: "Storage path not found" }, 400);
+
+        const cleanRequested = normalizeSelectedName(requestedFile);
+        if (!cleanRequested) return json({ success: false, error: "File parameter required" }, 400);
+
+        const targetKey = r2Prefix + cleanRequested;
+        let fileObj = null;
+
+        // 1. Primary: Try direct get on env.STORAGE (zyrexediting production)
+        if (env.STORAGE) {
+          try {
+            fileObj = await env.STORAGE.get(targetKey, {
+              range: request.headers.get("Range") || undefined,
+              onlyIf: request.headers
+            });
+          } catch(e) {}
+        }
+
+        // 2. Secondary: Try env.STORAGE_PROD
+        if (!fileObj && env.STORAGE_PROD) {
+          try {
+            fileObj = await env.STORAGE_PROD.get(targetKey, {
+              range: request.headers.get("Range") || undefined,
+              onlyIf: request.headers
+            });
+          } catch(e) {}
+        }
+
+        // 3. Fallback: Search relative key matching in bucket list
+        if (!fileObj) {
+          let listObjs = await r2List(env, r2Prefix, false);
+          if (listObjs.length === 0) listObjs = await r2List(env, r2Prefix, true);
+          const matched = listObjs.find(o => relativeR2Name(o.key, r2Prefix) === cleanRequested);
+          if (matched) {
+            if (env.STORAGE) {
+              try {
+                fileObj = await env.STORAGE.get(matched.key, {
+                  range: request.headers.get("Range") || undefined
+                });
+              } catch(e) {}
+            }
+            if (!fileObj && env.STORAGE_PROD) {
+              try {
+                fileObj = await env.STORAGE_PROD.get(matched.key, {
+                  range: request.headers.get("Range") || undefined
+                });
+              } catch(e) {}
+            }
+          }
+        }
+
+        if (!fileObj) {
+          return json({ success: false, error: "File not found in storage" }, 404);
+        }
+
+        // Determine MIME type
+        const ext = cleanRequested.split(".").pop().toLowerCase();
+        const mimeTypes = {
+          mp4: "video/mp4",
+          webm: "video/webm",
+          mov: "video/quicktime",
+          m4v: "video/mp4",
+          mp3: "audio/mpeg",
+          wav: "audio/wav",
+          aac: "audio/aac",
+          ogg: "audio/ogg",
+          png: "image/png",
+          jpg: "image/jpeg",
+          jpeg: "image/jpeg",
+          gif: "image/gif",
+          webp: "image/webp",
+          svg: "image/svg+xml",
+          txt: "text/plain; charset=utf-8",
+          json: "application/json; charset=utf-8",
+          md: "text/markdown; charset=utf-8",
+          xml: "application/xml; charset=utf-8",
+          log: "text/plain; charset=utf-8",
+          csv: "text/csv; charset=utf-8",
+          srt: "text/plain; charset=utf-8",
+          vtt: "text/vtt; charset=utf-8",
+          url: "text/plain; charset=utf-8",
+          pdf: "application/pdf"
+        };
+        const contentType = mimeTypes[ext] || fileObj.httpMetadata?.contentType || "application/octet-stream";
+
+        const headers = new Headers();
+        headers.set("Content-Type", contentType);
+        headers.set("Access-Control-Allow-Origin", "*");
+        headers.set("Access-Control-Allow-Methods", "GET, HEAD, OPTIONS");
+        headers.set("Access-Control-Allow-Headers", "*");
+        headers.set("Accept-Ranges", "bytes");
+        headers.set("Cache-Control", "public, max-age=7200");
+
+        if (fileObj.range) {
+          headers.set("Content-Range", `bytes ${fileObj.range.offset}-${fileObj.range.end || (fileObj.size - 1)}/${fileObj.size}`);
+          headers.set("Content-Length", String(fileObj.range.length));
+          return new Response(fileObj.body, { status: 206, headers });
+        }
+
+        headers.set("Content-Length", String(fileObj.size));
+        return new Response(fileObj.body, { status: 200, headers });
+      }
+
       // ============ DOWNLOAD: Binary ZIP Stream (R2 production bucket) ============
       if (path === "/api/downloads/download") {
         const token = url.searchParams.get("token");
