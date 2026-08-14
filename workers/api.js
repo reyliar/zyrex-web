@@ -3210,18 +3210,18 @@ async function storeAndProxyImage(env, imageUrl) {
                 for (const obj of list.objects) {
                   const k = obj.key;
                   if (k.endsWith("/.placeholder") || isWatermarkName(k)) continue;
-                  const kLow = k.toLowerCase();
                   
-                  const isMatch = (folderHint && kLow.includes(folderHint) && kLow.endsWith(targetFilename)) ||
-                                  kLow.endsWith("/" + targetFilename) ||
-                                  kLow === targetFilename ||
-                                  (folderHint && kLow.includes(folderHint));
-                  if (isMatch) {
-                    fileObj = await b.get(k, {
-                      range: request.headers.get("Range") || undefined
-                    });
-                    if (fileObj) break;
+                  const objBasename = k.split("/").pop().toLowerCase();
+                  if (objBasename !== targetFilename) continue;
+
+                  if (folderHint && !k.toLowerCase().includes(folderHint)) {
+                    continue;
                   }
+
+                  fileObj = await b.get(k, {
+                    range: request.headers.get("Range") || undefined
+                  });
+                  if (fileObj) break;
                 }
                 if (fileObj) break;
                 cursor = list.cursor;
