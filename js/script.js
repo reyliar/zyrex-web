@@ -638,32 +638,34 @@ window.showToast = function(title, message, type = 'success') {
         hub.id = 'globalFloatingHub';
         hub.className = 'global-floating-hub';
         hub.innerHTML = `
+            <div class="floating-notif-wrap">
+                <button id="globalNotifBtn" class="floating-hub-btn" onclick="window.toggleGlobalNotifPanel(event)" title="Notifications" aria-label="Notifications">
+                    <i class="fas fa-bell"></i>
+                    <span class="notif-bubble-badge" id="floatingNotifBadge" style="display:none">0</span>
+                </button>
+                <div id="globalNotifPanel" class="global-notif-panel">
+                    <div class="notif-panel-header">
+                        <h4>
+                            <i class="fas fa-bell" style="color:var(--cherry-neon)"></i> Notifications 
+                            <span class="notif-bubble-badge" id="panelNotifBadge" style="position:static;display:none;margin-left:4px">0</span>
+                        </h4>
+                        <div class="notif-panel-actions">
+                            <button class="notif-header-act-btn" onclick="window.toggleDNDQuick()" title="Toggle Do Not Disturb" id="btnQuickDND"><i class="fas fa-moon"></i></button>
+                            <a href="/settings?tab=general" class="notif-header-act-btn" title="Notification Settings"><i class="fas fa-cog"></i></a>
+                            <button class="notif-header-act-btn" onclick="window.markAllNotifsRead()" title="Mark all as read"><i class="fas fa-check-double"></i></button>
+                            <button class="notif-header-act-btn" onclick="window.toggleGlobalNotifPanel(event)" title="Close"><i class="fas fa-times"></i></button>
+                        </div>
+                    </div>
+                    <div class="notif-panel-body" id="globalNotifList"></div>
+                </div>
+            </div>
             <button id="globalScrollTopBtn" class="floating-hub-btn scroll-top-btn" onclick="window.scrollToTopSmooth()" title="Back to Top" aria-label="Back to Top">
                 <i class="fas fa-arrow-up"></i>
             </button>
-            <button id="globalNotifBtn" class="floating-hub-btn notif-hub-btn" onclick="window.toggleGlobalNotifPanel(event)" title="Notifications" aria-label="Notifications">
-                <i class="fas fa-bell"></i>
-                <span class="notif-bubble-badge" id="floatingNotifBadge" style="display:none">0</span>
-            </button>
-            <div id="globalNotifPanel" class="global-notif-panel">
-                <div class="notif-panel-header">
-                    <h4>
-                        <i class="fas fa-bell" style="color:var(--cherry-neon)"></i> Notifications 
-                        <span class="notif-bubble-badge" id="panelNotifBadge" style="position:static;display:none;margin-left:4px">0</span>
-                    </h4>
-                    <div class="notif-panel-actions">
-                        <button class="notif-header-act-btn" onclick="window.toggleDNDQuick()" title="Toggle Do Not Disturb" id="btnQuickDND"><i class="fas fa-moon"></i></button>
-                        <a href="/settings?tab=general" class="notif-header-act-btn" title="Notification Settings"><i class="fas fa-cog"></i></a>
-                        <button class="notif-header-act-btn" onclick="window.markAllNotifsRead()" title="Mark all as read"><i class="fas fa-check-double"></i></button>
-                        <button class="notif-header-act-btn" onclick="window.toggleGlobalNotifPanel(event)" title="Close"><i class="fas fa-times"></i></button>
-                    </div>
-                </div>
-                <div class="notif-panel-body" id="globalNotifList"></div>
-            </div>
         `;
         document.body.appendChild(hub);
 
-        // Smooth scroll listener: glides notification button up when scroll-to-top appears
+        // Smooth scroll listener: toggles scroll-to-top button visibility
         function handleScroll() {
             const h = document.getElementById('globalFloatingHub');
             if (h) {
@@ -721,6 +723,26 @@ window.showToast = function(title, message, type = 'success') {
             console.warn('Live notifications fetch failed:', e);
         }
         renderGlobalNotifications();
+    }
+
+    function parseNotifMarkdown(str) {
+        if (!str) return '';
+        let text = escapeHtmlNotif(str);
+        // bold **text** or __text__
+        text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        text = text.replace(/__(.*?)__/g, '<strong>$1</strong>');
+        // italic *text* or _text_
+        text = text.replace(/\*([^\*]+)\*/g, '<em>$1</em>');
+        text = text.replace(/_([^_]+)_/g, '<em>$1</em>');
+        // strikethrough ~~text~~
+        text = text.replace(/~~(.*?)~~/g, '<del>$1</del>');
+        // inline code `code`
+        text = text.replace(/`([^`]+)`/g, '<code style="background:rgba(255,255,255,0.09);padding:1px 5px;border-radius:4px;font-size:0.8em;color:#ff8da1">$1</code>');
+        // markdown links [text](url)
+        text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s\)]+|\/[^\s\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener" style="color:var(--cherry-light);text-decoration:underline">$1</a>');
+        // newlines
+        text = text.replace(/\n/g, '<br>');
+        return text;
     }
 
     function renderGlobalNotifications() {
@@ -796,10 +818,10 @@ window.showToast = function(title, message, type = 'success') {
                     </div>
                     <div class="notif-content-wrap">
                         <div class="notif-title-row">
-                            <span class="notif-title">${escapeHtmlNotif(n.title)}</span>
+                            <span class="notif-title">${parseNotifMarkdown(n.title)}</span>
                             <span class="notif-time">${timeAgo}</span>
                         </div>
-                        <div class="notif-desc">${escapeHtmlNotif(n.desc)}</div>
+                        <div class="notif-desc">${parseNotifMarkdown(n.desc)}</div>
                     </div>
                 </a>
             `;
