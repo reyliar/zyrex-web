@@ -743,6 +743,10 @@ window.showToast = function(title, message, type = 'success') {
     function parseNotifMarkdown(str) {
         if (!str) return '';
         let text = escapeHtmlNotif(str);
+        // headings # Title, ## Title
+        text = text.replace(/^#\s+(.*?)$/gm, '<strong style="font-size:1.02em;color:#fff;display:inline-block;margin-bottom:2px">$1</strong>');
+        text = text.replace(/^##\s+(.*?)$/gm, '<strong style="font-size:0.96em;color:#fff;display:inline-block">$1</strong>');
+        text = text.replace(/^###\s+(.*?)$/gm, '<strong style="font-size:0.90em;color:#fff;display:inline-block">$1</strong>');
         // bold **text** or __text__
         text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
         text = text.replace(/__(.*?)__/g, '<strong>$1</strong>');
