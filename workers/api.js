@@ -3113,7 +3113,7 @@ async function storeAndProxyImage(env, imageUrl) {
         });
       }
 
-      // ============ PRESET STATS (Download Count + View Count) ============
+      // ============ PRESET STATS (Download Count + Real View Count) ============
       if (path === "/api/presets/stats") {
         const id = url.searchParams.get("id");
         const shouldIncrementView = url.searchParams.get("increment_view") === "1" || request.method === "POST";
@@ -3121,9 +3121,10 @@ async function storeAndProxyImage(env, imageUrl) {
         if (!id) return json({ success: false, error: "id parameter required" }, 400);
 
         let dlCount = 0;
-        let viewCount = 0;
+        if (!globalThis.REAL_PRESET_VIEWS) globalThis.REAL_PRESET_VIEWS = new Map();
+        let viewCount = globalThis.REAL_PRESET_VIEWS.get(id) || 0;
 
-        // 1. Fetch download counts
+        // 1. Fetch download counts from bot API
         try {
           const resp = await fetch(`${BOT_API}/api/downloads/counts`);
           if (resp.ok) {
@@ -3133,34 +3134,29 @@ async function storeAndProxyImage(env, imageUrl) {
           }
         } catch(e) {}
 
-        // 2. Fetch/track views
-        try {
-          if (shouldIncrementView) {
-            const trackResp = await fetch(`${BOT_API}/api/presets/view`, {
+        // 2. Increment & persist real view count
+        if (shouldIncrementView) {
+          viewCount++;
+          globalThis.REAL_PRESET_VIEWS.set(id, viewCount);
+          try {
+            fetch(`${BOT_API}/api/presets/view`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ id }),
-            });
-            if (trackResp.ok) {
-              const vData = await trackResp.json();
-              viewCount = vData.views || 0;
-            }
-          } else {
-            const vResp = await fetch(`${BOT_API}/api/presets/views?id=${encodeURIComponent(id)}`);
-            if (vResp.ok) {
-              const vData = await vResp.json();
-              viewCount = vData.views || 0;
+              body: JSON.stringify({ id, views: viewCount }),
+            }).catch(() => {});
+          } catch(e) {}
+        }
+
+        try {
+          const vResp = await fetch(`${BOT_API}/api/presets/views?id=${encodeURIComponent(id)}`);
+          if (vResp.ok) {
+            const vData = await vResp.json();
+            if (typeof vData.views === "number" && vData.views > viewCount) {
+              viewCount = vData.views;
+              globalThis.REAL_PRESET_VIEWS.set(id, viewCount);
             }
           }
         } catch(e) {}
-
-        // Fallback calculation for view counts
-        if (!viewCount) {
-          let hash = 0;
-          for (let i = 0; i < id.length; i++) hash = ((hash << 5) - hash) + id.charCodeAt(i);
-          const baseViews = Math.abs(hash % 350) + 120;
-          viewCount = Math.max(baseViews, (dlCount * 3) + 45);
-        }
 
         return json({
           success: true,

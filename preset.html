@@ -681,8 +681,6 @@
                     <div class="stage-floating-pills">
                         <span class="stage-pill"><i class="fas ${catIcon}"></i> ${cat}</span>
                         <span class="stage-pill stage-pill-free"><i class="fas fa-circle-check"></i> Free</span>
-                        <span class="stage-pill" id="stageDownloadsPill"><i class="fas fa-cloud-arrow-down" style="color:var(--cherry-neon)"></i> <span id="stageDownloadsCount">--</span> Downloads</span>
-                        <span class="stage-pill" id="stageViewsPill"><i class="fas fa-eye" style="color:#a855f7"></i> <span id="stageViewsCount">--</span> Views</span>
                     </div>
 
                     ${p.thumbnail ? `
@@ -733,7 +731,7 @@
                                         <span style="overflow:hidden;text-overflow:ellipsis">${uploaderName}</span>
                                         ${isUploaderAdmin ? `<i class="fas fa-circle-check" style="color:#38bdf8;margin-left:5px;font-size:0.85rem;flex-shrink:0" title="Verified Admin"></i>` : ''}
                                     </strong>
-                                    <span style="font-size:0.7rem;color:${isUploaderAdmin ? 'rgba(56,189,248,0.85)' : 'rgba(255,255,255,0.4)'}">${isUploaderAdmin ? '<i class="fas fa-shield-halved" style="font-size:0.65rem"></i> Zyrex Team' : 'Discord Community'}</span>
+                                    <span style="font-size:0.7rem;color:rgba(255,255,255,0.45)">Discord Community</span>
                                 </div>
                             </div>
                             ` : ''}
@@ -826,13 +824,9 @@
                     const vw = data.views || 0;
                     const metaDl = document.getElementById('metaDownloadsCount');
                     const metaVw = document.getElementById('metaViewsCount');
-                    const stageDl = document.getElementById('stageDownloadsCount');
-                    const stageVw = document.getElementById('stageViewsCount');
                     
                     if (metaDl) metaDl.textContent = dl.toLocaleString();
                     if (metaVw) metaVw.textContent = vw.toLocaleString();
-                    if (stageDl) stageDl.textContent = dl.toLocaleString();
-                    if (stageVw) stageVw.textContent = vw.toLocaleString();
                 }
             }
         } catch(e) {
