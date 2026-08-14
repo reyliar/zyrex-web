@@ -14,7 +14,7 @@
     <meta name="author" content="Zyrex">
     <title>Zyrex | Preset</title>
     <link rel="icon" type="image/png" href="/assets/content.png">
-    <link rel="stylesheet" href="/css/style.css?v=43">
+    <link rel="stylesheet" href="/css/style.css?v=44">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
@@ -719,7 +719,7 @@
     </footer>
 
     <script src="/js/auth.js?v=11"></script>
-    <script src="/js/script.js?v=43"></script>
+    <script src="/js/script.js?v=44"></script>
     <script src="/js/presets-data.js?v=5"></script>
     <script>
     (async () => {
@@ -1121,6 +1121,7 @@
                     </div>
                 </form>
             `;
+            setTimeout(bindMentionAutocompleteToAllInputs, 50);
         } else {
             const redirectUrl = encodeURIComponent(window.location.pathname + window.location.search);
             box.innerHTML = `
@@ -1158,6 +1159,20 @@
         }
     }
 
+    function formatCommentContentWithMentions(rawContent) {
+        if (!rawContent) return '';
+        let escaped = escapeHtml(rawContent);
+        // Replace @mentions: @Username
+        escaped = escaped.replace(/@([a-zA-Z0-9_\.\-]+)/g, '<span class="mention-tag"><i class="fas fa-at" style="font-size:0.75em;opacity:0.75"></i>$1</span>');
+        // Replace <@12345>
+        escaped = escaped.replace(/&lt;@!?(\d+)&gt;/g, '<span class="mention-tag"><i class="fas fa-at" style="font-size:0.75em;opacity:0.75"></i>User</span>');
+        // Parse markdown basics
+        escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+        escaped = escaped.replace(/\*(.*?)\*/g, '<em>$1</em>');
+        escaped = escaped.replace(/`([^`]+)`/g, '<code style="background:rgba(255,255,255,0.08);padding:1px 4px;border-radius:4px;font-size:0.85em;color:#ff8da1">$1</code>');
+        return escaped.replace(/\n/g, '<br>');
+    }
+
     function renderCommentsTree(comments) {
         const tree = document.getElementById('commentsTreeContainer');
         if (!tree) return;
@@ -1173,6 +1188,7 @@
         }
 
         tree.innerHTML = comments.map(c => renderSingleComment(c)).join("");
+        bindMentionAutocompleteToAllInputs();
     }
 
     function renderSingleComment(c, isReply = false) {
@@ -1181,6 +1197,7 @@
         const isCurrentAuthor = currentUserData && (String(currentUserData.id) === String(c.user_id) || (currentUserData.id && ["1421177012814614548", "1382421118098346174"].includes(String(currentUserData.id))));
         const avatar = c.user_avatar || window.DEFAULT_AVATAR;
         const sourceLabel = c.source === 'discord' ? `<span class="source-pill-dc" title="Sent from Discord"><i class="fab fa-discord"></i> Discord</span>` : '';
+        const rawAuthorName = c.user_name || 'User';
 
         const repliesHtml = (c.replies && c.replies.length > 0) 
             ? `<div class="replies-branch">${c.replies.map(r => renderSingleComment(r, true)).join("")}</div>`
@@ -1189,21 +1206,21 @@
         return `
             <div class="comment-item ${isReply ? 'reply-item' : ''}" id="comment-${c.id}">
                 <div class="comment-avatar-wrap">
-                    <img src="${avatar}" alt="${escapeHtml(c.user_name)}" class="comment-avatar ${isAdmin ? 'admin-glow' : ''}" onerror="window.handleAvatarError(this)">
+                    <img src="${avatar}" alt="${escapeHtml(rawAuthorName)}" class="comment-avatar ${isAdmin ? 'admin-glow' : ''}" onerror="window.handleAvatarError(this)">
                 </div>
                 <div class="comment-body-wrap">
                     <div class="comment-header">
                         <div class="comment-user-title">
-                            <span>${escapeHtml(c.user_name)}</span>
+                            <span>${escapeHtml(rawAuthorName)}</span>
                             ${isAdmin ? `<i class="fas fa-circle-check" style="color:#38bdf8;font-size:0.8rem" title="Admin"></i>` : ''}
                             ${sourceLabel}
                         </div>
                         <span class="comment-time">${timeAgo}</span>
                     </div>
-                    <div class="comment-content" id="commentText-${c.id}">${escapeHtml(c.content)}</div>
+                    <div class="comment-content" id="commentText-${c.id}">${formatCommentContentWithMentions(c.content)}</div>
                     <div class="comment-actions">
                         ${currentUserData ? `
-                            <button class="comment-act-btn reply-btn" onclick="toggleReplyBox('${c.id}')">
+                            <button class="comment-act-btn reply-btn" onclick="toggleReplyBox('${c.id}', '${escapeHtml(rawAuthorName).replace(/'/g, "\\'")}')">
                                 <i class="fas fa-reply"></i> Reply
                             </button>
                         ` : ''}
@@ -1221,7 +1238,7 @@
                     <div id="editBox-${c.id}" class="reply-box-inline" style="display:none;background:rgba(255,43,82,0.05);border-color:rgba(255,43,82,0.25)">
                         <form onsubmit="handleEditSubmit(event, '${c.id}')" style="margin:0">
                             <div style="font-size:0.75rem;color:var(--cherry-neon);margin-bottom:6px;font-weight:600"><i class="fas fa-pen"></i> Edit comment:</div>
-                            <textarea id="editText-${c.id}" class="comment-textarea" style="min-height:55px;font-size:0.85rem" required maxlength="1000" onkeydown="handleEditKeydown(event, '${c.id}')">${escapeHtml(c.content)}</textarea>
+                            <textarea id="editText-${c.id}" class="comment-textarea mentionable-input" style="min-height:55px;font-size:0.85rem" required maxlength="1000" onkeydown="handleEditKeydown(event, '${c.id}')">${escapeHtml(c.content)}</textarea>
                             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px">
                                 <span id="editCooldownNotice-${c.id}" style="font-size:0.72rem;color:#ff6b8b"></span>
                                 <div style="display:flex;gap:8px">
@@ -1237,7 +1254,7 @@
                     <!-- INLINE REPLY BOX -->
                     <div id="replyBox-${c.id}" class="reply-box-inline" style="display:none">
                         <form onsubmit="handleReplySubmit(event, '${c.id}')" style="margin:0">
-                            <textarea id="replyText-${c.id}" class="comment-textarea" style="min-height:50px;font-size:0.85rem" placeholder="Write a reply... (Enter to send, Shift+Enter for new line)" required maxlength="1000" onkeydown="handleReplyKeydown(event, '${c.id}')"></textarea>
+                            <textarea id="replyText-${c.id}" class="comment-textarea mentionable-input" style="min-height:50px;font-size:0.85rem" placeholder="Write a reply... (Type @ to mention, Enter to send)" required maxlength="1000" onkeydown="handleReplyKeydown(event, '${c.id}')"></textarea>
                             <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:8px">
                                 <button type="button" class="comment-act-btn" onclick="toggleReplyBox('${c.id}')">Cancel</button>
                                 <button type="submit" class="comment-btn-submit" style="padding:6px 16px;font-size:0.78rem">
@@ -1270,6 +1287,7 @@
     };
 
     window.handleEditKeydown = function(e, commentId) {
+        if (window.isMentionPopupActive && window.isMentionPopupActive()) return;
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             const form = e.target.closest('form');
@@ -1326,6 +1344,7 @@
     };
 
     window.handleCommentKeydown = function(e, textarea) {
+        if (window.isMentionPopupActive && window.isMentionPopupActive()) return;
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             const form = textarea.closest('form');
@@ -1337,6 +1356,7 @@
     };
 
     window.handleReplyKeydown = function(e, parentId) {
+        if (window.isMentionPopupActive && window.isMentionPopupActive()) return;
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             const form = e.target.closest('form');
@@ -1347,14 +1367,20 @@
         }
     };
 
-    window.toggleReplyBox = function(commentId) {
+    window.toggleReplyBox = function(commentId, authorName) {
         const box = document.getElementById('replyBox-' + commentId);
         if (!box) return;
         const isHidden = box.style.display === 'none';
         box.style.display = isHidden ? 'block' : 'none';
         if (isHidden) {
             const ta = document.getElementById('replyText-' + commentId);
-            if (ta) ta.focus();
+            if (ta) {
+                if (authorName && !ta.value.trim()) {
+                    ta.value = `@${authorName} `;
+                }
+                ta.focus();
+                ta.setSelectionRange(ta.value.length, ta.value.length);
+            }
         }
     };
 
@@ -1424,6 +1450,181 @@
             if (btn) btn.disabled = false;
         }
     };
+
+    /* ===================== @ MENTION AUTOCOMPLETE CONTROLLER ===================== */
+    let mentionPopupEl = null;
+    let activeMentionTextarea = null;
+    let activeMentionQuery = '';
+    let activeMentionIndex = 0;
+    let cachedMentionMembers = [];
+    let mentionSearchTimeout = null;
+
+    function getOrCreateMentionPopup() {
+        if (!mentionPopupEl) {
+            mentionPopupEl = document.createElement('div');
+            mentionPopupEl.id = 'mentionAutocompletePopup';
+            mentionPopupEl.className = 'mention-autocomplete-popup';
+            document.body.appendChild(mentionPopupEl);
+
+            document.addEventListener('click', (e) => {
+                if (mentionPopupEl && !mentionPopupEl.contains(e.target) && e.target !== activeMentionTextarea) {
+                    closeMentionPopup();
+                }
+            });
+        }
+        return mentionPopupEl;
+    }
+
+    window.isMentionPopupActive = function() {
+        return mentionPopupEl && mentionPopupEl.classList.contains('active');
+    };
+
+    function closeMentionPopup() {
+        if (mentionPopupEl) {
+            mentionPopupEl.classList.remove('active');
+            mentionPopupEl.innerHTML = '';
+        }
+        activeMentionTextarea = null;
+        activeMentionQuery = '';
+        activeMentionIndex = 0;
+    }
+
+    async function searchMentionMembers(query) {
+        try {
+            const res = await fetch(`/api/guild/members?q=${encodeURIComponent(query)}`);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.success && Array.isArray(data.members)) {
+                    return data.members;
+                }
+            }
+        } catch(e) {}
+        return [];
+    }
+
+    function positionMentionPopup(textarea) {
+        const popup = getOrCreateMentionPopup();
+        const rect = textarea.getBoundingClientRect();
+        const top = window.scrollY + rect.top - popup.offsetHeight - 8;
+        const left = window.scrollX + rect.left;
+
+        popup.style.top = `${Math.max(10, top)}px`;
+        popup.style.left = `${Math.max(10, left)}px`;
+    }
+
+    function renderMentionSuggestions(members) {
+        const popup = getOrCreateMentionPopup();
+        cachedMentionMembers = members;
+        if (!members || members.length === 0) {
+            popup.innerHTML = `<div style="padding:10px;font-size:0.78rem;color:var(--text-sub);text-align:center">No members found</div>`;
+            popup.classList.add('active');
+            return;
+        }
+
+        popup.innerHTML = members.map((m, idx) => {
+            const isSelected = idx === activeMentionIndex;
+            const avatar = m.avatar || window.DEFAULT_AVATAR;
+            const dName = m.display_name || m.username;
+            const handle = m.username ? `@${m.username}` : '';
+            return `
+                <div class="mention-user-item ${isSelected ? 'selected' : ''}" data-idx="${idx}" onmousedown="selectMentionUser(${idx})">
+                    <img src="${avatar}" class="mention-user-avatar" onerror="window.handleAvatarError(this)">
+                    <div class="mention-user-info">
+                        <div class="mention-user-name">
+                            <span>${escapeHtml(dName)}</span>
+                            ${m.is_admin ? '<i class="fas fa-circle-check" style="color:#38bdf8;font-size:0.75rem" title="Admin"></i>' : ''}
+                        </div>
+                        <span class="mention-user-handle">${escapeHtml(handle)}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        popup.classList.add('active');
+        if (activeMentionTextarea) positionMentionPopup(activeMentionTextarea);
+    }
+
+    window.selectMentionUser = function(idx) {
+        if (!activeMentionTextarea || !cachedMentionMembers[idx]) return;
+        const user = cachedMentionMembers[idx];
+        const val = activeMentionTextarea.value;
+        const cursor = activeMentionTextarea.selectionStart;
+
+        // Find the @ before cursor
+        const lastAt = val.lastIndexOf('@', cursor - 1);
+        if (lastAt !== -1) {
+            const tagText = `@${user.username || user.display_name.replace(/\s+/g, '_')} `;
+            const newVal = val.slice(0, lastAt) + tagText + val.slice(cursor);
+            activeMentionTextarea.value = newVal;
+            const newCursor = lastAt + tagText.length;
+            activeMentionTextarea.focus();
+            activeMentionTextarea.setSelectionRange(newCursor, newCursor);
+        }
+        closeMentionPopup();
+    };
+
+    function attachMentionAutocomplete(textarea) {
+        if (!textarea || textarea.dataset.mentionAttached) return;
+        textarea.dataset.mentionAttached = 'true';
+
+        textarea.addEventListener('input', (e) => {
+            const val = textarea.value;
+            const cursor = textarea.selectionStart;
+            const textBeforeCursor = val.slice(0, cursor);
+            const atMatch = textBeforeCursor.match(/@([a-zA-Z0-9_\.\-]*)$/);
+
+            if (atMatch) {
+                activeMentionTextarea = textarea;
+                activeMentionQuery = atMatch[1];
+                activeMentionIndex = 0;
+
+                clearTimeout(mentionSearchTimeout);
+                mentionSearchTimeout = setTimeout(async () => {
+                    const members = await searchMentionMembers(activeMentionQuery);
+                    if (activeMentionTextarea === textarea) {
+                        renderMentionSuggestions(members);
+                    }
+                }, 120);
+            } else {
+                closeMentionPopup();
+            }
+        });
+
+        textarea.addEventListener('keydown', (e) => {
+            if (!window.isMentionPopupActive()) return;
+
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (cachedMentionMembers.length > 0) {
+                    activeMentionIndex = (activeMentionIndex + 1) % cachedMentionMembers.length;
+                    renderMentionSuggestions(cachedMentionMembers);
+                }
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (cachedMentionMembers.length > 0) {
+                    activeMentionIndex = (activeMentionIndex - 1 + cachedMentionMembers.length) % cachedMentionMembers.length;
+                    renderMentionSuggestions(cachedMentionMembers);
+                }
+            } else if (e.key === 'Enter' || e.key === 'Tab') {
+                if (cachedMentionMembers.length > 0) {
+                    e.preventDefault();
+                    window.selectMentionUser(activeMentionIndex);
+                }
+            } else if (e.key === 'Escape') {
+                closeMentionPopup();
+            }
+        });
+
+        textarea.addEventListener('blur', () => {
+            setTimeout(closeMentionPopup, 200);
+        });
+    }
+
+    function bindMentionAutocompleteToAllInputs() {
+        const mainTa = document.getElementById('mainCommentText');
+        if (mainTa) attachMentionAutocomplete(mainTa);
+        document.querySelectorAll('.mentionable-input').forEach(attachMentionAutocomplete);
+    }
 
     window.deleteComment = async function(commentId) {
         if (!confirm('Are you sure you want to delete this comment?')) return;
