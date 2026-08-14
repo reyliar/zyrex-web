@@ -3171,6 +3171,8 @@ async function storeAndProxyImage(env, imageUrl) {
 
         let fileObj = null;
         const bucketsToTry = [env.STORAGE_PROD, env.STORAGE].filter(Boolean);
+        const rangeHeader = request.headers.get("Range");
+        const getOpts = rangeHeader ? { range: request.headers } : {};
 
         // 1. Direct candidate keys
         const candidateKeys = [];
@@ -3187,46 +3189,36 @@ async function storeAndProxyImage(env, imageUrl) {
         for (const key of candidateKeys) {
           for (const b of bucketsToTry) {
             try {
-              fileObj = await b.get(key, {
-                range: request.headers.get("Range") || undefined,
-                onlyIf: request.headers
-              });
+              fileObj = await b.get(key, getOpts);
               if (fileObj) break;
             } catch(e) {}
           }
           if (fileObj) break;
         }
 
-        // 2. Deep search in R2 buckets
-        if (!fileObj) {
-          const folderHint = r2Prefix ? r2Prefix.replace(/\/+$/, "").split("/").pop().toLowerCase() : "";
+        // 2. Targeted search using prefix listing
+        if (!fileObj && r2Prefix) {
+          const rawFolder = r2Prefix.replace(/\/+$/, "");
           const targetFilename = cleanRequested.split("/").pop().toLowerCase();
-          
-          for (const b of bucketsToTry) {
-            try {
-              let cursor;
-              do {
-                const list = await b.list({ limit: 500, cursor });
+          const searchPrefixes = [r2Prefix, rawFolder + "/", "production/" + r2Prefix, "production/" + rawFolder + "/"];
+
+          for (const pref of searchPrefixes) {
+            for (const b of bucketsToTry) {
+              try {
+                const list = await b.list({ prefix: pref, limit: 200 });
                 for (const obj of list.objects) {
                   const k = obj.key;
                   if (k.endsWith("/.placeholder") || isWatermarkName(k)) continue;
                   
                   const objBasename = k.split("/").pop().toLowerCase();
-                  if (objBasename !== targetFilename) continue;
-
-                  if (folderHint && !k.toLowerCase().includes(folderHint)) {
-                    continue;
+                  if (objBasename === targetFilename || k.toLowerCase().endsWith(cleanRequested.toLowerCase())) {
+                    fileObj = await b.get(k, getOpts);
+                    if (fileObj) break;
                   }
-
-                  fileObj = await b.get(k, {
-                    range: request.headers.get("Range") || undefined
-                  });
-                  if (fileObj) break;
                 }
-                if (fileObj) break;
-                cursor = list.cursor;
-              } while (cursor);
-            } catch(e) {}
+              } catch(e) {}
+              if (fileObj) break;
+            }
             if (fileObj) break;
           }
         }
