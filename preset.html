@@ -674,6 +674,8 @@
                     <div class="stage-floating-pills">
                         <span class="stage-pill"><i class="fas ${catIcon}"></i> ${cat}</span>
                         <span class="stage-pill stage-pill-free"><i class="fas fa-circle-check"></i> Free</span>
+                        <span class="stage-pill" id="stageDownloadsPill"><i class="fas fa-cloud-arrow-down" style="color:var(--cherry-neon)"></i> <span id="stageDownloadsCount">--</span> Downloads</span>
+                        <span class="stage-pill" id="stageViewsPill"><i class="fas fa-eye" style="color:#a855f7"></i> <span id="stageViewsCount">--</span> Views</span>
                     </div>
 
                     ${p.thumbnail ? `
@@ -689,6 +691,19 @@
                     <div class="action-top-info">
                         <h1 class="preset-headline">${p.name}</h1>
                         
+                        <!-- META STATS: DOWNLOADS & VIEWS -->
+                        <div style="display:flex;align-items:center;flex-wrap:wrap;gap:14px;margin:-4px 0 16px;font-size:0.8rem;color:var(--text-sub)">
+                            <div style="display:inline-flex;align-items:center;gap:6px">
+                                <i class="fas fa-cloud-arrow-down" style="color:var(--cherry-neon)"></i>
+                                <span><strong id="metaDownloadsCount" style="color:#fff;font-weight:700">0</strong> downloads</span>
+                            </div>
+                            <span style="opacity:0.25">•</span>
+                            <div style="display:inline-flex;align-items:center;gap:6px">
+                                <i class="fas fa-eye" style="color:#a855f7"></i>
+                                <span><strong id="metaViewsCount" style="color:#fff;font-weight:700">0</strong> views</span>
+                            </div>
+                        </div>
+
                         <!-- CREATOR & UPLOADER DUO STRIP -->
                         <div style="display:grid;grid-template-columns:${uploaderName ? '1fr 1fr' : '1fr'};gap:10px;margin-bottom:20px">
                             <!-- Creator Card -->
@@ -781,6 +796,38 @@
                 </div>
             </div>
         `;
+        initPresetStats(p.id);
+    }
+
+    async function initPresetStats(productId) {
+        if (!productId) return;
+        const viewedKey = 'zyrex_viewed_' + productId;
+        const isNewView = !sessionStorage.getItem(viewedKey);
+        if (isNewView) {
+            sessionStorage.setItem(viewedKey, '1');
+        }
+
+        try {
+            const res = await fetch('/api/presets/stats?id=' + encodeURIComponent(productId) + (isNewView ? '&increment_view=1' : ''));
+            if (res.ok) {
+                const data = await res.json();
+                if (data.success) {
+                    const dl = data.downloads || 0;
+                    const vw = data.views || 0;
+                    const metaDl = document.getElementById('metaDownloadsCount');
+                    const metaVw = document.getElementById('metaViewsCount');
+                    const stageDl = document.getElementById('stageDownloadsCount');
+                    const stageVw = document.getElementById('stageViewsCount');
+                    
+                    if (metaDl) metaDl.textContent = dl.toLocaleString();
+                    if (metaVw) metaVw.textContent = vw.toLocaleString();
+                    if (stageDl) stageDl.textContent = dl.toLocaleString();
+                    if (stageVw) stageVw.textContent = vw.toLocaleString();
+                }
+            }
+        } catch(e) {
+            console.error('Stats fetch error:', e);
+        }
     }
 
     function switchTab(id, btn) {
