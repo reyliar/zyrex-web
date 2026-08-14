@@ -3783,17 +3783,17 @@ html, body {
     right: 26px;
     z-index: 2147483647;
     display: flex;
-    flex-direction: column;
+    flex-direction: column-reverse;
     align-items: center;
     gap: 12px;
-    pointer-events: auto;
+    pointer-events: none;
 }
 
 .floating-hub-btn {
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    background: rgba(15, 8, 20, 0.92);
+    background: rgba(15, 8, 20, 0.94);
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
     border: 1px solid rgba(255, 43, 82, 0.4);
@@ -3804,9 +3804,10 @@ html, body {
     font-size: 1.1rem;
     cursor: pointer;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 22px rgba(255, 43, 82, 0.3);
-    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s, opacity 0.3s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s;
     position: relative;
     outline: none;
+    pointer-events: auto;
 }
 
 .floating-hub-btn:hover {
@@ -3819,6 +3820,15 @@ html, body {
 
 .floating-hub-btn:active {
     transform: scale(0.95);
+}
+
+.notif-hub-btn {
+    transform: translateY(60px);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s, border-color 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+.global-floating-hub.scrolled .notif-hub-btn {
+    transform: translateY(0);
 }
 
 .notif-bubble-badge {
@@ -3850,24 +3860,26 @@ html, body {
 .scroll-top-btn {
     opacity: 0;
     visibility: hidden;
-    transform: translateY(16px) scale(0.8);
-    transition: opacity 0.3s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.3s;
-    background: rgba(18, 9, 24, 0.92);
+    transform: translateY(18px) scale(0.85);
+    transition: opacity 0.35s cubic-bezier(0.16, 1, 0.3, 1), transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.35s, background 0.2s, border-color 0.2s, color 0.2s;
+    background: rgba(18, 9, 24, 0.94);
     border-color: rgba(255, 43, 82, 0.45);
     color: #ff2b52;
+    pointer-events: none;
 }
 
-.scroll-top-btn.visible {
+.global-floating-hub.scrolled .scroll-top-btn {
     opacity: 1;
     visibility: visible;
     transform: translateY(0) scale(1);
+    pointer-events: auto;
 }
 
 /* Global Notifications Overlay Panel */
 .global-notif-panel {
-    position: fixed;
-    bottom: 86px;
-    right: 26px;
+    position: absolute;
+    bottom: calc(100% + 14px);
+    right: 0;
     width: 360px;
     max-width: calc(100vw - 32px);
     max-height: 480px;
@@ -3886,6 +3898,7 @@ html, body {
     transform: translateY(14px) scale(0.95);
     transform-origin: bottom right;
     transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    pointer-events: auto;
 }
 
 .global-notif-panel.open {
@@ -3895,7 +3908,7 @@ html, body {
 }
 
 .notif-panel-header {
-    padding: 16px 18px;
+    padding: 14px 18px;
     background: rgba(255, 255, 255, 0.025);
     border-bottom: 1px solid rgba(255, 255, 255, 0.07);
     display: flex;
@@ -3905,7 +3918,7 @@ html, body {
 
 .notif-panel-header h4 {
     margin: 0;
-    font-size: 1rem;
+    font-size: 0.95rem;
     font-weight: 700;
     color: #fff;
     display: flex;

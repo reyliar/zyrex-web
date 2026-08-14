@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zyrex | Settings</title>
     <link rel="icon" type="image/png" href="/assets/content.png">
-    <link rel="stylesheet" href="css/style.css?v=24">
+    <link rel="stylesheet" href="css/style.css?v=42">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
@@ -1508,21 +1508,36 @@
                     </div>
 
                     <div class="card">
-                        <h4 style="margin-bottom:12px; display:flex; align-items:center; gap:8px"><i class="fas fa-envelope" style="color:var(--cherry-light)"></i> Notifications & Community</h4>
-                        <p style="font-size:0.82rem;color:var(--text-muted);line-height:1.5;margin-bottom:18px">Configure how you receive updates and communications from Zyrex.</p>
+                        <h4 style="margin-bottom:12px; display:flex; align-items:center; gap:8px"><i class="fas fa-bell" style="color:var(--cherry-light)"></i> Live Notifications & Alerts</h4>
+                        <p style="font-size:0.82rem;color:var(--text-muted);line-height:1.5;margin-bottom:18px">Choose which types of live alerts you want to receive or enable Do Not Disturb.</p>
                         
                         <div style="display:flex; flex-direction:column; gap:12px">
+                            <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 12px; background:rgba(255,43,82,0.06); border:1px solid rgba(255,43,82,0.2); border-radius:10px; margin-bottom:4px">
+                                <div>
+                                    <div style="font-size:0.84rem; font-weight:700; color:#fff"><i class="fas fa-moon" style="color:var(--cherry-neon); margin-right:6px"></i> Do Not Disturb (DND)</div>
+                                    <small style="color:var(--text-muted); font-size:0.75rem">Mute and hide all live notification popups and badges</small>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" id="notifDND" onchange="saveSettingsNotifPreferences()">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+
                             <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:0.82rem; color:var(--text-muted)">
-                                <input type="checkbox" id="notifyEmail" checked style="accent-color:var(--cherry-light)">
-                                Email updates on preset releases
+                                <input type="checkbox" id="notifPresets" checked style="accent-color:var(--cherry-light)" onchange="saveSettingsNotifPreferences()">
+                                New Presets, Scenepacks & Media
                             </label>
                             <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:0.82rem; color:var(--text-muted)">
-                                <input type="checkbox" id="notifyDiscord" checked style="accent-color:var(--cherry-light)">
-                                Webhook push notifications
+                                <input type="checkbox" id="notifPlugins" checked style="accent-color:var(--cherry-light)" onchange="saveSettingsNotifPreferences()">
+                                New Plugins, Software & Tools
                             </label>
                             <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:0.82rem; color:var(--text-muted)">
-                                <input type="checkbox" id="notifyNewsletter" checked style="accent-color:var(--cherry-light)">
-                                Monthly newsletter digests
+                                <input type="checkbox" id="notifReplies" checked style="accent-color:var(--cherry-light)" onchange="saveSettingsNotifPreferences()">
+                                Comment Replies (from Web & Discord)
+                            </label>
+                            <label style="display:flex; align-items:center; gap:10px; cursor:pointer; font-size:0.82rem; color:var(--text-muted)">
+                                <input type="checkbox" id="notifAnnouncements" checked style="accent-color:var(--cherry-light)" onchange="saveSettingsNotifPreferences()">
+                                Announcements & Community Updates
                             </label>
                         </div>
                     </div>
@@ -2161,6 +2176,34 @@
             localStorage.setItem('zyrex_cookie_consent', JSON.stringify(preferences));
             alert("Cookie and privacy settings saved successfully!");
         }
+
+        function loadSettingsNotifPreferences() {
+            try {
+                const raw = localStorage.getItem('zyrex_notif_prefs');
+                const prefs = raw ? JSON.parse(raw) : { dnd: false, presets: true, plugins: true, replies: true, announcements: true };
+                if (document.getElementById('notifDND')) document.getElementById('notifDND').checked = !!prefs.dnd;
+                if (document.getElementById('notifPresets')) document.getElementById('notifPresets').checked = prefs.presets !== false;
+                if (document.getElementById('notifPlugins')) document.getElementById('notifPlugins').checked = prefs.plugins !== false;
+                if (document.getElementById('notifReplies')) document.getElementById('notifReplies').checked = prefs.replies !== false;
+                if (document.getElementById('notifAnnouncements')) document.getElementById('notifAnnouncements').checked = prefs.announcements !== false;
+            } catch(e) {}
+        }
+
+        function saveSettingsNotifPreferences() {
+            const prefs = {
+                dnd: !!document.getElementById('notifDND')?.checked,
+                presets: !!document.getElementById('notifPresets')?.checked,
+                plugins: !!document.getElementById('notifPlugins')?.checked,
+                replies: !!document.getElementById('notifReplies')?.checked,
+                announcements: !!document.getElementById('notifAnnouncements')?.checked,
+                updated_at: Date.now()
+            };
+            localStorage.setItem('zyrex_notif_prefs', JSON.stringify(prefs));
+            if (typeof window.refreshGlobalNotifications === 'function') {
+                window.refreshGlobalNotifications();
+            }
+        }
+        document.addEventListener('DOMContentLoaded', loadSettingsNotifPreferences);
 
         // Render profile card in global header banner
         function renderSidebarProfile(user) {
@@ -3296,5 +3339,6 @@
             return JSON.stringify(String(value ?? ''));
         }
     </script>
+    <script src="js/script.js?v=42"></script>
 </body>
 </html>

@@ -615,6 +615,17 @@ window.showToast = function(title, message, type = 'success') {
 
 /* ===================== GLOBAL NOTIFICATIONS & SCROLL-TO-TOP HUB ===================== */
 (function initGlobalFloatingHub() {
+    let cachedLiveNotifs = [];
+
+    function getNotifPrefs() {
+        try {
+            const raw = localStorage.getItem('zyrex_notif_prefs');
+            return raw ? JSON.parse(raw) : { dnd: false, presets: true, plugins: true, replies: true, announcements: true };
+        } catch(e) {
+            return { dnd: false, presets: true, plugins: true, replies: true, announcements: true };
+        }
+    }
+
     function setupHub() {
         if (document.getElementById('globalFloatingHub')) return;
         if (!document.body) {
@@ -622,46 +633,45 @@ window.showToast = function(title, message, type = 'success') {
             return;
         }
 
-        // Create Panel
-        const panel = document.createElement('div');
-        panel.id = 'globalNotifPanel';
-        panel.className = 'global-notif-panel';
-        panel.innerHTML = `
-            <div class="notif-panel-header">
-                <h4><i class="fas fa-bell" style="color:var(--cherry-neon)"></i> Notifications <span class="notif-bubble-badge" id="panelNotifBadge" style="position:static;display:inline-flex;margin-left:4px">3</span></h4>
-                <div class="notif-panel-actions">
-                    <button class="notif-header-act-btn" onclick="window.markAllNotifsRead()" title="Mark all as read"><i class="fas fa-check-double"></i> Read All</button>
-                    <button class="notif-header-act-btn" onclick="window.toggleGlobalNotifPanel()" title="Close"><i class="fas fa-times"></i></button>
-                </div>
-            </div>
-            <div class="notif-panel-body" id="globalNotifList"></div>
-        `;
-        document.body.appendChild(panel);
-
-        // Create Floating Action Buttons (Notifications & Scroll to Top)
+        // Create Floating Action Container with Panel inside for perfect anchoring
         const hub = document.createElement('div');
         hub.id = 'globalFloatingHub';
         hub.className = 'global-floating-hub';
         hub.innerHTML = `
-            <button id="globalNotifBtn" class="floating-hub-btn" onclick="window.toggleGlobalNotifPanel()" title="Notifications" aria-label="Notifications">
-                <i class="fas fa-bell"></i>
-                <span class="notif-bubble-badge" id="floatingNotifBadge">3</span>
-            </button>
             <button id="globalScrollTopBtn" class="floating-hub-btn scroll-top-btn" onclick="window.scrollToTopSmooth()" title="Back to Top" aria-label="Back to Top">
                 <i class="fas fa-arrow-up"></i>
             </button>
+            <button id="globalNotifBtn" class="floating-hub-btn notif-hub-btn" onclick="window.toggleGlobalNotifPanel(event)" title="Notifications" aria-label="Notifications">
+                <i class="fas fa-bell"></i>
+                <span class="notif-bubble-badge" id="floatingNotifBadge" style="display:none">0</span>
+            </button>
+            <div id="globalNotifPanel" class="global-notif-panel">
+                <div class="notif-panel-header">
+                    <h4>
+                        <i class="fas fa-bell" style="color:var(--cherry-neon)"></i> Notifications 
+                        <span class="notif-bubble-badge" id="panelNotifBadge" style="position:static;display:none;margin-left:4px">0</span>
+                    </h4>
+                    <div class="notif-panel-actions">
+                        <button class="notif-header-act-btn" onclick="window.toggleDNDQuick()" title="Toggle Do Not Disturb" id="btnQuickDND"><i class="fas fa-moon"></i></button>
+                        <a href="/settings?tab=general" class="notif-header-act-btn" title="Notification Settings"><i class="fas fa-cog"></i></a>
+                        <button class="notif-header-act-btn" onclick="window.markAllNotifsRead()" title="Mark all as read"><i class="fas fa-check-double"></i></button>
+                        <button class="notif-header-act-btn" onclick="window.toggleGlobalNotifPanel(event)" title="Close"><i class="fas fa-times"></i></button>
+                    </div>
+                </div>
+                <div class="notif-panel-body" id="globalNotifList"></div>
+            </div>
         `;
         document.body.appendChild(hub);
 
-        // Scroll listener for back to top button
+        // Smooth scroll listener: glides notification button up when scroll-to-top appears
         function handleScroll() {
-            const btn = document.getElementById('globalScrollTopBtn');
-            if (btn) {
+            const h = document.getElementById('globalFloatingHub');
+            if (h) {
                 const scrollY = window.pageYOffset || document.documentElement.scrollTop || window.scrollY || 0;
                 if (scrollY > 180) {
-                    btn.classList.add('visible');
+                    h.classList.add('scrolled');
                 } else {
-                    btn.classList.remove('visible');
+                    h.classList.remove('scrolled');
                 }
             }
         }
@@ -678,10 +688,10 @@ window.showToast = function(title, message, type = 'success') {
         });
 
         // Load notifications data
-        renderGlobalNotifications();
+        fetchLiveNotifications();
+        // Background live check every 45s
+        setInterval(fetchLiveNotifications, 45000);
     }
-
-    const defaultNotifs = [];
 
     function getReadIds() {
         try {
@@ -691,14 +701,70 @@ window.showToast = function(title, message, type = 'success') {
         }
     }
 
+    async function fetchLiveNotifications() {
+        const prefs = getNotifPrefs();
+        try {
+            let userId = '';
+            try {
+                const sessRaw = sessionStorage.getItem('zyrex_session_user');
+                if (sessRaw) userId = JSON.parse(sessRaw).id || '';
+            } catch(e) {}
+
+            const res = await fetch('/api/notifications' + (userId ? '?user_id=' + encodeURIComponent(userId) : ''));
+            if (res.ok) {
+                const data = await res.json();
+                if (data.success && Array.isArray(data.notifications)) {
+                    cachedLiveNotifs = data.notifications;
+                }
+            }
+        } catch(e) {
+            console.warn('Live notifications fetch failed:', e);
+        }
+        renderGlobalNotifications();
+    }
+
     function renderGlobalNotifications() {
         const list = document.getElementById('globalNotifList');
         const badge1 = document.getElementById('floatingNotifBadge');
         const badge2 = document.getElementById('panelNotifBadge');
+        const dndBtn = document.getElementById('btnQuickDND');
         if (!list) return;
 
+        const prefs = getNotifPrefs();
+        if (dndBtn) {
+            dndBtn.style.color = prefs.dnd ? 'var(--cherry-neon)' : 'var(--text-sub)';
+            dndBtn.title = prefs.dnd ? 'Do Not Disturb is ON (Click to turn off)' : 'Enable Do Not Disturb';
+        }
+
+        // If DND is enabled, hide all badges and show DND state
+        if (prefs.dnd) {
+            if (badge1) badge1.style.display = 'none';
+            if (badge2) badge2.style.display = 'none';
+            list.innerHTML = `
+                <div style="text-align:center;padding:32px 16px;color:var(--text-sub);font-size:0.84rem">
+                    <i class="fas fa-moon" style="font-size:2rem;margin-bottom:10px;display:block;color:var(--cherry-neon);opacity:0.85"></i>
+                    <div style="font-weight:700;color:#fff;margin-bottom:4px">Do Not Disturb is Active</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:14px">Live notifications and badges are muted.</div>
+                    <button class="notif-header-act-btn" onclick="window.toggleDNDQuick()" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,43,82,0.15);color:#fff;border:1px solid rgba(255,43,82,0.35);padding:6px 14px;border-radius:8px">
+                        <i class="fas fa-bell"></i> Turn Off DND
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        // Filter notifications according to user category preferences
+        const filteredNotifs = cachedLiveNotifs.filter(n => {
+            const cat = n.category || 'announcement';
+            if (cat === 'preset' && prefs.presets === false) return false;
+            if (cat === 'plugin' && prefs.plugins === false) return false;
+            if (cat === 'reply' && prefs.replies === false) return false;
+            if (cat === 'announcement' && prefs.announcements === false) return false;
+            return true;
+        });
+
         const readIds = getReadIds();
-        const unreadCount = defaultNotifs.filter(n => !readIds.includes(n.id)).length;
+        const unreadCount = filteredNotifs.filter(n => !readIds.includes(n.id)).length;
 
         if (badge1) {
             badge1.textContent = unreadCount;
@@ -709,14 +775,20 @@ window.showToast = function(title, message, type = 'success') {
             badge2.style.display = unreadCount > 0 ? 'inline-flex' : 'none';
         }
 
-        if (defaultNotifs.length === 0) {
-            list.innerHTML = `<div style="text-align:center;padding:36px 16px;color:rgba(255,255,255,0.45);font-size:0.84rem"><i class="fas fa-bell-slash" style="font-size:1.8rem;margin-bottom:10px;opacity:0.35;display:block;color:var(--cherry-neon)"></i><div>No new notifications</div></div>`;
+        if (filteredNotifs.length === 0) {
+            list.innerHTML = `
+                <div style="text-align:center;padding:36px 16px;color:rgba(255,255,255,0.45);font-size:0.84rem">
+                    <i class="fas fa-bell-slash" style="font-size:1.8rem;margin-bottom:10px;opacity:0.35;display:block;color:var(--cherry-neon)"></i>
+                    <div>No new notifications</div>
+                </div>
+            `;
             return;
         }
 
-        list.innerHTML = defaultNotifs.map(n => {
+        list.innerHTML = filteredNotifs.map(n => {
             const isUnread = !readIds.includes(n.id);
-            const iconClass = n.iconBrand ? `fab ${n.icon}` : `fas ${n.icon}`;
+            const iconClass = n.icon_brand ? `fab ${n.icon}` : `fas ${n.icon}`;
+            const timeAgo = formatNotifTime(n.created_at);
             return `
                 <a href="${n.link}" class="notif-item ${isUnread ? 'unread' : ''}" onclick="window.markNotifRead('${n.id}')">
                     <div class="notif-icon-circle" style="background:${n.bg};color:${n.color}">
@@ -724,21 +796,58 @@ window.showToast = function(title, message, type = 'success') {
                     </div>
                     <div class="notif-content-wrap">
                         <div class="notif-title-row">
-                            <span class="notif-title">${n.title}</span>
-                            <span class="notif-time">${n.time}</span>
+                            <span class="notif-title">${escapeHtmlNotif(n.title)}</span>
+                            <span class="notif-time">${timeAgo}</span>
                         </div>
-                        <div class="notif-desc">${n.desc}</div>
+                        <div class="notif-desc">${escapeHtmlNotif(n.desc)}</div>
                     </div>
                 </a>
             `;
         }).join('');
     }
 
-    window.toggleGlobalNotifPanel = function() {
+    function formatNotifTime(isoDate) {
+        if (!isoDate) return 'Just now';
+        try {
+            const date = new Date(isoDate.endsWith('Z') ? isoDate : isoDate + 'Z');
+            const sec = Math.floor((new Date() - date) / 1000);
+            if (isNaN(sec) || sec < 40) return 'Just now';
+            if (sec < 60) return `${sec}s ago`;
+            const min = Math.floor(sec / 60);
+            if (min < 60) return `${min}m ago`;
+            const hrs = Math.floor(min / 60);
+            if (hrs < 24) return `${hrs}h ago`;
+            return `${Math.floor(hrs / 24)}d ago`;
+        } catch(e) {
+            return 'Recently';
+        }
+    }
+
+    function escapeHtmlNotif(str) {
+        if (!str) return '';
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    window.toggleGlobalNotifPanel = function(e) {
+        if (e) e.stopPropagation();
         const panel = document.getElementById('globalNotifPanel');
         if (panel) {
             panel.classList.toggle('open');
+            if (panel.classList.contains('open')) {
+                renderGlobalNotifications();
+            }
         }
+    };
+
+    window.toggleDNDQuick = function() {
+        const prefs = getNotifPrefs();
+        prefs.dnd = !prefs.dnd;
+        localStorage.setItem('zyrex_notif_prefs', JSON.stringify(prefs));
+        renderGlobalNotifications();
+    };
+
+    window.refreshGlobalNotifications = function() {
+        renderGlobalNotifications();
     };
 
     window.scrollToTopSmooth = function() {
@@ -758,7 +867,7 @@ window.showToast = function(title, message, type = 'success') {
     };
 
     window.markAllNotifsRead = function() {
-        const allIds = defaultNotifs.map(n => n.id);
+        const allIds = cachedLiveNotifs.map(n => n.id);
         localStorage.setItem('zyrex_read_notifs', JSON.stringify(allIds));
         renderGlobalNotifications();
     };
