@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="/css/style.css?v=26">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit" async defer></script>
     <style>
         :root {
             --cherry-neon: #ff2b52;
@@ -583,6 +584,24 @@
             font-weight: 600;
         }
 
+        .turnstile-box-clean {
+            display: inline-block;
+            height: 65px;
+            max-height: 65px;
+            width: 300px;
+            max-width: 100%;
+            overflow: hidden;
+            border-radius: 8px;
+            background: #222;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+            vertical-align: middle;
+        }
+        .turnstile-box-clean iframe {
+            max-height: 65px !important;
+            border: none !important;
+        }
+
         @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
         @media (max-width: 900px) {
@@ -1094,7 +1113,10 @@
                             </div>
                             <textarea id="mainCommentText" class="comment-textarea" placeholder="Write a comment... (Enter to send, Shift+Enter for new line)" required maxlength="1000" onkeydown="handleCommentKeydown(event, this)"></textarea>
                             
-                            <div style="display:flex;align-items:center;justify-content:flex-end;margin-top:10px;gap:8px">
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px;flex-wrap:wrap;gap:12px">
+                                <div class="turnstile-box-clean">
+                                    <div id="cfTurnstileWidget"></div>
+                                </div>
                                 <button type="submit" id="btnSubmitComment" class="comment-btn-submit">
                                     <i class="fas fa-paper-plane"></i> Post Comment
                                 </button>
@@ -1103,6 +1125,7 @@
                     </div>
                 </form>
             `;
+            mountTurnstile();
         } else {
             const redirectUrl = encodeURIComponent(window.location.pathname + window.location.search);
             box.innerHTML = `
@@ -1115,6 +1138,30 @@
                     </a>
                 </div>
             `;
+        }
+    }
+
+    window.turnstileToken = null;
+    window.turnstileWidgetId = null;
+
+    function mountTurnstile() {
+        const el = document.getElementById('cfTurnstileWidget');
+        if (!el) return;
+        el.innerHTML = '';
+        if (window.turnstile) {
+            try {
+                window.turnstileWidgetId = turnstile.render('#cfTurnstileWidget', {
+                    sitekey: '1x00000000000000000000AA',
+                    theme: 'dark',
+                    callback: function(token) {
+                        window.turnstileToken = token;
+                    }
+                });
+            } catch(e) {
+                console.error('Turnstile render error:', e);
+            }
+        } else {
+            setTimeout(mountTurnstile, 200);
         }
     }
 
@@ -1254,6 +1301,13 @@
         const btn = document.getElementById('btnSubmitComment');
         if (!ta || !ta.value.trim() || !currentCommentsPresetId) return;
 
+        let cfToken = window.turnstileToken;
+        if (window.turnstile && !cfToken && window.turnstileWidgetId !== null) {
+            try {
+                cfToken = turnstile.getResponse(window.turnstileWidgetId) || turnstile.getResponse();
+            } catch(e) {}
+        }
+
         btn.disabled = true;
         const origText = btn.innerHTML;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Posting...';
@@ -1264,12 +1318,17 @@
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     preset_id: currentCommentsPresetId,
-                    content: ta.value.trim()
+                    content: ta.value.trim(),
+                    turnstile_token: cfToken
                 })
             });
             const data = await res.json();
             if (res.ok && data.success) {
                 ta.value = '';
+                if (window.turnstile && window.turnstileWidgetId !== null) {
+                    try { turnstile.reset(window.turnstileWidgetId); } catch(e) {}
+                    window.turnstileToken = null;
+                }
                 await loadCommentsData(currentCommentsPresetId);
             } else {
                 alert(data.error || 'Failed to post comment');
