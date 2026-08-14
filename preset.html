@@ -1200,7 +1200,7 @@
                         </div>
                         <span class="comment-time">${timeAgo}</span>
                     </div>
-                    <div class="comment-content">${escapeHtml(c.content)}</div>
+                    <div class="comment-content" id="commentText-${c.id}">${escapeHtml(c.content)}</div>
                     <div class="comment-actions">
                         ${currentUserData ? `
                             <button class="comment-act-btn reply-btn" onclick="toggleReplyBox('${c.id}')">
@@ -1208,10 +1208,30 @@
                             </button>
                         ` : ''}
                         ${isCurrentAuthor ? `
+                            <button class="comment-act-btn edit-btn" onclick="toggleEditBox('${c.id}')">
+                                <i class="fas fa-pen-to-square"></i> Edit
+                            </button>
                             <button class="comment-act-btn delete-btn" onclick="deleteComment('${c.id}')">
                                 <i class="fas fa-trash-can"></i> Delete
                             </button>
                         ` : ''}
+                    </div>
+
+                    <!-- INLINE EDIT BOX -->
+                    <div id="editBox-${c.id}" class="reply-box-inline" style="display:none;background:rgba(255,43,82,0.05);border-color:rgba(255,43,82,0.25)">
+                        <form onsubmit="handleEditSubmit(event, '${c.id}')" style="margin:0">
+                            <div style="font-size:0.75rem;color:var(--cherry-neon);margin-bottom:6px;font-weight:600"><i class="fas fa-pen"></i> Edit comment:</div>
+                            <textarea id="editText-${c.id}" class="comment-textarea" style="min-height:55px;font-size:0.85rem" required maxlength="1000" onkeydown="handleEditKeydown(event, '${c.id}')">${escapeHtml(c.content)}</textarea>
+                            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px">
+                                <span id="editCooldownNotice-${c.id}" style="font-size:0.72rem;color:#ff6b8b"></span>
+                                <div style="display:flex;gap:8px">
+                                    <button type="button" class="comment-act-btn" onclick="toggleEditBox('${c.id}')">Cancel</button>
+                                    <button type="submit" id="btnSaveEdit-${c.id}" class="comment-btn-submit" style="padding:6px 16px;font-size:0.78rem">
+                                        <i class="fas fa-check"></i> Save
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
                     </div>
 
                     <!-- INLINE REPLY BOX -->
@@ -1232,6 +1252,78 @@
             </div>
         `;
     }
+
+    const commentEditTimers = {};
+
+    window.toggleEditBox = function(commentId) {
+        const box = document.getElementById('editBox-' + commentId);
+        if (!box) return;
+        const isHidden = box.style.display === 'none';
+        box.style.display = isHidden ? 'block' : 'none';
+        if (isHidden) {
+            const ta = document.getElementById('editText-' + commentId);
+            if (ta) {
+                ta.focus();
+                ta.setSelectionRange(ta.value.length, ta.value.length);
+            }
+        }
+    };
+
+    window.handleEditKeydown = function(e, commentId) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            const form = e.target.closest('form');
+            if (form) {
+                if (typeof form.requestSubmit === 'function') form.requestSubmit();
+                else form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
+            }
+        }
+    };
+
+    window.handleEditSubmit = async function(e, commentId) {
+        e.preventDefault();
+        const ta = document.getElementById('editText-' + commentId);
+        const btn = document.getElementById('btnSaveEdit-' + commentId);
+        const notice = document.getElementById('editCooldownNotice-' + commentId);
+        if (!ta || !ta.value.trim() || !commentId) return;
+
+        // Check local 5-second cooldown
+        const now = Date.now();
+        const lastEdit = commentEditTimers[commentId] || 0;
+        if (now - lastEdit < 5000) {
+            const rem = Math.ceil((5000 - (now - lastEdit)) / 1000);
+            if (notice) notice.textContent = `Lütfen tekrar düzenlemek için ${rem}s bekleyin.`;
+            return;
+        }
+
+        btn.disabled = true;
+        const origHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+        try {
+            const res = await fetch(`/api/comments/${encodeURIComponent(commentId)}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    id: commentId,
+                    content: ta.value.trim()
+                })
+            });
+            const data = await res.json();
+            if (res.ok && data.success) {
+                commentEditTimers[commentId] = Date.now();
+                toggleEditBox(commentId);
+                await loadCommentsData(currentCommentsPresetId);
+            } else {
+                alert(data.error || 'Failed to update comment');
+            }
+        } catch(err) {
+            alert('Failed to edit comment. Please try again.');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = origHtml;
+        }
+    };
 
     window.handleCommentKeydown = function(e, textarea) {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -1340,11 +1432,10 @@
             if (res.ok) {
                 await loadCommentsData(currentCommentsPresetId);
             } else {
-                const data = await res.json();
-                alert(data.error || 'Could not delete comment');
+                alert('Failed to delete comment.');
             }
         } catch(e) {
-            alert('Failed to delete comment');
+            alert('Error deleting comment.');
         }
     };
 
@@ -1413,10 +1504,22 @@
         if (target) target.classList.add('active');
     }
 
+    const dlCooldownMap = {};
+
     window.genPresetToken = function(e, pid, fp) {
         e.preventDefault();
         const b = document.getElementById("dlBtn");
         if (!b) return;
+
+        // 15-second rate limiting check on client
+        const now = Date.now();
+        const lastGen = dlCooldownMap[pid] || 0;
+        if (now - lastGen < 15000) {
+            const rem = Math.ceil((15000 - (now - lastGen)) / 1000);
+            alert(`Aynı preset için tekrar indirme linki oluşturmadan önce lütfen ${rem} saniye bekleyin.`);
+            return;
+        }
+
         b.style.pointerEvents = "none";
         b.style.opacity = "0.65";
         b.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating Download...';
@@ -1428,18 +1531,40 @@
 
         fetch("/api/downloads/request-token/" + encodeURIComponent(pid) + "?" + q.toString(), { credentials: "include" })
             .then(res => res.json().then(data => {
-                b.style.pointerEvents = "";
-                b.style.opacity = "";
-                b.innerHTML = '<i class="fas fa-bolt"></i> Instant Download';
                 if (!res.ok || !data.success) {
+                    b.style.pointerEvents = "";
+                    b.style.opacity = "";
+                    b.innerHTML = '<i class="fas fa-bolt"></i> Instant Download';
                     if (targetTab) targetTab.close();
                     if (res.status === 401) {
                         window.location.href = "/api/login?redirect=" + encodeURIComponent(location.pathname + location.search);
+                    } else if (res.status === 429) {
+                        alert(data.error || "Please wait before requesting another download link.");
                     } else {
                         alert(data.error || "Could not generate download link");
                     }
                     return;
                 }
+
+                // Success: Start 15s cooldown
+                dlCooldownMap[pid] = Date.now();
+                let countdown = 15;
+                b.style.pointerEvents = "none";
+                b.style.opacity = "0.7";
+                b.innerHTML = `<i class="fas fa-clock"></i> Wait (${countdown}s)`;
+
+                const timer = setInterval(() => {
+                    countdown--;
+                    if (countdown <= 0) {
+                        clearInterval(timer);
+                        b.style.pointerEvents = "";
+                        b.style.opacity = "";
+                        b.innerHTML = '<i class="fas fa-bolt"></i> Instant Download';
+                    } else {
+                        b.innerHTML = `<i class="fas fa-clock"></i> Wait (${countdown}s)`;
+                    }
+                }, 1000);
+
                 const targetUrl = data.ad_url || data.short_url || data.url;
                 if (targetTab && targetUrl) targetTab.location.href = targetUrl;
                 else if (targetUrl) window.location.href = targetUrl;

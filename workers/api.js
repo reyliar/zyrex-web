@@ -26,6 +26,7 @@ const CATEGORY_INFO = {
 let sftpgoToken = null;
 let sftpgoTokenExpiry = 0;
 const downloadCounts = new Map();  // productId -> count (stateless — reset on cold start, acceptable)
+const downloadCooldownMap = new Map();  // user:product -> timestamp (15s cooldown enforcement)
 const usedTokens = new Set();  // single-use token enforcement (in-memory cache, backed by R2)
 const TOKEN_EXPIRY = 600;  // 10 minutes
 
@@ -3055,6 +3056,20 @@ async function storeAndProxyImage(env, imageUrl) {
         
         const productId = path.split("/api/downloads/request-token/")[1];
         if (!productId) return json({ error: "Product ID required" }, 400);
+        
+        // 15-Second Download Link Rate Limiter per User & Preset
+        const dlRateKey = `dl_cd:${session.userId}:${productId}`;
+        const nowMs = Date.now();
+        const lastGenTime = downloadCooldownMap.get(dlRateKey);
+        if (lastGenTime && (nowMs - lastGenTime < 15000)) {
+          const remainingSec = Math.ceil((15000 - (nowMs - lastGenTime)) / 1000);
+          return json({
+            success: false,
+            error: `Aynı preset için tekrar indirme linki oluşturmadan önce lütfen ${remainingSec} saniye bekleyin.`,
+            cooldown: remainingSec
+          }, 429);
+        }
+        downloadCooldownMap.set(dlRateKey, nowMs);
         
         let r2Prefix = "";
         let productHint = null;
