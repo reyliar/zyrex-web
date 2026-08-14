@@ -1,5 +1,13 @@
 /* ===================== PRESETS GRID RENDERER ===================== */
 
+window.DEFAULT_AVATAR = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2EwYTBiMCI+PHBhdGggZD0iTTEyIDEyYzIuMjEgMCA0LTEuNzkgNC00cy0xLjc5LTQtNC00LTQgMS43OS00IDQgMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYyaDE2di0yYzAtMi42Ni01LjMzLTQtOC00eiIvPjwvc3ZnPg==";
+
+window.handleAvatarError = function(img) {
+    if (!img) return;
+    img.onerror = null;
+    img.src = window.DEFAULT_AVATAR;
+};
+
 // Cache helpers for products data
 var PRODUCTS_CACHE_KEY = 'zyrex_products_cache';
 var PRODUCTS_CACHE_TTL = 15 * 60 * 1000; // 15 minutes
@@ -294,8 +302,7 @@ function renderPresets(items) {
         const descriptionText = item.description || item.desc || '';
         const shortDesc = descriptionText ? descriptionText.substring(0, 80) + (descriptionText.length > 80 ? '...' : '') : '';
         const avatarUrl = item.creator_avatar || '';
-        const unknownSvg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a0a0b0'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E";
-        const avatarHtml = avatarUrl ? `<img src="${avatarUrl}" alt="" onerror="this.onerror=null;this.src='${unknownSvg}'">` : `<img src="${unknownSvg}" alt="" style="opacity:0.6">`;
+        const avatarHtml = avatarUrl ? `<img src="${avatarUrl}" alt="" onerror="window.handleAvatarError(this)">` : `<img src="${window.DEFAULT_AVATAR}" alt="" style="opacity:0.6">`;
         const nickname = item.creator_nickname || item.author_name || 'Zyrex';
         const dlCount = downloadCounts[item.id] || item.downloads || 0;
         const likeCount = likeCounts[item.id] || 0;

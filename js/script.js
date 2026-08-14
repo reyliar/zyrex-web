@@ -1,3 +1,11 @@
+/* ===================== GLOBAL AVATAR ERROR HANDLER ===================== */
+window.DEFAULT_AVATAR = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2EwYTBiMCI+PHBhdGggZD0iTTEyIDEyYzIuMjEgMCA0LTEuNzkgNC00cy0xLjc5LTQtNC00LTQgMS43OS00IDQgMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYyaDE2di0yYzAtMi42Ni01LjMzLTQtOC00eiIvPjwvc3ZnPg==";
+window.handleAvatarError = function(img) {
+    if (!img) return;
+    img.onerror = null;
+    img.src = window.DEFAULT_AVATAR;
+};
+
 /* ===================== NAVBAR SCROLL EFFECT ===================== */
 const navbar = document.querySelector('.navbar');
 const navLinks = document.querySelectorAll('.nav-links a');

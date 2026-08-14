@@ -373,6 +373,14 @@
     <script src="/js/presets-data.js?v=5"></script>
     <script src="/js/plugins-data.js?v=5"></script>
     <script>
+        window.DEFAULT_AVATAR = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2EwYTBiMCI+PHBhdGggZD0iTTEyIDEyYzIuMjEgMCA0LTEuNzkgNC00cy0xLjc5LTQtNC00LTQgMS43OS00IDQgMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYyaDE2di0yYzAtMi42Ni01LjMzLTQtOC00eiIvPjwvc3ZnPg==";
+
+        window.handleAvatarError = function(img) {
+            if (!img) return;
+            img.onerror = null;
+            img.src = window.DEFAULT_AVATAR;
+        };
+
         const params = new URLSearchParams(window.location.search);
         const token = params.get('token');
         const productId = params.get('id');
@@ -595,11 +603,9 @@
             html += '<h1 class="product-title">' + p.name + '</h1>';
             html += '<div class="product-meta"><i class="fas ' + ic + '"></i> ' + cat + ' <span class="sep"></span> <i class="fas fa-download"></i> <span id="dlCount">0</span> downloads</div>';
 
-            const unknownSvg = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23a0a0b0'%3E%3Cpath d='M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z'/%3E%3C/svg%3E";
-
             // Creator
             html += '<div class="creator-row">';
-            html += av ? '<img src="' + av + '" alt="" onerror="this.onerror=null;this.src=\'' + unknownSvg + '\'">' : '<img src="' + unknownSvg + '" alt="" style="width:36px;height:36px;border-radius:50%;opacity:0.6">';
+            html += av ? '<img src="' + av + '" alt="" onerror="window.handleAvatarError(this)">' : '<img src="' + window.DEFAULT_AVATAR + '" alt="" style="width:36px;height:36px;border-radius:50%;opacity:0.6">';
             html += '<strong>' + nick + '</strong>';
             if (p.creator_social_url) html += '<a href="' + p.creator_social_url + '" target="_blank"><i class="fas fa-external-link-alt"></i> Profile</a>';
             html += '</div>';
@@ -607,7 +613,7 @@
             // Uploader
             if (uploaderName) {
                 html += '<div class="uploader-row">';
-                html += displayUploaderAv ? '<img src="' + displayUploaderAv + '" alt="" onerror="this.onerror=null;this.src=\'' + unknownSvg + '\'">' : '<div class="uav-fb"><i class="fab fa-discord"></i></div>';
+                html += displayUploaderAv ? '<img src="' + displayUploaderAv + '" alt="" onerror="window.handleAvatarError(this)">' : '<div class="uav-fb"><i class="fab fa-discord"></i></div>';
                 html += '<div><strong>' + uploaderName + '</strong><span>Community Uploader</span></div>';
                 html += '</div>';
             }
