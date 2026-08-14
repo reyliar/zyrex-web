@@ -41,6 +41,8 @@
             align-items: center;
             justify-content: center;
             overflow-x: hidden;
+            user-select: none;
+            -webkit-user-select: none;
         }
         .bg-grid {
             position: fixed; inset:0; pointer-events: none; z-index:0;
@@ -710,14 +712,18 @@
                             var fObj = child.fileObj;
                             var sz = fObj.size ? (fObj.size > 1048576 ? (fObj.size/1048576).toFixed(1)+' MB' : (fObj.size/1024).toFixed(1)+' KB') : '--';
                             var ext = child.name.split('.').pop().toLowerCase();
-                            var iconMap = {mp4:'fa-file-video',mov:'fa-file-video',webm:'fa-file-video',mp3:'fa-file-audio',wav:'fa-file-audio',aac:'fa-file-audio',png:'fa-file-image',jpg:'fa-file-image',jpeg:'fa-file-image',gif:'fa-file-image',webp:'fa-file-image',zip:'fa-file-zipper',rar:'fa-file-zipper','7z':'fa-file-zipper',pdf:'fa-file-pdf',aep:'fa-file-video',prproj:'fa-file-video',psd:'fa-file-image'};
+                            var iconMap = {mp4:'fa-file-video',mov:'fa-file-video',webm:'fa-file-video',mp3:'fa-file-audio',wav:'fa-file-audio',aac:'fa-file-audio',png:'fa-file-image',jpg:'fa-file-image',jpeg:'fa-file-image',gif:'fa-file-image',webp:'fa-file-image',zip:'fa-file-zipper',rar:'fa-file-zipper','7z':'fa-file-zipper',pdf:'fa-file-pdf',aep:'fa-file-video',prproj:'fa-file-video',psd:'fa-file-image',ffx:'fa-sliders'};
                             var fi = iconMap[ext] || 'fa-file-lines';
                             var isImage = ['png','jpg','jpeg','gif','webp'].includes(ext);
+                            var customIcon = getFileExtIcon(child.name);
+                            var iconDisplay = customIcon 
+                                ? '<img src="' + customIcon + '" alt="" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;flex-shrink:0" onerror="this.outerHTML=\'<i class=\\\'fas ' + fi + '\\\'></i>\'">' 
+                                : '<i class="fas ' + fi + '"></i>';
                             
                             tHtml += '<div class="file-item" style="padding-left: ' + (indent + 12) + 'px" data-filename="' + child.fullName.replace(/"/g, '&quot;') + '" data-filesize="' + sz + '" data-fileicon="' + fi + '" data-isimage="' + (isImage ? '1' : '0') + '" data-sizebytes="' + (fObj.size||0) + '">';
                             tHtml += '<div class="fl">';
                             tHtml += '<input type="checkbox" class="file-cb" checked onchange="event.stopPropagation();updateSelectedCount();updateFolderCheckboxState(this)" data-filename="' + child.fullName.replace(/"/g, '&quot;') + '">';
-                            tHtml += '<i class="fas ' + fi + '"></i>';
+                            tHtml += iconDisplay;
                             tHtml += '<span title="' + child.name + '">' + child.name + '</span>';
                             tHtml += '</div>';
                             tHtml += '<span class="fs">' + sz + '</span>';
@@ -735,7 +741,7 @@
             }
 
             // Always render file preview panel
-            html += '<div class="file-preview-panel" id="filePreviewPanel"><div class="fp-header"><i class="fas fa-eye"></i><span>File Preview</span></div><div class="fp-body"><div class="file-preview-thumb"><i class="fas fa-file-lines fp-icon"></i></div><div class="file-preview-info"><div class="fp-name">Click a file to preview</div><div class="fp-meta"><span><i class="fas fa-hdd"></i> --</span><span><i class="fas fa-tag"></i> --</span></div></div></div></div>';
+            html += '<div class="file-preview-panel" id="filePreviewPanel"><div class="fp-header"><i class="fas fa-eye"></i><span>File Preview</span></div><div class="fp-body"><div class="file-preview-thumb fp-thumb-container"><i class="fas fa-file-lines fp-icon"></i></div><div class="file-preview-info"><div class="fp-name">Click a file to preview</div><div class="fp-meta"><span><i class="fas fa-hdd"></i> --</span><span><i class="fas fa-tag"></i> --</span></div></div></div><div id="fpMediaContainer" style="padding:0 18px 18px;width:100%;display:none"></div></div>';
 
             // Download card
             if (productId || downloadToken) {
@@ -891,7 +897,6 @@
         function initFilePreviewClicks() {
             document.querySelectorAll('.file-item').forEach(function(el) {
                 el.addEventListener('click', function(e) {
-                    // Don't trigger if clicking checkbox or download button
                     if (e.target.closest('.file-cb')) return;
                     var filename = el.dataset.filename;
                     var size = el.dataset.filesize;
@@ -902,79 +907,136 @@
                 });
             });
         }
-        function selectFilePreview(rowEl, filename, size, iconClass, isImage, sizeBytes) {
-            // Deselect previous
+
+        function getFileExtIcon(filename) {
+            var ext = (filename || '').split('.').pop().toLowerCase();
+            var icons = {
+                'ffx': '/assets/ffx.png',
+                'aep': '/assets/Adobe-Icon_Adobe_After_Effects_Filetype_AEP.png',
+                'prproj': '/assets/free-adobe-premiere-pro-file-icon-svg-download-png-3516520.webp',
+                'psd': '/assets/PSD_file_icon.svg.webp'
+            };
+            return icons[ext] || '';
+        }
+
+        async function selectFilePreview(rowEl, filename, size, iconClass, isImage, sizeBytes) {
             document.querySelectorAll('.file-item.file-selected').forEach(function(el) { el.classList.remove('file-selected'); });
+            var panel = document.getElementById('filePreviewPanel');
+            var mediaContainer = document.getElementById('fpMediaContainer');
+            
             if (selectedPreviewFile && selectedPreviewFile.name === filename) {
-                // Clicking same file — deselect
                 selectedPreviewFile = null;
-                document.getElementById('filePreviewPanel').classList.remove('active');
-                document.querySelector('.file-preview-panel .fp-header span').textContent = 'File Preview';
-                document.querySelector('.file-preview-panel .fp-name').textContent = 'Click a file to preview';
-                document.querySelector('.file-preview-panel .fp-meta').innerHTML = '<span><i class="fas fa-hdd"></i> --</span><span><i class="fas fa-tag"></i> --</span>';
-                document.querySelector('.file-preview-thumb').innerHTML = '<i class="fas fa-file-lines fp-icon"></i>';
+                panel.classList.remove('active');
+                panel.querySelector('.fp-header span').textContent = 'File Preview';
+                panel.querySelector('.fp-name').textContent = 'Click a file to preview';
+                panel.querySelector('.fp-meta').innerHTML = '<span><i class="fas fa-hdd"></i> --</span><span><i class="fas fa-tag"></i> --</span>';
+                var thumbEl = panel.querySelector('.fp-thumb-container');
+                if (thumbEl) thumbEl.innerHTML = '<i class="fas fa-file-lines fp-icon"></i>';
+                if (mediaContainer) { mediaContainer.innerHTML = ''; mediaContainer.style.display = 'none'; }
                 return;
             }
-            // Select new
+
             rowEl.classList.add('file-selected');
             selectedPreviewFile = { name: filename, size: size, icon: iconClass, isImage: isImage, sizeBytes: sizeBytes };
             
-            var panel = document.getElementById('filePreviewPanel');
             panel.classList.add('active');
             panel.querySelector('.fp-header span').textContent = 'File Preview — Selected';
             panel.querySelector('.fp-name').textContent = filename;
             panel.querySelector('.fp-meta').innerHTML = '<span><i class="fas fa-hdd"></i> ' + size + '</span><span><i class="fas fa-tag"></i> ' + getFileTypeLabel(filename) + '</span>';
             
-            // Show custom icon based on file extension
-            var thumbEl = panel.querySelector('.file-preview-thumb');
+            var thumbEl = panel.querySelector('.fp-thumb-container') || panel.querySelector('.file-preview-thumb');
+            var ext = (filename || '').split('.').pop().toLowerCase();
             var extIcon = getFileExtIcon(filename);
+
             if (extIcon) {
-                var imgEl = document.createElement('img');
-                imgEl.src = extIcon;
-                imgEl.alt = '';
-                imgEl.style.cssText = 'width:100%;height:100%;object-fit:contain;padding:4px';
-                imgEl.onerror = function() { this.style.display = 'none'; };
-                var fallbackIcon = document.createElement('i');
-                fallbackIcon.className = 'fas ' + iconClass + ' fp-icon';
-                fallbackIcon.style.display = 'none';
-                thumbEl.innerHTML = '';
-                thumbEl.appendChild(imgEl);
-                thumbEl.appendChild(fallbackIcon);
+                thumbEl.innerHTML = '<img src="' + extIcon + '" alt="" style="width:100%;height:100%;object-fit:contain;padding:4px" onerror="this.outerHTML=\'<i class=\\\'fas ' + iconClass + ' fp-icon\\\'></i>\'">';
             } else {
                 thumbEl.innerHTML = '<i class="fas ' + iconClass + ' fp-icon"></i>';
             }
-        }
 
-        function getFileExtIcon(filename) {
-            var ext = filename.split('.').pop().toLowerCase();
-            var icons = {
-                'ffx': 'assets/ffx.png',
-                'aep': 'assets/Adobe-Icon_Adobe_After_Effects_Filetype_AEP.png',
-                'prproj': 'assets/free-adobe-premiere-pro-file-icon-svg-download-png-3516520.webp',
-                'psd': 'assets/PSD_file_icon.svg.webp'
-            };
-            return icons[ext] || '';
+            if (!mediaContainer) {
+                mediaContainer = document.createElement('div');
+                mediaContainer.id = 'fpMediaContainer';
+                mediaContainer.style.cssText = 'padding:0 18px 18px;width:100%';
+                panel.appendChild(mediaContainer);
+            }
+            mediaContainer.innerHTML = '';
+            mediaContainer.style.display = 'none';
+
+            const tokenVal = downloadToken || (new URLSearchParams(window.location.search)).get('token');
+            if (!tokenVal) return;
+
+            const streamUrl = '/api/downloads/download?token=' + encodeURIComponent(tokenVal) + '&file=' + encodeURIComponent(filename);
+
+            // 1. Video preview (protected from saving)
+            if (['mp4', 'webm', 'mov'].includes(ext)) {
+                mediaContainer.style.display = 'block';
+                mediaContainer.innerHTML = '<div style="background:#000;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.1);box-shadow:0 10px 30px rgba(0,0,0,0.7)">' +
+                    '<video controls controlsList="nodownload nofullscreen noremoteplayback" disablePictureInPicture oncontextmenu="return false;" style="width:100%;max-height:240px;display:block;outline:none" preload="metadata" src="' + streamUrl + '"></video>' +
+                    '</div>';
+            } 
+            // 2. Audio preview
+            else if (['mp3', 'wav', 'aac', 'ogg'].includes(ext)) {
+                mediaContainer.style.display = 'block';
+                mediaContainer.innerHTML = '<div style="background:rgba(255,255,255,0.03);padding:14px;border-radius:14px;border:1px solid rgba(255,255,255,0.08)">' +
+                    '<audio controls controlsList="nodownload" oncontextmenu="return false;" style="width:100%;outline:none" src="' + streamUrl + '"></audio>' +
+                    '</div>';
+            }
+            // 3. Image preview (protected from saving)
+            else if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext)) {
+                mediaContainer.style.display = 'block';
+                mediaContainer.innerHTML = '<div style="text-align:center;background:rgba(0,0,0,0.4);border-radius:14px;padding:12px;border:1px solid rgba(255,255,255,0.08)">' +
+                    '<img src="' + streamUrl + '" alt="" oncontextmenu="return false;" ondragstart="return false;" style="max-width:100%;max-height:220px;object-fit:contain;border-radius:8px;pointer-events:none;-webkit-user-drag:none;user-select:none" onerror="this.parentElement.style.display=\'none\'">' +
+                    '</div>';
+            }
+            // 4. Text / Script content preview (protected)
+            else if (['txt', 'json', 'md', 'xml', 'log', 'csv', 'srt', 'vtt', 'url'].includes(ext)) {
+                mediaContainer.style.display = 'block';
+                mediaContainer.innerHTML = '<div style="text-align:center;color:var(--gray);font-size:0.75rem"><i class="fas fa-spinner fa-spin"></i> Loading text preview...</div>';
+                try {
+                    const textResp = await fetch(streamUrl);
+                    if (textResp.ok) {
+                        const rawText = await textResp.text();
+                        const safeText = rawText.slice(0, 5000).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                        mediaContainer.innerHTML = '<div style="max-height:160px;overflow-y:auto;padding:12px 14px;background:rgba(0,0,0,0.5);border-radius:12px;border:1px solid rgba(255,255,255,0.08);font-family:monospace;font-size:0.75rem;line-height:1.6;color:#e0e0e0;white-space:pre-wrap;word-break:break-all;user-select:none" oncontextmenu="return false;" oncopy="return false;">' + safeText + '</div>';
+                    } else {
+                        mediaContainer.style.display = 'none';
+                    }
+                } catch(e) {
+                    mediaContainer.style.display = 'none';
+                }
+            }
         }
 
         function getFileTypeLabel(filename) {
-            var ext = filename.split('.').pop().toLowerCase();
-            var map = { mp4: 'Video', mov: 'Video', mp3: 'Audio', wav: 'Audio', png: 'Image', jpg: 'Image', jpeg: 'Image', gif: 'Image', webp: 'Image', zip: 'Archive', rar: 'Archive', '7z': 'Archive', pdf: 'Document', psd: 'Photoshop', aep: 'After Effects', mogrt: 'Motion Graphic', prproj: 'Premiere Pro', xml: 'XML', txt: 'Text' };
+            var ext = (filename || '').split('.').pop().toLowerCase();
+            var map = { mp4: 'Video', mov: 'Video', mp3: 'Audio', wav: 'Audio', png: 'Image', jpg: 'Image', jpeg: 'Image', gif: 'Image', webp: 'Image', zip: 'Archive', rar: 'Archive', '7z': 'Archive', pdf: 'Document', psd: 'Photoshop', aep: 'After Effects Project', ffx: 'After Effects Preset', mogrt: 'Motion Graphic', prproj: 'Premiere Pro Project', xml: 'XML', txt: 'Text' };
             return map[ext] || ext.toUpperCase();
         }
 
-        function loadImagePreview(filename) {
-            // Build URL to fetch the file from R2 via API
-            var tokenParam = downloadToken ? '&token=' + encodeURIComponent(downloadToken) : '';
-            var img = document.getElementById('fpImg');
-            var spinner = document.getElementById('fpSpinner');
-            if (!img) return;
-            // We can't directly load from R2, so we skip actual preview for now
-            // Show file icon as fallback
-            img.style.display = 'none';
-            if (spinner) spinner.style.display = 'none';
-            var thumbEl = document.querySelector('.file-preview-thumb');
-            if (thumbEl) thumbEl.innerHTML = '<i class="fas fa-file-image fp-icon"></i>';
-        }
+        // Lock right click and DevTools shortcuts on download page
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            return false;
+        });
+
+        document.addEventListener('keydown', function(e) {
+            // F12
+            if (e.key === 'F12' || e.keyCode === 123) {
+                e.preventDefault();
+                return false;
+            }
+            // Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C
+            if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) {
+                e.preventDefault();
+                return false;
+            }
+            // Ctrl+U (View Source), Ctrl+S (Save)
+            if (e.ctrlKey && (e.key === 'u' || e.key === 'U' || e.key === 's' || e.key === 'S')) {
+                e.preventDefault();
+                return false;
+            }
+        });
 
         // Download count: directly from Bot VPS API — NO localStorage
         function updateDownloadCount() {
