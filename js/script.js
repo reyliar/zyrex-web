@@ -652,11 +652,18 @@ window.showToast = function(title, message, type = 'success') {
                         <div class="notif-panel-actions">
                             <button class="notif-header-act-btn" onclick="window.toggleDNDQuick()" title="Toggle Do Not Disturb" id="btnQuickDND"><i class="fas fa-moon"></i></button>
                             <a href="/settings?tab=general" class="notif-header-act-btn" title="Notification Settings"><i class="fas fa-cog"></i></a>
+                            <button class="notif-header-act-btn" onclick="window.clearAllNotifs()" title="Clear all notifications"><i class="fas fa-trash-can"></i></button>
                             <button class="notif-header-act-btn" onclick="window.markAllNotifsRead()" title="Mark all as read"><i class="fas fa-check-double"></i></button>
                             <button class="notif-header-act-btn" onclick="window.toggleGlobalNotifPanel(event)" title="Close"><i class="fas fa-times"></i></button>
                         </div>
                     </div>
                     <div class="notif-panel-body" id="globalNotifList"></div>
+                    <div class="notif-panel-footer" id="globalNotifFooter" style="display:none">
+                        <span id="notifFooterSummary" style="color:var(--text-sub)"></span>
+                        <div style="display:flex;gap:8px">
+                            <button class="notif-footer-btn" onclick="window.clearAllNotifs()"><i class="fas fa-trash-can"></i> Clear All</button>
+                        </div>
+                    </div>
                 </div>
             </div>
             <button id="globalScrollTopBtn" class="floating-hub-btn scroll-top-btn" onclick="window.scrollToTopSmooth()" title="Back to Top" aria-label="Back to Top">
@@ -698,6 +705,14 @@ window.showToast = function(title, message, type = 'success') {
     function getReadIds() {
         try {
             return JSON.parse(localStorage.getItem('zyrex_read_notifs') || '[]');
+        } catch(e) {
+            return [];
+        }
+    }
+
+    function getClearedIds() {
+        try {
+            return JSON.parse(localStorage.getItem('zyrex_cleared_notifs') || '[]');
         } catch(e) {
             return [];
         }
@@ -747,6 +762,8 @@ window.showToast = function(title, message, type = 'success') {
 
     function renderGlobalNotifications() {
         const list = document.getElementById('globalNotifList');
+        const footer = document.getElementById('globalNotifFooter');
+        const footerSummary = document.getElementById('notifFooterSummary');
         const badge1 = document.getElementById('floatingNotifBadge');
         const badge2 = document.getElementById('panelNotifBadge');
         const dndBtn = document.getElementById('btnQuickDND');
@@ -762,6 +779,7 @@ window.showToast = function(title, message, type = 'success') {
         if (prefs.dnd) {
             if (badge1) badge1.style.display = 'none';
             if (badge2) badge2.style.display = 'none';
+            if (footer) footer.style.display = 'none';
             list.innerHTML = `
                 <div style="text-align:center;padding:32px 16px;color:var(--text-sub);font-size:0.84rem">
                     <i class="fas fa-moon" style="font-size:2rem;margin-bottom:10px;display:block;color:var(--cherry-neon);opacity:0.85"></i>
@@ -775,11 +793,15 @@ window.showToast = function(title, message, type = 'success') {
             return;
         }
 
-        // Filter notifications according to user category preferences
+        const clearedIds = getClearedIds();
+        // Filter notifications according to cleared IDs and user category preferences
         const filteredNotifs = cachedLiveNotifs.filter(n => {
+            if (clearedIds.includes(n.id)) return false;
             const cat = n.category || 'announcement';
             if (cat === 'preset' && prefs.presets === false) return false;
             if (cat === 'plugin' && prefs.plugins === false) return false;
+            if (cat === 'scenepack' && prefs.presets === false) return false;
+            if (cat === 'audio' && prefs.presets === false) return false;
             if (cat === 'reply' && prefs.replies === false) return false;
             if (cat === 'announcement' && prefs.announcements === false) return false;
             return true;
@@ -798,6 +820,7 @@ window.showToast = function(title, message, type = 'success') {
         }
 
         if (filteredNotifs.length === 0) {
+            if (footer) footer.style.display = 'none';
             list.innerHTML = `
                 <div style="text-align:center;padding:36px 16px;color:rgba(255,255,255,0.45);font-size:0.84rem">
                     <i class="fas fa-bell-slash" style="font-size:1.8rem;margin-bottom:10px;opacity:0.35;display:block;color:var(--cherry-neon)"></i>
@@ -807,23 +830,35 @@ window.showToast = function(title, message, type = 'success') {
             return;
         }
 
+        if (footer) {
+            footer.style.display = 'flex';
+            if (footerSummary) {
+                footerSummary.textContent = `${filteredNotifs.length} notification${filteredNotifs.length > 1 ? 's' : ''}`;
+            }
+        }
+
         list.innerHTML = filteredNotifs.map(n => {
             const isUnread = !readIds.includes(n.id);
             const iconClass = n.icon_brand ? `fab ${n.icon}` : `fas ${n.icon}`;
             const timeAgo = formatNotifTime(n.created_at);
             return `
-                <a href="${n.link}" class="notif-item ${isUnread ? 'unread' : ''}" onclick="window.markNotifRead('${n.id}')">
-                    <div class="notif-icon-circle" style="background:${n.bg};color:${n.color}">
-                        <i class="${iconClass}"></i>
-                    </div>
-                    <div class="notif-content-wrap">
-                        <div class="notif-title-row">
-                            <span class="notif-title">${parseNotifMarkdown(n.title)}</span>
-                            <span class="notif-time">${timeAgo}</span>
+                <div class="notif-item ${isUnread ? 'unread' : ''}" style="position:relative">
+                    <a href="${n.link}" style="display:flex;align-items:flex-start;gap:12px;text-decoration:none;color:inherit;flex:1;min-width:0" onclick="window.markNotifRead('${n.id}')">
+                        <div class="notif-icon-circle" style="background:${n.bg};color:${n.color}">
+                            <i class="${iconClass}"></i>
                         </div>
-                        <div class="notif-desc">${parseNotifMarkdown(n.desc)}</div>
-                    </div>
-                </a>
+                        <div class="notif-content-wrap">
+                            <div class="notif-title-row" style="padding-right:24px">
+                                <span class="notif-title">${parseNotifMarkdown(n.title)}</span>
+                                <span class="notif-time">${timeAgo}</span>
+                            </div>
+                            <div class="notif-desc">${parseNotifMarkdown(n.desc)}</div>
+                        </div>
+                    </a>
+                    <button class="notif-item-del-btn" onclick="window.clearSingleNotif(event, '${n.id}')" title="Dismiss">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
             `;
         }).join('');
     }
@@ -891,6 +926,28 @@ window.showToast = function(title, message, type = 'success') {
     window.markAllNotifsRead = function() {
         const allIds = cachedLiveNotifs.map(n => n.id);
         localStorage.setItem('zyrex_read_notifs', JSON.stringify(allIds));
+        renderGlobalNotifications();
+    };
+
+    window.clearSingleNotif = function(e, id) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        const cleared = getClearedIds();
+        if (!cleared.includes(id)) {
+            cleared.push(id);
+            localStorage.setItem('zyrex_cleared_notifs', JSON.stringify(cleared));
+            renderGlobalNotifications();
+        }
+    };
+
+    window.clearAllNotifs = function() {
+        const cleared = getClearedIds();
+        cachedLiveNotifs.forEach(n => {
+            if (!cleared.includes(n.id)) cleared.push(n.id);
+        });
+        localStorage.setItem('zyrex_cleared_notifs', JSON.stringify(cleared));
         renderGlobalNotifications();
     };
 
