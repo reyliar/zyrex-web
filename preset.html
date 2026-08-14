@@ -558,6 +558,16 @@
         const likeCount = likeCounts[p.id] || 0;
         const bookCount = bookCounts[p.id] || 0;
 
+        // Creator & Uploader resolution
+        const creatorName = p.creator_nickname || '';
+        const uploaderName = p.uploader_name || p.author_name || (creatorName ? '' : 'Zyrex');
+        const uploaderId = p.uploader_id || p.author_id || '';
+        let uploaderAvatar = p.uploader_avatar || p.author_avatar || '';
+        
+        if (!uploaderAvatar && uploaderId) {
+            uploaderAvatar = `https://cdn.discordapp.com/embed/avatars/${parseInt(uploaderId) % 5}.png`;
+        }
+
         // Source link system
         const sourceUrl = p.product_url || p.source_url || p.creator_social_url || '';
         let sourceLinkBtn = '';
@@ -565,20 +575,35 @@
             let domain = '';
             try { domain = new URL(sourceUrl).hostname.replace('www.', ''); } catch(e) {}
             let pLabel = 'Source';
+            let iconHtml = '<i class="fas fa-arrow-up-right-from-square"></i>';
             let brandIcon = '';
             if (domain.includes('payhip.com')) { brandIcon = 'payhip'; pLabel = 'Payhip'; }
             else if (domain.includes('patreon.com')) { brandIcon = 'patreon'; pLabel = 'Patreon'; }
             else if (domain.includes('boosty.to')) { brandIcon = 'boosty'; pLabel = 'Boosty'; }
             else if (domain.includes('gumroad.com')) { brandIcon = 'gumroad'; pLabel = 'Gumroad'; }
+            else if (domain.includes('sellfy.com')) { brandIcon = 'sellfy'; pLabel = 'Sellfy'; }
+            else if (domain.includes('sellix.io')) { brandIcon = 'sellix'; pLabel = 'Sellix'; }
             else if (domain.includes('tiktok.com')) { brandIcon = 'tiktok'; pLabel = 'TikTok'; }
             else if (domain.includes('instagram.com')) { brandIcon = 'instagram'; pLabel = 'Instagram'; }
             else if (domain.includes('youtube.com') || domain.includes('youtu.be')) { brandIcon = 'youtube'; pLabel = 'YouTube'; }
+            else if (domain.includes('x.com') || domain.includes('twitter.com')) { brandIcon = 'twitter'; pLabel = 'X / Twitter'; }
+            else if (domain.includes('twitch.tv')) { brandIcon = 'twitch'; pLabel = 'Twitch'; }
             else if (domain.includes('discord.gg') || domain.includes('discord.com')) { brandIcon = 'discord'; pLabel = 'Discord'; }
+            else if (domain.includes('t.me') || domain.includes('telegram')) { brandIcon = 'telegram'; pLabel = 'Telegram'; }
+
+            const faBrands = { patreon: 'fa-patreon', tiktok: 'fa-tiktok', instagram: 'fa-instagram', youtube: 'fa-youtube', twitter: 'fa-x-twitter', twitch: 'fa-twitch', discord: 'fa-discord', telegram: 'fa-telegram' };
+            const faviconPlatforms = { payhip: 'payhip.com', boosty: 'boosty.to', gumroad: 'gumroad.com', sellfy: 'sellfy.com', sellix: 'sellix.io' };
+
+            if (brandIcon && faBrands[brandIcon]) {
+                iconHtml = '<i class="fab ' + faBrands[brandIcon] + '"></i>';
+            } else if (brandIcon && faviconPlatforms[brandIcon]) {
+                iconHtml = '<img src="https://www.google.com/s2/favicons?domain=' + faviconPlatforms[brandIcon] + '&sz=32" alt="' + pLabel + '" style="width:16px;height:16px;vertical-align:middle;border-radius:3px">';
+            }
 
             sourceLinkBtn = `
-                <a href="${sourceUrl}" target="_blank" rel="noopener" class="mirror-link-pill" style="color:var(--cherry-neon);border-color:rgba(255,43,82,0.25)">
-                    <span><i class="fas fa-arrow-up-right-from-square"></i> Original ${pLabel}</span>
-                    <span style="font-size:0.7rem;opacity:0.6">${domain}</span>
+                <a href="${sourceUrl}" target="_blank" rel="noopener" class="mirror-link-pill" style="border-color:rgba(255,43,82,0.3);background:rgba(255,43,82,0.06)">
+                    <span style="display:flex;align-items:center;gap:8px;color:#fff">${iconHtml} <strong>${pLabel}</strong></span>
+                    <span style="font-size:0.75rem;color:var(--cherry-neon)"><i class="fas fa-arrow-up-right-from-square"></i> Visit</span>
                 </a>
             `;
         }
@@ -627,18 +652,29 @@
                     <div class="action-top-info">
                         <h1 class="preset-headline">${p.name}</h1>
                         
-                        <!-- CREATOR STRIP -->
-                        <div class="creator-clean-strip">
-                            <div class="creator-left-box">
-                                ${av ? `<img src="${av}" alt="${nick}">` : `<div class="cfb"><i class="fas fa-user"></i></div>`}
-                                <div class="creator-meta-text">
-                                    <strong>${nick}</strong>
-                                    <span>Verified Creator &middot; Zyrex</span>
+                        <!-- CREATOR & UPLOADER DUO STRIP -->
+                        <div style="display:grid;grid-template-columns:${uploaderName ? '1fr 1fr' : '1fr'};gap:10px;margin-bottom:20px">
+                            <!-- Creator Card -->
+                            <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:16px">
+                                ${av ? `<img src="${av}" alt="${nick}" style="width:36px;height:36px;border-radius:50%;object-fit:cover">` : `<div style="width:36px;height:36px;border-radius:50%;background:rgba(255,43,82,0.15);color:var(--cherry-neon);display:flex;align-items:center;justify-content:center;font-size:0.8rem"><i class="fas fa-paint-brush"></i></div>`}
+                                <div style="min-width:0;flex:1">
+                                    <div style="font-size:0.68rem;color:var(--text-sub);text-transform:uppercase;font-weight:700">Creator</div>
+                                    <strong style="display:block;font-size:0.86rem;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nick}</strong>
+                                    ${p.creator_social_url ? `<a href="${p.creator_social_url}" target="_blank" style="font-size:0.7rem;color:var(--cherry-neon);text-decoration:none"><i class="fas fa-arrow-up-right-from-square"></i> Profile</a>` : ''}
                                 </div>
                             </div>
-                            <div style="font-size:0.72rem;color:var(--text-sub)">
-                                <i class="fas fa-calendar-day"></i> ${p.created_at ? new Date(p.created_at).toLocaleDateString("en-US", {year:"numeric", month:"short", day:"numeric"}) : "Recently Added"}
+
+                            <!-- Uploader Card -->
+                            ${uploaderName ? `
+                            <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:rgba(88,101,242,0.06);border:1px solid rgba(88,101,242,0.18);border-radius:16px">
+                                <img src="${uploaderAvatar}" alt="${uploaderName}" style="width:36px;height:36px;border-radius:50%;object-fit:cover" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+                                <div style="min-width:0;flex:1">
+                                    <div style="font-size:0.68rem;color:rgba(180,190,255,0.7);text-transform:uppercase;font-weight:700">Uploader</div>
+                                    <strong style="display:block;font-size:0.86rem;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${uploaderName}</strong>
+                                    <span style="font-size:0.7rem;color:rgba(255,255,255,0.4)">Discord Community</span>
+                                </div>
                             </div>
+                            ` : ''}
                         </div>
 
                         <!-- PASSWORD BLOCK IF EXISTS -->
@@ -654,7 +690,7 @@
                             <i class="fas fa-bolt"></i> Instant Download
                         </a>
                         <div style="text-align:center;font-size:0.72rem;color:var(--text-sub);margin-bottom:14px">
-                            <i class="fas fa-shield-halved" style="color:var(--cherry-neon)"></i> One-time secure download link &middot; Fast CDN
+                            <i class="fas fa-shield-halved" style="color:var(--cherry-neon)"></i> Direct secure download &middot; Fast CDN
                         </div>
 
                         <!-- MIRRORS & SOURCE -->
