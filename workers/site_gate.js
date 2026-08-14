@@ -198,11 +198,17 @@ export default {
       if (denied) return denied;
     }
 
-    if (url.hostname === "dl.zyrexediting.xyz" && !isApiRequest(pathname)) {
-      return env.ASSETS.fetch("https://zyrexediting.xyz/download.html" + url.search);
+    if (url.hostname === "dl.zyrexediting.xyz") {
+      if (isApiRequest(pathname) && env.API) {
+        return env.API.fetch(request);
+      }
+      if (pathname === "/" || pathname === "/download" || pathname === "/download.html") {
+        return env.ASSETS.fetch("https://zyrexediting.xyz/download.html" + url.search);
+      }
+      return env.ASSETS.fetch(request);
     }
 
-    if ((url.hostname === "dl.zyrexediting.xyz" || isApiRequest(pathname)) && env.API) {
+    if (isApiRequest(pathname) && env.API) {
       const isCloudflareNativeEndpoint = pathname.startsWith("/api/presence") || 
                                          pathname.startsWith("/api/avatar/") || 
                                          pathname.startsWith("/api/banner/") ||
