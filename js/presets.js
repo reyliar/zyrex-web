@@ -312,7 +312,13 @@ function renderPresets(items) {
             `<div class="rimg-fallback" style="display:none"><i class="fas ${icon}"></i></div>` : 
             `<div class="rimg-fallback"><i class="fas ${icon}"></i></div>`;
 
-        return '<a href="/preset?id=' + item.id + '" class="rc">' +
+        const itemType = (item.type || '').toLowerCase();
+        let detailUrl = '/preset?id=' + encodeURIComponent(item.id);
+        if (itemType === 'scenepack') detailUrl = '/product-scenepack?id=' + encodeURIComponent(item.id);
+        else if (itemType === 'audio') detailUrl = '/product-audio?id=' + encodeURIComponent(item.id);
+        else if (itemType === 'plugin' || itemType === 'software') detailUrl = '/product?id=' + encodeURIComponent(item.id);
+
+        return '<a href="' + detailUrl + '" class="rc">' +
             '<div class="rc-img">' +
             thumbHtml +
             '<div class="roverlay"></div>' +

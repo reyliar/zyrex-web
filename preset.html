@@ -747,6 +747,21 @@
             return;
         }
 
+        // Automatic redirect to specialized product pages if item is not a preset
+        const itemType = (item.type || '').toLowerCase();
+        if (itemType === 'scenepack') {
+            window.location.replace('/product-scenepack?id=' + encodeURIComponent(id));
+            return;
+        }
+        if (itemType === 'audio') {
+            window.location.replace('/product-audio?id=' + encodeURIComponent(id));
+            return;
+        }
+        if (itemType === 'plugin' || itemType === 'software') {
+            window.location.replace('/product?id=' + encodeURIComponent(id));
+            return;
+        }
+
         renderPresetPage(item);
     })();
 

@@ -335,9 +335,13 @@
                 var avatar = item.creator_avatar || '';
                 var creator = item.creator_nickname || item.author_name || 'Zyrex';
                 var downloads = item.downloads || 0;
-                var itemName = item.name || 'Untitled Preset';
+                var itemName = item.name || 'Untitled Resource';
                 var itemId = String(item.id || '');
+                var itemType = (item.type || '').toLowerCase();
                 var presetUrl = '/preset?id=' + encodeURIComponent(itemId);
+                if (itemType === 'scenepack') presetUrl = '/product-scenepack?id=' + encodeURIComponent(itemId);
+                else if (itemType === 'audio') presetUrl = '/product-audio?id=' + encodeURIComponent(itemId);
+                else if (itemType === 'plugin' || itemType === 'software') presetUrl = '/product?id=' + encodeURIComponent(itemId);
                 var thumb = item.thumbnail
                     ? '<img src="' + escapeHtml(item.thumbnail) + '" alt="" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.style.display=&quot;flex&quot;"><div class="bm-fallback" style="display:none"><i class="fas ' + icon + '"></i></div>'
                     : '<div class="bm-fallback"><i class="fas ' + icon + '"></i></div>';
