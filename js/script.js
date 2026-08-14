@@ -617,6 +617,10 @@ window.showToast = function(title, message, type = 'success') {
 (function initGlobalFloatingHub() {
     function setupHub() {
         if (document.getElementById('globalFloatingHub')) return;
+        if (!document.body) {
+            setTimeout(setupHub, 50);
+            return;
+        }
 
         // Create Panel
         const panel = document.createElement('div');
@@ -650,16 +654,19 @@ window.showToast = function(title, message, type = 'success') {
         document.body.appendChild(hub);
 
         // Scroll listener for back to top button
-        window.addEventListener('scroll', () => {
+        function handleScroll() {
             const btn = document.getElementById('globalScrollTopBtn');
             if (btn) {
-                if (window.scrollY > 280) {
+                const scrollY = window.pageYOffset || document.documentElement.scrollTop || window.scrollY || 0;
+                if (scrollY > 180) {
                     btn.classList.add('visible');
                 } else {
                     btn.classList.remove('visible');
                 }
             }
-        }, { passive: true });
+        }
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        handleScroll();
 
         // Close panel when clicking outside
         document.addEventListener('click', (e) => {
@@ -790,9 +797,12 @@ window.showToast = function(title, message, type = 'success') {
 
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', setupHub);
+        window.addEventListener('load', setupHub);
     } else {
         setupHub();
     }
+    setTimeout(setupHub, 200);
+    setTimeout(setupHub, 1000);
 })();
 
 console.log('Zyrex - Website loaded successfully!');
