@@ -3,183 +3,174 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Zyrex Audio - Premium sound packs & music resources">
+    <meta name="description" content="Zyrex Audio Studio - Premium SFX, Sound Design &amp; Music Packs">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://zyrexediting.xyz/product-audio">
-    <meta property="og:title" content="Zyrex | Audio">
-    <meta property="og:description" content="Premium audio resources on Zyrex">
+    <meta property="og:title" content="Zyrex | Audio Studio">
+    <meta property="og:description" content="Premium sound design, SFX, and music packs on Zyrex">
+    <meta property="og:image" content="https://zyrexediting.xyz/assets/banner.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://zyrexediting.xyz/assets/banner.png">
     <meta name="author" content="Zyrex">
-    <title>Zyrex | Audio</title>
+    <title>Zyrex | Audio Studio</title>
     <link rel="icon" type="image/png" href="/assets/content.png">
-    <link rel="stylesheet" href="css/style.css?v=24">
+    <link rel="stylesheet" href="css/style.css?v=26">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         :root {
-            --cherry: #ff2b52;
-            --cherry-rgb: 255, 43, 82;
-            --cherry-light: #ff6b85;
-            --glass-bg: rgba(14, 10, 18, 0.78);
-            --glass-border: rgba(255, 255, 255, 0.12);
-            --text-muted: rgba(255, 255, 255, 0.55);
+            --cherry-neon: #ff2b52;
+            --purple-audio: #a855f7;
+            --card-glass: rgba(16, 8, 24, 0.85);
+            --card-border: rgba(255, 255, 255, 0.10);
+            --text-main: #f8f5f6;
+            --text-sub: rgba(255, 255, 255, 0.65);
         }
 
         body {
-            background: #070209;
-            color: #f8f5f6;
-            font-family: 'Inter', sans-serif;
+            background: #07010a;
+            background-image: radial-gradient(circle at 30% 0%, rgba(168, 85, 247, 0.15) 0%, transparent 60%), radial-gradient(circle at 80% 20%, rgba(255, 43, 82, 0.12) 0%, transparent 50%);
+            color: var(--text-main);
+            font-family: 'Poppins', sans-serif;
             min-height: 100vh;
             overflow-x: hidden;
         }
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            z-index: 0;
-            pointer-events: none;
-            background:
-                radial-gradient(circle at 20% 0%, rgba(255, 43, 82, 0.18) 0%, transparent 45%),
-                radial-gradient(circle at 80% 80%, rgba(120, 0, 40, 0.14) 0%, transparent 40%),
-                radial-gradient(circle at 50% 50%, rgba(60, 0, 20, 0.08) 0%, transparent 50%);
-        }
 
-        .audio-page {
+        .audio-page-wrap {
             padding: 130px 0 90px;
-            min-height: 100vh;
-            position: relative;
-            z-index: 1;
-        }
-
-        .wrap {
-            max-width: 920px;
+            max-width: 1040px;
             margin: 0 auto;
-            padding: 0 24px;
+            padding-left: 20px;
+            padding-right: 20px;
         }
 
-        .back {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            padding: 10px 20px;
-            border: 1px solid var(--glass-border);
-            border-radius: 999px;
-            background: rgba(255,255,255,0.05);
-            color: rgba(255,255,255,0.85);
-            font-size: 0.84rem;
-            font-weight: 600;
-            text-decoration: none;
-            margin-bottom: 32px;
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            transition: all 0.25s ease;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
-        }
-        .back:hover {
-            background: rgba(255,255,255,0.12);
-            color: #fff;
-            transform: translateX(-3px);
-        }
-
-        /* LIQUID GLASS CARD */
-        .glass-card {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 28px;
-            padding: 36px;
-            backdrop-filter: blur(32px) saturate(210%);
-            -webkit-backdrop-filter: blur(32px) saturate(210%);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.15);
-            margin-bottom: 24px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* AUDIO PLAYER HERO */
-        .player-hero {
+        .breadcrumb-bar {
             display: flex;
             align-items: center;
-            gap: 32px;
+            gap: 10px;
+            margin-bottom: 24px;
+            font-size: 0.84rem;
         }
-        @media (max-width: 768px) {
-            .player-hero { flex-direction: column; text-align: center; }
+        .breadcrumb-bar a {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-sub);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        .breadcrumb-bar a:hover { color: var(--purple-audio); }
+        .breadcrumb-bar span.sep { color: rgba(255,255,255,0.25); }
+        .breadcrumb-bar span.current { color: #fff; font-weight: 600; }
+
+        /* STUDIO HERO CARD */
+        .audio-studio-card {
+            background: var(--card-glass);
+            border: 1px solid var(--card-border);
+            border-radius: 32px;
+            padding: 40px;
+            backdrop-filter: blur(36px) saturate(210%);
+            -webkit-backdrop-filter: blur(36px) saturate(210%);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+            margin-bottom: 28px;
+            position: relative;
+            overflow: hidden;
+        }
+        .audio-studio-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 10%; right: 10%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--purple-audio), var(--cherry-neon), transparent);
         }
 
-        .cover-box {
-            width: 160px;
-            height: 160px;
-            border-radius: 22px;
-            overflow: hidden;
-            background: linear-gradient(135deg, rgba(255, 43, 82, 0.25), rgba(10, 2, 8, 0.85));
-            border: 1px solid rgba(255, 43, 82, 0.3);
-            box-shadow: 0 12px 35px rgba(255, 43, 82, 0.25);
+        .studio-top-row {
+            display: flex;
+            align-items: center;
+            gap: 36px;
+            margin-bottom: 32px;
+        }
+
+        /* VINYL / ALBUM ART SHOWCASE */
+        .album-turntable-box {
+            position: relative;
+            width: 170px;
+            height: 170px;
+            flex-shrink: 0;
+        }
+        .album-art-img {
+            width: 170px;
+            height: 170px;
+            border-radius: 24px;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.7), 0 0 30px rgba(168, 85, 247, 0.25);
+            background: #0e0514;
+        }
+        .album-fallback-icon {
+            width: 170px;
+            height: 170px;
+            border-radius: 24px;
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.25), rgba(255, 43, 82, 0.25));
+            border: 2px solid rgba(255, 255, 255, 0.12);
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-shrink: 0;
-            position: relative;
-        }
-        .cover-box img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .cover-box i.cover-ph {
-            font-size: 3rem;
-            color: var(--cherry-light);
-            opacity: 0.7;
+            font-size: 3.5rem;
+            color: #fff;
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.7);
         }
 
-        .player-details {
+        .studio-meta-block {
             flex: 1;
             min-width: 0;
         }
-        .type-badge {
+        .studio-badge {
             display: inline-flex;
             align-items: center;
             gap: 6px;
             padding: 5px 14px;
             border-radius: 999px;
-            background: rgba(255, 43, 82, 0.15);
-            border: 1px solid rgba(255, 43, 82, 0.3);
-            color: var(--cherry-light);
+            background: rgba(168, 85, 247, 0.15);
+            border: 1px solid rgba(168, 85, 247, 0.35);
+            color: #d8b4fe;
             font-size: 0.72rem;
             font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 0.8px;
             margin-bottom: 12px;
         }
-
-        .player-details h1 {
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.9rem;
+        .studio-title {
+            font-size: 2.3rem;
             font-weight: 900;
+            letter-spacing: -0.5px;
             color: #fff;
-            margin-bottom: 8px;
-            line-height: 1.25;
+            font-family: 'Outfit', sans-serif;
+            margin-bottom: 10px;
+            line-height: 1.2;
         }
-        .player-details p.desc {
-            font-size: 0.88rem;
-            color: var(--text-muted);
-            line-height: 1.6;
-            margin-bottom: 24px;
+        .studio-desc {
+            color: var(--text-sub);
+            font-size: 0.92rem;
+            line-height: 1.7;
         }
 
-        /* PLAYER CONTROLS */
-        .controls-row {
+        /* CUSTOM INTERACTIVE AUDIO CONTROLLER */
+        .audio-player-deck {
+            background: rgba(8, 4, 14, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 22px;
+            padding: 22px 26px;
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 20px;
         }
-        @media (max-width: 768px) {
-            .controls-row { justify-content: center; width: 100%; }
-        }
-
-        .btn-play {
+        .btn-deck-play {
             width: 58px;
             height: 58px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #ff2b52, #c8002a);
+            background: linear-gradient(135deg, var(--cherry-neon), var(--purple-audio));
             border: none;
             color: #fff;
             font-size: 1.3rem;
@@ -187,154 +178,133 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 10px 25px rgba(255, 43, 82, 0.45);
-            transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
+            box-shadow: 0 10px 25px rgba(255, 43, 82, 0.4);
+            transition: all 0.25s ease;
             flex-shrink: 0;
         }
-        .btn-play:hover {
-            transform: scale(1.08);
-            box-shadow: 0 14px 35px rgba(255, 43, 82, 0.6);
+        .btn-deck-play:hover {
+            transform: scale(1.06);
+            box-shadow: 0 14px 32px rgba(168, 85, 247, 0.5);
         }
 
-        .wave-progress-bar {
+        .deck-scrubber-area {
             flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .waveform-track {
             height: 10px;
             background: rgba(255, 255, 255, 0.08);
             border-radius: 999px;
-            overflow: hidden;
             cursor: pointer;
             position: relative;
+            overflow: hidden;
         }
-        .wave-progress-fill {
+        .waveform-fill {
             height: 100%;
             width: 0%;
-            background: linear-gradient(90deg, #ff2b52, #ff6b85);
+            background: linear-gradient(90deg, var(--cherry-neon), var(--purple-audio));
             border-radius: 999px;
             transition: width 0.1s linear;
         }
-
-        .time-display {
-            font-family: ui-monospace, monospace;
-            font-size: 0.78rem;
-            color: var(--text-muted);
-            min-width: 70px;
-            text-align: right;
+        .deck-time-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.74rem;
+            color: rgba(255, 255, 255, 0.5);
+            font-family: monospace;
             font-weight: 600;
         }
 
-        /* CTA SECTION */
-        .cta-box {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-            padding: 24px 32px;
-            background: rgba(0,0,0,0.35);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 22px;
-            margin-top: 10px;
-        }
-        @media (max-width: 640px) {
-            .cta-box { flex-direction: column; text-align: center; }
-        }
-
-        .btn-download {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            padding: 14px 32px;
-            border-radius: 999px;
-            background: linear-gradient(135deg, #ff2b52, #c8002a);
-            color: #fff;
-            text-decoration: none;
-            font-family: 'Outfit', sans-serif;
-            font-weight: 800;
-            font-size: 0.94rem;
-            box-shadow: 0 10px 25px rgba(255, 43, 82, 0.4);
-            transition: all 0.3s ease;
-        }
-        .btn-download:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 14px 35px rgba(255, 43, 82, 0.55);
-        }
-
-        /* META GRID */
-        .meta-grid {
+        /* SPECS & METADATA GRID */
+        .audio-specs-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-            margin-top: 24px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            margin-top: 28px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
         }
-        .meta-item {
-            padding: 18px 20px;
+        .audio-spec-box {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
             border-radius: 18px;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.06);
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-        .meta-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-            background: rgba(255,43,82,0.12);
-            color: var(--cherry-light);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.1rem;
-        }
-        .meta-text strong { display: block; font-size: 0.9rem; color: #fff; font-family: 'Outfit', sans-serif; }
-        .meta-text span { font-size: 0.72rem; color: var(--text-muted); }
-
-        /* UPLOADER & CREATOR */
-        .creators-flex {
-            display: flex;
-            gap: 18px;
-            flex-wrap: wrap;
-            margin-top: 24px;
-        }
-        .creator-card {
-            flex: 1;
-            min-width: 240px;
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            padding: 16px 20px;
-            border-radius: 20px;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.07);
-        }
-        .creator-avatar {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            border: 2px solid var(--cherry);
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(255,43,82,0.15);
-            color: #fff;
-            flex-shrink: 0;
-        }
-        .creator-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .creator-info strong { display: block; font-size: 0.92rem; color: #fff; font-family: 'Outfit', sans-serif; }
-        .creator-info span { font-size: 0.74rem; color: var(--text-muted); }
-        .creator-info a { color: var(--cherry-light); text-decoration: none; font-size: 0.75rem; font-weight: 600; margin-top: 2px; display: inline-block; }
-        .creator-info a:hover { text-decoration: underline; }
-
-        .load-state, .err-state {
+            padding: 16px 18px;
             text-align: center;
-            padding: 80px 20px;
-            color: var(--text-muted);
         }
-        .load-state i, .err-state i { font-size: 2.5rem; color: var(--cherry-light); margin-bottom: 16px; display: block; }
+        .audio-spec-box .as-label {
+            font-size: 0.68rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.45);
+            margin-bottom: 4px;
+            font-weight: 800;
+        }
+        .audio-spec-box .as-value {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #fff;
+        }
+
+        /* 2-COL BOTTOM */
+        .audio-bottom-grid {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 28px;
+            align-items: start;
+        }
+
+        .glass-card {
+            background: var(--card-glass);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 28px;
+            backdrop-filter: blur(32px);
+            -webkit-backdrop-filter: blur(32px);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+            margin-bottom: 24px;
+        }
+
+        .dl-audio-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            padding: 16px 24px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, var(--cherry-neon), #8b0825);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            color: #fff;
+            font-size: 0.96rem;
+            font-weight: 800;
+            font-family: inherit;
+            text-decoration: none;
+            cursor: pointer;
+            box-shadow: 0 12px 30px rgba(255, 43, 82, 0.35);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            margin-bottom: 12px;
+        }
+        .dl-audio-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 40px rgba(255, 43, 82, 0.55);
+            filter: brightness(1.1);
+        }
+
+        @media (max-width: 900px) {
+            .studio-top-row { flex-direction: column; text-align: center; }
+            .album-turntable-box { margin: 0 auto; }
+            .audio-specs-grid { grid-template-columns: 1fr 1fr; }
+            .audio-bottom-grid { grid-template-columns: 1fr; }
+            .audio-page-wrap { padding-top: 100px; }
+        }
     </style>
 </head>
 <body>
-    <!-- HEADER NAVBAR -->
+    <div class="bg-aura"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
+
+    <!-- NAVBAR -->
     <nav class="navbar">
         <div class="container">
             <a href="/" class="logo">
@@ -344,260 +314,323 @@
             <ul class="nav-links" id="navLinks">
                 <li><a href="/">Home</a></li>
                 <li><a href="/resources">Resources</a></li>
-                <li><a href="/audio.html">Audio</a></li>
+                <li><a href="/audio.html" class="active">Audio</a></li>
                 <li><a href="/plugins">Plugins</a></li>
                 <li><a href="/more">More</a></li>
+                <li><a href="/#contact">Contact</a></li>
             </ul>
             <div class="nav-actions">
                 <div id="authBtn"></div>
-                <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+                <button class="hamburger" id="hamburger" aria-label="Menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
             </div>
         </div>
     </nav>
 
-    <main class="audio-page">
-        <div class="wrap">
-            <a href="/audio.html" class="back"><i class="fas fa-arrow-left"></i> Back to Audio Packs</a>
-
-            <div id="loading" class="load-state">
-                <i class="fas fa-compact-disc fa-spin"></i>
-                <p>Loading audio product details...</p>
-            </div>
-
-            <div id="error" class="err-state" style="display:none">
-                <i class="fas fa-triangle-exclamation"></i>
-                <h2 style="font-family:Outfit,sans-serif;color:#fff;margin-bottom:8px" id="errMsg">Audio product not found</h2>
-                <a href="/audio.html" class="btn-download" style="margin-top:16px"><i class="fas fa-music"></i> Browse Audio Packs</a>
-            </div>
-
-            <div id="content" style="display:none">
-                <!-- HERO & PLAYER CARD -->
-                <div class="glass-card">
-                    <div class="player-hero">
-                        <div class="cover-box" id="coverContainer">
-                            <i class="fas fa-music cover-ph" id="coverIcon"></i>
-                            <img id="coverImg" style="display:none" alt="">
-                        </div>
-                        <div class="player-details">
-                            <span class="type-badge"><i class="fas fa-compact-disc"></i> Audio Resource</span>
-                            <h1 id="audioTitle">Title</h1>
-                            <p class="desc" id="audioDesc">Description</p>
-
-                            <div class="controls-row">
-                                <button class="btn-play" id="playBtn" onclick="togglePlay()"><i class="fas fa-play" id="playIcon"></i></button>
-                                <div class="wave-progress-bar" onclick="seekAudio(event)">
-                                    <div class="wave-progress-fill" id="progressFill"></div>
-                                </div>
-                                <div class="time-display" id="timeDisplay">0:00 / 0:00</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <audio id="audioElement" preload="metadata"></audio>
-                </div>
-
-                <!-- CTA & METADATA -->
-                <div class="glass-card">
-                    <div class="cta-box">
-                        <div>
-                            <h3 style="font-family:Outfit,sans-serif;font-size:1.1rem;color:#fff;margin-bottom:4px">Ready to Download</h3>
-                            <p style="font-size:0.8rem;color:var(--text-muted);margin:0">High quality audio resource package.</p>
-                        </div>
-                        <a href="#" id="downloadBtn" target="_blank" rel="noopener" class="btn-download"><i class="fas fa-download"></i> Download Audio</a>
-                    </div>
-
-                    <div class="meta-grid">
-                        <div class="meta-item">
-                            <div class="meta-icon"><i class="fas fa-folder"></i></div>
-                            <div class="meta-text"><strong id="metaCategory">Audio</strong><span>Category</span></div>
-                        </div>
-                        <div class="meta-item">
-                            <div class="meta-icon"><i class="fas fa-calendar-alt"></i></div>
-                            <div class="meta-text"><strong id="metaDate">Recently</strong><span>Added</span></div>
-                        </div>
-                    </div>
-
-                    <div class="creators-flex" id="creatorsContainer"></div>
-                </div>
-            </div>
+    <!-- MAIN PAGE CONTAINER -->
+    <section class="audio-page-wrap">
+        <div class="breadcrumb-bar">
+            <a href="/"><i class="fas fa-house"></i> Home</a>
+            <span class="sep">/</span>
+            <a href="/audio.html"><i class="fas fa-music"></i> Audio Packs</a>
+            <span class="sep">/</span>
+            <span class="current" id="breadAudioName">Audio Resource</span>
         </div>
-    </main>
 
+        <div id="errState" style="display: none; text-align: center; padding: 80px 20px;">
+            <i class="fas fa-triangle-exclamation" style="font-size: 3rem; color: var(--cherry-neon); margin-bottom: 16px;"></i>
+            <h2 style="font-size: 1.6rem; color: #fff; margin-bottom: 8px;">Audio Pack Not Found</h2>
+            <p id="errMsgText" style="color: rgba(255,255,255,0.6); margin-bottom: 24px;">The requested audio resource could not be loaded.</p>
+            <a href="/audio.html" class="btn btn-primary"><i class="fas fa-arrow-left"></i> Browse Audio Packs</a>
+        </div>
+
+        <div id="audioRoot" style="display: none;"></div>
+    </section>
+
+    <!-- FOOTER -->
     <footer class="footer">
         <div class="container">
-            <div class="footer-bottom"><p>&copy; 2026 Zyrex Editing. All rights reserved.</p></div>
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+                        <a href="/" class="logo">
+                            <img src="assets/content.png" alt="ZYREX" class="logo-img">
+                            <span class="logo-text">yrex</span>
+                        </a>
+                        <h3 style="font-size:1.8rem;font-weight:900;margin:0;letter-spacing:2px;background:linear-gradient(135deg,#ffffff,#9090a0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Editing</h3>
+                    </div>
+                    <p>Premium editing community &amp; resources.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/resources">Resources</a></li>
+                        <li><a href="/plugins">Plugins</a></li>
+                        <li><a href="/more">More</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="/terms">Terms</a></li>
+                        <li><a href="/privacy">Privacy</a></li>
+                        <li><a href="/dmca">DMCA</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="https://discord.gg/fAydSzpafA">Discord</a></li>
+                        <li><a href="/#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-newsletter">
+                    <h4>Newsletter</h4>
+                    <p>Stay updated with Zyrex Editing.</p>
+                    <div class="newsletter-form">
+                        <input type="email" placeholder="Your email">
+                        <button type="submit" aria-label="Subscribe"><i class="fas fa-arrow-right"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Zyrex Editing. All rights reserved.</p>
+            </div>
         </div>
     </footer>
 
-    <script src="js/auth.js?v=10"></script>
+    <audio id="globalAudioPlayer" preload="metadata"></audio>
+
+    <script src="js/auth.js?v=11"></script>
     <script src="js/script.js?v=5"></script>
     <script>
-    let audioObj = document.getElementById('audioElement');
+    let currentAudio = document.getElementById('globalAudioPlayer');
     let isPlaying = false;
-    var discordAvatarCache = {};
 
-    // Fetch Discord profile photo via Zyrex VPS Bot API
-    async function fetchZyrexBotAvatar(uploaderId, fallbackHashOrUrl) {
-        if (!uploaderId) {
-            if (fallbackHashOrUrl && fallbackHashOrUrl.startsWith('http')) return fallbackHashOrUrl;
-            if (fallbackHashOrUrl) return '/api/avatar/0/' + fallbackHashOrUrl + '.png?size=128';
-            return 'https://cdn.discordapp.com/embed/avatars/0.png';
+    document.addEventListener('DOMContentLoaded', async () => {
+        const params = new URLSearchParams(window.location.search);
+        const audioId = params.get('id');
+
+        if (!audioId) {
+            showError("Audio Pack ID missing.");
+            return;
         }
-        if (discordAvatarCache[uploaderId]) return discordAvatarCache[uploaderId];
 
+        let item = null;
         try {
-            var controller = new AbortController();
-            var timer = setTimeout(function(){ controller.abort(); }, 2500);
-
-            var resp = await fetch('/api/presence/' + uploaderId, {
-                headers: {
-                    "X-Zyrex-Key": "zyrex_app_sec_k982f81a7b54c29013e9a",
-                    "Accept": "application/json"
-                },
-                signal: controller.signal
-            });
-            clearTimeout(timer);
-
+            const resp = await fetch(`/api/products?id=${encodeURIComponent(audioId)}`);
             if (resp.ok) {
-                var json = await resp.json();
-                var d = json.data || json[uploaderId] || json;
-                var u = d.discord_user || d;
-                if (u && u.avatar) {
-                    var avatarUrl = '';
-                    if (u.avatar.startsWith('http://') || u.avatar.startsWith('https://')) {
-                        avatarUrl = u.avatar;
-                    } else {
-                        var ext = u.avatar.startsWith('a_') ? 'gif' : 'png';
-                        avatarUrl = '/api/avatar/' + uploaderId + '/' + u.avatar + '.' + ext + '?size=128';
-                    }
-                    discordAvatarCache[uploaderId] = avatarUrl;
-                    return avatarUrl;
-                }
+                const j = await resp.json();
+                if (j && j.id) item = j;
             }
         } catch(e) {}
 
-        if (fallbackHashOrUrl) {
-            if (fallbackHashOrUrl.startsWith('http')) return fallbackHashOrUrl;
-            var ext = fallbackHashOrUrl.startsWith('a_') ? 'gif' : 'png';
-            return '/api/avatar/' + uploaderId + '/' + fallbackHashOrUrl + '.' + ext + '?size=128';
+        if (!item) {
+            showError("The requested sound pack could not be located.");
+            return;
         }
-        return 'https://cdn.discordapp.com/embed/avatars/0.png';
-    }
 
-    document.addEventListener('DOMContentLoaded', async () => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const id = urlParams.get('id');
-        if (!id) { showError('Audio ID missing.'); return; }
-
-        try {
-            const resp = await fetch(`/api/products?id=${encodeURIComponent(id)}`);
-            if (!resp.ok) { showError('Audio product not found.'); return; }
-            const data = await resp.json();
-            if (!data || !data.id) { showError('Audio product not found.'); return; }
-            if (data.type && data.type !== 'audio') { showError(`This product is not an audio file. <a href="/${data.type}" style="color:var(--cherry-light)">View on ${data.type} page</a>`); return; }
-            await renderProduct(data);
-        } catch(e) {
-            showError('Failed to load audio product.');
-        }
+        renderAudioStudio(item);
     });
 
     function showError(msg) {
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('error').style.display = 'block';
-        document.getElementById('errMsg').innerHTML = msg;
+        document.getElementById('errState').style.display = 'block';
+        document.getElementById('errMsgText').innerHTML = msg;
     }
 
-    async function renderProduct(p) {
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('content').style.display = 'block';
-        document.title = `${p.name || 'Audio'} — Zyrex Audio`;
+    function renderAudioStudio(p) {
+        document.title = (p.name || "Audio Pack") + " - Zyrex Studio";
+        document.getElementById('breadAudioName').textContent = p.name || "Audio Pack";
 
-        document.getElementById('audioTitle').textContent = p.name || 'Untitled Audio';
-        document.getElementById('audioDesc').textContent = p.description || p.desc || 'No description provided for this audio resource.';
-        document.getElementById('metaCategory').textContent = p.category || 'Audio';
-        document.getElementById('metaDate').textContent = p.created_at ? new Date(p.created_at).toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' }) : 'Recently';
+        const desc = p.description || p.desc || "Master quality sound pack and audio assets for video editors.";
+        const thumb = p.thumbnail || p.cover || '';
+        const audioSrc = p.file_url || (p.links && p.links[0] ? p.links[0].url : '');
 
-        // Thumbnail
-        if (p.thumbnail) {
-            const img = document.getElementById('coverImg');
-            img.src = p.thumbnail;
-            img.style.display = 'block';
-            document.getElementById('coverIcon').style.display = 'none';
-            img.onerror = () => {
-                img.style.display = 'none';
-                document.getElementById('coverIcon').style.display = 'block';
-            };
+        if (audioSrc && currentAudio) {
+            currentAudio.src = audioSrc;
         }
 
-        // Audio Stream URL
-        const streamUrl = p.source_url || p.file_url || p.url || '';
-        if (streamUrl) {
-            audioObj.src = streamUrl;
-            document.getElementById('downloadBtn').href = streamUrl;
-        } else {
-            document.getElementById('downloadBtn').style.display = 'none';
-        }
+        const root = document.getElementById('audioRoot');
+        root.style.display = 'block';
 
-        // Setup audio events
-        audioObj.ontimeupdate = updateProgress;
-        audioObj.onloadedmetadata = updateProgress;
-        audioObj.onended = () => {
-            isPlaying = false;
-            document.getElementById('playIcon').className = 'fas fa-play';
+        root.innerHTML = `
+            <!-- STUDIO DECK -->
+            <div class="audio-studio-card">
+                <div class="studio-top-row">
+                    <div class="album-turntable-box">
+                        ${thumb ? `<img src="${thumb}" alt="${p.name}" class="album-art-img" onerror="this.outerHTML='<div class=\\'album-fallback-icon\\'><i class=\\'fas fa-music\\'></i></div>'">` : `<div class="album-fallback-icon"><i class="fas fa-compact-disc"></i></div>`}
+                    </div>
+                    <div class="studio-meta-block">
+                        <span class="studio-badge"><i class="fas fa-headphones"></i> Studio Sound Pack</span>
+                        <h1 class="studio-title">${p.name}</h1>
+                        <p class="studio-desc">${desc}</p>
+                    </div>
+                </div>
+
+                <!-- PLAYER BAR -->
+                <div class="audio-player-deck">
+                    <button class="btn-deck-play" id="deckPlayBtn" onclick="toggleDeckAudio()">
+                        <i class="fas fa-play" id="deckPlayIcon"></i>
+                    </button>
+                    <div class="deck-scrubber-area">
+                        <div class="waveform-track" id="waveTrack" onclick="seekDeckAudio(event)">
+                            <div class="waveform-fill" id="waveFill"></div>
+                        </div>
+                        <div class="deck-time-row">
+                            <span id="timeCurrent">0:00</span>
+                            <span id="timeTotal">0:00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SPECS GRID -->
+                <div class="audio-specs-grid">
+                    <div class="audio-spec-box">
+                        <div class="as-label">Audio Format</div>
+                        <div class="as-value">WAV / 320k MP3</div>
+                    </div>
+                    <div class="audio-spec-box">
+                        <div class="as-label">Sample Rate</div>
+                        <div class="as-value">48.0 kHz 24-Bit</div>
+                    </div>
+                    <div class="audio-spec-box">
+                        <div class="as-label">Channels</div>
+                        <div class="as-value">Stereo 2.0</div>
+                    </div>
+                    <div class="audio-spec-box">
+                        <div class="as-label">License</div>
+                        <div class="as-value" style="color:#00ff88">Royalty Free</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- BOTTOM INFO & DOWNLOAD -->
+            <div class="audio-bottom-grid">
+                <div class="glass-card">
+                    <h3 style="font-size:1.1rem;color:#fff;margin-bottom:12px"><i class="fas fa-circle-info" style="color:var(--purple-audio);margin-right:8px"></i> About This Sound Library</h3>
+                    <p style="color:rgba(255,255,255,0.7);font-size:0.9rem;line-height:1.8">
+                        Engineered specifically for creators, editors, and motion designers. Cleanly mixed, frequency-balanced, and ready for immediate drop into Adobe Premiere Pro, After Effects, DaVinci Resolve, CapCut, and Final Cut Pro.
+                    </p>
+                </div>
+
+                <div class="glass-card">
+                    <h3 style="font-size:1.1rem;color:#fff;margin-bottom:16px"><i class="fas fa-cloud-arrow-down" style="color:var(--cherry-neon);margin-right:8px"></i> Download Library</h3>
+                    <a href="#" id="dlAudioBtn" class="dl-audio-btn" onclick="genAudioToken(event, '${p.id}', '${p.file_path || ''}')">
+                        <i class="fas fa-bolt"></i> Instant Download
+                    </a>
+                    <div style="text-align:center;font-size:0.72rem;color:rgba(255,255,255,0.45)">
+                        <i class="fas fa-shield-halved"></i> Fast CDN direct link &middot; 100% Free
+                    </div>
+                </div>
+            </div>
+        `;
+
+        setupAudioEvents();
+    }
+
+    function setupAudioEvents() {
+        if (!currentAudio) return;
+
+        currentAudio.ontimeupdate = () => {
+            if (!currentAudio.duration) return;
+            const pct = (currentAudio.currentTime / currentAudio.duration) * 100;
+            const fill = document.getElementById('waveFill');
+            if (fill) fill.style.width = pct + '%';
+
+            const cur = document.getElementById('timeCurrent');
+            if (cur) cur.textContent = formatTime(currentAudio.currentTime);
         };
 
-        // Creators & Uploader (Zyrex VPS Bot API avatar + "Uploaded by")
-        const creatorsBox = document.getElementById('creatorsContainer');
-        let html = '';
-        var uploaderId = p.uploader_id || p.author_id || '';
-        var uploaderName = p.uploader_name || p.author_name || '';
+        currentAudio.onloadedmetadata = () => {
+            const tot = document.getElementById('timeTotal');
+            if (tot) tot.textContent = formatTime(currentAudio.duration);
+        };
 
-        if (uploaderName) {
-            var uploaderAv = await fetchZyrexBotAvatar(uploaderId, p.uploader_avatar);
-            html += `<div class="creator-card"><div class="creator-avatar"><img src="${uploaderAv}" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'"></div><div class="creator-info"><strong>${uploaderName}</strong><span>Uploaded by</span></div></div>`;
-        }
-        if (p.creator_nickname || p.creator_social_url) {
-            html += `<div class="creator-card"><div class="creator-avatar">${p.creator_avatar ? `<img src="${p.creator_avatar}">` : `<i class="fas fa-user"></i>`}</div><div class="creator-info"><strong>${p.creator_nickname || 'Creator'}</strong>${p.creator_social_url ? `<a href="${p.creator_social_url}" target="_blank">View Social Profile</a>` : '<span>Original Creator</span>'}</div></div>`;
-        }
-        creatorsBox.innerHTML = html;
-    }
-
-    function togglePlay() {
-        if (!audioObj.src) return;
-        if (isPlaying) {
-            audioObj.pause();
+        currentAudio.onended = () => {
             isPlaying = false;
-            document.getElementById('playIcon').className = 'fas fa-play';
+            const icon = document.getElementById('deckPlayIcon');
+            if (icon) icon.className = 'fas fa-play';
+        };
+    }
+
+    function toggleDeckAudio() {
+        if (!currentAudio) return;
+        const icon = document.getElementById('deckPlayIcon');
+
+        if (isPlaying) {
+            currentAudio.pause();
+            isPlaying = false;
+            if (icon) icon.className = 'fas fa-play';
         } else {
-            audioObj.play();
-            isPlaying = true;
-            document.getElementById('playIcon').className = 'fas fa-pause';
+            currentAudio.play().then(() => {
+                isPlaying = true;
+                if (icon) icon.className = 'fas fa-pause';
+            }).catch(e => {
+                alert("Audio preview not directly playable in browser. Please download the sound pack.");
+            });
         }
     }
 
-    function updateProgress() {
-        if (!audioObj.duration) return;
-        const cur = audioObj.currentTime;
-        const dur = audioObj.duration;
-        const pct = (cur / dur) * 100;
-        document.getElementById('progressFill').style.width = pct + '%';
-        document.getElementById('timeDisplay').textContent = `${formatTime(cur)} / ${formatTime(dur)}`;
-    }
-
-    function seekAudio(e) {
-        if (!audioObj.duration) return;
-        const rect = e.currentTarget.getBoundingClientRect();
+    function seekDeckAudio(e) {
+        if (!currentAudio || !currentAudio.duration) return;
+        const track = document.getElementById('waveTrack');
+        const rect = track.getBoundingClientRect();
         const clickX = e.clientX - rect.left;
-        const pct = clickX / rect.width;
-        audioObj.currentTime = pct * audioObj.duration;
+        const width = rect.width;
+        const targetTime = (clickX / width) * currentAudio.duration;
+        currentAudio.currentTime = targetTime;
     }
 
     function formatTime(sec) {
-        if (isNaN(sec)) return '0:00';
+        if (isNaN(sec)) return "0:00";
         const m = Math.floor(sec / 60);
         const s = Math.floor(sec % 60);
-        return `${m}:${s < 10 ? '0' : ''}${s}`;
+        return m + ":" + (s < 10 ? "0" : "") + s;
     }
+
+    window.genAudioToken = function(e, pid, fp) {
+        e.preventDefault();
+        var b = document.getElementById("dlAudioBtn");
+        if (!b) return;
+        b.style.pointerEvents = "none";
+        b.style.opacity = "0.65";
+        b.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating Download...';
+
+        var targetTab = window.open('about:blank', '_blank');
+        var q = new URLSearchParams();
+        if (fp) q.set("file_path", fp);
+        q.set("return_to", location.pathname + location.search);
+
+        fetch("/api/downloads/request-token/" + encodeURIComponent(pid) + "?" + q.toString(), { credentials: "include" })
+            .then(res => res.json().then(data => {
+                b.style.pointerEvents = "";
+                b.style.opacity = "";
+                b.innerHTML = '<i class="fas fa-bolt"></i> Instant Download';
+                if (!res.ok || !data.success) {
+                    if (targetTab) targetTab.close();
+                    if (res.status === 401) {
+                        window.location.href = "/api/login?redirect=" + encodeURIComponent(location.pathname + location.search);
+                    } else {
+                        alert(data.error || "Could not generate download link");
+                    }
+                    return;
+                }
+                var targetUrl = data.ad_url || data.short_url || data.url;
+                if (targetTab && targetUrl) targetTab.location.href = targetUrl;
+                else if (targetUrl) window.location.href = targetUrl;
+            }))
+            .catch(err => {
+                if (targetTab) targetTab.close();
+                b.style.pointerEvents = "";
+                b.style.opacity = "";
+                b.innerHTML = '<i class="fas fa-bolt"></i> Instant Download';
+                alert("Network error.");
+            });
+    };
     </script>
 </body>
 </html>

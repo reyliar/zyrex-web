@@ -83,7 +83,7 @@ function clearAuthCache() {
 function renderLoginUI(btn) {
     if (!btn) return;
     btn.classList.remove('auth-ready', 'menu-open');
-    btn.innerHTML = '<button type="button" onclick="openLoginModal()" class="auth-login-btn"><i class="fab fa-discord"></i><span>Login</span></button>';
+    btn.innerHTML = '<button type="button" onclick="openLoginModal()" class="auth-login-btn"><span>Login</span></button>';
 }
 
 function openLoginModal() {
@@ -163,6 +163,37 @@ function renderAuthUI(user) {
             ((user.can_upload || user.is_admin) ? '<a href="/upload" class="auth-menu-link"><i class="fas fa-cloud-upload-alt"></i><span>Upload</span></a>' : '') +
             '<a href="/api/logout" class="auth-menu-link auth-menu-link-danger"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>' +
         '</div>';
+    
+    attachUserHover(btn);
+}
+
+function attachUserHover(btn) {
+    if (!btn || btn._hoverAttached) return;
+    btn._hoverAttached = true;
+    var hoverTimer = null;
+
+    btn.addEventListener('mouseenter', function() {
+        if (hoverTimer) clearTimeout(hoverTimer);
+        var menu = document.getElementById('userMenu');
+        var trigger = btn.querySelector('.auth-user');
+        if (menu && btn.querySelector('.auth-user')) {
+            btn.classList.add('menu-open');
+            menu.hidden = false;
+            if (trigger) trigger.setAttribute('aria-expanded', 'true');
+        }
+    });
+
+    btn.addEventListener('mouseleave', function() {
+        hoverTimer = setTimeout(function() {
+            var menu = document.getElementById('userMenu');
+            var trigger = btn.querySelector('.auth-user');
+            if (menu) {
+                btn.classList.remove('menu-open');
+                menu.hidden = true;
+                if (trigger) trigger.setAttribute('aria-expanded', 'false');
+            }
+        }, 180);
+    });
 }
 
 async function checkAuth() {

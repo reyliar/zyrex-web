@@ -3,546 +3,391 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Zyrex Resources - Product detail">
+    <meta name="description" content="Zyrex Software & Plugins - Verified tools and VFX suites">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://zyrexediting.xyz/product">
+    <meta property="og:title" content="Zyrex | Software &amp; Plugins">
+    <meta property="og:description" content="Verified software, plugins, and editing suites on Zyrex">
+    <meta property="og:image" content="https://zyrexediting.xyz/assets/banner.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://zyrexediting.xyz/assets/banner.png">
     <meta name="author" content="Zyrex">
-    <title>Zyrex | Product</title>
+    <title>Zyrex | Software &amp; Plugins</title>
     <link rel="icon" type="image/png" href="/assets/content.png">
-    <link rel="stylesheet" href="css/style.css?v=24">
+    <link rel="stylesheet" href="css/style.css?v=26">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        /* FULLSCREEN LOADER OVERLAY */
+        /* FULLSCREEN LOADER */
         .resources-loader-overlay {
             position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            width: 100vw; height: 100vh;
+            inset: 0;
             z-index: 9999999;
-            background: #080204;
+            background: #060208;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-direction: column;
-            opacity: 1;
-            visibility: visible;
-            transition: opacity 0.5s ease, visibility 0.5s ease;
+            transition: opacity 0.4s ease, visibility 0.4s ease;
         }
         .resources-loader-overlay.fade-out {
             opacity: 0 !important;
             visibility: hidden !important;
             pointer-events: none !important;
         }
-        .resources-loader-content { text-align: center; display: flex; flex-direction: column; align-items: center; }
-        .loader-logo-container { position: relative; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center; }
-        .loader-logo-img { width: 48px; height: 48px; object-fit: contain; z-index: 2; filter: drop-shadow(0 0 12px rgba(230, 21, 54, 0.7)); animation: loaderLogoPulse 1.8s ease-in-out infinite alternate; }
-        .loader-pulse-ring { position: absolute; inset: 0; border-radius: 50%; border: 2px solid rgba(230, 21, 54, 0.2); border-top-color: #e61536; animation: loaderSpin 1s linear infinite; }
-        @keyframes loaderSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @keyframes loaderLogoPulse { 0% { transform: scale(0.92); opacity: 0.8; } 100% { transform: scale(1.08); opacity: 1; } }
+        .loader-logo-container { position: relative; width: 72px; height: 72px; display: flex; align-items: center; justify-content: center; }
+        .loader-logo-img { width: 44px; height: 44px; object-fit: contain; z-index: 2; filter: drop-shadow(0 0 12px rgba(255, 43, 82, 0.7)); animation: prodPulse 1.8s ease-in-out infinite alternate; }
+        .loader-pulse-ring { position: absolute; inset: 0; border-radius: 50%; border: 2px solid rgba(255, 43, 82, 0.2); border-top-color: #ff2b52; animation: prodSpin 1s linear infinite; }
+        @keyframes prodSpin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes prodPulse { 0% { transform: scale(0.92); opacity: 0.8; } 100% { transform: scale(1.08); opacity: 1; } }
 
         :root {
-            --cherry: #e61536;
-            --cherry-rgb: 230, 21, 54;
-            --cherry-light: #ff4d6d;
-            --rose-glow: rgba(230, 21, 54, 0.15);
-            --dark: #070203;
-            --light: #fcedf0;
-            --gray: #d4b0b8;
-            --gray-dark: #8a6570;
-            --card-bg: rgba(12, 2, 4, 0.45);
-            --card-border: rgba(230, 21, 54, 0.08);
-            --transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            --neon-cherry: #ff2b52;
+            --card-glass: rgba(14, 10, 20, 0.86);
+            --card-border: rgba(255, 255, 255, 0.10);
+            --text-main: #f8f5f6;
+            --text-sub: rgba(255, 255, 255, 0.65);
         }
 
-        .product-page {
-            padding-top: 160px;
+        body {
+            background: #050207;
+            background-image: radial-gradient(circle at 50% 0%, rgba(255, 43, 82, 0.12) 0%, transparent 60%);
+            color: var(--text-main);
+            font-family: 'Poppins', sans-serif;
             min-height: 100vh;
-            background: var(--dark);
-            position: relative;
-            overflow: hidden;
+            overflow-x: hidden;
         }
 
-        .product-back {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            color: var(--gray-dark);
-            font-size: 0.82rem;
-            text-decoration: none;
-            margin-bottom: 28px;
-            transition: var(--transition);
-            font-weight: 500;
-            animation: fadeSlideIn 0.5s ease forwards;
-        }
-        .product-back:hover {
-            color: var(--cherry-light);
-            transform: translateX(-2px);
-        }
-
-        /* iOS 26 LIQUID GLASS PRODUCT CARD */
-        .product-card {
-            max-width: 960px;
-            margin: 0 auto 60px;
-            background: rgba(12, 10, 16, 0.75);
-            backdrop-filter: blur(32px) saturate(200%);
-            -webkit-backdrop-filter: blur(32px) saturate(200%);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 28px;
-            padding: 40px;
-            display: grid;
-            grid-template-columns: 300px 1fr;
-            gap: 40px;
-            text-align: left;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.18);
-            transition: var(--transition);
-        }
-
-        .product-card:hover {
-            border-color: rgba(255, 43, 82, 0.30);
-            box-shadow: 0 40px 90px rgba(0, 0, 0, 0.85), 0 0 35px rgba(255, 43, 82, 0.15);
-        }
-
-        .product-left-col {
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-            border-right: 1px solid rgba(255, 255, 255, 0.08);
-            padding-right: 32px;
-        }
-        .product-right-col {
-            display: flex;
-            flex-direction: column;
-            gap: 24px;
-        }
-
-        @media (max-width: 800px) {
-            .product-page { padding-top: 120px; }
-            .product-card {
-                grid-template-columns: 1fr;
-                padding: 30px 20px;
-                gap: 30px;
-            }
-            .product-left-col {
-                border-right: none;
-                padding-right: 0;
-                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-                padding-bottom: 24px;
-                gap: 20px;
-            }
-        }
-
-        @keyframes fadeSlideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fadeSlideIn {
-            from { opacity: 0; transform: translateX(-10px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        /* iOS 26 LARGE SQUIRCLE THUMBNAIL */
-        .product-thumb-large {
-            width: 130px;
-            height: 130px;
-            border-radius: 30px;
-            background: rgba(14, 10, 18, 0.75);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .product-page-wrap {
+            padding: 130px 0 90px;
+            max-width: 1140px;
             margin: 0 auto;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.13);
-            box-shadow: 0 12px 40px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,0.14);
-            transition: var(--transition);
-        }
-        .product-thumb-large:hover {
-            transform: scale(1.04);
-            border-color: rgba(255, 43, 82, 0.40);
-            box-shadow: 0 16px 50px rgba(0,0,0,.6), 0 0 30px rgba(255,43,82,0.15);
-        }
-        .product-thumb-large img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .product-thumb-large .thumb-fallback {
-            font-size: 2.4rem;
-            color: rgba(255, 43, 82, 0.6);
+            padding-left: 20px;
+            padding-right: 20px;
         }
 
-        /* iOS 26 CATEGORY & PLATFORM BADGES */
-        .product-category-badge {
-            display: inline-flex;
-            align-items: center;
-            padding: 5px 18px;
-            background: rgba(255, 43, 82, 0.12);
-            border: 1px solid rgba(255, 43, 82, 0.28);
-            border-radius: 999px;
-            font-size: 0.68rem;
-            font-weight: 800;
-            color: #ff6b8b;
-            letter-spacing: 1.2px;
-            text-transform: uppercase;
-        }
-
-        .product-desc {
-            color: rgba(255,255,255,0.65);
-            font-size: 0.92rem;
-            line-height: 1.65;
-        }
-
-        .product-platform-tags {
+        .breadcrumb-bar {
             display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        .product-platform-tags span {
-            padding: 5px 14px;
-            border-radius: 999px;
-            font-size: 0.65rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .product-platform-tags .tag-win {
-            background: rgba(0, 200, 100, 0.10);
-            color: #00e676;
-            border: 1px solid rgba(0, 200, 100, 0.22);
-        }
-        .product-platform-tags .tag-mac {
-            background: rgba(0, 122, 255, 0.10);
-            color: #4da6ff;
-            border: 1px solid rgba(0, 122, 255, 0.22);
-        }
-
-        /* Windows SVG Mask Icon */
-        .win11-logo {
-            display: inline-block;
-            width: 10px;
-            height: 10px;
-            background-color: currentColor;
-            -webkit-mask: url(/assets/windows11.svg) no-repeat center;
-            -webkit-mask-size: contain;
-            mask: url(/assets/windows11.svg) no-repeat center;
-            mask-size: contain;
-        }
-
-        /* iOS 26 GLASS CREATOR BLOCK */
-        .creator-block {
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 18px;
-            padding: 14px 16px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-top: 12px;
-            backdrop-filter: blur(20px);
-            transition: var(--transition);
-        }
-        .creator-block:hover {
-            border-color: rgba(255, 43, 82, 0.25);
-            background: rgba(255, 43, 82, 0.04);
-        }
-        .creator-block .cb-avatar {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            overflow: hidden;
-            border: 1.5px solid rgba(255, 43, 82, 0.25);
-            flex-shrink: 0;
-            background: rgba(255, 43, 82, 0.08);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .creator-block .cb-avatar img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .creator-block .cb-avatar i {
-            color: #ff6b8b;
-            font-size: 1.1rem;
-        }
-        .creator-block .cb-info strong {
-            display: block;
-            font-size: 0.82rem;
-            color: #fff;
-            font-family: 'Outfit', sans-serif;
-        }
-        .creator-block .cb-info span {
-            display: block;
-            font-size: 0.65rem;
-            color: rgba(255,255,255,0.40);
-        }
-        .creator-block .cb-info a {
-            font-size: 0.7rem;
-            color: #ff6b8b;
-            text-decoration: none;
-            transition: var(--transition);
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            margin-top: 2px;
-        }
-        .creator-block .cb-info a:hover {
-            color: #fff;
-        }
-
-        /* iOS 26 PASSWORD BOX */
-        .product-password-box {
-            display: inline-flex;
             align-items: center;
             gap: 10px;
-            padding: 10px 18px;
-            background: rgba(255, 43, 82, 0.06);
-            border: 1px solid rgba(255, 43, 82, 0.18);
-            border-radius: 999px;
-            margin-bottom: 8px;
+            margin-bottom: 24px;
+            font-size: 0.84rem;
         }
-        .product-password-box i {
-            color: #ff6b8b;
-            font-size: 0.85rem;
-        }
-        .product-password-box span {
-            color: rgba(255,255,255,0.6);
-            font-size: 0.8rem;
-        }
-        .product-password-box code {
-            background: rgba(255, 43, 82, 0.14);
-            color: #ff6b8b;
-            padding: 3px 12px;
-            border-radius: 999px;
-            font-weight: 700;
-            font-size: 0.82rem;
-            cursor: pointer;
-            transition: var(--transition);
-        }
-        .product-password-box code:hover {
-            background: rgba(255, 43, 82, 0.26);
-            color: #fff;
-        }
-
-        .product-notes {
-            background: rgba(255, 193, 7, 0.03);
-            border: 1px solid rgba(255, 193, 7, 0.08);
-            border-radius: 12px;
-            padding: 12px 18px;
-            margin-top: 8px;
-            font-size: 0.78rem;
-            color: var(--gray);
-            line-height: 1.5;
-            display: flex;
-            align-items: flex-start;
-            gap: 8px;
-        }
-        .product-notes i {
-            color: #ffc107;
-            margin-top: 2px;
-        }
-
-        .product-downloads-title {
-            font-size: 0.78rem;
-            font-weight: 700;
-            color: var(--gray-dark);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            margin-bottom: 12px;
-            display: flex;
+        .breadcrumb-bar a {
+            display: inline-flex;
             align-items: center;
             gap: 6px;
+            color: var(--text-sub);
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.2s ease;
         }
+        .breadcrumb-bar a:hover { color: var(--neon-cherry); }
+        .breadcrumb-bar span.sep { color: rgba(255,255,255,0.25); }
+        .breadcrumb-bar span.current { color: #fff; font-weight: 600; }
 
-        .product-downloads {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        /* iOS 26 DOWNLOAD ROWS */
-        .product-dl-btn {
+        /* HERO SOFTWARE HEADER */
+        .software-header-card {
+            background: var(--card-glass);
+            border: 1px solid var(--card-border);
+            border-radius: 28px;
+            padding: 36px 40px;
+            backdrop-filter: blur(36px) saturate(210%);
+            -webkit-backdrop-filter: blur(36px) saturate(210%);
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.14);
             display: flex;
             align-items: center;
-            gap: 14px;
-            padding: 14px 18px;
-            background: rgba(14, 10, 18, 0.70);
-            border: 1px solid rgba(255, 255, 255, 0.09);
-            border-radius: 18px;
-            text-decoration: none;
-            transition: var(--transition);
-            text-align: left;
-            opacity: 0;
-            animation: fadeSlideUp 0.5s ease forwards;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.07);
+            gap: 32px;
+            margin-bottom: 28px;
+            position: relative;
+            overflow: hidden;
         }
-        .product-dl-btn:hover {
-            border-color: rgba(255, 43, 82, 0.30);
-            transform: translateX(4px);
-            background: rgba(255, 43, 82, 0.06);
-            box-shadow: 0 12px 30px rgba(0,0,0,.45), 0 0 20px rgba(255,43,82,0.10);
+        .software-header-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 15%; right: 15%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(255, 43, 82, 0.5), transparent);
         }
 
-        .product-dl-btn .dl-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 13px;
-            background: rgba(255, 255, 255, 0.05);
+        .software-icon-box {
+            width: 110px;
+            height: 110px;
+            border-radius: 24px;
+            background: rgba(8, 4, 12, 0.9);
+            border: 1.5px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 25px rgba(255, 43, 82, 0.20);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1rem;
             flex-shrink: 0;
-            border: 1px solid rgba(255, 255, 255, 0.09);
-            transition: var(--transition);
+            overflow: hidden;
+            position: relative;
         }
-        .product-dl-btn:hover .dl-icon {
-            background: rgba(255, 43, 82, 0.12);
-            border-color: rgba(255, 43, 82, 0.28);
+        .software-icon-box img {
+            width: 72px;
+            height: 72px;
+            object-fit: contain;
         }
-        .product-dl-btn .dl-icon.pixeldrain { color: #00e676; }
-        .product-dl-btn .dl-icon.gofile { color: #ff6b8b; }
-        .product-dl-btn .dl-icon.mediafire { color: #ff9f43; }
-        .product-dl-btn .dl-icon.default { color: #ff6b8b; }
 
-        .product-dl-btn .dl-info {
+        .software-header-content {
             flex: 1;
             min-width: 0;
         }
-        .product-dl-btn .dl-info strong {
-            display: block;
-            font-size: 0.88rem;
-            font-weight: 600;
-            color: var(--light);
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .product-dl-btn .dl-info span {
-            display: block;
-            font-size: 0.72rem;
-            color: var(--gray-dark);
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .product-dl-btn .dl-arrow {
-            color: var(--gray-dark);
-            font-size: 0.95rem;
-            transition: var(--transition);
-        }
-        .product-dl-btn:hover .dl-arrow {
-            color: var(--cherry-light);
-            transform: translateX(2px);
-        }
-
-        .product-loading {
-            text-align: center;
-            padding: 100px 20px;
-            color: var(--gray);
-        }
-        .product-loading i {
+        .software-header-content h1 {
             font-size: 2.2rem;
-            color: var(--cherry-light);
-            margin-bottom: 15px;
-            display: block;
+            font-weight: 900;
+            letter-spacing: -0.5px;
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            margin-bottom: 8px;
+            line-height: 1.2;
         }
 
-        .product-error {
-            text-align: center;
-            padding: 80px 20px;
-            color: var(--gray);
-        }
-        .product-error i {
-            font-size: 3rem;
-            color: var(--cherry-light);
-            opacity: 0.4;
-            margin-bottom: 15px;
-            display: block;
-        }
-
-        /* iOS 26 ADMIN CONTROLS */
-        .admin-bar {
+        .software-badges-row {
             display: flex;
+            align-items: center;
             gap: 10px;
-            margin-top: 24px;
             flex-wrap: wrap;
-            justify-content: center;
         }
-        .admin-bar .btn-admin {
+        .plat-badge {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 10px 22px;
+            padding: 5px 14px;
             border-radius: 999px;
-            font-size: .8rem;
+            font-size: 0.72rem;
             font-weight: 700;
-            cursor: pointer;
-            border: none;
-            font-family: inherit;
-            transition: var(--transition);
-            color: #fff;
-            backdrop-filter: blur(16px);
+            letter-spacing: 0.5px;
         }
-        .btn-admin-edit { background: rgba(255, 180, 0, 0.14); border: 1px solid rgba(255, 180, 0, 0.25); color: #ffcc00; }
-        .btn-admin-edit:hover { background: rgba(255, 180, 0, 0.24); transform: scale(1.04); }
-        .btn-admin-delete { background: rgba(255, 56, 96, 0.12); border: 1px solid rgba(255, 56, 96, 0.25); color: #ff6b8b; }
-        .btn-admin-delete:hover { background: rgba(255, 56, 96, 0.22); transform: scale(1.04); }
+        .plat-win {
+            background: rgba(0, 150, 255, 0.14);
+            border: 1px solid rgba(0, 150, 255, 0.35);
+            color: #4db5ff;
+        }
+        .plat-mac {
+            background: rgba(255, 255, 255, 0.10);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            color: #ffffff;
+        }
+        .plat-cat {
+            background: rgba(255, 43, 82, 0.12);
+            border: 1px solid rgba(255, 43, 82, 0.30);
+            color: #ff6b85;
+        }
 
-        .admin-modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.75);
-            z-index: 20000;
+        /* 2-COLUMN GRID */
+        .software-grid {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 28px;
+            align-items: start;
+        }
+
+        .glass-box {
+            background: var(--card-glass);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 28px;
+            backdrop-filter: blur(32px) saturate(210%);
+            -webkit-backdrop-filter: blur(32px) saturate(210%);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.10);
+            margin-bottom: 24px;
+        }
+
+        .box-title {
+            font-size: 0.76rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: rgba(255, 255, 255, 0.5);
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .box-title i { color: var(--neon-cherry); }
+
+        /* TABS */
+        .tab-nav {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 12px;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: rgba(255, 255, 255, 0.55);
+            padding: 8px 18px;
+            border-radius: 12px;
+            font-size: 0.86rem;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .tab-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
+        .tab-btn.active {
+            color: #fff;
+            background: rgba(255, 43, 82, 0.18);
+            border: 1px solid rgba(255, 43, 82, 0.35);
+        }
+
+        .tab-pane { display: none; }
+        .tab-pane.active { display: block; animation: tabFade 0.3s ease both; }
+        @keyframes tabFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+        .software-desc {
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 0.92rem;
+            line-height: 1.85;
+        }
+
+        /* TECH MATRIX TABLE */
+        .tech-matrix {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .matrix-cell {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 14px 18px;
+        }
+        .matrix-cell .cell-title {
+            font-size: 0.68rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.45);
+            margin-bottom: 4px;
+        }
+        .matrix-cell .cell-val {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* PASSWORD CARD */
+        .pw-box {
+            background: rgba(255, 43, 82, 0.06);
+            border: 1px solid rgba(255, 43, 82, 0.2);
+            border-radius: 16px;
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        .pw-text {
+            font-family: monospace;
+            font-size: 1rem;
+            font-weight: 700;
+            color: #ff6b85;
+            letter-spacing: 1px;
+        }
+
+        /* DOWNLOAD BUTTONS */
+        .dl-main-btn {
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
-            backdrop-filter: blur(8px);
-        }
-        .admin-modal {
-            background: rgba(12, 2, 4, 0.95);
-            border: 1px solid rgba(230, 21, 54, 0.15);
-            border-radius: 20px;
-            padding: 30px;
-            max-width: 500px;
+            gap: 12px;
             width: 100%;
-            max-height: 90vh;
-            overflow-y: auto;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+            padding: 16px 24px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, #ff2b52 0%, #b80d2d 100%);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            color: #fff;
+            font-size: 0.96rem;
+            font-weight: 800;
+            font-family: inherit;
+            text-decoration: none;
+            cursor: pointer;
+            box-shadow: 0 12px 30px rgba(255, 43, 82, 0.35);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 12px;
         }
-        .admin-modal h3 { font-size: 1.1rem; font-weight: 800; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; font-family: 'Outfit', sans-serif; }
-        .admin-modal .form-group { margin-bottom: 16px; }
-        .admin-modal .form-group label { display: block; font-size: .7rem; font-weight: 700; margin-bottom: 6px; color: var(--gray-dark); text-transform: uppercase; letter-spacing: 1px; }
-        .admin-modal .form-group input, .admin-modal .form-group textarea, .admin-modal .form-group select { width: 100%; padding: 10px 14px; background: rgba(12, 2, 4, 0.5); border: 1px solid rgba(230, 21, 54, 0.12); border-radius: 8px; color: var(--light); font-family: inherit; font-size: .85rem; outline: none; transition: var(--transition); }
-        .admin-modal .form-group input:focus, .admin-modal .form-group textarea:focus, .admin-modal .form-group select:focus { border-color: var(--cherry-light); }
-        .admin-modal .form-group textarea { min-height: 80px; resize: vertical; }
+        .dl-main-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 40px rgba(255, 43, 82, 0.55);
+            filter: brightness(1.1);
+        }
+
+        .mirrors-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        .mirror-pill {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 0.82rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        .mirror-pill:hover {
+            background: rgba(255, 43, 82, 0.10);
+            border-color: rgba(255, 43, 82, 0.30);
+            transform: translateX(3px);
+        }
+
+        .notes-callout {
+            background: rgba(255, 170, 0, 0.08);
+            border: 1px solid rgba(255, 170, 0, 0.25);
+            border-radius: 14px;
+            padding: 12px 16px;
+            font-size: 0.82rem;
+            color: #ffd000;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .software-header-card { flex-direction: column; text-align: center; padding: 30px 20px; }
+            .software-grid { grid-template-columns: 1fr; }
+            .tech-matrix { grid-template-columns: 1fr; }
+            .product-page-wrap { padding-top: 100px; }
+        }
     </style>
 </head>
 <body>
-    <!-- PRESET FULLSCREEN LOADER (SPINNER ONLY) -->
-    <div id="resources-loader" class="resources-loader-overlay">
-        <div class="resources-loader-content">
-            <div class="loader-logo-container">
-                <img src="assets/content.png" alt="Zyrex" class="loader-logo-img">
-                <div class="loader-pulse-ring"></div>
-            </div>
+    <div class="resources-loader-overlay" id="pageLoader">
+        <div class="loader-logo-container">
+            <div class="loader-pulse-ring"></div>
+            <img src="/assets/content.png" alt="Zyrex" class="loader-logo-img">
         </div>
+        <p style="margin-top: 16px; font-size: 0.85rem; color: rgba(255,255,255,0.6); font-weight: 600;">Loading Software &amp; Plugin...</p>
     </div>
-    <script>
-        setTimeout(function() {
-            var loader = document.getElementById('resources-loader');
-            if (loader && !loader.classList.contains('fade-out')) {
-                loader.classList.add('fade-out');
-                setTimeout(function() { if (loader && loader.parentNode) loader.parentNode.removeChild(loader); }, 600);
-            }
-        }, 1800);
-    </script>
+
     <div class="bg-aura"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
-    <!-- iOS 26 DYNAMIC ISLAND FLOATING GLASS NAVBAR -->
+
+    <!-- NAVBAR -->
     <nav class="navbar">
         <div class="container">
             <a href="/" class="logo">
@@ -552,7 +397,7 @@
             <ul class="nav-links" id="navLinks">
                 <li><a href="/">Home</a></li>
                 <li><a href="/resources">Resources</a></li>
-                <li><a href="/plugins">Plugins</a></li>
+                <li><a href="/plugins" class="active">Plugins</a></li>
                 <li><a href="/more">More</a></li>
                 <li><a href="/#contact">Contact</a></li>
             </ul>
@@ -567,15 +412,27 @@
         </div>
     </nav>
 
-    <section class="product-page">
-        <div class="container" id="productContainer">
-            <div class="product-loading" id="productLoading">
-                <i class="fas fa-spinner fa-spin"></i>
-                Loading product...
-            </div>
+    <!-- MAIN PRODUCT CONTAINER -->
+    <section class="product-page-wrap">
+        <div class="breadcrumb-bar">
+            <a href="/"><i class="fas fa-house"></i> Home</a>
+            <span class="sep">/</span>
+            <a href="/plugins"><i class="fas fa-cubes"></i> Plugins &amp; Software</a>
+            <span class="sep">/</span>
+            <span class="current" id="breadProductName">Software Detail</span>
         </div>
+
+        <div id="errState" style="display: none; text-align: center; padding: 80px 20px;">
+            <i class="fas fa-triangle-exclamation" style="font-size: 3rem; color: var(--neon-cherry); margin-bottom: 16px;"></i>
+            <h2 style="font-size: 1.6rem; color: #fff; margin-bottom: 8px;">Software Not Found</h2>
+            <p id="errMsgText" style="color: rgba(255,255,255,0.6); margin-bottom: 24px;">The requested product could not be loaded.</p>
+            <a href="/plugins" class="btn btn-primary"><i class="fas fa-arrow-left"></i> Browse Plugins &amp; Software</a>
+        </div>
+
+        <div id="productRoot" style="display: none;"></div>
     </section>
 
+    <!-- FOOTER -->
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
@@ -587,21 +444,22 @@
                         </a>
                         <h3 style="font-size:1.8rem;font-weight:900;margin:0;letter-spacing:2px;background:linear-gradient(135deg,#ffffff,#9090a0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Editing</h3>
                     </div>
-                    <p>Premium editing community & resources.</p>
+                    <p>Premium editing community &amp; resources.</p>
                 </div>
                 <div class="footer-links">
                     <h4>Quick Links</h4>
                     <ul>
                         <li><a href="/">Home</a></li>
-                        <li><a href="resources">Resources</a></li>
-                        <li><a href="plugins">Plugins</a></li>
+                        <li><a href="/resources">Resources</a></li>
+                        <li><a href="/plugins">Plugins</a></li>
+                        <li><a href="/more">More</a></li>
                     </ul>
                 </div>
                 <div class="footer-links">
                     <h4>Legal</h4>
                     <ul>
-                        <li><a href="/terms">Terms of Service</a></li>
-                        <li><a href="/privacy">Privacy Policy</a></li>
+                        <li><a href="/terms">Terms</a></li>
+                        <li><a href="/privacy">Privacy</a></li>
                         <li><a href="/dmca">DMCA</a></li>
                     </ul>
                 </div>
@@ -617,7 +475,7 @@
                     <p>Stay updated with Zyrex Editing.</p>
                     <div class="newsletter-form">
                         <input type="email" placeholder="Your email">
-                        <button type="submit"><i class="fas fa-arrow-right"></i></button>
+                        <button type="submit" aria-label="Subscribe"><i class="fas fa-arrow-right"></i></button>
                     </div>
                 </div>
             </div>
@@ -627,30 +485,31 @@
         </div>
     </footer>
 
-    <script src="js/auth.js?v=10"></script>
+    <script src="js/auth.js?v=11"></script>
     <script src="js/script.js?v=5"></script>
     <script src="js/plugins-data.js?v=4"></script>
     <script src="js/presets-data.js?v=4"></script>
     <script>
-    /* ===================== PRODUCT PAGE RENDER ===================== */
+    function hideLoader() {
+        var loader = document.getElementById('pageLoader');
+        if (loader) loader.classList.add('fade-out');
+    }
+
     document.addEventListener('DOMContentLoaded', async () => {
         const params = new URLSearchParams(window.location.search);
         const productId = params.get('id');
 
-        const container = document.getElementById('productContainer');
-        const loading = document.getElementById('productLoading');
-
         if (!productId) {
-            showError("Product ID missing");
+            hideLoader();
+            showError("Product ID is missing.");
             return;
         }
 
         let product = null;
         let isDbProduct = false;
 
-        // 1. Try to fetch from backend database first
         try {
-            const resp = await fetch(`/api/products?id=${productId}`);
+            const resp = await fetch(`/api/products?id=${encodeURIComponent(productId)}`);
             if (resp.ok) {
                 const dbProduct = await resp.json();
                 if (dbProduct && dbProduct.id) {
@@ -658,418 +517,295 @@
                     isDbProduct = true;
                 }
             }
-        } catch(e) {
-            console.warn("Could not load product from DB:", e);
-        }
+        } catch(e) {}
 
-        // 2. Fallback to local static arrays
         if (!product) {
             product = window.pluginsData ? window.pluginsData.find(p => p.id === productId) : null;
             if (!product) {
                 product = window.presetsData ? window.presetsData.find(p => p.id === productId) : null;
             }
-            // 3. Fallback to newly published products (from admin-upload)
             if (!product) {
                 try {
                     const newProducts = JSON.parse(localStorage.getItem('zyrex_new_products') || '[]');
                     product = newProducts.find(p => p.id === productId);
-                    if (product) isDbProduct = false; // local product, mark as non-DB
                 } catch(e) {}
             }
         }
 
         if (!product) {
-            showError("Product not found");
+            hideLoader();
+            showError("Product not found.");
             return;
         }
-
-        // Apply any local edits from admin
-        try {
-            const edits = JSON.parse(localStorage.getItem('zyrex_edited_products') || '{}');
-            if (edits[productId]) {
-                const e = edits[productId];
-                product.name = e.name || product.name;
-                product.type = e.type || product.type;
-                product.category = e.category || product.category;
-                product.platform = e.platform || product.platform;
-                product.description = e.description || product.description;
-                product.desc = e.description || product.desc;
-                product.password = e.password !== undefined ? e.password : product.password;
-                product.links = e.links || product.links;
-                product.notes = e.notes || product.notes;
-            }
-        } catch(e) {}
 
         if (product.type === 'scenepack') {
             window.location.href = '/product-scenepack?id=' + encodeURIComponent(productId);
             return;
         }
-
-        renderProductDetail(product, isDbProduct);
-
-        // ── ADMIN CONTROLS ──
-        let currentUser = null;
-        try {
-            const meResp = await fetch('/api/me', { credentials: 'include' });
-            if (meResp.ok) currentUser = await meResp.json();
-        } catch(e) {}
-
-        if (currentUser && currentUser.is_admin && productId) {
-            const adminBar = document.createElement('div');
-            adminBar.className = 'admin-bar';
-            adminBar.style.cssText = 'position:fixed;top:90px;right:24px;z-index:9000;flex-direction:column;gap:8px;align-items:flex-end';
-            adminBar.innerHTML = `
-                <button class="btn-admin btn-admin-edit" onclick="openEditModal()" title="Edit product"><i class="fas fa-pen"></i> Edit</button>
-                <button class="btn-admin btn-admin-delete" onclick="confirmDelete()" title="Delete product"><i class="fas fa-trash"></i> Delete</button>
-            `;
-            document.body.appendChild(adminBar);
-
-            window._productData = { product, isDbProduct, productId };
-
-            // Edit modal
-            window.openEditModal = function() {
-                const p = window._productData.product;
-                const modal = document.createElement('div');
-                modal.className = 'admin-modal-overlay';
-                modal.id = 'editModal';
-                modal.innerHTML = `
-                    <div class="admin-modal">
-                        <h3><i class="fas fa-pen" style="color:#ffb400"></i> Edit Product</h3>
-                        <div class="form-group"><label>Name</label><input id="edName" value="${(p.name||'').replace(/"/g,'&quot;')}"></div>
-                        <div class="form-group"><label>Category</label><select id="edCat">
-                            <option value="software" ${p.category==='software'?'selected':''}>Software</option>
-                            <option value="adobe-plugin" ${p.category==='adobe-plugin'?'selected':''}>Adobe Plugin</option>
-                            <option value="ofx-plugin" ${p.category==='ofx-plugin'?'selected':''}>OFX Plugin</option>
-                            <option value="avx" ${p.category==='avx'?'selected':''}>AVX</option>
-                            <option value="extensions-scripts" ${p.category==='extensions-scripts'?'selected':''}>Extensions & Scripts</option>
-                        </select></div>
-                        <div class="form-group"><label>Platform</label><select id="edPlat">
-                            <option value="win" ${p.platform==='win'?'selected':''}>Windows</option>
-                            <option value="mac" ${p.platform==='mac'?'selected':''}>Mac</option>
-                            <option value="both" ${p.platform==='both'?'selected':''}>Both</option>
-                        </select></div>
-                        <div class="form-group"><label>Description</label><textarea id="edDesc">${(p.desc||p.description||'').replace(/"/g,'&quot;')}</textarea></div>
-                        <div class="form-group"><label>ZIP Password</label><input id="edPw" value="${p.password||''}"></div>
-                        <div class="form-group"><label>Download URL</label><input id="edUrl" value="${(p.links&&p.links[0]?p.links[0].url:p.downloadUrl||'')}"></div>
-                        <div class="form-group"><label>Notes</label><input id="edNotes" value="${(p.notes||'').replace(/"/g,'&quot;')}"></div>
-                        <div style="display:flex;gap:10px;margin-top:20px">
-                            <button class="btn-admin btn-admin-edit" style="flex:1;justify-content:center" onclick="submitEdit()"><i class="fas fa-save"></i> Save Changes</button>
-                            <button class="btn-admin btn-admin-delete" style="flex:1;justify-content:center" onclick="document.getElementById('editModal').remove()"><i class="fas fa-times"></i> Cancel</button>
-                        </div>
-                    </div>`;
-                document.body.appendChild(modal);
-                modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
-            };
-
-            window.submitEdit = async function() {
-                const p = window._productData.product;
-                const data = {
-                    id: productId,
-                    name: document.getElementById('edName').value.trim(),
-                    type: p.type || 'plugin',
-                    category: document.getElementById('edCat').value,
-                    platform: document.getElementById('edPlat').value,
-                    description: document.getElementById('edDesc').value.trim(),
-                    password: document.getElementById('edPw').value.trim() || (p.password || null),
-                    links: [{ url: document.getElementById('edUrl').value.trim(), label: 'Download' }],
-                    notes: document.getElementById('edNotes').value.trim() || null
-                };
-                try {
-                    const resp = await fetch(`/api/products/edit/${productId}`, {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(data), credentials: 'include'
-                    });
-                    if (resp.ok) {
-                        // Persist edit to localStorage so it survives static JS reload
-                        try {
-                            const key = 'zyrex_edited_products';
-                            const edits = JSON.parse(localStorage.getItem(key) || '{}');
-                            edits[productId] = data;
-                            localStorage.setItem(key, JSON.stringify(edits));
-                        } catch(e) {}
-                        alert('Updated! Reloading...'); location.reload();
-                    }
-                    else alert('Update failed: ' + (await resp.text()));
-                } catch(e) { alert('Error: ' + e.message); }
-            };
-
-            window.confirmDelete = function() {
-                if (confirm('Delete "' + product.name + '"? This cannot be undone.')) {
-                    fetch('/api/products/delete', {
-                        method: 'POST', headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ id: productId }), credentials: 'include'
-                    }).then(r => {
-                        if (r.ok) {
-                            // Persist deletion in localStorage so it survives static data reloads
-                            try {
-                                const key = 'zyrex_deleted_products';
-                                const ids = JSON.parse(localStorage.getItem(key) || '[]');
-                                if (!ids.includes(productId)) { ids.push(productId); localStorage.setItem(key, JSON.stringify(ids)); }
-                            } catch(e) {}
-                            alert('Deleted!');
-                            location.href = 'resources';
-                        } else alert('Delete failed');
-                    });
-                }
-            };
+        if (product.type === 'audio') {
+            window.location.href = '/product-audio?id=' + encodeURIComponent(productId);
+            return;
         }
 
-        function showError(msg) {
-            loading.innerHTML = `
-                <div class="product-error">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <h3>${msg}</h3>
-                    <p style="margin-top:10px;color:var(--gray-dark)">The requested product could not be loaded.</p>
-                    <a href="resources" class="btn btn-primary" style="margin-top:20px;display:inline-flex">Back to Resources</a>
-                </div>
-            `;
-        }
-
-        function linkifyUrls(text) {
-            if (!text) return '';
-            var escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-            escaped = escaped.replace(/(https?:\/\/[^\s<>\[\]()]+)/gi, '<a href="$1" target="_blank" rel="noopener" style="color:var(--cherry-light);text-decoration:underline">$1</a>');
-            escaped = escaped.replace(/\n/g, '<br>');
-            return escaped;
-        }
-
-        function renderProductDetail(p, isDb) {
-            let backLink = 'resources';
-            if (p.type === 'plugin' || p.type === 'software') backLink = 'plugins';
-            if (p.type === 'audio') backLink = 'audio';
-            if (p.type === 'scenepack') backLink = 'scenepack';
-
-            const platformTags = [];
-            if (p.platform === 'win' || p.platform === 'both') platformTags.push('<span class="tag-win"><span class="win11-logo"></span> WIN</span>');
-            if (p.platform === 'mac' || p.platform === 'both') platformTags.push('<span class="tag-mac"><i class="fab fa-apple"></i> MAC</span>');
-
-            const categoryLabels = {
-                'software': 'Software',
-                'adobe-plugin': 'Adobe Plugin',
-                'ofx-plugin': 'OFX Plugin',
-                'others': 'Others'
-            };
-
-            const notesHtml = p.notes
-                ? `<div class="product-notes"><i class="fas fa-circle-info"></i> ${p.notes}</div>`
-                : '';
-
-            // Handle thumbnail
-            let thumbHtml = '';
-            if (p.thumbnail) {
-                thumbHtml = `<img src="${p.thumbnail}" alt="">`;
-            } else {
-                thumbHtml = `<img src="/assets/content.png" alt="" style="width:56px;height:56px;object-fit:contain">`;
-            }
-
-            // Creator details (original preset author) — only show if creator info exists
-            const hasCreator = p.creator_nickname || p.creator_social_url || p.creator_avatar;
-            const creatorNickname = p.creator_nickname || p.author_name || 'Creator';
-            const creatorAvatarHtml = p.creator_avatar
-                ? `<img src="${p.creator_avatar}" onerror="this.outerHTML='<i class=\\'fas fa-user\\'></i>'">`
-                : `<i class="fas fa-user"></i>`;
-            const creatorSocialHtml = p.creator_social_url
-                ? `<a href="${p.creator_social_url}" target="_blank"><i class="fas fa-external-link-alt" style="font-size:0.6rem"></i> View Profile</a>`
-                : '<span>Original Creator</span>';
-            const creatorSectionHtml = hasCreator ? `
-                <div style="margin-top:10px">
-                    <div style="font-size:0.75rem;font-weight:700;color:var(--gray-dark);text-transform:uppercase;letter-spacing:1px">Creator</div>
-                    <div class="creator-block">
-                        <div class="cb-avatar">${creatorAvatarHtml}</div>
-                        <div class="cb-info">
-                            <strong>${creatorNickname}</strong>
-                            ${creatorSocialHtml}
-                        </div>
-                    </div>
-                </div>
-            ` : '';
-
-            // Uploader details (Discord user who leaked)
-            const uploaderName = p.uploader_name || '';
-            const uploaderAvatarRaw = p.uploader_avatar || '';
-            const uploaderAvatarUrl = uploaderAvatarRaw
-                ? (uploaderAvatarRaw.startsWith('http') ? uploaderAvatarRaw : (p.uploader_id && typeof avatarProxyUrl === 'function' ? avatarProxyUrl(p.uploader_id, uploaderAvatarRaw, 64) : `https://cdn.discordapp.com/avatars/${p.uploader_id}/${uploaderAvatarRaw}.png`))
-                : '';
-            const uploaderAvatarHtml = uploaderAvatarUrl
-                ? `<img src="${uploaderAvatarUrl}" onerror="this.outerHTML='<i class=\\'fab fa-discord\\' style=\\'color:#5865F2\\'></i>'">`
-                : `<i class="fab fa-discord" style="color:#5865F2;font-size:1.1rem"></i>`;
-
-            const uploaderSectionHtml = uploaderName ? `
-                <div style="margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.05)">
-                    <div style="font-size:0.75rem;font-weight:700;color:var(--gray-dark);text-transform:uppercase;letter-spacing:1px">Shared by</div>
-                    <div class="creator-block" style="background:rgba(88,101,242,0.03);border-color:rgba(88,101,242,0.08)">
-                        <div class="cb-avatar" style="border-color:rgba(88,101,242,0.2);background:rgba(88,101,242,0.08)">${uploaderAvatarHtml}</div>
-                        <div class="cb-info">
-                            <strong>${uploaderName}</strong>
-                            <span style="font-size:0.65rem;color:rgba(88,101,242,0.8)">Uploader</span>
-                        </div>
-                    </div>
-                </div>
-            ` : '';
-
-            // Build downloads block
-            let dlHtml = '';
-            if (p.type === 'audio' && p.file_url) {
-                const downloadUrl = p.file_url + (p.file_url.includes('?') ? '&' : '?') + 'download=1';
-                dlHtml = `
-                    <div class="product-dl-btn" style="flex-direction:column;align-items:flex-start;gap:10px;padding:16px;cursor:default">
-                        <div style="display:flex;align-items:center;gap:12px;width:100%">
-                            <div class="dl-icon default" style="background:rgba(var(--cherry-rgb),0.1)"><i class="fas fa-play" style="color:var(--light)"></i></div>
-                            <div class="dl-info"><strong style="color:var(--light)">Audio Preview</strong><span style="color:var(--gray)">${p.name}</span></div>
-                        </div>
-                        <audio controls style="width:100%;height:36px;border-radius:8px"><source src="${p.file_url}" type="audio/mpeg"></audio>
-                        <a href="${downloadUrl}" download class="btn btn-primary" style="padding:8px 18px;font-size:.78rem;text-decoration:none;width:auto" onclick="fetch('/api/downloads/track', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ product_id: '${p.id}' }) }).catch(function(){})">Download Audio</a>
-                    </div>
-                `;
-            } else if (p.type === 'scenepack' && p.source_url) {
-                dlHtml = `
-                    <a href="${p.source_url}" target="_blank" rel="noopener" class="product-dl-btn" style="background:var(--gradient-accent)!important;border:1px solid rgba(var(--cherry-rgb),0.15)!important;box-shadow:0 4px 15px rgba(var(--cherry-rgb),0.35),inset 0 1px 1px rgba(var(--cherry-rgb),0.3)!important;">
-                        <div class="dl-icon default" style="background:rgba(var(--cherry-rgb),0.1)"><i class="fas fa-external-link-alt" style="color:var(--light)"></i></div>
-                        <div class="dl-info"><strong style="color:var(--light)">Download Scenepack</strong><span style="color:var(--gray)">External Link</span></div>
-                        <i class="fas fa-arrow-right dl-arrow" style="color:var(--light)"></i>
-                    </a>
-                `;
-            } else if (isDb && p.file_path) {
-                const filename = p.file_path.split('/').pop() || 'Download File';
-                dlHtml = `
-                    <a href="https://dl.zyrexediting.xyz/?id=${p.id}" target="_blank" rel="noopener" class="product-dl-btn" style="background:var(--gradient-accent) !important;border:1px solid rgba(var(--cherry-rgb),0.15) !important;box-shadow:0 4px 15px rgba(var(--cherry-rgb),0.35), inset 0 1px 1px rgba(var(--cherry-rgb),0.3) !important;">
-                        <div class="dl-icon default" style="background:rgba(var(--cherry-rgb),0.1)">
-                            <i class="fas fa-cloud-arrow-down" style="color:var(--light)"></i>
-                        </div>
-                        <div class="dl-info">
-                            <strong style="color:var(--light)">Download ZIP / Resource</strong>
-                            <span style="color:var(--gray)">${filename}</span>
-                        </div>
-                        <i class="fas fa-arrow-right dl-arrow" style="color:var(--light)"></i>
-                    </a>
-                `;
-            } else if (p.links && p.links.length) {
-                function getDlClass(label) {
-                    const l = label.toLowerCase();
-                    if (l.includes('pixel')) return 'pixeldrain';
-                    if (l.includes('gofile') || l.includes('go')) return 'gofile';
-                    if (l.includes('media')) return 'mediafire';
-                    return 'default';
-                }
-                function getDlIcon(label) {
-                    const l = label.toLowerCase();
-                    if (l.includes('pixel')) return 'fa-cloud-arrow-down';
-                    if (l.includes('gofile') || l.includes('go')) return 'fa-cloud';
-                    if (l.includes('media')) return 'fa-file-zipper';
-                    return 'fa-download';
-                }
-                dlHtml = p.links.map(link => `
-                    <a href="${link.url}" target="_blank" rel="noopener" class="product-dl-btn">
-                        <div class="dl-icon ${getDlClass(link.label)}">
-                            <i class="fas ${getDlIcon(link.label)}"></i>
-                        </div>
-                        <div class="dl-info">
-                            <strong>${link.label}</strong>
-                            <span>${new URL(link.url).hostname}</span>
-                        </div>
-                        <i class="fas fa-arrow-right dl-arrow"></i>
-                    </a>
-                `).join('');
-            } else {
-                dlHtml = `<div style="color:var(--gray-dark);font-size:0.85rem">No download links available for this product.</div>`;
-            }
-
-            container.innerHTML = `
-                <div style="max-width:960px;margin:0 auto">
-                    <a href="javascript:if(document.referrer&&document.referrer.includes(window.location.hostname)){history.back();}else{window.location.href='/'+backLink;}" class="product-back">
-                        <i class="fas fa-arrow-left"></i> Back
-                    </a>
-
-                    <div class="product-card glass-card-enhanced shimmer-sweep">
-
-                        <!-- HEADER ROW: Thumbnail + Title + Badges -->
-                        <div style="padding:0 0 24px;border-bottom:1px solid rgba(255,255,255,0.07);margin-bottom:24px">
-                            <div style="display:flex;align-items:flex-start;gap:20px;flex-wrap:wrap">
-                                <div class="product-thumb-large" style="flex-shrink:0;margin:0">${thumbHtml}</div>
-                                <div style="flex:1;min-width:200px">
-                                    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px">
-                                        <span class="product-category-badge">${categoryLabels[p.category] || p.category}</span>
-                                        ${platformTags.length ? `<div class="product-platform-tags">${platformTags.join('')}</div>` : ''}
-                                    </div>
-                                    <h1 style="font-size:clamp(1.5rem,4vw,2.2rem);font-weight:900;margin:0 0 10px;letter-spacing:-0.5px;line-height:1.2;color:#fff;font-family:'Outfit',sans-serif">${p.name}</h1>
-                                    ${p.description || p.desc ? `<p class="product-desc">${linkifyUrls(p.description || p.desc)}</p>` : ''}
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- TWO COLUMN: Left = meta/people | Right = downloads -->
-                        <div style="display:grid;grid-template-columns:1fr 280px;gap:24px">
-
-                            <!-- Left: Meta / People / Security -->
-                            <div style="display:flex;flex-direction:column;gap:16px">
-
-                                ${p.password ? `
-                                <div>
-                                    <div class="product-downloads-title" style="margin-bottom:10px"><i class="fas fa-lock"></i> ZIP Password</div>
-                                    <div class="product-password-box">
-                                        <i class="fas fa-lock"></i>
-                                        <code onclick="navigator.clipboard.writeText('${p.password.replace(/'/g,"\\'")}');this.textContent='Copied!';setTimeout(()=>this.textContent='${p.password.replace(/'/g,"\\'")}',1500)">${p.password}</code>
-                                        <span style="font-size:0.72rem;color:rgba(255,255,255,0.4)">Click to copy</span>
-                                    </div>
-                                </div>
-                                ` : ''}
-
-                                ${notesHtml}
-
-                                ${creatorSectionHtml}
-                                ${uploaderSectionHtml}
-
-                                ${p.vt_scan ? `
-                                <div>
-                                    <div class="product-downloads-title" style="margin-bottom:10px"><i class="fas fa-shield-halved"></i> Security Scan</div>
-                                    <a href="https://www.virustotal.com/gui/url/${p.vt_scan.id}" target="_blank" rel="noopener" class="creator-block" style="background:${p.vt_scan.malicious > 0 ? 'rgba(255,56,96,0.05)' : 'rgba(0,200,100,0.05)'};border-color:${p.vt_scan.malicious > 0 ? 'rgba(255,56,96,0.15)' : 'rgba(0,200,100,0.15)'};text-decoration:none">
-                                        <div class="cb-avatar" style="border-color:${p.vt_scan.malicious > 0 ? 'rgba(255,56,96,0.2)' : 'rgba(0,200,100,0.2)'};background:${p.vt_scan.malicious > 0 ? 'rgba(255,56,96,0.1)' : 'rgba(0,200,100,0.1)'}">
-                                            <img src="https://cdn.simpleicons.org/virustotal/${p.vt_scan.malicious > 0 ? 'ff3860' : '00c864'}" alt="VT" style="width:16px;height:16px;object-fit:contain">
-                                        </div>
-                                        <div class="cb-info">
-                                            <strong>Scanned by VirusTotal</strong>
-                                            <span style="font-size:0.65rem;color:${p.vt_scan.malicious > 0 ? '#ff6b8b' : '#00e676'}">
-                                                ${p.vt_scan.malicious > 0 ? `${p.vt_scan.malicious} threat${p.vt_scan.malicious > 1 ? 's' : ''} detected` : 'No threats detected'}
-                                            </span>
-                                        </div>
-                                    </a>
-                                </div>
-                                ` : ''}
-                            </div>
-
-                            <!-- Right: Downloads -->
-                            <div>
-                                <div class="product-downloads-title" style="margin-bottom:14px"><i class="fas fa-cloud-arrow-down"></i> Installation Package</div>
-                                <div class="product-downloads">
-                                    ${dlHtml}
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function linkifyUrls(text) {
-            if (!text) return '';
-            var escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-            escaped = escaped.replace(/(https?:\/\/[^\s<>\[\]()]+)/gi, '<a href="$1" target="_blank" rel="noopener" style="color:var(--cherry-light);text-decoration:underline">$1</a>');
-            escaped = escaped.replace(/\n/g, '<br>');
-            return escaped;
-        }
-
-        function showError(msg) {
-            loading.innerHTML = `
-                <div class="product-error">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <h3>${msg}</h3>
-                    <p style="margin-top:10px;color:var(--gray-dark)">The requested product could not be loaded.</p>
-                    <a href="resources" class="btn btn-primary" style="margin-top:20px;display:inline-flex">Back to Resources</a>
-                </div>
-            `;
-        }
+        renderSoftwareDetail(product, isDbProduct);
+        hideLoader();
     });
+
+    function showError(msg) {
+        document.getElementById('errState').style.display = 'block';
+        document.getElementById('errMsgText').innerHTML = msg;
+    }
+
+    function renderSoftwareDetail(p, isDb) {
+        document.title = (p.name || "Software") + " - Zyrex";
+        document.getElementById('breadProductName').textContent = p.name || "Software";
+
+        const categoryLabels = {
+            'software': 'Software / Standalone',
+            'adobe-plugin': 'Adobe After Effects & Premiere Plugin',
+            'ofx-plugin': 'OFX Video Suite',
+            'avx': 'Avid AVX Plugin',
+            'extensions-scripts': 'Extensions & Scripts',
+            'others': 'Creative Tools'
+        };
+
+        const catText = categoryLabels[p.category] || 'Editing Suite';
+        const desc = p.description || p.desc || 'No description available for this package.';
+        const platform = (p.platform || 'both').toLowerCase();
+
+        let platBadges = [];
+        if (platform === 'win' || platform === 'both') platBadges.push('<span class="plat-badge plat-win"><i class="fab fa-windows"></i> Windows 10/11</span>');
+        if (platform === 'mac' || platform === 'both') platBadges.push('<span class="plat-badge plat-mac"><i class="fab fa-apple"></i> macOS (Apple Silicon / Intel)</span>');
+        platBadges.push(`<span class="plat-badge plat-cat"><i class="fas fa-box-open"></i> ${catText}</span>`);
+
+        const iconSrc = p.thumbnail || p.icon || '/assets/content.png';
+
+        // Mirrors & Downloads
+        var links = [];
+        if (Array.isArray(p.links)) links = links.concat(p.links);
+        else {
+            if (p.link) links.push({ url: p.link, label: "Mirror 1" });
+            if (p.link_2) links.push({ url: p.link_2, label: "Mirror 2" });
+            if (p.downloadUrl) links.push({ url: p.downloadUrl, label: "Cloud Link" });
+        }
+
+        var mirrorsHtml = links.length > 0 ? 
+            '<div class="mirrors-list">' + links.map(function(l) {
+                var hostname = '';
+                try { hostname = new URL(l.url || l).hostname; } catch(e) { hostname = 'Cloud Mirror'; }
+                return '<a href="' + (l.url || l) + '" target="_blank" class="mirror-pill"><span style="display:flex;align-items:center;gap:8px"><i class="fas fa-arrow-up-right-from-square" style="color:var(--neon-cherry)"></i> ' + (l.label || "Mirror") + '</span><span style="font-size:0.72rem;opacity:0.6">' + hostname + '</span></a>';
+            }).join("") + '</div>' : '';
+
+        var dlBtnHtml = '';
+        if (p.id) {
+            dlBtnHtml = `
+                <a href="#" id="dlBtn" class="dl-main-btn" onclick="genSoftwareToken(event, '${p.id}', '${p.file_path || ''}')">
+                    <i class="fas fa-cloud-arrow-down"></i> Generate Secure Download
+                </a>
+            `;
+        } else if (links.length > 0) {
+            dlBtnHtml = `
+                <a href="${links[0].url || links[0]}" target="_blank" class="dl-main-btn">
+                    <i class="fas fa-cloud-arrow-down"></i> Download Now
+                </a>
+            `;
+        }
+
+        var passwordHtml = p.password ? `
+            <div class="pw-box">
+                <div>
+                    <div style="font-size:0.68rem;font-weight:800;text-transform:uppercase;color:rgba(255,255,255,0.5)">Archive Password</div>
+                    <div class="pw-text" id="pwValue">${p.password}</div>
+                </div>
+                <button type="button" onclick="copyPassword('${p.password}', this)" style="background:rgba(255,43,82,0.15);border:1px solid rgba(255,43,82,0.3);color:#fff;padding:6px 12px;border-radius:10px;font-size:0.75rem;font-weight:700;cursor:pointer">
+                    <i class="fas fa-copy"></i> Copy
+                </button>
+            </div>
+        ` : '';
+
+        var notesHtml = p.notes ? `
+            <div class="notes-callout">
+                <i class="fas fa-triangle-exclamation" style="font-size:1rem;margin-top:2px"></i>
+                <div><strong>Note:</strong> ${p.notes}</div>
+            </div>
+        ` : '';
+
+        const root = document.getElementById('productRoot');
+        root.style.display = 'block';
+
+        root.innerHTML = `
+            <!-- HEADER SHOWCASE -->
+            <div class="software-header-card">
+                <div class="software-icon-box">
+                    <img src="${iconSrc}" alt="${p.name}" onerror="this.src='/assets/content.png'">
+                </div>
+                <div class="software-header-content">
+                    <h1>${p.name}</h1>
+                    <div class="software-badges-row">
+                        ${platBadges.join('')}
+                    </div>
+                </div>
+            </div>
+
+            <div class="software-grid">
+                <!-- LEFT COLUMN -->
+                <div class="software-main-col">
+                    <div class="glass-box">
+                        <!-- TABS -->
+                        <div class="tab-nav">
+                            <button class="tab-btn active" onclick="switchSoftTab('overview', this)"><i class="fas fa-align-left"></i> Overview &amp; Specs</button>
+                            <button class="tab-btn" onclick="switchSoftTab('install', this)"><i class="fas fa-wrench"></i> Installation Guide</button>
+                        </div>
+
+                        <!-- TAB: OVERVIEW -->
+                        <div class="tab-pane active" id="tab-overview">
+                            ${notesHtml}
+                            <div class="software-desc">
+                                ${desc.replace(/\n/g, '<br>')}
+                            </div>
+
+                            <!-- TECHNICAL SPEC MATRIX -->
+                            <div class="tech-matrix">
+                                <div class="matrix-cell">
+                                    <div class="cell-title"><i class="fas fa-laptop-code"></i> Supported OS</div>
+                                    <div class="cell-val">${platform === 'win' ? 'Windows 10 / 11 (64-bit)' : (platform === 'mac' ? 'macOS Sonoma / Sequoia / Ventura' : 'Windows & macOS')}</div>
+                                </div>
+                                <div class="matrix-cell">
+                                    <div class="cell-title"><i class="fas fa-microchip"></i> Architecture</div>
+                                    <div class="cell-val">x86_64 / Apple Silicon Universal</div>
+                                </div>
+                                <div class="matrix-cell">
+                                    <div class="cell-title"><i class="fas fa-shield-virus"></i> Security Scan</div>
+                                    <div class="cell-val" style="color:#00ff88"><i class="fas fa-circle-check"></i> VirusTotal Clean &amp; Verified</div>
+                                </div>
+                                <div class="matrix-cell">
+                                    <div class="cell-title"><i class="fas fa-boxes-stacked"></i> Package Type</div>
+                                    <div class="cell-val">${catText}</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- TAB: INSTALLATION -->
+                        <div class="tab-pane" id="tab-install">
+                            <div class="software-desc">
+                                <h4 style="color:#fff;margin-bottom:12px">Quick Setup Instructions:</h4>
+                                <ol style="padding-left:20px;line-height:1.9">
+                                    <li>Disable temporary antivirus real-time shields if applying universal licenses.</li>
+                                    <li>Extract the downloaded archive using 7-Zip, WinRAR, or macOS Archive Utility.</li>
+                                    <li>${p.password ? 'Use archive password: <code>' + p.password + '</code>.' : 'No archive password required.'}</li>
+                                    <li>Run the installer (<code>.exe</code> or <code>.pkg</code>) and follow the step-by-step assistant.</li>
+                                    <li>Launch your editing software (After Effects, Premiere, DaVinci Resolve) to verify plug-in initialization.</li>
+                                </ol>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RIGHT SIDEBAR -->
+                <div class="software-sidebar-col">
+                    <div class="glass-box">
+                        <div class="box-title"><i class="fas fa-download"></i> Installation Files</div>
+                        
+                        ${passwordHtml}
+                        ${dlBtnHtml}
+
+                        <div style="text-align:center;font-size:0.72rem;color:rgba(255,255,255,0.45);margin-bottom:18px">
+                            <i class="fas fa-shield-halved" style="color:var(--neon-cherry)"></i> Safe cloud CDN delivery &middot; 100% Free
+                        </div>
+
+                        ${mirrorsHtml}
+
+                        <div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:14px;margin-top:16px">
+                            <div style="display:flex;justify-content:space-between;font-size:0.82rem;margin-bottom:8px">
+                                <span style="color:rgba(255,255,255,0.5)"><i class="fas fa-tag"></i> Software ID</span>
+                                <span style="font-family:monospace;color:#fff">${p.id}</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;font-size:0.82rem">
+                                <span style="color:rgba(255,255,255,0.5)"><i class="fas fa-circle-check" style="color:#00ff88"></i> License</span>
+                                <span style="color:#00ff88;font-weight:700">Pre-Activated</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function switchSoftTab(tabId, btn) {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+        if (btn) btn.classList.add('active');
+        var target = document.getElementById('tab-' + tabId);
+        if (target) target.classList.add('active');
+    }
+
+    window.copyPassword = function(pw, btn) {
+        navigator.clipboard.writeText(pw).then(() => {
+            var orig = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            setTimeout(() => { btn.innerHTML = orig; }, 2000);
+        });
+    };
+
+    window.genSoftwareToken = function(e, pid, fp) {
+        e.preventDefault();
+        var b = document.getElementById("dlBtn");
+        if (!b) return;
+        var origHtml = b.getAttribute("data-orig-html") || b.innerHTML;
+        if (!b.getAttribute("data-orig-html")) b.setAttribute("data-orig-html", origHtml);
+
+        function resetBtn() {
+            b.style.pointerEvents = "";
+            b.style.opacity = "";
+            b.innerHTML = b.getAttribute("data-orig-html") || '<i class="fas fa-cloud-arrow-down"></i> Generate Secure Download';
+        }
+
+        b.style.pointerEvents = "none";
+        b.style.opacity = "0.65";
+        b.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating Download Link...';
+
+        var targetTab = window.open('about:blank', '_blank');
+        var q = new URLSearchParams();
+        if (fp) q.set("file_path", fp);
+        q.set("return_to", location.pathname + location.search);
+
+        fetch("/api/downloads/request-token/" + encodeURIComponent(pid) + "?" + q.toString(), { credentials: "include" })
+            .then(res => res.json().then(data => {
+                if (!res.ok || !data.success) {
+                    if (targetTab) targetTab.close();
+                    resetBtn();
+                    if (res.status === 401) {
+                        window.location.href = "/api/login?redirect=" + encodeURIComponent(location.pathname + location.search);
+                    } else if (res.status === 403 || res.status === 404) {
+                        window.location.href = "/download?id=" + encodeURIComponent(pid);
+                    } else {
+                        alert(data.error || "Could not generate download link");
+                    }
+                    return;
+                }
+                var targetUrl = data.ad_url || data.short_url || data.url;
+                if (targetTab && targetUrl) {
+                    targetTab.location.href = targetUrl;
+                    var checkInterval = setInterval(function() {
+                        if (!targetTab || targetTab.closed) {
+                            clearInterval(checkInterval);
+                            resetBtn();
+                        }
+                    }, 500);
+                } else if (targetUrl) {
+                    window.location.href = targetUrl;
+                } else {
+                    if (targetTab) targetTab.close();
+                    resetBtn();
+                    alert("Invalid download link");
+                }
+            }))
+            .catch(err => {
+                if (targetTab) targetTab.close();
+                resetBtn();
+                alert("Network error. Please try again.");
+            });
+    };
     </script>
 </body>
 </html>

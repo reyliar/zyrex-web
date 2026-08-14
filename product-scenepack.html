@@ -3,270 +3,240 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Zyrex Scenepacks - Premium scene packs & project templates">
+    <meta name="description" content="Zyrex Scenepack Vault - Raw Scene Footage and Video Clips">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://zyrexediting.xyz/product-scenepack">
-    <meta property="og:title" content="Zyrex | Scenepack">
-    <meta property="og:description" content="Premium scenepacks on Zyrex">
+    <meta property="og:title" content="Zyrex | Scenepack Vault">
+    <meta property="og:description" content="Premium raw scene footage and 4K edit packs on Zyrex">
+    <meta property="og:image" content="https://zyrexediting.xyz/assets/banner.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://zyrexediting.xyz/assets/banner.png">
     <meta name="author" content="Zyrex">
-    <title>Zyrex | Scenepack</title>
+    <title>Zyrex | Scenepack Vault</title>
     <link rel="icon" type="image/png" href="/assets/content.png">
-    <link rel="stylesheet" href="css/style.css?v=24">
+    <link rel="stylesheet" href="css/style.css?v=26">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         :root {
-            --cherry: #ff2b52;
-            --cherry-rgb: 255, 43, 82;
-            --cherry-light: #ff6b85;
-            --glass-bg: rgba(14, 10, 18, 0.78);
-            --glass-border: rgba(255, 255, 255, 0.12);
-            --text-muted: rgba(255, 255, 255, 0.55);
+            --cherry-neon: #ff2b52;
+            --cinema-cyan: #06b6d4;
+            --card-glass: rgba(10, 12, 20, 0.88);
+            --card-border: rgba(255, 255, 255, 0.10);
+            --text-main: #f8f5f6;
+            --text-sub: rgba(255, 255, 255, 0.65);
         }
 
         body {
-            background: #070209;
-            color: #f8f5f6;
-            font-family: 'Inter', sans-serif;
+            background: #04040a;
+            background-image: radial-gradient(circle at 50% 0%, rgba(6, 182, 212, 0.12) 0%, transparent 60%), radial-gradient(circle at 80% 30%, rgba(255, 43, 82, 0.10) 0%, transparent 50%);
+            color: var(--text-main);
+            font-family: 'Poppins', sans-serif;
             min-height: 100vh;
             overflow-x: hidden;
         }
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            z-index: 0;
-            pointer-events: none;
-            background:
-                radial-gradient(circle at 20% 0%, rgba(255, 43, 82, 0.18) 0%, transparent 45%),
-                radial-gradient(circle at 80% 80%, rgba(120, 0, 40, 0.14) 0%, transparent 40%),
-                radial-gradient(circle at 50% 50%, rgba(60, 0, 20, 0.08) 0%, transparent 50%);
-        }
 
-        .sp-page {
+        .cinema-page-wrap {
             padding: 130px 0 90px;
-            min-height: 100vh;
-            position: relative;
-            z-index: 1;
-        }
-
-        .wrap {
-            max-width: 960px;
+            max-width: 1120px;
             margin: 0 auto;
-            padding: 0 24px;
+            padding-left: 20px;
+            padding-right: 20px;
         }
 
-        .back {
+        .breadcrumb-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 24px;
+            font-size: 0.84rem;
+        }
+        .breadcrumb-bar a {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            padding: 10px 20px;
-            border: 1px solid var(--glass-border);
-            border-radius: 999px;
-            background: rgba(255,255,255,0.05);
-            color: rgba(255,255,255,0.85);
-            font-size: 0.84rem;
-            font-weight: 600;
+            gap: 6px;
+            color: var(--text-sub);
             text-decoration: none;
-            margin-bottom: 32px;
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            transition: all 0.25s ease;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            font-weight: 500;
+            transition: all 0.2s ease;
         }
-        .back:hover {
-            background: rgba(255,255,255,0.12);
-            color: #fff;
-            transform: translateX(-3px);
-        }
+        .breadcrumb-bar a:hover { color: var(--cinema-cyan); }
+        .breadcrumb-bar span.sep { color: rgba(255,255,255,0.25); }
+        .breadcrumb-bar span.current { color: #fff; font-weight: 600; }
 
-        /* LIQUID GLASS CARD */
-        .glass-card {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 28px;
-            padding: 36px;
-            backdrop-filter: blur(32px) saturate(210%);
-            -webkit-backdrop-filter: blur(32px) saturate(210%);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.15);
-            margin-bottom: 24px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        /* OPTIMIZED COMPACT ORIGINAL-DIMENSIONS HERO SHOWCASE */
-        .sp-widescreen-hero {
+        /* WIDESCREEN CINEMA THEATER CARD */
+        .cinema-stage-card {
             position: relative;
             width: 100%;
-            min-height: 220px;
-            max-height: 330px;
-            border-radius: 22px;
+            aspect-ratio: 21/9;
+            min-height: 280px;
+            max-height: 440px;
+            border-radius: 28px;
             overflow: hidden;
-            background: #080206;
+            background: #000;
             border: 1px solid rgba(255, 255, 255, 0.12);
-            box-shadow: 0 16px 50px rgba(0, 0, 0, 0.6), 0 0 25px rgba(255, 43, 82, 0.12);
-            margin-bottom: 24px;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.18);
+            margin-bottom: 28px;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 16px;
         }
-        .sp-widescreen-hero img.hero-bg-blur {
+        .cinema-stage-card img.bg-ambient {
             position: absolute;
             inset: -20px;
             width: calc(100% + 40px);
             height: calc(100% + 40px);
             object-fit: cover;
-            filter: blur(32px) brightness(0.35);
+            filter: blur(40px) brightness(0.4);
             opacity: 0.75;
-            pointer-events: none;
         }
-        .sp-widescreen-hero img.hero-main-img {
+        .cinema-stage-card img.main-film-img {
             position: relative;
-            max-width: 100%;
-            max-height: 300px;
-            width: auto;
-            height: auto;
-            object-fit: contain;
-            border-radius: 14px;
             z-index: 2;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            max-width: 92%;
+            max-height: 92%;
+            object-fit: contain;
+            border-radius: 16px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            transition: transform 0.4s ease;
         }
-        .sp-widescreen-hero:hover img.hero-main-img {
+        .cinema-stage-card:hover img.main-film-img {
             transform: scale(1.02);
         }
-        .sp-hero-overlay {
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(180deg, rgba(0,0,0,0.15) 0%, transparent 60%, rgba(7, 2, 9, 0.7) 100%);
-            z-index: 3;
-            pointer-events: none;
-        }
 
-        /* Hero Badges */
-        .sp-hero-badges {
+        .cinema-floating-badges {
             position: absolute;
-            top: 16px;
-            left: 18px;
+            top: 20px;
+            left: 20px;
+            z-index: 3;
             display: flex;
             gap: 8px;
-            z-index: 4;
+            flex-wrap: wrap;
         }
-
-        .type-badge {
+        .cinema-pill {
+            padding: 6px 16px;
+            border-radius: 999px;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            font-size: 0.72rem;
+            font-weight: 800;
+            color: #fff;
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 5px 14px;
-            border-radius: 999px;
-            background: rgba(255, 43, 82, 0.15);
-            border: 1px solid rgba(255, 43, 82, 0.3);
-            color: var(--cherry-light);
-            font-size: 0.72rem;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+        .cinema-pill-4k {
+            background: rgba(6, 182, 212, 0.2);
+            border-color: rgba(6, 182, 212, 0.4);
+            color: #67e8f9;
+        }
+
+        /* 2-COLUMN GRID */
+        .cinema-grid {
+            display: grid;
+            grid-template-columns: 1fr 340px;
+            gap: 28px;
+            align-items: start;
+        }
+
+        .glass-card {
+            background: var(--card-glass);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 28px;
+            backdrop-filter: blur(32px) saturate(210%);
+            -webkit-backdrop-filter: blur(32px) saturate(210%);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.10);
+            margin-bottom: 24px;
+        }
+
+        .scene-title {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: #fff;
+            letter-spacing: -0.5px;
+            font-family: 'Outfit', sans-serif;
+            margin-bottom: 12px;
+            line-height: 1.2;
+        }
+        .scene-desc {
+            color: var(--text-sub);
+            font-size: 0.92rem;
+            line-height: 1.8;
+            margin-bottom: 24px;
+        }
+
+        /* FOOTAGE SPECS GRID */
+        .footage-specs-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .spec-cell {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 16px;
+            padding: 14px 16px;
+        }
+        .spec-cell .lbl {
+            font-size: 0.68rem;
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 1px;
-            backdrop-filter: blur(8px);
+            color: rgba(255, 255, 255, 0.45);
+            margin-bottom: 4px;
         }
-
-        .sp-meta h1 {
-            font-family: 'Outfit', sans-serif;
-            font-size: 2.1rem;
-            font-weight: 900;
-            color: #fff;
-            margin-bottom: 12px;
-            line-height: 1.25;
-        }
-        .sp-meta p.desc {
+        .spec-cell .val {
             font-size: 0.92rem;
-            color: var(--text-muted);
-            line-height: 1.65;
-        }
-
-        /* Minimal Single CTA */
-        .cta-box {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 20px;
-            padding: 24px 32px;
-            background: rgba(0,0,0,0.35);
-            border: 1px solid rgba(255,255,255,0.08);
-            border-radius: 22px;
-            margin-top: 10px;
-        }
-        @media (max-width: 640px) {
-            .cta-box { flex-direction: column; text-align: center; }
-        }
-
-        .btn-download {
-            display: inline-flex;
-            align-items: center;
-            gap: 10px;
-            padding: 14px 32px;
-            border-radius: 999px;
-            background: linear-gradient(135deg, #ff2b52, #c8002a);
+            font-weight: 700;
             color: #fff;
-            text-decoration: none;
-            font-family: 'Outfit', sans-serif;
-            font-weight: 800;
-            font-size: 0.94rem;
-            box-shadow: 0 10px 25px rgba(255, 43, 82, 0.4);
-            transition: all 0.3s ease;
-        }
-        .btn-download:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 14px 35px rgba(255, 43, 82, 0.55);
-        }
-
-        /* Creators & Uploaders Flex */
-        .creators-flex {
-            display: flex;
-            gap: 18px;
-            flex-wrap: wrap;
-            margin-top: 24px;
-        }
-        .creator-card {
-            flex: 1;
-            min-width: 240px;
             display: flex;
             align-items: center;
-            gap: 14px;
-            padding: 16px 20px;
-            border-radius: 20px;
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.07);
+            gap: 6px;
         }
-        .creator-avatar {
-            width: 48px;
-            height: 48px;
-            border-radius: 50%;
-            border: 2px solid var(--cherry);
-            overflow: hidden;
+
+        /* DOWNLOAD BUTTON */
+        .dl-cinema-btn {
             display: flex;
             align-items: center;
             justify-content: center;
-            background: rgba(255,43,82,0.15);
+            gap: 12px;
+            width: 100%;
+            padding: 16px 24px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, var(--cinema-cyan), #0369a1);
+            border: 1px solid rgba(255, 255, 255, 0.25);
             color: #fff;
-            flex-shrink: 0;
+            font-size: 0.96rem;
+            font-weight: 800;
+            font-family: inherit;
+            text-decoration: none;
+            cursor: pointer;
+            box-shadow: 0 12px 30px rgba(6, 182, 212, 0.35);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            margin-bottom: 12px;
         }
-        .creator-avatar img { width: 100%; height: 100%; object-fit: cover; }
-        .creator-info strong { display: block; font-size: 0.92rem; color: #fff; font-family: 'Outfit', sans-serif; }
-        .creator-info span { font-size: 0.74rem; color: var(--text-muted); }
-        .creator-info a { color: var(--cherry-light); text-decoration: none; font-size: 0.75rem; font-weight: 600; margin-top: 2px; display: inline-block; }
-        .creator-info a:hover { text-decoration: underline; }
+        .dl-cinema-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 40px rgba(6, 182, 212, 0.55);
+            filter: brightness(1.1);
+        }
 
-        .load-state, .err-state {
-            text-align: center;
-            padding: 80px 20px;
-            color: var(--text-muted);
+        @media (max-width: 900px) {
+            .cinema-grid { grid-template-columns: 1fr; }
+            .footage-specs-row { grid-template-columns: 1fr; }
+            .cinema-page-wrap { padding-top: 100px; }
         }
-        .load-state i, .err-state i { font-size: 2.5rem; color: var(--cherry-light); margin-bottom: 16px; display: block; }
     </style>
 </head>
 <body>
+    <div class="bg-aura"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
+
     <!-- NAVBAR -->
     <nav class="navbar">
         <div class="container">
@@ -277,216 +247,216 @@
             <ul class="nav-links" id="navLinks">
                 <li><a href="/">Home</a></li>
                 <li><a href="/resources">Resources</a></li>
-                <li><a href="/scenepack.html">Scenepacks</a></li>
+                <li><a href="/scenepack.html" class="active">Scenepacks</a></li>
                 <li><a href="/plugins">Plugins</a></li>
                 <li><a href="/more">More</a></li>
+                <li><a href="/#contact">Contact</a></li>
             </ul>
             <div class="nav-actions">
                 <div id="authBtn"></div>
-                <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+                <button class="hamburger" id="hamburger" aria-label="Menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
             </div>
         </div>
     </nav>
 
-    <main class="sp-page">
-        <div class="wrap">
-            <a href="/scenepack.html" class="back"><i class="fas fa-arrow-left"></i> Back to Scenepacks</a>
-
-            <div id="load" class="load-state">
-                <i class="fas fa-clapperboard fa-spin"></i>
-                <p>Loading scenepack details...</p>
-            </div>
-
-            <div id="err" class="err-state" style="display:none">
-                <i class="fas fa-triangle-exclamation"></i>
-                <h2 style="font-family:Outfit,sans-serif;color:#fff;margin-bottom:8px" id="errMsg">Scenepack not found</h2>
-                <a href="/scenepack.html" class="btn-download" style="margin-top:16px"><i class="fas fa-clapperboard"></i> Browse Scenepacks</a>
-            </div>
-
-            <div id="root" style="display:none"></div>
+    <!-- MAIN PAGE CONTAINER -->
+    <section class="cinema-page-wrap">
+        <div class="breadcrumb-bar">
+            <a href="/"><i class="fas fa-house"></i> Home</a>
+            <span class="sep">/</span>
+            <a href="/scenepack.html"><i class="fas fa-clapperboard"></i> Scenepacks</a>
+            <span class="sep">/</span>
+            <span class="current" id="breadSceneName">Scenepack Detail</span>
         </div>
-    </main>
 
+        <div id="errState" style="display: none; text-align: center; padding: 80px 20px;">
+            <i class="fas fa-triangle-exclamation" style="font-size: 3rem; color: var(--cherry-neon); margin-bottom: 16px;"></i>
+            <h2 style="font-size: 1.6rem; color: #fff; margin-bottom: 8px;">Scenepack Not Found</h2>
+            <p id="errMsgText" style="color: rgba(255,255,255,0.6); margin-bottom: 24px;">The requested footage could not be loaded.</p>
+            <a href="/scenepack.html" class="btn btn-primary"><i class="fas fa-arrow-left"></i> Browse Scenepacks</a>
+        </div>
+
+        <div id="sceneRoot" style="display: none;"></div>
+    </section>
+
+    <!-- FOOTER -->
     <footer class="footer">
         <div class="container">
-            <div class="footer-bottom"><p>&copy; 2026 Zyrex Editing. All rights reserved.</p></div>
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+                        <a href="/" class="logo">
+                            <img src="assets/content.png" alt="ZYREX" class="logo-img">
+                            <span class="logo-text">yrex</span>
+                        </a>
+                        <h3 style="font-size:1.8rem;font-weight:900;margin:0;letter-spacing:2px;background:linear-gradient(135deg,#ffffff,#9090a0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Editing</h3>
+                    </div>
+                    <p>Premium editing community &amp; resources.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/resources">Resources</a></li>
+                        <li><a href="/plugins">Plugins</a></li>
+                        <li><a href="/more">More</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="/terms">Terms</a></li>
+                        <li><a href="/privacy">Privacy</a></li>
+                        <li><a href="/dmca">DMCA</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="https://discord.gg/fAydSzpafA">Discord</a></li>
+                        <li><a href="/#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-newsletter">
+                    <h4>Newsletter</h4>
+                    <p>Stay updated with Zyrex Editing.</p>
+                    <div class="newsletter-form">
+                        <input type="email" placeholder="Your email">
+                        <button type="submit" aria-label="Subscribe"><i class="fas fa-arrow-right"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Zyrex Editing. All rights reserved.</p>
+            </div>
         </div>
     </footer>
 
-    <script src="js/auth.js?v=10"></script>
+    <script src="js/auth.js?v=11"></script>
     <script src="js/script.js?v=5"></script>
     <script>
-    var discordAvatarCache = {};
+    document.addEventListener('DOMContentLoaded', async () => {
+        const params = new URLSearchParams(window.location.search);
+        const sceneId = params.get('id');
 
-    // Fetch Discord profile photo via Zyrex VPS Bot API
-    async function fetchZyrexBotAvatar(uploaderId, fallbackHashOrUrl) {
-        if (!uploaderId) {
-            if (fallbackHashOrUrl && fallbackHashOrUrl.startsWith('http')) return fallbackHashOrUrl;
-            if (fallbackHashOrUrl) return '/api/avatar/0/' + fallbackHashOrUrl + '.png?size=128';
-            return 'https://cdn.discordapp.com/embed/avatars/0.png';
+        if (!sceneId) {
+            showError("Scenepack ID missing.");
+            return;
         }
-        if (discordAvatarCache[uploaderId]) return discordAvatarCache[uploaderId];
 
+        let item = null;
         try {
-            var controller = new AbortController();
-            var timer = setTimeout(function(){ controller.abort(); }, 2500);
-
-            var resp = await fetch('/api/presence/' + uploaderId, {
-                headers: {
-                    "X-Zyrex-Key": "zyrex_app_sec_k982f81a7b54c29013e9a",
-                    "Accept": "application/json"
-                },
-                signal: controller.signal
-            });
-            clearTimeout(timer);
-
+            const resp = await fetch(`/api/products?id=${encodeURIComponent(sceneId)}`);
             if (resp.ok) {
-                var json = await resp.json();
-                var d = json.data || json[uploaderId] || json;
-                var u = d.discord_user || d;
-                if (u && u.avatar) {
-                    var avatarUrl = '';
-                    if (u.avatar.startsWith('http://') || u.avatar.startsWith('https://')) {
-                        avatarUrl = u.avatar;
-                    } else {
-                        var ext = u.avatar.startsWith('a_') ? 'gif' : 'png';
-                        avatarUrl = '/api/avatar/' + uploaderId + '/' + u.avatar + '.' + ext + '?size=128';
-                    }
-                    discordAvatarCache[uploaderId] = avatarUrl;
-                    return avatarUrl;
-                }
+                const j = await resp.json();
+                if (j && j.id) item = j;
             }
         } catch(e) {}
 
-        if (fallbackHashOrUrl) {
-            if (fallbackHashOrUrl.startsWith('http')) return fallbackHashOrUrl;
-            var ext = fallbackHashOrUrl.startsWith('a_') ? 'gif' : 'png';
-            return '/api/avatar/' + uploaderId + '/' + fallbackHashOrUrl + '.' + ext + '?size=128';
-        }
-        return 'https://cdn.discordapp.com/embed/avatars/0.png';
-    }
-
-    (async function(){
-        var p = new URLSearchParams(location.search);
-        var id = p.get('id');
-        if (!id) return showErr('Scenepack ID missing');
-        try {
-            var r = await fetch('/api/products?id=' + encodeURIComponent(id));
-            var data = null;
-            if (r.ok) data = await r.json();
-
-            if (Array.isArray(data)) {
-                data = data.find(x => String(x.id) === String(id)) || data[0];
-            }
-            if (data && data.data && !data.id) data = data.data;
-
-            if (!data || !data.id) {
-                try {
-                    var editedMap = JSON.parse(localStorage.getItem('zyrex_edited_products') || '{}');
-                    if (editedMap[id]) data = editedMap[id];
-                } catch(e) {}
-            }
-
-            if (!data || !data.id) { showErr('Scenepack not found'); return; }
-            await render(data);
-        } catch(e) { showErr('Failed to load scenepack'); }
-    })();
-
-    function showErr(m) {
-        document.getElementById('load').style.display = 'none';
-        document.getElementById('err').style.display = 'block';
-        document.getElementById('errMsg').innerHTML = m;
-    }
-
-    function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
-
-    async function render(p) {
-        document.getElementById('load').style.display = 'none';
-        document.getElementById('root').style.display = 'block';
-        document.title = (p.name || 'Scenepack') + ' \u2014 Zyrex Scenepacks';
-
-        var downloadUrl = p.source_url || p.file_url || p.url || '';
-        var hostname = '';
-        try { hostname = new URL(downloadUrl).hostname.replace('www.', ''); } catch(e) {}
-
-        var html = '';
-
-        // 1. COMPACT ORIGINAL-DIMENSIONS THUMBNAIL HERO SHOWCASE
-        var thumbUrl = p.thumbnail || 'assets/content.png';
-        html += '<div class="sp-widescreen-hero">';
-        html += '<img src="' + esc(thumbUrl) + '" class="hero-bg-blur" alt="">';
-        html += '<img src="' + esc(thumbUrl) + '" class="hero-main-img" alt="' + esc(p.name) + '" onerror="this.src=\'assets/content.png\'">';
-        html += '<div class="sp-hero-overlay"></div>';
-        html += '<div class="sp-hero-badges">';
-        html += '<span class="type-badge"><i class="fas fa-clapperboard"></i> Scenepack</span>';
-        html += '</div>';
-        html += '</div>';
-
-        // 2. MAIN GLASS DETAILS CARD
-        html += '<div class="glass-card">';
-        html += '<div class="sp-meta">';
-        html += '<h1>' + esc(p.name || 'Untitled Scenepack') + '</h1>';
-        html += '<p class="desc">' + esc(p.description || p.desc || 'No description provided for this scenepack.') + '</p>';
-        html += '</div>';
-
-        // 3. CTA DOWNLOAD BOX
-        html += '<div class="cta-box"><div>';
-        html += '<h3 style="font-family:Outfit,sans-serif;font-size:1.1rem;color:#fff;margin-bottom:4px">Download Scenepack</h3>';
-        html += '<p style="font-size:0.8rem;color:var(--text-muted);margin:0">Host: ' + esc(hostname || 'Direct Link / External Host') + '</p></div>';
-        if (downloadUrl) {
-            html += '<a href="' + esc(downloadUrl) + '" target="_blank" rel="noopener" class="btn-download"><i class="fas fa-download"></i> Download Scenepack</a>';
-        } else {
-            html += '<span style="color:var(--text-muted);font-size:0.85rem">No download link available</span>';
-        }
-        html += '</div>';
-
-        // 4. CREATORS & UPLOADERS SECTION (ZYREX VPS BOT API DISCORD AVATAR)
-        var uploaderName = p.uploader_name || p.author_name || '';
-        var uploaderId = p.uploader_id || p.author_id || '';
-        var creatorName = p.creator_nickname || '';
-        var hasUploader = !!uploaderName;
-        var hasCreator = !!(creatorName || p.creator_social_url || p.creator_avatar);
-
-        if (hasUploader || hasCreator) {
-            html += '<div class="creators-flex">';
-            
-            // Uploader Card (Using Zyrex VPS Bot API for Discord Avatar & NO "(discord)" text)
-            if (hasUploader) {
-                var uploaderImg = await fetchZyrexBotAvatar(uploaderId, p.uploader_avatar);
-
-                html += '<div class="creator-card"><div class="creator-avatar">';
-                if (uploaderImg) {
-                    html += '<img src="' + esc(uploaderImg) + '" onerror="this.src=\'https://cdn.discordapp.com/embed/avatars/0.png\'">';
-                } else {
-                    html += '<i class="fab fa-discord" style="color:#5865F2"></i>';
-                }
-                html += '</div><div class="creator-info"><strong>' + esc(uploaderName) + '</strong><span>Uploaded by</span></div></div>';
-            }
-
-            // Original Creator Card
-            if (hasCreator) {
-                html += '<div class="creator-card"><div class="creator-avatar">';
-                if (p.creator_avatar) {
-                    html += '<img src="' + esc(p.creator_avatar) + '" onerror="this.outerHTML=\'<i class=\\\'fas fa-user\\\'></i>\'">';
-                } else {
-                    html += '<i class="fas fa-user"></i>';
-                }
-                html += '</div><div class="creator-info"><strong>' + esc(creatorName || 'Original Creator') + '</strong>';
-                if (p.creator_social_url) {
-                    html += '<a href="' + esc(p.creator_social_url) + '" target="_blank">View Social Profile</a>';
-                } else {
-                    html += '<span>Original Creator</span>';
-                }
-                html += '</div></div>';
-            }
-
-            html += '</div>';
+        if (!item) {
+            showError("The requested scenepack could not be found.");
+            return;
         }
 
-        html += '</div>';
+        renderSceneDetail(item);
+    });
 
-        document.getElementById('root').innerHTML = html;
+    function showError(msg) {
+        document.getElementById('errState').style.display = 'block';
+        document.getElementById('errMsgText').innerHTML = msg;
     }
+
+    function renderSceneDetail(p) {
+        document.title = (p.name || "Scenepack") + " - Zyrex Cinema Vault";
+        document.getElementById('breadSceneName').textContent = p.name || "Scenepack";
+
+        const desc = p.description || p.desc || "Ultra high quality raw scene footage and cinema cuts for video editors.";
+        const thumb = p.thumbnail || '/assets/content.png';
+        const dlUrl = p.source_url || p.file_url || p.url || '';
+
+        const root = document.getElementById('sceneRoot');
+        root.style.display = 'block';
+
+        root.innerHTML = `
+            <!-- CINEMA THEATER SHOWCASE -->
+            <div class="cinema-stage-card">
+                <img src="${thumb}" alt="" class="bg-ambient">
+                <img src="${thumb}" alt="${p.name}" class="main-film-img" onerror="this.src='/assets/content.png'">
+                <div class="cinema-floating-badges">
+                    <span class="cinema-pill"><i class="fas fa-clapperboard"></i> Cinema Scenepack</span>
+                </div>
+            </div>
+
+            <div class="cinema-grid">
+                <div class="glass-card">
+                    <h1 class="scene-title">${p.name}</h1>
+                    <p class="scene-desc">${desc.replace(/\n/g, '<br>')}</p>
+                </div>
+
+                <div class="glass-card">
+                    <h3 style="font-size:1.1rem;color:#fff;margin-bottom:16px"><i class="fas fa-cloud-arrow-down" style="color:var(--cinema-cyan);margin-right:8px"></i> Download Footage</h3>
+                    
+                    ${p.id ? `
+                        <a href="#" id="dlSceneBtn" class="dl-cinema-btn" onclick="genSceneToken(event, '${p.id}', '${p.file_path || ''}')">
+                            <i class="fas fa-bolt"></i> Generate Download
+                        </a>
+                    ` : (dlUrl ? `
+                        <a href="${dlUrl}" target="_blank" rel="noopener" class="dl-cinema-btn">
+                            <i class="fas fa-download"></i> Download Scenepack
+                        </a>
+                    ` : '<div style="color:var(--text-sub);font-size:0.85rem">No link available</div>')}
+
+                    <div style="text-align:center;font-size:0.72rem;color:rgba(255,255,255,0.45);margin-top:12px">
+                        <i class="fas fa-shield-halved"></i> Fast direct cloud link &middot; 100% Free
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    window.genSceneToken = function(e, pid, fp) {
+        e.preventDefault();
+        var b = document.getElementById("dlSceneBtn");
+        if (!b) return;
+        b.style.pointerEvents = "none";
+        b.style.opacity = "0.65";
+        b.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating Download...';
+
+        var targetTab = window.open('about:blank', '_blank');
+        var q = new URLSearchParams();
+        if (fp) q.set("file_path", fp);
+        q.set("return_to", location.pathname + location.search);
+
+        fetch("/api/downloads/request-token/" + encodeURIComponent(pid) + "?" + q.toString(), { credentials: "include" })
+            .then(res => res.json().then(data => {
+                b.style.pointerEvents = "";
+                b.style.opacity = "";
+                b.innerHTML = '<i class="fas fa-bolt"></i> Generate Download';
+                if (!res.ok || !data.success) {
+                    if (targetTab) targetTab.close();
+                    if (res.status === 401) {
+                        window.location.href = "/api/login?redirect=" + encodeURIComponent(location.pathname + location.search);
+                    } else {
+                        alert(data.error || "Could not generate download link");
+                    }
+                    return;
+                }
+                var targetUrl = data.ad_url || data.short_url || data.url;
+                if (targetTab && targetUrl) targetTab.location.href = targetUrl;
+                else if (targetUrl) window.location.href = targetUrl;
+            }))
+            .catch(err => {
+                if (targetTab) targetTab.close();
+                b.style.pointerEvents = "";
+                b.style.opacity = "";
+                b.innerHTML = '<i class="fas fa-bolt"></i> Generate Download';
+                alert("Network error.");
+            });
+    };
     </script>
 </body>
 </html>
