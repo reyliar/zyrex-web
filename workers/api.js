@@ -3166,6 +3166,72 @@ async function storeAndProxyImage(env, imageUrl) {
         });
       }
 
+      // ============ PRESET COMMENTS (Two-Way Discord <-> Web) ============
+      if (path === "/api/comments" || path.startsWith("/api/comments/")) {
+        if (request.method === "GET") {
+          try {
+            const resp = await fetch(`${BOT_API}/api/comments?${url.searchParams.toString()}`);
+            if (resp.ok) return json(await resp.json());
+            return json({ success: false, error: "Failed to fetch comments" }, resp.status);
+          } catch(e) {
+            return json({ success: false, error: "Bot API unavailable" }, 502);
+          }
+        }
+
+        if (request.method === "POST") {
+          const session = parseSession(request.headers.get("Cookie"));
+          if (!session || !session.userId) {
+            return json({ success: false, error: "Please login with Discord to comment" }, 401);
+          }
+
+          let body;
+          try { body = await request.json(); } catch(e) { return json({ success: false, error: "Invalid JSON" }, 400); }
+
+          const isAdmin = ADMIN_IDS.includes(session.userId);
+          const avatarUrl = session.avatar 
+            ? `https://cdn.discordapp.com/avatars/${session.userId}/${session.avatar}.png?size=128`
+            : `https://cdn.discordapp.com/embed/avatars/${(parseInt(session.userId) || 0) % 5}.png`;
+
+          const payload = {
+            preset_id: body.preset_id || body.id,
+            user_id: session.userId,
+            user_name: session.globalName || session.displayName || session.username || "Zyrex Member",
+            user_avatar: avatarUrl,
+            content: body.content,
+            parent_id: body.parent_id || null,
+            is_admin: isAdmin,
+            source: "web"
+          };
+
+          try {
+            const resp = await fetch(`${BOT_API}/api/comments`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload)
+            });
+            const data = await resp.json();
+            return json(data, resp.status);
+          } catch(e) {
+            return json({ success: false, error: "Failed to post comment" }, 502);
+          }
+        }
+
+        if (request.method === "DELETE") {
+          const session = parseSession(request.headers.get("Cookie"));
+          if (!session || !session.userId) {
+            return json({ success: false, error: "Unauthorized" }, 401);
+          }
+          const commentId = path.replace("/api/comments/", "").replace("/api/comments", "") || url.searchParams.get("id");
+          try {
+            const resp = await fetch(`${BOT_API}/api/comments/${commentId}`, { method: "DELETE" });
+            const data = await resp.json();
+            return json(data, resp.status);
+          } catch(e) {
+            return json({ success: false, error: "Bot API unavailable" }, 502);
+          }
+        }
+      }
+
       // ============ DOWNLOAD COUNTER (proxied to Bot VPS — single source of truth) ============
       if (path === "/api/downloads/counts") {
         try {
