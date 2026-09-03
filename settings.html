@@ -1325,12 +1325,761 @@
                 padding: 18px;
             }
         }
-        @media(max-width: 480px) {
-            .dash-header .logo span { display: none; }
-            .dash-content { padding: 20px 12px; }
-            .pane-title { font-size: 1.3rem; }
-            .card { padding: 20px; }
+        /* ================== DISCORD MEMBERS & MODERATION STYLES ================== */
+        .mod-stats-strip {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 14px;
+            margin-bottom: 22px;
         }
+        .mod-stat-card {
+            background: rgba(22, 6, 12, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 16px 20px;
+            backdrop-filter: blur(16px);
+            transition: var(--transition);
+        }
+        .mod-stat-card:hover {
+            border-color: rgba(255, 59, 96, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+        }
+        .mod-stat-num {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.1;
+            margin-bottom: 4px;
+            font-family: 'Outfit', 'Poppins', sans-serif;
+        }
+        .mod-stat-lbl {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-weight: 500;
+        }
+        .mod-toolbar {
+            display: flex;
+            gap: 14px;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .mod-search-wrap {
+            flex: 1;
+            min-width: 260px;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+        .mod-search-wrap i.fa-magnifying-glass {
+            position: absolute;
+            left: 16px;
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+        .mod-search-wrap input {
+            width: 100%;
+            padding: 12px 38px 12px 42px;
+            background: rgba(18, 5, 10, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 999px;
+            color: #fff;
+            font-size: 0.88rem;
+            outline: none;
+            transition: var(--transition);
+            font-family: inherit;
+        }
+        .mod-search-wrap input:focus {
+            border-color: var(--cherry-light);
+            background: rgba(26, 7, 14, 0.75);
+            box-shadow: 0 0 0 3px rgba(255, 59, 96, 0.15);
+        }
+        .mod-search-wrap button {
+            position: absolute;
+            right: 14px;
+            background: none;
+            border: none;
+            color: rgba(255, 255, 255, 0.4);
+            cursor: pointer;
+            font-size: 0.85rem;
+            padding: 4px;
+        }
+        .mod-search-wrap button:hover {
+            color: #fff;
+        }
+        .mod-filter-selects {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .mod-select {
+            padding: 10px 18px;
+            background: rgba(18, 5, 10, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 999px;
+            color: #fff;
+            font-size: 0.84rem;
+            font-family: inherit;
+            outline: none;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .mod-select:focus {
+            border-color: var(--cherry-light);
+        }
+        .mod-select option {
+            background: #12050a;
+            color: #fff;
+        }
+        .mod-chips-row {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 8px;
+            margin-bottom: 22px;
+            scrollbar-width: thin;
+        }
+        .mod-chip {
+            padding: 7px 15px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 999px;
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 0.8rem;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            transition: var(--transition);
+        }
+        .mod-chip:hover {
+            background: rgba(255, 255, 255, 0.09);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.16);
+        }
+        .mod-chip.active {
+            background: rgba(255, 59, 96, 0.18);
+            border-color: var(--cherry-light);
+            color: #fff;
+            box-shadow: 0 0 16px rgba(255, 59, 96, 0.25);
+        }
+        .chip-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .members-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+            gap: 16px;
+        }
+        .member-card {
+            background: rgba(20, 6, 12, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            position: relative;
+            backdrop-filter: blur(20px);
+            transition: var(--transition);
+            overflow: hidden;
+        }
+        .member-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: transparent;
+            transition: var(--transition);
+        }
+        .member-card.is-admin::before {
+            background: linear-gradient(90deg, var(--cherry-light), #f43f5e);
+        }
+        .member-card.is-uploader::before {
+            background: linear-gradient(90deg, #38bdf8, #0ea5e9);
+        }
+        .member-card.is-timed-out::before {
+            background: #ef4444;
+        }
+        .member-card:hover {
+            border-color: rgba(255, 59, 96, 0.35);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45), 0 0 25px rgba(255, 59, 96, 0.08);
+        }
+        .member-card-top {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+        }
+        .member-avatar-wrap {
+            position: relative;
+            width: 52px;
+            height: 52px;
+            flex-shrink: 0;
+        }
+        .member-avatar-wrap img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255, 255, 255, 0.12);
+            background: #1a080f;
+        }
+        .presence-dot {
+            position: absolute;
+            bottom: 0px;
+            right: 0px;
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            border: 2.5px solid #14060c;
+        }
+        .presence-dot.online { background: #23a55a; }
+        .presence-dot.idle { background: #f0b232; }
+        .presence-dot.dnd { background: #f23f43; }
+        .presence-dot.offline { background: #80848e; }
+        .member-meta {
+            flex: 1;
+            min-width: 0;
+        }
+        .member-name-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .member-display-name {
+            font-size: 0.98rem;
+            font-weight: 700;
+            color: #fff;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .member-handle {
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: block;
+            margin-top: 1px;
+        }
+        .member-id-tag {
+            font-size: 0.7rem;
+            color: rgba(255, 255, 255, 0.35);
+            font-family: monospace;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            transition: var(--transition);
+        }
+        .member-id-tag:hover {
+            color: var(--cherry-light);
+        }
+        .member-roles-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            max-height: 48px;
+            overflow: hidden;
+        }
+        .role-pill {
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 2px 8px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.05);
+            white-space: nowrap;
+        }
+        .role-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+        .member-flags-row {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            font-size: 0.72rem;
+        }
+        .flag-pill {
+            padding: 3px 8px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 600;
+        }
+        .flag-timeout {
+            background: rgba(244, 63, 94, 0.18);
+            border: 1px solid rgba(244, 63, 94, 0.4);
+            color: #fda4af;
+        }
+        .flag-voice {
+            background: rgba(168, 85, 247, 0.18);
+            border: 1px solid rgba(168, 85, 247, 0.4);
+            color: #d8b4fe;
+        }
+        .flag-warns {
+            background: rgba(245, 158, 11, 0.18);
+            border: 1px solid rgba(245, 158, 11, 0.4);
+            color: #fde68a;
+        }
+        .member-card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: auto;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            padding-top: 12px;
+        }
+        .btn-card-action {
+            flex: 1;
+            padding: 7px 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(255, 255, 255, 0.04);
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 0.78rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            transition: var(--transition);
+        }
+        .btn-card-action:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        .btn-card-manage {
+            background: linear-gradient(135deg, rgba(255, 59, 96, 0.25), rgba(230, 21, 54, 0.15));
+            border-color: rgba(255, 59, 96, 0.35);
+            color: #fff;
+        }
+        .btn-card-manage:hover {
+            background: linear-gradient(135deg, rgba(255, 59, 96, 0.45), rgba(230, 21, 54, 0.3));
+            border-color: var(--cherry-light);
+            box-shadow: 0 4px 15px rgba(255, 59, 96, 0.3);
+        }
+        .mod-modal-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 1000;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeIn 0.25s ease-out;
+        }
+        .mod-modal-card {
+            background: #0f0408;
+            border: 1px solid rgba(255, 59, 96, 0.25);
+            border-radius: 24px;
+            width: min(760px, 100%);
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.85), 0 0 50px rgba(255, 59, 96, 0.12);
+            overflow: hidden;
+            position: relative;
+        }
+        .mod-modal-header {
+            padding: 24px 28px 18px;
+            background: linear-gradient(180deg, rgba(35, 10, 20, 0.85) 0%, rgba(15, 4, 8, 0.95) 100%);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            position: relative;
+        }
+        .mod-modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: rgba(255, 255, 255, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .mod-modal-close:hover {
+            background: rgba(255, 59, 96, 0.25);
+            color: #fff;
+            border-color: var(--cherry-light);
+        }
+        .mod-user-header {
+            display: flex;
+            gap: 18px;
+            align-items: center;
+        }
+        .mod-user-avatar-wrap {
+            position: relative;
+            width: 72px;
+            height: 72px;
+            flex-shrink: 0;
+        }
+        .mod-user-avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid rgba(255, 255, 255, 0.16);
+            background: #1c060f;
+        }
+        .mod-presence-indicator {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 3px solid #0f0408;
+        }
+        .mod-id-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 3px 9px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            font-size: 0.72rem;
+            color: rgba(255, 255, 255, 0.65);
+            font-family: monospace;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .mod-id-pill:hover {
+            border-color: var(--cherry-light);
+            color: #fff;
+        }
+        .mod-user-meta-row {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-top: 8px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        .mod-modal-tabs {
+            display: flex;
+            gap: 6px;
+            padding: 10px 24px;
+            background: rgba(10, 3, 6, 0.7);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        .mod-tab-btn {
+            padding: 8px 14px;
+            background: transparent;
+            border: 1px solid transparent;
+            border-radius: 10px;
+            color: rgba(255, 255, 255, 0.65);
+            font-size: 0.82rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            white-space: nowrap;
+            transition: var(--transition);
+        }
+        .mod-tab-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .mod-tab-btn.active {
+            color: #fff;
+            background: rgba(255, 59, 96, 0.15);
+            border-color: rgba(255, 59, 96, 0.35);
+        }
+        .mod-modal-body {
+            padding: 22px 28px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        .mod-panel {
+            display: none;
+            animation: fadeIn 0.2s ease-out;
+        }
+        .mod-panel.active {
+            display: block;
+        }
+        .mod-input, .mod-textarea {
+            width: 100%;
+            padding: 11px 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            color: #fff;
+            font-size: 0.88rem;
+            font-family: inherit;
+            outline: none;
+            transition: var(--transition);
+            box-sizing: border-box;
+        }
+        .mod-input:focus, .mod-textarea:focus {
+            border-color: var(--cherry-light);
+            background: rgba(255, 255, 255, 0.07);
+            box-shadow: 0 0 0 3px rgba(255, 59, 96, 0.15);
+        }
+        .mod-duration-chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .duration-chip {
+            padding: 8px 14px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 999px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.8rem;
+            font-weight: 500;
+            font-family: inherit;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .duration-chip:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+        .duration-chip.active {
+            background: rgba(255, 59, 96, 0.2);
+            border-color: var(--cherry-light);
+            color: #fff;
+            box-shadow: 0 0 12px rgba(255, 59, 96, 0.25);
+        }
+        .mod-roles-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            max-height: 240px;
+            overflow-y: auto;
+            padding: 4px;
+        }
+        .mod-role-toggle-chip {
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.04);
+            color: rgba(255, 255, 255, 0.7);
+            transition: var(--transition);
+        }
+        .mod-role-toggle-chip:hover {
+            border-color: rgba(255, 255, 255, 0.3);
+            color: #fff;
+        }
+        .mod-role-toggle-chip.active {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+            box-shadow: 0 0 12px rgba(255, 255, 255, 0.08);
+        }
+        .danger-box {
+            background: rgba(244, 63, 94, 0.06);
+            border: 1px solid rgba(244, 63, 94, 0.25);
+            border-radius: 18px;
+            padding: 20px;
+        }
+        .danger-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: rgba(244, 63, 94, 0.18);
+            color: #f43f5e;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+        .btn-danger-solid {
+            padding: 10px 18px;
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(135deg, #e11d48, #be123c);
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.85rem;
+            font-family: inherit;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 15px rgba(225, 29, 72, 0.35);
+            transition: var(--transition);
+            white-space: nowrap;
+        }
+        .btn-danger-solid:hover {
+            background: linear-gradient(135deg, #f43f5e, #e11d48);
+            box-shadow: 0 6px 20px rgba(244, 63, 94, 0.45);
+            transform: translateY(-1px);
+        }
+        .btn-danger-outline {
+            padding: 8px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(244, 63, 94, 0.4);
+            background: rgba(244, 63, 94, 0.1);
+            color: #fca5a5;
+            font-weight: 600;
+            font-size: 0.82rem;
+            font-family: inherit;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: var(--transition);
+        }
+        .btn-danger-outline:hover {
+            background: rgba(244, 63, 94, 0.25);
+            color: #fff;
+            border-color: #f43f5e;
+        }
+        .btn-primary-glow {
+            padding: 10px 20px;
+            border-radius: 10px;
+            border: none;
+            background: linear-gradient(135deg, var(--cherry-light), var(--rose-glow));
+            color: #fff;
+            font-weight: 600;
+            font-size: 0.86rem;
+            font-family: inherit;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            box-shadow: 0 4px 18px rgba(255, 59, 96, 0.35);
+            transition: var(--transition);
+        }
+        .btn-primary-glow:hover {
+            box-shadow: 0 6px 24px rgba(255, 59, 96, 0.5);
+            transform: translateY(-1px);
+        }
+        .mod-warns-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .mod-warn-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            font-size: 0.82rem;
+        }
+        .mod-warn-del-btn {
+            background: none;
+            border: none;
+            color: rgba(244, 63, 94, 0.6);
+            cursor: pointer;
+            padding: 4px;
+            transition: var(--transition);
+        }
+        .mod-warn-del-btn:hover {
+            color: #f43f5e;
+        }
+        .template-chip {
+            padding: 4px 10px;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .template-chip:hover {
+            background: rgba(255, 59, 96, 0.2);
+            border-color: var(--cherry-light);
+            color: #fff;
+        }
+        .mod-timeout-active-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 14px 18px;
+            background: rgba(244, 63, 94, 0.1);
+            border: 1px solid rgba(244, 63, 94, 0.3);
+            border-radius: 12px;
+            margin-bottom: 16px;
+        }
+        .mod-voice-status-card {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px 20px;
+            background: rgba(168, 85, 247, 0.1);
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            border-radius: 14px;
+        }
+        .mod-toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 2000;
+            background: rgba(15, 5, 10, 0.92);
+            border: 1px solid var(--cherry-light);
+            border-radius: 14px;
+            padding: 12px 20px;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 25px rgba(255, 59, 96, 0.25);
+            backdrop-filter: blur(20px);
+            color: #fff;
+            font-size: 0.88rem;
+            font-weight: 500;
+            animation: slideUp 0.3s ease-out;
+        }
+        .mod-toast.success i { color: #22c55e; }
+        .mod-toast.error i { color: #ef4444; }
+        .mod-toast.info i { color: #38bdf8; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     </style>
 </head>
 <body>
@@ -1739,17 +2488,85 @@
                 </div>
             </div>
 
-            <!-- TAB 5: DISCORD MEMBERS -->
+            <!-- TAB 5: DISCORD MEMBERS & MODERATION -->
             <div class="tab-panel" id="pane-members">
                 <div class="pane-hero">
-                    <div class="pane-hero-icon" style="background:linear-gradient(135deg,rgba(88,101,242,0.3),rgba(55,60,200,0.15))"><i class="fab fa-discord" style="color:#7c83ff"></i></div>
-                    <div>
-                        <h2 class="pane-title" style="margin-bottom:4px">Discord Guild Members</h2>
-                        <p style="font-size:0.88rem;color:rgba(255,255,255,0.5);margin:0">Active guild members with upload permissions or admin access.</p>
+                    <div class="pane-hero-icon" style="background:linear-gradient(135deg,rgba(88,101,242,0.35),rgba(55,60,200,0.15))">
+                        <i class="fab fa-discord" style="color:#7c83ff"></i>
+                    </div>
+                    <div style="flex:1">
+                        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+                            <div>
+                                <h2 class="pane-title" style="margin-bottom:4px">Discord Members & Moderation</h2>
+                                <p style="font-size:0.88rem;color:rgba(255,255,255,0.5);margin:0">Live guild directory with deep moderation controls, roles, timeouts, kicks, bans, and direct messaging.</p>
+                            </div>
+                            <div style="display:flex;gap:8px">
+                                <button class="btn-ghost" onclick="fetchDiscordGuildMembers(true)" id="refreshMembersBtn" title="Reload live guild cache">
+                                    <i class="fas fa-arrows-rotate"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
+
+                <!-- Stats summary strip -->
+                <div class="mod-stats-strip">
+                    <div class="mod-stat-card">
+                        <div class="mod-stat-num" id="modStatTotal">-</div>
+                        <div class="mod-stat-lbl"><i class="fas fa-users"></i> Total Members</div>
+                    </div>
+                    <div class="mod-stat-card">
+                        <div class="mod-stat-num" id="modStatOnline" style="color:#23a55a">-</div>
+                        <div class="mod-stat-lbl"><i class="fas fa-circle" style="color:#23a55a;font-size:0.55rem;vertical-align:middle;margin-right:2px"></i> Online Now</div>
+                    </div>
+                    <div class="mod-stat-card">
+                        <div class="mod-stat-num" id="modStatUploaders" style="color:#38bdf8">-</div>
+                        <div class="mod-stat-lbl"><i class="fas fa-cloud-arrow-up"></i> Uploaders</div>
+                    </div>
+                    <div class="mod-stat-card">
+                        <div class="mod-stat-num" id="modStatAdmins" style="color:var(--cherry-light)">-</div>
+                        <div class="mod-stat-lbl"><i class="fas fa-shield-halved"></i> Admins</div>
+                    </div>
+                    <div class="mod-stat-card">
+                        <div class="mod-stat-num" id="modStatTimedOut" style="color:#f43f5e">-</div>
+                        <div class="mod-stat-lbl"><i class="fas fa-clock"></i> Timed Out</div>
+                    </div>
+                </div>
+
+                <!-- Filters & Search Toolbar -->
+                <div class="mod-toolbar">
+                    <div class="mod-search-wrap">
+                        <i class="fas fa-magnifying-glass"></i>
+                        <input type="text" id="memberSearchInput" placeholder="Search name, nickname, @username, or Discord ID..." oninput="handleMemberSearch()">
+                        <button type="button" id="clearMemberSearchBtn" onclick="clearMemberSearch()" style="display:none"><i class="fas fa-xmark"></i></button>
+                    </div>
+                    <div class="mod-filter-selects">
+                        <select id="memberRoleFilter" class="mod-select" onchange="filterMembers()">
+                            <option value="all">All Roles</option>
+                        </select>
+                        <select id="memberSortSelect" class="mod-select" onchange="filterMembers()">
+                            <option value="admin">Sort: Admins First</option>
+                            <option value="uploader">Sort: Uploaders First</option>
+                            <option value="name">Sort: Name (A-Z)</option>
+                            <option value="joined">Sort: Recently Joined</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Status Filter Chips -->
+                <div class="mod-chips-row">
+                    <button class="mod-chip active" data-filter="all" onclick="setMemberFilter('all', this)">All (<span id="chipCountAll">0</span>)</button>
+                    <button class="mod-chip" data-filter="online" onclick="setMemberFilter('online', this)"><span class="chip-dot" style="background:#23a55a"></span> Online (<span id="chipCountOnline">0</span>)</button>
+                    <button class="mod-chip" data-filter="uploader" onclick="setMemberFilter('uploader', this)"><i class="fas fa-cloud-arrow-up" style="color:#38bdf8"></i> Uploaders (<span id="chipCountUploader">0</span>)</button>
+                    <button class="mod-chip" data-filter="admin" onclick="setMemberFilter('admin', this)"><i class="fas fa-shield-halved" style="color:var(--cherry-light)"></i> Admins (<span id="chipCountAdmin">0</span>)</button>
+                    <button class="mod-chip" data-filter="timeout" onclick="setMemberFilter('timeout', this)"><i class="fas fa-clock" style="color:#f43f5e"></i> Timed Out (<span id="chipCountTimeout">0</span>)</button>
+                    <button class="mod-chip" data-filter="voice" onclick="setMemberFilter('voice', this)"><i class="fas fa-headphones" style="color:#a855f7"></i> In Voice (<span id="chipCountVoice">0</span>)</button>
+                    <button class="mod-chip" data-filter="bot" onclick="setMemberFilter('bot', this)"><i class="fas fa-robot" style="color:#94a3b8"></i> Bots (<span id="chipCountBot">0</span>)</button>
+                </div>
+
+                <!-- Members Card Grid -->
                 <div class="members-grid" id="discordMembersGrid">
-                    <p style="color:var(--text-muted);font-size:0.85rem"><i class="fas fa-spinner fa-spin"></i> Fetching guild team cache...</p>
+                    <p style="color:var(--text-muted);font-size:0.85rem"><i class="fas fa-spinner fa-spin"></i> Fetching guild members & live states...</p>
                 </div>
             </div>
 
@@ -2006,6 +2823,212 @@
                 </div>
             </form>
         </div>
+    </div>
+
+    <!-- ================== ADVANCED MEMBER MODERATION MODAL ================== -->
+    <div class="mod-modal-overlay" id="memberModModal" style="display:none" onclick="if(event.target===this)closeMemberModModal()">
+        <div class="mod-modal-card">
+            <!-- Modal Header / User Banner -->
+            <div class="mod-modal-header">
+                <button class="mod-modal-close" onclick="closeMemberModModal()"><i class="fas fa-xmark"></i></button>
+                <div class="mod-user-header">
+                    <div class="mod-user-avatar-wrap">
+                        <img src="" alt="" id="modUserAvatar" class="mod-user-avatar">
+                        <span class="mod-presence-indicator" id="modUserPresence"></span>
+                    </div>
+                    <div class="mod-user-title">
+                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                            <h3 id="modUserDisplayName" style="margin:0;font-size:1.3rem;font-weight:700">Display Name</h3>
+                            <span id="modUserAdminBadge" class="badge badge-admin" style="display:none">Admin</span>
+                            <span id="modUserUploaderBadge" class="badge badge-upload" style="display:none">Uploader</span>
+                            <span id="modUserTimeoutBadge" class="badge badge-timeout flag-timeout" style="display:none"><i class="fas fa-clock"></i> Timed Out</span>
+                        </div>
+                        <div class="mod-user-sub" style="margin-top:2px">
+                            <span id="modUserTag" style="color:rgba(255,255,255,0.7);font-size:0.88rem">@username</span>
+                            <span class="mod-id-pill" onclick="copyUserIdToClipboard()" title="Click to copy Discord ID">
+                                <i class="far fa-copy"></i> <span id="modUserId">000000000000000000</span>
+                            </span>
+                        </div>
+                        <div class="mod-user-meta-row">
+                            <span id="modUserJoined"><i class="far fa-calendar-check"></i> Joined: -</span>
+                            <span id="modUserCreated"><i class="far fa-clock"></i> Created: -</span>
+                            <span id="modUserVoice" style="display:none;color:#a855f7"><i class="fas fa-headphones"></i> In Voice: <b id="modUserVoiceChannel">-</b></span>
+                            <span id="modUserWarns" style="color:#f59e0b"><i class="fas fa-triangle-exclamation"></i> <b id="modUserWarnCount">0</b> Warnings</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Sub-Tabs -->
+            <div class="mod-modal-tabs">
+                <button class="mod-tab-btn active" data-modtab="roles" onclick="switchModTab('roles', this)"><i class="fas fa-shield-halved"></i> Roles</button>
+                <button class="mod-tab-btn" data-modtab="timeout" onclick="switchModTab('timeout', this)"><i class="fas fa-clock"></i> Timeout</button>
+                <button class="mod-tab-btn" data-modtab="nick" onclick="switchModTab('nick', this)"><i class="fas fa-signature"></i> Nickname</button>
+                <button class="mod-tab-btn" data-modtab="warn" onclick="switchModTab('warn', this)"><i class="fas fa-triangle-exclamation"></i> Warns (<span id="modTabWarnCount">0</span>)</button>
+                <button class="mod-tab-btn" data-modtab="dm" onclick="switchModTab('dm', this)"><i class="fas fa-paper-plane"></i> Send DM</button>
+                <button class="mod-tab-btn" data-modtab="voice" id="modTabVoiceBtn" style="display:none" onclick="switchModTab('voice', this)"><i class="fas fa-microphone-lines"></i> Voice</button>
+                <button class="mod-tab-btn" data-modtab="danger" onclick="switchModTab('danger', this)" style="color:#f43f5e"><i class="fas fa-skull"></i> Kick / Ban</button>
+            </div>
+
+            <!-- Modal Content Panels -->
+            <div class="mod-modal-body">
+                <!-- PANEL: ROLES -->
+                <div class="mod-panel active" id="modPanel-roles">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+                        <h4 style="margin:0;font-size:0.95rem"><i class="fas fa-tags" style="color:var(--cherry-light);margin-right:6px"></i>Server Roles</h4>
+                        <span style="font-size:0.75rem;color:var(--text-muted)">Click any role to grant or revoke</span>
+                    </div>
+                    <div class="mod-roles-grid" id="modRolesContainer">
+                        <p style="color:var(--text-muted);font-size:0.85rem">Loading server roles...</p>
+                    </div>
+                </div>
+
+                <!-- PANEL: TIMEOUT -->
+                <div class="mod-panel" id="modPanel-timeout">
+                    <div class="mod-timeout-active-box" id="modTimeoutActiveBox" style="display:none">
+                        <div>
+                            <strong style="color:#f43f5e"><i class="fas fa-clock"></i> Currently Timed Out</strong>
+                            <p style="margin:4px 0 0;font-size:0.8rem;color:rgba(255,255,255,0.7)" id="modTimeoutUntilText"></p>
+                        </div>
+                        <button class="btn-danger-outline" onclick="executeTimeout(0)">Remove Timeout</button>
+                    </div>
+
+                    <h4 style="margin:0 0 10px;font-size:0.95rem">Apply Timeout Duration</h4>
+                    <div class="mod-duration-chips">
+                        <button type="button" class="duration-chip" onclick="selectTimeoutDuration(60, this)">60 Seconds</button>
+                        <button type="button" class="duration-chip active" onclick="selectTimeoutDuration(300, this)">5 Minutes</button>
+                        <button type="button" class="duration-chip" onclick="selectTimeoutDuration(600, this)">10 Minutes</button>
+                        <button type="button" class="duration-chip" onclick="selectTimeoutDuration(3600, this)">1 Hour</button>
+                        <button type="button" class="duration-chip" onclick="selectTimeoutDuration(86400, this)">1 Day</button>
+                        <button type="button" class="duration-chip" onclick="selectTimeoutDuration(604800, this)">1 Week</button>
+                    </div>
+
+                    <div style="margin-top:14px">
+                        <label style="display:block;font-size:0.8rem;color:rgba(255,255,255,0.7);margin-bottom:6px">Reason for Timeout</label>
+                        <input type="text" id="modTimeoutReason" class="mod-input" placeholder="e.g. Spamming, inappropriate language, self-promotion">
+                    </div>
+
+                    <div style="margin-top:16px;display:flex;justify-content:flex-end">
+                        <button class="btn-primary-glow" onclick="applySelectedTimeout()"><i class="fas fa-gavel"></i> Apply Timeout</button>
+                    </div>
+                </div>
+
+                <!-- PANEL: NICKNAME -->
+                <div class="mod-panel" id="modPanel-nick">
+                    <h4 style="margin:0 0 10px;font-size:0.95rem">Server Nickname</h4>
+                    <p style="font-size:0.82rem;color:var(--text-muted);margin:0 0 14px">Change the member's display nickname inside the Discord guild or reset to original username.</p>
+                    <input type="text" id="modNicknameInput" class="mod-input" placeholder="Enter new nickname (leave empty to reset)">
+                    <div style="margin-top:16px;display:flex;justify-content:space-between">
+                        <button class="btn-ghost" onclick="resetNickname()"><i class="fas fa-rotate-left"></i> Reset to Default</button>
+                        <button class="btn-primary-glow" onclick="saveNickname()"><i class="fas fa-check"></i> Save Nickname</button>
+                    </div>
+                </div>
+
+                <!-- PANEL: WARNS -->
+                <div class="mod-panel" id="modPanel-warn">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+                        <h4 style="margin:0;font-size:0.95rem">Active Member Warnings</h4>
+                        <span style="font-size:0.8rem;color:#f59e0b"><i class="fas fa-triangle-exclamation"></i> <span id="modWarnsTotalLabel">0</span> warnings on record</span>
+                    </div>
+                    <div class="mod-warns-list" id="modWarnsListContainer">
+                        <p style="color:var(--text-muted);font-size:0.85rem">Loading warning history...</p>
+                    </div>
+
+                    <hr style="border:0;border-top:1px solid rgba(255,255,255,0.08);margin:16px 0">
+                    <h4 style="margin:0 0 10px;font-size:0.9rem"><i class="fas fa-plus-circle" style="color:var(--cherry-light);margin-right:6px"></i>Issue New Official Warning</h4>
+                    <input type="text" id="modNewWarnReason" class="mod-input" placeholder="Reason for warning (e.g. Broken links uploaded, disrespectful behavior)...">
+                    <div style="margin-top:10px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+                        <label style="font-size:0.8rem;color:rgba(255,255,255,0.8);cursor:pointer;display:flex;align-items:center;gap:6px">
+                            <input type="checkbox" id="modWarnSendDm" checked style="accent-color:var(--cherry-light)"> Send DM notification to member
+                        </label>
+                        <button class="btn-primary-glow" onclick="submitNewWarn()"><i class="fas fa-triangle-exclamation"></i> Issue Warning</button>
+                    </div>
+                </div>
+
+                <!-- PANEL: DIRECT MESSAGE (DM) -->
+                <div class="mod-panel" id="modPanel-dm">
+                    <h4 style="margin:0 0 10px;font-size:0.95rem">Send Official Direct Message (DM)</h4>
+                    <p style="font-size:0.82rem;color:var(--text-muted);margin:0 0 12px">The message will be delivered directly from the verified Zyrex Bot as an official embed.</p>
+                    
+                    <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap">
+                        <span style="font-size:0.75rem;color:var(--text-muted);line-height:26px">Templates:</span>
+                        <button class="template-chip" onclick="applyDmTemplate('rules')">Rule Notice</button>
+                        <button class="template-chip" onclick="applyDmTemplate('uploader_welcome')">Uploader Welcome</button>
+                        <button class="template-chip" onclick="applyDmTemplate('content_issue')">Content Issue</button>
+                    </div>
+
+                    <label style="display:block;font-size:0.8rem;color:rgba(255,255,255,0.7);margin-bottom:6px">Embed Title</label>
+                    <input type="text" id="modDmTitle" class="mod-input" value="Official Notice from Zyrex Editing">
+
+                    <label style="display:block;font-size:0.8rem;color:rgba(255,255,255,0.7);margin:12px 0 6px">Message Content</label>
+                    <textarea id="modDmMessage" class="mod-textarea" rows="4" placeholder="Write your direct message to this member..."></textarea>
+
+                    <div style="margin-top:16px;display:flex;justify-content:flex-end">
+                        <button class="btn-primary-glow" onclick="sendDirectMessage()"><i class="fas fa-paper-plane"></i> Send Direct Message</button>
+                    </div>
+                </div>
+
+                <!-- PANEL: VOICE -->
+                <div class="mod-panel" id="modPanel-voice">
+                    <h4 style="margin:0 0 8px;font-size:0.95rem">Voice Channel Moderation</h4>
+                    <div class="mod-voice-status-card">
+                        <i class="fas fa-headphones-simple" style="font-size:1.8rem;color:#a855f7"></i>
+                        <div>
+                            <div style="font-weight:600;font-size:1rem" id="modVoiceChannelDisplay">-</div>
+                            <div style="font-size:0.8rem;color:var(--text-muted)" id="modVoiceStateDisplay">Connected</div>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+                        <button class="btn-ghost" onclick="executeVoiceAction('mute')" id="modVoiceMuteBtn"><i class="fas fa-microphone-slash"></i> Server Mute</button>
+                        <button class="btn-ghost" onclick="executeVoiceAction('unmute')" id="modVoiceUnmuteBtn"><i class="fas fa-microphone"></i> Unmute</button>
+                        <button class="btn-danger-outline" onclick="executeVoiceAction('disconnect')"><i class="fas fa-phone-slash"></i> Disconnect from Channel</button>
+                    </div>
+                </div>
+
+                <!-- PANEL: DANGER ZONE (KICK / BAN) -->
+                <div class="mod-panel" id="modPanel-danger">
+                    <div class="danger-box">
+                        <div style="display:flex;align-items:flex-start;gap:14px;margin-bottom:18px">
+                            <div class="danger-icon"><i class="fas fa-user-xmark"></i></div>
+                            <div style="flex:1">
+                                <h5 style="margin:0 0 4px;font-size:1rem;color:#fff">Kick Member from Server</h5>
+                                <p style="margin:0;font-size:0.82rem;color:rgba(255,255,255,0.6)">Removes the member from the guild. They can re-join if they have an active invite link.</p>
+                                <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
+                                    <input type="text" id="modKickReason" class="mod-input" placeholder="Reason for kick..." style="max-width:320px">
+                                    <button class="btn-danger-solid" onclick="executeKick()"><i class="fas fa-user-xmark"></i> Kick Member</button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr style="border:0;border-top:1px solid rgba(244,63,94,0.25);margin:16px 0">
+
+                        <div style="display:flex;align-items:flex-start;gap:14px">
+                            <div class="danger-icon" style="background:rgba(244,63,94,0.25)"><i class="fas fa-ban"></i></div>
+                            <div style="flex:1">
+                                <h5 style="margin:0 0 4px;font-size:1rem;color:#fff">Permanently Ban Member</h5>
+                                <p style="margin:0;font-size:0.82rem;color:rgba(255,255,255,0.6)">Bans this user from the guild permanently. They will not be able to re-join unless unbanned.</p>
+                                
+                                <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
+                                    <input type="text" id="modBanReason" class="mod-input" placeholder="Reason for permanent ban..." style="max-width:260px">
+                                    <select id="modBanPurgeDays" class="mod-select" style="max-width:170px">
+                                        <option value="0">Keep all messages</option>
+                                        <option value="1">Delete past 24 hours</option>
+                                        <option value="7">Delete past 7 days</option>
+                                    </select>
+                                    <button class="btn-danger-solid" onclick="executeBan()"><i class="fas fa-gavel"></i> Ban User</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Glass Toast Container -->
+    <div id="modToast" class="mod-toast" style="display:none">
+        <i class="fas fa-circle-check" id="modToastIcon"></i>
+        <span id="modToastMsg">Success</span>
     </div>
 
     <script src="js/auth.js?v=10"></script>
@@ -3087,38 +4110,763 @@
             }
         }
 
-        // ================== DISCORD MEMBERS TAB ==================
-        async function fetchDiscordGuildMembers() {
-            const grid = document.getElementById('discordMembersGrid');
-            grid.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem"><i class="fas fa-spinner fa-spin"></i> Fetching guild team cache...</p>';
+        // ================== DISCORD MEMBERS & ADVANCED MODERATION ==================
+        let rawGuildMembers = [];
+        let guildRolesList = [];
+        let currentSelectedMember = null;
+        let activeMemberFilter = 'all';
+        let selectedTimeoutSeconds = 300;
+
+        function showModToast(message, type = 'success') {
+            const toast = document.getElementById('modToast');
+            const msg = document.getElementById('modToastMsg');
+            const icon = document.getElementById('modToastIcon');
+            if (!toast || !msg) return;
+
+            toast.className = `mod-toast ${type}`;
+            if (type === 'success') icon.className = 'fas fa-circle-check';
+            else if (type === 'error') icon.className = 'fas fa-circle-xmark';
+            else icon.className = 'fas fa-circle-info';
+
+            msg.textContent = message;
+            toast.style.display = 'inline-flex';
+
+            clearTimeout(window.__modToastTimer);
+            window.__modToastTimer = setTimeout(() => {
+                toast.style.display = 'none';
+            }, 4000);
+        }
+
+        async function fetchGuildRolesList() {
             try {
+                const resp = await fetch('/api/guild/roles');
+                const data = await resp.json();
+                if (data.success && data.roles) {
+                    guildRolesList = data.roles;
+                    const roleSelect = document.getElementById('memberRoleFilter');
+                    if (roleSelect) {
+                        const current = roleSelect.value;
+                        roleSelect.innerHTML = '<option value="all">All Roles</option>' + 
+                            data.roles.map(r => `<option value="${r.id}">${escapeHtml(r.name)} (${r.member_count})</option>`).join('');
+                        roleSelect.value = current || 'all';
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to load guild roles:", e);
+            }
+        }
+
+        async function fetchDiscordGuildMembers(force = false) {
+            const grid = document.getElementById('discordMembersGrid');
+            const refreshBtn = document.getElementById('refreshMembersBtn');
+            if (refreshBtn) refreshBtn.innerHTML = '<i class="fas fa-arrows-rotate fa-spin"></i> Loading...';
+            if (grid && (!rawGuildMembers.length || force)) {
+                grid.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem"><i class="fas fa-spinner fa-spin"></i> Fetching live Discord guild directory & telemetry...</p>';
+            }
+
+            try {
+                // Fetch roles list in parallel
+                fetchGuildRolesList();
+
                 const resp = await fetch('/api/guild/members');
                 const data = await resp.json();
                 if (data.success && data.members) {
-                    data.members.sort((a,b) => b.is_admin - a.is_admin);
-                    grid.innerHTML = data.members.map(m => {
-                        const avatar = m.avatar 
-                            ? avatarProxyUrl(m.id, m.avatar, 64)
-                            : '';
-                        return `
-                            <div class="member-card">
-                                ${avatar ? `<img src="${avatar}" alt="">` : '<div class="member-fallback"><i class="fas fa-user-circle"></i></div>'}
-                                <div class="member-info">
-                                    <h4>${m.global_name || m.username}</h4>
-                                    <span>@${m.username}</span>
-                                    <div style="display:flex;gap:4px">
-                                        ${m.is_admin ? '<span class="badge badge-admin">Admin</span>' : ''}
-                                        ${m.is_uploader ? '<span class="badge badge-upload">Uploader</span>' : ''}
-                                    </div>
+                    rawGuildMembers = data.members;
+                    updateMemberStats(rawGuildMembers);
+                    renderMembersList(filterAndSortMembers(rawGuildMembers));
+                } else {
+                    if (grid) grid.innerHTML = `<p style="color:var(--cherry-light)">Error loading members: ${escapeHtml(data.error || 'Permission denied')}</p>`;
+                }
+            } catch (e) {
+                if (grid) grid.innerHTML = '<p style="color:var(--cherry-light)">Failed to connect to Discord API Gateway.</p>';
+            } finally {
+                if (refreshBtn) refreshBtn.innerHTML = '<i class="fas fa-arrows-rotate"></i> Refresh';
+            }
+        }
+
+        function updateMemberStats(members) {
+            const total = members.length;
+            const online = members.filter(m => m.status && m.status !== 'offline').length;
+            const uploaders = members.filter(m => m.is_uploader).length;
+            const admins = members.filter(m => m.is_admin).length;
+            const timedOut = members.filter(m => m.is_timed_out).length;
+            const inVoice = members.filter(m => m.voice).length;
+            const bots = members.filter(m => m.is_bot).length;
+
+            const setNum = (id, n) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = n.toLocaleString();
+            };
+
+            setNum('modStatTotal', total);
+            setNum('modStatOnline', online);
+            setNum('modStatUploaders', uploaders);
+            setNum('modStatAdmins', admins);
+            setNum('modStatTimedOut', timedOut);
+
+            setNum('chipCountAll', total);
+            setNum('chipCountOnline', online);
+            setNum('chipCountUploader', uploaders);
+            setNum('chipCountAdmin', admins);
+            setNum('chipCountTimeout', timedOut);
+            setNum('chipCountVoice', inVoice);
+            setNum('chipCountBot', bots);
+        }
+
+        function setMemberFilter(filterKey, el) {
+            activeMemberFilter = filterKey;
+            document.querySelectorAll('.mod-chip').forEach(c => c.classList.remove('active'));
+            if (el) el.classList.add('active');
+            filterMembers();
+        }
+
+        function handleMemberSearch() {
+            const q = document.getElementById('memberSearchInput').value.trim();
+            const clearBtn = document.getElementById('clearMemberSearchBtn');
+            if (clearBtn) clearBtn.style.display = q ? 'inline-flex' : 'none';
+            filterMembers();
+        }
+
+        function clearMemberSearch() {
+            const input = document.getElementById('memberSearchInput');
+            if (input) input.value = '';
+            const clearBtn = document.getElementById('clearMemberSearchBtn');
+            if (clearBtn) clearBtn.style.display = 'none';
+            filterMembers();
+        }
+
+        function filterMembers() {
+            renderMembersList(filterAndSortMembers(rawGuildMembers));
+        }
+
+        function filterAndSortMembers(members) {
+            const q = (document.getElementById('memberSearchInput')?.value || '').trim().toLowerCase();
+            const roleFilter = document.getElementById('memberRoleFilter')?.value || 'all';
+            const sortMode = document.getElementById('memberSortSelect')?.value || 'admin';
+
+            let list = members.filter(m => {
+                // Search query
+                if (q) {
+                    const matchUser = (m.username || '').toLowerCase().includes(q);
+                    const matchNick = (m.nickname || '').toLowerCase().includes(q);
+                    const matchGlobal = (m.global_name || '').toLowerCase().includes(q);
+                    const matchId = (m.id || '').includes(q);
+                    if (!matchUser && !matchNick && !matchGlobal && !matchId) return false;
+                }
+
+                // Filter chip
+                if (activeMemberFilter === 'online' && (!m.status || m.status === 'offline')) return false;
+                if (activeMemberFilter === 'uploader' && !m.is_uploader) return false;
+                if (activeMemberFilter === 'admin' && !m.is_admin) return false;
+                if (activeMemberFilter === 'timeout' && !m.is_timed_out) return false;
+                if (activeMemberFilter === 'voice' && !m.voice) return false;
+                if (activeMemberFilter === 'bot' && !m.is_bot) return false;
+
+                // Role dropdown filter
+                if (roleFilter !== 'all') {
+                    const hasRole = (m.roles || []).some(r => String(r.id) === String(roleFilter));
+                    if (!hasRole) return false;
+                }
+
+                return true;
+            });
+
+            // Sort
+            if (sortMode === 'admin') {
+                list.sort((a, b) => (b.is_admin ? 1 : 0) - (a.is_admin ? 1 : 0) || (b.is_uploader ? 1 : 0) - (a.is_uploader ? 1 : 0));
+            } else if (sortMode === 'uploader') {
+                list.sort((a, b) => (b.is_uploader ? 1 : 0) - (a.is_uploader ? 1 : 0) || (b.is_admin ? 1 : 0) - (a.is_admin ? 1 : 0));
+            } else if (sortMode === 'name') {
+                list.sort((a, b) => (a.global_name || a.username || '').localeCompare(b.global_name || b.username || ''));
+            } else if (sortMode === 'joined') {
+                list.sort((a, b) => new Date(b.joined_at || 0) - new Date(a.joined_at || 0));
+            }
+
+            return list;
+        }
+
+        function renderMembersList(members) {
+            const grid = document.getElementById('discordMembersGrid');
+            if (!grid) return;
+
+            if (!members || members.length === 0) {
+                grid.innerHTML = '<p style="color:var(--text-muted);font-size:0.88rem;grid-column:1/-1;padding:24px 0"><i class="fas fa-user-slash" style="margin-right:6px"></i> No members matched the active filter criteria.</p>';
+                return;
+            }
+
+            grid.innerHTML = members.map(m => {
+                const avatar = m.avatar || `https://cdn.discordapp.com/embed/avatars/${(BigInt(m.id || 0) >> 22n) % 6n}.png`;
+                const statusClass = m.status || 'offline';
+                const cardClasses = ['member-card'];
+                if (m.is_admin) cardClasses.push('is-admin');
+                if (m.is_uploader) cardClasses.push('is-uploader');
+                if (m.is_timed_out) cardClasses.push('is-timed-out');
+
+                const displayName = escapeHtml(m.nickname || m.global_name || m.username);
+                const handle = escapeHtml(m.username);
+
+                // Roles pills (up to 3)
+                const rolesHtml = (m.roles || []).slice(0, 4).map(r => {
+                    return `<span class="role-pill" style="border-color:${r.color}33"><span class="role-dot" style="background:${r.color}"></span><span style="color:#eee">${escapeHtml(r.name)}</span></span>`;
+                }).join('');
+                const remainingRoles = (m.roles || []).length > 4 ? `<span class="role-pill">+${(m.roles || []).length - 4}</span>` : '';
+
+                // Flags
+                let flagsHtml = '';
+                if (m.is_timed_out) {
+                    flagsHtml += `<span class="flag-pill flag-timeout"><i class="fas fa-clock"></i> Timed Out</span>`;
+                }
+                if (m.voice) {
+                    flagsHtml += `<span class="flag-pill flag-voice"><i class="fas fa-headphones"></i> ${escapeHtml(m.voice.channel_name || 'Voice')}</span>`;
+                }
+                if (m.warns_count > 0) {
+                    flagsHtml += `<span class="flag-pill flag-warns"><i class="fas fa-triangle-exclamation"></i> ${m.warns_count} Warn${m.warns_count > 1 ? 's' : ''}</span>`;
+                }
+
+                return `
+                    <div class="${cardClasses.join(' ')}" data-user-id="${m.id}">
+                        <div class="member-card-top">
+                            <div class="member-avatar-wrap">
+                                <img src="${avatar}" alt="${handle}" loading="lazy" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+                                <span class="presence-dot ${statusClass}" title="Status: ${statusClass}"></span>
+                            </div>
+                            <div class="member-meta">
+                                <div class="member-name-row">
+                                    <h4 class="member-display-name">${displayName}</h4>
+                                    ${m.is_admin ? '<span class="badge badge-admin" style="font-size:0.65rem;padding:2px 6px">Admin</span>' : ''}
+                                    ${m.is_uploader ? '<span class="badge badge-upload" style="font-size:0.65rem;padding:2px 6px">Uploader</span>' : ''}
+                                    ${m.is_bot ? '<span class="badge" style="background:rgba(255,255,255,0.1);color:#cbd5e1;font-size:0.62rem;padding:1px 5px">BOT</span>' : ''}
+                                </div>
+                                <span class="member-handle">@${handle}</span>
+                                <span class="member-id-tag" onclick="copyId('${m.id}', this)" title="Click to copy ID"><i class="far fa-copy"></i> ${m.id}</span>
+                            </div>
+                        </div>
+
+                        ${flagsHtml ? `<div class="member-flags-row">${flagsHtml}</div>` : ''}
+
+                        <div class="member-roles-wrap">
+                            ${rolesHtml}
+                            ${remainingRoles}
+                        </div>
+
+                        <div class="member-card-actions">
+                            <button class="btn-card-action" onclick="quickToggleUploader('${m.id}', ${m.is_uploader})" title="${m.is_uploader ? 'Revoke uploader role' : 'Grant uploader role'}">
+                                <i class="fas fa-cloud-arrow-up" style="color:${m.is_uploader ? '#38bdf8' : 'rgba(255,255,255,0.4)'}"></i>
+                                <span>${m.is_uploader ? 'Revoke' : 'Make'} Uploader</span>
+                            </button>
+                            <button class="btn-card-action btn-card-manage" onclick="openMemberModModal('${m.id}')">
+                                <i class="fas fa-shield-halved"></i>
+                                <span>Moderate</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function copyId(id, el) {
+            navigator.clipboard.writeText(id).then(() => {
+                const oldHtml = el.innerHTML;
+                el.innerHTML = '<i class="fas fa-check" style="color:#22c55e"></i> Copied!';
+                setTimeout(() => { el.innerHTML = oldHtml; }, 1500);
+            });
+        }
+
+        function copyUserIdToClipboard() {
+            const idEl = document.getElementById('modUserId');
+            if (idEl) {
+                navigator.clipboard.writeText(idEl.textContent).then(() => {
+                    showModToast(`Copied ID ${idEl.textContent} to clipboard!`, 'info');
+                });
+            }
+        }
+
+        // ================== MODAL & MODERATION ACTIONS ==================
+        function openMemberModModal(userId) {
+            const member = rawGuildMembers.find(m => String(m.id) === String(userId));
+            if (!member) {
+                showModToast("Member not found in current directory cache", "error");
+                return;
+            }
+            currentSelectedMember = member;
+
+            const modal = document.getElementById('memberModModal');
+            if (!modal) return;
+
+            // Header info
+            const avatar = member.avatar || `https://cdn.discordapp.com/embed/avatars/${(BigInt(member.id || 0) >> 22n) % 6n}.png`;
+            document.getElementById('modUserAvatar').src = avatar;
+            document.getElementById('modUserDisplayName').textContent = member.nickname || member.global_name || member.username;
+            document.getElementById('modUserTag').textContent = `@${member.username}`;
+            document.getElementById('modUserId').textContent = member.id;
+
+            // Badges
+            document.getElementById('modUserAdminBadge').style.display = member.is_admin ? 'inline-block' : 'none';
+            document.getElementById('modUserUploaderBadge').style.display = member.is_uploader ? 'inline-block' : 'none';
+            document.getElementById('modUserTimeoutBadge').style.display = member.is_timed_out ? 'inline-block' : 'none';
+
+            // Presence
+            const presence = document.getElementById('modUserPresence');
+            if (presence) presence.className = `mod-presence-indicator presence-dot ${member.status || 'offline'}`;
+
+            // Meta dates
+            const joinedText = member.joined_at ? new Date(member.joined_at).toLocaleDateString() : 'Unknown';
+            const createdText = member.created_at ? new Date(member.created_at).toLocaleDateString() : 'Unknown';
+            document.getElementById('modUserJoined').innerHTML = `<i class="far fa-calendar-check"></i> Joined: ${joinedText}`;
+            document.getElementById('modUserCreated').innerHTML = `<i class="far fa-clock"></i> Created: ${createdText}`;
+
+            // Warns count
+            document.getElementById('modUserWarnCount').textContent = member.warns_count || 0;
+            document.getElementById('modTabWarnCount').textContent = member.warns_count || 0;
+            document.getElementById('modWarnsTotalLabel').textContent = member.warns_count || 0;
+
+            // Voice tab & display
+            const voiceBtn = document.getElementById('modTabVoiceBtn');
+            const voiceBadge = document.getElementById('modUserVoice');
+            if (member.voice) {
+                if (voiceBtn) voiceBtn.style.display = 'inline-flex';
+                if (voiceBadge) {
+                    voiceBadge.style.display = 'inline-block';
+                    document.getElementById('modUserVoiceChannel').textContent = member.voice.channel_name || 'Voice';
+                }
+                document.getElementById('modVoiceChannelDisplay').textContent = member.voice.channel_name || 'Channel';
+                document.getElementById('modVoiceStateDisplay').textContent = `Mute: ${member.voice.mute ? 'Yes' : 'No'} | Deaf: ${member.voice.deaf ? 'Yes' : 'No'}`;
+            } else {
+                if (voiceBtn) voiceBtn.style.display = 'none';
+                if (voiceBadge) voiceBadge.style.display = 'none';
+            }
+
+            // Timeout status
+            const timeoutBox = document.getElementById('modTimeoutActiveBox');
+            if (member.is_timed_out && member.timeout_until) {
+                timeoutBox.style.display = 'flex';
+                document.getElementById('modTimeoutUntilText').textContent = `Active until: ${new Date(member.timeout_until).toLocaleString()}`;
+            } else {
+                timeoutBox.style.display = 'none';
+            }
+
+            // Nickname input
+            document.getElementById('modNicknameInput').value = member.nickname || '';
+
+            // Reset tabs to roles
+            switchModTab('roles', document.querySelector('.mod-tab-btn[data-modtab="roles"]'));
+
+            // Render Roles
+            renderModalRoles();
+
+            // Load Warns
+            loadMemberWarns(member.id);
+
+            modal.style.display = 'flex';
+        }
+
+        function closeMemberModModal() {
+            const modal = document.getElementById('memberModModal');
+            if (modal) modal.style.display = 'none';
+            currentSelectedMember = null;
+        }
+
+        function switchModTab(tabKey, btn) {
+            document.querySelectorAll('.mod-tab-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            document.querySelectorAll('.mod-panel').forEach(p => p.classList.remove('active'));
+            const target = document.getElementById(`modPanel-${tabKey}`);
+            if (target) target.classList.add('active');
+        }
+
+        function renderModalRoles() {
+            const container = document.getElementById('modRolesContainer');
+            if (!container) return;
+
+            if (!guildRolesList.length) {
+                container.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem">No guild roles fetched.</p>';
+                return;
+            }
+
+            const memberRoleIds = new Set((currentSelectedMember.roles || []).map(r => String(r.id)));
+
+            container.innerHTML = guildRolesList.map(r => {
+                const isAssigned = memberRoleIds.has(String(r.id));
+                return `
+                    <button class="mod-role-toggle-chip ${isAssigned ? 'active' : ''}" onclick="toggleMemberRole('${r.id}', ${isAssigned})" style="border-color:${r.color}${isAssigned ? '99' : '33'}">
+                        <span class="role-dot" style="background:${r.color}"></span>
+                        <span>${escapeHtml(r.name)}</span>
+                        <i class="fas ${isAssigned ? 'fa-check' : 'fa-plus'}" style="font-size:0.7rem;margin-left:2px;opacity:0.8"></i>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        async function toggleMemberRole(roleId, isCurrentlyAssigned) {
+            if (!currentSelectedMember) return;
+            const action = isCurrentlyAssigned ? 'remove' : 'add';
+
+            try {
+                const resp = await fetch('/api/guild/members/role', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: currentSelectedMember.id,
+                        role_id: roleId,
+                        action: action
+                    })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    showModToast(data.message || `Role updated successfully!`, 'success');
+                    // Update local cached member
+                    if (action === 'add') {
+                        const r = guildRolesList.find(x => String(x.id) === String(roleId));
+                        if (r) currentSelectedMember.roles.push(r);
+                    } else {
+                        currentSelectedMember.roles = currentSelectedMember.roles.filter(x => String(x.id) !== String(roleId));
+                    }
+                    renderModalRoles();
+                    renderMembersList(filterAndSortMembers(rawGuildMembers));
+                } else {
+                    showModToast(data.error || 'Failed to update role', 'error');
+                }
+            } catch (e) {
+                showModToast('Role action request failed', 'error');
+            }
+        }
+
+        async function quickToggleUploader(userId, isCurrentlyUploader) {
+            const role = guildRolesList.find(r => r.id === '1519624224476762122') || { id: '1519624224476762122' };
+            const action = isCurrentlyUploader ? 'remove' : 'add';
+
+            try {
+                const resp = await fetch('/api/guild/members/role', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: userId,
+                        role_id: role.id,
+                        action: action
+                    })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    showModToast(data.message || `Uploader role updated!`, 'success');
+                    const mem = rawGuildMembers.find(m => String(m.id) === String(userId));
+                    if (mem) {
+                        mem.is_uploader = !isCurrentlyUploader;
+                        updateMemberStats(rawGuildMembers);
+                        renderMembersList(filterAndSortMembers(rawGuildMembers));
+                    }
+                } else {
+                    showModToast(data.error || 'Failed to change role', 'error');
+                }
+            } catch (e) {
+                showModToast('Connection error', 'error');
+            }
+        }
+
+        function selectTimeoutDuration(seconds, btn) {
+            selectedTimeoutSeconds = seconds;
+            document.querySelectorAll('.duration-chip').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+        }
+
+        async function applySelectedTimeout() {
+            const reason = document.getElementById('modTimeoutReason').value.trim();
+            await executeTimeout(selectedTimeoutSeconds, reason);
+        }
+
+        async function executeTimeout(durationSec, reason = '') {
+            if (!currentSelectedMember) return;
+            try {
+                const resp = await fetch('/api/guild/members/timeout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: currentSelectedMember.id,
+                        duration_seconds: durationSec,
+                        reason: reason || 'Web Admin Action'
+                    })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    showModToast(data.message, 'success');
+                    currentSelectedMember.is_timed_out = durationSec > 0;
+                    if (durationSec > 0) {
+                        currentSelectedMember.timeout_until = new Date(Date.now() + durationSec * 1000).toISOString();
+                        document.getElementById('modTimeoutActiveBox').style.display = 'flex';
+                        document.getElementById('modTimeoutUntilText').textContent = `Active until: ${new Date(currentSelectedMember.timeout_until).toLocaleString()}`;
+                    } else {
+                        currentSelectedMember.timeout_until = null;
+                        document.getElementById('modTimeoutActiveBox').style.display = 'none';
+                    }
+                    updateMemberStats(rawGuildMembers);
+                    renderMembersList(filterAndSortMembers(rawGuildMembers));
+                } else {
+                    showModToast(data.error || 'Timeout failed', 'error');
+                }
+            } catch (e) {
+                showModToast('Timeout request failed', 'error');
+            }
+        }
+
+        async function saveNickname() {
+            if (!currentSelectedMember) return;
+            const nick = document.getElementById('modNicknameInput').value.trim();
+            try {
+                const resp = await fetch('/api/guild/members/nickname', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: currentSelectedMember.id,
+                        nickname: nick
+                    })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    showModToast(data.message, 'success');
+                    currentSelectedMember.nickname = nick || null;
+                    document.getElementById('modUserDisplayName').textContent = nick || currentSelectedMember.global_name || currentSelectedMember.username;
+                    renderMembersList(filterAndSortMembers(rawGuildMembers));
+                } else {
+                    showModToast(data.error || 'Failed to update nickname', 'error');
+                }
+            } catch (e) {
+                showModToast('Nickname request failed', 'error');
+            }
+        }
+
+        async function resetNickname() {
+            document.getElementById('modNicknameInput').value = '';
+            await saveNickname();
+        }
+
+        async function loadMemberWarns(userId) {
+            const container = document.getElementById('modWarnsListContainer');
+            if (!container) return;
+            container.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem"><i class="fas fa-spinner fa-spin"></i> Fetching warning records...</p>';
+
+            try {
+                const resp = await fetch(`/api/guild/members/warns?user_id=${userId}`);
+                const data = await resp.json();
+                if (data.success && data.warns) {
+                    if (data.warns.length === 0) {
+                        container.innerHTML = '<p style="color:var(--text-muted);font-size:0.82rem;padding:6px 0">No warnings on record for this user.</p>';
+                        return;
+                    }
+                    container.innerHTML = data.warns.map(w => `
+                        <div class="mod-warn-item">
+                            <div>
+                                <div style="font-weight:600;color:#fff">${escapeHtml(w.reason)}</div>
+                                <div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px">
+                                    By ${escapeHtml(w.moderator_name || 'Admin')} • ${new Date(w.created_at).toLocaleString()}
                                 </div>
                             </div>
-                        `;
-                    }).join('');
+                            <button class="mod-warn-del-btn" onclick="deleteWarn('${w.id}')" title="Delete warning">
+                                <i class="fas fa-trash-can"></i>
+                            </button>
+                        </div>
+                    `).join('');
                 } else {
-                    grid.innerHTML = `<p style="color:var(--cherry-light)">Error listing members: ${data.error || 'Unknown'}</p>`;
+                    container.innerHTML = '<p style="color:var(--cherry-light);font-size:0.82rem">Failed to load warnings.</p>';
                 }
-            } catch(e) {
-                grid.innerHTML = '<p style="color:var(--cherry-light)">API Request failed.</p>';
+            } catch (e) {
+                container.innerHTML = '<p style="color:var(--cherry-light);font-size:0.82rem">Warns fetch error.</p>';
+            }
+        }
+
+        async function submitNewWarn() {
+            if (!currentSelectedMember) return;
+            const reason = document.getElementById('modNewWarnReason').value.trim();
+            const sendDm = document.getElementById('modWarnSendDm').checked;
+            if (!reason) {
+                showModToast('Please enter a warning reason', 'error');
+                return;
+            }
+
+            try {
+                const resp = await fetch('/api/guild/members/warn', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: currentSelectedMember.id,
+                        reason: reason,
+                        send_dm: sendDm
+                    })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    showModToast(data.message + (data.dm_delivered ? ' (DM delivered)' : ''), 'success');
+                    document.getElementById('modNewWarnReason').value = '';
+                    currentSelectedMember.warns_count = data.total_warns;
+                    document.getElementById('modUserWarnCount').textContent = data.total_warns;
+                    document.getElementById('modTabWarnCount').textContent = data.total_warns;
+                    document.getElementById('modWarnsTotalLabel').textContent = data.total_warns;
+                    loadMemberWarns(currentSelectedMember.id);
+                    renderMembersList(filterAndSortMembers(rawGuildMembers));
+                } else {
+                    showModToast(data.error || 'Failed to issue warning', 'error');
+                }
+            } catch (e) {
+                showModToast('Warning request failed', 'error');
+            }
+        }
+
+        async function deleteWarn(warnId) {
+            if (!confirm('Are you sure you want to remove this warning?')) return;
+            try {
+                const resp = await fetch(`/api/guild/members/warns/${warnId}`, { method: 'DELETE' });
+                const data = await resp.json();
+                if (data.success) {
+                    showModToast('Warning deleted.', 'info');
+                    if (currentSelectedMember) {
+                        currentSelectedMember.warns_count = Math.max(0, (currentSelectedMember.warns_count || 1) - 1);
+                        document.getElementById('modUserWarnCount').textContent = currentSelectedMember.warns_count;
+                        document.getElementById('modTabWarnCount').textContent = currentSelectedMember.warns_count;
+                        document.getElementById('modWarnsTotalLabel').textContent = currentSelectedMember.warns_count;
+                        loadMemberWarns(currentSelectedMember.id);
+                        renderMembersList(filterAndSortMembers(rawGuildMembers));
+                    }
+                } else {
+                    showModToast(data.error || 'Delete failed', 'error');
+                }
+            } catch (e) {
+                showModToast('Delete request failed', 'error');
+            }
+        }
+
+        function applyDmTemplate(templateKey) {
+            const titleEl = document.getElementById('modDmTitle');
+            const msgEl = document.getElementById('modDmMessage');
+            if (templateKey === 'rules') {
+                titleEl.value = 'Community Guidelines Reminder';
+                msgEl.value = 'Hello! We noticed recent activity that borders our community guidelines. Please ensure your uploads and discussions respect our Discord and website rules.';
+            } else if (templateKey === 'uploader_welcome') {
+                titleEl.value = 'Welcome to Zyrex Editing Uploaders!';
+                msgEl.value = 'Congratulations! You have been granted content uploader permissions on zyrexediting.xyz. You can now publish your editing presets, project files, and scenepacks directly to the platform.';
+            } else if (templateKey === 'content_issue') {
+                titleEl.value = 'Notice Regarding Your Recent Upload';
+                msgEl.value = 'Hello! One of your recent uploads required moderation attention due to missing preview assets or a broken download URL. Please review your uploads in the Dashboard.';
+            }
+        }
+
+        async function sendDirectMessage() {
+            if (!currentSelectedMember) return;
+            const title = document.getElementById('modDmTitle').value.trim();
+            const message = document.getElementById('modDmMessage').value.trim();
+            if (!message) {
+                showModToast('Please write a message content to send', 'error');
+                return;
+            }
+
+            try {
+                const resp = await fetch('/api/guild/members/dm', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: currentSelectedMember.id,
+                        title: title,
+                        message: message
+                    })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    showModToast(data.message, 'success');
+                    document.getElementById('modDmMessage').value = '';
+                } else {
+                    showModToast(data.error || 'Failed to send DM', 'error');
+                }
+            } catch (e) {
+                showModToast('DM request failed', 'error');
+            }
+        }
+
+        async function executeVoiceAction(action) {
+            if (!currentSelectedMember) return;
+            try {
+                const resp = await fetch('/api/guild/members/voice', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: currentSelectedMember.id,
+                        action: action
+                    })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    showModToast(data.message, 'success');
+                    if (action === 'disconnect') {
+                        currentSelectedMember.voice = null;
+                        document.getElementById('modTabVoiceBtn').style.display = 'none';
+                        document.getElementById('modUserVoice').style.display = 'none';
+                        switchModTab('roles', document.querySelector('.mod-tab-btn[data-modtab="roles"]'));
+                    }
+                    renderMembersList(filterAndSortMembers(rawGuildMembers));
+                } else {
+                    showModToast(data.error || 'Voice action failed', 'error');
+                }
+            } catch (e) {
+                showModToast('Voice action request failed', 'error');
+            }
+        }
+
+        async function executeKick() {
+            if (!currentSelectedMember) return;
+            const name = currentSelectedMember.nickname || currentSelectedMember.username;
+            if (!confirm(`Are you sure you want to KICK ${name} from the Discord server?`)) return;
+
+            const reason = document.getElementById('modKickReason').value.trim();
+            try {
+                const resp = await fetch('/api/guild/members/kick', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: currentSelectedMember.id,
+                        reason: reason
+                    })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    showModToast(data.message, 'success');
+                    closeMemberModModal();
+                    rawGuildMembers = rawGuildMembers.filter(m => String(m.id) !== String(currentSelectedMember.id));
+                    updateMemberStats(rawGuildMembers);
+                    renderMembersList(filterAndSortMembers(rawGuildMembers));
+                } else {
+                    showModToast(data.error || 'Kick failed', 'error');
+                }
+            } catch (e) {
+                showModToast('Kick request failed', 'error');
+            }
+        }
+
+        async function executeBan() {
+            if (!currentSelectedMember) return;
+            const name = currentSelectedMember.nickname || currentSelectedMember.username;
+            if (!confirm(`🚨 EXTREME ACTION: Permanently BAN ${name} from the Discord server?`)) return;
+
+            const reason = document.getElementById('modBanReason').value.trim();
+            const purgeDays = parseInt(document.getElementById('modBanPurgeDays').value || '0');
+
+            try {
+                const resp = await fetch('/api/guild/members/ban', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: currentSelectedMember.id,
+                        delete_message_days: purgeDays,
+                        reason: reason
+                    })
+                });
+                const data = await resp.json();
+                if (data.success) {
+                    showModToast(data.message, 'success');
+                    closeMemberModModal();
+                    rawGuildMembers = rawGuildMembers.filter(m => String(m.id) !== String(currentSelectedMember.id));
+                    updateMemberStats(rawGuildMembers);
+                    renderMembersList(filterAndSortMembers(rawGuildMembers));
+                } else {
+                    showModToast(data.error || 'Ban failed', 'error');
+                }
+            } catch (e) {
+                showModToast('Ban request failed', 'error');
             }
         }
 

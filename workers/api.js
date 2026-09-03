@@ -2762,19 +2762,23 @@ async function storeAndProxyImage(env, imageUrl) {
       // GUILD MEMBERS - Proxy to Bot
       if (path === "/api/guild/members") {
         const session = parseSession(request.headers.get("Cookie"));
-        if (!session || !ADMIN_IDS.includes(session.userId)) {
+        const isAutocomplete = url.searchParams.has("q") || url.searchParams.get("autocomplete") === "1";
+        if (!isAutocomplete && (!session || !ADMIN_IDS.includes(session.userId))) {
           return json({ error: "Unauthorized" }, 403);
         }
-        const targetUrl = `${BOT_API}/api/guild/members`;
+        const targetUrl = `${BOT_API}/api/guild/members${url.search}`;
+        const proxyHeaders = {
+          "Content-Type": "application/json",
+        };
+        if (session) {
+          proxyHeaders["X-User-ID"] = session.userId || "";
+          proxyHeaders["X-User-Name"] = session.username || "";
+          proxyHeaders["X-User-Can-Upload"] = session.canUpload ? "true" : "false";
+          proxyHeaders["X-User-Is-Admin"] = ADMIN_IDS.includes(session.userId) ? "true" : "false";
+        }
         const botResp = await fetch(targetUrl, {
           method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "X-User-ID": session.userId,
-            "X-User-Name": session.username,
-            "X-User-Can-Upload": session.canUpload ? "true" : "false",
-            "X-User-Is-Admin": "true",
-          }
+          headers: proxyHeaders
         });
         const data = await botResp.text();
         try {
