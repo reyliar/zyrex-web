@@ -1,6 +1,11 @@
 # Zyrex Web — Deploy Script (PowerShell)
 # Run this script to sync .site-assets and deploy everything at once.
 
+# Ensure Node.js is in PATH
+if (Test-Path "C:\Program Files\nodejs") {
+    $env:PATH = "C:\Program Files\nodejs;" + $env:PATH
+}
+
 # Sync HTML, JS, CSS, Assets, Plugins, _headers, _redirects to .site-assets
 Write-Host "Syncing site files and folders to .site-assets..." -ForegroundColor Cyan
 
@@ -25,10 +30,11 @@ Write-Host "  All site assets synced successfully!" -ForegroundColor Green
 
 # Deploy zyrex-api worker (scan-creator-links, scrape, etc.)
 Write-Host "`nDeploying zyrex-api worker..." -ForegroundColor Cyan
-npx wrangler deploy --config wrangler.workers.toml
+cmd /c npx wrangler deploy --config wrangler.workers.toml
 
 # Deploy zyrex-site-gate (serves the HTML files to zyrexediting.xyz)
 Write-Host "`nDeploying zyrex-site-gate..." -ForegroundColor Cyan
-npx wrangler deploy --config wrangler.site-gate.toml
+cmd /c npx wrangler deploy --config wrangler.site-gate.toml
 
 Write-Host "`nAll deployed! Live at: https://zyrexediting.xyz" -ForegroundColor Green
+
