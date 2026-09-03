@@ -1,3 +1,249 @@
+/* ===================== ZYREX THEME ENGINE ===================== */
+window.ZYREX_THEMES = {
+    cherry: {
+        name: 'Cherry Obsidian',
+        badge: 'Signature',
+        accent: '#ff2b52',
+        secondary: '#ff758f',
+        desc: 'Iconic Zyrex signature with intense neon crimson & blood rose accents.',
+        colors: ['#ff2b52', '#ff758f', '#b81432', '#070205'],
+        vars: {
+            '--bordeaux-deep': '#070205',
+            '--bordeaux-dark': '#0f070b',
+            '--bordeaux-mid': '#1c0a13',
+            '--bordeaux-core': '#b81432',
+            '--bordeaux-vivid': '#ff2b52',
+            '--bordeaux-light': '#ff4d6d',
+            '--rose-glow': '#ff758f',
+            '--primary': '#b81432',
+            '--accent': '#ff2b52',
+            '--cherry': '#b81432',
+            '--cherry-rgb': '184, 20, 50',
+            '--cherry-light': '#ff2b52',
+            '--cherry-neon': '#ff2b52',
+            '--dark': '#070205',
+            '--glass-border-hover': 'rgba(255, 43, 82, 0.45)',
+            '--neon-glow': '0 0 25px rgba(255, 43, 82, 0.35)',
+            '--text-glow': '0 0 14px rgba(255, 117, 143, 0.35)',
+            '--gradient': 'linear-gradient(135deg, #ff2b52 0%, #1c0a13 100%)',
+            '--gradient-accent': 'linear-gradient(135deg, #ff4d6d 0%, #b81432 100%)',
+            '--gradient-text': 'linear-gradient(135deg, #ffffff 0%, #ff2b52 100%)'
+        }
+    },
+    cyberpunk: {
+        name: 'Cyberpunk 2077',
+        badge: 'Synthwave',
+        accent: '#00f0ff',
+        secondary: '#ff007f',
+        desc: 'Electric cyan, hot neon magenta & dark Tokyo night synthwave glow.',
+        colors: ['#00f0ff', '#ff007f', '#7928ca', '#05030f'],
+        vars: {
+            '--bordeaux-deep': '#05030f',
+            '--bordeaux-dark': '#0b061e',
+            '--bordeaux-mid': '#170c38',
+            '--bordeaux-core': '#00d2ff',
+            '--bordeaux-vivid': '#00f0ff',
+            '--bordeaux-light': '#38bdf8',
+            '--rose-glow': '#ff007f',
+            '--primary': '#00f0ff',
+            '--accent': '#ff007f',
+            '--cherry': '#00d2ff',
+            '--cherry-rgb': '0, 240, 255',
+            '--cherry-light': '#00f0ff',
+            '--cherry-neon': '#ff007f',
+            '--dark': '#05030f',
+            '--glass-border-hover': 'rgba(0, 240, 255, 0.45)',
+            '--neon-glow': '0 0 25px rgba(0, 240, 255, 0.35)',
+            '--text-glow': '0 0 14px rgba(0, 240, 255, 0.4)',
+            '--gradient': 'linear-gradient(135deg, #00f0ff 0%, #ff007f 100%)',
+            '--gradient-accent': 'linear-gradient(135deg, #00f0ff 0%, #7928ca 100%)',
+            '--gradient-text': 'linear-gradient(135deg, #ffffff 0%, #00f0ff 100%)'
+        }
+    },
+    emerald: {
+        name: 'Matrix Emerald',
+        badge: 'Cyber Green',
+        accent: '#00ff88',
+        secondary: '#10b981',
+        desc: 'Futuristic tactical cyber aesthetic with radiant neon mint & matrix noir.',
+        colors: ['#00ff88', '#10b981', '#064e3b', '#020905'],
+        vars: {
+            '--bordeaux-deep': '#020905',
+            '--bordeaux-dark': '#04140b',
+            '--bordeaux-mid': '#062615',
+            '--bordeaux-core': '#059669',
+            '--bordeaux-vivid': '#00ff88',
+            '--bordeaux-light': '#34d399',
+            '--rose-glow': '#00ff88',
+            '--primary': '#10b981',
+            '--accent': '#00ff88',
+            '--cherry': '#059669',
+            '--cherry-rgb': '0, 255, 136',
+            '--cherry-light': '#00ff88',
+            '--cherry-neon': '#00ff88',
+            '--dark': '#020905',
+            '--glass-border-hover': 'rgba(0, 255, 136, 0.45)',
+            '--neon-glow': '0 0 25px rgba(0, 255, 136, 0.35)',
+            '--text-glow': '0 0 14px rgba(0, 255, 136, 0.4)',
+            '--gradient': 'linear-gradient(135deg, #00ff88 0%, #04140b 100%)',
+            '--gradient-accent': 'linear-gradient(135deg, #34d399 0%, #064e3b 100%)',
+            '--gradient-text': 'linear-gradient(135deg, #ffffff 0%, #00ff88 100%)'
+        }
+    },
+    cosmic: {
+        name: 'Cosmic Nebula',
+        badge: 'Starlight',
+        accent: '#6366f1',
+        secondary: '#38bdf8',
+        desc: 'Interstellar deep space atmosphere with celestial indigo & starlight glow.',
+        colors: ['#38bdf8', '#6366f1', '#4338ca', '#030514'],
+        vars: {
+            '--bordeaux-deep': '#030514',
+            '--bordeaux-dark': '#060c28',
+            '--bordeaux-mid': '#0e1747',
+            '--bordeaux-core': '#4f46e5',
+            '--bordeaux-vivid': '#6366f1',
+            '--bordeaux-light': '#818cf8',
+            '--rose-glow': '#38bdf8',
+            '--primary': '#6366f1',
+            '--accent': '#38bdf8',
+            '--cherry': '#4f46e5',
+            '--cherry-rgb': '99, 102, 241',
+            '--cherry-light': '#818cf8',
+            '--cherry-neon': '#38bdf8',
+            '--dark': '#030514',
+            '--glass-border-hover': 'rgba(99, 102, 241, 0.45)',
+            '--neon-glow': '0 0 25px rgba(99, 102, 241, 0.35)',
+            '--text-glow': '0 0 14px rgba(56, 189, 248, 0.4)',
+            '--gradient': 'linear-gradient(135deg, #6366f1 0%, #38bdf8 100%)',
+            '--gradient-accent': 'linear-gradient(135deg, #818cf8 0%, #4338ca 100%)',
+            '--gradient-text': 'linear-gradient(135deg, #ffffff 0%, #818cf8 100%)'
+        }
+    },
+    amethyst: {
+        name: 'Amethyst Royal',
+        badge: 'VIP Luxury',
+        accent: '#a855f7',
+        secondary: '#c084fc',
+        desc: 'Prestige luxury aesthetic with electric violet, royal amethyst & velvet tones.',
+        colors: ['#c084fc', '#a855f7', '#581c87', '#0a0314'],
+        vars: {
+            '--bordeaux-deep': '#0a0314',
+            '--bordeaux-dark': '#140626',
+            '--bordeaux-mid': '#240a42',
+            '--bordeaux-core': '#9333ea',
+            '--bordeaux-vivid': '#a855f7',
+            '--bordeaux-light': '#c084fc',
+            '--rose-glow': '#e879f9',
+            '--primary': '#9333ea',
+            '--accent': '#c084fc',
+            '--cherry': '#9333ea',
+            '--cherry-rgb': '168, 85, 247',
+            '--cherry-light': '#c084fc',
+            '--cherry-neon': '#e879f9',
+            '--dark': '#0a0314',
+            '--glass-border-hover': 'rgba(168, 85, 247, 0.45)',
+            '--neon-glow': '0 0 25px rgba(168, 85, 247, 0.35)',
+            '--text-glow': '0 0 14px rgba(192, 132, 252, 0.4)',
+            '--gradient': 'linear-gradient(135deg, #a855f7 0%, #140626 100%)',
+            '--gradient-accent': 'linear-gradient(135deg, #c084fc 0%, #581c87 100%)',
+            '--gradient-text': 'linear-gradient(135deg, #ffffff 0%, #c084fc 100%)'
+        }
+    },
+    solar: {
+        name: 'Solar Magma',
+        badge: 'High-Octane',
+        accent: '#f59e0b',
+        secondary: '#ff4500',
+        desc: 'Burning sunset & molten lava aesthetic with vibrant golden-amber flames.',
+        colors: ['#fbbf24', '#f59e0b', '#dc2626', '#0d0602'],
+        vars: {
+            '--bordeaux-deep': '#0d0602',
+            '--bordeaux-dark': '#1c0c04',
+            '--bordeaux-mid': '#311406',
+            '--bordeaux-core': '#ea580c',
+            '--bordeaux-vivid': '#f59e0b',
+            '--bordeaux-light': '#fbbf24',
+            '--rose-glow': '#ff6b35',
+            '--primary': '#ea580c',
+            '--accent': '#f59e0b',
+            '--cherry': '#ea580c',
+            '--cherry-rgb': '245, 158, 11',
+            '--cherry-light': '#fbbf24',
+            '--cherry-neon': '#ff6b35',
+            '--dark': '#0d0602',
+            '--glass-border-hover': 'rgba(245, 158, 11, 0.45)',
+            '--neon-glow': '0 0 25px rgba(245, 158, 11, 0.35)',
+            '--text-glow': '0 0 14px rgba(251, 191, 36, 0.4)',
+            '--gradient': 'linear-gradient(135deg, #f59e0b 0%, #ff4500 100%)',
+            '--gradient-accent': 'linear-gradient(135deg, #fbbf24 0%, #c2410c 100%)',
+            '--gradient-text': 'linear-gradient(135deg, #ffffff 0%, #fbbf24 100%)'
+        }
+    },
+    hyperborea: {
+        name: 'Glacier Frost',
+        badge: 'Ice Diamond',
+        accent: '#38bdf8',
+        secondary: '#ffffff',
+        desc: 'Sub-zero diamond frost with titanium slate, arctic ice & clean highlights.',
+        colors: ['#ffffff', '#bae6fd', '#0284c7', '#05080f'],
+        vars: {
+            '--bordeaux-deep': '#05080f',
+            '--bordeaux-dark': '#0a101f',
+            '--bordeaux-mid': '#111b33',
+            '--bordeaux-core': '#0284c7',
+            '--bordeaux-vivid': '#38bdf8',
+            '--bordeaux-light': '#7dd3fc',
+            '--rose-glow': '#e0f2fe',
+            '--primary': '#0284c7',
+            '--accent': '#38bdf8',
+            '--cherry': '#0284c7',
+            '--cherry-rgb': '56, 189, 248',
+            '--cherry-light': '#7dd3fc',
+            '--cherry-neon': '#38bdf8',
+            '--dark': '#05080f',
+            '--glass-border-hover': 'rgba(56, 189, 248, 0.45)',
+            '--neon-glow': '0 0 25px rgba(56, 189, 248, 0.35)',
+            '--text-glow': '0 0 14px rgba(224, 242, 254, 0.4)',
+            '--gradient': 'linear-gradient(135deg, #38bdf8 0%, #0a101f 100%)',
+            '--gradient-accent': 'linear-gradient(135deg, #7dd3fc 0%, #0369a1 100%)',
+            '--gradient-text': 'linear-gradient(135deg, #ffffff 0%, #7dd3fc 100%)'
+        }
+    }
+};
+
+window.applyGlobalTheme = function(themeKey) {
+    if (!themeKey || !window.ZYREX_THEMES[themeKey]) {
+        // Map old legacy keys if found
+        if (themeKey === 'default') themeKey = 'cherry';
+        else if (themeKey === 'midnight') themeKey = 'cherry';
+        else if (themeKey === 'darker') themeKey = 'cyberpunk';
+        else if (themeKey === 'light-tint') themeKey = 'hyperborea';
+        else themeKey = 'cherry';
+    }
+    localStorage.setItem('zyrex_theme', themeKey);
+    const theme = window.ZYREX_THEMES[themeKey];
+    if (theme && theme.vars) {
+        const root = document.documentElement;
+        for (const [k, v] of Object.entries(theme.vars)) {
+            root.style.setProperty(k, v);
+        }
+        document.body.className = document.body.className.replace(/\btheme-\S+/g, '').trim();
+        document.body.classList.add('theme-' + themeKey);
+
+        const orb1 = document.querySelector('.orb-1');
+        const orb2 = document.querySelector('.orb-2');
+        if (orb1 && theme.accent) orb1.style.background = theme.accent;
+        if (orb2 && theme.secondary) orb2.style.background = theme.secondary;
+    }
+};
+
+// Auto-run theme immediately
+try {
+    const savedTheme = localStorage.getItem('zyrex_theme') || 'cherry';
+    window.applyGlobalTheme(savedTheme);
+} catch(e) {}
+
 /* ===================== GLOBAL AVATAR ERROR HANDLER ===================== */
 window.DEFAULT_AVATAR = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2EwYTBiMCI+PHBhdGggZD0iTTEyIDEyYzIuMjEgMCA0LTEuNzkgNC00cy0xLjc5LTQtNC00LTQgMS43OS00IDQgMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYyaDE2di0yYzAtMi42Ni01LjMzLTQtOC00eiIvPjwvc3ZnPg==";
 window.handleAvatarError = function(img) {

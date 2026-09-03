@@ -2112,6 +2112,108 @@
 
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    
+        /* === ULTRA-COOL THEME GALLERY GRID === */
+        .theme-gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+            gap: 14px;
+            margin-top: 14px;
+            margin-bottom: 20px;
+        }
+        .theme-card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.09);
+            border-radius: 16px;
+            padding: 16px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            backdrop-filter: blur(16px);
+        }
+        .theme-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.06);
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
+        }
+        .theme-card.active {
+            border-color: var(--cherry-light, #ff2b52);
+            background: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), 0 0 20px rgba(255, 43, 82, 0.3);
+        }
+        .theme-palette-bar {
+            height: 14px;
+            border-radius: 999px;
+            display: flex;
+            overflow: hidden;
+            margin-bottom: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+        .palette-stripe {
+            flex: 1;
+            height: 100%;
+        }
+        .theme-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 6px;
+        }
+        .theme-card-title {
+            font-size: 0.95rem;
+            font-weight: 800;
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            margin: 0;
+        }
+        .theme-card-badge {
+            font-size: 0.65rem;
+            font-weight: 800;
+            padding: 2px 7px;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .theme-card-desc {
+            font-size: 0.74rem;
+            color: rgba(255, 255, 255, 0.55);
+            line-height: 1.4;
+            margin: 0 0 14px;
+        }
+        .theme-active-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.4);
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            padding-top: 10px;
+        }
+        .theme-card.active .theme-active-indicator {
+            color: var(--cherry-light, #ff2b52);
+        }
+        .theme-card.active .theme-check-icon {
+            display: inline-flex !important;
+        }
+        .theme-check-icon {
+            display: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--cherry-light, #ff2b52);
+            color: #fff;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.6rem;
+        }
+
     </style>
 </head>
 <body>
@@ -3261,31 +3363,64 @@
             document.querySelector('.dash-sidebar')?.classList.toggle('open');
         }
 
-        function applyUserTheme(theme) {
-            localStorage.setItem('zyrex_theme', theme);
-            document.body.className = document.body.className.replace(/\btheme-\S+/g, '');
-            if (theme !== 'default') {
-                document.body.classList.add(`theme-${theme}`);
+        function renderThemeCards() {
+            var grid = document.getElementById('themeGalleryGrid');
+            if (!grid || !window.ZYREX_THEMES) return;
+            var current = localStorage.getItem('zyrex_theme') || 'cherry';
+
+            var themes = [
+                { key: 'cherry', badgeBg: 'rgba(255,43,82,0.2)', badgeColor: '#ff2b52' },
+                { key: 'cyberpunk', badgeBg: 'rgba(0,240,255,0.2)', badgeColor: '#00f0ff' },
+                { key: 'emerald', badgeBg: 'rgba(0,255,136,0.2)', badgeColor: '#00ff88' },
+                { key: 'cosmic', badgeBg: 'rgba(99,102,241,0.2)', badgeColor: '#818cf8' },
+                { key: 'amethyst', badgeBg: 'rgba(168,85,247,0.2)', badgeColor: '#c084fc' },
+                { key: 'solar', badgeBg: 'rgba(245,158,11,0.2)', badgeColor: '#fbbf24' },
+                { key: 'hyperborea', badgeBg: 'rgba(56,189,248,0.2)', badgeColor: '#38bdf8' }
+            ];
+
+            grid.innerHTML = themes.map(function(item) {
+                var t = window.ZYREX_THEMES[item.key];
+                if (!t) return '';
+                var isActive = (current === item.key);
+                var stripes = (t.colors || []).map(function(c) {
+                    return '<span class="palette-stripe" style="background:' + c + '"></span>';
+                }).join('');
+
+                return '<div class="theme-card ' + (isActive ? 'active' : '') + '" onclick="applyUserTheme(\'' + item.key + '\')">' +
+                    '<div class="theme-palette-bar">' + stripes + '</div>' +
+                    '<div class="theme-card-header">' +
+                        '<h5 class="theme-card-title">' + t.name + '</h5>' +
+                        '<span class="theme-card-badge" style="background:' + item.badgeBg + ';color:' + item.badgeColor + '">' + t.badge + '</span>' +
+                    '</div>' +
+                    '<p class="theme-card-desc">' + t.desc + '</p>' +
+                    '<div class="theme-active-indicator">' +
+                        '<span>' + (isActive ? 'Applied Theme' : 'Click to apply') + '</span>' +
+                        '<span class="theme-check-icon"><i class="fas fa-check"></i></span>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        function applyUserTheme(themeKey) {
+            if (!themeKey || (window.ZYREX_THEMES && !window.ZYREX_THEMES[themeKey])) {
+                if (themeKey === 'default' || themeKey === 'midnight') themeKey = 'cherry';
+                else if (themeKey === 'darker') themeKey = 'cyberpunk';
+                else if (themeKey === 'light-tint') themeKey = 'hyperborea';
+                else themeKey = 'cherry';
             }
-            if (theme === 'midnight') {
-                document.documentElement.style.setProperty('--cherry', '#9c1c31');
-                document.documentElement.style.setProperty('--cherry-rgb', '156, 28, 49');
-                document.documentElement.style.setProperty('--dark', '#040001');
-            } else if (theme === 'darker') {
-                document.documentElement.style.setProperty('--cherry', '#5a0614');
-                document.documentElement.style.setProperty('--cherry-rgb', '90, 6, 20');
-                document.documentElement.style.setProperty('--dark', '#000000');
-                document.documentElement.style.setProperty('--sidebar-bg', '#000000');
-            } else if (theme === 'light-tint') {
-                document.documentElement.style.setProperty('--cherry', '#d61c3c');
-                document.documentElement.style.setProperty('--cherry-rgb', '214, 28, 60');
-                document.documentElement.style.setProperty('--dark', '#0c0708');
+
+            if (typeof window.applyGlobalTheme === 'function') {
+                window.applyGlobalTheme(themeKey);
             } else {
-                document.documentElement.style.setProperty('--cherry', '#7a081e');
-                document.documentElement.style.setProperty('--cherry-rgb', '122, 8, 30');
-                document.documentElement.style.setProperty('--dark', '#050001');
-                document.documentElement.style.setProperty('--sidebar-bg', '#09090e');
+                localStorage.setItem('zyrex_theme', themeKey);
             }
+
+            // Sync dropdown
+            var sel = document.getElementById('themeSelector');
+            if (sel) sel.value = themeKey;
+
+            // Re-render gallery cards to update active status
+            renderThemeCards();
         }
 
         function toggleAnimations(enabled) {
