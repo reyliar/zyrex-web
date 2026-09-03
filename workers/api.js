@@ -2053,6 +2053,7 @@ export default {
                                path === "/api/auth/logout" || 
                                path === "/api/me" ||
                                path === "/api/health" ||
+                               path.startsWith("/api/lookup/") ||
                                path.startsWith("/api/products") ||
                                (path.startsWith("/api/comments") && request.method === "GET") ||
                                path.startsWith("/api/notifications") ||
@@ -2096,6 +2097,63 @@ export default {
         return json({ success: true, url: `https://thumbnail.zyrexediting.xyz/${safeName}` });
       } catch(e) {
         return json({ error: e.message }, 500);
+      }
+    }
+
+        // ============ IMDB & IGDB PRODUCTION & GAME LOOKUP APIs ============
+    if (path === "/api/lookup/imdb" && request.method === "GET") {
+      const q = (url.searchParams.get("q") || "").trim();
+      if (!q) return json({ success: false, results: [] });
+      try {
+        const clean = q.toLowerCase().replace(/[^a-z0-9]/g, "");
+        const imdbUrl = `https://v3.sg.media-imdb.com/suggestion/x/${encodeURIComponent(clean)}.json`;
+        const resp = await fetch(imdbUrl, {
+          headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" }
+        });
+        if (!resp.ok) return json({ success: false, results: [] });
+        const d = await resp.json();
+        const items = (d.d || []).map(item => {
+          let img = item.i && item.i.imageUrl ? item.i.imageUrl : "";
+          if (img && img.includes("._V1_")) {
+            img = img.replace(/\._V1_.*?\./, "._V1_FMjpg_UX1000_.");
+          }
+          return {
+            id: item.id,
+            title: item.l,
+            year: item.y ? String(item.y) : (item.yr || ""),
+            type: item.qid === "tvSeries" ? "Series" : (item.qid === "videoGame" ? "Game" : "Movie"),
+            stars: item.s || "",
+            poster: img
+          };
+        });
+        return json({ success: true, results: items });
+      } catch(e) {
+        return json({ success: false, error: e.message, results: [] });
+      }
+    }
+
+    if (path === "/api/lookup/games" && request.method === "GET") {
+      const q = (url.searchParams.get("q") || "").trim();
+      if (!q) return json({ success: false, results: [] });
+      try {
+        const gameUrl = `https://api.rawg.io/api/games?search=${encodeURIComponent(q)}&page_size=10&key=c542e67aec3a4340908f9de9e86038af`;
+        const resp = await fetch(gameUrl, {
+          headers: { "User-Agent": "Mozilla/5.0" }
+        });
+        if (!resp.ok) return json({ success: false, results: [] });
+        const d = await resp.json();
+        const items = (d.results || []).map(g => ({
+          id: g.slug || String(g.id),
+          title: g.name,
+          year: g.released ? g.released.split("-")[0] : "",
+          type: "Game",
+          rating: g.rating ? String(g.rating) : "",
+          genres: (g.genres || []).map(x => x.name).join(", "),
+          poster: g.background_image || ""
+        }));
+        return json({ success: true, results: items });
+      } catch(e) {
+        return json({ success: false, error: e.message, results: [] });
       }
     }
 
@@ -4120,7 +4178,8 @@ async function storeAndProxyImage(env, imageUrl) {
       }
 
       // ============ BOT PROXY (admin, comments, notifications, guild, cloud link/unlink, downloads, hlx, verify, products) ============
-      if (path.startsWith("/api/guild/") || path.startsWith("/api/notifications") || path.startsWith("/api/comments") || path.startsWith("/api/products") || path.startsWith("/api/admin/") || path.startsWith("/api/cloud/") || path.startsWith("/api/downloads/") || path.startsWith("/api/hlx/") || path.startsWith("/api/verify") || path.startsWith("/api/sftpgo/") || path.startsWith("/api/search/") || path === "/api/resource-stats") {
+      if (path.startsWith("/api/guild/") || path.startsWith("/api/notifications") || path.startsWith("/api/comments") || path.startsWith("/api/lookup/") ||
+                               path.startsWith("/api/products") || path.startsWith("/api/admin/") || path.startsWith("/api/cloud/") || path.startsWith("/api/downloads/") || path.startsWith("/api/hlx/") || path.startsWith("/api/verify") || path.startsWith("/api/sftpgo/") || path.startsWith("/api/search/") || path === "/api/resource-stats") {
         const session = parseSession(request.headers.get("Cookie"));
         const proxyHeaders = {
           "Content-Type": "application/json",

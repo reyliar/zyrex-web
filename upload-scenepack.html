@@ -384,6 +384,138 @@
             .studio-main { margin-left: 0; padding: 32px 20px; }
             .mobile-trigger { display: block; }
         }
+    
+        /* === PROD LOOKUP TRIGGER BAR & SELECT === */
+        .prod-lookup-trigger-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 16px 20px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, rgba(245, 197, 24, 0.08), rgba(6, 182, 212, 0.08));
+            border: 1px solid rgba(245, 197, 24, 0.3);
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        .prod-trigger-text strong {
+            display: block;
+            color: #fff;
+            font-size: 0.95rem;
+            margin-top: 3px;
+        }
+        .prod-trigger-text p {
+            margin: 2px 0 0;
+            font-size: 0.75rem;
+            color: var(--muted);
+        }
+        .prod-trigger-badge {
+            font-size: 0.65rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #f5c518;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn-open-prod-lookup {
+            background: linear-gradient(135deg, rgba(245, 197, 24, 0.2), rgba(6, 182, 212, 0.2));
+            border: 1px solid rgba(245, 197, 24, 0.45);
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            transition: all 0.22s ease;
+        }
+        .btn-open-prod-lookup:hover {
+            background: linear-gradient(135deg, rgba(245, 197, 24, 0.35), rgba(6, 182, 212, 0.35));
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(245, 197, 24, 0.25);
+        }
+        .studio-select {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            color: #fff;
+            font-family: inherit;
+            font-size: 0.88rem;
+            outline: none;
+            transition: var(--transition);
+        }
+        .studio-select:focus {
+            border-color: var(--border-hover);
+            box-shadow: 0 0 0 3px rgba(255, 43, 82, 0.15);
+        }
+
+        /* === LOOKUP MODAL STYLES === */
+        .lookup-results-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            max-height: 460px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .lookup-card-row {
+            display: grid;
+            grid-template-columns: 55px 1fr auto;
+            gap: 14px;
+            align-items: center;
+            padding: 10px 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            transition: all 0.2s ease;
+        }
+        .lookup-card-row:hover {
+            background: rgba(255, 255, 255, 0.07);
+            border-color: rgba(245, 197, 24, 0.4);
+            transform: translateY(-1px);
+        }
+        .lookup-thumb {
+            width: 55px;
+            height: 75px;
+            object-fit: cover;
+            border-radius: 8px;
+            background: #000;
+        }
+        .lookup-info h5 {
+            margin: 0 0 4px;
+            font-size: 0.92rem;
+            font-weight: 800;
+            color: #fff;
+        }
+        .lookup-info-meta {
+            font-size: 0.75rem;
+            color: var(--muted);
+            line-height: 1.4;
+        }
+        .btn-lookup-select {
+            padding: 7px 14px;
+            border-radius: 10px;
+            background: rgba(255, 43, 82, 0.15);
+            border: 1px solid rgba(255, 43, 82, 0.35);
+            color: #fff;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .btn-lookup-select:hover {
+            background: #ff2b52;
+            transform: scale(1.04);
+            box-shadow: 0 4px 15px rgba(255, 43, 82, 0.4);
+        }
+
     </style>
 </head>
 <body>
@@ -440,11 +572,43 @@
                 </div>
             </div>
 
-            <!-- CONTENT CARD -->
+                        <!-- CONTENT CARD -->
             <div class="glass-panel" id="mainPanel" style="display:none">
+                <!-- PRODUCTION & GAME AUTO-LOOKUP BAR -->
+                <div class="prod-lookup-trigger-bar">
+                    <div class="prod-trigger-text">
+                        <span class="prod-trigger-badge"><i class="fas fa-wand-magic-sparkles"></i> DATABASE AUTO-FILL</span>
+                        <strong>Fetch Movie, TV Series or Video Game</strong>
+                        <p>Search IMDb &amp; IGDB to auto-import official poster, title, origin &amp; category</p>
+                    </div>
+                    <button type="button" class="btn-open-prod-lookup" onclick="openProdLookupModal()">
+                        <i class="fab fa-imdb" style="color:#f5c518;font-size:1.15rem"></i>
+                        <i class="fas fa-gamepad" style="color:#06b6d4;font-size:1rem"></i>
+                        <span>Search IMDb / Games</span>
+                    </button>
+                </div>
+
                 <div class="field">
                     <label><i class="fas fa-clapperboard"></i> Scenepack Name *</label>
-                    <input type="text" id="spName" placeholder="Tom Holland - Spider-Man Scene Pack (4K 60FPS)">
+                    <input type="text" id="spName" placeholder="e.g. Steve Harrington — Season 2 (or Elden Ring - Boss Clips)">
+                </div>
+
+                <div class="row-fields">
+                    <div class="field">
+                        <label><i class="fas fa-film"></i> Production / Game Origin (optional)</label>
+                        <input type="text" id="spOrigin" placeholder="e.g. Stranger Things, Cyberpunk 2077">
+                    </div>
+                    <div class="field">
+                        <label><i class="fas fa-tags"></i> Category</label>
+                        <select id="spCat" class="studio-select">
+                            <option value="scenepack">General Scenepack</option>
+                            <option value="movie">Movie / Film</option>
+                            <option value="series">TV Series</option>
+                            <option value="games">Video Games</option>
+                            <option value="anime">Anime</option>
+                            <option value="character">Character / Person</option>
+                        </select>
+                    </div>
                 </div>
 
                 <div class="field">
@@ -794,6 +958,152 @@
             } catch(e) {}
         }
 
+        
+        var activeLookupSource = 'imdb';
+        var prodLookupDebounce = null;
+
+        function openProdLookupModal() {
+            var el = document.getElementById('prodLookupOverlay');
+            el.style.display = 'flex';
+            var inp = document.getElementById('prodSearchQuery');
+            // If origin or name has text, prefill
+            var orig = document.getElementById('spOrigin').value || document.getElementById('spName').value || '';
+            if (orig && !inp.value) {
+                inp.value = orig.split('—')[0].split('-')[0].trim();
+                execProdLookup();
+            }
+            inp.focus();
+        }
+
+        function closeProdLookupModal() {
+            document.getElementById('prodLookupOverlay').style.display = 'none';
+        }
+
+        function switchLookupSource(src) {
+            activeLookupSource = src;
+            var tImdb = document.getElementById('tabLookupImdb');
+            var tGames = document.getElementById('tabLookupGames');
+            var inp = document.getElementById('prodSearchQuery');
+
+            if (src === 'imdb') {
+                tImdb.style.background = 'rgba(245, 197, 24, 0.15)';
+                tImdb.style.borderColor = 'rgba(245, 197, 24, 0.5)';
+                tImdb.style.color = '#fff';
+                tGames.style.background = 'rgba(255, 255, 255, 0.04)';
+                tGames.style.borderColor = 'var(--border)';
+                tGames.style.color = 'var(--muted)';
+                inp.placeholder = 'Search movie, TV series, anime on IMDb...';
+            } else {
+                tGames.style.background = 'rgba(6, 182, 212, 0.15)';
+                tGames.style.borderColor = 'rgba(6, 182, 212, 0.5)';
+                tGames.style.color = '#fff';
+                tImdb.style.background = 'rgba(255, 255, 255, 0.04)';
+                tImdb.style.borderColor = 'var(--border)';
+                tImdb.style.color = 'var(--muted)';
+                inp.placeholder = 'Search video games on IGDB (e.g. Elden Ring, Valorant, GTA V)...';
+            }
+            if (inp.value.trim()) execProdLookup();
+        }
+
+        async function execProdLookup() {
+            var q = document.getElementById('prodSearchQuery').value.trim();
+            var st = document.getElementById('prodLookupStatus');
+            var rl = document.getElementById('prodResultsList');
+
+            if (!q) {
+                st.style.display = 'block';
+                st.style.background = 'rgba(255,43,82,0.1)';
+                st.style.color = 'var(--cherry-light)';
+                st.textContent = 'Please enter a title to search.';
+                return;
+            }
+
+            st.style.display = 'block';
+            st.style.background = 'rgba(255,255,255,0.05)';
+            st.style.color = '#fff';
+            st.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching ' + (activeLookupSource === 'imdb' ? 'IMDb database...' : 'IGDB video games...');
+            rl.style.display = 'none';
+
+            try {
+                var endpoint = activeLookupSource === 'imdb' ? '/api/lookup/imdb?q=' : '/api/lookup/games?q=';
+                var res = await fetch(endpoint + encodeURIComponent(q));
+                var data = await res.json();
+
+                var results = data && data.results ? data.results : [];
+
+                if (!results.length) {
+                    st.style.background = 'rgba(255,255,255,0.05)';
+                    st.style.color = 'var(--muted)';
+                    st.textContent = 'No matching ' + (activeLookupSource === 'imdb' ? 'movies or series' : 'games') + ' found. Try a different keyword.';
+                    return;
+                }
+
+                st.style.display = 'none';
+                rl.style.display = 'flex';
+
+                rl.innerHTML = results.map(function(item) {
+                    var poster = item.poster || '/assets/content.png';
+                    var metaLine = [item.year, item.type, item.stars || item.genres].filter(Boolean).join(' · ');
+                    var ratingTag = '';
+                    if (item.rating) {
+                        ratingTag = '<span style="color:#f5c518;font-weight:900;font-size:0.72rem"><i class="fas fa-star"></i> ' + item.rating + '</span>';
+                    }
+
+                    return '<div class="lookup-card-row">' +
+                        '<img src="' + poster + '" class="lookup-thumb" onerror="this.src=\'/assets/content.png\'">' +
+                        '<div class="lookup-info">' +
+                            '<h5>' + escapeHtml(item.title) + ' ' + ratingTag + '</h5>' +
+                            '<div class="lookup-info-meta">' + escapeHtml(metaLine) + '</div>' +
+                        '</div>' +
+                        '<div>' +
+                            '<button type="button" class="btn-lookup-select" onclick="selectLookupResult(' + escapeHtml(JSON.stringify(JSON.stringify(item))) + ')">' +
+                                '<i class="fas fa-check"></i> Select' +
+                            '</button>' +
+                        '</div>' +
+                    '</div>';
+                }).join('');
+
+            } catch(e) {
+                st.style.display = 'block';
+                st.style.background = 'rgba(255,43,82,0.1)';
+                st.style.color = 'var(--cherry-light)';
+                st.textContent = 'Lookup error: ' + (e.message || 'Failed to contact database');
+            }
+        }
+
+        function selectLookupResult(jsonStr) {
+            try {
+                var item = JSON.parse(jsonStr);
+                if (!item) return;
+
+                // 1. Set origin
+                document.getElementById('spOrigin').value = item.title;
+
+                // 2. Set thumbnail
+                if (item.poster) {
+                    document.getElementById('spThumb').value = item.poster;
+                    previewThumb(item.poster);
+                }
+
+                // 3. Auto-fill Scenepack name prefix if empty or default
+                var nameInput = document.getElementById('spName');
+                if (!nameInput.value || nameInput.value.includes('—') || nameInput.value.includes('-')) {
+                    nameInput.value = item.title + ' — ';
+                }
+
+                // 4. Auto-select category
+                var catSelect = document.getElementById('spCat');
+                if (item.type === 'Series') catSelect.value = 'series';
+                else if (item.type === 'Game') catSelect.value = 'games';
+                else if (item.type === 'Movie') catSelect.value = 'movie';
+
+                alertMsg('Imported from ' + (activeLookupSource === 'imdb' ? 'IMDb' : 'IGDB') + ': ' + item.title + (item.year ? ' (' + item.year + ')' : ''), false);
+                closeProdLookupModal();
+            } catch(err) {
+                console.error('Error selecting item:', err);
+            }
+        }
+
         function previewThumb(url) {
             var box = document.getElementById('thumbPreviewBox');
             var img = document.getElementById('thumbPreviewImg');
@@ -818,11 +1128,12 @@
             var generatedId = 'scenepack-' + Date.now().toString(36);
 
             try {
-                var payload = {
+                                var payload = {
                     id: generatedId,
                     type: 'scenepack',
                     name: name,
-                    category: 'scenepack',
+                    category: document.getElementById('spCat').value || 'scenepack',
+                    origin: document.getElementById('spOrigin').value.trim(),
                     description: document.getElementById('spDesc').value.trim(),
                     source_url: link,
                     product_url: link,
@@ -869,5 +1180,46 @@
             setTimeout(function(){ b.classList.remove('show'); }, 5000);
         }
     </script>
+    <!-- IMDB & IGDB LOOKUP MODAL -->
+    <div id="prodLookupOverlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(4,1,2,0.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)closeProdLookupModal()">
+        <div style="background:#0d060a;border:1px solid var(--border);border-radius:26px;padding:28px;width:100%;max-width:580px;max-height:90vh;overflow-y:auto;box-shadow:0 25px 80px rgba(0,0,0,0.85);position:relative">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
+                <div style="display:flex;align-items:center;gap:12px">
+                    <div style="width:40px;height:40px;border-radius:12px;background:rgba(245,197,24,0.12);border:1px solid rgba(245,197,24,0.35);display:flex;align-items:center;justify-content:center;color:#f5c518;font-size:1.1rem">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <div>
+                        <h3 style="font-size:1.15rem;font-weight:800;color:#fff;margin:0">Production &amp; Game Search</h3>
+                        <p style="font-size:0.75rem;color:var(--muted);margin:0">Fetch from IMDb (Films &amp; Series) or IGDB (Video Games)</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeProdLookupModal()" style="background:rgba(255,255,255,0.05);border:none;color:var(--muted);width:32px;height:32px;border-radius:50%;cursor:pointer;display:inline-flex;align-items:center;justify-content:center"><i class="fas fa-times"></i></button>
+            </div>
+
+            <!-- Tabs: IMDb vs IGDB -->
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
+                <button type="button" id="tabLookupImdb" class="btn-icon active" onclick="switchLookupSource('imdb')" style="padding:10px;border-radius:12px;background:rgba(245,197,24,0.15);border:1px solid rgba(245,197,24,0.5);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-size:0.82rem;font-weight:700">
+                    <i class="fab fa-imdb" style="color:#f5c518;font-size:1.2rem"></i> Movies &amp; TV Series (IMDb)
+                </button>
+                <button type="button" id="tabLookupGames" class="btn-icon" onclick="switchLookupSource('games')" style="padding:10px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-size:0.82rem;font-weight:700">
+                    <i class="fas fa-gamepad" style="color:#06b6d4;font-size:1.1rem"></i> Video Games (IGDB)
+                </button>
+            </div>
+
+            <!-- Search Input -->
+            <div style="display:flex;background:rgba(0,0,0,0.55);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px">
+                <span style="padding:12px 0 12px 14px;color:var(--cherry-light);font-size:0.9rem"><i class="fas fa-search"></i></span>
+                <input id="prodSearchQuery" placeholder="Search Stranger Things, The Batman, Elden Ring, Cyberpunk..." style="flex:1;padding:12px;background:transparent;border:none;color:#fff;font-family:inherit;font-size:0.88rem;outline:none" onkeydown="if(event.key==='Enter')execProdLookup()">
+                <button type="button" onclick="execProdLookup()" style="padding:0 16px;background:var(--cherry);border:none;color:#fff;font-weight:700;font-size:0.8rem;cursor:pointer">Search</button>
+            </div>
+
+            <!-- Status Indicator -->
+            <div id="prodLookupStatus" style="display:none;margin-bottom:14px;padding:8px 12px;border-radius:10px;font-size:0.78rem;text-align:center"></div>
+
+            <!-- Results List -->
+            <div id="prodResultsList" class="lookup-results-list" style="display:none"></div>
+        </div>
+    </div>
+
 </body>
 </html>
