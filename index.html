@@ -30,140 +30,228 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        /* ================== 3D INCOMING ZYREX LOGO & HERO PORTAL ================== */
-        .hero-portal-stage {
+        /* ================== HELIX-STYLE MINIMALIST HERO ================== */
+        .hero-helix {
             position: relative;
-            width: 140px;
-            height: 140px;
-            margin: 0 auto 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            perspective: 1200px;
+            padding: 160px 0 110px;
+            text-align: center;
+            background: radial-gradient(circle at 50% 28%, rgba(45, 15, 30, 0.45) 0%, rgba(16, 6, 12, 0.25) 45%, transparent 70%);
+            overflow: hidden;
         }
-        .hero-portal-nebula {
-            position: absolute;
-            inset: -35px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(255, 59, 96, 0.45) 0%, rgba(225, 29, 72, 0.18) 50%, transparent 75%);
-            filter: blur(20px);
-            animation: nebulaPulse 4s ease-in-out infinite alternate;
-            pointer-events: none;
-        }
-        .hero-portal-shockwave {
-            position: absolute;
-            width: 110px;
-            height: 110px;
-            border-radius: 50%;
-            border: 2px solid rgba(255, 59, 96, 0.85);
-            opacity: 0;
-            pointer-events: none;
-            animation: shockwaveExpand 2.8s cubic-bezier(0.1, 0.8, 0.3, 1) infinite;
-        }
-        .hero-portal-ring {
-            position: absolute;
-            border-radius: 50%;
-            pointer-events: none;
-        }
-        .hero-portal-ring.ring-1 {
-            width: 124px;
-            height: 124px;
-            border: 1px dashed rgba(255, 59, 96, 0.4);
-            animation: ringSpinClockwise 22s linear infinite;
-        }
-        .hero-portal-ring.ring-2 {
-            width: 148px;
-            height: 148px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-top: 2px solid rgba(255, 59, 96, 0.7);
-            border-bottom: 2px solid rgba(244, 63, 94, 0.5);
-            animation: ringSpinCounter 16s linear infinite;
-        }
-        .hero-logo-frame {
+        .hero-inner-open {
+            max-width: 860px;
+            margin: 0 auto;
             position: relative;
-            width: 86px;
-            height: 86px;
-            border-radius: 24px;
-            background: linear-gradient(145deg, rgba(32, 8, 18, 0.95), rgba(14, 3, 7, 0.98));
-            border: 1px solid rgba(255, 59, 96, 0.45);
-            box-shadow: 0 14px 40px rgba(0, 0, 0, 0.75), 0 0 35px rgba(255, 59, 96, 0.35);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transform-style: preserve-3d;
-            animation: logoZoomFromDistance 1.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+            z-index: 2;
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+            box-shadow: none !important;
         }
-        .hero-incoming-logo {
-            width: 54px;
-            height: 54px;
+        .hero-brand-lockup {
+            display: inline-flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 22px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .hero-brand-icon {
+            width: 44px;
+            height: 44px;
             object-fit: contain;
-            filter: drop-shadow(0 0 12px rgba(255, 59, 96, 0.8));
-            animation: logoBreathing 3.6s ease-in-out infinite alternate;
+            filter: drop-shadow(0 0 16px rgba(255, 59, 96, 0.65));
+            animation: heroIconFloat 3.5s ease-in-out infinite alternate;
         }
-        @keyframes logoZoomFromDistance {
-            0% {
-                transform: perspective(1000px) translateZ(-950px) translateY(-60px) scale(0.1) rotateX(45deg) rotateY(-30deg);
-                opacity: 0;
-                filter: blur(28px);
-            }
-            58% {
-                transform: perspective(1000px) translateZ(80px) translateY(0) scale(1.14) rotateX(-6deg) rotateY(6deg);
-                opacity: 1;
-                filter: blur(0px);
-            }
-            82% {
-                transform: perspective(1000px) translateZ(-20px) scale(0.96) rotateX(2deg) rotateY(-2deg);
-            }
-            100% {
-                transform: perspective(1000px) translateZ(0) scale(1) rotateX(0) rotateY(0);
-                opacity: 1;
-                filter: blur(0px);
-            }
+        @keyframes heroIconFloat {
+            from { transform: translateY(0) scale(1); }
+            to { transform: translateY(-4px) scale(1.05); }
         }
-        @keyframes nebulaPulse {
-            0% { transform: scale(0.85); opacity: 0.5; }
-            100% { transform: scale(1.22); opacity: 0.95; }
+        .hero-brand-text-col {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            text-align: left;
         }
-        @keyframes shockwaveExpand {
-            0% { transform: scale(0.65); opacity: 0.9; border-width: 2.5px; }
-            60% { opacity: 0.35; }
-            100% { transform: scale(2.3); opacity: 0; border-width: 1px; }
+        .hero-brand-title {
+            font-size: 1.65rem;
+            font-weight: 800;
+            font-family: 'Outfit', -apple-system, sans-serif;
+            color: #ffffff;
+            line-height: 1;
+            letter-spacing: -0.5px;
         }
-        @keyframes ringSpinClockwise {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .hero-brand-title sup {
+            font-size: 0.58em;
+            font-weight: 400;
+            opacity: 0.65;
+            margin-left: 2px;
         }
-        @keyframes ringSpinCounter {
-            0% { transform: rotate(360deg); }
-            100% { transform: rotate(0deg); }
+        .hero-brand-sub {
+            font-size: 0.62rem;
+            font-weight: 700;
+            letter-spacing: 3.5px;
+            color: rgba(255, 255, 255, 0.45);
+            margin-top: 4px;
+            text-transform: uppercase;
+            font-family: 'Outfit', sans-serif;
         }
-        @keyframes logoBreathing {
-            0% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 12px rgba(255, 59, 96, 0.6)); }
-            100% { transform: translateY(-5px) scale(1.05); filter: drop-shadow(0 0 24px rgba(255, 59, 96, 0.95)); }
+        .hero-pill-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 18px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.75);
+            font-size: 0.74rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 26px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        .hero-pill-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #6366f1;
+            box-shadow: 0 0 10px #6366f1, 0 0 20px #6366f1;
+            display: inline-block;
+        }
+        .hero-headline-massive {
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: clamp(2.9rem, 6.8vw, 5.2rem);
+            font-weight: 900;
+            color: #ffffff;
+            line-height: 1.05;
+            letter-spacing: -0.035em;
+            margin: 0 auto 22px;
+            max-width: 840px;
+        }
+        .hero-headline-massive .accent-here {
+            color: #7c83ff;
+            text-shadow: 0 0 45px rgba(124, 131, 255, 0.45);
+        }
+        .hero-sub-clean {
+            font-size: clamp(0.98rem, 1.9vw, 1.15rem);
+            color: #94a3b8;
+            line-height: 1.65;
+            max-width: 660px;
+            margin: 0 auto 38px;
+            font-weight: 400;
+        }
+        .hero-cta-group {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+        }
+        .btn-amber-download {
+            background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+            color: #ffffff !important;
+            font-size: 0.98rem;
+            font-weight: 700;
+            padding: 13px 22px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            box-shadow: 0 8px 25px rgba(245, 158, 11, 0.35);
+            transition: transform 0.22s ease, box-shadow 0.22s ease;
+            text-decoration: none;
+            border: none;
+        }
+        .btn-amber-download:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(245, 158, 11, 0.5);
+            color: #ffffff !important;
+        }
+        .btn-amber-download .arrow-bubble {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.22);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.72rem;
+            margin-left: 2px;
+        }
+        .btn-slate-glass {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #ffffff !important;
+            font-size: 0.98rem;
+            font-weight: 600;
+            padding: 13px 28px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.22s ease, background 0.22s ease, border-color 0.22s ease;
+            text-decoration: none;
+        }
+        .btn-slate-glass:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+            color: #ffffff !important;
         }
 
-        /* Hero Text Staggered Reveal */
-        .hero-inner h1 {
-            animation: heroTextReveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.35s both;
+        /* ================== SIMPLIFIED MISSION & VISION ================== */
+        .mv-clean-section {
+            padding: 85px 0;
+            position: relative;
         }
-        .hero-inner .lead {
-            animation: heroTextReveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both;
+        .mv-clean-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 24px;
+            max-width: 960px;
+            margin: 0 auto;
         }
-        .hero-actions {
-            animation: heroTextReveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.65s both;
+        .mv-clean-card {
+            background: rgba(20, 8, 14, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 34px 30px;
+            backdrop-filter: blur(20px);
+            transition: transform 0.28s ease, border-color 0.28s ease, box-shadow 0.28s ease;
         }
-        .hero-stats-grid {
-            animation: heroTextReveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.8s both;
+        .mv-clean-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(255, 59, 96, 0.35);
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.5), 0 0 25px rgba(255, 59, 96, 0.12);
         }
-        @keyframes heroTextReveal {
-            from {
-                opacity: 0;
-                transform: translateY(22px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+        .mv-clean-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 14px;
+            background: linear-gradient(135deg, rgba(255, 59, 96, 0.2), rgba(225, 29, 72, 0.1));
+            border: 1px solid rgba(255, 59, 96, 0.3);
+            color: #ff3b60;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+        }
+        .mv-clean-card h3 {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin: 0 0 12px;
+            font-family: 'Outfit', sans-serif;
+        }
+        .mv-clean-card p {
+            font-size: 0.95rem;
+            color: rgba(255, 255, 255, 0.65);
+            line-height: 1.68;
+            margin: 0;
         }
 
         /* ================== SCROLL-REVEAL LUXURY ANIMATIONS ================== */
@@ -222,68 +310,50 @@
         </div>
     </nav>
 
-    <!-- WELCOME HERO SECTION -->
-    <section id="hero" class="heroModern">
+    <!-- WELCOME HERO SECTION (HELIX-STYLE MINIMALIST) -->
+    <section id="hero" class="heroModern hero-helix">
         <div class="particles" id="particles"></div>
         <div class="container">
-            <div class="hero-inner">
-                <!-- 3D INCOMING ZYREX LOGO STAGE -->
-                <div class="hero-portal-stage">
-                    <div class="hero-portal-nebula"></div>
-                    <div class="hero-portal-ring ring-1"></div>
-                    <div class="hero-portal-ring ring-2"></div>
-                    <div class="hero-portal-shockwave"></div>
-                    <div class="hero-logo-frame">
-                        <img src="assets/content.png" alt="Zyrex Logo" class="hero-incoming-logo">
+            <div class="hero-inner-open">
+                <!-- Centered Logo Lockup -->
+                <div class="hero-brand-lockup">
+                    <img src="assets/content.png" alt="Zyrex Logo" class="hero-brand-icon">
+                    <div class="hero-brand-text-col">
+                        <span class="hero-brand-title">Zyrex<sup>™</sup></span>
+                        <span class="hero-brand-sub">EDITING</span>
                     </div>
                 </div>
 
-                <div class="hero-chip">
-                    <img src="assets/content.png" alt="Zyrex Logo" style="width: 1.2em; height: 1.2em; object-fit: contain;">
-                    <span>Zyrex™ Creative Vault</span>
+                <!-- Status Pill Badge -->
+                <div>
+                    <div class="hero-pill-badge">
+                        <span class="hero-pill-dot"></span>
+                        <span>120+ PRESETS &amp; PLUGINS · LIVE</span>
+                    </div>
                 </div>
-                <h1>Welcome to <span class="cherry-text">Zyrex</span></h1>
-                <p class="lead">
-                    Access verified presets, plugins, scenepacks, and audio assets — 100% free for video editors worldwide.
+
+                <!-- Massive Bold Headline -->
+                <h1 class="hero-headline-massive">
+                    Creative limits end<br>
+                    <span class="accent-here">here.</span>
+                </h1>
+
+                <!-- Clean Subtitle -->
+                <p class="hero-sub-clean">
+                    After Effects presets &amp; projects, plus plugins, scenepacks, audio, and LUTs — source-matched quality in one open vault.
                 </p>
 
-                <div class="hero-actions">
-                    <a href="/presets" class="btn btn-primary">
-                        <i class="fas fa-sliders"></i> Browse Presets
+                <!-- Dual Action Buttons -->
+                <div class="hero-cta-group">
+                    <a href="/presets" class="btn-amber-download">
+                        <i class="fas fa-download"></i>
+                        <span>Browse Presets</span>
+                        <span class="arrow-bubble"><i class="fas fa-arrow-right"></i></span>
                     </a>
-                    <a href="/plugins" class="btn btn-secondary">
-                        <i class="fas fa-cubes"></i> Plugins &amp; Software
-                    </a>
-                    <a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn btn-secondary">
-                        <i class="fab fa-discord"></i> Join Discord Community
+                    <a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-slate-glass">
+                        <i class="fab fa-discord"></i> Join Discord
                     </a>
                 </div>
-            </div>
-
-            <!-- REAL DYNAMIC METRIC COUNTERS GRID -->
-            <div class="hero-stats-grid">
-                <div class="stat-box">
-                    <div class="number" id="heroStatPresets">82</div>
-                    <div class="label">Presets</div>
-                </div>
-                <div class="stat-box">
-                    <div class="number" id="heroStatPlugins">28</div>
-                    <div class="label">Plugins</div>
-                </div>
-                <div class="stat-box">
-                    <div class="number" id="heroStatScenepacks">6</div>
-                    <div class="label">Scenepacks</div>
-                </div>
-                <div class="stat-box">
-                    <div class="number" id="heroStatAudios">4</div>
-                    <div class="label">Audios</div>
-                </div>
-            </div>
-
-            <!-- SCROLL INDICATOR -->
-            <div class="swipe-up-indicator">
-                <span>Explore Zyrex</span>
-                <i class="fas fa-chevron-down"></i>
             </div>
         </div>
     </section>
@@ -392,35 +462,32 @@
         </div>
     </section>
 
-    <!-- ABOUT & MISSION UNIFIED SECTION -->
-    <section class="about-intro section-padding reveal-on-scroll">
+    <!-- MISSION & VISION SECTION (SIMPLE & MINIMAL) -->
+    <section class="mv-clean-section section-padding reveal-on-scroll">
         <div class="container">
-            <div class="about-unified-card reveal-scale">
-                <div class="about-main-block">
-                    <span class="section-subtitle">The Creative Underground</span>
-                    <h2 class="section-title warm-text" style="font-size: 2.2rem; margin-bottom: 8px;">Inside <span class="cherry-text">Zyrex</span></h2>
-                    <div class="section-divider" style="margin: 12px 0 20px 0; width: 80px;"></div>
-                    <p class="about-text">
-                        Zyrex was built from the ground up by active editors to eliminate paywalled presets, broken link rot, and predatory download traps. We deliver direct, lightning-fast access to raw 4K scenepacks, color grades, velocity maps, project files, and essential VFX plugins. Backed by dedicated NVMe cloud storage and an elite creator collective, Zyrex powers your editing pipeline with zero compromise.
+            <div class="section-header" style="text-align: center; margin-bottom: 36px;">
+                <span class="section-subtitle">About Zyrex</span>
+                <h2 class="section-title warm-text">Misyon &amp; <span class="cherry-text">Vizyon</span></h2>
+                <div class="section-divider" style="margin: 10px auto;"></div>
+            </div>
+
+            <div class="mv-clean-grid">
+                <!-- Misyon Card -->
+                <div class="mv-clean-card reveal-on-scroll reveal-delay-1">
+                    <div class="mv-clean-icon"><i class="fas fa-bullseye"></i></div>
+                    <h3>Misyonumuz</h3>
+                    <p>
+                        Video editörlerinin aradığı After Effects presetlerini, eklentileri ve 4K scenepack'leri sahte indirme linkleri, reklamlar veya ücret duvarları olmadan, doğrudan tek tıkla yüksek hızda buluttan ulaştırmak.
                     </p>
                 </div>
 
-                <div class="about-pillars-grid">
-                    <div class="pillar-box reveal-on-scroll reveal-delay-1">
-                        <div class="pillar-icon"><i class="fas fa-compass-drafting"></i></div>
-                        <h3>The Vision</h3>
-                        <p>A borderless creative ecosystem where no editor is held back by paywalls, speed throttles, or scarce software. Unrestricted visual power for all.</p>
-                    </div>
-                    <div class="pillar-box reveal-on-scroll reveal-delay-2">
-                        <div class="pillar-icon"><i class="fas fa-gauge-high"></i></div>
-                        <h3>The Mission</h3>
-                        <p>Curating 100% clean, verified project files and presets with 1-click cloud downloads, zero adware, and direct creator attribution.</p>
-                    </div>
-                    <div class="pillar-box reveal-on-scroll reveal-delay-3">
-                        <div class="pillar-icon"><i class="fas fa-shield-halved"></i></div>
-                        <h3>The Standard</h3>
-                        <p>Lossless media, verified safe assets, active community mentoring, and raw creative energy across every timeline you render.</p>
-                    </div>
+                <!-- Vizyon Card -->
+                <div class="mv-clean-card reveal-on-scroll reveal-delay-2">
+                    <div class="mv-clean-icon"><i class="fas fa-eye"></i></div>
+                    <h3>Vizyonumuz</h3>
+                    <p>
+                        Dünyanın dört bir yanındaki içerik üreticilerinin yaratıcılıklarını kısıtlayan tüm bariyerleri kaldırarak; özgür, temiz ve sürekli güncellenen en büyük açık kurgu ve efekt arşivini yaşatmak.
+                    </p>
                 </div>
             </div>
         </div>
