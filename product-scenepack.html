@@ -350,29 +350,66 @@
             color: #fff;
         }
 
-        /* UPLOADER PROFILE ROW */
+        /* UPLOADER PROFILE ROW & SOCIALS */
+        .creator-card-enhanced {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 14px 16px;
+            margin-bottom: 18px;
+        }
         .creator-row {
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 18px;
+            margin-bottom: 0;
         }
         .creator-avatar {
-            width: 42px;
-            height: 42px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
             object-fit: cover;
-            border: 1.5px solid rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(6, 182, 212, 0.4);
+            box-shadow: 0 0 12px rgba(6, 182, 212, 0.2);
         }
         .creator-info h5 {
             margin: 0;
-            font-size: 0.88rem;
+            font-size: 0.92rem;
             font-weight: 700;
             color: #fff;
         }
-        .creator-info span {
+        .creator-role-tag {
             font-size: 0.72rem;
-            color: var(--text-sub);
+            color: var(--scene-cyan);
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 2px;
+        }
+        .creator-social-bar {
+            margin-top: 12px;
+            padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .creator-social-btn {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            background: rgba(6, 182, 212, 0.08);
+            border: 1px solid rgba(6, 182, 212, 0.25);
+            border-radius: 10px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        .creator-social-btn:hover {
+            background: rgba(6, 182, 212, 0.18);
+            border-color: rgba(6, 182, 212, 0.5);
+            transform: translateY(-1px);
+            color: #fff;
         }
 
         /* RELATED SCENEPACKS GRID */
@@ -508,13 +545,13 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-brand">
-                    <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-                        <a href="/" class="logo">
-                            <img src="/assets/content.png" alt="ZYREX" class="logo-img">
-                            <span class="logo-text">yrex</span>
-                        </a>
-                        <h3 style="font-size:1.8rem;font-weight:900;margin:0;letter-spacing:2px;background:linear-gradient(135deg,#ffffff,#9090a0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Editing</h3>
-                    </div>
+                    <a href="/" class="hero-brand-lockup footer-brand-lockup">
+                        <img src="/assets/content.png" alt="Zyrex Logo" class="hero-brand-icon">
+                        <div class="hero-brand-text-col">
+                            <span class="hero-brand-title">Zyrex<sup>™</sup></span>
+                            <span class="hero-brand-sub">EDITING</span>
+                        </div>
+                    </a>
                     <p>Premium editing community &amp; resources.</p>
                 </div>
                 <div class="footer-links">
@@ -596,7 +633,7 @@
         document.title = (p.name || "Scenepack") + " - Zyrex";
         document.getElementById('breadSceneName').textContent = p.name || "Scenepack";
 
-        const desc = p.description || p.desc || "Raw scene footage and editing clips curated for video editors.";
+        const desc = p.description || p.desc || "Curated scene clips and editing footage for video editors.";
         const thumb = p.thumbnail || '/assets/content.png';
 
         // Likes & Bookmarks
@@ -609,23 +646,47 @@
         var uploaderName = p.creator_nickname || p.author_name || p.uploader_name || 'Community Creator';
         var uploaderAv = p.uploader_avatar || p.creator_avatar || 'https://cdn.discordapp.com/embed/avatars/0.png';
 
-        // Category determination
+        // Social Media Detection
+        var socialUrl = (p.creator_social_url || p.social_url || p.author_social || '').trim();
+        var socialIcon = 'fas fa-link';
+        var socialHandle = p.creator_username ? '@' + p.creator_username : 'Social Profile';
+
+        if (socialUrl) {
+            var sLow = socialUrl.toLowerCase();
+            if (sLow.includes('tiktok.com')) {
+                socialIcon = 'fab fa-tiktok';
+                var m = socialUrl.match(/@([a-zA-Z0-9_.-]+)/);
+                if (m) socialHandle = '@' + m[1];
+            } else if (sLow.includes('instagram.com')) {
+                socialIcon = 'fab fa-instagram';
+                var m = socialUrl.match(/instagram\.com\/([a-zA-Z0-9_.-]+)/);
+                if (m) socialHandle = '@' + m[1];
+            } else if (sLow.includes('youtube.com') || sLow.includes('youtu.be')) {
+                socialIcon = 'fab fa-youtube';
+                var m = socialUrl.match(/@([a-zA-Z0-9_.-]+)/);
+                if (m) socialHandle = '@' + m[1];
+                else socialHandle = 'YouTube';
+            } else if (sLow.includes('discord.gg') || sLow.includes('discord.com')) {
+                socialIcon = 'fab fa-discord';
+                socialHandle = 'Discord Community';
+            } else if (sLow.includes('twitter.com') || sLow.includes('x.com')) {
+                socialIcon = 'fab fa-x-twitter';
+                var m = socialUrl.match(/(?:twitter|x)\.com\/([a-zA-Z0-9_.-]+)/);
+                if (m) socialHandle = '@' + m[1];
+            }
+        }
+
+        // Category determination (clean, no raw)
         var catMap = {
             anime: 'Anime Scenepack',
-            movie: 'Movie & Film Clips',
-            series: 'TV Series Footage',
+            movie: 'Movie Clips',
+            series: 'TV Series Clips',
             games: 'Gaming Clips',
-            character: 'Character Scenepack',
-            others: 'Raw Scenepack'
+            character: 'Character Clips',
+            others: 'Scenepack'
         };
         var rawCat = (p.category || 'scenepack').toLowerCase();
-        var catLabel = catMap[rawCat] || 'Raw Scenepack';
-
-        // Resolution detection from title/notes
-        var nameLower = (p.name || '').toLowerCase();
-        var qualityText = '1080p Full HD';
-        if (nameLower.includes('4k') || nameLower.includes('2160p')) qualityText = '4K Ultra HD';
-        else if (nameLower.includes('720p')) qualityText = '720p HD';
+        var catLabel = catMap[rawCat] || 'Scenepack';
 
         // Normalize links
         var links = [];
@@ -719,10 +780,10 @@
             <!-- WIDESCREEN FOOTAGE SHOWCASE -->
             <div class="scenepack-stage-card">
                 <img src="${thumb}" alt="" class="bg-ambient">
-                <img src="${thumb}" alt="${p.name}" class="main-film-img" onerror="this.src='/assets/content.png'">
+                <img src="${thumb}" alt="${escapeHtml(p.name)}" class="main-film-img" onerror="this.src='/assets/content.png'">
                 <div class="scenepack-floating-badges">
                     <span class="scene-pill"><i class="fas fa-film"></i> ${catLabel}</span>
-                    <span class="scene-pill scene-pill-cyan"><i class="fas fa-tv"></i> ${qualityText}</span>
+                    <span class="scene-pill scene-pill-cyan"><i class="fas fa-circle-check"></i> Verified Community Pack</span>
                 </div>
             </div>
 
@@ -730,7 +791,7 @@
                 <!-- LEFT COLUMN -->
                 <div class="scenepack-main-col">
                     <div class="glass-card">
-                        <h1 class="scene-title">${p.name}</h1>
+                        <h1 class="scene-title">${escapeHtml(p.name)}</h1>
                         <p class="scene-desc">${desc.replace(/\n/g, '<br>')}</p>
 
                         <!-- ACTIONS ROW -->
@@ -756,16 +817,16 @@
                                 <div class="val">${catLabel}</div>
                             </div>
                             <div class="spec-cell">
-                                <div class="lbl">Resolution</div>
-                                <div class="val">${qualityText}</div>
-                            </div>
-                            <div class="spec-cell">
                                 <div class="lbl">Downloads</div>
                                 <div class="val">${p.downloads || 0}</div>
                             </div>
                             <div class="spec-cell">
                                 <div class="lbl">Added</div>
                                 <div class="val">${p.created_at ? new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'Verified'}</div>
+                            </div>
+                            <div class="spec-cell">
+                                <div class="lbl">Compatibility</div>
+                                <div class="val">All Video Editors</div>
                             </div>
                         </div>
                     </div>
@@ -776,11 +837,11 @@
                             <i class="fas fa-circle-info"></i> About this Scenepack
                         </div>
                         <p style="color:rgba(255,255,255,0.75);font-size:0.92rem;line-height:1.8">
-                            Raw footage cuts for video editors. Log / standard color profile ready for coloring, masking, twixtor, velocity editing, and motion graphics in After Effects, Premiere Pro, DaVinci Resolve, Sony Vegas, and mobile apps.
+                            Curated scene footage for video editing and motion design. Fully compatible for cuts, color grading, masking, twixtor, velocity editing, and motion graphics across After Effects, Premiere Pro, DaVinci Resolve, Sony Vegas, CapCut, and mobile suites.
                         </p>
                         ${p.notes ? `
                             <div style="margin-top:16px;padding:12px 16px;background:rgba(6,182,212,0.06);border-left:3px solid var(--scene-cyan);border-radius:0 10px 10px 0;font-size:0.86rem;color:rgba(255,255,255,0.85)">
-                                <strong>Release Note:</strong> ${p.notes}
+                                <strong>Release Note:</strong> ${escapeHtml(p.notes)}
                             </div>
                         ` : ''}
                     </div>
@@ -793,13 +854,24 @@
                             <i class="fas fa-download"></i> Download Footage
                         </div>
 
-                        <!-- Uploader profile -->
-                        <div class="creator-row">
-                            <img src="${uploaderAv}" alt="" class="creator-avatar" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
-                            <div class="creator-info">
-                                <h5>${uploaderName}</h5>
-                                <span>Footage Uploader</span>
+                        <!-- Enhanced Uploader profile with real social account -->
+                        <div class="creator-card-enhanced">
+                            <div class="creator-row">
+                                <img src="${uploaderAv}" alt="${escapeHtml(uploaderName)}" class="creator-avatar" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+                                <div class="creator-info">
+                                    <h5>${escapeHtml(uploaderName)}</h5>
+                                    <span class="creator-role-tag"><i class="fas fa-cloud-arrow-up"></i> Community Uploader</span>
+                                </div>
                             </div>
+                            ${socialUrl ? `
+                                <div class="creator-social-bar">
+                                    <a href="${socialUrl}" target="_blank" rel="noopener" class="creator-social-btn">
+                                        <i class="${socialIcon}"></i>
+                                        <span>${escapeHtml(socialHandle)}</span>
+                                        <i class="fas fa-arrow-up-right-from-square" style="font-size:0.7rem;margin-left:auto;opacity:0.6"></i>
+                                    </a>
+                                </div>
+                            ` : ''}
                         </div>
 
                         ${passwordHtml}
@@ -807,12 +879,10 @@
                         ${mirrorsHtml}
 
                         <div style="text-align:center;font-size:0.72rem;color:rgba(255,255,255,0.45);margin-top:16px">
-                            <i class="fas fa-shield-halved" style="color:var(--scene-cyan);margin-right:4px"></i> Always scan downloaded files with your local antivirus software.
+                            <i class="fas fa-shield-halved" style="color:var(--scene-cyan);margin-right:4px"></i> Verified clean and free of bloat.
                         </div>
                     </div>
                 </div>
-            </div>
-
             <div id="relatedSceneContainer"></div>
         `;
 
