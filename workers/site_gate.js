@@ -1,7 +1,7 @@
 const DEFAULT_HEALTH_URL = "https://storage.zyrexediting.xyz/health";
-const DEFAULT_TIMEOUT_MS = 1500;
+const DEFAULT_TIMEOUT_MS = 5000;
 const DEFAULT_ONLINE_CACHE_MS = 15000;
-const DEFAULT_OFFLINE_CACHE_MS = 3000;
+const DEFAULT_OFFLINE_CACHE_MS = 5000;
 
 let healthState = {
   available: true, // Default optimistic until proven otherwise
@@ -209,15 +209,6 @@ export default {
     }
 
     if (isApiRequest(pathname) && env.API) {
-      const isCloudflareNativeEndpoint = pathname.startsWith("/api/presence") || 
-                                         pathname.startsWith("/api/avatar/") || 
-                                         pathname.startsWith("/api/banner/") ||
-                                         pathname.startsWith("/api/downloads/") ||
-                                         pathname.startsWith("/api/files/") ||
-                                         pathname.startsWith("/api/thumbnails/");
-      if (!isCloudflareNativeEndpoint && !(await isServerAvailable(env))) {
-        return offlineResponse(request);
-      }
       return env.API.fetch(request);
     }
 

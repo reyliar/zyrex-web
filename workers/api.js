@@ -2052,9 +2052,17 @@ export default {
                                path === "/api/auth/callback" || 
                                path === "/api/auth/logout" || 
                                path === "/api/me" ||
+                               path === "/api/health" ||
+                               path.startsWith("/api/products") ||
+                               (path.startsWith("/api/comments") && request.method === "GET") ||
+                               path.startsWith("/api/notifications") ||
+                               path.startsWith("/api/guild/") ||
                                path.startsWith("/api/downloads/") ||
                                path.startsWith("/api/avatar/") || 
                                path.startsWith("/api/banner/") ||
+                               path.startsWith("/api/presets/") ||
+                               path === "/api/resource-stats" ||
+                               path === "/api/team" ||
                                path.startsWith("/api/presence");
 
       const origin = request.headers.get("Origin") || request.headers.get("Referer") || "";
