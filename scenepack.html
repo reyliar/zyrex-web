@@ -742,6 +742,9 @@
             <button type="button" class="sp-view-tab" id="tabProductions" onclick="switchSPView('productions')">
                 <i class="fas fa-film"></i> Films &amp; Series <span class="imdb-mini-tag">IMDb Hub</span>
             </button>
+            <button type="button" class="sp-view-tab" id="tabGames" onclick="switchSPView('games')">
+                <i class="fas fa-gamepad"></i> Video Games <span class="imdb-mini-tag" style="background:linear-gradient(135deg, #7c3aed, #db2777)">Games Hub</span>
+            </button>
         </div>
 
         <!-- CONTAINER FOR PRODUCTIONS VIEW (IMDB HUB) -->
@@ -758,6 +761,23 @@
                     <span style="font-size:0.8rem;color:var(--text-muted)">Matched with official IMDb ratings &amp; posters</span>
                 </div>
                 <div class="productions-grid" id="productionsGrid"></div>
+            </div>
+        </div>
+
+        <!-- CONTAINER FOR VIDEO GAMES VIEW (GAMES HUB) -->
+        <div id="gamesSection" style="display:none;">
+            <!-- GAME SHOWCASE DETAIL -->
+            <div id="gameShowcaseContainer" style="display:none;"></div>
+
+            <!-- GAMES GRID -->
+            <div id="gamesGridContainer">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px">
+                    <h3 style="font-size:1.15rem;font-weight:800;color:#fff;margin:0;display:flex;align-items:center;gap:8px">
+                        <i class="fas fa-gamepad" style="color:#a855f7"></i> Browse by Video Games
+                    </h3>
+                    <span style="font-size:0.8rem;color:var(--text-muted)">Cinematic gameplay, game cutscenes &amp; trailers</span>
+                </div>
+                <div class="productions-grid" id="gamesGrid"></div>
             </div>
         </div>
 
@@ -1004,43 +1024,78 @@
             }
         }
 
-        // ================== VIEW SWITCHER & IMDB HUB ==================
+        // ================== VIEW SWITCHER & HUBS ==================
         function switchSPView(mode) {
             currentViewMode = mode;
             var tabAll = document.getElementById('tabAllPacks');
             var tabProd = document.getElementById('tabProductions');
+            var tabGames = document.getElementById('tabGames');
             var allSec = document.getElementById('allPacksSection');
             var prodSec = document.getElementById('productionsSection');
+            var gamesSec = document.getElementById('gamesSection');
+
+            // Reset tabs
+            if (tabAll) tabAll.classList.remove('active');
+            if (tabProd) tabProd.classList.remove('active');
+            if (tabGames) tabGames.classList.remove('active');
 
             if (mode === 'productions') {
-                tabAll.classList.remove('active');
-                tabProd.classList.add('active');
-                allSec.style.display = 'none';
-                prodSec.style.display = 'block';
+                if (tabProd) tabProd.classList.add('active');
+                if (allSec) allSec.style.display = 'none';
+                if (gamesSec) gamesSec.style.display = 'none';
+                if (prodSec) prodSec.style.display = 'block';
+                closeProductionView();
                 renderProductionsGrid();
+            } else if (mode === 'games') {
+                if (tabGames) tabGames.classList.add('active');
+                if (allSec) allSec.style.display = 'none';
+                if (prodSec) prodSec.style.display = 'none';
+                if (gamesSec) gamesSec.style.display = 'block';
+                closeProductionView();
+                renderGamesGrid();
             } else {
-                tabProd.classList.remove('active');
-                tabAll.classList.add('active');
-                prodSec.style.display = 'none';
-                allSec.style.display = 'block';
+                if (tabAll) tabAll.classList.add('active');
+                if (prodSec) prodSec.style.display = 'none';
+                if (gamesSec) gamesSec.style.display = 'none';
+                if (allSec) allSec.style.display = 'block';
                 closeProductionView();
             }
         }
 
-        // Render Productions Grid (Films & Series)
+        // Render Productions Grid (Films & Series ONLY - Hide 0-pack categories)
         function renderProductionsGrid() {
             var grid = document.getElementById('productionsGrid');
             var prods = typeof getAllIMDbProductions === 'function' ? getAllIMDbProductions() : [];
             
-            grid.innerHTML = prods.map(function(pr) {
+            // PAYLAŞIMI OLMAYAN YAPIMLARI GİZLE (matchingCount > 0)
+            var activeProds = prods.filter(function(pr) {
+                if (pr.category === 'game' || pr.type === 'Game') return false;
                 var matchingCount = allSP.filter(function(p){
                     var match = typeof findProductionForScenepack === 'function' ? findProductionForScenepack(p) : null;
                     return match && match.id === pr.id;
                 }).length;
+                return matchingCount > 0;
+            });
+
+            if (activeProds.length === 0) {
+                grid.innerHTML = '<div class="empty" style="grid-column: 1 / -1; padding: 40px 20px; text-align: center; color: var(--text-muted);"><i class="fas fa-film" style="font-size: 2rem; margin-bottom: 12px; display: block; color: var(--cherry-light);"></i><p>No films or TV series with scenepacks found yet. Check back soon!</p></div>';
+                return;
+            }
+
+            grid.innerHTML = activeProds.map(function(pr) {
+                var matchingPacks = allSP.filter(function(p){
+                    var match = typeof findProductionForScenepack === 'function' ? findProductionForScenepack(p) : null;
+                    return match && match.id === pr.id;
+                });
+                var matchingCount = matchingPacks.length;
+
+                // Use first real scenepack thumbnail if available
+                var firstThumb = matchingPacks.find(function(p){ return p.thumbnail && p.thumbnail !== 'assets/content.png' && p.thumbnail !== '/assets/content.png'; });
+                var posterImg = (firstThumb && firstThumb.thumbnail) ? firstThumb.thumbnail : pr.poster;
 
                 return '<div class="prod-card" onclick="openProductionView(\'' + pr.id + '\')">' +
                     '<div class="prod-poster-box">' +
-                        '<img src="' + pr.poster + '" alt="' + escapeHtml(pr.title) + '" class="prod-poster-img" onerror="this.src=\'assets/content.png\'">' +
+                        '<img src="' + posterImg + '" alt="' + escapeHtml(pr.title) + '" class="prod-poster-img" onerror="this.src=\'assets/content.png\'">' +
                         '<div class="prod-imdb-badge"><i class="fab fa-imdb"></i> ' + pr.rating + '</div>' +
                         '<div class="prod-count-pill">' + matchingCount + ' pack' + (matchingCount !== 1 ? 's' : '') + '</div>' +
                     '</div>' +
@@ -1054,14 +1109,79 @@
             }).join('');
         }
 
-        // Open Image 1 Style Production Showcase View
+        // Render Video Games Grid (Video Games ONLY - Hide 0-pack categories)
+        function renderGamesGrid() {
+            var grid = document.getElementById('gamesGrid');
+            var allGames = typeof getAllGameProductions === 'function' ? getAllGameProductions() : [];
+            
+            // PAYLAŞIMI OLMAYAN OYUNLARI GİZLE (matchingCount > 0)
+            var activeGames = allGames.filter(function(g) {
+                var matchingCount = allSP.filter(function(p){
+                    var match = typeof findProductionForScenepack === 'function' ? findProductionForScenepack(p) : null;
+                    return match && match.id === g.id;
+                }).length;
+                return matchingCount > 0;
+            });
+
+            // Fallback for custom game categories uploaded by community
+            allSP.forEach(function(p) {
+                var cat = (p.category || '').toLowerCase();
+                if (cat === 'games' || cat === 'game') {
+                    var match = typeof findProductionForScenepack === 'function' ? findProductionForScenepack(p) : null;
+                    if (match && !activeGames.some(function(ag){ return ag.id === match.id; })) {
+                        activeGames.push(match);
+                    }
+                }
+            });
+
+            if (activeGames.length === 0) {
+                grid.innerHTML = '<div class="empty" style="grid-column: 1 / -1; padding: 40px 20px; text-align: center; color: var(--text-muted);"><i class="fas fa-gamepad" style="font-size: 2rem; margin-bottom: 12px; display: block; color: #a855f7;"></i><p>No video game scenepacks found yet. Check back soon!</p></div>';
+                return;
+            }
+
+            grid.innerHTML = activeGames.map(function(g) {
+                var matchingPacks = allSP.filter(function(p){
+                    var match = typeof findProductionForScenepack === 'function' ? findProductionForScenepack(p) : null;
+                    return match && match.id === g.id;
+                });
+                var matchingCount = matchingPacks.length;
+
+                var firstThumb = matchingPacks.find(function(p){ return p.thumbnail && p.thumbnail !== 'assets/content.png' && p.thumbnail !== '/assets/content.png'; });
+                var posterImg = (firstThumb && firstThumb.thumbnail) ? firstThumb.thumbnail : g.poster;
+
+                return '<div class="prod-card" onclick="openProductionView(\'' + g.id + '\')">' +
+                    '<div class="prod-poster-box">' +
+                        '<img src="' + posterImg + '" alt="' + escapeHtml(g.title) + '" class="prod-poster-img" onerror="this.src=\'assets/content.png\'">' +
+                        '<div class="prod-imdb-badge" style="background:#7c3aed;color:#fff"><i class="fas fa-gamepad"></i> ' + (g.rating || '9.0') + '</div>' +
+                        '<div class="prod-count-pill">' + matchingCount + ' pack' + (matchingCount !== 1 ? 's' : '') + '</div>' +
+                    '</div>' +
+                    '<div class="prod-body">' +
+                        '<div>' +
+                            '<h4 class="prod-title">' + escapeHtml(g.title) + '</h4>' +
+                            '<p class="prod-sub">' + escapeHtml(g.year) + ' · Video Game</p>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        // Open Production / Game Showcase Detail View
         function openProductionView(prodId) {
             var pr = typeof getProductionById === 'function' ? getProductionById(prodId) : null;
             if (!pr) return;
 
             currentActiveProd = pr;
-            document.getElementById('productionsGridContainer').style.display = 'none';
-            var container = document.getElementById('productionShowcaseContainer');
+            var isGame = (pr.type === 'Game' || pr.category === 'game');
+
+            // Hide grids
+            var prodGridBox = document.getElementById('productionsGridContainer');
+            var gameGridBox = document.getElementById('gamesGridContainer');
+            if (prodGridBox) prodGridBox.style.display = 'none';
+            if (gameGridBox) gameGridBox.style.display = 'none';
+
+            // Choose active showcase container
+            var container = isGame ? document.getElementById('gameShowcaseContainer') : document.getElementById('productionShowcaseContainer');
+            if (!container) container = document.getElementById('productionShowcaseContainer');
             container.style.display = 'block';
 
             var matchingPacks = allSP.filter(function(p){
@@ -1070,34 +1190,46 @@
             });
 
             var totalDL = matchingPacks.reduce(function(acc, x){ return acc + (x.downloads || 0); }, 0);
+            var firstThumb = matchingPacks.find(function(p){ return p.thumbnail && p.thumbnail !== 'assets/content.png' && p.thumbnail !== '/assets/content.png'; });
+            var posterSrc = (firstThumb && firstThumb.thumbnail) ? firstThumb.thumbnail : pr.poster;
+
+            var backBtnHtml = isGame 
+                ? '<button class="showcase-back-btn" onclick="closeProductionView()"><i class="fas fa-arrow-left"></i> All Video Games</button>'
+                : '<button class="showcase-back-btn" onclick="closeProductionView()"><i class="fas fa-arrow-left"></i> All Films &amp; Series</button>';
+
+            var badgeHtml = isGame
+                ? '<span class="badge-imdb" style="background:#7c3aed;color:#fff"><i class="fas fa-gamepad"></i> ' + (pr.rating || '9.0') + '/10</span>'
+                : '<span class="badge-imdb"><i class="fab fa-imdb"></i> ' + pr.rating + '/10</span>';
+
+            var metaDesc = isGame
+                ? `${escapeHtml(pr.year)} · Developer: ${escapeHtml(pr.directors)} · ${escapeHtml(pr.genres)} · Video Game`
+                : `${escapeHtml(pr.year)} · Directed by ${escapeHtml(pr.directors)} · ${escapeHtml(pr.genres)} · ${escapeHtml(pr.type)}`;
 
             container.innerHTML = `
-                <button class="showcase-back-btn" onclick="closeProductionView()">
-                    <i class="fas fa-arrow-left"></i> All Films &amp; Series
-                </button>
+                ${backBtnHtml}
 
                 <div class="production-showcase-view">
-                    <!-- HEADER ROW (IMAGE 1 STYLE) -->
+                    <!-- HEADER ROW -->
                     <div class="prod-showcase-header">
                         <div class="prod-showcase-poster">
-                            <img src="${pr.poster}" alt="${escapeHtml(pr.title)}" onerror="this.src='assets/content.png'">
+                            <img src="${posterSrc}" alt="${escapeHtml(pr.title)}" onerror="this.src='assets/content.png'">
                         </div>
                         <div class="prod-showcase-info">
                             <h1>${escapeHtml(pr.title)}</h1>
                             <div class="prod-showcase-meta">
-                                ${escapeHtml(pr.year)} · Directed by ${escapeHtml(pr.directors)} · ${escapeHtml(pr.genres)} · ${escapeHtml(pr.type)}
+                                ${metaDesc}
                             </div>
                             <div class="prod-stats-strip">
                                 <span><strong>${matchingPacks.length}</strong> scenepacks</span>
                                 <span>·</span>
                                 <span><strong>${totalDL.toLocaleString()}</strong> downloads</span>
                                 <div class="showcase-badge-row" style="margin: 0; margin-left: auto;">
-                                    <span class="badge-imdb"><i class="fab fa-imdb"></i> ${pr.rating}/10</span>
+                                    ${badgeHtml}
                                     ${pr.rotten ? `<span class="badge-rotten"><i class="fas fa-fire"></i> ${pr.rotten}</span>` : ''}
                                 </div>
                             </div>
                             <div class="prod-cast-list">
-                                <strong>Cast:</strong> ${escapeHtml(pr.cast)}
+                                <strong>${isGame ? 'Key Characters:' : 'Cast:'}</strong> ${escapeHtml(pr.cast)}
                             </div>
                             ${pr.tagline ? `<div class="prod-tagline">"${escapeHtml(pr.tagline)}"</div>` : ''}
                             
@@ -1109,7 +1241,7 @@
                         </div>
                     </div>
 
-                    <!-- SHOWCASE SCENEPACKS TABLE (IMAGE 1 STYLE) -->
+                    <!-- SHOWCASE SCENEPACKS TABLE -->
                     <div class="showcase-table-wrap">
                         <div class="showcase-table-header">
                             <div>SCENEPACK</div>
@@ -1169,8 +1301,15 @@
 
         function closeProductionView() {
             currentActiveProd = null;
-            document.getElementById('productionShowcaseContainer').style.display = 'none';
-            document.getElementById('productionsGridContainer').style.display = 'block';
+            var prodShowcase = document.getElementById('productionShowcaseContainer');
+            var gameShowcase = document.getElementById('gameShowcaseContainer');
+            var prodGrid = document.getElementById('productionsGridContainer');
+            var gameGrid = document.getElementById('gamesGridContainer');
+
+            if (prodShowcase) prodShowcase.style.display = 'none';
+            if (gameShowcase) gameShowcase.style.display = 'none';
+            if (prodGrid) prodGrid.style.display = 'block';
+            if (gameGrid) gameGrid.style.display = 'block';
         }
 
         fetch('/api/search/creator-index').then(function(r){ return r.json(); }).then(function(d){
@@ -1186,12 +1325,16 @@
                     updateStats(data);
                     renderSP(data);
 
-                    // Check URL parameter for ?production=...
+                    // Check URL parameter for ?production=... or ?game=...
                     var urlParams = new URLSearchParams(window.location.search);
                     var prodParam = urlParams.get('production');
+                    var gameParam = urlParams.get('game');
                     if (prodParam) {
                         switchSPView('productions');
                         openProductionView(prodParam);
+                    } else if (gameParam) {
+                        switchSPView('games');
+                        openProductionView(gameParam);
                     }
                 } else {
                     document.getElementById('spGrid').innerHTML = '<div class="empty"><i class="fas fa-film"></i><p>No scenepacks yet. Check back soon!</p></div>';

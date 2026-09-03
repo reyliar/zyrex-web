@@ -942,7 +942,10 @@
         var originTitle = prod ? prod.title : (p.origin || 'Curated Footage');
         var originValueHtml = escapeHtml(originTitle);
         if (prod) {
-            originValueHtml = `<a href="/scenepack.html?production=${encodeURIComponent(prod.id)}" style="color:#67e8f9;text-decoration:none;display:inline-flex;align-items:center;gap:6px">${escapeHtml(prod.title)} <i class="fas fa-arrow-right" style="font-size:0.7rem"></i></a>`;
+            var isGameProd = (prod.type === 'Game' || prod.category === 'game');
+            var linkParam = isGameProd ? `game=${encodeURIComponent(prod.id)}` : `production=${encodeURIComponent(prod.id)}`;
+            var linkColor = isGameProd ? '#c084fc' : '#67e8f9';
+            originValueHtml = `<a href="/scenepack.html?${linkParam}" style="color:${linkColor};text-decoration:none;display:inline-flex;align-items:center;gap:6px">${escapeHtml(prod.title)} <i class="fas fa-arrow-right" style="font-size:0.7rem"></i></a>`;
         }
 
         // Release / Added date
@@ -1050,8 +1053,8 @@
                 <div class="scenepack-meta-col">
                     <div>
                         <div class="origin-kicker-bar">
-                            <span class="origin-pill"><i class="fas fa-film"></i> ${prod ? (prod.type || 'Series/Movie') : catLabel}</span>
-                            ${prod ? `<span class="origin-pill" style="background:rgba(6,182,212,0.12);border-color:rgba(6,182,212,0.3);color:#67e8f9">${escapeHtml(prod.title)}</span>` : ''}
+                            <span class="origin-pill"><i class="${(prod && (prod.type === 'Game' || prod.category === 'game')) ? 'fas fa-gamepad' : 'fas fa-film'}"></i> ${prod ? (prod.type || 'Series/Movie') : catLabel}</span>
+                            ${prod ? `<span class="origin-pill" style="background:${(prod.type === 'Game' || prod.category === 'game') ? 'rgba(168,85,247,0.14)' : 'rgba(6,182,212,0.12)'};border-color:${(prod.type === 'Game' || prod.category === 'game') ? 'rgba(168,85,247,0.35)' : 'rgba(6,182,212,0.3)'};color:${(prod.type === 'Game' || prod.category === 'game') ? '#c084fc' : '#67e8f9'}">${escapeHtml(prod.title)}</span>` : ''}
                         </div>
 
                         <h1 class="scene-title-featured">${escapeHtml(p.name)}</h1>

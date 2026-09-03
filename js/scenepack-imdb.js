@@ -248,7 +248,7 @@ var IMDB_PRODUCTIONS = [
         id: "arcane",
         imdbId: "tt11126994",
         title: "Arcane",
-        year: "2021\u20132024",
+        year: "2021–2024",
         type: "Series",
         rating: "9.0",
         rotten: "100%",
@@ -258,33 +258,144 @@ var IMDB_PRODUCTIONS = [
         tagline: "Every legend has a beginning.",
         poster: "https://m.media-amazon.com/images/M/MV5BYmU5OWM5ZTAtNjUzOC00NmUyLTgyOWMtMjlkMbkwOTY0MzMwXkEyXkFqcGc@._V1_FMjpg_UX1000_.jpg",
         banner: "https://images.unsplash.com/photo-1563089145-599997674d42?w=1200",
-        keywords: ["arcane", "jinx", "vi", "silco", "caitlyn", "league of legends"]
+        keywords: ["arcane", "jinx", "silco", "caitlyn", "zaun", "piltover", "heimerdinger", "vi arcane", "arcane league"]
     }
 ];
 
+var GAME_PRODUCTIONS = [
+    {
+        id: "resident-evil",
+        title: "Resident Evil",
+        year: "1996–Present",
+        type: "Game",
+        category: "game",
+        rating: "9.2",
+        directors: "Capcom",
+        genres: "Survival Horror, Action, Sci-Fi",
+        cast: "Leon S. Kennedy, Ada Wong, Claire Redfield, Jill Valentine, Chris Redfield, Albert Wesker",
+        tagline: "Enter the world of survival horror.",
+        poster: "https://thumbnail.zyrexediting.xyz/4921935510176045.jpeg",
+        banner: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200",
+        keywords: ["resident evil", "ada wong", "code: veronica", "code veronica", "claire redfield", "leon kennedy", "leon s. kennedy", "jill valentine", "chris redfield", "albert wesker", "biohazard", "raccoon city", "umbrella corp"]
+    },
+    {
+        id: "gta",
+        title: "Grand Theft Auto",
+        year: "1997–Present",
+        type: "Game",
+        category: "game",
+        rating: "9.5",
+        directors: "Rockstar Games",
+        genres: "Action-Adventure, Open World, Crime",
+        cast: "Michael De Santa, Franklin Clinton, Trevor Philips, Tommy Vercetti, CJ",
+        tagline: "Welcome to Los Santos.",
+        poster: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200",
+        banner: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1200",
+        keywords: ["gta", "grand theft auto", "gta v", "gta 5", "gta vi", "gta 6", "los santos", "trevor philips", "michael de santa", "franklin clinton", "san andreas"]
+    },
+    {
+        id: "cyberpunk-2077",
+        title: "Cyberpunk 2077",
+        year: "2020",
+        type: "Game",
+        category: "game",
+        rating: "8.6",
+        directors: "CD Projekt Red",
+        genres: "Action RPG, Sci-Fi, Cyberpunk",
+        cast: "V, Johnny Silverhand, Judy Alvarez, Panam Palmer",
+        tagline: "Welcome to Night City.",
+        poster: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200",
+        banner: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1200",
+        keywords: ["cyberpunk", "cyberpunk 2077", "johnny silverhand", "night city", "panam", "judy alvarez"]
+    },
+    {
+        id: "valorant",
+        title: "Valorant",
+        year: "2020",
+        type: "Game",
+        category: "game",
+        rating: "8.5",
+        directors: "Riot Games",
+        genres: "First-Person Shooter, Tactical",
+        cast: "Jett, Reyna, Phoenix, Viper, Sage, Omen",
+        tagline: "Defy the limits.",
+        poster: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200",
+        banner: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1200",
+        keywords: ["valorant", "jett", "reyna", "phoenix", "sage", "omen", "clove"]
+    }
+];
+
+function matchesKeyword(text, keyword) {
+    if (!text || !keyword) return false;
+    var kw = keyword.toLowerCase().trim();
+    if (!kw) return false;
+    if (kw.indexOf(' ') !== -1 || kw.indexOf(':') !== -1 || kw.indexOf('-') !== -1) {
+        return text.indexOf(kw) !== -1;
+    }
+    var pattern = '(?:^|[^a-z0-9])' + kw + '(?:$|[^a-z0-9])';
+    try {
+        var re = new RegExp(pattern, 'i');
+        return re.test(text);
+    } catch(e) {
+        return text.indexOf(kw) !== -1;
+    }
+}
+
 function findProductionForScenepack(item) {
     if (!item) return null;
+    var cat = (item.category || '').toLowerCase().trim();
+    var isGame = (cat === 'games' || cat === 'game');
+
     var searchStr = [
         item.origin || '',
         item.name || '',
         item.title || '',
         item.description || '',
-        item.desc || '',
-        item.category || ''
+        item.desc || ''
     ].join(' ').toLowerCase();
 
+    // 1. VIDEO GAMES ONLY MATCH GAME PRODUCTIONS
+    if (isGame) {
+        for (var g = 0; g < GAME_PRODUCTIONS.length; g++) {
+            var gProd = GAME_PRODUCTIONS[g];
+            if (matchesKeyword(searchStr, gProd.title)) return gProd;
+            for (var gk = 0; gk < gProd.keywords.length; gk++) {
+                if (matchesKeyword(searchStr, gProd.keywords[gk])) return gProd;
+            }
+        }
+        
+        // Return a clean fallback game production if it's a distinct game
+        var gameName = (item.origin || item.name || 'Video Game').trim();
+        return {
+            id: 'game-' + (item.origin ? item.origin.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'custom'),
+            title: item.origin || item.name,
+            year: 'Video Game',
+            type: 'Game',
+            category: 'game',
+            rating: '9.0',
+            directors: 'Game Studio',
+            genres: 'Gaming, Action',
+            cast: item.name || 'Game Characters',
+            tagline: 'Video Game Scenepack',
+            poster: item.thumbnail || 'assets/content.png',
+            banner: item.thumbnail || 'assets/content.png',
+            keywords: []
+        };
+    }
+
+    // 2. MOVIES & TV SERIES (NEVER MATCH VIDEO GAMES)
     for (var i = 0; i < IMDB_PRODUCTIONS.length; i++) {
         var prod = IMDB_PRODUCTIONS[i];
-        if (searchStr.indexOf(prod.title.toLowerCase()) !== -1) {
+        if (matchesKeyword(searchStr, prod.title)) {
             return prod;
         }
         for (var k = 0; k < prod.keywords.length; k++) {
-            var kw = prod.keywords[k];
-            if (searchStr.indexOf(kw) !== -1) {
+            if (matchesKeyword(searchStr, prod.keywords[k])) {
                 return prod;
             }
         }
     }
+
     return null;
 }
 
@@ -292,12 +403,21 @@ function getAllIMDbProductions() {
     return IMDB_PRODUCTIONS;
 }
 
+function getAllGameProductions() {
+    return GAME_PRODUCTIONS;
+}
+
+function getAllProductions() {
+    return IMDB_PRODUCTIONS.concat(GAME_PRODUCTIONS);
+}
+
 function getProductionById(id) {
     if (!id) return null;
     var target = String(id).toLowerCase().trim();
-    for (var i = 0; i < IMDB_PRODUCTIONS.length; i++) {
-        if (IMDB_PRODUCTIONS[i].id === target || IMDB_PRODUCTIONS[i].imdbId.toLowerCase() === target) {
-            return IMDB_PRODUCTIONS[i];
+    var all = IMDB_PRODUCTIONS.concat(GAME_PRODUCTIONS);
+    for (var i = 0; i < all.length; i++) {
+        if (all[i].id === target || (all[i].imdbId && all[i].imdbId.toLowerCase() === target)) {
+            return all[i];
         }
     }
     return null;
