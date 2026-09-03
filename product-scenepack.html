@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Zyrex Scenepack Vault - Raw Scene Footage and Video Clips">
+    <meta name="description" content="Zyrex Scenepacks - Raw scene footage, movie clips, and anime cuts for video editors.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://zyrexediting.xyz/product-scenepack">
-    <meta property="og:title" content="Zyrex | Scenepack Vault">
-    <meta property="og:description" content="Premium raw scene footage and 4K edit packs on Zyrex">
+    <meta property="og:title" content="Zyrex | Scenepacks &amp; Raw Clips">
+    <meta property="og:description" content="Raw scene footage and edit packs for video editors on Zyrex">
     <meta property="og:image" content="https://zyrexediting.xyz/assets/banner.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:image" content="https://zyrexediting.xyz/assets/banner.png">
     <meta name="author" content="Zyrex">
-    <title>Zyrex | Scenepack Vault</title>
+    <title>Zyrex | Scenepacks &amp; Raw Clips</title>
     <link rel="icon" type="image/png" href="/assets/content.png">
     <link rel="stylesheet" href="css/style.css?v=26">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
@@ -20,8 +20,8 @@
     <style>
         :root {
             --cherry-neon: #ff2b52;
-            --cinema-cyan: #06b6d4;
-            --card-glass: rgba(10, 12, 20, 0.88);
+            --scene-cyan: #06b6d4;
+            --card-glass: rgba(10, 12, 20, 0.86);
             --card-border: rgba(255, 255, 255, 0.10);
             --text-main: #f8f5f6;
             --text-sub: rgba(255, 255, 255, 0.65);
@@ -29,14 +29,16 @@
 
         body {
             background: #04040a;
-            background-image: radial-gradient(circle at 50% 0%, rgba(6, 182, 212, 0.12) 0%, transparent 60%), radial-gradient(circle at 80% 30%, rgba(255, 43, 82, 0.10) 0%, transparent 50%);
+            background-image:
+                radial-gradient(circle at 50% 0%, rgba(6, 182, 212, 0.12) 0%, transparent 60%),
+                radial-gradient(circle at 80% 30%, rgba(255, 43, 82, 0.10) 0%, transparent 50%);
             color: var(--text-main);
             font-family: 'Poppins', sans-serif;
             min-height: 100vh;
             overflow-x: hidden;
         }
 
-        .cinema-page-wrap {
+        .scenepack-page-wrap {
             padding: 130px 0 90px;
             max-width: 1120px;
             margin: 0 auto;
@@ -50,6 +52,7 @@
             gap: 10px;
             margin-bottom: 24px;
             font-size: 0.84rem;
+            flex-wrap: wrap;
         }
         .breadcrumb-bar a {
             display: inline-flex;
@@ -58,14 +61,14 @@
             color: var(--text-sub);
             text-decoration: none;
             font-weight: 500;
-            transition: all 0.2s ease;
+            transition: color 0.2s ease;
         }
-        .breadcrumb-bar a:hover { color: var(--cinema-cyan); }
+        .breadcrumb-bar a:hover { color: var(--scene-cyan); }
         .breadcrumb-bar span.sep { color: rgba(255,255,255,0.25); }
         .breadcrumb-bar span.current { color: #fff; font-weight: 600; }
 
-        /* WIDESCREEN CINEMA THEATER CARD */
-        .cinema-stage-card {
+        /* WIDESCREEN FOOTAGE SHOWCASE */
+        .scenepack-stage-card {
             position: relative;
             width: 100%;
             aspect-ratio: 21/9;
@@ -73,7 +76,7 @@
             max-height: 440px;
             border-radius: 28px;
             overflow: hidden;
-            background: #000;
+            background: #08080f;
             border: 1px solid rgba(255, 255, 255, 0.12);
             box-shadow: 0 30px 80px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.18);
             margin-bottom: 28px;
@@ -81,7 +84,7 @@
             align-items: center;
             justify-content: center;
         }
-        .cinema-stage-card img.bg-ambient {
+        .scenepack-stage-card img.bg-ambient {
             position: absolute;
             inset: -20px;
             width: calc(100% + 40px);
@@ -90,21 +93,21 @@
             filter: blur(40px) brightness(0.4);
             opacity: 0.75;
         }
-        .cinema-stage-card img.main-film-img {
+        .scenepack-stage-card img.main-film-img {
             position: relative;
             z-index: 2;
-            max-width: 92%;
-            max-height: 92%;
+            max-width: 94%;
+            max-height: 94%;
             object-fit: contain;
-            border-radius: 16px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+            border-radius: 18px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85);
             transition: transform 0.4s ease;
         }
-        .cinema-stage-card:hover img.main-film-img {
-            transform: scale(1.02);
+        .scenepack-stage-card:hover img.main-film-img {
+            transform: scale(1.015);
         }
 
-        .cinema-floating-badges {
+        .scenepack-floating-badges {
             position: absolute;
             top: 20px;
             left: 20px;
@@ -113,11 +116,12 @@
             gap: 8px;
             flex-wrap: wrap;
         }
-        .cinema-pill {
+        .scene-pill {
             padding: 6px 16px;
             border-radius: 999px;
             background: rgba(0, 0, 0, 0.75);
             backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid rgba(255, 255, 255, 0.15);
             font-size: 0.72rem;
             font-weight: 800;
@@ -128,14 +132,14 @@
             text-transform: uppercase;
             letter-spacing: 0.8px;
         }
-        .cinema-pill-4k {
+        .scene-pill-cyan {
             background: rgba(6, 182, 212, 0.2);
             border-color: rgba(6, 182, 212, 0.4);
             color: #67e8f9;
         }
 
         /* 2-COLUMN GRID */
-        .cinema-grid {
+        .scenepack-grid {
             display: grid;
             grid-template-columns: 1fr 340px;
             gap: 28px;
@@ -154,25 +158,64 @@
         }
 
         .scene-title {
-            font-size: 2.2rem;
+            font-size: 2.15rem;
             font-weight: 900;
             color: #fff;
             letter-spacing: -0.5px;
             font-family: 'Outfit', sans-serif;
             margin-bottom: 12px;
-            line-height: 1.2;
+            line-height: 1.25;
         }
         .scene-desc {
             color: var(--text-sub);
             font-size: 0.92rem;
             line-height: 1.8;
+            margin-bottom: 20px;
+        }
+
+        /* ACTIONS ROW */
+        .scene-actions-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
             margin-bottom: 24px;
+        }
+        .action-pill-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: rgba(255, 255, 255, 0.8);
+            border-radius: 999px;
+            padding: 7px 16px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            transition: all 0.2s ease;
+        }
+        .action-pill-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+        .action-pill-btn.liked {
+            color: #ff2b52;
+            border-color: rgba(255, 43, 82, 0.4);
+            background: rgba(255, 43, 82, 0.12);
+        }
+        .action-pill-btn.bookmarked {
+            color: #ffc107;
+            border-color: rgba(255, 193, 7, 0.4);
+            background: rgba(255, 193, 7, 0.12);
         }
 
         /* FOOTAGE SPECS GRID */
         .footage-specs-row {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 12px;
             padding-top: 20px;
             border-top: 1px solid rgba(255, 255, 255, 0.08);
@@ -182,6 +225,7 @@
             border: 1px solid rgba(255, 255, 255, 0.06);
             border-radius: 16px;
             padding: 14px 16px;
+            text-align: center;
         }
         .spec-cell .lbl {
             font-size: 0.68rem;
@@ -195,21 +239,70 @@
             font-size: 0.92rem;
             font-weight: 700;
             color: #fff;
+        }
+
+        .card-header-title {
+            font-size: 0.78rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: rgba(255, 255, 255, 0.55);
+            margin-bottom: 18px;
             display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .card-header-title i { color: var(--scene-cyan); }
+
+        /* PASSWORD BOX */
+        .pw-box {
+            background: rgba(6, 182, 212, 0.08);
+            border: 1px solid rgba(6, 182, 212, 0.25);
+            border-radius: 16px;
+            padding: 14px 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+        .pw-text {
+            font-family: monospace;
+            font-size: 1.05rem;
+            font-weight: 800;
+            color: #67e8f9;
+            letter-spacing: 1px;
+        }
+        .pw-copy-btn {
+            background: rgba(6, 182, 212, 0.2);
+            border: 1px solid rgba(6, 182, 212, 0.4);
+            color: #fff;
+            padding: 7px 14px;
+            border-radius: 10px;
+            font-size: 0.76rem;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
             align-items: center;
             gap: 6px;
         }
+        .pw-copy-btn:hover {
+            background: rgba(6, 182, 212, 0.35);
+            transform: scale(1.02);
+        }
 
         /* DOWNLOAD BUTTON */
-        .dl-cinema-btn {
+        .dl-scene-btn {
             display: flex;
             align-items: center;
             justify-content: center;
             gap: 12px;
             width: 100%;
-            padding: 16px 24px;
+            padding: 16px 22px;
             border-radius: 18px;
-            background: linear-gradient(135deg, var(--cinema-cyan), #0369a1);
+            background: linear-gradient(135deg, var(--scene-cyan), #0369a1);
             border: 1px solid rgba(255, 255, 255, 0.25);
             color: #fff;
             font-size: 0.96rem;
@@ -218,19 +311,145 @@
             text-decoration: none;
             cursor: pointer;
             box-shadow: 0 12px 30px rgba(6, 182, 212, 0.35);
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
             margin-bottom: 12px;
+            text-align: center;
         }
-        .dl-cinema-btn:hover {
+        .dl-scene-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 16px 40px rgba(6, 182, 212, 0.55);
             filter: brightness(1.1);
+            color: #fff;
+        }
+
+        .mirrors-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-top: 14px;
+            margin-bottom: 16px;
+        }
+        .mirror-pill {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 0.84rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        .mirror-pill:hover {
+            background: rgba(6, 182, 212, 0.12);
+            border-color: rgba(6, 182, 212, 0.35);
+            transform: translateX(3px);
+            color: #fff;
+        }
+
+        /* UPLOADER PROFILE ROW */
+        .creator-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+        .creator-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1.5px solid rgba(255, 255, 255, 0.15);
+        }
+        .creator-info h5 {
+            margin: 0;
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: #fff;
+        }
+        .creator-info span {
+            font-size: 0.72rem;
+            color: var(--text-sub);
+        }
+
+        /* RELATED SCENEPACKS GRID */
+        .related-section {
+            margin-top: 40px;
+        }
+        .related-title {
+            font-size: 1.2rem;
+            font-weight: 800;
+            font-family: 'Outfit', sans-serif;
+            color: #fff;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .related-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 16px;
+        }
+        .related-card {
+            background: var(--card-glass);
+            border: 1px solid var(--card-border);
+            border-radius: 18px;
+            padding: 14px 16px;
+            text-decoration: none;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: all 0.25s ease;
+        }
+        .related-card:hover {
+            border-color: rgba(6, 182, 212, 0.4);
+            background: rgba(6, 182, 212, 0.08);
+            transform: translateY(-2px);
+        }
+        .related-card-thumb {
+            width: 60px;
+            height: 40px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        .related-card-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .related-card-info {
+            min-width: 0;
+            flex: 1;
+        }
+        .related-card-info h4 {
+            font-size: 0.86rem;
+            font-weight: 700;
+            margin: 0 0 4px 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .related-card-info span {
+            font-size: 0.72rem;
+            color: rgba(255, 255, 255, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         @media (max-width: 900px) {
-            .cinema-grid { grid-template-columns: 1fr; }
-            .footage-specs-row { grid-template-columns: 1fr; }
-            .cinema-page-wrap { padding-top: 100px; }
+            .scenepack-grid { grid-template-columns: 1fr; }
+            .footage-specs-row { grid-template-columns: 1fr 1fr; }
+            .scenepack-page-wrap { padding-top: 100px; }
+            .scenepack-stage-card { aspect-ratio: 16/9; min-height: 220px; }
         }
     </style>
 </head>
@@ -241,13 +460,14 @@
     <nav class="navbar">
         <div class="container">
             <a href="/" class="logo">
-                <img src="assets/content.png" alt="ZYREX" class="logo-img">
+                <img src="/assets/content.png" alt="ZYREX" class="logo-img">
                 <span class="logo-text">yrex</span>
             </a>
             <ul class="nav-links" id="navLinks">
                 <li><a href="/">Home</a></li>
                 <li><a href="/presets">Presets</a></li>
                 <li><a href="/scenepack.html" class="active">Scenepacks</a></li>
+                <li><a href="/audio.html">Audio</a></li>
                 <li><a href="/plugins">Plugins</a></li>
                 <li><a href="/more">More</a></li>
                 <li><a href="/#contact">Contact</a></li>
@@ -264,7 +484,7 @@
     </nav>
 
     <!-- MAIN PAGE CONTAINER -->
-    <section class="cinema-page-wrap">
+    <section class="scenepack-page-wrap">
         <div class="breadcrumb-bar">
             <a href="/"><i class="fas fa-house"></i> Home</a>
             <span class="sep">/</span>
@@ -290,7 +510,7 @@
                 <div class="footer-brand">
                     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
                         <a href="/" class="logo">
-                            <img src="assets/content.png" alt="ZYREX" class="logo-img">
+                            <img src="/assets/content.png" alt="ZYREX" class="logo-img">
                             <span class="logo-text">yrex</span>
                         </a>
                         <h3 style="font-size:1.8rem;font-weight:900;margin:0;letter-spacing:2px;background:linear-gradient(135deg,#ffffff,#9090a0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Editing</h3>
@@ -302,6 +522,8 @@
                     <ul>
                         <li><a href="/">Home</a></li>
                         <li><a href="/presets">Presets</a></li>
+                        <li><a href="/scenepack.html">Scenepacks</a></li>
+                        <li><a href="/audio.html">Audio</a></li>
                         <li><a href="/plugins">Plugins</a></li>
                         <li><a href="/more">More</a></li>
                     </ul>
@@ -371,51 +593,335 @@
     }
 
     function renderSceneDetail(p) {
-        document.title = (p.name || "Scenepack") + " - Zyrex Cinema Vault";
+        document.title = (p.name || "Scenepack") + " - Zyrex";
         document.getElementById('breadSceneName').textContent = p.name || "Scenepack";
 
-        const desc = p.description || p.desc || "Ultra high quality raw scene footage and cinema cuts for video editors.";
+        const desc = p.description || p.desc || "Raw scene footage and editing clips curated for video editors.";
         const thumb = p.thumbnail || '/assets/content.png';
-        const dlUrl = p.source_url || p.file_url || p.url || '';
+
+        // Likes & Bookmarks
+        var likeKey = 'zyrex_like_' + p.id;
+        var bookKey = 'zyrex_bookmark_' + p.id;
+        var isLiked = localStorage.getItem(likeKey) === '1';
+        var isBookmarked = localStorage.getItem(bookKey) === '1';
+
+        // Creator details
+        var uploaderName = p.creator_nickname || p.author_name || p.uploader_name || 'Community Creator';
+        var uploaderAv = p.uploader_avatar || p.creator_avatar || 'https://cdn.discordapp.com/embed/avatars/0.png';
+
+        // Category determination
+        var catMap = {
+            anime: 'Anime Scenepack',
+            movie: 'Movie & Film Clips',
+            series: 'TV Series Footage',
+            games: 'Gaming Clips',
+            character: 'Character Scenepack',
+            others: 'Raw Scenepack'
+        };
+        var rawCat = (p.category || 'scenepack').toLowerCase();
+        var catLabel = catMap[rawCat] || 'Raw Scenepack';
+
+        // Resolution detection from title/notes
+        var nameLower = (p.name || '').toLowerCase();
+        var qualityText = '1080p Full HD';
+        if (nameLower.includes('4k') || nameLower.includes('2160p')) qualityText = '4K Ultra HD';
+        else if (nameLower.includes('720p')) qualityText = '720p HD';
+
+        // Normalize links
+        var links = [];
+        if (Array.isArray(p.links) && p.links.length > 0) {
+            links = p.links;
+        } else {
+            if (p.source_url) links.push({ url: p.source_url, label: "Cloud Drive" });
+            if (p.file_url) links.push({ url: p.file_url, label: "Direct Video Link" });
+            if (p.link) links.push({ url: p.link, label: "Mirror 1" });
+            if (p.link_2) links.push({ url: p.link_2, label: "Mirror 2" });
+            if (p.url) links.push({ url: p.url, label: "Cloud Source" });
+        }
+
+        // Primary download button
+        var dlBtnHtml = '';
+        var mirrorsHtml = '';
+
+        if (p.file_path && p.file_path.length > 0) {
+            dlBtnHtml = `
+                <a href="#" id="dlSceneBtn" class="dl-scene-btn" onclick="genSceneToken(event, '${p.id}', '${p.file_path}')">
+                    <i class="fas fa-cloud-arrow-down"></i>
+                    <span>Generate Secure Download</span>
+                </a>
+            `;
+        } else if (links.length > 0) {
+            var prim = links[0];
+            var pUrl = prim.url || prim;
+            var pLabel = prim.label || "Download Scenepack";
+            dlBtnHtml = `
+                <a href="${pUrl}" target="_blank" rel="noopener" class="dl-scene-btn">
+                    <i class="fas fa-arrow-up-right-from-square"></i>
+                    <span>${pLabel}</span>
+                </a>
+            `;
+        } else {
+            dlBtnHtml = `
+                <button class="dl-scene-btn" disabled style="opacity:0.5;cursor:not-allowed">
+                    <i class="fas fa-link-slash"></i>
+                    <span>Download Link Unavailable</span>
+                </button>
+            `;
+        }
+
+        if (links.length > 1) {
+            mirrorsHtml = `
+                <div class="card-header-title" style="margin-top:20px;margin-bottom:10px">
+                    <i class="fas fa-hard-drive"></i> Additional Mirrors (${links.length})
+                </div>
+                <div class="mirrors-list">
+                    ${links.slice(1).map(function(l) {
+                        var u = l.url || l;
+                        var lab = l.label || "Alternative Mirror";
+                        var hostname = 'Mirror Source';
+                        try { hostname = new URL(u).hostname; } catch(e) {}
+                        return `
+                            <a href="${u}" target="_blank" rel="noopener" class="mirror-pill">
+                                <span style="display:flex;align-items:center;gap:8px">
+                                    <i class="fas fa-arrow-up-right-from-square" style="color:var(--scene-cyan)"></i>
+                                    <span>${lab}</span>
+                                </span>
+                                <span style="font-size:0.72rem;opacity:0.6">${hostname}</span>
+                            </a>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+        }
+
+        // Archive Password
+        var passwordHtml = '';
+        if (p.password && String(p.password).trim().length > 0) {
+            passwordHtml = `
+                <div class="pw-box">
+                    <div>
+                        <div style="font-size:0.68rem;font-weight:800;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:2px">
+                            <i class="fas fa-key"></i> Archive Password
+                        </div>
+                        <div class="pw-text" id="pwValue">${p.password}</div>
+                    </div>
+                    <button type="button" class="pw-copy-btn" onclick="copyPassword('${p.password}', this)">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                </div>
+            `;
+        }
 
         const root = document.getElementById('sceneRoot');
         root.style.display = 'block';
 
         root.innerHTML = `
-            <!-- CINEMA THEATER SHOWCASE -->
-            <div class="cinema-stage-card">
+            <!-- WIDESCREEN FOOTAGE SHOWCASE -->
+            <div class="scenepack-stage-card">
                 <img src="${thumb}" alt="" class="bg-ambient">
                 <img src="${thumb}" alt="${p.name}" class="main-film-img" onerror="this.src='/assets/content.png'">
-                <div class="cinema-floating-badges">
-                    <span class="cinema-pill"><i class="fas fa-clapperboard"></i> Cinema Scenepack</span>
+                <div class="scenepack-floating-badges">
+                    <span class="scene-pill"><i class="fas fa-film"></i> ${catLabel}</span>
+                    <span class="scene-pill scene-pill-cyan"><i class="fas fa-tv"></i> ${qualityText}</span>
                 </div>
             </div>
 
-            <div class="cinema-grid">
-                <div class="glass-card">
-                    <h1 class="scene-title">${p.name}</h1>
-                    <p class="scene-desc">${desc.replace(/\n/g, '<br>')}</p>
+            <div class="scenepack-grid">
+                <!-- LEFT COLUMN -->
+                <div class="scenepack-main-col">
+                    <div class="glass-card">
+                        <h1 class="scene-title">${p.name}</h1>
+                        <p class="scene-desc">${desc.replace(/\n/g, '<br>')}</p>
+
+                        <!-- ACTIONS ROW -->
+                        <div class="scene-actions-row">
+                            <button class="action-pill-btn ${isLiked ? 'liked' : ''}" id="likeBtn" onclick="toggleSceneLike('${p.id}')">
+                                <i class="${isLiked ? 'fas' : 'far'} fa-heart"></i>
+                                <span>${isLiked ? 'Favorited' : 'Favorite'}</span>
+                            </button>
+                            <button class="action-pill-btn ${isBookmarked ? 'bookmarked' : ''}" id="bookBtn" onclick="toggleSceneBookmark('${p.id}', '${escapeHtml(p.name || '')}', '${rawCat}')">
+                                <i class="${isBookmarked ? 'fas' : 'far'} fa-bookmark"></i>
+                                <span>${isBookmarked ? 'Bookmarked' : 'Bookmark'}</span>
+                            </button>
+                            <button class="action-pill-btn" onclick="shareScenepack()">
+                                <i class="fas fa-share-nodes"></i>
+                                <span id="shareBtnText">Share</span>
+                            </button>
+                        </div>
+
+                        <!-- FOOTAGE SPECS -->
+                        <div class="footage-specs-row">
+                            <div class="spec-cell">
+                                <div class="lbl">Category</div>
+                                <div class="val">${catLabel}</div>
+                            </div>
+                            <div class="spec-cell">
+                                <div class="lbl">Resolution</div>
+                                <div class="val">${qualityText}</div>
+                            </div>
+                            <div class="spec-cell">
+                                <div class="lbl">Downloads</div>
+                                <div class="val">${p.downloads || 0}</div>
+                            </div>
+                            <div class="spec-cell">
+                                <div class="lbl">Added</div>
+                                <div class="val">${p.created_at ? new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'Verified'}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ABOUT & COMPATIBILITY -->
+                    <div class="glass-card">
+                        <div class="card-header-title">
+                            <i class="fas fa-circle-info"></i> About this Scenepack
+                        </div>
+                        <p style="color:rgba(255,255,255,0.75);font-size:0.92rem;line-height:1.8">
+                            Raw footage cuts for video editors. Log / standard color profile ready for coloring, masking, twixtor, velocity editing, and motion graphics in After Effects, Premiere Pro, DaVinci Resolve, Sony Vegas, and mobile apps.
+                        </p>
+                        ${p.notes ? `
+                            <div style="margin-top:16px;padding:12px 16px;background:rgba(6,182,212,0.06);border-left:3px solid var(--scene-cyan);border-radius:0 10px 10px 0;font-size:0.86rem;color:rgba(255,255,255,0.85)">
+                                <strong>Release Note:</strong> ${p.notes}
+                            </div>
+                        ` : ''}
+                    </div>
                 </div>
 
-                <div class="glass-card">
-                    <h3 style="font-size:1.1rem;color:#fff;margin-bottom:16px"><i class="fas fa-cloud-arrow-down" style="color:var(--cinema-cyan);margin-right:8px"></i> Download Footage</h3>
-                    
-                    ${p.id ? `
-                        <a href="#" id="dlSceneBtn" class="dl-cinema-btn" onclick="genSceneToken(event, '${p.id}', '${p.file_path || ''}')">
-                            <i class="fas fa-bolt"></i> Generate Download
-                        </a>
-                    ` : (dlUrl ? `
-                        <a href="${dlUrl}" target="_blank" rel="noopener" class="dl-cinema-btn">
-                            <i class="fas fa-download"></i> Download Scenepack
-                        </a>
-                    ` : '<div style="color:var(--text-sub);font-size:0.85rem">No link available</div>')}
+                <!-- RIGHT COLUMN (SIDEBAR) -->
+                <div class="scenepack-side-col">
+                    <div class="glass-card">
+                        <div class="card-header-title">
+                            <i class="fas fa-download"></i> Download Footage
+                        </div>
 
-                    <div style="text-align:center;font-size:0.72rem;color:rgba(255,255,255,0.45);margin-top:12px">
-                        <i class="fas fa-shield-halved"></i> Fast direct cloud link &middot; 100% Free
+                        <!-- Uploader profile -->
+                        <div class="creator-row">
+                            <img src="${uploaderAv}" alt="" class="creator-avatar" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+                            <div class="creator-info">
+                                <h5>${uploaderName}</h5>
+                                <span>Footage Uploader</span>
+                            </div>
+                        </div>
+
+                        ${passwordHtml}
+                        ${dlBtnHtml}
+                        ${mirrorsHtml}
+
+                        <div style="text-align:center;font-size:0.72rem;color:rgba(255,255,255,0.45);margin-top:16px">
+                            <i class="fas fa-shield-halved" style="color:var(--scene-cyan);margin-right:4px"></i> Always scan downloaded files with your local antivirus software.
+                        </div>
                     </div>
                 </div>
             </div>
+
+            <div id="relatedSceneContainer"></div>
         `;
+
+        loadRelatedScenepacks(p.id);
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    }
+
+    window.copyPassword = function(pw, btn) {
+        navigator.clipboard.writeText(pw).then(() => {
+            var orig = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            setTimeout(() => { btn.innerHTML = orig; }, 2000);
+        });
+    };
+
+    window.toggleSceneLike = function(pid) {
+        var key = 'zyrex_like_' + pid;
+        var liked = localStorage.getItem(key) === '1';
+        var btn = document.getElementById('likeBtn');
+        if (!btn) return;
+        if (liked) {
+            localStorage.removeItem(key);
+            btn.classList.remove('liked');
+            btn.innerHTML = '<i class="far fa-heart"></i> <span>Favorite</span>';
+        } else {
+            localStorage.setItem(key, '1');
+            btn.classList.add('liked');
+            btn.innerHTML = '<i class="fas fa-heart"></i> <span>Favorited</span>';
+        }
+    };
+
+    window.toggleSceneBookmark = function(pid, name, category) {
+        var key = 'zyrex_bookmark_' + pid;
+        var bookmarked = localStorage.getItem(key) === '1';
+        var btn = document.getElementById('bookBtn');
+        if (!btn) return;
+
+        var bookmarksList = [];
+        try {
+            bookmarksList = JSON.parse(localStorage.getItem('zyrex_bookmarks') || '[]');
+        } catch(e) {}
+
+        if (bookmarked) {
+            localStorage.removeItem(key);
+            btn.classList.remove('bookmarked');
+            btn.innerHTML = '<i class="far fa-bookmark"></i> <span>Bookmark</span>';
+            bookmarksList = bookmarksList.filter(b => b.id !== pid);
+        } else {
+            localStorage.setItem(key, '1');
+            btn.classList.add('bookmarked');
+            btn.innerHTML = '<i class="fas fa-bookmark"></i> <span>Bookmarked</span>';
+            if (!bookmarksList.some(b => b.id === pid)) {
+                bookmarksList.push({ id: pid, name: name, category: category, type: 'scenepack', saved_at: new Date().toISOString() });
+            }
+        }
+        try {
+            localStorage.setItem('zyrex_bookmarks', JSON.stringify(bookmarksList));
+        } catch(e) {}
+    };
+
+    window.shareScenepack = function() {
+        var url = window.location.href;
+        navigator.clipboard.writeText(url).then(() => {
+            var span = document.getElementById('shareBtnText');
+            if (span) {
+                var orig = span.textContent;
+                span.textContent = 'Copied Link!';
+                setTimeout(() => { span.textContent = orig; }, 2000);
+            }
+        });
+    };
+
+    async function loadRelatedScenepacks(currentId) {
+        try {
+            const resp = await fetch('/api/products?type=scenepack');
+            if (!resp.ok) return;
+            const items = await resp.json();
+            if (!Array.isArray(items)) return;
+            const related = items.filter(x => x.id !== currentId).slice(0, 3);
+            if (related.length === 0) return;
+
+            const container = document.getElementById('relatedSceneContainer');
+            if (!container) return;
+
+            container.innerHTML = `
+                <div class="related-section">
+                    <div class="related-title">
+                        <i class="fas fa-film" style="color:var(--scene-cyan)"></i> More Scenepacks &amp; Clips
+                    </div>
+                    <div class="related-grid">
+                        ${related.map(item => `
+                            <a href="/product-scenepack?id=${item.id}" class="related-card">
+                                <div class="related-card-thumb">
+                                    <img src="${item.thumbnail || '/assets/content.png'}" alt="" onerror="this.src='/assets/content.png'">
+                                </div>
+                                <div class="related-card-info">
+                                    <h4>${item.name}</h4>
+                                    <span><i class="fas fa-download"></i> ${item.downloads || 0} downloads</span>
+                                </div>
+                            </a>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        } catch(e) {}
     }
 
     window.genSceneToken = function(e, pid, fp) {
@@ -424,7 +930,7 @@
         if (!b) return;
         b.style.pointerEvents = "none";
         b.style.opacity = "0.65";
-        b.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating Download...';
+        b.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Requesting Download Link...</span>';
 
         var targetTab = window.open('about:blank', '_blank');
         var q = new URLSearchParams();
@@ -435,7 +941,7 @@
             .then(res => res.json().then(data => {
                 b.style.pointerEvents = "";
                 b.style.opacity = "";
-                b.innerHTML = '<i class="fas fa-bolt"></i> Generate Download';
+                b.innerHTML = '<i class="fas fa-cloud-arrow-down"></i> <span>Generate Secure Download</span>';
                 if (!res.ok || !data.success) {
                     if (targetTab) targetTab.close();
                     if (res.status === 401) {
@@ -453,8 +959,8 @@
                 if (targetTab) targetTab.close();
                 b.style.pointerEvents = "";
                 b.style.opacity = "";
-                b.innerHTML = '<i class="fas fa-bolt"></i> Generate Download';
-                alert("Network error.");
+                b.innerHTML = '<i class="fas fa-cloud-arrow-down"></i> <span>Generate Secure Download</span>';
+                alert("Network error. Please try again.");
             });
     };
     </script>

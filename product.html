@@ -43,7 +43,8 @@
 
         :root {
             --neon-cherry: #ff2b52;
-            --card-glass: rgba(14, 10, 20, 0.86);
+            --neon-cherry-glow: rgba(255, 43, 82, 0.4);
+            --card-glass: rgba(14, 10, 20, 0.82);
             --card-border: rgba(255, 255, 255, 0.10);
             --text-main: #f8f5f6;
             --text-sub: rgba(255, 255, 255, 0.65);
@@ -51,11 +52,31 @@
 
         body {
             background: #050207;
-            background-image: radial-gradient(circle at 50% 0%, rgba(255, 43, 82, 0.12) 0%, transparent 60%);
+            background-image:
+                radial-gradient(circle at 50% 0%, rgba(255, 43, 82, 0.14) 0%, transparent 60%),
+                radial-gradient(circle at 85% 30%, rgba(168, 85, 247, 0.08) 0%, transparent 50%);
             color: var(--text-main);
             font-family: 'Poppins', sans-serif;
             min-height: 100vh;
             overflow-x: hidden;
+        }
+
+        /* SVG WINDOWS 11 LOGO */
+        .win11-logo {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            background-color: currentColor;
+            -webkit-mask: url('/assets/windows11.svg') no-repeat center / contain;
+            mask: url('/assets/windows11.svg') no-repeat center / contain;
+            vertical-align: -2px;
+            flex-shrink: 0;
+        }
+
+        .win11-logo-lg {
+            width: 18px;
+            height: 18px;
+            vertical-align: -3px;
         }
 
         .product-page-wrap {
@@ -66,12 +87,14 @@
             padding-right: 20px;
         }
 
+        /* BREADCRUMB */
         .breadcrumb-bar {
             display: flex;
             align-items: center;
             gap: 10px;
             margin-bottom: 24px;
             font-size: 0.84rem;
+            flex-wrap: wrap;
         }
         .breadcrumb-bar a {
             display: inline-flex;
@@ -80,21 +103,21 @@
             color: var(--text-sub);
             text-decoration: none;
             font-weight: 500;
-            transition: all 0.2s ease;
+            transition: color 0.2s ease;
         }
         .breadcrumb-bar a:hover { color: var(--neon-cherry); }
         .breadcrumb-bar span.sep { color: rgba(255,255,255,0.25); }
         .breadcrumb-bar span.current { color: #fff; font-weight: 600; }
 
-        /* HERO SOFTWARE HEADER */
+        /* HERO SOFTWARE HEADER CARD */
         .software-header-card {
             background: var(--card-glass);
             border: 1px solid var(--card-border);
             border-radius: 28px;
             padding: 36px 40px;
-            backdrop-filter: blur(36px) saturate(210%);
-            -webkit-backdrop-filter: blur(36px) saturate(210%);
-            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+            backdrop-filter: blur(36px) saturate(200%);
+            -webkit-backdrop-filter: blur(36px) saturate(200%);
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.12);
             display: flex;
             align-items: center;
             gap: 32px;
@@ -105,18 +128,18 @@
         .software-header-card::before {
             content: '';
             position: absolute;
-            top: 0; left: 15%; right: 15%;
+            top: 0; left: 10%; right: 10%;
             height: 2px;
-            background: linear-gradient(90deg, transparent, rgba(255, 43, 82, 0.5), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255, 43, 82, 0.6), transparent);
         }
 
         .software-icon-box {
-            width: 110px;
-            height: 110px;
+            width: 105px;
+            height: 105px;
             border-radius: 24px;
-            background: rgba(8, 4, 12, 0.9);
-            border: 1.5px solid rgba(255, 255, 255, 0.15);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 25px rgba(255, 43, 82, 0.20);
+            background: rgba(10, 6, 16, 0.95);
+            border: 1.5px solid rgba(255, 255, 255, 0.14);
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 30px rgba(255, 43, 82, 0.18);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -125,9 +148,14 @@
             position: relative;
         }
         .software-icon-box img {
-            width: 72px;
-            height: 72px;
+            width: 68px;
+            height: 68px;
             object-fit: contain;
+            border-radius: 12px;
+        }
+        .software-icon-box i.fallback-icon {
+            font-size: 2.8rem;
+            color: var(--neon-cherry);
         }
 
         .software-header-content {
@@ -135,12 +163,12 @@
             min-width: 0;
         }
         .software-header-content h1 {
-            font-size: 2.2rem;
+            font-size: 2.15rem;
             font-weight: 900;
             letter-spacing: -0.5px;
             color: #fff;
             font-family: 'Outfit', sans-serif;
-            margin-bottom: 8px;
+            margin-bottom: 12px;
             line-height: 1.2;
         }
 
@@ -149,37 +177,87 @@
             align-items: center;
             gap: 10px;
             flex-wrap: wrap;
+            margin-bottom: 16px;
         }
         .plat-badge {
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            padding: 5px 14px;
+            gap: 7px;
+            padding: 6px 14px;
             border-radius: 999px;
-            font-size: 0.72rem;
+            font-size: 0.74rem;
             font-weight: 700;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.4px;
+            text-decoration: none;
+            transition: all 0.2s ease;
         }
         .plat-win {
-            background: rgba(0, 150, 255, 0.14);
-            border: 1px solid rgba(0, 150, 255, 0.35);
-            color: #4db5ff;
+            background: rgba(0, 162, 255, 0.12);
+            border: 1px solid rgba(0, 162, 255, 0.35);
+            color: #5ec2ff;
         }
         .plat-mac {
             background: rgba(255, 255, 255, 0.10);
-            border: 1px solid rgba(255, 255, 255, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.24);
             color: #ffffff;
         }
         .plat-cat {
             background: rgba(255, 43, 82, 0.12);
-            border: 1px solid rgba(255, 43, 82, 0.30);
+            border: 1px solid rgba(255, 43, 82, 0.32);
             color: #ff6b85;
+        }
+        .plat-vt {
+            background: rgba(0, 220, 120, 0.12);
+            border: 1px solid rgba(0, 220, 120, 0.35);
+            color: #00ff88;
+        }
+        .plat-vt:hover {
+            background: rgba(0, 220, 120, 0.22);
+            transform: translateY(-1px);
+        }
+
+        /* ACTIONS BAR (Like, Bookmark, Share) */
+        .software-actions-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .action-pill-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: rgba(255, 255, 255, 0.8);
+            border-radius: 999px;
+            padding: 7px 16px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            transition: all 0.2s ease;
+        }
+        .action-pill-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+        .action-pill-btn.liked {
+            color: #ff2b52;
+            border-color: rgba(255, 43, 82, 0.4);
+            background: rgba(255, 43, 82, 0.12);
+        }
+        .action-pill-btn.bookmarked {
+            color: #ffc107;
+            border-color: rgba(255, 193, 7, 0.4);
+            background: rgba(255, 193, 7, 0.12);
         }
 
         /* 2-COLUMN GRID */
         .software-grid {
             display: grid;
-            grid-template-columns: 1fr 340px;
+            grid-template-columns: 1fr 350px;
             gap: 28px;
             align-items: start;
         }
@@ -189,8 +267,8 @@
             border: 1px solid var(--card-border);
             border-radius: 24px;
             padding: 28px;
-            backdrop-filter: blur(32px) saturate(210%);
-            -webkit-backdrop-filter: blur(32px) saturate(210%);
+            backdrop-filter: blur(32px) saturate(200%);
+            -webkit-backdrop-filter: blur(32px) saturate(200%);
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.10);
             margin-bottom: 24px;
         }
@@ -200,7 +278,7 @@
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 1.5px;
-            color: rgba(255, 255, 255, 0.5);
+            color: rgba(255, 255, 255, 0.55);
             margin-bottom: 18px;
             display: flex;
             align-items: center;
@@ -212,7 +290,7 @@
         .tab-nav {
             display: flex;
             gap: 8px;
-            margin-bottom: 20px;
+            margin-bottom: 22px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.08);
             padding-bottom: 12px;
         }
@@ -231,7 +309,7 @@
             align-items: center;
             gap: 8px;
         }
-        .tab-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.05); }
+        .tab-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.06); }
         .tab-btn.active {
             color: #fff;
             background: rgba(255, 43, 82, 0.18);
@@ -243,18 +321,18 @@
         @keyframes tabFade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
         .software-desc {
-            color: rgba(255, 255, 255, 0.75);
+            color: rgba(255, 255, 255, 0.8);
             font-size: 0.92rem;
             line-height: 1.85;
         }
 
-        /* TECH MATRIX TABLE */
+        /* TECHNICAL SPEC MATRIX */
         .tech-matrix {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 12px;
-            margin-top: 20px;
-            padding-top: 20px;
+            margin-top: 24px;
+            padding-top: 22px;
             border-top: 1px solid rgba(255, 255, 255, 0.08);
         }
         .matrix-cell {
@@ -269,8 +347,12 @@
             text-transform: uppercase;
             letter-spacing: 1px;
             color: rgba(255, 255, 255, 0.45);
-            margin-bottom: 4px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
+        .matrix-cell .cell-title i { color: var(--neon-cherry); }
         .matrix-cell .cell-val {
             font-size: 0.88rem;
             font-weight: 700;
@@ -278,26 +360,46 @@
             display: flex;
             align-items: center;
             gap: 8px;
+            word-break: break-word;
         }
 
         /* PASSWORD CARD */
         .pw-box {
-            background: rgba(255, 43, 82, 0.06);
-            border: 1px solid rgba(255, 43, 82, 0.2);
+            background: rgba(255, 43, 82, 0.08);
+            border: 1px solid rgba(255, 43, 82, 0.25);
             border-radius: 16px;
             padding: 14px 18px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             gap: 12px;
-            margin-bottom: 20px;
+            margin-bottom: 18px;
         }
         .pw-text {
             font-family: monospace;
-            font-size: 1rem;
-            font-weight: 700;
+            font-size: 1.05rem;
+            font-weight: 800;
             color: #ff6b85;
             letter-spacing: 1px;
+        }
+        .pw-copy-btn {
+            background: rgba(255, 43, 82, 0.2);
+            border: 1px solid rgba(255, 43, 82, 0.4);
+            color: #fff;
+            padding: 7px 14px;
+            border-radius: 10px;
+            font-size: 0.76rem;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .pw-copy-btn:hover {
+            background: rgba(255, 43, 82, 0.35);
+            transform: scale(1.02);
         }
 
         /* DOWNLOAD BUTTONS */
@@ -307,7 +409,7 @@
             justify-content: center;
             gap: 12px;
             width: 100%;
-            padding: 16px 24px;
+            padding: 16px 22px;
             border-radius: 18px;
             background: linear-gradient(135deg, #ff2b52 0%, #b80d2d 100%);
             border: 1px solid rgba(255, 255, 255, 0.25);
@@ -318,22 +420,25 @@
             text-decoration: none;
             cursor: pointer;
             box-shadow: 0 12px 30px rgba(255, 43, 82, 0.35);
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
             position: relative;
             overflow: hidden;
             margin-bottom: 12px;
+            text-align: center;
         }
         .dl-main-btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 16px 40px rgba(255, 43, 82, 0.55);
-            filter: brightness(1.1);
+            filter: brightness(1.08);
+            color: #fff;
         }
 
         .mirrors-list {
             display: flex;
             flex-direction: column;
             gap: 8px;
-            margin-bottom: 20px;
+            margin-top: 14px;
+            margin-bottom: 16px;
         }
         .mirror-pill {
             display: flex;
@@ -345,31 +450,110 @@
             border-radius: 14px;
             color: #fff;
             text-decoration: none;
-            font-size: 0.82rem;
+            font-size: 0.84rem;
             font-weight: 600;
             transition: all 0.2s ease;
         }
         .mirror-pill:hover {
-            background: rgba(255, 43, 82, 0.10);
-            border-color: rgba(255, 43, 82, 0.30);
+            background: rgba(255, 43, 82, 0.12);
+            border-color: rgba(255, 43, 82, 0.35);
             transform: translateX(3px);
+            color: #fff;
         }
 
+        /* NOTES CALLOUT */
         .notes-callout {
             background: rgba(255, 170, 0, 0.08);
             border: 1px solid rgba(255, 170, 0, 0.25);
             border-radius: 14px;
-            padding: 12px 16px;
-            font-size: 0.82rem;
+            padding: 14px 18px;
+            font-size: 0.86rem;
             color: #ffd000;
             display: flex;
             align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 22px;
+            line-height: 1.6;
+        }
+        .notes-callout i { font-size: 1.1rem; margin-top: 2px; flex-shrink: 0; }
+
+        /* RELATED ITEMS */
+        .related-section {
+            margin-top: 40px;
+        }
+        .related-title {
+            font-size: 1.25rem;
+            font-weight: 800;
+            font-family: 'Outfit', sans-serif;
+            color: #fff;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
             gap: 10px;
-            margin-bottom: 20px;
+        }
+        .related-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 16px;
+        }
+        .related-card {
+            background: var(--card-glass);
+            border: 1px solid var(--card-border);
+            border-radius: 18px;
+            padding: 16px 18px;
+            text-decoration: none;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: all 0.25s ease;
+        }
+        .related-card:hover {
+            border-color: rgba(255, 43, 82, 0.4);
+            background: rgba(255, 43, 82, 0.08);
+            transform: translateY(-2px);
+        }
+        .related-card-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: rgba(10, 6, 16, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+        .related-card-icon img {
+            width: 28px;
+            height: 28px;
+            object-fit: contain;
+        }
+        .related-card-info {
+            min-width: 0;
+            flex: 1;
+        }
+        .related-card-info h4 {
+            font-size: 0.88rem;
+            font-weight: 700;
+            margin: 0 0 4px 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .related-card-info span {
+            font-size: 0.72rem;
+            color: rgba(255, 255, 255, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         @media (max-width: 900px) {
             .software-header-card { flex-direction: column; text-align: center; padding: 30px 20px; }
+            .software-badges-row { justify-content: center; }
+            .software-actions-row { justify-content: center; }
             .software-grid { grid-template-columns: 1fr; }
             .tech-matrix { grid-template-columns: 1fr; }
             .product-page-wrap { padding-top: 100px; }
@@ -391,7 +575,7 @@
     <nav class="navbar">
         <div class="container">
             <a href="/" class="logo">
-                <img src="assets/content.png" alt="ZYREX" class="logo-img">
+                <img src="/assets/content.png" alt="ZYREX" class="logo-img">
                 <span class="logo-text">yrex</span>
             </a>
             <ul class="nav-links" id="navLinks">
@@ -439,7 +623,7 @@
                 <div class="footer-brand">
                     <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
                         <a href="/" class="logo">
-                            <img src="assets/content.png" alt="ZYREX" class="logo-img">
+                            <img src="/assets/content.png" alt="ZYREX" class="logo-img">
                             <span class="logo-text">yrex</span>
                         </a>
                         <h3 style="font-size:1.8rem;font-weight:900;margin:0;letter-spacing:2px;background:linear-gradient(135deg,#ffffff,#9090a0);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">Editing</h3>
@@ -495,6 +679,37 @@
         if (loader) loader.classList.add('fade-out');
     }
 
+    function getProductIcon(p) {
+        if (p.thumbnail) return p.thumbnail;
+        if (p.icon) return p.icon;
+        var n = ((p.name || '') + ' ' + (p.id || '')).toLowerCase();
+        if (n.includes('after effect') || n.includes('after-effect') || n.includes('ae ')) return '/assets/brand-logos/after-effects.svg';
+        if (n.includes('premiere') || n.includes(' pr ')) return '/assets/brand-logos/premiere-pro.svg';
+        if (n.includes('photoshop') || n.includes(' ps ')) return '/assets/brand-logos/photoshop.svg';
+        if (n.includes('topaz')) return '/assets/brand-logos/topaz.svg';
+        if (n.includes('sapphire')) return '/assets/brand-logos/sapphire.svg';
+        if (n.includes('continuum') || n.includes('bcc')) return '/assets/brand-logos/continuum.svg';
+        if (n.includes('red giant') || n.includes('red-giant') || n.includes('trapcode') || n.includes('magic bullet') || n.includes('universe')) return '/assets/brand-logos/red-giant.svg';
+        if (n.includes('maxon') || n.includes('cinema 4d') || n.includes('c4d')) return '/assets/maxon.svg';
+        if (n.includes('capcut')) return '/assets/brand-logos/capcut.jpg';
+        if (n.includes('alight motion') || n.includes('alight-motion')) return '/assets/brand-logos/alight-motion.jpg';
+        if (n.includes('video star') || n.includes('video-star')) return '/assets/brand-logos/video-star.jpg';
+        return '/assets/content.png';
+    }
+
+    function getMirrorIcon(url, label) {
+        var u = (url || '').toLowerCase();
+        var l = (label || '').toLowerCase();
+        if (l.includes('torrent') || u.includes('torrent') || u.endsWith('.torrent') || u.includes('korsars') || u.includes('tapochek') || u.includes('uztracker') || u.includes('rutracker')) {
+            return 'fa-magnet';
+        }
+        if (u.includes('drive.google.com')) return 'fab fa-google-drive';
+        if (u.includes('mediafire.com')) return 'fa-fire';
+        if (u.includes('mega.nz')) return 'fa-cloud-arrow-down';
+        if (u.includes('arfiles.net') || u.includes('safefilehosting')) return 'fa-server';
+        return 'fa-arrow-up-right-from-square';
+    }
+
     document.addEventListener('DOMContentLoaded', async () => {
         const params = new URLSearchParams(window.location.search);
         const productId = params.get('id');
@@ -538,12 +753,17 @@
             return;
         }
 
+        // Automatic routing for scenepacks, audio, and presets
         if (product.type === 'scenepack') {
             window.location.href = '/product-scenepack?id=' + encodeURIComponent(productId);
             return;
         }
         if (product.type === 'audio') {
             window.location.href = '/product-audio?id=' + encodeURIComponent(productId);
+            return;
+        }
+        if (product.type === 'preset') {
+            window.location.href = '/preset?id=' + encodeURIComponent(productId);
             return;
         }
 
@@ -562,73 +782,204 @@
 
         const categoryLabels = {
             'software': 'Software / Standalone',
-            'adobe-plugin': 'Adobe After Effects & Premiere Plugin',
-            'ofx-plugin': 'OFX Video Suite',
+            'adobe-plugin': 'Adobe AE & Premiere Plugin',
+            'ofx-plugin': 'OFX Video Suite (DaVinci / VEGAS)',
             'avx': 'Avid AVX Plugin',
             'extensions-scripts': 'Extensions & Scripts',
             'others': 'Creative Tools'
         };
 
         const catText = categoryLabels[p.category] || 'Editing Suite';
-        const desc = p.description || p.desc || 'No description available for this package.';
+        const desc = p.description || p.desc || 'Verified creative tool release for video editors.';
         const platform = (p.platform || 'both').toLowerCase();
 
+        // Platform Badges with assets/windows11.svg
         let platBadges = [];
-        if (platform === 'win' || platform === 'both') platBadges.push('<span class="plat-badge plat-win"><i class="fab fa-windows"></i> Windows 10/11</span>');
-        if (platform === 'mac' || platform === 'both') platBadges.push('<span class="plat-badge plat-mac"><i class="fab fa-apple"></i> macOS (Apple Silicon / Intel)</span>');
+        if (platform === 'win' || platform === 'windows' || platform === 'both') {
+            platBadges.push('<span class="plat-badge plat-win"><span class="win11-logo"></span> Windows 10/11</span>');
+        }
+        if (platform === 'mac' || platform === 'macos' || platform === 'both') {
+            platBadges.push('<span class="plat-badge plat-mac"><i class="fab fa-apple"></i> macOS (Universal)</span>');
+        }
         platBadges.push(`<span class="plat-badge plat-cat"><i class="fas fa-box-open"></i> ${catText}</span>`);
 
-        const iconSrc = p.thumbnail || p.icon || '/assets/content.png';
+        // Genuine VirusTotal status badge (only if scan data exists)
+        if (p.vt_scan && p.vt_scan.id) {
+            var harmless = p.vt_scan.harmless || 0;
+            var malicious = p.vt_scan.malicious || 0;
+            var vtUrl = 'https://www.virustotal.com/gui/url/' + p.vt_scan.id;
+            var vtText = malicious === 0 ? (harmless + ' Vendors Clean') : (malicious + ' Flagged / ' + harmless + ' Clean');
+            platBadges.push(`<a href="${vtUrl}" target="_blank" rel="noopener" class="plat-badge plat-vt" title="View authentic VirusTotal analysis"><i class="fas fa-shield-check"></i> VirusTotal: ${vtText} <i class="fas fa-arrow-up-right-from-square" style="font-size:0.65rem"></i></a>`);
+        }
 
-        // Mirrors & Downloads
+        const iconSrc = getProductIcon(p);
+
+        // Normalize mirrors & links
         var links = [];
-        if (Array.isArray(p.links)) links = links.concat(p.links);
-        else {
+        if (Array.isArray(p.links) && p.links.length > 0) {
+            links = p.links;
+        } else {
             if (p.link) links.push({ url: p.link, label: "Mirror 1" });
             if (p.link_2) links.push({ url: p.link_2, label: "Mirror 2" });
+            if (p.link_3) links.push({ url: p.link_3, label: "Mirror 3" });
             if (p.downloadUrl) links.push({ url: p.downloadUrl, label: "Cloud Link" });
         }
 
-        var mirrorsHtml = links.length > 0 ? 
-            '<div class="mirrors-list">' + links.map(function(l) {
-                var hostname = '';
-                try { hostname = new URL(l.url || l).hostname; } catch(e) { hostname = 'Cloud Mirror'; }
-                return '<a href="' + (l.url || l) + '" target="_blank" class="mirror-pill"><span style="display:flex;align-items:center;gap:8px"><i class="fas fa-arrow-up-right-from-square" style="color:var(--neon-cherry)"></i> ' + (l.label || "Mirror") + '</span><span style="font-size:0.72rem;opacity:0.6">' + hostname + '</span></a>';
-            }).join("") + '</div>' : '';
-
+        // Primary Download Button & Mirrors
         var dlBtnHtml = '';
-        if (p.id) {
+        var mirrorsHtml = '';
+
+        if (p.file_path && p.file_path.length > 0) {
+            // DB uploaded file with real server file path
             dlBtnHtml = `
-                <a href="#" id="dlBtn" class="dl-main-btn" onclick="genSoftwareToken(event, '${p.id}', '${p.file_path || ''}')">
-                    <i class="fas fa-cloud-arrow-down"></i> Generate Secure Download
+                <a href="#" id="dlBtn" class="dl-main-btn" onclick="genSoftwareToken(event, '${p.id}', '${p.file_path}')">
+                    <i class="fas fa-cloud-arrow-down"></i>
+                    <span>Generate Secure Download</span>
                 </a>
             `;
         } else if (links.length > 0) {
+            // Authentic direct mirror download button
+            var primaryLink = links[0];
+            var pUrl = primaryLink.url || primaryLink;
+            var pLabel = primaryLink.label || "Download Package";
+            var pIcon = getMirrorIcon(pUrl, pLabel);
+
             dlBtnHtml = `
-                <a href="${links[0].url || links[0]}" target="_blank" class="dl-main-btn">
-                    <i class="fas fa-cloud-arrow-down"></i> Download Now
+                <a href="${pUrl}" target="_blank" rel="noopener" class="dl-main-btn">
+                    <i class="fas ${pIcon}"></i>
+                    <span>Download via ${pLabel}</span>
                 </a>
+            `;
+        } else {
+            dlBtnHtml = `
+                <button class="dl-main-btn" disabled style="opacity:0.5;cursor:not-allowed">
+                    <i class="fas fa-link-slash"></i>
+                    <span>Mirror Unavailable</span>
+                </button>
             `;
         }
 
-        var passwordHtml = p.password ? `
-            <div class="pw-box">
-                <div>
-                    <div style="font-size:0.68rem;font-weight:800;text-transform:uppercase;color:rgba(255,255,255,0.5)">Archive Password</div>
-                    <div class="pw-text" id="pwValue">${p.password}</div>
+        if (links.length > 0) {
+            mirrorsHtml = `
+                <div class="box-title" style="margin-top:20px;margin-bottom:10px">
+                    <i class="fas fa-hard-drive"></i> Available Download Mirrors (${links.length})
                 </div>
-                <button type="button" onclick="copyPassword('${p.password}', this)" style="background:rgba(255,43,82,0.15);border:1px solid rgba(255,43,82,0.3);color:#fff;padding:6px 12px;border-radius:10px;font-size:0.75rem;font-weight:700;cursor:pointer">
-                    <i class="fas fa-copy"></i> Copy
-                </button>
-            </div>
-        ` : '';
+                <div class="mirrors-list">
+                    ${links.map(function(l) {
+                        var url = l.url || l;
+                        var label = l.label || "Direct Mirror";
+                        var icon = getMirrorIcon(url, label);
+                        var hostname = 'Mirror Source';
+                        try { hostname = new URL(url).hostname; } catch(e) {}
+                        return `
+                            <a href="${url}" target="_blank" rel="noopener" class="mirror-pill">
+                                <span style="display:flex;align-items:center;gap:10px">
+                                    <i class="fas ${icon}" style="color:var(--neon-cherry)"></i>
+                                    <span>${label}</span>
+                                </span>
+                                <span style="font-size:0.74rem;opacity:0.65;display:flex;align-items:center;gap:4px">
+                                    ${hostname} <i class="fas fa-arrow-up-right-from-square" style="font-size:0.65rem"></i>
+                                </span>
+                            </a>
+                        `;
+                    }).join("")}
+                </div>
+            `;
+        }
 
-        var notesHtml = p.notes ? `
-            <div class="notes-callout">
-                <i class="fas fa-triangle-exclamation" style="font-size:1rem;margin-top:2px"></i>
-                <div><strong>Note:</strong> ${p.notes}</div>
-            </div>
-        ` : '';
+        // Archive Password Box (only if password exists and is non-empty)
+        var passwordHtml = '';
+        if (p.password && String(p.password).trim().length > 0) {
+            passwordHtml = `
+                <div class="pw-box">
+                    <div>
+                        <div style="font-size:0.68rem;font-weight:800;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:2px">
+                            <i class="fas fa-key"></i> Archive Password
+                        </div>
+                        <div class="pw-text" id="pwValue">${p.password}</div>
+                    </div>
+                    <button type="button" class="pw-copy-btn" onclick="copyPassword('${p.password}', this)">
+                        <i class="fas fa-copy"></i> Copy
+                    </button>
+                </div>
+            `;
+        }
+
+        // Real Notes Callout
+        var notesHtml = '';
+        if (p.notes && String(p.notes).trim().length > 0) {
+            notesHtml = `
+                <div class="notes-callout">
+                    <i class="fas fa-circle-info"></i>
+                    <div>
+                        <strong>Release Note:</strong> ${p.notes}
+                    </div>
+                </div>
+            `;
+        }
+
+        // Technical Spec Values (Genuine & accurate)
+        var osSpecHtml = '';
+        var archSpecHtml = '';
+        if (platform === 'win' || platform === 'windows') {
+            osSpecHtml = '<span class="win11-logo"></span> Windows 10 / 11 (64-bit)';
+            archSpecHtml = 'x86_64 (64-bit)';
+        } else if (platform === 'mac' || platform === 'macos') {
+            osSpecHtml = '<i class="fab fa-apple"></i> macOS (Sonoma / Ventura / Monterey)';
+            archSpecHtml = 'Apple Silicon (M1/M2/M3) & Intel x64';
+        } else {
+            osSpecHtml = '<span class="win11-logo"></span> Windows &amp; <i class="fab fa-apple"></i> macOS';
+            archSpecHtml = 'Universal (x64 / ARM64)';
+        }
+
+        var securitySpecHtml = '';
+        if (p.vt_scan && p.vt_scan.id) {
+            var h = p.vt_scan.harmless || 0;
+            var m = p.vt_scan.malicious || 0;
+            var totalVendors = h + m;
+            var cleanText = m === 0 ? `VirusTotal Verified: ${h}/${totalVendors} Clean` : `VirusTotal: ${m} flags / ${h} clean`;
+            securitySpecHtml = `<a href="https://www.virustotal.com/gui/url/${p.vt_scan.id}" target="_blank" rel="noopener" style="color:#00ff88;text-decoration:none;display:flex;align-items:center;gap:6px"><i class="fas fa-circle-check"></i> ${cleanText} <i class="fas fa-arrow-up-right-from-square" style="font-size:0.7rem"></i></a>`;
+        } else {
+            securitySpecHtml = '<span style="color:rgba(255,255,255,0.75)"><i class="fas fa-shield-halved" style="color:var(--neon-cherry)"></i> Community Verified Link</span>';
+        }
+
+        // Like and Bookmark states
+        var likeKey = 'zyrex_like_' + p.id;
+        var bookKey = 'zyrex_bookmark_' + p.id;
+        var isLiked = localStorage.getItem(likeKey) === '1';
+        var isBookmarked = localStorage.getItem(bookKey) === '1';
+
+        // Related tools from pluginsData
+        var relatedHtml = '';
+        if (window.pluginsData && Array.isArray(window.pluginsData)) {
+            var relatedList = window.pluginsData
+                .filter(item => item.id !== p.id && (item.category === p.category || item.platform === p.platform))
+                .slice(0, 3);
+            if (relatedList.length > 0) {
+                relatedHtml = `
+                    <div class="related-section">
+                        <div class="related-title">
+                            <i class="fas fa-layer-group" style="color:var(--neon-cherry)"></i> More Software &amp; Plugins
+                        </div>
+                        <div class="related-grid">
+                            ${relatedList.map(item => `
+                                <a href="/product?id=${item.id}" class="related-card">
+                                    <div class="related-card-icon">
+                                        <img src="${getProductIcon(item)}" alt="${item.name}" onerror="this.src='/assets/content.png'">
+                                    </div>
+                                    <div class="related-card-info">
+                                        <h4>${item.name}</h4>
+                                        <span>
+                                            ${(item.platform === 'win' || item.platform === 'windows') ? '<span class="win11-logo"></span> Windows' : (item.platform === 'mac' ? '<i class="fab fa-apple"></i> macOS' : 'Multi-platform')}
+                                        </span>
+                                    </div>
+                                </a>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+        }
 
         const root = document.getElementById('productRoot');
         root.style.display = 'block';
@@ -644,6 +995,20 @@
                     <div class="software-badges-row">
                         ${platBadges.join('')}
                     </div>
+                    <div class="software-actions-row">
+                        <button class="action-pill-btn ${isLiked ? 'liked' : ''}" id="likeBtn" onclick="toggleSoftLike('${p.id}')">
+                            <i class="${isLiked ? 'fas' : 'far'} fa-heart"></i>
+                            <span>${isLiked ? 'Favorited' : 'Favorite'}</span>
+                        </button>
+                        <button class="action-pill-btn ${isBookmarked ? 'bookmarked' : ''}" id="bookBtn" onclick="toggleSoftBookmark('${p.id}', '${escapeHtml(p.name || '')}', '${p.category || 'software'}')">
+                            <i class="${isBookmarked ? 'fas' : 'far'} fa-bookmark"></i>
+                            <span>${isBookmarked ? 'Bookmarked' : 'Bookmark'}</span>
+                        </button>
+                        <button class="action-pill-btn" onclick="shareProduct()">
+                            <i class="fas fa-share-nodes"></i>
+                            <span id="shareBtnText">Share</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -653,8 +1018,12 @@
                     <div class="glass-box">
                         <!-- TABS -->
                         <div class="tab-nav">
-                            <button class="tab-btn active" onclick="switchSoftTab('overview', this)"><i class="fas fa-align-left"></i> Overview &amp; Specs</button>
-                            <button class="tab-btn" onclick="switchSoftTab('install', this)"><i class="fas fa-wrench"></i> Installation Guide</button>
+                            <button class="tab-btn active" onclick="switchSoftTab('overview', this)">
+                                <i class="fas fa-align-left"></i> Overview &amp; Specifications
+                            </button>
+                            <button class="tab-btn" onclick="switchSoftTab('install', this)">
+                                <i class="fas fa-wrench"></i> Setup &amp; Installation
+                            </button>
                         </div>
 
                         <!-- TAB: OVERVIEW -->
@@ -667,19 +1036,19 @@
                             <!-- TECHNICAL SPEC MATRIX -->
                             <div class="tech-matrix">
                                 <div class="matrix-cell">
-                                    <div class="cell-title"><i class="fas fa-laptop-code"></i> Supported OS</div>
-                                    <div class="cell-val">${platform === 'win' ? 'Windows 10 / 11 (64-bit)' : (platform === 'mac' ? 'macOS Sonoma / Sequoia / Ventura' : 'Windows & macOS')}</div>
+                                    <div class="cell-title"><i class="fas fa-laptop"></i> Supported Platform</div>
+                                    <div class="cell-val">${osSpecHtml}</div>
                                 </div>
                                 <div class="matrix-cell">
                                     <div class="cell-title"><i class="fas fa-microchip"></i> Architecture</div>
-                                    <div class="cell-val">x86_64 / Apple Silicon Universal</div>
+                                    <div class="cell-val">${archSpecHtml}</div>
                                 </div>
                                 <div class="matrix-cell">
-                                    <div class="cell-title"><i class="fas fa-shield-virus"></i> Security Scan</div>
-                                    <div class="cell-val" style="color:#00ff88"><i class="fas fa-circle-check"></i> VirusTotal Clean &amp; Verified</div>
+                                    <div class="cell-title"><i class="fas fa-shield-halved"></i> Security Verification</div>
+                                    <div class="cell-val">${securitySpecHtml}</div>
                                 </div>
                                 <div class="matrix-cell">
-                                    <div class="cell-title"><i class="fas fa-boxes-stacked"></i> Package Type</div>
+                                    <div class="cell-title"><i class="fas fa-box-open"></i> Suite / Package Type</div>
                                     <div class="cell-val">${catText}</div>
                                 </div>
                             </div>
@@ -688,47 +1057,67 @@
                         <!-- TAB: INSTALLATION -->
                         <div class="tab-pane" id="tab-install">
                             <div class="software-desc">
-                                <h4 style="color:#fff;margin-bottom:12px">Quick Setup Instructions:</h4>
-                                <ol style="padding-left:20px;line-height:1.9">
-                                    <li>Disable temporary antivirus real-time shields if applying universal licenses.</li>
-                                    <li>Extract the downloaded archive using 7-Zip, WinRAR, or macOS Archive Utility.</li>
-                                    <li>${p.password ? 'Use archive password: <code>' + p.password + '</code>.' : 'No archive password required.'}</li>
-                                    <li>Run the installer (<code>.exe</code> or <code>.pkg</code>) and follow the step-by-step assistant.</li>
-                                    <li>Launch your editing software (After Effects, Premiere, DaVinci Resolve) to verify plug-in initialization.</li>
+                                <h4 style="color:#fff;margin-bottom:12px;font-size:1.05rem">
+                                    <i class="fas fa-circle-check" style="color:var(--neon-cherry)"></i> Installation &amp; Setup Guide
+                                </h4>
+                                <ol style="padding-left:22px;line-height:2">
+                                    <li>Download the archive or installer from the verified download mirrors on the right.</li>
+                                    <li>Extract the compressed archive using <strong>7-Zip</strong>, <strong>WinRAR</strong>, or native archive utility.</li>
+                                    ${p.password ? `<li>When prompted for extraction, use archive password: <code>${p.password}</code>.</li>` : `<li>No password required for extraction.</li>`}
+                                    <li>Run the installer (e.g. <code>.exe</code>, <code>Setup.exe</code>, or <code>.pkg</code>) and follow the onscreen setup instructions.</li>
+                                    <li>If the package includes a plugin, ensure your host software (After Effects, Premiere Pro, or DaVinci Resolve) is completely closed during installation.</li>
+                                    <li>Launch your editing software to verify initialization in your effects or extensions menu.</li>
                                 </ol>
+                                ${p.notes ? `
+                                    <div style="margin-top:16px;padding:12px 16px;background:rgba(255,255,255,0.04);border-left:3px solid var(--neon-cherry);border-radius:0 10px 10px 0;font-size:0.86rem;color:rgba(255,255,255,0.85)">
+                                        <strong>Specific Release Note:</strong> ${p.notes}
+                                    </div>
+                                ` : ''}
                             </div>
                         </div>
                     </div>
+
+                    ${relatedHtml}
                 </div>
 
                 <!-- RIGHT SIDEBAR -->
                 <div class="software-sidebar-col">
                     <div class="glass-box">
                         <div class="box-title"><i class="fas fa-download"></i> Installation Files</div>
-                        
+
                         ${passwordHtml}
                         ${dlBtnHtml}
-
-                        <div style="text-align:center;font-size:0.72rem;color:rgba(255,255,255,0.45);margin-bottom:18px">
-                            <i class="fas fa-shield-halved" style="color:var(--neon-cherry)"></i> Safe cloud CDN delivery &middot; 100% Free
-                        </div>
-
                         ${mirrorsHtml}
 
-                        <div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:14px;margin-top:16px">
-                            <div style="display:flex;justify-content:space-between;font-size:0.82rem;margin-bottom:8px">
-                                <span style="color:rgba(255,255,255,0.5)"><i class="fas fa-tag"></i> Software ID</span>
-                                <span style="font-family:monospace;color:#fff">${p.id}</span>
+                        <div style="border-top:1px solid rgba(255,255,255,0.08);padding-top:16px;margin-top:16px">
+                            <div style="display:flex;justify-content:space-between;font-size:0.82rem;margin-bottom:10px">
+                                <span style="color:rgba(255,255,255,0.5)"><i class="fas fa-tag"></i> Package ID</span>
+                                <span style="font-family:monospace;color:#fff;max-width:180px;overflow:hidden;text-overflow:ellipsis;text-align:right" title="${p.id}">${p.id}</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;font-size:0.82rem;margin-bottom:10px">
+                                <span style="color:rgba(255,255,255,0.5)"><i class="fas fa-desktop"></i> Platform</span>
+                                <span style="color:#fff;font-weight:600;display:flex;align-items:center;gap:6px">
+                                    ${(platform === 'win' || platform === 'windows') ? '<span class="win11-logo"></span> Windows' : (platform === 'mac' ? '<i class="fab fa-apple"></i> macOS' : 'Windows & Mac')}
+                                </span>
                             </div>
                             <div style="display:flex;justify-content:space-between;font-size:0.82rem">
-                                <span style="color:rgba(255,255,255,0.5)"><i class="fas fa-circle-check" style="color:#00ff88"></i> License</span>
-                                <span style="color:#00ff88;font-weight:700">Pre-Activated</span>
+                                <span style="color:rgba(255,255,255,0.5)"><i class="fas fa-shield"></i> File Source</span>
+                                <span style="color:#fff;font-weight:600">${links.length > 0 ? (links.length + ' Mirror' + (links.length > 1 ? 's' : '')) : 'Direct'}</span>
                             </div>
+                        </div>
+
+                        <div style="margin-top:18px;padding:12px;border-radius:12px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.06);font-size:0.72rem;color:rgba(255,255,255,0.45);line-height:1.5;text-align:center">
+                            <i class="fas fa-shield-halved" style="color:var(--neon-cherry);margin-right:4px"></i> Always verify file hashes or scan downloads with your local antivirus or VirusTotal.
                         </div>
                     </div>
                 </div>
             </div>
         `;
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
     }
 
     function switchSoftTab(tabId, btn) {
@@ -747,6 +1136,65 @@
         });
     };
 
+    window.toggleSoftLike = function(pid) {
+        var key = 'zyrex_like_' + pid;
+        var liked = localStorage.getItem(key) === '1';
+        var btn = document.getElementById('likeBtn');
+        if (!btn) return;
+        if (liked) {
+            localStorage.removeItem(key);
+            btn.classList.remove('liked');
+            btn.innerHTML = '<i class="far fa-heart"></i> <span>Favorite</span>';
+        } else {
+            localStorage.setItem(key, '1');
+            btn.classList.add('liked');
+            btn.innerHTML = '<i class="fas fa-heart"></i> <span>Favorited</span>';
+        }
+    };
+
+    window.toggleSoftBookmark = function(pid, name, category) {
+        var key = 'zyrex_bookmark_' + pid;
+        var bookmarked = localStorage.getItem(key) === '1';
+        var btn = document.getElementById('bookBtn');
+        if (!btn) return;
+
+        // Also update the global bookmarks array for bookmarks.html
+        var bookmarksList = [];
+        try {
+            bookmarksList = JSON.parse(localStorage.getItem('zyrex_bookmarks') || '[]');
+        } catch(e) {}
+
+        if (bookmarked) {
+            localStorage.removeItem(key);
+            btn.classList.remove('bookmarked');
+            btn.innerHTML = '<i class="far fa-bookmark"></i> <span>Bookmark</span>';
+            bookmarksList = bookmarksList.filter(b => b.id !== pid);
+        } else {
+            localStorage.setItem(key, '1');
+            btn.classList.add('bookmarked');
+            btn.innerHTML = '<i class="fas fa-bookmark"></i> <span>Bookmarked</span>';
+            if (!bookmarksList.some(b => b.id === pid)) {
+                bookmarksList.push({ id: pid, name: name, category: category, type: 'plugin', saved_at: new Date().toISOString() });
+            }
+        }
+        try {
+            localStorage.setItem('zyrex_bookmarks', JSON.stringify(bookmarksList));
+        } catch(e) {}
+    };
+
+    window.shareProduct = function() {
+        var url = window.location.href;
+        navigator.clipboard.writeText(url).then(() => {
+            var span = document.getElementById('shareBtnText');
+            if (span) {
+                var orig = span.textContent;
+                span.textContent = 'Copied Link!';
+                setTimeout(() => { span.textContent = orig; }, 2000);
+            }
+        });
+    };
+
+    // Internal download generator for database uploaded products with file_path
     window.genSoftwareToken = function(e, pid, fp) {
         e.preventDefault();
         var b = document.getElementById("dlBtn");
@@ -757,12 +1205,12 @@
         function resetBtn() {
             b.style.pointerEvents = "";
             b.style.opacity = "";
-            b.innerHTML = b.getAttribute("data-orig-html") || '<i class="fas fa-cloud-arrow-down"></i> Generate Secure Download';
+            b.innerHTML = b.getAttribute("data-orig-html") || '<i class="fas fa-cloud-arrow-down"></i> <span>Generate Secure Download</span>';
         }
 
         b.style.pointerEvents = "none";
         b.style.opacity = "0.65";
-        b.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating Download Link...';
+        b.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span>Requesting Download Link...</span>';
 
         var targetTab = window.open('about:blank', '_blank');
         var q = new URLSearchParams();
