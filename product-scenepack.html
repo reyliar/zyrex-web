@@ -488,6 +488,258 @@
             .scenepack-page-wrap { padding-top: 100px; }
             .scenepack-stage-card { aspect-ratio: 16/9; min-height: 220px; }
         }
+    
+        /* === IMAGE 2 INSPIRED SHOWCASE LAYOUT === */
+        .scenepack-showcase-panel {
+            display: grid;
+            grid-template-columns: 290px 1fr;
+            gap: 36px;
+            padding: 36px;
+            background: var(--card-glass);
+            border: 1px solid var(--card-border);
+            border-radius: 28px;
+            backdrop-filter: blur(36px) saturate(210%);
+            -webkit-backdrop-filter: blur(36px) saturate(210%);
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+            margin-bottom: 28px;
+            position: relative;
+            overflow: hidden;
+        }
+        .scenepack-showcase-panel::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 10%; right: 10%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #ff2b52, #06b6d4, transparent);
+            z-index: 2;
+        }
+        @media (max-width: 860px) {
+            .scenepack-showcase-panel {
+                grid-template-columns: 1fr;
+                padding: 24px;
+                gap: 24px;
+            }
+            .scenepack-poster-frame {
+                max-width: 260px;
+                margin: 0 auto;
+            }
+        }
+        .scenepack-poster-frame {
+            position: relative;
+            aspect-ratio: 2 / 3;
+            width: 100%;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.85);
+            background: #0d0914;
+        }
+        .scenepack-poster-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.4s ease;
+        }
+        .scenepack-poster-frame:hover .scenepack-poster-img {
+            transform: scale(1.03);
+        }
+        .poster-imdb-badge {
+            position: absolute;
+            bottom: 12px;
+            left: 12px;
+            background: #f5c518;
+            color: #000;
+            font-weight: 900;
+            font-size: 0.78rem;
+            padding: 5px 11px;
+            border-radius: 8px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.7);
+            letter-spacing: 0.5px;
+            z-index: 3;
+        }
+        .poster-imdb-badge i { font-size: 1.1rem; }
+
+        .scenepack-meta-col {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-width: 0;
+        }
+        .origin-kicker-bar {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .origin-pill {
+            padding: 4px 12px;
+            border-radius: 999px;
+            background: rgba(255, 43, 82, 0.12);
+            border: 1px solid rgba(255, 43, 82, 0.3);
+            color: #ff758f;
+            font-size: 0.72rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .scene-title-featured {
+            font-size: clamp(1.8rem, 3.2vw, 2.5rem);
+            font-weight: 900;
+            color: #fff;
+            letter-spacing: -0.5px;
+            font-family: 'Outfit', sans-serif;
+            margin: 0 0 20px;
+            line-height: 1.2;
+        }
+
+        /* CLEAN METADATA GRID (IMAGE 2) */
+        .scenepack-meta-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            padding: 18px 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            margin-bottom: 24px;
+        }
+        .meta-field {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+        .meta-label {
+            font-size: 0.68rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.45);
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .meta-label i { font-size: 0.72rem; color: #ff758f; }
+        .meta-value {
+            font-size: 0.94rem;
+            font-weight: 700;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .creator-highlight-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            color: #fff;
+            text-decoration: none;
+            transition: color 0.2s, transform 0.2s;
+        }
+        .creator-highlight-link:hover {
+            color: #ff758f;
+            transform: translateX(2px);
+        }
+        .creator-highlight-link i.fa-arrow-up-right-from-square {
+            font-size: 0.68rem;
+            opacity: 0.7;
+        }
+        .creator-mini-av {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            flex-shrink: 0;
+        }
+        .uploader-highlight-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        /* PRIMARY CTA ROW */
+        .scenepack-cta-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+        .btn-download-primary {
+            flex: 1;
+            min-width: 200px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 16px 28px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, rgba(255, 43, 82, 0.95), rgba(184, 20, 50, 1));
+            border: 1px solid rgba(255, 117, 143, 0.45);
+            box-shadow: 0 12px 32px rgba(255, 43, 82, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.35);
+            color: #fff !important;
+            font-size: 1.02rem;
+            font-weight: 800;
+            text-decoration: none;
+            cursor: pointer;
+            transition: transform 0.22s ease, box-shadow 0.22s ease;
+        }
+        .btn-download-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 16px 42px rgba(255, 43, 82, 0.6);
+            color: #fff !important;
+        }
+        .cta-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* PRODUCTION CARD */
+        .production-info-card {
+            background: var(--card-glass);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 28px;
+            margin-bottom: 24px;
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+        }
+        .production-info-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        .production-info-header h3 {
+            font-size: 1.25rem;
+            font-weight: 800;
+            color: #fff;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .prod-detail-line {
+            font-size: 0.88rem;
+            color: rgba(255, 255, 255, 0.7);
+            line-height: 1.6;
+            margin-bottom: 6px;
+        }
+        .prod-detail-line strong {
+            color: #fff;
+            font-weight: 700;
+        }
+
     </style>
 </head>
 <body>
@@ -595,6 +847,7 @@
         </div>
     </footer>
 
+    <script src="js/scenepack-imdb.js?v=2"></script>
     <script src="js/auth.js?v=11"></script>
     <script src="js/script.js?v=5"></script>
     <script>
@@ -629,12 +882,22 @@
         document.getElementById('errMsgText').innerHTML = msg;
     }
 
-    function renderSceneDetail(p) {
+        function renderSceneDetail(p) {
         document.title = (p.name || "Scenepack") + " - Zyrex";
         document.getElementById('breadSceneName').textContent = p.name || "Scenepack";
 
-        const desc = p.description || p.desc || "Curated scene clips and editing footage for video editors.";
-        const thumb = p.thumbnail || '/assets/content.png';
+        var prod = typeof findProductionForScenepack === 'function' ? findProductionForScenepack(p) : null;
+        
+        // Poster selection
+        var poster = '/assets/content.png';
+        if (p.thumbnail && p.thumbnail !== '/assets/content.png' && p.thumbnail !== 'assets/content.png') {
+            poster = p.thumbnail;
+        } else if (prod && prod.poster) {
+            poster = prod.poster;
+        }
+
+        // Real description (from upload or creator social)
+        var realDesc = (p.description || p.desc || '').trim();
 
         // Likes & Bookmarks
         var likeKey = 'zyrex_like_' + p.id;
@@ -642,53 +905,65 @@
         var isLiked = localStorage.getItem(likeKey) === '1';
         var isBookmarked = localStorage.getItem(bookKey) === '1';
 
-        // Creator details
-        var uploaderName = p.creator_nickname || p.author_name || p.uploader_name || 'Community Creator';
-        var uploaderAv = p.uploader_avatar || p.creator_avatar || 'https://cdn.discordapp.com/embed/avatars/0.png';
-
-        // Social Media Detection
+        // Creator details (Scenepack Sahibi)
+        var creatorName = (p.creator_nickname || p.author_name || '').trim();
+        var creatorAv = p.creator_avatar || '';
         var socialUrl = (p.creator_social_url || p.social_url || p.author_social || '').trim();
-        var socialIcon = 'fas fa-link';
-        var socialHandle = p.creator_username ? '@' + p.creator_username : 'Social Profile';
+        var socialIcon = 'fas fa-arrow-up-right-from-square';
 
         if (socialUrl) {
             var sLow = socialUrl.toLowerCase();
-            if (sLow.includes('tiktok.com')) {
-                socialIcon = 'fab fa-tiktok';
-                var m = socialUrl.match(/@([a-zA-Z0-9_.-]+)/);
-                if (m) socialHandle = '@' + m[1];
-            } else if (sLow.includes('instagram.com')) {
-                socialIcon = 'fab fa-instagram';
-                var m = socialUrl.match(/instagram\.com\/([a-zA-Z0-9_.-]+)/);
-                if (m) socialHandle = '@' + m[1];
-            } else if (sLow.includes('youtube.com') || sLow.includes('youtu.be')) {
-                socialIcon = 'fab fa-youtube';
-                var m = socialUrl.match(/@([a-zA-Z0-9_.-]+)/);
-                if (m) socialHandle = '@' + m[1];
-                else socialHandle = 'YouTube';
-            } else if (sLow.includes('discord.gg') || sLow.includes('discord.com')) {
-                socialIcon = 'fab fa-discord';
-                socialHandle = 'Discord Community';
-            } else if (sLow.includes('twitter.com') || sLow.includes('x.com')) {
-                socialIcon = 'fab fa-x-twitter';
-                var m = socialUrl.match(/(?:twitter|x)\.com\/([a-zA-Z0-9_.-]+)/);
-                if (m) socialHandle = '@' + m[1];
-            }
+            if (sLow.includes('instagram.com')) socialIcon = 'fab fa-instagram';
+            else if (sLow.includes('tiktok.com')) socialIcon = 'fab fa-tiktok';
+            else if (sLow.includes('youtube.com') || sLow.includes('youtu.be')) socialIcon = 'fab fa-youtube';
+            else if (sLow.includes('discord.gg') || sLow.includes('discord.com')) socialIcon = 'fab fa-discord';
+            else if (sLow.includes('twitter.com') || sLow.includes('x.com')) socialIcon = 'fab fa-x-twitter';
         }
 
-        // Category determination (clean, no raw)
+        var creatorValueHtml = '';
+        if (creatorName) {
+            var avHtml = creatorAv ? `<img src="${creatorAv}" class="creator-mini-av" onerror="this.style.display='none'">` : '';
+            if (socialUrl) {
+                creatorValueHtml = `<a href="${socialUrl}" target="_blank" rel="noopener" class="creator-highlight-link" title="Visit Creator Profile">${avHtml}<span>${escapeHtml(creatorName)}</span> <i class="${socialIcon}"></i></a>`;
+            } else {
+                creatorValueHtml = `<span class="creator-highlight-link">${avHtml}<span>${escapeHtml(creatorName)}</span></span>`;
+            }
+        } else {
+            creatorValueHtml = `<span style="color:rgba(255,255,255,0.7)">Community Creator</span>`;
+        }
+
+        // Uploader details (Zyrex Discord Yükleyicisi)
+        var uploaderName = p.uploader_name || 'Zyrex Member';
+        var uploaderAv = p.uploader_avatar || 'https://cdn.discordapp.com/embed/avatars/0.png';
+        var uploaderId = p.uploader_id || '';
+        var uploaderValueHtml = `<span class="uploader-highlight-pill"><img src="${uploaderAv}" class="creator-mini-av" data-uploader-id="${uploaderId}" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'"> <span>${escapeHtml(uploaderName)}</span></span>`;
+
+        // Origin details (IMDb matched or category)
+        var originTitle = prod ? prod.title : (p.origin || 'Curated Footage');
+        var originValueHtml = escapeHtml(originTitle);
+        if (prod) {
+            originValueHtml = `<a href="/scenepack.html?production=${encodeURIComponent(prod.id)}" style="color:#67e8f9;text-decoration:none;display:inline-flex;align-items:center;gap:6px">${escapeHtml(prod.title)} <i class="fas fa-arrow-right" style="font-size:0.7rem"></i></a>`;
+        }
+
+        // Release / Added date
+        var releaseDateVal = p.release_date || (p.created_at ? new Date(p.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Verified');
+
+        // File size (if present)
+        var fileSizeVal = p.file_size || p.size || '';
+
+        // Category determination
         var catMap = {
-            anime: 'Anime Scenepack',
-            movie: 'Movie Clips',
-            series: 'TV Series Clips',
-            games: 'Gaming Clips',
-            character: 'Character Clips',
+            anime: 'Anime',
+            movie: 'Movie',
+            series: 'TV Series',
+            games: 'Gaming',
+            character: 'Character',
             others: 'Scenepack'
         };
         var rawCat = (p.category || 'scenepack').toLowerCase();
         var catLabel = catMap[rawCat] || 'Scenepack';
 
-        // Normalize links
+        // Normalize download links
         var links = [];
         if (Array.isArray(p.links) && p.links.length > 0) {
             links = p.links;
@@ -706,69 +981,53 @@
 
         if (p.file_path && p.file_path.length > 0) {
             dlBtnHtml = `
-                <a href="#" id="dlSceneBtn" class="dl-scene-btn" onclick="genSceneToken(event, '${p.id}', '${p.file_path}')">
-                    <i class="fas fa-cloud-arrow-down"></i>
-                    <span>Generate Secure Download</span>
+                <a href="#" id="dlSceneBtn" class="btn-download-primary" onclick="genSceneToken(event, '${p.id}', '${p.file_path}')">
+                    <i class="fas fa-arrow-down"></i>
+                    <span>Download</span>
                 </a>
             `;
         } else if (links.length > 0) {
             var prim = links[0];
             var pUrl = prim.url || prim;
-            var pLabel = prim.label || "Download Scenepack";
+            var pLabel = prim.label || "Download";
             dlBtnHtml = `
-                <a href="${pUrl}" target="_blank" rel="noopener" class="dl-scene-btn">
-                    <i class="fas fa-arrow-up-right-from-square"></i>
-                    <span>${pLabel}</span>
+                <a href="${pUrl}" target="_blank" rel="noopener" class="btn-download-primary">
+                    <i class="fas fa-arrow-down"></i>
+                    <span>Download</span>
                 </a>
             `;
         } else {
             dlBtnHtml = `
-                <button class="dl-scene-btn" disabled style="opacity:0.5;cursor:not-allowed">
+                <button class="btn-download-primary" disabled style="opacity:0.5;cursor:not-allowed">
                     <i class="fas fa-link-slash"></i>
-                    <span>Download Link Unavailable</span>
+                    <span>Download Unavailable</span>
                 </button>
             `;
         }
 
         if (links.length > 1) {
             mirrorsHtml = `
-                <div class="card-header-title" style="margin-top:20px;margin-bottom:10px">
-                    <i class="fas fa-hard-drive"></i> Additional Mirrors (${links.length})
-                </div>
-                <div class="mirrors-list">
-                    ${links.slice(1).map(function(l) {
-                        var u = l.url || l;
-                        var lab = l.label || "Alternative Mirror";
-                        var hostname = 'Mirror Source';
-                        try { hostname = new URL(u).hostname; } catch(e) {}
-                        return `
-                            <a href="${u}" target="_blank" rel="noopener" class="mirror-pill">
-                                <span style="display:flex;align-items:center;gap:8px">
-                                    <i class="fas fa-arrow-up-right-from-square" style="color:var(--scene-cyan)"></i>
-                                    <span>${lab}</span>
-                                </span>
-                                <span style="font-size:0.72rem;opacity:0.6">${hostname}</span>
-                            </a>
-                        `;
-                    }).join('')}
-                </div>
-            `;
-        }
-
-        // Archive Password
-        var passwordHtml = '';
-        if (p.password && String(p.password).trim().length > 0) {
-            passwordHtml = `
-                <div class="pw-box">
-                    <div>
-                        <div style="font-size:0.68rem;font-weight:800;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:2px">
-                            <i class="fas fa-key"></i> Archive Password
-                        </div>
-                        <div class="pw-text" id="pwValue">${p.password}</div>
+                <div style="margin-top:20px">
+                    <div style="font-size:0.75rem;font-weight:800;text-transform:uppercase;color:rgba(255,255,255,0.45);letter-spacing:1px;margin-bottom:8px">
+                        <i class="fas fa-hard-drive"></i> Alternative Mirrors (${links.length})
                     </div>
-                    <button type="button" class="pw-copy-btn" onclick="copyPassword('${p.password}', this)">
-                        <i class="fas fa-copy"></i> Copy
-                    </button>
+                    <div class="mirrors-list">
+                        ${links.slice(1).map(function(l) {
+                            var u = l.url || l;
+                            var lab = l.label || "Alternative Mirror";
+                            var hostname = 'Cloud Mirror';
+                            try { hostname = new URL(u).hostname; } catch(e) {}
+                            return `
+                                <a href="${u}" target="_blank" rel="noopener" class="mirror-pill">
+                                    <span style="display:flex;align-items:center;gap:8px">
+                                        <i class="fas fa-arrow-up-right-from-square" style="color:var(--cherry-light)"></i>
+                                        <span>${lab}</span>
+                                    </span>
+                                    <span style="font-size:0.72rem;opacity:0.6">${hostname}</span>
+                                </a>
+                            `;
+                        }).join('')}
+                    </div>
                 </div>
             `;
         }
@@ -777,112 +1036,115 @@
         root.style.display = 'block';
 
         root.innerHTML = `
-            <!-- WIDESCREEN FOOTAGE SHOWCASE -->
-            <div class="scenepack-stage-card">
-                <img src="${thumb}" alt="" class="bg-ambient">
-                <img src="${thumb}" alt="${escapeHtml(p.name)}" class="main-film-img" onerror="this.src='/assets/content.png'">
-                <div class="scenepack-floating-badges">
-                    <span class="scene-pill"><i class="fas fa-film"></i> ${catLabel}</span>
-                    <span class="scene-pill scene-pill-cyan"><i class="fas fa-circle-check"></i> Verified Community Pack</span>
+            <!-- IMAGE 2 INSPIRED SHOWCASE CARD -->
+            <div class="scenepack-showcase-panel">
+                <!-- POSTER COLUMN -->
+                <div class="scenepack-poster-col">
+                    <div class="scenepack-poster-frame">
+                        <img src="${poster}" alt="${escapeHtml(p.name)}" class="scenepack-poster-img" onerror="this.src='/assets/content.png'">
+                        ${prod && prod.rating ? `<div class="poster-imdb-badge"><i class="fab fa-imdb"></i> ${prod.rating}/10</div>` : ''}
+                    </div>
+                </div>
+
+                <!-- METADATA & ACTIONS COLUMN -->
+                <div class="scenepack-meta-col">
+                    <div>
+                        <div class="origin-kicker-bar">
+                            <span class="origin-pill"><i class="fas fa-film"></i> ${prod ? (prod.type || 'Series/Movie') : catLabel}</span>
+                            ${prod ? `<span class="origin-pill" style="background:rgba(6,182,212,0.12);border-color:rgba(6,182,212,0.3);color:#67e8f9">${escapeHtml(prod.title)}</span>` : ''}
+                        </div>
+
+                        <h1 class="scene-title-featured">${escapeHtml(p.name)}</h1>
+
+                        <!-- METADATA GRID (IMAGE 2 STYLE, NO ENCODE/QUALITY) -->
+                        <div class="scenepack-meta-grid">
+                            <div class="meta-field">
+                                <span class="meta-label"><i class="fas fa-user-pen"></i> CREATOR</span>
+                                <span class="meta-value">${creatorValueHtml}</span>
+                            </div>
+
+                            <div class="meta-field">
+                                <span class="meta-label"><i class="fas fa-clapperboard"></i> ORIGIN</span>
+                                <span class="meta-value">${originValueHtml}</span>
+                            </div>
+
+                            <div class="meta-field">
+                                <span class="meta-label"><i class="fas fa-calendar"></i> RELEASE DATE</span>
+                                <span class="meta-value">${releaseDateVal}</span>
+                            </div>
+
+                            ${fileSizeVal ? `
+                            <div class="meta-field">
+                                <span class="meta-label"><i class="fas fa-hard-drive"></i> FILE SIZE</span>
+                                <span class="meta-value">${escapeHtml(fileSizeVal)}</span>
+                            </div>
+                            ` : ''}
+
+                            <div class="meta-field">
+                                <span class="meta-label"><i class="fas fa-cloud-arrow-up"></i> UPLOADER</span>
+                                <span class="meta-value">${uploaderValueHtml}</span>
+                            </div>
+
+                            <div class="meta-field">
+                                <span class="meta-label"><i class="fas fa-download"></i> DOWNLOADS</span>
+                                <span class="meta-value">${p.downloads || 0}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DOWNLOAD CTA & ACTION ICONS -->
+                    <div>
+                        <div class="scenepack-cta-row">
+                            ${dlBtnHtml}
+                            <div class="cta-actions">
+                                <button class="action-pill-btn ${isLiked ? 'liked' : ''}" id="likeBtn" onclick="toggleSceneLike('${p.id}')" title="Favorite">
+                                    <i class="${isLiked ? 'fas' : 'far'} fa-heart"></i>
+                                </button>
+                                <button class="action-pill-btn ${isBookmarked ? 'bookmarked' : ''}" id="bookBtn" onclick="toggleSceneBookmark('${p.id}', '${escapeHtml(p.name || '')}', '${rawCat}')" title="Bookmark">
+                                    <i class="${isBookmarked ? 'fas' : 'far'} fa-bookmark"></i>
+                                </button>
+                                <button class="action-pill-btn" onclick="shareScenepack()" title="Share Link">
+                                    <i class="fas fa-share-nodes"></i>
+                                </button>
+                            </div>
+                        </div>
+                        ${mirrorsHtml}
+                    </div>
                 </div>
             </div>
 
-            <div class="scenepack-grid">
-                <!-- LEFT COLUMN -->
-                <div class="scenepack-main-col">
-                    <div class="glass-card">
-                        <h1 class="scene-title">${escapeHtml(p.name)}</h1>
-                        <p class="scene-desc">${desc.replace(/\n/g, '<br>')}</p>
-
-                        <!-- ACTIONS ROW -->
-                        <div class="scene-actions-row">
-                            <button class="action-pill-btn ${isLiked ? 'liked' : ''}" id="likeBtn" onclick="toggleSceneLike('${p.id}')">
-                                <i class="${isLiked ? 'fas' : 'far'} fa-heart"></i>
-                                <span>${isLiked ? 'Favorited' : 'Favorite'}</span>
-                            </button>
-                            <button class="action-pill-btn ${isBookmarked ? 'bookmarked' : ''}" id="bookBtn" onclick="toggleSceneBookmark('${p.id}', '${escapeHtml(p.name || '')}', '${rawCat}')">
-                                <i class="${isBookmarked ? 'fas' : 'far'} fa-bookmark"></i>
-                                <span>${isBookmarked ? 'Bookmarked' : 'Bookmark'}</span>
-                            </button>
-                            <button class="action-pill-btn" onclick="shareScenepack()">
-                                <i class="fas fa-share-nodes"></i>
-                                <span id="shareBtnText">Share</span>
-                            </button>
-                        </div>
-
-                        <!-- FOOTAGE SPECS -->
-                        <div class="footage-specs-row">
-                            <div class="spec-cell">
-                                <div class="lbl">Category</div>
-                                <div class="val">${catLabel}</div>
-                            </div>
-                            <div class="spec-cell">
-                                <div class="lbl">Downloads</div>
-                                <div class="val">${p.downloads || 0}</div>
-                            </div>
-                            <div class="spec-cell">
-                                <div class="lbl">Added</div>
-                                <div class="val">${p.created_at ? new Date(p.created_at).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'Verified'}</div>
-                            </div>
-                            <div class="spec-cell">
-                                <div class="lbl">Compatibility</div>
-                                <div class="val">All Video Editors</div>
-                            </div>
-                        </div>
+            <!-- REAL DESCRIPTION / NOTES (IF AVAILABLE, ZERO FAKE AI SLOP) -->
+            ${(realDesc || p.notes) ? `
+                <div class="glass-card">
+                    <div class="card-header-title">
+                        <i class="fas fa-align-left"></i> Description &amp; Creator Notes
                     </div>
-
-                    <!-- ABOUT & COMPATIBILITY -->
-                    <div class="glass-card">
-                        <div class="card-header-title">
-                            <i class="fas fa-circle-info"></i> About this Scenepack
+                    ${realDesc ? `<p style="color:rgba(255,255,255,0.8);font-size:0.92rem;line-height:1.75;margin:0 0 12px">${realDesc.replace(/
+/g, '<br>')}</p>` : ''}
+                    ${p.notes ? `
+                        <div style="padding:12px 16px;background:rgba(255,43,82,0.06);border-left:3px solid var(--cherry-light);border-radius:0 12px 12px 0;font-size:0.86rem;color:rgba(255,255,255,0.85)">
+                            <strong>Note:</strong> ${escapeHtml(p.notes)}
                         </div>
-                        <p style="color:rgba(255,255,255,0.75);font-size:0.92rem;line-height:1.8">
-                            Curated scene footage for video editing and motion design. Fully compatible for cuts, color grading, masking, twixtor, velocity editing, and motion graphics across After Effects, Premiere Pro, DaVinci Resolve, Sony Vegas, CapCut, and mobile suites.
-                        </p>
-                        ${p.notes ? `
-                            <div style="margin-top:16px;padding:12px 16px;background:rgba(6,182,212,0.06);border-left:3px solid var(--scene-cyan);border-radius:0 10px 10px 0;font-size:0.86rem;color:rgba(255,255,255,0.85)">
-                                <strong>Release Note:</strong> ${escapeHtml(p.notes)}
-                            </div>
-                        ` : ''}
-                    </div>
+                    ` : ''}
                 </div>
+            ` : ''}
 
-                <!-- RIGHT COLUMN (SIDEBAR) -->
-                <div class="scenepack-side-col">
-                    <div class="glass-card">
-                        <div class="card-header-title">
-                            <i class="fas fa-download"></i> Download Footage
-                        </div>
-
-                        <!-- Enhanced Uploader profile with real social account -->
-                        <div class="creator-card-enhanced">
-                            <div class="creator-row">
-                                <img src="${uploaderAv}" alt="${escapeHtml(uploaderName)}" class="creator-avatar" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
-                                <div class="creator-info">
-                                    <h5>${escapeHtml(uploaderName)}</h5>
-                                    <span class="creator-role-tag"><i class="fas fa-cloud-arrow-up"></i> Community Uploader</span>
-                                </div>
-                            </div>
-                            ${socialUrl ? `
-                                <div class="creator-social-bar">
-                                    <a href="${socialUrl}" target="_blank" rel="noopener" class="creator-social-btn">
-                                        <i class="${socialIcon}"></i>
-                                        <span>${escapeHtml(socialHandle)}</span>
-                                        <i class="fas fa-arrow-up-right-from-square" style="font-size:0.7rem;margin-left:auto;opacity:0.6"></i>
-                                    </a>
-                                </div>
-                            ` : ''}
-                        </div>
-
-                        ${passwordHtml}
-                        ${dlBtnHtml}
-                        ${mirrorsHtml}
-
-                        <div style="text-align:center;font-size:0.72rem;color:rgba(255,255,255,0.45);margin-top:16px">
-                            <i class="fas fa-shield-halved" style="color:var(--scene-cyan);margin-right:4px"></i> Verified clean and free of bloat.
-                        </div>
+            <!-- PRODUCTION INFO CARD (IF IMDB MATCHED) -->
+            ${prod ? `
+                <div class="production-info-card">
+                    <div class="production-info-header">
+                        <h3><i class="fas fa-clapperboard" style="color:var(--cherry-light)"></i> About the Production: ${escapeHtml(prod.title)}</h3>
+                        <a href="/scenepack.html?production=${encodeURIComponent(prod.id)}" class="action-pill-btn" style="color:#67e8f9;border-color:rgba(6,182,212,0.3)">
+                            Browse all ${escapeHtml(prod.title)} packs <i class="fas fa-arrow-right"></i>
+                        </a>
                     </div>
+                    <div class="prod-detail-line"><strong>Year &amp; Type:</strong> ${escapeHtml(prod.year)} · ${escapeHtml(prod.type)} · ${escapeHtml(prod.genres)}</div>
+                    <div class="prod-detail-line"><strong>Directors / Creators:</strong> ${escapeHtml(prod.directors)}</div>
+                    <div class="prod-detail-line"><strong>Cast:</strong> ${escapeHtml(prod.cast)}</div>
+                    ${prod.tagline ? `<div class="prod-detail-line" style="font-style:italic;color:rgba(255,255,255,0.5);margin-top:8px">"${escapeHtml(prod.tagline)}"</div>` : ''}
                 </div>
+            ` : ''}
+
             <div id="relatedSceneContainer"></div>
         `;
 

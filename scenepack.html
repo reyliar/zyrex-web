@@ -368,6 +368,346 @@
             .stats-row { gap: 10px; }
             .glass-stat { padding: 16px 18px; }
         }
+    
+        /* === VIEW SWITCH TABS === */
+        .sp-view-tabs {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 14px;
+        }
+        .sp-view-tab {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            color: rgba(255, 255, 255, 0.7);
+            padding: 10px 22px;
+            border-radius: 999px;
+            font-size: 0.88rem;
+            font-weight: 700;
+            font-family: inherit;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            transition: all 0.22s ease;
+        }
+        .sp-view-tab:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+            transform: translateY(-1px);
+        }
+        .sp-view-tab.active {
+            background: linear-gradient(135deg, rgba(255, 43, 82, 0.95), rgba(184, 20, 50, 0.95));
+            border-color: rgba(255, 117, 143, 0.45);
+            color: #fff;
+            box-shadow: 0 8px 25px rgba(255, 43, 82, 0.35);
+        }
+        .imdb-mini-tag {
+            background: #f5c518;
+            color: #000;
+            font-size: 0.65rem;
+            font-weight: 900;
+            padding: 2px 6px;
+            border-radius: 4px;
+            letter-spacing: 0.5px;
+        }
+
+        /* === PRODUCTIONS GRID (IMDB HUB) === */
+        .productions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+            gap: 22px;
+            margin-top: 10px;
+        }
+        .prod-card {
+            background: rgba(18, 12, 22, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.10);
+            border-radius: 20px;
+            overflow: hidden;
+            text-decoration: none;
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.28s;
+            cursor: pointer;
+            backdrop-filter: blur(20px);
+        }
+        .prod-card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(255, 43, 82, 0.45);
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.7), 0 0 25px rgba(255, 43, 82, 0.18);
+        }
+        .prod-poster-box {
+            position: relative;
+            aspect-ratio: 2 / 3;
+            width: 100%;
+            overflow: hidden;
+            background: #09040c;
+        }
+        .prod-poster-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s ease;
+        }
+        .prod-card:hover .prod-poster-img {
+            transform: scale(1.05);
+        }
+        .prod-imdb-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.85);
+            border: 1px solid rgba(245, 197, 24, 0.5);
+            color: #f5c518;
+            font-size: 0.72rem;
+            font-weight: 900;
+            padding: 3px 8px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            backdrop-filter: blur(8px);
+        }
+        .prod-count-pill {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            background: rgba(255, 43, 82, 0.85);
+            color: #fff;
+            font-size: 0.68rem;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 999px;
+            letter-spacing: 0.5px;
+        }
+        .prod-body {
+            padding: 16px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .prod-title {
+            font-size: 1.05rem;
+            font-weight: 800;
+            font-family: 'Outfit', sans-serif;
+            color: #fff;
+            margin: 0 0 4px;
+            line-height: 1.25;
+        }
+        .prod-sub {
+            font-size: 0.74rem;
+            color: rgba(255, 255, 255, 0.5);
+            margin: 0;
+        }
+
+        /* === IMAGE 1 STYLE PRODUCTION SHOWCASE VIEW === */
+        .production-showcase-view {
+            background: var(--card-glass);
+            border: 1px solid var(--card-border);
+            border-radius: 28px;
+            padding: 36px;
+            backdrop-filter: blur(36px);
+            margin-bottom: 30px;
+            position: relative;
+        }
+        .prod-showcase-header {
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            gap: 34px;
+            margin-bottom: 32px;
+        }
+        @media (max-width: 820px) {
+            .prod-showcase-header { grid-template-columns: 1fr; }
+            .prod-showcase-poster { max-width: 220px; margin: 0 auto; }
+        }
+        .prod-showcase-poster {
+            position: relative;
+            aspect-ratio: 2 / 3;
+            width: 100%;
+            border-radius: 18px;
+            overflow: hidden;
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .prod-showcase-poster img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .showcase-badge-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 14px;
+            flex-wrap: wrap;
+        }
+        .badge-imdb {
+            background: #f5c518;
+            color: #000;
+            font-weight: 900;
+            font-size: 0.8rem;
+            padding: 4px 10px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .badge-rotten {
+            background: rgba(239, 68, 68, 0.2);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            color: #f87171;
+            font-weight: 800;
+            font-size: 0.8rem;
+            padding: 4px 10px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .prod-showcase-info h1 {
+            font-size: clamp(2rem, 3.5vw, 2.8rem);
+            font-weight: 900;
+            font-family: 'Outfit', sans-serif;
+            color: #fff;
+            margin: 0 0 10px;
+            line-height: 1.15;
+        }
+        .prod-showcase-meta {
+            font-size: 0.92rem;
+            color: rgba(255, 255, 255, 0.65);
+            line-height: 1.6;
+            margin-bottom: 14px;
+        }
+        .prod-stats-strip {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            font-size: 0.86rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 18px;
+            flex-wrap: wrap;
+        }
+        .prod-stats-strip strong {
+            color: #fff;
+            font-weight: 800;
+        }
+        .prod-cast-list {
+            font-size: 0.88rem;
+            color: rgba(255, 255, 255, 0.65);
+            margin-bottom: 14px;
+            line-height: 1.6;
+        }
+        .prod-cast-list strong { color: #fff; }
+        .prod-tagline {
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.45);
+            font-size: 0.9rem;
+            margin-bottom: 24px;
+        }
+        .showcase-back-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            margin-bottom: 18px;
+        }
+        .showcase-back-btn:hover {
+            background: rgba(255, 255, 255, 0.12);
+            transform: translateX(-3px);
+        }
+
+        /* SHOWCASE TABLE (IMAGE 1 STYLE) */
+        .showcase-table-wrap {
+            background: rgba(0, 0, 0, 0.25);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            overflow: hidden;
+        }
+        .showcase-table-header {
+            display: grid;
+            grid-template-columns: 2fr 120px 120px 130px;
+            gap: 16px;
+            padding: 14px 20px;
+            background: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            font-size: 0.72rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255, 255, 255, 0.45);
+        }
+        @media (max-width: 680px) {
+            .showcase-table-header { display: none; }
+            .showcase-row { grid-template-columns: 1fr !important; gap: 10px !important; }
+        }
+        .showcase-row {
+            display: grid;
+            grid-template-columns: 2fr 120px 120px 130px;
+            gap: 16px;
+            padding: 18px 20px;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+            transition: background 0.2s ease;
+        }
+        .showcase-row:last-child { border-bottom: none; }
+        .showcase-row:hover {
+            background: rgba(255, 43, 82, 0.06);
+        }
+        .showcase-row-title {
+            font-size: 0.96rem;
+            font-weight: 700;
+            color: #fff;
+            text-decoration: none;
+            margin-bottom: 4px;
+            display: block;
+        }
+        .showcase-row-title:hover { color: #ff758f; }
+        .showcase-row-creator {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.55);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .showcase-row-meta {
+            font-size: 0.88rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.85);
+        }
+        .btn-table-dl {
+            padding: 8px 16px;
+            border-radius: 10px;
+            background: rgba(255, 43, 82, 0.15);
+            border: 1px solid rgba(255, 43, 82, 0.35);
+            color: #fff;
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            transition: all 0.2s ease;
+            justify-content: center;
+        }
+        .btn-table-dl:hover {
+            background: #ff2b52;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(255, 43, 82, 0.4);
+            color: #fff;
+        }
+
     </style>
 </head>
 <body>
@@ -394,16 +734,47 @@
             <div class="glass-stat"><div class="st-icon"><i class="fas fa-download"></i></div><div class="st-info"><strong id="statDL">--</strong><span>Downloads</span></div></div>
         </div>
 
-        <!-- TOOLBAR -->
-        <div class="toolbar">
-            <div class="search-wrap"><i class="fas fa-search"></i><input type="text" id="spSearch" placeholder="Search by title, creator, uploader..."></div>
-            <span class="results-count" id="resultsCount"></span>
+                <!-- VIEW TABS -->
+        <div class="sp-view-tabs">
+            <button type="button" class="sp-view-tab active" id="tabAllPacks" onclick="switchSPView('all')">
+                <i class="fas fa-layer-group"></i> All Scenepacks
+            </button>
+            <button type="button" class="sp-view-tab" id="tabProductions" onclick="switchSPView('productions')">
+                <i class="fas fa-film"></i> Films &amp; Series <span class="imdb-mini-tag">IMDb Hub</span>
+            </button>
         </div>
 
-        <!-- GRID -->
-        <div class="sp-grid" id="spGrid">
-            <div class="empty"><i class="fas fa-film"></i><p>Loading scenepacks...</p></div>
+        <!-- CONTAINER FOR PRODUCTIONS VIEW (IMDB HUB) -->
+        <div id="productionsSection" style="display:none;">
+            <!-- SHOWCASE DETAIL (IMAGE 1 STYLE) -->
+            <div id="productionShowcaseContainer" style="display:none;"></div>
+
+            <!-- PRODUCTIONS GRID -->
+            <div id="productionsGridContainer">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px">
+                    <h3 style="font-size:1.15rem;font-weight:800;color:#fff;margin:0;display:flex;align-items:center;gap:8px">
+                        <i class="fas fa-clapperboard" style="color:var(--cherry-light)"></i> Browse by Movie &amp; TV Series
+                    </h3>
+                    <span style="font-size:0.8rem;color:var(--text-muted)">Matched with official IMDb ratings &amp; posters</span>
+                </div>
+                <div class="productions-grid" id="productionsGrid"></div>
+            </div>
         </div>
+
+        <!-- CONTAINER FOR ALL PACKS VIEW -->
+        <div id="allPacksSection">
+            <!-- TOOLBAR -->
+            <div class="toolbar">
+                <div class="search-wrap"><i class="fas fa-search"></i><input type="text" id="spSearch" placeholder="Search by title, creator, show origin..."></div>
+                <span class="results-count" id="resultsCount"></span>
+            </div>
+
+            <!-- GRID -->
+            <div class="sp-grid" id="spGrid">
+                <div class="empty"><i class="fas fa-film"></i><p>Loading scenepacks...</p></div>
+            </div>
+        </div>
+    </div>
     </div>
 
     <!-- PREVIEW MODAL -->
@@ -505,12 +876,20 @@
         </div>
     </footer>
 
+    <script src="js/scenepack-imdb.js?v=2"></script>
     <script src="js/auth.js?v=10"></script>
     <script src="js/script.js?v=5"></script>
     <script>
         var allSP = [];
         var creatorIndex = {};
         var discordAvatarCache = {};
+        var currentViewMode = 'all';
+        var currentActiveProd = null;
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
 
         // Fetch Discord profile photo via Zyrex VPS Bot API
         async function fetchUploaderDiscordAvatar(uploaderId, fallbackHashOrUrl) {
@@ -520,46 +899,31 @@
                 return 'https://cdn.discordapp.com/embed/avatars/0.png';
             }
             if (discordAvatarCache[uploaderId]) return discordAvatarCache[uploaderId];
-
+            
             try {
-                var controller = new AbortController();
-                var timer = setTimeout(function(){ controller.abort(); }, 2500);
-
-                var resp = await fetch('/api/presence/' + uploaderId, {
-                    headers: {
-                        "X-Zyrex-Key": "zyrex_app_sec_k982f81a7b54c29013e9a",
-                        "Accept": "application/json"
-                    },
-                    signal: controller.signal
-                });
-                clearTimeout(timer);
-
-                if (resp.ok) {
-                    var json = await resp.json();
-                    var d = json.data || json[uploaderId] || json;
-                    var u = d.discord_user || d;
-                    if (u && u.avatar) {
-                        var avatarUrl = '';
-                        if (u.avatar.startsWith('http://') || u.avatar.startsWith('https://')) {
-                            avatarUrl = u.avatar;
-                        } else {
-                            var ext = u.avatar.startsWith('a_') ? 'gif' : 'png';
-                            avatarUrl = '/api/avatar/' + uploaderId + '/' + u.avatar + '.' + ext + '?size=128';
-                        }
-                        discordAvatarCache[uploaderId] = avatarUrl;
-                        return avatarUrl;
+                var res = await fetch('/api/discord-user/' + uploaderId);
+                if (res.ok) {
+                    var data = await res.json();
+                    if (data && data.avatar_url) {
+                        discordAvatarCache[uploaderId] = data.avatar_url;
+                        return data.avatar_url;
                     }
                 }
             } catch(e) {}
-
+            
+            if (fallbackHashOrUrl && fallbackHashOrUrl.startsWith('http')) {
+                discordAvatarCache[uploaderId] = fallbackHashOrUrl;
+                return fallbackHashOrUrl;
+            }
             if (fallbackHashOrUrl) {
-                if (fallbackHashOrUrl.startsWith('http')) return fallbackHashOrUrl;
-                var ext = fallbackHashOrUrl.startsWith('a_') ? 'gif' : 'png';
-                return '/api/avatar/' + uploaderId + '/' + fallbackHashOrUrl + '.' + ext + '?size=128';
+                var url = '/api/avatar/' + uploaderId + '/' + fallbackHashOrUrl + '.png?size=128';
+                discordAvatarCache[uploaderId] = url;
+                return url;
             }
             return 'https://cdn.discordapp.com/embed/avatars/0.png';
         }
 
+        // Only load avatars for real Discord uploaders (DO NOT touch creators)
         function loadUploaderAvatars() {
             document.querySelectorAll('img[data-uploader-id]').forEach(async function(img) {
                 var uid = img.getAttribute('data-uploader-id');
@@ -570,11 +934,249 @@
                 }
             });
         }
-        
+
+        function updateStats(items) {
+            document.getElementById('statTotal').textContent = items.length;
+            var creators = {};
+            items.forEach(function(p){ var c = p.creator_nickname || p.author_name; if(c) creators[c] = 1; });
+            document.getElementById('statCreators').textContent = Object.keys(creators).length;
+            var dl = items.reduce(function(s, x){ return s + (x.downloads || 0); }, 0);
+            document.getElementById('statDL').textContent = dl >= 1000 ? (dl / 1000).toFixed(1) + 'k' : dl;
+        }
+
+        // Render scenepack cards with TRUE creator vs uploader distinction
+        function renderSP(items) {
+            var grid = document.getElementById('spGrid');
+            if (items.length === 0) {
+                grid.innerHTML = '<div class="empty"><i class="fas fa-search"></i><p>No scenepacks found matching your search.</p></div>';
+                document.getElementById('resultsCount').textContent = '';
+            } else {
+                grid.innerHTML = items.map(function(p){
+                    var prod = typeof findProductionForScenepack === 'function' ? findProductionForScenepack(p) : null;
+                    var imageSrc = p.thumbnail && p.thumbnail !== 'assets/content.png' ? p.thumbnail : (prod ? prod.poster : 'assets/content.png');
+                    var idString = String(p.id);
+
+                    // True Creator vs Zyrex Uploader
+                    var hasCreator = Boolean((p.creator_nickname || p.author_name || '').trim());
+                    var creatorName = p.creator_nickname || p.author_name || '';
+                    var creatorAv = p.creator_avatar || '';
+                    var uploaderName = p.uploader_name || 'Zyrex Member';
+                    var uploaderAv = p.uploader_avatar || 'https://cdn.discordapp.com/embed/avatars/0.png';
+                    var uploaderId = p.uploader_id || '';
+
+                    var avHtml = '';
+                    var nameHtml = '';
+                    var subHtml = '';
+
+                    if (hasCreator) {
+                        avHtml = '<img class="sp-uploader-av" src="' + (creatorAv || 'assets/content.png') + '" onerror="this.src=\'assets/content.png\'" alt="">';
+                        nameHtml = '<span class="sp-uploader-name">' + escapeHtml(creatorName) + '</span>';
+                        subHtml = '<span class="sp-uploader-sub" style="color:var(--cherry-light);font-weight:700">Creator</span>';
+                    } else {
+                        avHtml = '<img class="sp-uploader-av" data-uploader-id="' + uploaderId + '" data-fallback="' + uploaderAv + '" src="https://cdn.discordapp.com/embed/avatars/0.png" alt="">';
+                        nameHtml = '<span class="sp-uploader-name">' + escapeHtml(uploaderName) + '</span>';
+                        subHtml = '<span class="sp-uploader-sub">Uploaded by</span>';
+                    }
+
+                    return '<a class="sp-card" href="/product-scenepack?id=' + idString + '">' +
+                        '<div class="sp-card-thumb">' +
+                            '<img src="' + imageSrc + '" alt="" onerror="this.src=\'assets/content.png\'">' +
+                            '<div class="sp-thumb-overlay"></div>' +
+                            (prod && prod.rating ? '<span style="position:absolute;top:10px;right:10px;background:#f5c518;color:#000;font-size:0.68rem;font-weight:900;padding:2px 6px;border-radius:4px;z-index:2"><i class="fab fa-imdb"></i> ' + prod.rating + '</span>' : '') +
+                        '</div>' +
+                        '<div class="sp-card-body">' +
+                            '<h3 class="sp-card-title">' + escapeHtml(p.name) + '</h3>' +
+                            '<div class="sp-uploader-row">' +
+                                '<div class="sp-uploader-info">' +
+                                    avHtml +
+                                    '<div>' +
+                                        nameHtml +
+                                        subHtml +
+                                    '</div>' +
+                                '</div>' +
+                                '<span class="sp-dl-count"><i class="fas fa-download" style="color:var(--cherry-light)"></i> ' + (p.downloads || 0) + '</span>' +
+                            '</div>' +
+                        '</div>' +
+                    '</a>';
+                }).join('');
+                document.getElementById('resultsCount').textContent = items.length + ' scenepack' + (items.length !== 1 ? 's' : '');
+                loadUploaderAvatars();
+            }
+        }
+
+        // ================== VIEW SWITCHER & IMDB HUB ==================
+        function switchSPView(mode) {
+            currentViewMode = mode;
+            var tabAll = document.getElementById('tabAllPacks');
+            var tabProd = document.getElementById('tabProductions');
+            var allSec = document.getElementById('allPacksSection');
+            var prodSec = document.getElementById('productionsSection');
+
+            if (mode === 'productions') {
+                tabAll.classList.remove('active');
+                tabProd.classList.add('active');
+                allSec.style.display = 'none';
+                prodSec.style.display = 'block';
+                renderProductionsGrid();
+            } else {
+                tabProd.classList.remove('active');
+                tabAll.classList.add('active');
+                prodSec.style.display = 'none';
+                allSec.style.display = 'block';
+                closeProductionView();
+            }
+        }
+
+        // Render Productions Grid (Films & Series)
+        function renderProductionsGrid() {
+            var grid = document.getElementById('productionsGrid');
+            var prods = typeof getAllIMDbProductions === 'function' ? getAllIMDbProductions() : [];
+            
+            grid.innerHTML = prods.map(function(pr) {
+                var matchingCount = allSP.filter(function(p){
+                    var match = typeof findProductionForScenepack === 'function' ? findProductionForScenepack(p) : null;
+                    return match && match.id === pr.id;
+                }).length;
+
+                return '<div class="prod-card" onclick="openProductionView(\'' + pr.id + '\')">' +
+                    '<div class="prod-poster-box">' +
+                        '<img src="' + pr.poster + '" alt="' + escapeHtml(pr.title) + '" class="prod-poster-img" onerror="this.src=\'assets/content.png\'">' +
+                        '<div class="prod-imdb-badge"><i class="fab fa-imdb"></i> ' + pr.rating + '</div>' +
+                        '<div class="prod-count-pill">' + matchingCount + ' pack' + (matchingCount !== 1 ? 's' : '') + '</div>' +
+                    '</div>' +
+                    '<div class="prod-body">' +
+                        '<div>' +
+                            '<h4 class="prod-title">' + escapeHtml(pr.title) + '</h4>' +
+                            '<p class="prod-sub">' + escapeHtml(pr.year) + ' · ' + escapeHtml(pr.type) + '</p>' +
+                        '</div>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        // Open Image 1 Style Production Showcase View
+        function openProductionView(prodId) {
+            var pr = typeof getProductionById === 'function' ? getProductionById(prodId) : null;
+            if (!pr) return;
+
+            currentActiveProd = pr;
+            document.getElementById('productionsGridContainer').style.display = 'none';
+            var container = document.getElementById('productionShowcaseContainer');
+            container.style.display = 'block';
+
+            var matchingPacks = allSP.filter(function(p){
+                var match = typeof findProductionForScenepack === 'function' ? findProductionForScenepack(p) : null;
+                return match && match.id === pr.id;
+            });
+
+            var totalDL = matchingPacks.reduce(function(acc, x){ return acc + (x.downloads || 0); }, 0);
+
+            container.innerHTML = `
+                <button class="showcase-back-btn" onclick="closeProductionView()">
+                    <i class="fas fa-arrow-left"></i> All Films &amp; Series
+                </button>
+
+                <div class="production-showcase-view">
+                    <!-- HEADER ROW (IMAGE 1 STYLE) -->
+                    <div class="prod-showcase-header">
+                        <div class="prod-showcase-poster">
+                            <img src="${pr.poster}" alt="${escapeHtml(pr.title)}" onerror="this.src='assets/content.png'">
+                        </div>
+                        <div class="prod-showcase-info">
+                            <h1>${escapeHtml(pr.title)}</h1>
+                            <div class="prod-showcase-meta">
+                                ${escapeHtml(pr.year)} · Directed by ${escapeHtml(pr.directors)} · ${escapeHtml(pr.genres)} · ${escapeHtml(pr.type)}
+                            </div>
+                            <div class="prod-stats-strip">
+                                <span><strong>${matchingPacks.length}</strong> scenepacks</span>
+                                <span>·</span>
+                                <span><strong>${totalDL.toLocaleString()}</strong> downloads</span>
+                                <div class="showcase-badge-row" style="margin: 0; margin-left: auto;">
+                                    <span class="badge-imdb"><i class="fab fa-imdb"></i> ${pr.rating}/10</span>
+                                    ${pr.rotten ? `<span class="badge-rotten"><i class="fas fa-fire"></i> ${pr.rotten}</span>` : ''}
+                                </div>
+                            </div>
+                            <div class="prod-cast-list">
+                                <strong>Cast:</strong> ${escapeHtml(pr.cast)}
+                            </div>
+                            ${pr.tagline ? `<div class="prod-tagline">"${escapeHtml(pr.tagline)}"</div>` : ''}
+                            
+                            <!-- IN-SHOW SEARCH BAR -->
+                            <div class="search-wrap" style="max-width: 100%; margin-top: 14px;">
+                                <i class="fas fa-search"></i>
+                                <input type="text" id="showcaseSearchInput" placeholder="Search scenepacks in ${escapeHtml(pr.title)} (name, character, creator)..." oninput="filterShowcaseTable(this.value)">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SHOWCASE SCENEPACKS TABLE (IMAGE 1 STYLE) -->
+                    <div class="showcase-table-wrap">
+                        <div class="showcase-table-header">
+                            <div>SCENEPACK</div>
+                            <div>SIZE</div>
+                            <div>DOWNLOADS</div>
+                            <div style="text-align:right">ACTION</div>
+                        </div>
+                        <div id="showcaseTableBody">
+                            ${renderShowcaseRows(matchingPacks)}
+                        </div>
+                    </div>
+                </div>
+            `;
+            window.scrollTo({ top: 280, behavior: 'smooth' });
+        }
+
+        function renderShowcaseRows(packs) {
+            if (!packs || packs.length === 0) {
+                return '<div style="padding: 30px; text-align: center; color: rgba(255,255,255,0.5);"><i class="fas fa-film" style="font-size: 1.5rem; margin-bottom: 8px; display:block"></i>No scenepacks registered for this production yet. Check back soon!</div>';
+            }
+            return packs.map(function(p) {
+                var creator = p.creator_nickname || p.author_name || 'Community Creator';
+                var size = p.file_size || p.size || '3.5 GB';
+                var downloads = (p.downloads || 0).toLocaleString();
+
+                return '<div class="showcase-row">' +
+                    '<div>' +
+                        '<a href="/product-scenepack?id=' + p.id + '" class="showcase-row-title">' + escapeHtml(p.name) + '</a>' +
+                        '<span class="showcase-row-creator"><i class="fas fa-user-pen" style="color:var(--cherry-light)"></i> ' + escapeHtml(creator) + '</span>' +
+                    '</div>' +
+                    '<div class="showcase-row-meta">' + escapeHtml(size) + '</div>' +
+                    '<div class="showcase-row-meta">' + downloads + '</div>' +
+                    '<div style="text-align:right">' +
+                        '<a href="/product-scenepack?id=' + p.id + '" class="btn-table-dl">' +
+                            '<i class="fas fa-download"></i> Get' +
+                        '</a>' +
+                    '</div>' +
+                '</div>';
+            }).join('');
+        }
+
+        function filterShowcaseTable(query) {
+            if (!currentActiveProd) return;
+            var q = (query || '').toLowerCase().trim();
+            var packs = allSP.filter(function(p){
+                var match = typeof findProductionForScenepack === 'function' ? findProductionForScenepack(p) : null;
+                return match && match.id === currentActiveProd.id;
+            });
+            if (q) {
+                packs = packs.filter(function(p){
+                    var txt = [p.name, p.creator_nickname, p.author_name, p.description].join(' ').toLowerCase();
+                    return txt.indexOf(q) !== -1;
+                });
+            }
+            document.getElementById('showcaseTableBody').innerHTML = renderShowcaseRows(packs);
+        }
+
+        function closeProductionView() {
+            currentActiveProd = null;
+            document.getElementById('productionShowcaseContainer').style.display = 'none';
+            document.getElementById('productionsGridContainer').style.display = 'block';
+        }
+
         fetch('/api/search/creator-index').then(function(r){ return r.json(); }).then(function(d){
             if (d && d.success && d.index) creatorIndex = d.index;
         }).catch(function(){});
-        
+
         (async function(){
             try {
                 var r = await fetch('/api/products?type=scenepack');
@@ -583,97 +1185,20 @@
                     allSP = data;
                     updateStats(data);
                     renderSP(data);
+
+                    // Check URL parameter for ?production=...
+                    var urlParams = new URLSearchParams(window.location.search);
+                    var prodParam = urlParams.get('production');
+                    if (prodParam) {
+                        switchSPView('productions');
+                        openProductionView(prodParam);
+                    }
                 } else {
                     document.getElementById('spGrid').innerHTML = '<div class="empty"><i class="fas fa-film"></i><p>No scenepacks yet. Check back soon!</p></div>';
                 }
             } catch(e) {}
         })();
 
-        function updateStats(items) {
-            document.getElementById('statTotal').textContent = items.length;
-            var creators = {};
-            items.forEach(function(p){ var c = p.creator_nickname||p.author_name; if(c) creators[c]=1; });
-            document.getElementById('statCreators').textContent = Object.keys(creators).length;
-            var dl = items.reduce(function(s,x){ return s+(x.downloads||0); },0);
-            document.getElementById('statDL').textContent = dl>=1000?(dl/1000).toFixed(1)+'k':dl;
-        }
-        
-        function renderSP(items) {
-            var grid = document.getElementById('spGrid');
-            if (items.length === 0) {
-                grid.innerHTML = '<div class="empty"><i class="fas fa-search"></i><p>No scenepacks found matching your search.</p></div>';
-                document.getElementById('resultsCount').textContent = '';
-            } else {
-                grid.innerHTML = items.map(function(p){
-                    var imageSrc = p.thumbnail || 'assets/content.png';
-                    var idString = String(p.id);
-                    var uploaderId = p.uploader_id || p.author_id || '';
-                    var uploaderName = p.creator_nickname || p.author_name || p.uploader_name || 'Zyrex';
-                    var fallbackAv = p.uploader_avatar || p.creator_avatar || '';
-
-                    return '<a class="sp-card" href="/product-scenepack?id=' + idString + '">' +
-                        '<div class="sp-card-thumb">' +
-                            '<img src="' + imageSrc + '" alt="" onerror="this.src=\'assets/content.png\'">' +
-                            '<div class="sp-thumb-overlay"></div>' +
-                        '</div>' +
-                        '<div class="sp-card-body">' +
-                            '<h3 class="sp-card-title">' + p.name + '</h3>' +
-                            '<div class="sp-uploader-row">' +
-                                '<div class="sp-uploader-info">' +
-                                    '<img class="sp-uploader-av" data-uploader-id="' + uploaderId + '" data-fallback="' + fallbackAv + '" src="https://cdn.discordapp.com/embed/avatars/0.png" alt="">' +
-                                    '<div>' +
-                                        '<span class="sp-uploader-name">' + uploaderName + '</span>' +
-                                        '<span class="sp-uploader-sub">Uploaded by</span>' +
-                                    '</div>' +
-                                '</div>' +
-                                '<span class="sp-dl-count"><i class="fas fa-download" style="color:var(--cherry-light)"></i> ' + (p.downloads || 0) + '</span>' +
-                            '</div>' +
-                        '</div>' +
-                    '</a>';
-                }).join('');
-                document.getElementById('resultsCount').textContent = items.length+' scenepack'+(items.length!==1?'s':'');
-                loadUploaderAvatars();
-            }
-        }
-        
-        var activeProductId = null;
-        async function openScenepackModal(id) {
-            var p = allSP.find(function(item){ return String(item.id) === String(id); });
-            if (!p) return;
-            
-            activeProductId = id;
-            
-            var modalThumb = document.getElementById('spModalThumb');
-            modalThumb.src = p.thumbnail || 'assets/content.png';
-            document.getElementById('spModalTitle').textContent = p.name;
-            document.getElementById('spModalDesc').textContent = p.description || p.desc || 'No description available for this scene pack.';
-            
-            var uploaderId = p.uploader_id || p.author_id || '';
-            var uploaderName = p.creator_nickname || p.author_name || p.uploader_name || 'Zyrex';
-            document.getElementById('spModalCreator').textContent = uploaderName;
-            document.getElementById('spModalDownloads').textContent = p.downloads || 0;
-            
-            var uploaderAvatarEl = document.getElementById('spModalUploaderAv');
-            if (uploaderAvatarEl) {
-                var avUrl = await fetchUploaderDiscordAvatar(uploaderId, p.uploader_avatar || p.creator_avatar);
-                uploaderAvatarEl.src = avUrl;
-            }
-            
-            var dlBtn = document.getElementById('spModalDownloadBtn');
-            dlBtn.href = '/product-scenepack?id=' + p.id;
-            
-            document.getElementById('scenepackModal').classList.add('active');
-        }
-        
-        function closeScenepackModal() {
-            document.getElementById('scenepackModal').classList.remove('active');
-        }
-        
-        window.addEventListener('click', function(e) {
-            var modal = document.getElementById('scenepackModal');
-            if (e.target === modal) closeScenepackModal();
-        });
-        
         document.addEventListener('input', function(e) {
             if (e.target.id !== 'spSearch') return;
             var s = e.target.value.toLowerCase().trim();

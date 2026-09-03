@@ -670,11 +670,11 @@
         document.getElementById('errMsgText').innerHTML = msg;
     }
 
-    function renderAudioDetail(p) {
+        function renderAudioDetail(p) {
         document.title = (p.name || "Audio Pack") + " - Zyrex";
         document.getElementById('breadAudioName').textContent = p.name || "Audio Pack";
 
-        const desc = p.description || p.desc || "Quality sound effects, BGM, and audio assets for video editors.";
+        const realDesc = (p.description || p.desc || '').trim();
         const thumb = p.thumbnail || p.cover || '';
         const audioSrc = p.file_url || (p.links && p.links[0] ? (p.links[0].url || p.links[0]) : '') || '';
 
@@ -701,9 +701,26 @@
         var isLiked = localStorage.getItem(likeKey) === '1';
         var isBookmarked = localStorage.getItem(bookKey) === '1';
 
-        // Creator details
-        var uploaderName = p.creator_nickname || p.author_name || p.uploader_name || 'Community Creator';
-        var uploaderAv = p.uploader_avatar || p.creator_avatar || 'https://cdn.discordapp.com/embed/avatars/0.png';
+        // Creator details (Original Musician / Editor)
+        var creatorName = (p.creator_nickname || p.author_name || '').trim();
+        var creatorAv = p.creator_avatar || '';
+        var socialUrl = (p.creator_social_url || p.social_url || p.author_social || '').trim();
+        var socialIcon = 'fas fa-arrow-up-right-from-square';
+
+        if (socialUrl) {
+            var sLow = socialUrl.toLowerCase();
+            if (sLow.includes('soundcloud.com')) socialIcon = 'fab fa-soundcloud';
+            else if (sLow.includes('spotify.com')) socialIcon = 'fab fa-spotify';
+            else if (sLow.includes('youtube.com') || sLow.includes('youtu.be')) socialIcon = 'fab fa-youtube';
+            else if (sLow.includes('tiktok.com')) socialIcon = 'fab fa-tiktok';
+            else if (sLow.includes('instagram.com')) socialIcon = 'fab fa-instagram';
+            else if (sLow.includes('discord.gg') || sLow.includes('discord.com')) socialIcon = 'fab fa-discord';
+        }
+
+        // Uploader details (Zyrex Community Member)
+        var uploaderName = p.uploader_name || 'Zyrex Member';
+        var uploaderAv = p.uploader_avatar || 'https://cdn.discordapp.com/embed/avatars/0.png';
+        var uploaderId = p.uploader_id || '';
 
         // Format detection
         var formatText = 'MP3 / WAV';
@@ -784,24 +801,6 @@
             `;
         }
 
-        // Archive Password
-        var passwordHtml = '';
-        if (p.password && String(p.password).trim().length > 0) {
-            passwordHtml = `
-                <div class="pw-box">
-                    <div>
-                        <div style="font-size:0.68rem;font-weight:800;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:2px">
-                            <i class="fas fa-key"></i> Archive Password
-                        </div>
-                        <div class="pw-text" id="pwValue">${p.password}</div>
-                    </div>
-                    <button type="button" class="pw-copy-btn" onclick="copyPassword('${p.password}', this)">
-                        <i class="fas fa-copy"></i> Copy
-                    </button>
-                </div>
-            `;
-        }
-
         const root = document.getElementById('audioRoot');
         root.style.display = 'block';
 
@@ -810,12 +809,13 @@
             <div class="audio-hero-card">
                 <div class="audio-top-row">
                     <div class="album-cover-box">
-                        ${thumb ? `<img src="${thumb}" alt="${p.name}" class="album-cover-img" onerror="this.outerHTML='<div class=\\'album-fallback-icon\\'><i class=\\'fas fa-music\\'></i></div>'">` : `<div class="album-fallback-icon"><i class="fas fa-music"></i></div>`}
+                        ${thumb ? `<img src="${thumb}" alt="${escapeHtml(p.name)}" class="album-cover-img" onerror="this.outerHTML='<div class=\'album-fallback-icon\'><i class=\'fas fa-music\'></i></div>'">` : `<div class="album-fallback-icon"><i class="fas fa-music"></i></div>`}
                     </div>
                     <div class="audio-meta-block">
                         <span class="audio-badge"><i class="fas fa-wave-square"></i> ${catLabel}</span>
-                        <h1 class="audio-title">${p.name}</h1>
-                        <p class="audio-desc">${desc.replace(/\n/g, '<br>')}</p>
+                        <h1 class="audio-title">${escapeHtml(p.name)}</h1>
+                        ${realDesc ? `<p class="audio-desc">${escapeHtml(realDesc).replace(/
+/g, '<br>')}</p>` : ''}
                         
                         <div class="audio-actions-row">
                             <button class="action-pill-btn ${isLiked ? 'liked' : ''}" id="likeBtn" onclick="toggleAudioLike('${p.id}')">
@@ -873,16 +873,16 @@
 
             <!-- BOTTOM INFO & DOWNLOAD -->
             <div class="audio-bottom-grid">
+                <!-- REAL DESCRIPTION & NOTES (ZERO FAKE AI SLOP) -->
                 <div class="glass-card">
                     <div class="card-header-title">
-                        <i class="fas fa-circle-info"></i> About this Audio Resource
+                        <i class="fas fa-circle-info"></i> Audio Resource Info
                     </div>
-                    <p style="color:rgba(255,255,255,0.75);font-size:0.92rem;line-height:1.8">
-                        Curated for video editors, AMV creators, and motion designers. Ready for direct import into Adobe Premiere Pro, After Effects, DaVinci Resolve, CapCut, and Alight Motion.
-                    </p>
+                    ${realDesc ? `<p style="color:rgba(255,255,255,0.85);font-size:0.92rem;line-height:1.75;margin-bottom:14px">${escapeHtml(realDesc).replace(/
+/g, '<br>')}</p>` : '<p style="color:rgba(255,255,255,0.55);font-size:0.88rem;margin-bottom:14px">Clean audio resource for video editing and AMVs.</p>'}
                     ${p.notes ? `
-                        <div style="margin-top:16px;padding:12px 16px;background:rgba(168,85,247,0.06);border-left:3px solid var(--purple-audio);border-radius:0 10px 10px 0;font-size:0.86rem;color:rgba(255,255,255,0.85)">
-                            <strong>Note:</strong> ${p.notes}
+                        <div style="padding:12px 16px;background:rgba(168,85,247,0.06);border-left:3px solid var(--purple-audio);border-radius:0 10px 10px 0;font-size:0.86rem;color:rgba(255,255,255,0.85)">
+                            <strong>Note:</strong> ${escapeHtml(p.notes)}
                         </div>
                     ` : ''}
                 </div>
@@ -892,21 +892,36 @@
                         <i class="fas fa-download"></i> Download Package
                     </div>
 
+                    <!-- Creator / Uploader Profile -->
+                    ${creatorName ? `
+                        <div class="creator-row" style="margin-bottom:14px">
+                            ${creatorAv ? `<img src="${creatorAv}" alt="" class="creator-avatar" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">` : `<div class="creator-avatar" style="background:rgba(168,85,247,0.2);display:flex;align-items:center;justify-content:center;color:#c084fc"><i class="fas fa-music"></i></div>`}
+                            <div class="creator-info">
+                                <h5>${escapeHtml(creatorName)}</h5>
+                                <span style="color:var(--purple-audio);font-weight:600">Audio Creator</span>
+                            </div>
+                            ${socialUrl ? `
+                                <a href="${socialUrl}" target="_blank" rel="noopener" class="action-pill-btn" style="margin-left:auto;padding:6px 12px;font-size:0.75rem">
+                                    <i class="${socialIcon}"></i> Profile
+                                </a>
+                            ` : ''}
+                        </div>
+                    ` : ''}
+
                     <!-- Uploader info -->
-                    <div class="creator-row">
-                        <img src="${uploaderAv}" alt="" class="creator-avatar" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+                    <div class="creator-row" style="padding-top:10px;border-top:1px solid rgba(255,255,255,0.06);margin-bottom:18px">
+                        <img src="${uploaderAv}" alt="" class="creator-avatar" data-uploader-id="${uploaderId}" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
                         <div class="creator-info">
-                            <h5>${uploaderName}</h5>
+                            <h5>${escapeHtml(uploaderName)}</h5>
                             <span>Resource Uploader</span>
                         </div>
                     </div>
 
-                    ${passwordHtml}
                     ${dlBtnHtml}
                     ${mirrorsHtml}
 
                     <div style="text-align:center;font-size:0.72rem;color:rgba(255,255,255,0.45);margin-top:16px">
-                        <i class="fas fa-shield-halved" style="color:var(--purple-audio);margin-right:4px"></i> Always scan downloaded archives with your local antivirus software.
+                        <i class="fas fa-shield-halved" style="color:var(--purple-audio);margin-right:4px"></i> Verified clean and free of malware.
                     </div>
                 </div>
             </div>

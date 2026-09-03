@@ -635,9 +635,26 @@
                         ? '<img src="'+p.thumbnail+'" alt="" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'block\'"><i class="fas fa-music" style="display:none"></i>' 
                         : '<i class="fas fa-music"></i>';
                     
-                    var uploaderId = p.uploader_id || p.author_id || '';
-                    var uploaderName = p.creator_nickname || p.author_name || p.uploader_name || 'Zyrex';
-                    var fallbackAv = p.uploader_avatar || p.creator_avatar || '';
+                    var hasCreator = Boolean((p.creator_nickname || p.author_name || '').trim());
+                    var creatorName = p.creator_nickname || p.author_name || '';
+                    var creatorAv = p.creator_avatar || '';
+                    var uploaderName = p.uploader_name || 'Zyrex Member';
+                    var uploaderAv = p.uploader_avatar || 'https://cdn.discordapp.com/embed/avatars/0.png';
+                    var uploaderId = p.uploader_id || '';
+
+                    var avImg = '';
+                    var nameText = '';
+                    var subText = '';
+
+                    if (hasCreator) {
+                        avImg = '<img src="' + (creatorAv || 'assets/content.png') + '" onerror="this.src=\'assets/content.png\'" alt="">';
+                        nameText = creatorName;
+                        subText = '<span style="color:var(--cherry-light);font-weight:700">Creator</span>';
+                    } else {
+                        avImg = '<img data-uploader-id="' + uploaderId + '" data-fallback="' + uploaderAv + '" src="https://cdn.discordapp.com/embed/avatars/0.png" alt="">';
+                        nameText = uploaderName;
+                        subText = '<span>Uploaded by</span>';
+                    }
 
                     return '<tr>' +
                         '<td style="text-align: center;"><button class="ac-play" onclick="playPreview(event,\''+p.id+'\',this)" title="Preview"><i class="fas fa-play"></i></button></td>' +
@@ -650,8 +667,8 @@
                         '<td>' + catTag + '</td>' +
                         '<td>' +
                             '<div class="creator-profile-cell">' +
-                                '<img data-uploader-id="' + uploaderId + '" data-fallback="' + fallbackAv + '" src="https://cdn.discordapp.com/embed/avatars/0.png" alt="">' +
-                                '<div class="cr-info"><h5>' + uploaderName + '</h5><span>Uploaded by</span></div>' +
+                                avImg +
+                                '<div class="cr-info"><h5>' + nameText + '</h5>' + subText + '</div>' +
                             '</div>' +
                         '</td>' +
                         '<td style="text-align: right; font-weight:700; font-family:monospace; color:var(--text-muted);">' + (p.downloads||0) + '</td>' +
