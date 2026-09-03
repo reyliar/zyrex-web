@@ -29,6 +29,169 @@
     <link rel="stylesheet" href="css/style.css?v=26">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        /* ================== 3D INCOMING ZYREX LOGO & HERO PORTAL ================== */
+        .hero-portal-stage {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1200px;
+        }
+        .hero-portal-nebula {
+            position: absolute;
+            inset: -35px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 59, 96, 0.45) 0%, rgba(225, 29, 72, 0.18) 50%, transparent 75%);
+            filter: blur(20px);
+            animation: nebulaPulse 4s ease-in-out infinite alternate;
+            pointer-events: none;
+        }
+        .hero-portal-shockwave {
+            position: absolute;
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 59, 96, 0.85);
+            opacity: 0;
+            pointer-events: none;
+            animation: shockwaveExpand 2.8s cubic-bezier(0.1, 0.8, 0.3, 1) infinite;
+        }
+        .hero-portal-ring {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+        }
+        .hero-portal-ring.ring-1 {
+            width: 124px;
+            height: 124px;
+            border: 1px dashed rgba(255, 59, 96, 0.4);
+            animation: ringSpinClockwise 22s linear infinite;
+        }
+        .hero-portal-ring.ring-2 {
+            width: 148px;
+            height: 148px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-top: 2px solid rgba(255, 59, 96, 0.7);
+            border-bottom: 2px solid rgba(244, 63, 94, 0.5);
+            animation: ringSpinCounter 16s linear infinite;
+        }
+        .hero-logo-frame {
+            position: relative;
+            width: 86px;
+            height: 86px;
+            border-radius: 24px;
+            background: linear-gradient(145deg, rgba(32, 8, 18, 0.95), rgba(14, 3, 7, 0.98));
+            border: 1px solid rgba(255, 59, 96, 0.45);
+            box-shadow: 0 14px 40px rgba(0, 0, 0, 0.75), 0 0 35px rgba(255, 59, 96, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform-style: preserve-3d;
+            animation: logoZoomFromDistance 1.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        .hero-incoming-logo {
+            width: 54px;
+            height: 54px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 12px rgba(255, 59, 96, 0.8));
+            animation: logoBreathing 3.6s ease-in-out infinite alternate;
+        }
+        @keyframes logoZoomFromDistance {
+            0% {
+                transform: perspective(1000px) translateZ(-950px) translateY(-60px) scale(0.1) rotateX(45deg) rotateY(-30deg);
+                opacity: 0;
+                filter: blur(28px);
+            }
+            58% {
+                transform: perspective(1000px) translateZ(80px) translateY(0) scale(1.14) rotateX(-6deg) rotateY(6deg);
+                opacity: 1;
+                filter: blur(0px);
+            }
+            82% {
+                transform: perspective(1000px) translateZ(-20px) scale(0.96) rotateX(2deg) rotateY(-2deg);
+            }
+            100% {
+                transform: perspective(1000px) translateZ(0) scale(1) rotateX(0) rotateY(0);
+                opacity: 1;
+                filter: blur(0px);
+            }
+        }
+        @keyframes nebulaPulse {
+            0% { transform: scale(0.85); opacity: 0.5; }
+            100% { transform: scale(1.22); opacity: 0.95; }
+        }
+        @keyframes shockwaveExpand {
+            0% { transform: scale(0.65); opacity: 0.9; border-width: 2.5px; }
+            60% { opacity: 0.35; }
+            100% { transform: scale(2.3); opacity: 0; border-width: 1px; }
+        }
+        @keyframes ringSpinClockwise {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes ringSpinCounter {
+            0% { transform: rotate(360deg); }
+            100% { transform: rotate(0deg); }
+        }
+        @keyframes logoBreathing {
+            0% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 12px rgba(255, 59, 96, 0.6)); }
+            100% { transform: translateY(-5px) scale(1.05); filter: drop-shadow(0 0 24px rgba(255, 59, 96, 0.95)); }
+        }
+
+        /* Hero Text Staggered Reveal */
+        .hero-inner h1 {
+            animation: heroTextReveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.35s both;
+        }
+        .hero-inner .lead {
+            animation: heroTextReveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.5s both;
+        }
+        .hero-actions {
+            animation: heroTextReveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.65s both;
+        }
+        .hero-stats-grid {
+            animation: heroTextReveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.8s both;
+        }
+        @keyframes heroTextReveal {
+            from {
+                opacity: 0;
+                transform: translateY(22px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ================== SCROLL-REVEAL LUXURY ANIMATIONS ================== */
+        .reveal-on-scroll {
+            opacity: 0;
+            transform: translateY(34px);
+            transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: opacity, transform;
+        }
+        .reveal-on-scroll.revealed {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        .reveal-scale {
+            opacity: 0;
+            transform: scale(0.93) translateY(24px);
+            transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1), transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+            will-change: opacity, transform;
+        }
+        .reveal-scale.revealed {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+        .reveal-delay-1 { transition-delay: 0.12s; }
+        .reveal-delay-2 { transition-delay: 0.22s; }
+        .reveal-delay-3 { transition-delay: 0.32s; }
+        .reveal-delay-4 { transition-delay: 0.42s; }
+    </style>
 </head>
 <body>
     <div class="bg-aura"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
@@ -64,9 +227,20 @@
         <div class="particles" id="particles"></div>
         <div class="container">
             <div class="hero-inner">
+                <!-- 3D INCOMING ZYREX LOGO STAGE -->
+                <div class="hero-portal-stage">
+                    <div class="hero-portal-nebula"></div>
+                    <div class="hero-portal-ring ring-1"></div>
+                    <div class="hero-portal-ring ring-2"></div>
+                    <div class="hero-portal-shockwave"></div>
+                    <div class="hero-logo-frame">
+                        <img src="assets/content.png" alt="Zyrex Logo" class="hero-incoming-logo">
+                    </div>
+                </div>
+
                 <div class="hero-chip">
                     <img src="assets/content.png" alt="Zyrex Logo" style="width: 1.2em; height: 1.2em; object-fit: contain;">
-                    <span>Zyrex™ Editing</span>
+                    <span>Zyrex™ Creative Vault</span>
                 </div>
                 <h1>Welcome to <span class="cherry-text">Zyrex</span></h1>
                 <p class="lead">
@@ -115,7 +289,7 @@
     </section>
 
     <!-- CREATIVE TOOLS MARQUEE -->
-    <section class="brand-showcase" aria-label="Supported creative applications and plugins">
+    <section class="brand-showcase reveal-on-scroll" aria-label="Supported creative applications and plugins">
         <div class="brand-marquee">
             <div class="brand-track">
                 <div class="brand-group" role="list">
@@ -219,33 +393,33 @@
     </section>
 
     <!-- ABOUT & MISSION UNIFIED SECTION -->
-    <section class="about-intro section-padding">
+    <section class="about-intro section-padding reveal-on-scroll">
         <div class="container">
-            <div class="about-unified-card">
+            <div class="about-unified-card reveal-scale">
                 <div class="about-main-block">
-                    <span class="section-subtitle">Who We Are</span>
-                    <h2 class="section-title warm-text" style="font-size: 2.2rem; margin-bottom: 8px;">About <span class="cherry-text">Zyrex</span></h2>
+                    <span class="section-subtitle">The Creative Underground</span>
+                    <h2 class="section-title warm-text" style="font-size: 2.2rem; margin-bottom: 8px;">Inside <span class="cherry-text">Zyrex</span></h2>
                     <div class="section-divider" style="margin: 12px 0 20px 0; width: 80px;"></div>
                     <p class="about-text">
-                        Zyrex is an open community platform built for video editors, motion designers, and content creators. We provide fast, reliable access to essential plugins, presets, overlays, and software tools to streamline your creative workflow. Whether you are just starting out or working on advanced projects, Zyrex connects creators with the verified resources they need to produce high-impact visuals.
+                        Zyrex was built from the ground up by active editors to eliminate paywalled presets, broken link rot, and predatory download traps. We deliver direct, lightning-fast access to raw 4K scenepacks, color grades, velocity maps, project files, and essential VFX plugins. Backed by dedicated NVMe cloud storage and an elite creator collective, Zyrex powers your editing pipeline with zero compromise.
                     </p>
                 </div>
 
                 <div class="about-pillars-grid">
-                    <div class="pillar-box">
-                        <div class="pillar-icon"><i class="fas fa-eye"></i></div>
-                        <h3>Our Vision</h3>
-                        <p>Building an open, accessible archive of high-quality editing assets for creators everywhere.</p>
+                    <div class="pillar-box reveal-on-scroll reveal-delay-1">
+                        <div class="pillar-icon"><i class="fas fa-compass-drafting"></i></div>
+                        <h3>The Vision</h3>
+                        <p>A borderless creative ecosystem where no editor is held back by paywalls, speed throttles, or scarce software. Unrestricted visual power for all.</p>
                     </div>
-                    <div class="pillar-box">
-                        <div class="pillar-icon"><i class="fas fa-bullseye"></i></div>
-                        <h3>Our Mission</h3>
-                        <p>Delivering verified, fast-download plugins and presets so editors spend time creating, not searching.</p>
+                    <div class="pillar-box reveal-on-scroll reveal-delay-2">
+                        <div class="pillar-icon"><i class="fas fa-gauge-high"></i></div>
+                        <h3>The Mission</h3>
+                        <p>Curating 100% clean, verified project files and presets with 1-click cloud downloads, zero adware, and direct creator attribution.</p>
                     </div>
-                    <div class="pillar-box">
-                        <div class="pillar-icon"><i class="fas fa-bolt"></i></div>
-                        <h3>In Short</h3>
-                        <p>Free, verified editing assets and a supportive creator community — simple and direct.</p>
+                    <div class="pillar-box reveal-on-scroll reveal-delay-3">
+                        <div class="pillar-icon"><i class="fas fa-shield-halved"></i></div>
+                        <h3>The Standard</h3>
+                        <p>Lossless media, verified safe assets, active community mentoring, and raw creative energy across every timeline you render.</p>
                     </div>
                 </div>
             </div>
@@ -253,7 +427,7 @@
     </section>
 
     <!-- TEAM SECTION -->
-    <section id="team" class="team section-padding">
+    <section id="team" class="team section-padding reveal-on-scroll">
         <div class="container">
             <div class="section-header">
                 <h2 class="section-title warm-text">Meet the <span class="cherry-text">Team</span></h2>
@@ -261,7 +435,7 @@
             </div>
             <div class="team-grid" id="teamGrid">
                 <!-- Founder: reyli -->
-                <div class="team-card glass-card-enhanced shimmer-sweep">
+                <div class="team-card glass-card-enhanced shimmer-sweep reveal-scale reveal-delay-1">
                     <a href="https://discord.com/users/1421177012814614548" target="_blank" class="team-card-link">
                         <div class="team-avatar">
                             <img src="/api/avatar/1421177012814614548/66077819163365312e485b95e30001d8.png" alt="reyli" onerror="this.onerror=null;this.src='assets/content.png';">
@@ -273,7 +447,7 @@
                     </a>
                 </div>
                 <!-- Co-Founder: kerem -->
-                <div class="team-card glass-card-enhanced shimmer-sweep">
+                <div class="team-card glass-card-enhanced shimmer-sweep reveal-scale reveal-delay-2">
                     <a href="https://discord.com/users/1382421118098346174" target="_blank" class="team-card-link">
                         <div class="team-avatar">
                             <img src="/api/avatar/1382421118098346174/d6a983ec1a87e899b737422ee50fb441.png" alt="kerem" onerror="this.onerror=null;this.src='assets/content.png';">
@@ -285,7 +459,7 @@
                     </a>
                 </div>
                 <!-- Staff Team: JINA -->
-                <div class="team-card glass-card-enhanced shimmer-sweep">
+                <div class="team-card glass-card-enhanced shimmer-sweep reveal-scale reveal-delay-3">
                     <a href="https://discord.com/users/700282586026737694" target="_blank" class="team-card-link">
                         <div class="team-avatar">
                             <img src="/api/avatar/700282586026737694/f358b6536d5aaf867c158c6c0ffb1463.png" alt="JINA" onerror="this.onerror=null;this.src='assets/content.png';">
@@ -301,7 +475,7 @@
     </section>
 
     <!-- CONTACT SECTION -->
-    <section id="contact" class="contact section-padding">
+    <section id="contact" class="contact section-padding reveal-on-scroll">
         <div class="container">
             <div class="section-header">
                 <span class="section-subtitle">Get In Touch</span>
@@ -309,7 +483,7 @@
                 <div class="section-divider"></div>
             </div>
             <div class="contact-grid">
-                <div class="contact-info glass-card" style="padding: 30px;">
+                <div class="contact-info glass-card reveal-on-scroll reveal-delay-1" style="padding: 30px;">
                     <div class="contact-item">
                         <i class="fab fa-discord"></i>
                         <div>
@@ -332,7 +506,7 @@
                         </a>
                     </div>
                 </div>
-                <form class="contact-form glass-card" id="contactForm" style="padding: 30px;">
+                <form class="contact-form glass-card reveal-on-scroll reveal-delay-2" id="contactForm" style="padding: 30px;">
                     <div class="form-group">
                         <input type="text" placeholder="Your Name" required>
                     </div>
@@ -407,5 +581,24 @@
     <script src="js/auth.js?v=10"></script>
     <script src="js/plugins-data.js"></script>
     <script src="js/script.js?v=5"></script>
+    <script>
+        // Scroll Reveal Observer
+        document.addEventListener('DOMContentLoaded', () => {
+            const revealElements = document.querySelectorAll('.reveal-on-scroll, .reveal-scale');
+            if ('IntersectionObserver' in window) {
+                const observer = new IntersectionObserver((entries, obs) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            entry.target.classList.add('revealed');
+                            obs.unobserve(entry.target);
+                        }
+                    });
+                }, { threshold: 0.12, rootMargin: '0px 0px -30px 0px' });
+                revealElements.forEach(el => observer.observe(el));
+            } else {
+                revealElements.forEach(el => el.classList.add('revealed'));
+            }
+        });
+    </script>
 </body>
 </html>

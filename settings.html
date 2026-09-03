@@ -1492,8 +1492,20 @@
             gap: 14px;
             position: relative;
             backdrop-filter: blur(20px);
-            transition: var(--transition);
+            transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.28s ease, box-shadow 0.28s ease;
             overflow: hidden;
+            animation: memberCardIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+            animation-delay: calc(var(--card-index, 0) * 28ms);
+        }
+        @keyframes memberCardIn {
+            from {
+                opacity: 0;
+                transform: translateY(18px) scale(0.96);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
         }
         .member-card::before {
             content: '';
@@ -1505,6 +1517,10 @@
             background: transparent;
             transition: var(--transition);
         }
+        .member-card.is-staff::before {
+            background: linear-gradient(90deg, #ff3b60, #e11d48, #be123c);
+            box-shadow: 0 0 14px rgba(255, 59, 96, 0.7);
+        }
         .member-card.is-admin::before {
             background: linear-gradient(90deg, var(--cherry-light), #f43f5e);
         }
@@ -1515,9 +1531,9 @@
             background: #ef4444;
         }
         .member-card:hover {
-            border-color: rgba(255, 59, 96, 0.35);
-            transform: translateY(-3px);
-            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45), 0 0 25px rgba(255, 59, 96, 0.08);
+            border-color: rgba(255, 59, 96, 0.48);
+            transform: translateY(-4px);
+            box-shadow: 0 18px 40px rgba(0, 0, 0, 0.65), 0 0 35px rgba(255, 59, 96, 0.18);
         }
         .member-card-top {
             display: flex;
@@ -1706,8 +1722,24 @@
             max-height: 90vh;
             display: flex;
             flex-direction: column;
-            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.85), 0 0 50px rgba(255, 59, 96, 0.12);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.85), 0 0 50px rgba(255, 59, 96, 0.16);
             overflow: hidden;
+            position: relative;
+            animation: modalSpring 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+        }
+        @keyframes modalSpring {
+            from {
+                opacity: 0;
+                transform: scale(0.93) translateY(24px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        .is-loading {
+            pointer-events: none !important;
+            opacity: 0.82 !important;
             position: relative;
         }
         .mod-modal-header {
@@ -2516,6 +2548,10 @@
                         <div class="mod-stat-lbl"><i class="fas fa-users"></i> Total Members</div>
                     </div>
                     <div class="mod-stat-card">
+                        <div class="mod-stat-num" id="modStatStaff" style="color:#ff3b60">-</div>
+                        <div class="mod-stat-lbl"><i class="fas fa-shield-halved" style="color:#ff3b60"></i> Staff Team</div>
+                    </div>
+                    <div class="mod-stat-card">
                         <div class="mod-stat-num" id="modStatOnline" style="color:#23a55a">-</div>
                         <div class="mod-stat-lbl"><i class="fas fa-circle" style="color:#23a55a;font-size:0.55rem;vertical-align:middle;margin-right:2px"></i> Online Now</div>
                     </div>
@@ -2524,8 +2560,8 @@
                         <div class="mod-stat-lbl"><i class="fas fa-cloud-arrow-up"></i> Uploaders</div>
                     </div>
                     <div class="mod-stat-card">
-                        <div class="mod-stat-num" id="modStatAdmins" style="color:var(--cherry-light)">-</div>
-                        <div class="mod-stat-lbl"><i class="fas fa-shield-halved"></i> Admins</div>
+                        <div class="mod-stat-num" id="modStatVerified" style="color:#4ade80">-</div>
+                        <div class="mod-stat-lbl"><i class="fas fa-circle-check"></i> Verified</div>
                     </div>
                     <div class="mod-stat-card">
                         <div class="mod-stat-num" id="modStatTimedOut" style="color:#f43f5e">-</div>
@@ -2545,8 +2581,10 @@
                             <option value="all">All Roles</option>
                         </select>
                         <select id="memberSortSelect" class="mod-select" onchange="filterMembers()">
+                            <option value="staff">Sort: Staff First</option>
                             <option value="admin">Sort: Admins First</option>
                             <option value="uploader">Sort: Uploaders First</option>
+                            <option value="uploads">Sort: Most Uploads</option>
                             <option value="name">Sort: Name (A-Z)</option>
                             <option value="joined">Sort: Recently Joined</option>
                         </select>
@@ -2556,9 +2594,11 @@
                 <!-- Status Filter Chips -->
                 <div class="mod-chips-row">
                     <button class="mod-chip active" data-filter="all" onclick="setMemberFilter('all', this)">All (<span id="chipCountAll">0</span>)</button>
+                    <button class="mod-chip" data-filter="staff" onclick="setMemberFilter('staff', this)"><i class="fas fa-shield-halved" style="color:#ff3b60"></i> Staff Team (<span id="chipCountStaff">0</span>)</button>
                     <button class="mod-chip" data-filter="online" onclick="setMemberFilter('online', this)"><span class="chip-dot" style="background:#23a55a"></span> Online (<span id="chipCountOnline">0</span>)</button>
+                    <button class="mod-chip" data-filter="verified" onclick="setMemberFilter('verified', this)"><i class="fas fa-circle-check" style="color:#22c55e"></i> Verified (<span id="chipCountVerified">0</span>)</button>
                     <button class="mod-chip" data-filter="uploader" onclick="setMemberFilter('uploader', this)"><i class="fas fa-cloud-arrow-up" style="color:#38bdf8"></i> Uploaders (<span id="chipCountUploader">0</span>)</button>
-                    <button class="mod-chip" data-filter="admin" onclick="setMemberFilter('admin', this)"><i class="fas fa-shield-halved" style="color:var(--cherry-light)"></i> Admins (<span id="chipCountAdmin">0</span>)</button>
+                    <button class="mod-chip" data-filter="admin" onclick="setMemberFilter('admin', this)"><i class="fas fa-user-shield" style="color:var(--cherry-light)"></i> Admins (<span id="chipCountAdmin">0</span>)</button>
                     <button class="mod-chip" data-filter="timeout" onclick="setMemberFilter('timeout', this)"><i class="fas fa-clock" style="color:#f43f5e"></i> Timed Out (<span id="chipCountTimeout">0</span>)</button>
                     <button class="mod-chip" data-filter="voice" onclick="setMemberFilter('voice', this)"><i class="fas fa-headphones" style="color:#a855f7"></i> In Voice (<span id="chipCountVoice">0</span>)</button>
                     <button class="mod-chip" data-filter="bot" onclick="setMemberFilter('bot', this)"><i class="fas fa-robot" style="color:#94a3b8"></i> Bots (<span id="chipCountBot">0</span>)</button>
@@ -2839,8 +2879,11 @@
                     <div class="mod-user-title">
                         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
                             <h3 id="modUserDisplayName" style="margin:0;font-size:1.3rem;font-weight:700">Display Name</h3>
+                            <span id="modUserStaffBadge" class="badge" style="display:none;background:linear-gradient(135deg,#ff3b60,#be123c);color:#fff;font-weight:700;box-shadow:0 0 12px rgba(255,59,96,0.35)"><i class="fas fa-shield-halved"></i> Staff</span>
+                            <span id="modUserVerifiedBadge" class="badge" style="display:none;background:rgba(34,197,94,0.18);border:1px solid rgba(34,197,94,0.35);color:#86efac"><i class="fas fa-circle-check"></i> Verified</span>
                             <span id="modUserAdminBadge" class="badge badge-admin" style="display:none">Admin</span>
                             <span id="modUserUploaderBadge" class="badge badge-upload" style="display:none">Uploader</span>
+                            <span id="modUserCloudBadge" class="badge" style="display:none;background:rgba(56,189,248,0.18);border:1px solid rgba(56,189,248,0.35);color:#7dd3fc"><i class="fas fa-cloud"></i> SFTP Uploader</span>
                             <span id="modUserTimeoutBadge" class="badge badge-timeout flag-timeout" style="display:none"><i class="fas fa-clock"></i> Timed Out</span>
                         </div>
                         <div class="mod-user-sub" style="margin-top:2px">
@@ -2862,6 +2905,7 @@
             <!-- Modal Sub-Tabs -->
             <div class="mod-modal-tabs">
                 <button class="mod-tab-btn active" data-modtab="roles" onclick="switchModTab('roles', this)"><i class="fas fa-shield-halved"></i> Roles</button>
+                <button class="mod-tab-btn" data-modtab="zyrex" onclick="switchModTab('zyrex', this)"><i class="fas fa-cube"></i> Zyrex Hub</button>
                 <button class="mod-tab-btn" data-modtab="timeout" onclick="switchModTab('timeout', this)"><i class="fas fa-clock"></i> Timeout</button>
                 <button class="mod-tab-btn" data-modtab="nick" onclick="switchModTab('nick', this)"><i class="fas fa-signature"></i> Nickname</button>
                 <button class="mod-tab-btn" data-modtab="warn" onclick="switchModTab('warn', this)"><i class="fas fa-triangle-exclamation"></i> Warns (<span id="modTabWarnCount">0</span>)</button>
@@ -2890,7 +2934,7 @@
                             <strong style="color:#f43f5e"><i class="fas fa-clock"></i> Currently Timed Out</strong>
                             <p style="margin:4px 0 0;font-size:0.8rem;color:rgba(255,255,255,0.7)" id="modTimeoutUntilText"></p>
                         </div>
-                        <button class="btn-danger-outline" onclick="executeTimeout(0)">Remove Timeout</button>
+                        <button class="btn-danger-outline" id="modTimeoutRemoveBtn" onclick="executeTimeout(0, 'Admin manual reset')">Remove Timeout</button>
                     </div>
 
                     <h4 style="margin:0 0 10px;font-size:0.95rem">Apply Timeout Duration</h4>
@@ -2909,7 +2953,7 @@
                     </div>
 
                     <div style="margin-top:16px;display:flex;justify-content:flex-end">
-                        <button class="btn-primary-glow" onclick="applySelectedTimeout()"><i class="fas fa-gavel"></i> Apply Timeout</button>
+                        <button class="btn-primary-glow" id="modTimeoutApplyBtn" onclick="applySelectedTimeout()"><i class="fas fa-gavel"></i> Apply Timeout</button>
                     </div>
                 </div>
 
@@ -2919,8 +2963,8 @@
                     <p style="font-size:0.82rem;color:var(--text-muted);margin:0 0 14px">Change the member's display nickname inside the Discord guild or reset to original username.</p>
                     <input type="text" id="modNicknameInput" class="mod-input" placeholder="Enter new nickname (leave empty to reset)">
                     <div style="margin-top:16px;display:flex;justify-content:space-between">
-                        <button class="btn-ghost" onclick="resetNickname()"><i class="fas fa-rotate-left"></i> Reset to Default</button>
-                        <button class="btn-primary-glow" onclick="saveNickname()"><i class="fas fa-check"></i> Save Nickname</button>
+                        <button class="btn-ghost" id="modNickResetBtn" onclick="resetNickname()"><i class="fas fa-rotate-left"></i> Reset to Default</button>
+                        <button class="btn-primary-glow" id="modNickSaveBtn" onclick="saveNickname()"><i class="fas fa-check"></i> Save Nickname</button>
                     </div>
                 </div>
 
@@ -2941,7 +2985,7 @@
                         <label style="font-size:0.8rem;color:rgba(255,255,255,0.8);cursor:pointer;display:flex;align-items:center;gap:6px">
                             <input type="checkbox" id="modWarnSendDm" checked style="accent-color:var(--cherry-light)"> Send DM notification to member
                         </label>
-                        <button class="btn-primary-glow" onclick="submitNewWarn()"><i class="fas fa-triangle-exclamation"></i> Issue Warning</button>
+                        <button class="btn-primary-glow" id="modWarnIssueBtn" onclick="submitNewWarn()"><i class="fas fa-triangle-exclamation"></i> Issue Warning</button>
                     </div>
                 </div>
 
@@ -2964,7 +3008,7 @@
                     <textarea id="modDmMessage" class="mod-textarea" rows="4" placeholder="Write your direct message to this member..."></textarea>
 
                     <div style="margin-top:16px;display:flex;justify-content:flex-end">
-                        <button class="btn-primary-glow" onclick="sendDirectMessage()"><i class="fas fa-paper-plane"></i> Send Direct Message</button>
+                        <button class="btn-primary-glow" id="modDmSendBtn" onclick="sendDirectMessage()"><i class="fas fa-paper-plane"></i> Send Direct Message</button>
                     </div>
                 </div>
 
@@ -2981,7 +3025,7 @@
                     <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
                         <button class="btn-ghost" onclick="executeVoiceAction('mute')" id="modVoiceMuteBtn"><i class="fas fa-microphone-slash"></i> Server Mute</button>
                         <button class="btn-ghost" onclick="executeVoiceAction('unmute')" id="modVoiceUnmuteBtn"><i class="fas fa-microphone"></i> Unmute</button>
-                        <button class="btn-danger-outline" onclick="executeVoiceAction('disconnect')"><i class="fas fa-phone-slash"></i> Disconnect from Channel</button>
+                        <button class="btn-danger-outline" onclick="executeVoiceAction('disconnect')" id="modVoiceDisconnectBtn"><i class="fas fa-phone-slash"></i> Disconnect from Channel</button>
                     </div>
                 </div>
 
@@ -2995,7 +3039,7 @@
                                 <p style="margin:0;font-size:0.82rem;color:rgba(255,255,255,0.6)">Removes the member from the guild. They can re-join if they have an active invite link.</p>
                                 <div style="display:flex;gap:10px;margin-top:10px;flex-wrap:wrap">
                                     <input type="text" id="modKickReason" class="mod-input" placeholder="Reason for kick..." style="max-width:320px">
-                                    <button class="btn-danger-solid" onclick="executeKick()"><i class="fas fa-user-xmark"></i> Kick Member</button>
+                                    <button class="btn-danger-solid" id="modKickBtn" onclick="executeKick()"><i class="fas fa-user-xmark"></i> Kick Member</button>
                                 </div>
                             </div>
                         </div>
@@ -3015,9 +3059,56 @@
                                         <option value="1">Delete past 24 hours</option>
                                         <option value="7">Delete past 7 days</option>
                                     </select>
-                                    <button class="btn-danger-solid" onclick="executeBan()"><i class="fas fa-gavel"></i> Ban User</button>
+                                    <button class="btn-danger-solid" id="modBanBtn" onclick="executeBan()"><i class="fas fa-gavel"></i> Ban User</button>
                                 </div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PANEL: ZYREX PLATFORM DATA HUB -->
+                <div class="mod-panel" id="modPanel-zyrex">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+                        <div>
+                            <h4 style="margin:0 0 4px;font-size:1.05rem;color:#fff;font-family:'Outfit',sans-serif">Zyrex Platform & Verify Records</h4>
+                            <p style="margin:0;font-size:0.8rem;color:var(--text-muted)">Synchronized community profile, verification tokens, and cloud storage assets.</p>
+                        </div>
+                        <span id="modZyrexVerifyStatusBadge" class="badge" style="padding:5px 12px;font-size:0.75rem"><i class="fas fa-circle-check"></i> Verified</span>
+                    </div>
+
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px">
+                        <!-- Cloud SFTP Card -->
+                        <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px">
+                            <div style="font-size:0.74rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px"><i class="fas fa-cloud"></i> SFTPGo Cloud Account</div>
+                            <div id="modZyrexCloudUser" style="font-size:1.05rem;font-weight:700;color:#fff;font-family:monospace">Not Linked</div>
+                            <div id="modZyrexCloudSub" style="font-size:0.75rem;color:rgba(255,255,255,0.45);margin-top:4px">No active upload quota</div>
+                        </div>
+                        <!-- Uploads Card -->
+                        <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px">
+                            <div style="font-size:0.74rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px"><i class="fas fa-cubes"></i> Total Published Uploads</div>
+                            <div id="modZyrexUploadsCount" style="font-size:1.05rem;font-weight:700;color:#38bdf8">0 Presets</div>
+                            <div style="font-size:0.75rem;color:rgba(255,255,255,0.45);margin-top:4px">Authored on Zyrex Web</div>
+                        </div>
+                        <!-- Staff Rank Card -->
+                        <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:14px;padding:14px">
+                            <div style="font-size:0.74rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px"><i class="fas fa-shield-halved"></i> Authority / Staff Tier</div>
+                            <div id="modZyrexStaffRank" style="font-size:1.05rem;font-weight:700;color:#ff3b60">Community Member</div>
+                            <div style="font-size:0.75rem;color:rgba(255,255,255,0.45);margin-top:4px">Guild & Platform Role</div>
+                        </div>
+                    </div>
+
+                    <div style="background:rgba(20,6,12,0.6);border:1px solid rgba(255,59,96,0.2);border-radius:16px;padding:18px">
+                        <h5 style="margin:0 0 8px;font-size:0.92rem;color:#fff"><i class="fas fa-shield-cat" style="color:var(--cherry-light);margin-right:6px"></i> Zyrex Verify Status</h5>
+                        <p style="font-size:0.82rem;color:rgba(255,255,255,0.7);margin:0 0 12px" id="modZyrexVerifyExplain">
+                            Checking Discord snowflake and verified guild role link...
+                        </p>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap">
+                            <button type="button" class="btn-ghost" id="modZyrexGrantVerifyBtn" onclick="toggleZyrexVerifiedStatus()" style="font-size:0.8rem">
+                                <i class="fas fa-circle-check"></i> Toggle Verified Role
+                            </button>
+                            <button type="button" class="btn-ghost" onclick="quickManageCloudAccount()" style="font-size:0.8rem">
+                                <i class="fas fa-cloud-arrow-up"></i> Manage Cloud Account
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -4184,10 +4275,28 @@
             }
         }
 
+        // ================== DISCORD MEMBERS & MODERATION ENGINE ==================
+        async function withBtnLoading(btn, text, asyncFn) {
+            if (!btn) return await asyncFn();
+            const origHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.classList.add('is-loading');
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> <span>${text}</span>`;
+            try {
+                return await asyncFn();
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('is-loading');
+                btn.innerHTML = origHtml;
+            }
+        }
+
         function updateMemberStats(members) {
             const total = members.length;
+            const staff = members.filter(m => m.is_staff).length;
             const online = members.filter(m => m.status && m.status !== 'offline').length;
             const uploaders = members.filter(m => m.is_uploader).length;
+            const verified = members.filter(m => m.is_verified).length;
             const admins = members.filter(m => m.is_admin).length;
             const timedOut = members.filter(m => m.is_timed_out).length;
             const inVoice = members.filter(m => m.voice).length;
@@ -4199,13 +4308,16 @@
             };
 
             setNum('modStatTotal', total);
+            setNum('modStatStaff', staff);
             setNum('modStatOnline', online);
             setNum('modStatUploaders', uploaders);
-            setNum('modStatAdmins', admins);
+            setNum('modStatVerified', verified);
             setNum('modStatTimedOut', timedOut);
 
             setNum('chipCountAll', total);
+            setNum('chipCountStaff', staff);
             setNum('chipCountOnline', online);
+            setNum('chipCountVerified', verified);
             setNum('chipCountUploader', uploaders);
             setNum('chipCountAdmin', admins);
             setNum('chipCountTimeout', timedOut);
@@ -4242,7 +4354,7 @@
         function filterAndSortMembers(members) {
             const q = (document.getElementById('memberSearchInput')?.value || '').trim().toLowerCase();
             const roleFilter = document.getElementById('memberRoleFilter')?.value || 'all';
-            const sortMode = document.getElementById('memberSortSelect')?.value || 'admin';
+            const sortMode = document.getElementById('memberSortSelect')?.value || 'staff';
 
             let list = members.filter(m => {
                 // Search query
@@ -4251,11 +4363,14 @@
                     const matchNick = (m.nickname || '').toLowerCase().includes(q);
                     const matchGlobal = (m.global_name || '').toLowerCase().includes(q);
                     const matchId = (m.id || '').includes(q);
-                    if (!matchUser && !matchNick && !matchGlobal && !matchId) return false;
+                    const matchSftp = (m.sftp_username || '').toLowerCase().includes(q);
+                    if (!matchUser && !matchNick && !matchGlobal && !matchId && !matchSftp) return false;
                 }
 
                 // Filter chip
+                if (activeMemberFilter === 'staff' && !m.is_staff) return false;
                 if (activeMemberFilter === 'online' && (!m.status || m.status === 'offline')) return false;
+                if (activeMemberFilter === 'verified' && !m.is_verified) return false;
                 if (activeMemberFilter === 'uploader' && !m.is_uploader) return false;
                 if (activeMemberFilter === 'admin' && !m.is_admin) return false;
                 if (activeMemberFilter === 'timeout' && !m.is_timed_out) return false;
@@ -4272,10 +4387,19 @@
             });
 
             // Sort
-            if (sortMode === 'admin') {
+            if (sortMode === 'staff') {
+                list.sort((a, b) => {
+                    const rA = a.staff_info?.rank || 99;
+                    const rB = b.staff_info?.rank || 99;
+                    if (rA !== rB) return rA - rB;
+                    return (b.is_admin ? 1 : 0) - (a.is_admin ? 1 : 0) || (b.is_uploader ? 1 : 0) - (a.is_uploader ? 1 : 0);
+                });
+            } else if (sortMode === 'admin') {
                 list.sort((a, b) => (b.is_admin ? 1 : 0) - (a.is_admin ? 1 : 0) || (b.is_uploader ? 1 : 0) - (a.is_uploader ? 1 : 0));
             } else if (sortMode === 'uploader') {
                 list.sort((a, b) => (b.is_uploader ? 1 : 0) - (a.is_uploader ? 1 : 0) || (b.is_admin ? 1 : 0) - (a.is_admin ? 1 : 0));
+            } else if (sortMode === 'uploads') {
+                list.sort((a, b) => (b.upload_count || 0) - (a.upload_count || 0));
             } else if (sortMode === 'name') {
                 list.sort((a, b) => (a.global_name || a.username || '').localeCompare(b.global_name || b.username || ''));
             } else if (sortMode === 'joined') {
@@ -4294,10 +4418,11 @@
                 return;
             }
 
-            grid.innerHTML = members.map(m => {
+            grid.innerHTML = members.map((m, idx) => {
                 const avatar = m.avatar || `https://cdn.discordapp.com/embed/avatars/${(BigInt(m.id || 0) >> 22n) % 6n}.png`;
                 const statusClass = m.status || 'offline';
                 const cardClasses = ['member-card'];
+                if (m.is_staff) cardClasses.push('is-staff');
                 if (m.is_admin) cardClasses.push('is-admin');
                 if (m.is_uploader) cardClasses.push('is-uploader');
                 if (m.is_timed_out) cardClasses.push('is-timed-out');
@@ -4313,6 +4438,17 @@
 
                 // Flags
                 let flagsHtml = '';
+                if (m.is_staff) {
+                    const title = escapeHtml(m.staff_info?.title || 'Staff');
+                    flagsHtml += `<span class="flag-pill flag-staff" style="background:linear-gradient(135deg,rgba(255,59,96,0.22),rgba(225,29,72,0.12));border:1px solid rgba(255,59,96,0.4);color:#fda4af"><i class="fas fa-shield-halved" style="color:#ff3b60"></i> ${title}</span>`;
+                }
+                if (m.is_verified) {
+                    flagsHtml += `<span class="flag-pill flag-verified" style="background:rgba(34,197,94,0.15);border:1px solid rgba(34,197,94,0.35);color:#86efac" title="Verified Zyrex Member"><i class="fas fa-circle-check"></i> Verified</span>`;
+                }
+                if (m.sftp_username || m.upload_count > 0) {
+                    const label = m.sftp_username ? `@${escapeHtml(m.sftp_username)}` : 'Cloud';
+                    flagsHtml += `<span class="flag-pill flag-cloud" style="background:rgba(56,189,248,0.15);border:1px solid rgba(56,189,248,0.35);color:#7dd3fc" title="Zyrex Cloud Storage (${m.upload_count} presets)"><i class="fas fa-cloud"></i> ${label} · ${m.upload_count || 0}</span>`;
+                }
                 if (m.is_timed_out) {
                     flagsHtml += `<span class="flag-pill flag-timeout"><i class="fas fa-clock"></i> Timed Out</span>`;
                 }
@@ -4324,7 +4460,7 @@
                 }
 
                 return `
-                    <div class="${cardClasses.join(' ')}" data-user-id="${m.id}">
+                    <div class="${cardClasses.join(' ')}" data-user-id="${m.id}" style="--card-index:${idx}">
                         <div class="member-card-top">
                             <div class="member-avatar-wrap">
                                 <img src="${avatar}" alt="${handle}" loading="lazy" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
@@ -4333,8 +4469,9 @@
                             <div class="member-meta">
                                 <div class="member-name-row">
                                     <h4 class="member-display-name">${displayName}</h4>
-                                    ${m.is_admin ? '<span class="badge badge-admin" style="font-size:0.65rem;padding:2px 6px">Admin</span>' : ''}
-                                    ${m.is_uploader ? '<span class="badge badge-upload" style="font-size:0.65rem;padding:2px 6px">Uploader</span>' : ''}
+                                    ${m.is_staff ? `<span class="badge" style="background:linear-gradient(135deg,#ff3b60,#be123c);color:#fff;font-size:0.62rem;padding:2px 6px;font-weight:700;box-shadow:0 0 10px rgba(255,59,96,0.35)">${escapeHtml(m.staff_info?.title || 'Staff')}</span>` : ''}
+                                    ${m.is_admin && !m.is_staff ? '<span class="badge badge-admin" style="font-size:0.62rem;padding:2px 6px">Admin</span>' : ''}
+                                    ${m.is_uploader ? '<span class="badge badge-upload" style="font-size:0.62rem;padding:2px 6px">Uploader</span>' : ''}
                                     ${m.is_bot ? '<span class="badge" style="background:rgba(255,255,255,0.1);color:#cbd5e1;font-size:0.62rem;padding:1px 5px">BOT</span>' : ''}
                                 </div>
                                 <span class="member-handle">@${handle}</span>
@@ -4350,7 +4487,7 @@
                         </div>
 
                         <div class="member-card-actions">
-                            <button class="btn-card-action" onclick="quickToggleUploader('${m.id}', ${m.is_uploader})" title="${m.is_uploader ? 'Revoke uploader role' : 'Grant uploader role'}">
+                            <button class="btn-card-action" onclick="quickToggleUploader('${m.id}', ${m.is_uploader}, this)" title="${m.is_uploader ? 'Revoke uploader role' : 'Grant uploader role'}">
                                 <i class="fas fa-cloud-arrow-up" style="color:${m.is_uploader ? '#38bdf8' : 'rgba(255,255,255,0.4)'}"></i>
                                 <span>${m.is_uploader ? 'Revoke' : 'Make'} Uploader</span>
                             </button>
@@ -4401,6 +4538,29 @@
             document.getElementById('modUserId').textContent = member.id;
 
             // Badges
+            const staffBadge = document.getElementById('modUserStaffBadge');
+            if (staffBadge) {
+                if (member.is_staff) {
+                    staffBadge.style.display = 'inline-flex';
+                    staffBadge.innerHTML = `<i class="fas fa-shield-halved"></i> ${escapeHtml(member.staff_info?.title || 'Staff')}`;
+                } else {
+                    staffBadge.style.display = 'none';
+                }
+            }
+
+            const verifiedBadge = document.getElementById('modUserVerifiedBadge');
+            if (verifiedBadge) verifiedBadge.style.display = member.is_verified ? 'inline-flex' : 'none';
+
+            const cloudBadge = document.getElementById('modUserCloudBadge');
+            if (cloudBadge) {
+                if (member.sftp_username) {
+                    cloudBadge.style.display = 'inline-flex';
+                    cloudBadge.innerHTML = `<i class="fas fa-cloud"></i> @${escapeHtml(member.sftp_username)}`;
+                } else {
+                    cloudBadge.style.display = 'none';
+                }
+            }
+
             document.getElementById('modUserAdminBadge').style.display = member.is_admin ? 'inline-block' : 'none';
             document.getElementById('modUserUploaderBadge').style.display = member.is_uploader ? 'inline-block' : 'none';
             document.getElementById('modUserTimeoutBadge').style.display = member.is_timed_out ? 'inline-block' : 'none';
@@ -4448,6 +4608,42 @@
             // Nickname input
             document.getElementById('modNicknameInput').value = member.nickname || '';
 
+            // Zyrex Hub Tab Population
+            const cloudUserEl = document.getElementById('modZyrexCloudUser');
+            const cloudSubEl = document.getElementById('modZyrexCloudSub');
+            if (cloudUserEl) {
+                cloudUserEl.textContent = member.sftp_username ? `@${member.sftp_username}` : 'Not Provisioned';
+                if (cloudSubEl) cloudSubEl.textContent = member.sftp_username ? 'Active SFTPGo Cloud Uploader' : 'No active storage linked';
+            }
+            const uploadsEl = document.getElementById('modZyrexUploadsCount');
+            if (uploadsEl) {
+                uploadsEl.textContent = `${member.upload_count || 0} Content Assets`;
+            }
+            const staffRankEl = document.getElementById('modZyrexStaffRank');
+            if (staffRankEl) {
+                staffRankEl.textContent = member.staff_info?.title || (member.is_admin ? 'Administrator' : (member.is_uploader ? 'Verified Uploader' : 'Community Member'));
+                if (member.staff_info?.color) staffRankEl.style.color = member.staff_info.color;
+            }
+            const verifyStatusEl = document.getElementById('modZyrexVerifyStatusBadge');
+            const verifyExplainEl = document.getElementById('modZyrexVerifyExplain');
+            if (verifyStatusEl) {
+                if (member.is_verified) {
+                    verifyStatusEl.className = 'badge';
+                    verifyStatusEl.style.background = 'rgba(34,197,94,0.2)';
+                    verifyStatusEl.style.color = '#86efac';
+                    verifyStatusEl.style.border = '1px solid rgba(34,197,94,0.4)';
+                    verifyStatusEl.innerHTML = '<i class="fas fa-circle-check"></i> Verified Member';
+                    if (verifyExplainEl) verifyExplainEl.innerHTML = 'This member has completed verification via Zyrex Bot OAuth gateway and possesses the verified Discord guild role.';
+                } else {
+                    verifyStatusEl.className = 'badge';
+                    verifyStatusEl.style.background = 'rgba(255,255,255,0.06)';
+                    verifyStatusEl.style.color = 'var(--text-muted)';
+                    verifyStatusEl.style.border = '1px solid rgba(255,255,255,0.1)';
+                    verifyStatusEl.innerHTML = '<i class="fas fa-circle-xmark"></i> Unverified';
+                    if (verifyExplainEl) verifyExplainEl.innerHTML = 'This member has not yet acquired the verified role on the Discord guild. You can manually grant or revoke it below.';
+                }
+            }
+
             // Reset tabs to roles
             switchModTab('roles', document.querySelector('.mod-tab-btn[data-modtab="roles"]'));
 
@@ -4488,7 +4684,7 @@
             container.innerHTML = guildRolesList.map(r => {
                 const isAssigned = memberRoleIds.has(String(r.id));
                 return `
-                    <button class="mod-role-toggle-chip ${isAssigned ? 'active' : ''}" onclick="toggleMemberRole('${r.id}', ${isAssigned})" style="border-color:${r.color}${isAssigned ? '99' : '33'}">
+                    <button class="mod-role-toggle-chip ${isAssigned ? 'active' : ''}" onclick="toggleMemberRole('${r.id}', ${isAssigned}, this)" style="border-color:${r.color}${isAssigned ? '99' : '33'}">
                         <span class="role-dot" style="background:${r.color}"></span>
                         <span>${escapeHtml(r.name)}</span>
                         <i class="fas ${isAssigned ? 'fa-check' : 'fa-plus'}" style="font-size:0.7rem;margin-left:2px;opacity:0.8"></i>
@@ -4497,10 +4693,11 @@
             }).join('');
         }
 
-        async function toggleMemberRole(roleId, isCurrentlyAssigned) {
+        async function toggleMemberRole(roleId, isCurrentlyAssigned, btnEl) {
             if (!currentSelectedMember) return;
             const action = isCurrentlyAssigned ? 'remove' : 'add';
 
+            if (btnEl) btnEl.style.opacity = '0.5';
             try {
                 const resp = await fetch('/api/guild/members/role', {
                     method: 'POST',
@@ -4518,8 +4715,10 @@
                     if (action === 'add') {
                         const r = guildRolesList.find(x => String(x.id) === String(roleId));
                         if (r) currentSelectedMember.roles.push(r);
+                        if (roleId === '1519246304163659858') currentSelectedMember.is_verified = true;
                     } else {
                         currentSelectedMember.roles = currentSelectedMember.roles.filter(x => String(x.id) !== String(roleId));
+                        if (roleId === '1519246304163659858') currentSelectedMember.is_verified = false;
                     }
                     renderModalRoles();
                     renderMembersList(filterAndSortMembers(rawGuildMembers));
@@ -4528,38 +4727,72 @@
                 }
             } catch (e) {
                 showModToast('Role action request failed', 'error');
+            } finally {
+                if (btnEl) btnEl.style.opacity = '1';
             }
         }
 
-        async function quickToggleUploader(userId, isCurrentlyUploader) {
+        async function toggleZyrexVerifiedStatus() {
+            if (!currentSelectedMember) return;
+            const verifiedRoleId = '1519246304163659858';
+            const btn = document.getElementById('modZyrexGrantVerifyBtn');
+            await withBtnLoading(btn, 'Updating Status...', async () => {
+                await toggleMemberRole(verifiedRoleId, currentSelectedMember.is_verified, null);
+                // Refresh modal view
+                openMemberModModal(currentSelectedMember.id);
+                switchModTab('zyrex', document.querySelector('.mod-tab-btn[data-modtab="zyrex"]'));
+            });
+        }
+
+        function quickManageCloudAccount() {
+            if (!currentSelectedMember) return;
+            closeMemberModModal();
+            // Switch to Cloud Storage tab
+            switchTab('tab-cloud');
+            setTimeout(() => {
+                const sftpInput = document.getElementById('sftpgoUsername');
+                if (sftpInput && !currentSelectedMember.sftp_username) {
+                    openSFTPGoUserModal();
+                    const discordSel = document.getElementById('sftpgoDiscordSelect');
+                    if (discordSel) {
+                        discordSel.value = currentSelectedMember.id;
+                        onDiscordMemberSelect();
+                    }
+                }
+            }, 300);
+        }
+
+        async function quickToggleUploader(userId, isCurrentlyUploader, btnEl) {
             const role = guildRolesList.find(r => r.id === '1519624224476762122') || { id: '1519624224476762122' };
             const action = isCurrentlyUploader ? 'remove' : 'add';
 
-            try {
-                const resp = await fetch('/api/guild/members/role', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        user_id: userId,
-                        role_id: role.id,
-                        action: action
-                    })
-                });
-                const data = await resp.json();
-                if (data.success) {
-                    showModToast(data.message || `Uploader role updated!`, 'success');
-                    const mem = rawGuildMembers.find(m => String(m.id) === String(userId));
-                    if (mem) {
-                        mem.is_uploader = !isCurrentlyUploader;
-                        updateMemberStats(rawGuildMembers);
-                        renderMembersList(filterAndSortMembers(rawGuildMembers));
+            await withBtnLoading(btnEl, 'Updating...', async () => {
+                try {
+                    const resp = await fetch('/api/guild/members/role', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            user_id: userId,
+                            role_id: role.id,
+                            action: action
+                        })
+                    });
+                    const data = await resp.json();
+                    if (data.success) {
+                        showModToast(data.message || `Uploader role updated!`, 'success');
+                        const mem = rawGuildMembers.find(m => String(m.id) === String(userId));
+                        if (mem) {
+                            mem.is_uploader = !isCurrentlyUploader;
+                            updateMemberStats(rawGuildMembers);
+                            renderMembersList(filterAndSortMembers(rawGuildMembers));
+                        }
+                    } else {
+                        showModToast(data.error || 'Failed to change role', 'error');
                     }
-                } else {
-                    showModToast(data.error || 'Failed to change role', 'error');
+                } catch (e) {
+                    showModToast('Connection error', 'error');
                 }
-            } catch (e) {
-                showModToast('Connection error', 'error');
-            }
+            });
         }
 
         function selectTimeoutDuration(seconds, btn) {
@@ -4569,8 +4802,11 @@
         }
 
         async function applySelectedTimeout() {
+            const btn = document.getElementById('modTimeoutApplyBtn');
             const reason = document.getElementById('modTimeoutReason').value.trim();
-            await executeTimeout(selectedTimeoutSeconds, reason);
+            await withBtnLoading(btn, 'Applying...', async () => {
+                await executeTimeout(selectedTimeoutSeconds, reason);
+            });
         }
 
         async function executeTimeout(durationSec, reason = '') {
@@ -4609,33 +4845,39 @@
 
         async function saveNickname() {
             if (!currentSelectedMember) return;
+            const btn = document.getElementById('modNickSaveBtn');
             const nick = document.getElementById('modNicknameInput').value.trim();
-            try {
-                const resp = await fetch('/api/guild/members/nickname', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        user_id: currentSelectedMember.id,
-                        nickname: nick
-                    })
-                });
-                const data = await resp.json();
-                if (data.success) {
-                    showModToast(data.message, 'success');
-                    currentSelectedMember.nickname = nick || null;
-                    document.getElementById('modUserDisplayName').textContent = nick || currentSelectedMember.global_name || currentSelectedMember.username;
-                    renderMembersList(filterAndSortMembers(rawGuildMembers));
-                } else {
-                    showModToast(data.error || 'Failed to update nickname', 'error');
+            await withBtnLoading(btn, 'Saving...', async () => {
+                try {
+                    const resp = await fetch('/api/guild/members/nickname', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            user_id: currentSelectedMember.id,
+                            nickname: nick
+                        })
+                    });
+                    const data = await resp.json();
+                    if (data.success) {
+                        showModToast(data.message, 'success');
+                        currentSelectedMember.nickname = nick || null;
+                        document.getElementById('modUserDisplayName').textContent = nick || currentSelectedMember.global_name || currentSelectedMember.username;
+                        renderMembersList(filterAndSortMembers(rawGuildMembers));
+                    } else {
+                        showModToast(data.error || 'Failed to update nickname', 'error');
+                    }
+                } catch (e) {
+                    showModToast('Nickname request failed', 'error');
                 }
-            } catch (e) {
-                showModToast('Nickname request failed', 'error');
-            }
+            });
         }
 
         async function resetNickname() {
+            const btn = document.getElementById('modNickResetBtn');
             document.getElementById('modNicknameInput').value = '';
-            await saveNickname();
+            await withBtnLoading(btn, 'Resetting...', async () => {
+                await saveNickname();
+            });
         }
 
         async function loadMemberWarns(userId) {
@@ -4659,7 +4901,7 @@
                                     By ${escapeHtml(w.moderator_name || 'Admin')} • ${new Date(w.created_at).toLocaleString()}
                                 </div>
                             </div>
-                            <button class="mod-warn-del-btn" onclick="deleteWarn('${w.id}')" title="Delete warning">
+                            <button class="mod-warn-del-btn" onclick="deleteWarn('${w.id}', this)" title="Delete warning">
                                 <i class="fas fa-trash-can"></i>
                             </button>
                         </div>
@@ -4674,6 +4916,7 @@
 
         async function submitNewWarn() {
             if (!currentSelectedMember) return;
+            const btn = document.getElementById('modWarnIssueBtn');
             const reason = document.getElementById('modNewWarnReason').value.trim();
             const sendDm = document.getElementById('modWarnSendDm').checked;
             if (!reason) {
@@ -4681,36 +4924,39 @@
                 return;
             }
 
-            try {
-                const resp = await fetch('/api/guild/members/warn', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        user_id: currentSelectedMember.id,
-                        reason: reason,
-                        send_dm: sendDm
-                    })
-                });
-                const data = await resp.json();
-                if (data.success) {
-                    showModToast(data.message + (data.dm_delivered ? ' (DM delivered)' : ''), 'success');
-                    document.getElementById('modNewWarnReason').value = '';
-                    currentSelectedMember.warns_count = data.total_warns;
-                    document.getElementById('modUserWarnCount').textContent = data.total_warns;
-                    document.getElementById('modTabWarnCount').textContent = data.total_warns;
-                    document.getElementById('modWarnsTotalLabel').textContent = data.total_warns;
-                    loadMemberWarns(currentSelectedMember.id);
-                    renderMembersList(filterAndSortMembers(rawGuildMembers));
-                } else {
-                    showModToast(data.error || 'Failed to issue warning', 'error');
+            await withBtnLoading(btn, 'Issuing...', async () => {
+                try {
+                    const resp = await fetch('/api/guild/members/warn', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            user_id: currentSelectedMember.id,
+                            reason: reason,
+                            send_dm: sendDm
+                        })
+                    });
+                    const data = await resp.json();
+                    if (data.success) {
+                        showModToast(data.message + (data.dm_delivered ? ' (DM delivered)' : ''), 'success');
+                        document.getElementById('modNewWarnReason').value = '';
+                        currentSelectedMember.warns_count = data.total_warns;
+                        document.getElementById('modUserWarnCount').textContent = data.total_warns;
+                        document.getElementById('modTabWarnCount').textContent = data.total_warns;
+                        document.getElementById('modWarnsTotalLabel').textContent = data.total_warns;
+                        loadMemberWarns(currentSelectedMember.id);
+                        renderMembersList(filterAndSortMembers(rawGuildMembers));
+                    } else {
+                        showModToast(data.error || 'Failed to issue warning', 'error');
+                    }
+                } catch (e) {
+                    showModToast('Warning request failed', 'error');
                 }
-            } catch (e) {
-                showModToast('Warning request failed', 'error');
-            }
+            });
         }
 
-        async function deleteWarn(warnId) {
+        async function deleteWarn(warnId, btnEl) {
             if (!confirm('Are you sure you want to remove this warning?')) return;
+            if (btnEl) btnEl.style.opacity = '0.5';
             try {
                 const resp = await fetch(`/api/guild/members/warns/${warnId}`, { method: 'DELETE' });
                 const data = await resp.json();
@@ -4729,6 +4975,8 @@
                 }
             } catch (e) {
                 showModToast('Delete request failed', 'error');
+            } finally {
+                if (btnEl) btnEl.style.opacity = '1';
             }
         }
 
@@ -4749,6 +4997,7 @@
 
         async function sendDirectMessage() {
             if (!currentSelectedMember) return;
+            const btn = document.getElementById('modDmSendBtn');
             const title = document.getElementById('modDmTitle').value.trim();
             const message = document.getElementById('modDmMessage').value.trim();
             if (!message) {
@@ -4756,118 +5005,131 @@
                 return;
             }
 
-            try {
-                const resp = await fetch('/api/guild/members/dm', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        user_id: currentSelectedMember.id,
-                        title: title,
-                        message: message
-                    })
-                });
-                const data = await resp.json();
-                if (data.success) {
-                    showModToast(data.message, 'success');
-                    document.getElementById('modDmMessage').value = '';
-                } else {
-                    showModToast(data.error || 'Failed to send DM', 'error');
+            await withBtnLoading(btn, 'Sending DM...', async () => {
+                try {
+                    const resp = await fetch('/api/guild/members/dm', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            user_id: currentSelectedMember.id,
+                            title: title,
+                            message: message
+                        })
+                    });
+                    const data = await resp.json();
+                    if (data.success) {
+                        showModToast(data.message, 'success');
+                        document.getElementById('modDmMessage').value = '';
+                    } else {
+                        showModToast(data.error || 'Failed to send DM', 'error');
+                    }
+                } catch (e) {
+                    showModToast('DM request failed', 'error');
                 }
-            } catch (e) {
-                showModToast('DM request failed', 'error');
-            }
+            });
         }
 
         async function executeVoiceAction(action) {
             if (!currentSelectedMember) return;
-            try {
-                const resp = await fetch('/api/guild/members/voice', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        user_id: currentSelectedMember.id,
-                        action: action
-                    })
-                });
-                const data = await resp.json();
-                if (data.success) {
-                    showModToast(data.message, 'success');
-                    if (action === 'disconnect') {
-                        currentSelectedMember.voice = null;
-                        document.getElementById('modTabVoiceBtn').style.display = 'none';
-                        document.getElementById('modUserVoice').style.display = 'none';
-                        switchModTab('roles', document.querySelector('.mod-tab-btn[data-modtab="roles"]'));
+            const btn = action === 'disconnect' ? document.getElementById('modVoiceDisconnectBtn') :
+                        (action === 'mute' ? document.getElementById('modVoiceMuteBtn') : document.getElementById('modVoiceUnmuteBtn'));
+
+            await withBtnLoading(btn, 'Processing...', async () => {
+                try {
+                    const resp = await fetch('/api/guild/members/voice', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            user_id: currentSelectedMember.id,
+                            action: action
+                        })
+                    });
+                    const data = await resp.json();
+                    if (data.success) {
+                        showModToast(data.message, 'success');
+                        if (action === 'disconnect') {
+                            currentSelectedMember.voice = null;
+                            document.getElementById('modTabVoiceBtn').style.display = 'none';
+                            document.getElementById('modUserVoice').style.display = 'none';
+                            switchModTab('roles', document.querySelector('.mod-tab-btn[data-modtab="roles"]'));
+                        }
+                        renderMembersList(filterAndSortMembers(rawGuildMembers));
+                    } else {
+                        showModToast(data.error || 'Voice action failed', 'error');
                     }
-                    renderMembersList(filterAndSortMembers(rawGuildMembers));
-                } else {
-                    showModToast(data.error || 'Voice action failed', 'error');
+                } catch (e) {
+                    showModToast('Voice action request failed', 'error');
                 }
-            } catch (e) {
-                showModToast('Voice action request failed', 'error');
-            }
+            });
         }
 
         async function executeKick() {
             if (!currentSelectedMember) return;
+            const btn = document.getElementById('modKickBtn');
             const name = currentSelectedMember.nickname || currentSelectedMember.username;
             if (!confirm(`Are you sure you want to KICK ${name} from the Discord server?`)) return;
 
             const reason = document.getElementById('modKickReason').value.trim();
-            try {
-                const resp = await fetch('/api/guild/members/kick', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        user_id: currentSelectedMember.id,
-                        reason: reason
-                    })
-                });
-                const data = await resp.json();
-                if (data.success) {
-                    showModToast(data.message, 'success');
-                    closeMemberModModal();
-                    rawGuildMembers = rawGuildMembers.filter(m => String(m.id) !== String(currentSelectedMember.id));
-                    updateMemberStats(rawGuildMembers);
-                    renderMembersList(filterAndSortMembers(rawGuildMembers));
-                } else {
-                    showModToast(data.error || 'Kick failed', 'error');
+            await withBtnLoading(btn, 'Kicking...', async () => {
+                try {
+                    const resp = await fetch('/api/guild/members/kick', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            user_id: currentSelectedMember.id,
+                            reason: reason
+                        })
+                    });
+                    const data = await resp.json();
+                    if (data.success) {
+                        showModToast(data.message, 'success');
+                        closeMemberModModal();
+                        rawGuildMembers = rawGuildMembers.filter(m => String(m.id) !== String(currentSelectedMember.id));
+                        updateMemberStats(rawGuildMembers);
+                        renderMembersList(filterAndSortMembers(rawGuildMembers));
+                    } else {
+                        showModToast(data.error || 'Kick failed', 'error');
+                    }
+                } catch (e) {
+                    showModToast('Kick request failed', 'error');
                 }
-            } catch (e) {
-                showModToast('Kick request failed', 'error');
-            }
+            });
         }
 
         async function executeBan() {
             if (!currentSelectedMember) return;
+            const btn = document.getElementById('modBanBtn');
             const name = currentSelectedMember.nickname || currentSelectedMember.username;
             if (!confirm(`🚨 EXTREME ACTION: Permanently BAN ${name} from the Discord server?`)) return;
 
             const reason = document.getElementById('modBanReason').value.trim();
             const purgeDays = parseInt(document.getElementById('modBanPurgeDays').value || '0');
 
-            try {
-                const resp = await fetch('/api/guild/members/ban', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        user_id: currentSelectedMember.id,
-                        delete_message_days: purgeDays,
-                        reason: reason
-                    })
-                });
-                const data = await resp.json();
-                if (data.success) {
-                    showModToast(data.message, 'success');
-                    closeMemberModModal();
-                    rawGuildMembers = rawGuildMembers.filter(m => String(m.id) !== String(currentSelectedMember.id));
-                    updateMemberStats(rawGuildMembers);
-                    renderMembersList(filterAndSortMembers(rawGuildMembers));
-                } else {
-                    showModToast(data.error || 'Ban failed', 'error');
+            await withBtnLoading(btn, 'Banning...', async () => {
+                try {
+                    const resp = await fetch('/api/guild/members/ban', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            user_id: currentSelectedMember.id,
+                            delete_message_days: purgeDays,
+                            reason: reason
+                        })
+                    });
+                    const data = await resp.json();
+                    if (data.success) {
+                        showModToast(data.message, 'success');
+                        closeMemberModModal();
+                        rawGuildMembers = rawGuildMembers.filter(m => String(m.id) !== String(currentSelectedMember.id));
+                        updateMemberStats(rawGuildMembers);
+                        renderMembersList(filterAndSortMembers(rawGuildMembers));
+                    } else {
+                        showModToast(data.error || 'Ban failed', 'error');
+                    }
+                } catch (e) {
+                    showModToast('Ban request failed', 'error');
                 }
-            } catch (e) {
-                showModToast('Ban request failed', 'error');
-            }
+            });
         }
 
         // ================== SYSTEM TELEMETRY TAB ==================
