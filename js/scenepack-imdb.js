@@ -264,6 +264,21 @@ var IMDB_PRODUCTIONS = [
 
 var GAME_PRODUCTIONS = [
     {
+        id: "elden-ring",
+        title: "Elden Ring",
+        year: "2022",
+        type: "Game",
+        category: "game",
+        rating: "9.5",
+        directors: "FromSoftware",
+        genres: "Action RPG, Dark Fantasy",
+        cast: "Malenia, Radahn, Ranni, Marika, Godfrey, Melina",
+        tagline: "Rise, Tarnished.",
+        poster: "https://media.rawg.io/media/games/b29/b294fdd866dcdb643e7bab370a552855.jpg",
+        banner: "https://media.rawg.io/media/games/b29/b294fdd866dcdb643e7bab370a552855.jpg",
+        keywords: ["elden ring", "malenia", "radahn", "ranni", "tarnished", "shadow of the erdtree"]
+    },
+    {
         id: "resident-evil",
         title: "Resident Evil",
         year: "1996–Present",
@@ -276,7 +291,7 @@ var GAME_PRODUCTIONS = [
         tagline: "Enter the world of survival horror.",
         poster: "https://thumbnail.zyrexediting.xyz/4921935510176045.jpeg",
         banner: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200",
-        keywords: ["resident evil", "ada wong", "code: veronica", "code veronica", "claire redfield", "leon kennedy", "leon s. kennedy", "jill valentine", "chris redfield", "albert wesker", "biohazard", "raccoon city", "umbrella corp"]
+        keywords: ["resident evil", "ada wong", "code: veronica", "code veronica", "claire redfield", "leon kennedy", "leon s. kennedy", "jill valentine", "chris redfield", "albert wesker", "biohazard", "raccoon city", "umbrella corp", "battlesuit", "veronica"]
     },
     {
         id: "gta",
@@ -322,76 +337,152 @@ var GAME_PRODUCTIONS = [
         poster: "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200",
         banner: "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=1200",
         keywords: ["valorant", "jett", "reyna", "phoenix", "sage", "omen", "clove"]
+    },
+    {
+        id: "minecraft",
+        title: "Minecraft",
+        year: "2011",
+        type: "Game",
+        category: "game",
+        rating: "9.0",
+        directors: "Mojang Studios",
+        genres: "Sandbox, Survival, Adventure",
+        cast: "Steve, Alex, Ender Dragon",
+        tagline: "Build, survive, explore.",
+        poster: "https://media.rawg.io/media/games/b4e/b4e4c73d5aa4ec66bbf75375c4847a2b.jpg",
+        banner: "https://media.rawg.io/media/games/b4e/b4e4c73d5aa4ec66bbf75375c4847a2b.jpg",
+        keywords: ["minecraft", "steve", "mojang", "ender dragon"]
+    },
+    {
+        id: "god-of-war",
+        title: "God of War",
+        year: "2018",
+        type: "Game",
+        category: "game",
+        rating: "9.7",
+        directors: "Santa Monica Studio",
+        genres: "Action-Adventure, Mythology",
+        cast: "Kratos, Atreus, Freya, Baldur, Thor",
+        tagline: "A new beginning.",
+        poster: "https://media.rawg.io/media/games/4be/4be6a6ad03647293dc2f6d5da4019756.jpg",
+        banner: "https://media.rawg.io/media/games/4be/4be6a6ad03647293dc2f6d5da4019756.jpg",
+        keywords: ["god of war", "kratos", "atreus", "ragnarok"]
+    },
+    {
+        id: "red-dead-redemption-2",
+        title: "Red Dead Redemption 2",
+        year: "2018",
+        type: "Game",
+        category: "game",
+        rating: "9.8",
+        directors: "Rockstar Games",
+        genres: "Action-Adventure, Western",
+        cast: "Arthur Morgan, Dutch van der Linde, John Marston, Sadie Adler",
+        tagline: "Outlaws for life.",
+        poster: "https://media.rawg.io/media/games/511/5118aff5091cb3efec399c808f8c598f.jpg",
+        banner: "https://media.rawg.io/media/games/511/5118aff5091cb3efec399c808f8c598f.jpg",
+        keywords: ["red dead", "red dead redemption", "rdr2", "arthur morgan", "john marston"]
     }
 ];
 
-function matchesKeyword(text, keyword) {
-    if (!text || !keyword) return false;
-    var kw = keyword.toLowerCase().trim();
-    if (!kw) return false;
-    if (kw.indexOf(' ') !== -1 || kw.indexOf(':') !== -1 || kw.indexOf('-') !== -1) {
-        return text.indexOf(kw) !== -1;
-    }
-    var pattern = '(?:^|[^a-z0-9])' + kw + '(?:$|[^a-z0-9])';
-    try {
-        var re = new RegExp(pattern, 'i');
-        return re.test(text);
-    } catch(e) {
-        return text.indexOf(kw) !== -1;
-    }
+function slugifyText(text) {
+    if (!text) return '';
+    return String(text).toLowerCase().trim().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 }
 
 function findProductionForScenepack(item) {
     if (!item) return null;
     var cat = (item.category || '').toLowerCase().trim();
     var isGame = (cat === 'games' || cat === 'game');
+    var isAnime = (cat === 'anime');
+    var isMovie = (cat === 'movie');
+    var isSeries = (cat === 'series');
 
-    var searchStr = [
-        item.origin || '',
-        item.name || '',
-        item.title || '',
-        item.description || '',
-        item.desc || ''
-    ].join(' ').toLowerCase();
+    var origin = (item.origin || '').trim();
+    var name = (item.name || item.title || '').trim();
+    var nameLower = name.toLowerCase();
 
-    // 1. VIDEO GAMES ONLY MATCH GAME PRODUCTIONS
-    if (isGame) {
-        for (var g = 0; g < GAME_PRODUCTIONS.length; g++) {
-            var gProd = GAME_PRODUCTIONS[g];
-            if (matchesKeyword(searchStr, gProd.title)) return gProd;
-            for (var gk = 0; gk < gProd.keywords.length; gk++) {
-                if (matchesKeyword(searchStr, gProd.keywords[gk])) return gProd;
+    // 1. PRIORITY ONE: If explicit origin is provided, match by origin ONLY!
+    if (origin) {
+        var originLower = origin.toLowerCase();
+        var originSlug = slugifyText(origin);
+
+        // Check in games if item is marked as game
+        if (isGame) {
+            for (var g = 0; g < GAME_PRODUCTIONS.length; g++) {
+                var gp = GAME_PRODUCTIONS[g];
+                if (gp.title.toLowerCase() === originLower || gp.id === originSlug) {
+                    return gp;
+                }
+            }
+        } else {
+            // Check in IMDb productions
+            for (var m = 0; m < IMDB_PRODUCTIONS.length; m++) {
+                var ip = IMDB_PRODUCTIONS[m];
+                if (ip.title.toLowerCase() === originLower || ip.id === originSlug) {
+                    return ip;
+                }
+            }
+            // Also check games just in case category was not set
+            for (var g2 = 0; g2 < GAME_PRODUCTIONS.length; g2++) {
+                var gp2 = GAME_PRODUCTIONS[g2];
+                if (gp2.title.toLowerCase() === originLower || gp2.id === originSlug) {
+                    return gp2;
+                }
             }
         }
-        
-        // Return a clean fallback game production if it's a distinct game
-        var gameName = (item.origin || item.name || 'Video Game').trim();
+
+        // Return honest dynamic production for custom origin
         return {
-            id: 'game-' + (item.origin ? item.origin.toLowerCase().replace(/[^a-z0-9]+/g, '-') : 'custom'),
-            title: item.origin || item.name,
-            year: 'Video Game',
-            type: 'Game',
-            category: 'game',
-            rating: '9.0',
-            directors: 'Game Studio',
-            genres: 'Gaming, Action',
-            cast: item.name || 'Game Characters',
-            tagline: 'Video Game Scenepack',
-            poster: item.thumbnail || 'assets/content.png',
-            banner: item.thumbnail || 'assets/content.png',
-            keywords: []
+            id: originSlug || 'custom-origin',
+            title: origin,
+            year: item.release_date ? item.release_date.split('-')[0] : '',
+            type: isGame ? 'Game' : (isSeries ? 'Series' : (isMovie ? 'Movie' : (isAnime ? 'Anime' : 'Production'))),
+            category: isGame ? 'game' : (cat || 'production'),
+            rating: item.rating || item.imdb_rating || '',
+            rotten: '',
+            directors: isGame ? 'Game Studio' : 'Director',
+            genres: isGame ? 'Video Game' : (cat ? cat.toUpperCase() : 'Film/TV'),
+            cast: '',
+            tagline: '',
+            poster: (item.thumbnail && !item.thumbnail.includes('content.png')) ? item.thumbnail : '/assets/content.png',
+            banner: (item.thumbnail && !item.thumbnail.includes('content.png')) ? item.thumbnail : '',
+            keywords: [originLower],
+            isDynamic: true
         };
     }
 
-    // 2. MOVIES & TV SERIES (NEVER MATCH VIDEO GAMES)
-    for (var i = 0; i < IMDB_PRODUCTIONS.length; i++) {
-        var prod = IMDB_PRODUCTIONS[i];
-        if (matchesKeyword(searchStr, prod.title)) {
-            return prod;
+    // 2. PRIORITY TWO: If no explicit origin, match by known title or distinct keywords
+    if (isGame) {
+        for (var g3 = 0; g3 < GAME_PRODUCTIONS.length; g3++) {
+            var gp3 = GAME_PRODUCTIONS[g3];
+            var tLow = gp3.title.toLowerCase();
+            if (nameLower.indexOf(tLow) !== -1) {
+                return gp3;
+            }
+            if (gp3.keywords && Array.isArray(gp3.keywords)) {
+                for (var k = 0; k < gp3.keywords.length; k++) {
+                    var kw = gp3.keywords[k].toLowerCase();
+                    if (kw.length >= 4 && nameLower.indexOf(kw) !== -1) {
+                        return gp3;
+                    }
+                }
+            }
         }
-        for (var k = 0; k < prod.keywords.length; k++) {
-            if (matchesKeyword(searchStr, prod.keywords[k])) {
-                return prod;
+    } else {
+        for (var m2 = 0; m2 < IMDB_PRODUCTIONS.length; m2++) {
+            var ip2 = IMDB_PRODUCTIONS[m2];
+            var iLow = ip2.title.toLowerCase();
+            if (nameLower.indexOf(iLow) !== -1) {
+                return ip2;
+            }
+            if (ip2.keywords && Array.isArray(ip2.keywords)) {
+                for (var k2 = 0; k2 < ip2.keywords.length; k2++) {
+                    var kw2 = ip2.keywords[k2].toLowerCase();
+                    if (kw2.length >= 4 && nameLower.indexOf(kw2) !== -1) {
+                        return ip2;
+                    }
+                }
             }
         }
     }
@@ -411,13 +502,22 @@ function getAllProductions() {
     return IMDB_PRODUCTIONS.concat(GAME_PRODUCTIONS);
 }
 
-function getProductionById(id) {
+function getProductionById(id, itemsList) {
     if (!id) return null;
     var target = String(id).toLowerCase().trim();
     var all = IMDB_PRODUCTIONS.concat(GAME_PRODUCTIONS);
     for (var i = 0; i < all.length; i++) {
         if (all[i].id === target || (all[i].imdbId && all[i].imdbId.toLowerCase() === target)) {
             return all[i];
+        }
+    }
+    // Also search dynamic productions in itemsList or window.allSP
+    var list = (itemsList && Array.isArray(itemsList)) ? itemsList : (typeof allSP !== 'undefined' && Array.isArray(allSP) ? allSP : []);
+    for (var j = 0; j < list.length; j++) {
+        var item = list[j];
+        var prod = findProductionForScenepack(item);
+        if (prod && (prod.id === target || slugifyText(prod.title) === target || prod.title.toLowerCase() === target)) {
+            return prod;
         }
     }
     return null;

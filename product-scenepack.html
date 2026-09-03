@@ -874,6 +874,14 @@
             return;
         }
 
+        try {
+            const editedKey = 'zyrex_edited_products';
+            const editedMap = JSON.parse(localStorage.getItem(editedKey) || '{}');
+            if (editedMap[item.id]) {
+                item = Object.assign({}, item, editedMap[item.id]);
+            }
+        } catch(e) {}
+
         renderSceneDetail(item);
     });
 
@@ -882,13 +890,28 @@
         document.getElementById('errMsgText').innerHTML = msg;
     }
 
-        function renderSceneDetail(p) {
+            function renderSceneDetail(p) {
         document.title = (p.name || "Scenepack") + " - Zyrex";
         document.getElementById('breadSceneName').textContent = p.name || "Scenepack";
 
         var prod = typeof findProductionForScenepack === 'function' ? findProductionForScenepack(p) : null;
         
-        // Poster selection
+        // Category determination (User category is always primary)
+        var catMap = {
+            anime: 'Anime',
+            movie: 'Movie',
+            series: 'TV Series',
+            games: 'Video Games',
+            game: 'Video Games',
+            character: 'Character',
+            others: 'Scenepack',
+            scenepack: 'Scenepack'
+        };
+        var rawCat = (p.category || (prod && prod.category) || 'scenepack').toLowerCase();
+        var catLabel = catMap[rawCat] || 'Scenepack';
+        var isGame = (rawCat === 'games' || rawCat === 'game');
+
+        // Poster selection: User thumbnail is primary
         var poster = '/assets/content.png';
         if (p.thumbnail && p.thumbnail !== '/assets/content.png' && p.thumbnail !== 'assets/content.png') {
             poster = p.thumbnail;
@@ -938,14 +961,12 @@
         var uploaderId = p.uploader_id || '';
         var uploaderValueHtml = `<span class="uploader-highlight-pill"><img src="${uploaderAv}" class="creator-mini-av" data-uploader-id="${uploaderId}" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'"> <span>${escapeHtml(uploaderName)}</span></span>`;
 
-        // Origin details (IMDb matched or category)
-        var originTitle = prod ? prod.title : (p.origin || 'Curated Footage');
-        var originValueHtml = escapeHtml(originTitle);
-        if (prod) {
-            var isGameProd = (prod.type === 'Game' || prod.category === 'game');
-            var linkParam = isGameProd ? `game=${encodeURIComponent(prod.id)}` : `production=${encodeURIComponent(prod.id)}`;
-            var linkColor = isGameProd ? '#c084fc' : '#67e8f9';
-            originValueHtml = `<a href="/scenepack.html?${linkParam}" style="color:${linkColor};text-decoration:none;display:inline-flex;align-items:center;gap:6px">${escapeHtml(prod.title)} <i class="fas fa-arrow-right" style="font-size:0.7rem"></i></a>`;
+        // Origin details (Explicit user p.origin ALWAYS WINS over guessed productions)
+        var originTitle = (p.origin || '').trim() || (prod ? prod.title : '');
+        var originValueHtml = originTitle ? escapeHtml(originTitle) : '<span style="opacity:0.55">Curated Footage</span>';
+        if (originTitle) {
+            var linkColor = isGame ? '#c084fc' : '#67e8f9';
+            originValueHtml = `<a href="/scenepack.html?origin=${encodeURIComponent(originTitle)}" style="color:${linkColor};text-decoration:none;display:inline-flex;align-items:center;gap:6px">${escapeHtml(originTitle)} <i class="fas fa-arrow-right" style="font-size:0.7rem"></i></a>`;
         }
 
         // Release / Added date
@@ -954,17 +975,8 @@
         // File size (if present)
         var fileSizeVal = p.file_size || p.size || '';
 
-        // Category determination
-        var catMap = {
-            anime: 'Anime',
-            movie: 'Movie',
-            series: 'TV Series',
-            games: 'Gaming',
-            character: 'Character',
-            others: 'Scenepack'
-        };
-        var rawCat = (p.category || 'scenepack').toLowerCase();
-        var catLabel = catMap[rawCat] || 'Scenepack';
+        // Rating: ONLY if explicitly present on product
+        var explicitRating = (p.rating || p.imdb_rating || '').trim();
 
         // Normalize download links
         var links = [];
@@ -1039,13 +1051,13 @@
         root.style.display = 'block';
 
         root.innerHTML = `
-            <!-- IMAGE 2 INSPIRED SHOWCASE CARD -->
+            <!-- SHOWCASE CARD -->
             <div class="scenepack-showcase-panel">
                 <!-- POSTER COLUMN -->
                 <div class="scenepack-poster-col">
                     <div class="scenepack-poster-frame">
                         <img src="${poster}" alt="${escapeHtml(p.name)}" class="scenepack-poster-img" onerror="this.src='/assets/content.png'">
-                        ${(p.rating || p.imdb_rating) ? `<div class=\"poster-imdb-badge\"><i class=\"fab fa-imdb\"></i> ${p.rating || p.imdb_rating}/10</div>` : ''}
+                        ${explicitRating ? `<div class="poster-imdb-badge"><i class="${isGame ? 'fas fa-gamepad' : 'fab fa-imdb'}"></i> ${escapeHtml(explicitRating)}/10</div>` : ''}
                     </div>
                 </div>
 
@@ -1053,13 +1065,13 @@
                 <div class="scenepack-meta-col">
                     <div>
                         <div class="origin-kicker-bar">
-                            <span class="origin-pill"><i class="${(prod && (prod.type === 'Game' || prod.category === 'game')) ? 'fas fa-gamepad' : 'fas fa-film'}"></i> ${prod ? (prod.type || 'Series/Movie') : catLabel}</span>
-                            ${prod ? `<span class="origin-pill" style="background:${(prod.type === 'Game' || prod.category === 'game') ? 'rgba(168,85,247,0.14)' : 'rgba(6,182,212,0.12)'};border-color:${(prod.type === 'Game' || prod.category === 'game') ? 'rgba(168,85,247,0.35)' : 'rgba(6,182,212,0.3)'};color:${(prod.type === 'Game' || prod.category === 'game') ? '#c084fc' : '#67e8f9'}">${escapeHtml(prod.title)}</span>` : ''}
+                            <span class="origin-pill"><i class="${isGame ? 'fas fa-gamepad' : 'fas fa-film'}"></i> ${catLabel}</span>
+                            ${originTitle ? `<span class="origin-pill" style="background:${isGame ? 'rgba(192,132,252,0.12)' : 'rgba(6,182,212,0.12)'};border-color:${isGame ? 'rgba(192,132,252,0.3)' : 'rgba(6,182,212,0.3)'};color:${isGame ? '#c084fc' : '#67e8f9'}">${escapeHtml(originTitle)}</span>` : ''}
                         </div>
 
                         <h1 class="scene-title-featured">${escapeHtml(p.name)}</h1>
 
-                        <!-- METADATA GRID (IMAGE 2 STYLE, NO ENCODE/QUALITY) -->
+                        <!-- METADATA GRID (IMAGE 2 STYLE) -->
                         <div class="scenepack-meta-grid">
                             <div class="meta-field">
                                 <span class="meta-label"><i class="fas fa-user-pen"></i> CREATOR</span>
@@ -1067,7 +1079,7 @@
                             </div>
 
                             <div class="meta-field">
-                                <span class="meta-label"><i class="fas fa-clapperboard"></i> ORIGIN</span>
+                                <span class="meta-label"><i class="${isGame ? 'fas fa-gamepad' : 'fas fa-clapperboard'}"></i> ORIGIN</span>
                                 <span class="meta-value">${originValueHtml}</span>
                             </div>
 
@@ -1116,13 +1128,13 @@
                 </div>
             </div>
 
-            <!-- REAL DESCRIPTION / NOTES (IF AVAILABLE, ZERO FAKE AI SLOP) -->
+            <!-- REAL DESCRIPTION / NOTES -->
             ${(realDesc || p.notes) ? `
                 <div class="glass-card">
                     <div class="card-header-title">
                         <i class="fas fa-align-left"></i> Description &amp; Creator Notes
                     </div>
-                    ${realDesc ? `<p style=\"color:rgba(255,255,255,0.8);font-size:0.92rem;line-height:1.75;margin:0 0 12px\">${escapeHtml(realDesc).split('\n').join('<br>')}</p>` : ''}
+                    ${realDesc ? `<p style="color:rgba(255,255,255,0.8);font-size:0.92rem;line-height:1.75;margin:0 0 12px">${escapeHtml(realDesc).split('\n').join('<br>')}</p>` : ''}
                     ${p.notes ? `
                         <div style="padding:12px 16px;background:rgba(255,43,82,0.06);border-left:3px solid var(--cherry-light);border-radius:0 12px 12px 0;font-size:0.86rem;color:rgba(255,255,255,0.85)">
                             <strong>Note:</strong> ${escapeHtml(p.notes)}
@@ -1131,18 +1143,18 @@
                 </div>
             ` : ''}
 
-            <!-- PRODUCTION INFO CARD (IF IMDB MATCHED) -->
-            ${prod ? `
+            <!-- PRODUCTION / GAME INFO CARD (ONLY IF CURATED DATA EXISTS) -->
+            ${(prod && prod.directors && prod.cast) ? `
                 <div class="production-info-card">
                     <div class="production-info-header">
-                        <h3><i class="fas fa-clapperboard" style="color:var(--cherry-light)"></i> About the Production: ${escapeHtml(prod.title)}</h3>
-                        <a href="/scenepack.html?production=${encodeURIComponent(prod.id)}" class="action-pill-btn" style="color:#67e8f9;border-color:rgba(6,182,212,0.3)">
+                        <h3><i class="${isGame ? 'fas fa-gamepad' : 'fas fa-clapperboard'}" style="color:var(--cherry-light)"></i> About ${isGame ? 'the Game' : 'the Production'}: ${escapeHtml(prod.title)}</h3>
+                        <a href="/scenepack.html?origin=${encodeURIComponent(prod.title)}" class="action-pill-btn" style="color:#67e8f9;border-color:rgba(6,182,212,0.3)">
                             Browse all ${escapeHtml(prod.title)} packs <i class="fas fa-arrow-right"></i>
                         </a>
                     </div>
-                    <div class="prod-detail-line"><strong>Year &amp; Type:</strong> ${escapeHtml(prod.year)} · ${escapeHtml(prod.type)} · ${escapeHtml(prod.genres)}</div>
-                    <div class="prod-detail-line"><strong>Directors / Creators:</strong> ${escapeHtml(prod.directors)}</div>
-                    <div class="prod-detail-line"><strong>Cast:</strong> ${escapeHtml(prod.cast)}</div>
+                    <div class="prod-detail-line"><strong>${isGame ? 'Released & Genres' : 'Year & Genres'}:</strong> ${escapeHtml(prod.year)} · ${escapeHtml(prod.type)} · ${escapeHtml(prod.genres)}</div>
+                    <div class="prod-detail-line"><strong>${isGame ? 'Developer / Studio' : 'Directors / Creators'}:</strong> ${escapeHtml(prod.directors)}</div>
+                    <div class="prod-detail-line"><strong>${isGame ? 'Characters' : 'Cast'}:</strong> ${escapeHtml(prod.cast)}</div>
                     ${prod.tagline ? `<div class="prod-detail-line" style="font-style:italic;color:rgba(255,255,255,0.5);margin-top:8px">"${escapeHtml(prod.tagline)}"</div>` : ''}
                 </div>
             ` : ''}
@@ -1227,8 +1239,13 @@
         try {
             const resp = await fetch('/api/products?type=scenepack');
             if (!resp.ok) return;
-            const items = await resp.json();
+            let items = await resp.json();
             if (!Array.isArray(items)) return;
+            try {
+                const editedKey = 'zyrex_edited_products';
+                const editedMap = JSON.parse(localStorage.getItem(editedKey) || '{}');
+                items = items.map(x => editedMap[x.id] ? Object.assign({}, x, editedMap[x.id]) : x);
+            } catch(e) {}
             const related = items.filter(x => x.id !== currentId).slice(0, 3);
             if (related.length === 0) return;
 

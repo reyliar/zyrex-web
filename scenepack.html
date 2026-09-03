@@ -708,6 +708,87 @@
             color: #fff;
         }
 
+
+        /* === CATEGORY BADGES & ORIGIN PILLS === */
+        .sp-cat-badge {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(14, 8, 18, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: #fff;
+            font-size: 0.68rem;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            backdrop-filter: blur(8px);
+            z-index: 2;
+        }
+        .sp-cat-badge.cat-games {
+            background: rgba(124, 58, 237, 0.85);
+            border-color: rgba(168, 85, 247, 0.4);
+        }
+        .sp-cat-badge.cat-movie {
+            background: rgba(225, 29, 72, 0.85);
+            border-color: rgba(251, 113, 133, 0.4);
+        }
+        .sp-cat-badge.cat-series {
+            background: rgba(2, 132, 199, 0.85);
+            border-color: rgba(56, 189, 248, 0.4);
+        }
+        .sp-cat-badge.cat-anime {
+            background: rgba(234, 88, 12, 0.85);
+            border-color: rgba(251, 146, 60, 0.4);
+        }
+        .sp-origin-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: var(--cherry-light);
+            background: rgba(255, 43, 82, 0.1);
+            border: 1px solid rgba(255, 43, 82, 0.2);
+            padding: 2px 8px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .hub-filter-tabs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+        .hub-filter-tab {
+            padding: 7px 16px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .hub-filter-tab:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+        .hub-filter-tab.active {
+            background: rgba(255, 43, 82, 0.2);
+            border-color: var(--cherry-light);
+            color: #fff;
+            box-shadow: 0 0 15px rgba(255, 43, 82, 0.3);
+        }
+
     </style>
 </head>
 <body>
@@ -734,50 +815,53 @@
             <div class="glass-stat"><div class="st-icon"><i class="fas fa-download"></i></div><div class="st-info"><strong id="statDL">--</strong><span>Downloads</span></div></div>
         </div>
 
-                <!-- VIEW TABS -->
-        <div class="sp-view-tabs">
-            <button type="button" class="sp-view-tab active" id="tabAllPacks" onclick="switchSPView('all')">
+                <!-- VIEW & CATEGORY TABS -->
+        <div class="sp-view-tabs" id="mainViewTabs">
+            <button type="button" class="sp-view-tab active" data-tab="all" onclick="switchSPCategory('all')">
                 <i class="fas fa-layer-group"></i> All Scenepacks
             </button>
-            <button type="button" class="sp-view-tab" id="tabProductions" onclick="switchSPView('productions')">
-                <i class="fas fa-film"></i> Films &amp; Series <span class="imdb-mini-tag">IMDb Hub</span>
+            <button type="button" class="sp-view-tab" data-tab="series" onclick="switchSPCategory('series')">
+                <i class="fas fa-tv"></i> TV Series
             </button>
-            <button type="button" class="sp-view-tab" id="tabGames" onclick="switchSPView('games')">
-                <i class="fas fa-gamepad"></i> Video Games <span class="imdb-mini-tag" style="background:linear-gradient(135deg, #7c3aed, #db2777)">Games Hub</span>
+            <button type="button" class="sp-view-tab" data-tab="movie" onclick="switchSPCategory('movie')">
+                <i class="fas fa-film"></i> Movies
+            </button>
+            <button type="button" class="sp-view-tab" data-tab="games" onclick="switchSPCategory('games')">
+                <i class="fas fa-gamepad"></i> Video Games
+            </button>
+            <button type="button" class="sp-view-tab" data-tab="anime" onclick="switchSPCategory('anime')">
+                <i class="fas fa-fire"></i> Anime
+            </button>
+            <button type="button" class="sp-view-tab" data-tab="hub" onclick="switchSPView('hub')">
+                <i class="fas fa-cubes"></i> Productions &amp; Games Hub <span class="imdb-mini-tag">Hub</span>
             </button>
         </div>
 
-        <!-- CONTAINER FOR PRODUCTIONS VIEW (IMDB HUB) -->
-        <div id="productionsSection" style="display:none;">
+        <!-- UNIFIED PRODUCTIONS & GAMES HUB SECTION -->
+        <div id="hubSection" style="display:none;">
             <!-- SHOWCASE DETAIL (IMAGE 1 STYLE) -->
             <div id="productionShowcaseContainer" style="display:none;"></div>
 
-            <!-- PRODUCTIONS GRID -->
-            <div id="productionsGridContainer">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px">
-                    <h3 style="font-size:1.15rem;font-weight:800;color:#fff;margin:0;display:flex;align-items:center;gap:8px">
-                        <i class="fas fa-clapperboard" style="color:var(--cherry-light)"></i> Browse by Movie &amp; TV Series
-                    </h3>
-                    <span style="font-size:0.8rem;color:var(--text-muted)">Matched with official IMDb ratings &amp; posters</span>
-                </div>
-                <div class="productions-grid" id="productionsGrid"></div>
-            </div>
-        </div>
+            <!-- HUB GRID CONTAINER -->
+            <div id="hubGridContainer">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:12px">
+                    <div>
+                        <h3 style="font-size:1.25rem;font-weight:800;color:#fff;margin:0 0 4px;display:flex;align-items:center;gap:8px">
+                            <i class="fas fa-cubes" style="color:var(--cherry-light)"></i> Productions &amp; Games Hub
+                        </h3>
+                        <span style="font-size:0.82rem;color:var(--text-muted)">Browse scenepacks grouped by official Film, Series or Video Game title</span>
+                    </div>
 
-        <!-- CONTAINER FOR VIDEO GAMES VIEW (GAMES HUB) -->
-        <div id="gamesSection" style="display:none;">
-            <!-- GAME SHOWCASE DETAIL -->
-            <div id="gameShowcaseContainer" style="display:none;"></div>
-
-            <!-- GAMES GRID -->
-            <div id="gamesGridContainer">
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px">
-                    <h3 style="font-size:1.15rem;font-weight:800;color:#fff;margin:0;display:flex;align-items:center;gap:8px">
-                        <i class="fas fa-gamepad" style="color:#a855f7"></i> Browse by Video Games
-                    </h3>
-                    <span style="font-size:0.8rem;color:var(--text-muted)">Cinematic gameplay, game cutscenes &amp; trailers</span>
+                    <!-- HUB SUBTABS -->
+                    <div class="hub-filter-tabs">
+                        <button type="button" class="hub-filter-tab active" onclick="filterHubCategory('all')">All Titles</button>
+                        <button type="button" class="hub-filter-tab" onclick="filterHubCategory('movies_series')"><i class="fas fa-film"></i> TV &amp; Movies</button>
+                        <button type="button" class="hub-filter-tab" onclick="filterHubCategory('games')"><i class="fas fa-gamepad"></i> Video Games</button>
+                        <button type="button" class="hub-filter-tab" onclick="filterHubCategory('anime')"><i class="fas fa-fire"></i> Anime</button>
+                    </div>
                 </div>
-                <div class="productions-grid" id="gamesGrid"></div>
+
+                <div class="productions-grid" id="hubGrid"></div>
             </div>
         </div>
 
@@ -964,201 +1048,323 @@
             document.getElementById('statDL').textContent = dl >= 1000 ? (dl / 1000).toFixed(1) + 'k' : dl;
         }
 
-        // Render scenepack cards with TRUE creator vs uploader distinction
-        function renderSP(items) {
-            var grid = document.getElementById('spGrid');
-            if (items.length === 0) {
-                grid.innerHTML = '<div class="empty"><i class="fas fa-search"></i><p>No scenepacks found matching your search.</p></div>';
-                document.getElementById('resultsCount').textContent = '';
-            } else {
-                grid.innerHTML = items.map(function(p){
-                    var prod = typeof findProductionForScenepack === 'function' ? findProductionForScenepack(p) : null;
-                    var imageSrc = p.thumbnail && p.thumbnail !== 'assets/content.png' ? p.thumbnail : (prod ? prod.poster : 'assets/content.png');
-                    var idString = String(p.id);
+        // State management
+        var allSP = [];
+        var creatorIndex = {};
+        var discordAvatarCache = {};
+        var currentCategory = 'all';
+        var currentViewMode = 'packs';
+        var currentHubCategory = 'all';
+        var currentActiveProd = null;
 
-                    // True Creator vs Zyrex Uploader
-                    var hasCreator = Boolean((p.creator_nickname || p.author_name || '').trim());
-                    var creatorName = p.creator_nickname || p.author_name || '';
-                    var creatorAv = p.creator_avatar || '';
-                    var uploaderName = p.uploader_name || 'Zyrex Member';
-                    var uploaderAv = p.uploader_avatar || 'https://cdn.discordapp.com/embed/avatars/0.png';
-                    var uploaderId = p.uploader_id || '';
-
-                    var avHtml = '';
-                    var nameHtml = '';
-                    var subHtml = '';
-
-                    if (hasCreator) {
-                        avHtml = '<img class="sp-uploader-av" src="' + (creatorAv || 'assets/content.png') + '" onerror="this.src=\'assets/content.png\'" alt="">';
-                        nameHtml = '<span class="sp-uploader-name">' + escapeHtml(creatorName) + '</span>';
-                        subHtml = '<span class="sp-uploader-sub" style="color:var(--cherry-light);font-weight:700">Creator</span>';
-                    } else {
-                        avHtml = '<img class="sp-uploader-av" data-uploader-id="' + uploaderId + '" data-fallback="' + uploaderAv + '" src="https://cdn.discordapp.com/embed/avatars/0.png" alt="">';
-                        nameHtml = '<span class="sp-uploader-name">' + escapeHtml(uploaderName) + '</span>';
-                        subHtml = '<span class="sp-uploader-sub">Uploaded by</span>';
-                    }
-
-                    return '<a class="sp-card" href="/product-scenepack?id=' + idString + '">' +
-                        '<div class="sp-card-thumb">' +
-                            '<img src="' + imageSrc + '" alt="" onerror="this.src=\'assets/content.png\'">' +
-                            '<div class="sp-thumb-overlay"></div>' +
-                            ((p.rating || p.imdb_rating) ? '<span style="position:absolute;top:10px;right:10px;background:#f5c518;color:#000;font-size:0.68rem;font-weight:900;padding:2px 6px;border-radius:4px;z-index:2"><i class="fab fa-imdb"></i> ' + (p.rating || p.imdb_rating) + '</span>' : '') +
-                        '</div>' +
-                        '<div class="sp-card-body">' +
-                            '<h3 class="sp-card-title">' + escapeHtml(p.name) + '</h3>' +
-                            '<div class="sp-uploader-row">' +
-                                '<div class="sp-uploader-info">' +
-                                    avHtml +
-                                    '<div>' +
-                                        nameHtml +
-                                        subHtml +
-                                    '</div>' +
-                                '</div>' +
-                                '<span class="sp-dl-count"><i class="fas fa-download" style="color:var(--cherry-light)"></i> ' + (p.downloads || 0) + '</span>' +
-                            '</div>' +
-                        '</div>' +
-                    '</a>';
-                }).join('');
-                document.getElementById('resultsCount').textContent = items.length + ' scenepack' + (items.length !== 1 ? 's' : '');
-                loadUploaderAvatars();
-            }
+        function escapeHtml(text) {
+            if (!text) return '';
+            return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
         }
 
-        // ================== VIEW SWITCHER & HUBS ==================
-        function switchSPView(mode) {
-            currentViewMode = mode;
-            var tabAll = document.getElementById('tabAllPacks');
-            var tabProd = document.getElementById('tabProductions');
-            var tabGames = document.getElementById('tabGames');
-            var allSec = document.getElementById('allPacksSection');
-            var prodSec = document.getElementById('productionsSection');
-            var gamesSec = document.getElementById('gamesSection');
-
-            // Reset tabs
-            if (tabAll) tabAll.classList.remove('active');
-            if (tabProd) tabProd.classList.remove('active');
-            if (tabGames) tabGames.classList.remove('active');
-
-            if (mode === 'productions') {
-                if (tabProd) tabProd.classList.add('active');
-                if (allSec) allSec.style.display = 'none';
-                if (gamesSec) gamesSec.style.display = 'none';
-                if (prodSec) prodSec.style.display = 'block';
-                closeProductionView();
-                renderProductionsGrid();
-            } else if (mode === 'games') {
-                if (tabGames) tabGames.classList.add('active');
-                if (allSec) allSec.style.display = 'none';
-                if (prodSec) prodSec.style.display = 'none';
-                if (gamesSec) gamesSec.style.display = 'block';
-                closeProductionView();
-                renderGamesGrid();
-            } else {
-                if (tabAll) tabAll.classList.add('active');
-                if (prodSec) prodSec.style.display = 'none';
-                if (gamesSec) gamesSec.style.display = 'none';
-                if (allSec) allSec.style.display = 'block';
-                closeProductionView();
+        // Fetch Discord profile photo via Zyrex VPS Bot API
+        async function fetchUploaderDiscordAvatar(uploaderId, fallbackHashOrUrl) {
+            if (!uploaderId) {
+                if (fallbackHashOrUrl && fallbackHashOrUrl.startsWith('http')) return fallbackHashOrUrl;
+                if (fallbackHashOrUrl) return '/api/avatar/0/' + fallbackHashOrUrl + '.png?size=128';
+                return 'https://cdn.discordapp.com/embed/avatars/0.png';
             }
-        }
-
-        // Render Productions Grid (Films & Series ONLY - Hide 0-pack categories)
-        function renderProductionsGrid() {
-            var grid = document.getElementById('productionsGrid');
-            var prods = typeof getAllIMDbProductions === 'function' ? getAllIMDbProductions() : [];
+            if (discordAvatarCache[uploaderId]) return discordAvatarCache[uploaderId];
             
-            // PAYLAŞIMI OLMAYAN YAPIMLARI GİZLE (matchingCount > 0)
-            var activeProds = prods.filter(function(pr) {
-                if (pr.category === 'game' || pr.type === 'Game') return false;
-                var matchingCount = allSP.filter(function(p){
-                    var match = typeof findProductionForScenepack === 'function' ? findProductionForScenepack(p) : null;
-                    return match && match.id === pr.id;
-                }).length;
-                return matchingCount > 0;
+            try {
+                var res = await fetch('/api/discord-user/' + uploaderId);
+                if (res.ok) {
+                    var data = await res.json();
+                    if (data && data.avatar_url) {
+                        discordAvatarCache[uploaderId] = data.avatar_url;
+                        return data.avatar_url;
+                    }
+                }
+            } catch(e) {}
+            
+            if (fallbackHashOrUrl && fallbackHashOrUrl.startsWith('http')) {
+                discordAvatarCache[uploaderId] = fallbackHashOrUrl;
+                return fallbackHashOrUrl;
+            }
+            if (fallbackHashOrUrl) {
+                var url = '/api/avatar/' + uploaderId + '/' + fallbackHashOrUrl + '.png?size=128';
+                discordAvatarCache[uploaderId] = url;
+                return url;
+            }
+            return 'https://cdn.discordapp.com/embed/avatars/0.png';
+        }
+
+        function loadUploaderAvatars() {
+            document.querySelectorAll('img[data-uploader-id]').forEach(async function(img) {
+                var uid = img.getAttribute('data-uploader-id');
+                var fb = img.getAttribute('data-fallback') || '';
+                if (uid) {
+                    var url = await fetchUploaderDiscordAvatar(uid, fb);
+                    if (url) img.src = url;
+                }
+            });
+        }
+
+        function updateStats(items) {
+            document.getElementById('statTotal').textContent = items.length;
+            var creators = {};
+            items.forEach(function(p){ var c = p.creator_nickname || p.author_name; if(c) creators[c] = 1; });
+            document.getElementById('statCreators').textContent = Object.keys(creators).length;
+            var dl = items.reduce(function(s, x){ return s + (x.downloads || 0); }, 0);
+            document.getElementById('statDL').textContent = dl >= 1000 ? (dl / 1000).toFixed(1) + 'k' : dl;
+        }
+
+        // ================== CATEGORY FILTERING & RENDERING ==================
+        function switchSPCategory(cat) {
+            currentCategory = cat;
+            currentViewMode = 'packs';
+
+            // Update top tabs
+            document.querySelectorAll('#mainViewTabs button').forEach(function(btn) {
+                btn.classList.toggle('active', btn.getAttribute('data-tab') === cat);
             });
 
-            if (activeProds.length === 0) {
-                grid.innerHTML = '<div class="empty" style="grid-column: 1 / -1; padding: 40px 20px; text-align: center; color: var(--text-muted);"><i class="fas fa-film" style="font-size: 2rem; margin-bottom: 12px; display: block; color: var(--cherry-light);"></i><p>No films or TV series with scenepacks found yet. Check back soon!</p></div>';
+            // Toggle sections
+            var hubSec = document.getElementById('hubSection');
+            var packsSec = document.getElementById('allPacksSection');
+            if (hubSec) hubSec.style.display = 'none';
+            if (packsSec) packsSec.style.display = 'block';
+
+            applyFilters();
+        }
+
+        function applyFilters() {
+            var searchInp = document.getElementById('spSearch');
+            var query = searchInp ? searchInp.value.toLowerCase().trim() : '';
+
+            var filtered = allSP.filter(function(p) {
+                var prod = typeof findProductionForScenepack === 'function' ? findProductionForScenepack(p) : null;
+                var rawCat = (p.category || '').toLowerCase().trim();
+                var pType = prod ? (prod.type || '').toLowerCase() : '';
+
+                // Category check
+                if (currentCategory === 'series') {
+                    if (rawCat !== 'series' && pType !== 'series') return false;
+                } else if (currentCategory === 'movie') {
+                    if (rawCat !== 'movie' && pType !== 'movie') return false;
+                } else if (currentCategory === 'games') {
+                    if (rawCat !== 'games' && rawCat !== 'game' && pType !== 'game') return false;
+                } else if (currentCategory === 'anime') {
+                    if (rawCat !== 'anime' && pType !== 'anime') return false;
+                }
+
+                // Search query check
+                if (query) {
+                    var originTitle = (p.origin || (prod ? prod.title : '')).toLowerCase();
+                    var matchText = [p.name, p.creator_nickname, p.author_name, p.creator_username, p.description, p.desc, originTitle].join(' ').toLowerCase();
+                    if (matchText.indexOf(query) === -1) return false;
+                }
+
+                return true;
+            });
+
+            renderSP(filtered);
+        }
+
+        // Render scenepack cards
+        function renderSP(items) {
+            var grid = document.getElementById('spGrid');
+            if (!items || items.length === 0) {
+                grid.innerHTML = '<div class="empty" style="grid-column: 1 / -1; padding: 40px 20px; text-align: center; color: var(--text-muted);"><i class="fas fa-search" style="font-size: 2rem; margin-bottom: 12px; display: block; color: var(--cherry-light);"></i><p>No scenepacks found in this category or search.</p></div>';
+                document.getElementById('resultsCount').textContent = '0 scenepacks';
                 return;
             }
 
-            grid.innerHTML = activeProds.map(function(pr) {
-                var matchingPacks = allSP.filter(function(p){
-                    var match = typeof findProductionForScenepack === 'function' ? findProductionForScenepack(p) : null;
-                    return match && match.id === pr.id;
-                });
-                var matchingCount = matchingPacks.length;
+            grid.innerHTML = items.map(function(p) {
+                var prod = typeof findProductionForScenepack === 'function' ? findProductionForScenepack(p) : null;
+                var imageSrc = (p.thumbnail && p.thumbnail !== 'assets/content.png' && p.thumbnail !== '/assets/content.png') ? p.thumbnail : (prod ? prod.poster : 'assets/content.png');
+                var idString = String(p.id);
 
-                // Use first real scenepack thumbnail if available
-                var firstThumb = matchingPacks.find(function(p){ return p.thumbnail && p.thumbnail !== 'assets/content.png' && p.thumbnail !== '/assets/content.png'; });
-                var posterImg = (firstThumb && firstThumb.thumbnail) ? firstThumb.thumbnail : pr.poster;
+                // True Creator vs Zyrex Uploader
+                var hasCreator = Boolean((p.creator_nickname || p.author_name || '').trim());
+                var creatorName = p.creator_nickname || p.author_name || '';
+                var creatorAv = p.creator_avatar || '';
+                var uploaderName = p.uploader_name || 'Zyrex Member';
+                var uploaderAv = p.uploader_avatar || 'https://cdn.discordapp.com/embed/avatars/0.png';
+                var uploaderId = p.uploader_id || '';
+
+                var avHtml = '';
+                var nameHtml = '';
+                var subHtml = '';
+
+                if (hasCreator) {
+                    avHtml = '<img class="sp-uploader-av" src="' + (creatorAv || 'assets/content.png') + '" onerror="this.src=\'assets/content.png\'" alt="">';
+                    nameHtml = '<span class="sp-uploader-name">' + escapeHtml(creatorName) + '</span>';
+                    subHtml = '<span class="sp-uploader-sub" style="color:var(--cherry-light);font-weight:700">Creator</span>';
+                } else {
+                    avHtml = '<img class="sp-uploader-av" data-uploader-id="' + uploaderId + '" data-fallback="' + uploaderAv + '" src="https://cdn.discordapp.com/embed/avatars/0.png" alt="">';
+                    nameHtml = '<span class="sp-uploader-name">' + escapeHtml(uploaderName) + '</span>';
+                    subHtml = '<span class="sp-uploader-sub">Uploaded by</span>';
+                }
+
+                // Category pill determination
+                var rawCat = (p.category || (prod && prod.category) || 'scenepack').toLowerCase();
+                var catLabel = 'Scenepack';
+                var catClass = 'cat-sp';
+                var catIcon = 'fa-clapperboard';
+
+                if (rawCat === 'games' || rawCat === 'game' || (prod && prod.type === 'Game')) {
+                    catLabel = 'Video Game';
+                    catClass = 'cat-games';
+                    catIcon = 'fa-gamepad';
+                } else if (rawCat === 'movie' || (prod && prod.type === 'Movie')) {
+                    catLabel = 'Movie';
+                    catClass = 'cat-movie';
+                    catIcon = 'fa-film';
+                } else if (rawCat === 'series' || (prod && prod.type === 'Series')) {
+                    catLabel = 'TV Series';
+                    catClass = 'cat-series';
+                    catIcon = 'fa-tv';
+                } else if (rawCat === 'anime' || (prod && prod.type === 'Anime')) {
+                    catLabel = 'Anime';
+                    catClass = 'cat-anime';
+                    catIcon = 'fa-fire';
+                }
+
+                // Origin tag
+                var originTitle = (p.origin || '').trim() || (prod ? prod.title : '');
+                var originHtml = originTitle ? '<div class="sp-origin-tag"><i class="fas fa-film"></i> ' + escapeHtml(originTitle) + '</div>' : '';
+
+                // Rating badge
+                var ratingVal = p.rating || p.imdb_rating || (prod ? prod.rating : '');
+                var ratingHtml = ratingVal ? '<span style="position:absolute;top:10px;right:10px;background:#f5c518;color:#000;font-size:0.68rem;font-weight:900;padding:2px 6px;border-radius:4px;z-index:2"><i class="fab fa-imdb"></i> ' + escapeHtml(ratingVal) + '</span>' : '';
+
+                return '<a class="sp-card" href="/product-scenepack?id=' + idString + '">' +
+                    '<div class="sp-card-thumb">' +
+                        '<img src="' + imageSrc + '" alt="" onerror="this.src=\'assets/content.png\'">' +
+                        '<div class="sp-thumb-overlay"></div>' +
+                        '<span class="sp-cat-badge ' + catClass + '"><i class="fas ' + catIcon + '"></i> ' + catLabel + '</span>' +
+                        ratingHtml +
+                    '</div>' +
+                    '<div class="sp-card-body">' +
+                        originHtml +
+                        '<h3 class="sp-card-title">' + escapeHtml(p.name) + '</h3>' +
+                        '<div class="sp-uploader-row">' +
+                            '<div class="sp-uploader-info">' +
+                                avHtml +
+                                '<div>' +
+                                    nameHtml +
+                                    subHtml +
+                                '</div>' +
+                            '</div>' +
+                            '<span class="sp-dl-count"><i class="fas fa-download" style="color:var(--cherry-light)"></i> ' + (p.downloads || 0) + '</span>' +
+                        '</div>' +
+                    '</div>' +
+                '</a>';
+            }).join('');
+
+            document.getElementById('resultsCount').textContent = items.length + ' scenepack' + (items.length !== 1 ? 's' : '');
+            loadUploaderAvatars();
+        }
+
+        // ================== PRODUCTIONS & GAMES HUB ==================
+        function switchSPView(mode) {
+            if (mode === 'hub') {
+                currentViewMode = 'hub';
+                document.querySelectorAll('#mainViewTabs button').forEach(function(btn) {
+                    btn.classList.toggle('active', btn.getAttribute('data-tab') === 'hub');
+                });
+                var hubSec = document.getElementById('hubSection');
+                var packsSec = document.getElementById('allPacksSection');
+                if (packsSec) packsSec.style.display = 'none';
+                if (hubSec) hubSec.style.display = 'block';
+                closeProductionView();
+                renderHubGrid();
+            } else {
+                switchSPCategory('all');
+            }
+        }
+
+        function filterHubCategory(subCat) {
+            currentHubCategory = subCat;
+            document.querySelectorAll('.hub-filter-tab').forEach(function(btn) {
+                var txt = btn.textContent.toLowerCase();
+                if (subCat === 'all' && txt.includes('all')) btn.classList.add('active');
+                else if (subCat === 'movies_series' && txt.includes('tv')) btn.classList.add('active');
+                else if (subCat === 'games' && txt.includes('game')) btn.classList.add('active');
+                else if (subCat === 'anime' && txt.includes('anime')) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+            renderHubGrid();
+        }
+
+        function renderHubGrid() {
+            var grid = document.getElementById('hubGrid');
+            if (!grid) return;
+
+            // Collect curated productions
+            var allKnown = (typeof getAllProductions === 'function') ? getAllProductions() : [];
+            var prodMap = {};
+
+            allKnown.forEach(function(pr) {
+                prodMap[pr.id] = Object.assign({}, pr);
+            });
+
+            // Gather any custom productions from allSP
+            allSP.forEach(function(p) {
+                var match = (typeof findProductionForScenepack === 'function') ? findProductionForScenepack(p) : null;
+                if (match && !prodMap[match.id]) {
+                    prodMap[match.id] = match;
+                }
+            });
+
+            // Filter productions that have at least 1 active scenepack
+            var activeList = [];
+            for (var k in prodMap) {
+                var pr = prodMap[k];
+                var matchingPacks = allSP.filter(function(p) {
+                    var match = (typeof findProductionForScenepack === 'function') ? findProductionForScenepack(p) : null;
+                    return match && (match.id === pr.id || slugifyText(match.title) === pr.id);
+                });
+
+                if (matchingPacks.length > 0) {
+                    // Filter by subcategory
+                    var isGame = (pr.type === 'Game' || pr.category === 'game');
+                    var isMovie = (pr.type === 'Movie' || pr.category === 'movie');
+                    var isSeries = (pr.type === 'Series' || pr.category === 'series');
+                    var isAnime = (pr.type === 'Anime' || pr.category === 'anime');
+
+                    if (currentHubCategory === 'movies_series' && !isMovie && !isSeries) continue;
+                    if (currentHubCategory === 'games' && !isGame) continue;
+                    if (currentHubCategory === 'anime' && !isAnime) continue;
+
+                    activeList.push({
+                        prod: pr,
+                        packs: matchingPacks
+                    });
+                }
+            }
+
+            if (activeList.length === 0) {
+                grid.innerHTML = '<div class="empty" style="grid-column: 1 / -1; padding: 40px 20px; text-align: center; color: var(--text-muted);"><i class="fas fa-cubes" style="font-size: 2rem; margin-bottom: 12px; display: block; color: var(--cherry-light);"></i><p>No titles found in this hub category yet.</p></div>';
+                return;
+            }
+
+            grid.innerHTML = activeList.map(function(item) {
+                var pr = item.prod;
+                var matchingCount = item.packs.length;
+                var firstThumb = item.packs.find(function(p){ return p.thumbnail && p.thumbnail !== 'assets/content.png' && p.thumbnail !== '/assets/content.png'; });
+                var posterImg = (firstThumb && firstThumb.thumbnail) ? firstThumb.thumbnail : (pr.poster || '/assets/content.png');
+                var isGame = (pr.type === 'Game' || pr.category === 'game');
+                var badgeStyle = isGame ? 'background:#7c3aed;color:#fff' : 'background:rgba(0,0,0,0.85);color:#f5c518;border:1px solid rgba(245,197,24,0.5)';
+                var badgeIcon = isGame ? 'fas fa-gamepad' : 'fab fa-imdb';
+                var ratingVal = pr.rating || '9.0';
 
                 return '<div class="prod-card" onclick="openProductionView(\'' + pr.id + '\')">' +
                     '<div class="prod-poster-box">' +
                         '<img src="' + posterImg + '" alt="' + escapeHtml(pr.title) + '" class="prod-poster-img" onerror="this.src=\'assets/content.png\'">' +
-                        '<div class="prod-imdb-badge"><i class="fab fa-imdb"></i> ' + pr.rating + '</div>' +
+                        '<div class="prod-imdb-badge" style="' + badgeStyle + '"><i class="' + badgeIcon + '"></i> ' + escapeHtml(ratingVal) + '</div>' +
                         '<div class="prod-count-pill">' + matchingCount + ' pack' + (matchingCount !== 1 ? 's' : '') + '</div>' +
                     '</div>' +
                     '<div class="prod-body">' +
                         '<div>' +
                             '<h4 class="prod-title">' + escapeHtml(pr.title) + '</h4>' +
-                            '<p class="prod-sub">' + escapeHtml(pr.year) + ' · ' + escapeHtml(pr.type) + '</p>' +
-                        '</div>' +
-                    '</div>' +
-                '</div>';
-            }).join('');
-        }
-
-        // Render Video Games Grid (Video Games ONLY - Hide 0-pack categories)
-        function renderGamesGrid() {
-            var grid = document.getElementById('gamesGrid');
-            var allGames = typeof getAllGameProductions === 'function' ? getAllGameProductions() : [];
-            
-            // PAYLAŞIMI OLMAYAN OYUNLARI GİZLE (matchingCount > 0)
-            var activeGames = allGames.filter(function(g) {
-                var matchingCount = allSP.filter(function(p){
-                    var match = typeof findProductionForScenepack === 'function' ? findProductionForScenepack(p) : null;
-                    return match && match.id === g.id;
-                }).length;
-                return matchingCount > 0;
-            });
-
-            // Fallback for custom game categories uploaded by community
-            allSP.forEach(function(p) {
-                var cat = (p.category || '').toLowerCase();
-                if (cat === 'games' || cat === 'game') {
-                    var match = typeof findProductionForScenepack === 'function' ? findProductionForScenepack(p) : null;
-                    if (match && !activeGames.some(function(ag){ return ag.id === match.id; })) {
-                        activeGames.push(match);
-                    }
-                }
-            });
-
-            if (activeGames.length === 0) {
-                grid.innerHTML = '<div class="empty" style="grid-column: 1 / -1; padding: 40px 20px; text-align: center; color: var(--text-muted);"><i class="fas fa-gamepad" style="font-size: 2rem; margin-bottom: 12px; display: block; color: #a855f7;"></i><p>No video game scenepacks found yet. Check back soon!</p></div>';
-                return;
-            }
-
-            grid.innerHTML = activeGames.map(function(g) {
-                var matchingPacks = allSP.filter(function(p){
-                    var match = typeof findProductionForScenepack === 'function' ? findProductionForScenepack(p) : null;
-                    return match && match.id === g.id;
-                });
-                var matchingCount = matchingPacks.length;
-
-                var firstThumb = matchingPacks.find(function(p){ return p.thumbnail && p.thumbnail !== 'assets/content.png' && p.thumbnail !== '/assets/content.png'; });
-                var posterImg = (firstThumb && firstThumb.thumbnail) ? firstThumb.thumbnail : g.poster;
-
-                return '<div class="prod-card" onclick="openProductionView(\'' + g.id + '\')">' +
-                    '<div class="prod-poster-box">' +
-                        '<img src="' + posterImg + '" alt="' + escapeHtml(g.title) + '" class="prod-poster-img" onerror="this.src=\'assets/content.png\'">' +
-                        '<div class="prod-imdb-badge" style="background:#7c3aed;color:#fff"><i class="fas fa-gamepad"></i> ' + (g.rating || '9.0') + '</div>' +
-                        '<div class="prod-count-pill">' + matchingCount + ' pack' + (matchingCount !== 1 ? 's' : '') + '</div>' +
-                    '</div>' +
-                    '<div class="prod-body">' +
-                        '<div>' +
-                            '<h4 class="prod-title">' + escapeHtml(g.title) + '</h4>' +
-                            '<p class="prod-sub">' + escapeHtml(g.year) + ' · Video Game</p>' +
+                            '<p class="prod-sub">' + escapeHtml(pr.year || '') + (pr.type ? ' · ' + escapeHtml(pr.type) : '') + '</p>' +
                         '</div>' +
                     '</div>' +
                 '</div>';
@@ -1167,43 +1373,39 @@
 
         // Open Production / Game Showcase Detail View
         function openProductionView(prodId) {
-            var pr = typeof getProductionById === 'function' ? getProductionById(prodId) : null;
+            var pr = (typeof getProductionById === 'function') ? getProductionById(prodId, allSP) : null;
             if (!pr) return;
 
             currentActiveProd = pr;
             var isGame = (pr.type === 'Game' || pr.category === 'game');
 
-            // Hide grids
-            var prodGridBox = document.getElementById('productionsGridContainer');
-            var gameGridBox = document.getElementById('gamesGridContainer');
-            if (prodGridBox) prodGridBox.style.display = 'none';
-            if (gameGridBox) gameGridBox.style.display = 'none';
+            var hubGridBox = document.getElementById('hubGridContainer');
+            if (hubGridBox) hubGridBox.style.display = 'none';
 
-            // Choose active showcase container
-            var container = isGame ? document.getElementById('gameShowcaseContainer') : document.getElementById('productionShowcaseContainer');
-            if (!container) container = document.getElementById('productionShowcaseContainer');
+            var container = document.getElementById('productionShowcaseContainer');
+            if (!container) return;
             container.style.display = 'block';
 
             var matchingPacks = allSP.filter(function(p){
-                var match = typeof findProductionForScenepack === 'function' ? findProductionForScenepack(p) : null;
-                return match && match.id === pr.id;
+                var match = (typeof findProductionForScenepack === 'function') ? findProductionForScenepack(p) : null;
+                return match && (match.id === pr.id || slugifyText(match.title) === pr.id);
             });
 
             var totalDL = matchingPacks.reduce(function(acc, x){ return acc + (x.downloads || 0); }, 0);
             var firstThumb = matchingPacks.find(function(p){ return p.thumbnail && p.thumbnail !== 'assets/content.png' && p.thumbnail !== '/assets/content.png'; });
-            var posterSrc = (firstThumb && firstThumb.thumbnail) ? firstThumb.thumbnail : pr.poster;
+            var posterSrc = (firstThumb && firstThumb.thumbnail) ? firstThumb.thumbnail : (pr.poster || '/assets/content.png');
 
-            var backBtnHtml = isGame 
-                ? '<button class="showcase-back-btn" onclick="closeProductionView()"><i class="fas fa-arrow-left"></i> All Video Games</button>'
-                : '<button class="showcase-back-btn" onclick="closeProductionView()"><i class="fas fa-arrow-left"></i> All Films &amp; Series</button>';
+            var backBtnHtml = '<button class="showcase-back-btn" onclick="closeProductionView()"><i class="fas fa-arrow-left"></i> Back to Hub Titles</button>';
 
             var badgeHtml = isGame
                 ? '<span class="badge-imdb" style="background:#7c3aed;color:#fff"><i class="fas fa-gamepad"></i> ' + (pr.rating || '9.0') + '/10</span>'
-                : '<span class="badge-imdb"><i class="fab fa-imdb"></i> ' + pr.rating + '/10</span>';
+                : '<span class="badge-imdb"><i class="fab fa-imdb"></i> ' + (pr.rating || '8.5') + '/10</span>';
 
             var metaDesc = isGame
-                ? `${escapeHtml(pr.year)} · Developer: ${escapeHtml(pr.directors)} · ${escapeHtml(pr.genres)} · Video Game`
-                : `${escapeHtml(pr.year)} · Directed by ${escapeHtml(pr.directors)} · ${escapeHtml(pr.genres)} · ${escapeHtml(pr.type)}`;
+                ? `${escapeHtml(pr.year || '')} · Developer: ${escapeHtml(pr.directors || 'Game Studio')} · ${escapeHtml(pr.genres || 'Video Game')} · Video Game`
+                : `${escapeHtml(pr.year || '')} · Directed by ${escapeHtml(pr.directors || 'Director')} · ${escapeHtml(pr.genres || 'Film')} · ${escapeHtml(pr.type || 'Production')}`;
+
+            var castLine = pr.cast ? `<div class="prod-cast-list"><strong>${isGame ? 'Key Characters:' : 'Cast:'}</strong> ${escapeHtml(pr.cast)}</div>` : '';
 
             container.innerHTML = `
                 ${backBtnHtml}
@@ -1228,9 +1430,7 @@
                                     ${pr.rotten ? `<span class="badge-rotten"><i class="fas fa-fire"></i> ${pr.rotten}</span>` : ''}
                                 </div>
                             </div>
-                            <div class="prod-cast-list">
-                                <strong>${isGame ? 'Key Characters:' : 'Cast:'}</strong> ${escapeHtml(pr.cast)}
-                            </div>
+                            ${castLine}
                             ${pr.tagline ? `<div class="prod-tagline">"${escapeHtml(pr.tagline)}"</div>` : ''}
                             
                             <!-- IN-SHOW SEARCH BAR -->
@@ -1287,8 +1487,8 @@
             if (!currentActiveProd) return;
             var q = (query || '').toLowerCase().trim();
             var packs = allSP.filter(function(p){
-                var match = typeof findProductionForScenepack === 'function' ? findProductionForScenepack(p) : null;
-                return match && match.id === currentActiveProd.id;
+                var match = (typeof findProductionForScenepack === 'function') ? findProductionForScenepack(p) : null;
+                return match && (match.id === currentActiveProd.id || slugifyText(match.title) === currentActiveProd.id);
             });
             if (q) {
                 packs = packs.filter(function(p){
@@ -1302,14 +1502,10 @@
         function closeProductionView() {
             currentActiveProd = null;
             var prodShowcase = document.getElementById('productionShowcaseContainer');
-            var gameShowcase = document.getElementById('gameShowcaseContainer');
-            var prodGrid = document.getElementById('productionsGridContainer');
-            var gameGrid = document.getElementById('gamesGridContainer');
+            var hubGrid = document.getElementById('hubGridContainer');
 
             if (prodShowcase) prodShowcase.style.display = 'none';
-            if (gameShowcase) gameShowcase.style.display = 'none';
-            if (prodGrid) prodGrid.style.display = 'block';
-            if (gameGrid) gameGrid.style.display = 'block';
+            if (hubGrid) hubGrid.style.display = 'block';
         }
 
         fetch('/api/search/creator-index').then(function(r){ return r.json(); }).then(function(d){
@@ -1321,50 +1517,45 @@
                 var r = await fetch('/api/products?type=scenepack');
                 var data = await r.json();
                 if (Array.isArray(data) && data.length) {
+                    // Merge edited products from localStorage
+                    try {
+                        var editedKey = 'zyrex_edited_products';
+                        var editedMap = JSON.parse(localStorage.getItem(editedKey) || '{}');
+                        data = data.map(function(p){
+                            return editedMap[p.id] ? Object.assign({}, p, editedMap[p.id]) : p;
+                        });
+                    } catch(e) {}
+
                     allSP = data;
                     updateStats(data);
-                    renderSP(data);
+                    applyFilters();
 
-                    // Check URL parameter for ?production=... or ?game=...
+                    // Check URL parameter for ?category=..., ?production=..., or ?hub=1
                     var urlParams = new URLSearchParams(window.location.search);
-                    var prodParam = urlParams.get('production');
-                    var gameParam = urlParams.get('game');
+                    var catParam = urlParams.get('category');
+                    var prodParam = urlParams.get('production') || urlParams.get('game');
+                    var hubParam = urlParams.get('hub');
+
                     if (prodParam) {
-                        switchSPView('productions');
+                        switchSPView('hub');
                         openProductionView(prodParam);
-                    } else if (gameParam) {
-                        switchSPView('games');
-                        openProductionView(gameParam);
+                    } else if (hubParam) {
+                        switchSPView('hub');
+                    } else if (catParam) {
+                        switchSPCategory(catParam);
                     }
                 } else {
                     document.getElementById('spGrid').innerHTML = '<div class="empty"><i class="fas fa-film"></i><p>No scenepacks yet. Check back soon!</p></div>';
                 }
-            } catch(e) {}
+            } catch(e) {
+                console.error("Scenepack fetch error:", e);
+            }
         })();
 
         document.addEventListener('input', function(e) {
-            if (e.target.id !== 'spSearch') return;
-            var s = e.target.value.toLowerCase().trim();
-            if (!s) { renderSP(allSP); updateStats(allSP); return; }
-            
-            var matchIds = null;
-            if (Object.keys(creatorIndex).length > 0) {
-                matchIds = {};
-                for (var k in creatorIndex) {
-                    if (k.indexOf(s) !== -1) {
-                        var raw = creatorIndex[k];
-                        (Array.isArray(raw) ? raw : String(raw).split(' ')).forEach(function(id){ matchIds[id] = true; });
-                    }
-                }
-                if (Object.keys(matchIds).length === 0) matchIds = null;
+            if (e.target.id === 'spSearch') {
+                applyFilters();
             }
-            
-            var filtered = allSP.filter(function(p){
-                if (matchIds && matchIds[p.id]) return true;
-                var txt = [p.name, p.creator_nickname, p.author_name, p.creator_username, p.description, p.desc].join(' ').toLowerCase();
-                return txt.indexOf(s) !== -1;
-            });
-            renderSP(filtered);
         });
     </script>
 </body>
