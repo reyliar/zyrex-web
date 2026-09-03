@@ -2767,6 +2767,37 @@
                     </div>
                 </div>
 
+                
+                <!-- SCENEPACK & PRODUCTION SPECIFIC CONFIGURATION -->
+                <div id="sectionScenepackSpecific" style="display:none" class="form-section-divider">
+                    <div class="form-section-label">
+                        <span><i class="fas fa-clapperboard" style="margin-right:7px"></i>Scenepack &amp; Origin Details</span>
+                        <button type="button" onclick="openSettingsProdLookup()" style="display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:999px;background:linear-gradient(135deg,rgba(245,197,24,0.18),rgba(6,182,212,0.18));border:1px solid rgba(245,197,24,0.4);color:#fff;font-size:0.78rem;font-weight:700;cursor:pointer;transition:all 0.2s">
+                            <i class="fab fa-imdb" style="color:#f5c518"></i> <i class="fas fa-gamepad" style="color:#06b6d4"></i> Search IMDb / Games
+                        </button>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editProductOrigin"><i class="fas fa-film" style="margin-right:5px;opacity:0.7"></i>Production / Game Origin</label>
+                            <input type="text" id="editProductOrigin" placeholder="e.g. Stranger Things, Cyberpunk 2077">
+                        </div>
+                        <div class="form-group">
+                            <label for="editProductImdbRating"><i class="fab fa-imdb" style="margin-right:5px;color:#f5c518"></i>IMDb / IGDB Rating (optional)</label>
+                            <input type="text" id="editProductImdbRating" placeholder="e.g. 8.7 or leave empty">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="editProductFileSize"><i class="fas fa-hard-drive" style="margin-right:5px;opacity:0.7"></i>File Size (optional)</label>
+                            <input type="text" id="editProductFileSize" placeholder="e.g. 3.59 GB">
+                        </div>
+                        <div class="form-group">
+                            <label for="editProductReleaseDate"><i class="fas fa-calendar" style="margin-right:5px;opacity:0.7"></i>Release Date (optional)</label>
+                            <input type="text" id="editProductReleaseDate" placeholder="e.g. 2024-07-15">
+                        </div>
+                    </div>
+                </div>
+
                 <!-- PRESET / SCENEPACK CREATOR SECTION -->
                 <div id="sectionCreatorInfo" class="form-section-divider">
                     <div class="form-section-label">
@@ -3625,6 +3656,7 @@
         // Modal helper functions
         function updateModalFieldsForType(type) {
             const pluginSection = document.getElementById('sectionPluginSpecific');
+            const scenepackSection = document.getElementById('sectionScenepackSpecific');
             const creatorSection = document.getElementById('sectionCreatorInfo');
             const groupFilePath = document.getElementById('groupFilePath');
             const groupSourceUrl = document.getElementById('groupSourceUrl');
@@ -3632,6 +3664,7 @@
             const subEl = document.getElementById('editModalHeaderSub');
 
             if (pluginSection) pluginSection.style.display = 'none';
+            if (scenepackSection) scenepackSection.style.display = 'none';
             if (creatorSection) creatorSection.style.display = 'block';
             if (groupFilePath) groupFilePath.style.display = 'block';
             if (groupSourceUrl) groupSourceUrl.style.display = 'block';
@@ -3647,7 +3680,8 @@
                 if (subEl) subEl.textContent = 'Configure audio stream URL, category, description and uploader info';
             } else if (cleanType === 'scenepack') {
                 if (titleEl) titleEl.textContent = 'Edit Scenepack';
-                if (subEl) subEl.textContent = 'Configure scenepack source link, thumbnail, description and creator info';
+                if (subEl) subEl.textContent = 'Configure origin, IMDb rating, creator, poster and download link';
+                if (scenepackSection) scenepackSection.style.display = 'block';
             } else {
                 if (titleEl) titleEl.textContent = 'Edit Preset Package';
                 if (subEl) subEl.textContent = 'Configure preset category, creator social profile, thumbnail and description';
@@ -3677,7 +3711,11 @@
             } else if (t === 'scenepack') {
                 options = [
                     { val: 'scenepack', label: 'Scenepack' },
-                    { val: 'raw-footage', label: 'Raw Footage' }
+                    { val: 'series', label: 'TV Series' },
+                    { val: 'movie', label: 'Movie' },
+                    { val: 'games', label: 'Video Games' },
+                    { val: 'anime', label: 'Anime' },
+                    { val: 'character', label: 'Character' }
                 ];
             } else {
                 options = [
@@ -3700,6 +3738,122 @@
         }
 
         // Modal triggers for editing product
+        
+        var activeSetLookup = 'imdb';
+        function openSettingsProdLookup() {
+            var m = document.getElementById('settingsProdLookupModal');
+            if (m) m.classList.add('active');
+            var q = document.getElementById('editProductOrigin').value || document.getElementById('editProductName').value || '';
+            var inp = document.getElementById('setLookupQuery');
+            if (q && !inp.value) {
+                inp.value = q.split('—')[0].split('-')[0].trim();
+                execSettingsLookup();
+            }
+            inp.focus();
+        }
+
+        function closeSettingsProdLookup() {
+            var m = document.getElementById('settingsProdLookupModal');
+            if (m) m.classList.remove('active');
+        }
+
+        function switchSettingsLookup(src) {
+            activeSetLookup = src;
+            var tI = document.getElementById('tabSetImdb');
+            var tG = document.getElementById('tabSetGames');
+            var inp = document.getElementById('setLookupQuery');
+            if (src === 'imdb') {
+                tI.style.background = 'rgba(245,197,24,0.15)';
+                tI.style.borderColor = 'rgba(245,197,24,0.5)';
+                tI.style.color = '#fff';
+                tG.style.background = 'rgba(255,255,255,0.04)';
+                tG.style.borderColor = 'var(--border)';
+                tG.style.color = 'var(--muted)';
+                inp.placeholder = 'Search movie, TV series, anime on IMDb...';
+            } else {
+                tG.style.background = 'rgba(6,182,212,0.15)';
+                tG.style.borderColor = 'rgba(6,182,212,0.5)';
+                tG.style.color = '#fff';
+                tI.style.background = 'rgba(255,255,255,0.04)';
+                tI.style.borderColor = 'var(--border)';
+                tI.style.color = 'var(--muted)';
+                inp.placeholder = 'Search video games on IGDB (e.g. Elden Ring, Cyberpunk)...';
+            }
+            if (inp.value.trim()) execSettingsLookup();
+        }
+
+        async function execSettingsLookup() {
+            var q = document.getElementById('setLookupQuery').value.trim();
+            var st = document.getElementById('setLookupStatus');
+            var rl = document.getElementById('setLookupResults');
+
+            if (!q) {
+                st.style.display = 'block';
+                st.style.color = '#ff2b52';
+                st.textContent = 'Please enter a search query.';
+                return;
+            }
+
+            st.style.display = 'block';
+            st.style.color = '#fff';
+            st.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching database...';
+            rl.innerHTML = '';
+
+            try {
+                var endpoint = activeSetLookup === 'imdb' ? '/api/lookup/imdb?q=' : '/api/lookup/games?q=';
+                var res = await fetch(endpoint + encodeURIComponent(q));
+                var data = await res.json();
+                var results = data && data.results ? data.results : [];
+
+                if (!results.length) {
+                    st.style.color = 'rgba(255,255,255,0.5)';
+                    st.textContent = 'No matching titles found.';
+                    return;
+                }
+
+                st.style.display = 'none';
+                rl.innerHTML = results.map(function(item) {
+                    var poster = item.poster || '/assets/content.png';
+                    var meta = [item.year, item.type, item.stars || item.genres].filter(Boolean).join(' · ');
+                    return '<div style="display:grid;grid-template-columns:45px 1fr auto;gap:12px;align-items:center;padding:8px 12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px">' +
+                        '<img src="' + poster + '" style="width:45px;height:60px;object-fit:cover;border-radius:6px" onerror="this.src=\'/assets/content.png\'">' +
+                        '<div>' +
+                            '<strong style="color:#fff;font-size:0.86rem;display:block">' + (item.title || '') + (item.rating ? ' <span style="color:#f5c518;font-size:0.75rem">★ ' + item.rating + '</span>' : '') + '</strong>' +
+                            '<span style="font-size:0.72rem;color:rgba(255,255,255,0.45)">' + meta + '</span>' +
+                        '</div>' +
+                        '<button type="button" onclick="applySettingsLookup(' + escapeHtml(JSON.stringify(JSON.stringify(item))) + ')" class="ov-btn-primary" style="padding:6px 12px;font-size:0.72rem">' +
+                            'Apply' +
+                        '</button>' +
+                    '</div>';
+                }).join('');
+            } catch(e) {
+                st.style.display = 'block';
+                st.style.color = '#ff2b52';
+                st.textContent = 'Lookup error: ' + e.message;
+            }
+        }
+
+        function applySettingsLookup(jsonStr) {
+            try {
+                var item = JSON.parse(jsonStr);
+                if (!item) return;
+
+                if (item.title) document.getElementById('editProductOrigin').value = item.title;
+                if (item.poster) document.getElementById('editProductThumbnail').value = item.poster;
+                if (item.rating) document.getElementById('editProductImdbRating').value = item.rating;
+
+                var catSelect = document.getElementById('editProductCategory');
+                if (item.type === 'Series') catSelect.value = 'series';
+                else if (item.type === 'Game') catSelect.value = 'games';
+                else if (item.type === 'Movie') catSelect.value = 'movie';
+
+                closeSettingsProdLookup();
+                alert('Applied: ' + item.title + (item.year ? ' (' + item.year + ')' : ''));
+            } catch(err) {
+                console.error(err);
+            }
+        }
+
         function openEditModal(productId) {
             const product = allProducts.find(p => String(p.id) === String(productId));
             if (!product) {
@@ -3731,6 +3885,12 @@
             setModalVal('editProductCreatorSocialUrl', product.creator_social_url || '');
             setModalVal('editProductCreatorNickname', product.creator_nickname || '');
             setModalVal('editProductCreatorAvatar', product.creator_avatar || '');
+
+            // Scenepack fields
+            setModalVal('editProductOrigin', product.origin || '');
+            setModalVal('editProductImdbRating', product.rating || product.imdb_rating || '');
+            setModalVal('editProductFileSize', product.file_size || product.size || '');
+            setModalVal('editProductReleaseDate', product.release_date || '');
 
             const modal = document.getElementById('editProductModal');
             if (modal) {
@@ -3799,7 +3959,12 @@
                 notes: document.getElementById('editProductNotes').value,
                 creator_social_url: document.getElementById('editProductCreatorSocialUrl').value,
                 creator_nickname: document.getElementById('editProductCreatorNickname').value,
-                creator_avatar: document.getElementById('editProductCreatorAvatar').value
+                creator_avatar: document.getElementById('editProductCreatorAvatar').value,
+                origin: (document.getElementById('editProductOrigin') ? document.getElementById('editProductOrigin').value.trim() : ''),
+                rating: (document.getElementById('editProductImdbRating') ? document.getElementById('editProductImdbRating').value.trim() : ''),
+                imdb_rating: (document.getElementById('editProductImdbRating') ? document.getElementById('editProductImdbRating').value.trim() : ''),
+                file_size: (document.getElementById('editProductFileSize') ? document.getElementById('editProductFileSize').value.trim() : ''),
+                release_date: (document.getElementById('editProductReleaseDate') ? document.getElementById('editProductReleaseDate').value.trim() : '')
             };
 
             if (type === 'plugin' || type === 'software') {
@@ -5350,5 +5515,43 @@
         }
     </script>
     <script src="js/script.js?v=42"></script>
+
+    <!-- SETTINGS IMDB / IGDB SEARCH MODAL -->
+    <div id="settingsProdLookupModal" class="modal">
+        <div class="modal-content" style="max-width:540px">
+            <div class="modal-header">
+                <div style="display:flex;align-items:center;gap:12px">
+                    <div style="width:38px;height:38px;border-radius:12px;background:rgba(245,197,24,0.15);border:1px solid rgba(245,197,24,0.35);display:flex;align-items:center;justify-content:center;color:#f5c518;font-size:1.1rem">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <div>
+                        <h3 style="-webkit-text-fill-color:unset;background:none;color:#fff;font-size:1.1rem">Search IMDb / IGDB</h3>
+                        <p style="font-size:0.75rem;color:rgba(255,255,255,0.45);margin:2px 0 0">Fetch official poster, origin &amp; rating</p>
+                    </div>
+                </div>
+                <button class="modal-close" onclick="closeSettingsProdLookup()">&times;</button>
+            </div>
+            
+            <div style="padding:20px 24px">
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px">
+                    <button type="button" id="tabSetImdb" onclick="switchSettingsLookup('imdb')" style="padding:9px;border-radius:10px;background:rgba(245,197,24,0.15);border:1px solid rgba(245,197,24,0.5);color:#fff;cursor:pointer;font-weight:700;font-size:0.8rem">
+                        <i class="fab fa-imdb" style="color:#f5c518"></i> Movies / Series (IMDb)
+                    </button>
+                    <button type="button" id="tabSetGames" onclick="switchSettingsLookup('games')" style="padding:9px;border-radius:10px;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--muted);cursor:pointer;font-weight:700;font-size:0.8rem">
+                        <i class="fas fa-gamepad" style="color:#06b6d4"></i> Video Games (IGDB)
+                    </button>
+                </div>
+                
+                <div style="display:flex;background:rgba(0,0,0,0.5);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:14px">
+                    <input id="setLookupQuery" placeholder="Search Stranger Things, The Batman, Elden Ring..." style="flex:1;padding:10px 14px;background:transparent;border:none;color:#fff;font-family:inherit;font-size:0.88rem;outline:none" onkeydown="if(event.key==='Enter')execSettingsLookup()">
+                    <button type="button" onclick="execSettingsLookup()" style="padding:0 14px;background:var(--cherry);border:none;color:#fff;font-weight:700;cursor:pointer">Search</button>
+                </div>
+
+                <div id="setLookupStatus" style="display:none;margin-bottom:12px;padding:8px 12px;border-radius:8px;font-size:0.75rem;text-align:center"></div>
+                <div id="setLookupResults" style="display:flex;flex-direction:column;gap:10px;max-height:360px;overflow-y:auto"></div>
+            </div>
+        </div>
+    </div>
+
 </body>
 </html>

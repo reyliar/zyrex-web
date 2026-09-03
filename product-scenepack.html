@@ -1042,7 +1042,7 @@
                 <div class="scenepack-poster-col">
                     <div class="scenepack-poster-frame">
                         <img src="${poster}" alt="${escapeHtml(p.name)}" class="scenepack-poster-img" onerror="this.src='/assets/content.png'">
-                        ${prod && prod.rating ? `<div class="poster-imdb-badge"><i class="fab fa-imdb"></i> ${prod.rating}/10</div>` : ''}
+                        ${(p.rating || p.imdb_rating) ? `<div class=\"poster-imdb-badge\"><i class=\"fab fa-imdb\"></i> ${p.rating || p.imdb_rating}/10</div>` : ''}
                     </div>
                 </div>
 
@@ -1119,8 +1119,7 @@
                     <div class="card-header-title">
                         <i class="fas fa-align-left"></i> Description &amp; Creator Notes
                     </div>
-                    ${realDesc ? `<p style="color:rgba(255,255,255,0.8);font-size:0.92rem;line-height:1.75;margin:0 0 12px">${realDesc.replace(/
-/g, '<br>')}</p>` : ''}
+                    ${realDesc ? `<p style=\"color:rgba(255,255,255,0.8);font-size:0.92rem;line-height:1.75;margin:0 0 12px\">${escapeHtml(realDesc).split('\n').join('<br>')}</p>` : ''}
                     ${p.notes ? `
                         <div style="padding:12px 16px;background:rgba(255,43,82,0.06);border-left:3px solid var(--cherry-light);border-radius:0 12px 12px 0;font-size:0.86rem;color:rgba(255,255,255,0.85)">
                             <strong>Note:</strong> ${escapeHtml(p.notes)}

@@ -814,8 +814,7 @@
                     <div class="audio-meta-block">
                         <span class="audio-badge"><i class="fas fa-wave-square"></i> ${catLabel}</span>
                         <h1 class="audio-title">${escapeHtml(p.name)}</h1>
-                        ${realDesc ? `<p class="audio-desc">${escapeHtml(realDesc).replace(/
-/g, '<br>')}</p>` : ''}
+                        ${realDesc ? `<p class=\"audio-desc\">${escapeHtml(realDesc).split('\n').join('<br>')}</p>` : ''}
                         
                         <div class="audio-actions-row">
                             <button class="action-pill-btn ${isLiked ? 'liked' : ''}" id="likeBtn" onclick="toggleAudioLike('${p.id}')">
@@ -878,8 +877,7 @@
                     <div class="card-header-title">
                         <i class="fas fa-circle-info"></i> Audio Resource Info
                     </div>
-                    ${realDesc ? `<p style="color:rgba(255,255,255,0.85);font-size:0.92rem;line-height:1.75;margin-bottom:14px">${escapeHtml(realDesc).replace(/
-/g, '<br>')}</p>` : '<p style="color:rgba(255,255,255,0.55);font-size:0.88rem;margin-bottom:14px">Clean audio resource for video editing and AMVs.</p>'}
+                    ${realDesc ? `<p style=\"color:rgba(255,255,255,0.85);font-size:0.92rem;line-height:1.75;margin-bottom:14px\">${escapeHtml(realDesc).split('\n').join('<br>')}</p>` : '<p style="color:rgba(255,255,255,0.55);font-size:0.88rem;margin-bottom:14px">Clean audio resource for video editing and AMVs.</p>'}
                     ${p.notes ? `
                         <div style="padding:12px 16px;background:rgba(168,85,247,0.06);border-left:3px solid var(--purple-audio);border-radius:0 10px 10px 0;font-size:0.86rem;color:rgba(255,255,255,0.85)">
                             <strong>Note:</strong> ${escapeHtml(p.notes)}
