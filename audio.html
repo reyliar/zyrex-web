@@ -5,26 +5,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zyrex | Editing Audios</title>
     <link rel="icon" type="image/png" href="/assets/content.png">
-    <link rel="stylesheet" href="css/style.css?v=24">
+    <link rel="stylesheet" href="css/style.css?v=26">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
         :root {
             --cherry: #ff2b52;
             --cherry-light: #ff6b85;
             --cherry-dark: #c8002a;
             --dark-bg: #070209;
-            --glass-bg: rgba(14, 10, 18, 0.75);
-            --glass-border: rgba(255, 255, 255, 0.12);
+            --sp-card-bg: rgba(18, 10, 22, 0.65);
+            --sp-row-hover: rgba(255, 255, 255, 0.06);
+            --sp-row-active: rgba(255, 43, 82, 0.12);
+            --sp-border: rgba(255, 255, 255, 0.08);
             --text-muted: rgba(255, 255, 255, 0.55);
+            --text-faint: rgba(255, 255, 255, 0.35);
         }
 
         body {
             background: var(--dark-bg);
             color: #f8f5f6;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             min-height: 100vh;
             overflow-x: hidden;
+            padding-bottom: 110px; /* Space for sticky bottom player */
         }
         body::before {
             content: '';
@@ -33,416 +37,967 @@
             z-index: 0;
             pointer-events: none;
             background:
-                radial-gradient(circle at 20% 0%, rgba(255, 43, 82, 0.18) 0%, transparent 45%),
-                radial-gradient(circle at 80% 80%, rgba(120, 0, 40, 0.14) 0%, transparent 40%),
-                radial-gradient(circle at 50% 50%, rgba(60, 0, 20, 0.08) 0%, transparent 50%);
+                radial-gradient(circle at 15% 10%, rgba(255, 43, 82, 0.14) 0%, transparent 45%),
+                radial-gradient(circle at 85% 70%, rgba(130, 0, 45, 0.10) 0%, transparent 40%),
+                radial-gradient(circle at 50% 100%, rgba(50, 0, 20, 0.08) 0%, transparent 50%);
         }
 
-        .page-wrap {
-            max-width: 1240px;
+        .spotify-wrap {
+            max-width: 1280px;
             margin: 0 auto;
-            padding: 130px 24px 80px;
+            padding: 120px 28px 40px;
             position: relative;
             z-index: 1;
         }
 
-        /* === LIQUID GLASS HERO BANNER === */
-        .glass-hero {
+        /* ================= SPOTIFY PLAYLIST HEADER ================= */
+        .sp-header {
+            display: flex;
+            align-items: flex-end;
+            gap: 32px;
+            padding: 32px 36px;
+            margin-bottom: 28px;
+            border-radius: 24px;
+            background: linear-gradient(180deg, rgba(255, 43, 82, 0.10) 0%, rgba(14, 8, 18, 0.7) 100%);
+            border: 1px solid var(--sp-border);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
             position: relative;
-            border-radius: 28px;
             overflow: hidden;
-            margin-bottom: 32px;
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            backdrop-filter: blur(32px) saturate(210%);
-            -webkit-backdrop-filter: blur(32px) saturate(210%);
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.18);
         }
-        .glass-hero::before {
+        .sp-header::before {
             content: '';
             position: absolute;
             top: 0; left: 0; right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, transparent, #ff2b52, #ff6b85, #ff2b52, transparent);
-            z-index: 2;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(255, 43, 82, 0.6), transparent);
         }
-        .hero-content {
-            position: relative;
-            z-index: 1;
-            padding: 48px 52px;
-            display: flex;
-            align-items: center;
-            gap: 36px;
-            flex-wrap: wrap;
-        }
-        .hero-icon {
-            width: 80px;
-            height: 80px;
-            border-radius: 24px;
-            background: linear-gradient(135deg, rgba(255, 43, 82, 0.25), rgba(255, 43, 82, 0.05));
-            border: 1px solid rgba(255, 43, 82, 0.3);
+        .sp-cover-box {
+            width: 192px;
+            height: 192px;
+            border-radius: 16px;
+            background: linear-gradient(135deg, #1f0a14, #0b0308);
+            border: 1px solid rgba(255, 43, 82, 0.25);
+            box-shadow: 0 16px 38px rgba(0, 0, 0, 0.7), 0 0 30px rgba(255, 43, 82, 0.18);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2.2rem;
-            color: var(--cherry-light);
             flex-shrink: 0;
-            box-shadow: 0 0 45px rgba(255, 43, 82, 0.25);
+            position: relative;
+            overflow: hidden;
         }
-        .hero-text { flex: 1; min-width: 220px; }
-        .hero-text .label {
+        .sp-cover-box i.cover-bg-icon {
+            font-size: 4.2rem;
+            color: var(--cherry-light);
+            opacity: 0.85;
+            transition: transform 0.3s ease;
+        }
+        .sp-cover-box:hover i.cover-bg-icon {
+            transform: scale(1.08);
+        }
+
+        .sp-header-info {
+            flex: 1;
+            min-width: 240px;
+        }
+        .sp-header-tag {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            padding: 5px 14px;
-            border-radius: 999px;
-            font-size: .68rem;
+            font-size: 0.72rem;
             font-weight: 800;
+            letter-spacing: 1.2px;
             text-transform: uppercase;
-            letter-spacing: 1px;
-            background: rgba(255, 43, 82, 0.15);
-            border: 1px solid rgba(255, 43, 82, 0.3);
             color: var(--cherry-light);
-            margin-bottom: 12px;
+            margin-bottom: 8px;
         }
-        .hero-text h1 {
-            font-size: 2.6rem;
+        .sp-header-title {
+            font-size: clamp(2.2rem, 4.5vw, 3.8rem);
             font-weight: 900;
-            letter-spacing: -.5px;
             font-family: 'Outfit', sans-serif;
-            margin: 0 0 6px;
-            line-height: 1.1;
+            letter-spacing: -1px;
+            line-height: 1.05;
+            color: #ffffff;
+            margin: 0 0 12px;
+        }
+        .sp-header-desc {
+            font-size: 0.92rem;
+            color: var(--text-muted);
+            line-height: 1.5;
+            margin: 0 0 16px;
+            max-width: 640px;
+        }
+        .sp-header-meta {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.84rem;
+            color: rgba(255, 255, 255, 0.85);
+            flex-wrap: wrap;
+        }
+        .sp-header-meta .brand {
+            font-weight: 700;
+            color: #fff;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .sp-header-meta .brand img {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
+        .sp-header-meta .dot {
+            color: rgba(255, 255, 255, 0.3);
+        }
+        .sp-header-meta span.num {
+            font-weight: 600;
             color: #fff;
         }
-        .hero-text .subtitle { color: var(--text-muted); font-size: .92rem; margin: 0; }
 
-        .hero-wave { display: flex; align-items: flex-end; gap: 3px; height: 50px; flex-shrink: 0; }
-        .hero-wave .bar {
-            width: 4px;
-            border-radius: 2px;
-            background: linear-gradient(180deg, var(--cherry-light), rgba(255,43,82,0.3));
-            animation: wavePulse 1.2s ease-in-out infinite alternate;
+        /* ================= SPOTIFY ACTION BAR ================= */
+        .sp-action-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            padding: 8px 4px 20px;
+            flex-wrap: wrap;
         }
-        .hero-wave .bar:nth-child(1){height:20px;animation-delay:0s}
-        .hero-wave .bar:nth-child(2){height:38px;animation-delay:.1s}
-        .hero-wave .bar:nth-child(3){height:18px;animation-delay:.2s}
-        .hero-wave .bar:nth-child(4){height:48px;animation-delay:.15s}
-        .hero-wave .bar:nth-child(5){height:24px;animation-delay:.25s}
-        .hero-wave .bar:nth-child(6){height:40px;animation-delay:.05s}
-        .hero-wave .bar:nth-child(7){height:32px;animation-delay:.3s}
-        .hero-wave .bar:nth-child(8){height:16px;animation-delay:.12s}
-        .hero-wave .bar:nth-child(9){height:44px;animation-delay:.18s}
-        .hero-wave .bar:nth-child(10){height:20px;animation-delay:.22s}
-        @keyframes wavePulse { 0%{transform:scaleY(.5)} 100%{transform:scaleY(1.1)} }
-
-        /* === LIQUID GLASS STATS ROW === */
-        .stats-row { display: flex; gap: 16px; margin-bottom: 32px; flex-wrap: wrap; }
-        .glass-stat {
-            flex: 1;
-            min-width: 160px;
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 22px;
-            padding: 20px 24px;
+        .sp-action-left {
             display: flex;
             align-items: center;
             gap: 16px;
-            backdrop-filter: blur(28px);
-            -webkit-backdrop-filter: blur(28px);
-            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.12);
         }
-        .glass-stat .st-icon {
-            width: 44px;
-            height: 44px;
-            border-radius: 14px;
-            background: rgba(255, 43, 82, 0.12);
-            border: 1px solid rgba(255, 43, 82, 0.25);
-            display: flex;
+        /* Spotify Big Circular Play Button (in Zyrex Cherry) */
+        .btn-spotify-play {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff2b52, #c8002a);
+            border: none;
+            color: #ffffff;
+            font-size: 1.3rem;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 1rem;
-            color: var(--cherry-light);
-            flex-shrink: 0;
-        }
-        .glass-stat .st-info strong { display: block; font-size: 1.15rem; font-weight: 800; color: #fff; font-family: 'Outfit', sans-serif; }
-        .glass-stat .st-info span { font-size: .7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; }
-
-        /* === TOOLBAR === */
-        .toolbar { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; flex-wrap: wrap; }
-        .search-wrap { position: relative; flex: 1; min-width: 240px; max-width: 480px; }
-        .search-wrap i { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: .85rem; pointer-events: none; z-index: 1; }
-        .search-wrap input {
-            width: 100%;
-            padding: 14px 18px 14px 46px;
-            background: rgba(14, 10, 18, 0.65);
-            border: 1px solid var(--glass-border);
-            border-radius: 16px;
-            color: #fff;
-            font-family: inherit;
-            font-size: .88rem;
-            outline: none;
-            backdrop-filter: blur(20px);
-            transition: all 0.25s ease;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
-        }
-        .search-wrap input:focus { border-color: rgba(255, 43, 82, 0.45); box-shadow: 0 0 0 3px rgba(255, 43, 82, 0.15); }
-        .search-wrap input::placeholder { color: var(--text-muted); }
-        
-        .cat-filters { display: flex; gap: 8px; flex-wrap: wrap; }
-        .cat-chip {
-            padding: 8px 18px;
-            border-radius: 999px;
-            font-size: .76rem;
-            font-weight: 600;
             cursor: pointer;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.09);
-            color: rgba(255, 255, 255, 0.75);
-            backdrop-filter: blur(16px);
-            transition: all 0.25s ease;
-            font-family: inherit;
+            box-shadow: 0 8px 24px rgba(255, 43, 82, 0.45);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            outline: none;
         }
-        .cat-chip:hover, .cat-chip.active {
-            background: rgba(255, 43, 82, 0.18);
-            border-color: rgba(255, 43, 82, 0.35);
-            color: var(--cherry-light);
-            transform: translateY(-1px);
+        .btn-spotify-play:hover {
+            transform: scale(1.08);
+            background: linear-gradient(135deg, #ff456a, #e00032);
+            box-shadow: 0 12px 30px rgba(255, 43, 82, 0.65);
         }
-        .cat-chip.active { font-weight: 800; box-shadow: 0 0 16px rgba(255, 43, 82, 0.2); }
+        .btn-spotify-play i {
+            margin-left: 2px;
+        }
+        .btn-spotify-play.is-playing i {
+            margin-left: 0;
+        }
 
-        .results-count { font-size: .78rem; color: var(--text-muted); flex-shrink: 0; }
-
-        /* === LIQUID GLASS AUDIO TABLE DIRECTORY === */
-        .glass-table-wrap {
-            background: var(--glass-bg);
-            border: 1px solid var(--glass-border);
-            border-radius: 28px;
-            overflow: hidden;
-            box-shadow: 0 25px 65px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.15);
-            backdrop-filter: blur(32px) saturate(200%);
-            -webkit-backdrop-filter: blur(32px) saturate(200%);
-            margin-bottom: 40px;
-        }
-        .audio-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.88rem;
-        }
-        .audio-table th {
-            background: rgba(255, 43, 82, 0.06);
-            border-bottom: 1px solid rgba(255, 43, 82, 0.12);
-            padding: 20px 24px;
-            font-family: 'Outfit', sans-serif;
+        .btn-spotify-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: transparent;
+            border: 1px solid var(--sp-border);
             color: var(--text-muted);
-            text-transform: uppercase;
-            font-size: 0.72rem;
-            letter-spacing: 1.5px;
-            font-weight: 800;
-        }
-        .audio-table td {
-            padding: 18px 24px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-            vertical-align: middle;
-            color: #fff;
-            transition: background 0.25s;
-        }
-        .audio-table tr:hover td {
-            background: rgba(255, 43, 82, 0.04);
-        }
-
-        .ac-album-cell {
-            width: 48px;
-            height: 48px;
-            border-radius: 14px;
-            background: rgba(255, 43, 82, 0.12);
-            display: flex;
+            font-size: 1rem;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            border: 1px solid rgba(255, 43, 82, 0.22);
-            overflow: hidden;
-            position: relative;
-            flex-shrink: 0;
+            cursor: pointer;
+            transition: all 0.2s ease;
         }
-        .ac-album-cell img { width: 100%; height: 100%; object-fit: cover; }
-        .ac-album-cell i { font-size: 1.1rem; color: var(--cherry-light); }
+        .btn-spotify-icon:hover {
+            color: #fff;
+            border-color: rgba(255, 255, 255, 0.25);
+            transform: scale(1.05);
+        }
+        .btn-spotify-icon.active {
+            color: var(--cherry-light);
+            border-color: rgba(255, 43, 82, 0.4);
+            background: rgba(255, 43, 82, 0.12);
+        }
 
-        .creator-profile-cell {
+        .sp-action-right {
             display: flex;
             align-items: center;
             gap: 12px;
+            flex-wrap: wrap;
+            flex: 1;
+            justify-content: flex-end;
+            min-width: 280px;
         }
-        .creator-profile-cell img {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 1.5px solid var(--cherry-light);
-            background: rgba(0,0,0,0.2);
-            flex-shrink: 0;
+        /* Spotify-style Search Input */
+        .sp-search-box {
+            position: relative;
+            min-width: 220px;
+            max-width: 320px;
+            flex: 1;
         }
-        .creator-profile-cell .cr-info h5 {
-            margin: 0;
-            font-size: 0.86rem;
-            font-weight: 700;
-            color: #fff;
-            font-family: 'Outfit', sans-serif;
-        }
-        .creator-profile-cell .cr-info span {
-            font-size: 0.66rem;
+        .sp-search-box i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
             color: var(--text-muted);
-            display: block;
+            font-size: 0.82rem;
+            pointer-events: none;
         }
-
-        .ac-tag {
-            display: inline-flex;
-            padding: 4px 12px;
+        .sp-search-box input {
+            width: 100%;
+            padding: 10px 16px 10px 38px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--sp-border);
             border-radius: 999px;
-            font-size: 0.68rem;
-            font-weight: 800;
-            background: rgba(255, 43, 82, 0.12);
-            color: var(--cherry-light);
-            border: 1px solid rgba(255, 43, 82, 0.25);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            color: #fff;
+            font-size: 0.85rem;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+        .sp-search-box input:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 43, 82, 0.5);
+            box-shadow: 0 0 0 3px rgba(255, 43, 82, 0.15);
+        }
+        .sp-search-box input::placeholder {
+            color: var(--text-faint);
         }
 
-        .ac-play {
+        /* Filter Pills */
+        .sp-filter-pills {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .sp-pill {
+            padding: 7px 16px;
+            border-radius: 999px;
+            font-size: 0.78rem;
+            font-weight: 600;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.7);
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        .sp-pill:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: #fff;
+        }
+        .sp-pill.active {
+            background: #ffffff;
+            border-color: #ffffff;
+            color: #000000;
+            font-weight: 700;
+        }
+
+        /* ================= SPOTIFY TRACK TABLE ================= */
+        .sp-table-container {
+            background: rgba(14, 8, 18, 0.55);
+            border: 1px solid var(--sp-border);
+            border-radius: 20px;
+            overflow: hidden;
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+            margin-bottom: 30px;
+        }
+        .sp-tracklist {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.88rem;
+            table-layout: fixed;
+        }
+        .sp-tracklist thead tr {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .sp-tracklist th {
+            padding: 14px 20px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: var(--text-muted);
+            text-align: left;
+            user-select: none;
+        }
+        .sp-tracklist th.col-num { width: 50px; text-align: center; }
+        .sp-tracklist th.col-title { width: 38%; }
+        .sp-tracklist th.col-genre { width: 18%; }
+        .sp-tracklist th.col-uploader { width: 22%; }
+        .sp-tracklist th.col-dl { width: 120px; text-align: right; }
+        .sp-tracklist th.col-actions { width: 100px; text-align: right; }
+
+        .sp-row {
+            height: 62px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            transition: background 0.18s ease;
+            cursor: pointer;
+        }
+        .sp-row:last-child {
+            border-bottom: none;
+        }
+        .sp-row:hover {
+            background: var(--sp-row-hover);
+        }
+        .sp-row.is-current {
+            background: var(--sp-row-active);
+        }
+        .sp-row.is-current .sp-track-title {
+            color: var(--cherry-light);
+        }
+
+        .sp-tracklist td {
+            padding: 10px 20px;
+            vertical-align: middle;
+            color: #fff;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Track Number & Hover Play Icon */
+        .sp-num-cell {
+            text-align: center;
+            position: relative;
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            width: 50px;
+        }
+        .sp-num-text {
+            display: inline-block;
+            transition: opacity 0.15s;
+        }
+        .sp-row-play-btn {
+            display: none;
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 0.85rem;
+            cursor: pointer;
+            align-items: center;
+            justify-content: center;
+        }
+        .sp-row:hover .sp-num-text {
+            display: none;
+        }
+        .sp-row:hover .sp-row-play-btn {
+            display: inline-flex;
+        }
+        .sp-row.is-current .sp-num-text {
+            display: none;
+        }
+        .sp-row.is-current .sp-row-play-btn {
+            display: inline-flex;
+            color: var(--cherry-light);
+        }
+
+        /* Equalizer Bars when playing */
+        .sp-eq-bars {
+            display: none;
+            align-items: flex-end;
+            gap: 2px;
+            height: 14px;
+            margin: 0 auto;
+        }
+        .sp-eq-bars span {
+            width: 3px;
+            background: var(--cherry-light);
+            border-radius: 1px;
+            animation: eqBounce 1s ease-in-out infinite alternate;
+        }
+        .sp-eq-bars span:nth-child(1) { height: 60%; animation-delay: 0.1s; }
+        .sp-eq-bars span:nth-child(2) { height: 100%; animation-delay: 0.3s; }
+        .sp-eq-bars span:nth-child(3) { height: 40%; animation-delay: 0.2s; }
+        .sp-row.is-current.is-playing .sp-eq-bars {
+            display: inline-flex;
+        }
+        .sp-row.is-current.is-playing .sp-row:not(:hover) .sp-row-play-btn {
+            display: none;
+        }
+        @keyframes eqBounce {
+            0% { transform: scaleY(0.3); }
+            100% { transform: scaleY(1); }
+        }
+
+        /* Title Cell */
+        .sp-title-cell-wrap {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            min-width: 0;
+        }
+        .sp-track-thumb {
             width: 42px;
             height: 42px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, rgba(255, 43, 82, 0.2), rgba(200, 0, 42, 0.2));
-            border: 1.5px solid rgba(255, 43, 82, 0.35);
+            border-radius: 8px;
+            background: rgba(255, 43, 82, 0.12);
+            border: 1px solid rgba(255, 43, 82, 0.2);
             display: flex;
             align-items: center;
             justify-content: center;
-            color: #fff;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.16,1,0.3,1);
-            box-shadow: 0 4px 15px rgba(255, 43, 82, 0.2);
+            overflow: hidden;
+            flex-shrink: 0;
         }
-        .ac-play:hover {
-            background: linear-gradient(135deg, #ff2b52, #c8002a);
-            border-color: #ff6b85;
-            transform: scale(1.12);
-            box-shadow: 0 8px 25px rgba(255, 43, 82, 0.5);
+        .sp-track-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .sp-track-thumb i {
+            font-size: 0.95rem;
+            color: var(--cherry-light);
+        }
+        .sp-track-meta {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .sp-track-title {
+            font-size: 0.92rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-decoration: none;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            transition: color 0.15s ease;
+        }
+        .sp-track-title:hover {
+            color: var(--cherry-light);
+            text-decoration: underline;
+        }
+        .sp-track-artist {
+            font-size: 0.74rem;
+            color: var(--text-muted);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
-        .btn-details {
+        /* Genre Badge */
+        .sp-genre-pill {
+            display: inline-flex;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 0.70rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: rgba(255, 43, 82, 0.12);
+            color: var(--cherry-light);
+            border: 1px solid rgba(255, 43, 82, 0.25);
+        }
+
+        /* Uploader Cell */
+        .sp-uploader-cell-wrap {
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            min-width: 0;
+        }
+        .sp-uploader-avatar {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid rgba(255, 43, 82, 0.4);
+            background: rgba(0,0,0,0.4);
+            flex-shrink: 0;
+        }
+        .sp-uploader-name {
+            font-size: 0.80rem;
+            color: rgba(255, 255, 255, 0.85);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Downloads Cell */
+        .sp-dl-cell {
+            text-align: right;
+            font-family: 'Outfit', monospace;
+            font-size: 0.82rem;
+            color: var(--text-muted);
+            font-weight: 600;
+        }
+
+        /* Row Actions */
+        .sp-actions-cell {
+            text-align: right;
+        }
+        .sp-row-action-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
             display: inline-flex;
             align-items: center;
-            gap: 6px;
-            padding: 8px 16px;
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            color: #fff;
-            font-size: 0.78rem;
-            font-weight: 700;
+            justify-content: center;
+            transition: all 0.15s ease;
             text-decoration: none;
-            transition: all 0.25s ease;
         }
-        .btn-details:hover {
-            background: rgba(255, 43, 82, 0.2);
-            border-color: rgba(255, 43, 82, 0.4);
-            color: var(--cherry-light);
-            transform: translateY(-1px);
+        .sp-row-action-btn:hover {
+            color: #fff;
+            background: rgba(255, 255, 255, 0.1);
         }
 
-        .empty {
+        /* Empty State */
+        .sp-empty-state {
             text-align: center;
-            padding: 80px 20px;
+            padding: 70px 20px;
             color: var(--text-muted);
         }
-        .empty i {
-            font-size: 3.5rem;
+        .sp-empty-state i {
+            font-size: 3rem;
             color: var(--cherry-light);
-            opacity: 0.15;
+            opacity: 0.3;
+            margin-bottom: 12px;
             display: block;
-            margin-bottom: 16px;
         }
-        .empty p { font-size: 0.92rem; }
 
-        @media(max-width: 900px) {
-            .hero-content { padding: 36px 28px; gap: 24px; }
-            .hero-text h1 { font-size: 2rem; }
-            .hero-icon { width: 64px; height: 64px; font-size: 1.6rem; }
-            .hero-wave { display: none; }
+        /* ================= SPOTIFY STICKY BOTTOM PLAYER ================= */
+        .sp-player-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 86px;
+            background: rgba(10, 4, 12, 0.96);
+            border-top: 1px solid rgba(255, 255, 255, 0.10);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 28px;
+            box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.7);
+            user-select: none;
+            transition: transform 0.3s ease;
         }
-        @media(max-width: 768px) {
-            .audio-table th:nth-child(3), .audio-table td:nth-child(3) { display: none; }
+        .sp-player-bar.hidden {
+            transform: translateY(100%);
         }
-        @media(max-width: 600px) {
-            .page-wrap { padding-top: 110px; padding-left: 14px; padding-right: 14px; }
-            .hero-content { padding: 28px 18px; flex-direction: column; align-items: flex-start; }
-            .hero-text h1 { font-size: 1.6rem; }
-            .audio-table th:nth-child(4), .audio-table td:nth-child(4) { display: none; }
-            .stats-row { gap: 10px; }
-            .glass-stat { padding: 16px 18px; }
-            .audio-table td, .audio-table th { padding: 14px 16px; }
+
+        /* Left: Currently Playing */
+        .sp-player-left {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            width: 28%;
+            min-width: 180px;
+        }
+        .sp-player-thumb {
+            width: 52px;
+            height: 52px;
+            border-radius: 8px;
+            background: #180a14;
+            border: 1px solid rgba(255, 43, 82, 0.3);
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .sp-player-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .sp-player-thumb i {
+            font-size: 1.2rem;
+            color: var(--cherry-light);
+        }
+        .sp-player-track-info {
+            min-width: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .sp-player-title {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: #ffffff;
+            text-decoration: none;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .sp-player-title:hover {
+            text-decoration: underline;
+            color: var(--cherry-light);
+        }
+        .sp-player-sub {
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Center: Controls & Scrubber */
+        .sp-player-center {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            flex: 1;
+            max-width: 540px;
+        }
+        .sp-player-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .sp-ctrl-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            cursor: pointer;
+            padding: 6px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.15s ease;
+        }
+        .sp-ctrl-btn:hover {
+            color: #ffffff;
+            transform: scale(1.08);
+        }
+        .sp-ctrl-btn.active {
+            color: var(--cherry-light);
+        }
+        .sp-ctrl-play {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #ffffff;
+            color: #000000;
+            font-size: 0.95rem;
+            box-shadow: 0 4px 14px rgba(255, 255, 255, 0.25);
+        }
+        .sp-ctrl-play:hover {
+            background: var(--cherry-light);
+            color: #ffffff;
+            transform: scale(1.1);
+            box-shadow: 0 6px 18px rgba(255, 43, 82, 0.5);
+        }
+        .sp-ctrl-play i {
+            margin-left: 2px;
+        }
+        .sp-ctrl-play.is-playing i {
+            margin-left: 0;
+        }
+
+        .sp-player-progress-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+        }
+        .sp-time-text {
+            font-size: 0.70rem;
+            color: var(--text-muted);
+            font-family: monospace;
+            width: 36px;
+            text-align: center;
+        }
+        .sp-scrubber-track {
+            flex: 1;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 2px;
+            cursor: pointer;
+            position: relative;
+            transition: height 0.15s ease;
+        }
+        .sp-scrubber-track:hover {
+            height: 6px;
+        }
+        .sp-scrubber-fill {
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 0%;
+            background: var(--cherry-light);
+            border-radius: 2px;
+            pointer-events: none;
+        }
+        .sp-scrubber-thumb {
+            position: absolute;
+            top: 50%;
+            left: 0%;
+            transform: translate(-50%, -50%);
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #ffffff;
+            box-shadow: 0 0 6px rgba(0,0,0,0.5);
+            opacity: 0;
+            transition: opacity 0.15s ease;
+            pointer-events: none;
+        }
+        .sp-scrubber-track:hover .sp-scrubber-thumb {
+            opacity: 1;
+        }
+
+        /* Right: Volume & Details */
+        .sp-player-right {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 14px;
+            width: 28%;
+            min-width: 180px;
+        }
+        .sp-vol-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .sp-vol-slider {
+            width: 80px;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 2px;
+            outline: none;
+            cursor: pointer;
+        }
+        .sp-vol-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #fff;
+            cursor: pointer;
+        }
+        .sp-player-link-btn {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-decoration: none;
+            padding: 6px;
+            transition: color 0.15s ease;
+        }
+        .sp-player-link-btn:hover {
+            color: #fff;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 900px) {
+            .sp-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 20px;
+                padding: 24px;
+            }
+            .sp-cover-box {
+                width: 140px;
+                height: 140px;
+            }
+            .sp-tracklist th.col-uploader,
+            .sp-tracklist td:nth-child(4) {
+                display: none;
+            }
+            .sp-player-right { display: none; }
+            .sp-player-left { width: 40%; }
+        }
+        @media (max-width: 650px) {
+            .spotify-wrap {
+                padding-top: 100px;
+                padding-left: 14px;
+                padding-right: 14px;
+            }
+            .sp-header-title {
+                font-size: 1.8rem;
+            }
+            .sp-tracklist th.col-genre,
+            .sp-tracklist td:nth-child(3) {
+                display: none;
+            }
+            .sp-tracklist th.col-title { width: auto; }
+            .sp-tracklist th, .sp-tracklist td { padding: 10px 12px; }
+            .sp-player-bar {
+                padding: 0 14px;
+                height: 74px;
+            }
+            .sp-player-thumb {
+                width: 42px;
+                height: 42px;
+            }
+            .sp-player-left { width: 48%; }
         }
     </style>
 </head>
 <body>
     <div class="bg-aura"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
-    <nav class="navbar"><div class="container"><a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><ul class="nav-links" id="navLinks"><li><a href="/">Home</a></li><li><a href="/presets">Presets</a></li><li><a href="/audio.html">Audio</a></li><li><a href="/plugins">Plugins</a></li><li><a href="/more">More</a></li><li><a href="/#contact">Contact</a></li></ul><div class="nav-actions"><div id="authBtn"></div><button class="hamburger" id="hamburger"><span></span><span></span><span></span></button></div></div></nav>
+    
+    <!-- Top Navbar -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="/">Home</a></li>
+                <li><a href="/presets">Presets</a></li>
+                <li><a href="/audio.html" class="active">Audio</a></li>
+                <li><a href="/plugins">Plugins</a></li>
+                <li><a href="/more">More</a></li>
+                <li><a href="/#contact">Contact</a></li>
+            </ul>
+            <div class="nav-actions">
+                <div id="authBtn"></div>
+                <button class="hamburger" id="hamburger" aria-label="Toggle navigation"><span></span><span></span><span></span></button>
+            </div>
+        </div>
+    </nav>
 
-    <div class="page-wrap">
-        <!-- HERO -->
-        <div class="glass-hero">
-            <div class="hero-content">
-                <div class="hero-icon"><i class="fas fa-wave-square"></i></div>
-                <div class="hero-text">
-                    <span class="label"><i class="fas fa-headphones"></i> Audio Library</span>
-                    <h1>Editing Audios</h1>
-                    <p class="subtitle">Curated sound packs & music resources for video creators</p>
+    <div class="spotify-wrap">
+        <!-- SPOTIFY PLAYLIST HEADER -->
+        <header class="sp-header">
+            <div class="sp-cover-box">
+                <i class="fas fa-headphones cover-bg-icon"></i>
+            </div>
+            <div class="sp-header-info">
+                <div class="sp-header-tag"><i class="fas fa-bolt"></i> Curated Playlist</div>
+                <h1 class="sp-header-title">Editing Audios</h1>
+                <p class="sp-header-desc">Curated sound packs, trend beats, velocity audios &amp; high-fidelity audio cuts for video creators.</p>
+                <div class="sp-header-meta">
+                    <span class="brand"><img src="/assets/content.png" alt=""> Zyrex Editing</span>
+                    <span class="dot">·</span>
+                    <span><span class="num" id="statTotal">--</span> tracks</span>
+                    <span class="dot">·</span>
+                    <span><span class="num" id="statDL">--</span> downloads</span>
+                    <span class="dot">·</span>
+                    <span><span class="num" id="statHot">--</span> hot picks</span>
                 </div>
-                <div class="hero-wave">
-                    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
-                    <div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div><div class="bar"></div>
+            </div>
+        </header>
+
+        <!-- SPOTIFY ACTION & SEARCH BAR -->
+        <div class="sp-action-bar">
+            <div class="sp-action-left">
+                <button type="button" class="btn-spotify-play" id="mainPlayBtn" title="Play first track" aria-label="Play">
+                    <i class="fas fa-play"></i>
+                </button>
+                <button type="button" class="btn-spotify-icon" id="mainShuffleBtn" title="Shuffle Play" aria-label="Shuffle">
+                    <i class="fas fa-shuffle"></i>
+                </button>
+            </div>
+            <div class="sp-action-right">
+                <div class="sp-search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="audioSearch" placeholder="Search in playlist..." autocomplete="off">
+                </div>
+                <div class="sp-filter-pills" id="catFilters">
+                    <!-- Categories inserted dynamically -->
                 </div>
             </div>
         </div>
 
-        <!-- STATS -->
-        <div class="stats-row">
-            <div class="glass-stat"><div class="st-icon"><i class="fas fa-music"></i></div><div class="st-info"><strong id="statTotal">--</strong><span>Total Audios</span></div></div>
-            <div class="glass-stat"><div class="st-icon"><i class="fas fa-fire"></i></div><div class="st-info"><strong id="statHot">--</strong><span>Hot Picks</span></div></div>
-            <div class="glass-stat"><div class="st-icon"><i class="fas fa-download"></i></div><div class="st-info"><strong id="statDL">--</strong><span>Downloads</span></div></div>
-        </div>
-
-        <!-- TOOLBAR -->
-        <div class="toolbar">
-            <div class="search-wrap"><i class="fas fa-search"></i><input type="text" id="audioSearch" placeholder="Search audio by title, category, creator..."></div>
-            <span class="results-count" id="resultsCount"></span>
-            <div class="cat-filters" id="catFilters"></div>
-        </div>
-
-        <!-- DIRECTORY TABLE -->
-        <div class="table-responsive glass-table-wrap" id="audioTableContainer" style="display:none;">
-            <table class="audio-table">
+        <!-- TRACKLIST TABLE -->
+        <div class="sp-table-container">
+            <table class="sp-tracklist">
                 <thead>
                     <tr>
-                        <th style="width: 80px; text-align: center;">Play</th>
-                        <th>Track Title</th>
-                        <th>Category</th>
-                        <th>Uploader</th>
-                        <th style="text-align: right; width: 140px;">Downloads</th>
-                        <th style="text-align: right; width: 140px;">Actions</th>
+                        <th class="col-num">#</th>
+                        <th class="col-title">Title</th>
+                        <th class="col-genre">Genre</th>
+                        <th class="col-uploader">Uploader</th>
+                        <th class="col-dl"><i class="fas fa-download"></i> Downloads</th>
+                        <th class="col-actions"></th>
                     </tr>
                 </thead>
                 <tbody id="audioTableBody">
+                    <tr>
+                        <td colspan="6">
+                            <div class="sp-empty-state">
+                                <i class="fas fa-spinner fa-spin"></i>
+                                <p>Loading audio library...</p>
+                            </div>
+                        </td>
+                    </tr>
                 </tbody>
             </table>
         </div>
-        <div id="audioGridEmpty">
-            <div class="empty"><i class="fas fa-music"></i><p>Loading audio library...</p></div>
+    </div>
+
+    <!-- SPOTIFY PERSISTENT BOTTOM PLAYER -->
+    <div class="sp-player-bar hidden" id="playerBar">
+        <!-- Left: Current Track -->
+        <div class="sp-player-left">
+            <div class="sp-player-thumb" id="pThumb">
+                <i class="fas fa-music"></i>
+            </div>
+            <div class="sp-player-track-info">
+                <a href="#" class="sp-player-title" id="pTitle">Select a track</a>
+                <span class="sp-player-sub" id="pArtist">Zyrex Audio</span>
+            </div>
+        </div>
+
+        <!-- Center: Controls & Scrubber -->
+        <div class="sp-player-center">
+            <div class="sp-player-controls">
+                <button type="button" class="sp-ctrl-btn" id="ctrlShuffle" title="Shuffle"><i class="fas fa-shuffle"></i></button>
+                <button type="button" class="sp-ctrl-btn" id="ctrlPrev" title="Previous"><i class="fas fa-backward-step"></i></button>
+                <button type="button" class="sp-ctrl-btn sp-ctrl-play" id="ctrlPlay" title="Play/Pause"><i class="fas fa-play"></i></button>
+                <button type="button" class="sp-ctrl-btn" id="ctrlNext" title="Next"><i class="fas fa-forward-step"></i></button>
+                <button type="button" class="sp-ctrl-btn" id="ctrlRepeat" title="Repeat"><i class="fas fa-repeat"></i></button>
+            </div>
+            <div class="sp-player-progress-row">
+                <span class="sp-time-text" id="pCurrentTime">0:00</span>
+                <div class="sp-scrubber-track" id="pScrubber">
+                    <div class="sp-scrubber-fill" id="pFill"></div>
+                    <div class="sp-scrubber-thumb" id="pThumbPin"></div>
+                </div>
+                <span class="sp-time-text" id="pDuration">0:00</span>
+            </div>
+        </div>
+
+        <!-- Right: Actions & Volume -->
+        <div class="sp-player-right">
+            <a href="#" class="sp-player-link-btn" id="pDetailBtn" title="View Details / Product Page">
+                <i class="fas fa-arrow-up-right-from-square"></i>
+            </a>
+            <a href="#" class="sp-player-link-btn" id="pDlBtn" download title="Download Audio" target="_blank">
+                <i class="fas fa-download"></i>
+            </a>
+            <div class="sp-vol-row">
+                <i class="fas fa-volume-high" id="volIcon" style="font-size:0.85rem; color:var(--text-muted)"></i>
+                <input type="range" class="sp-vol-slider" id="volSlider" min="0" max="1" step="0.05" value="0.9" aria-label="Volume">
+            </div>
         </div>
     </div>
 
+    <!-- Footer -->
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
-                                <div class="footer-brand">
+                <div class="footer-brand">
                     <a href="/" class="hero-brand-lockup footer-brand-lockup">
                         <img src="/assets/content.png" alt="Zyrex Logo" class="hero-brand-icon">
                         <div class="hero-brand-text-col">
@@ -472,7 +1027,7 @@
                 <div class="footer-links">
                     <h4>Community</h4>
                     <ul>
-                        <li><a href="https://discord.gg/fAydSzpafA">Discord</a></li>
+                        <li><a href="https://discord.gg/fAydSzpafA" target="_blank" rel="noopener">Discord</a></li>
                         <li><a href="/#contact">Contact</a></li>
                     </ul>
                 </div>
@@ -494,10 +1049,33 @@
     <script src="js/auth.js?v=10"></script>
     <script src="js/script.js?v=5"></script>
     <script>
-        var allAudio = [], activeCat = 'all';
+        // Data & State
+        var allAudio = [];
+        var activeCat = 'all';
+        var activeSearch = '';
         var discordAvatarCache = {};
+        
+        // Audio Player Engine
+        var currentTrackIndex = -1;
+        var filteredTracks = [];
+        var audioEngine = new Audio();
+        audioEngine.preload = 'metadata';
+        var isShuffle = false;
+        var isRepeat = false;
 
-        // Fetch Discord profile photo via Zyrex VPS Bot API
+        function escapeHtml(str) {
+            if (!str) return '';
+            return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function formatTime(sec) {
+            if (isNaN(sec) || !isFinite(sec)) return '0:00';
+            var m = Math.floor(sec / 60);
+            var s = Math.floor(sec % 60);
+            return m + ':' + (s < 10 ? '0' : '') + s;
+        }
+
+        // Discord Avatar Fetcher
         async function fetchUploaderDiscordAvatar(uploaderId, fallbackHashOrUrl) {
             if (!uploaderId) {
                 if (fallbackHashOrUrl && fallbackHashOrUrl.startsWith('http')) return fallbackHashOrUrl;
@@ -556,136 +1134,381 @@
             });
         }
 
-        (async function(){
+        // Fetch Audio Catalog
+        (async function initAudioPage(){
             try {
                 var r = await fetch('/api/products?type=audio');
                 var data = await r.json();
                 if (Array.isArray(data) && data.length) {
                     allAudio = data;
-                    updateStats(data);
-                    buildCatFilters(data);
-                    renderAudio(data);
+                    updateHeaderStats(data);
+                    buildCategoryPills(data);
+                    applyFilters();
                 } else {
-                    document.getElementById('audioTableContainer').style.display = 'none';
-                    document.getElementById('audioGridEmpty').innerHTML = '<div class="empty"><i class="fas fa-music"></i><p>No audio resources yet. Check back soon!</p></div>';
+                    document.getElementById('audioTableBody').innerHTML = 
+                        '<tr><td colspan="6"><div class="sp-empty-state"><i class="fas fa-music"></i><p>No audio tracks found yet.</p></div></td></tr>';
                 }
-            } catch(e) {}
+            } catch(err) {
+                document.getElementById('audioTableBody').innerHTML = 
+                    '<tr><td colspan="6"><div class="sp-empty-state"><i class="fas fa-triangle-exclamation"></i><p>Unable to load tracks. Please try again.</p></div></td></tr>';
+            }
         })();
 
-        function updateStats(items) {
+        function updateHeaderStats(items) {
             document.getElementById('statTotal').textContent = items.length;
-            var hot = items.filter(function(x){ return (x.category||'').indexOf('hot')!==-1; }).length;
+            var hot = items.filter(function(x){ return (x.category || '').indexOf('hot') !== -1; }).length;
             document.getElementById('statHot').textContent = hot;
-            var dl = items.reduce(function(s,x){ return s+(x.downloads||0); },0);
-            document.getElementById('statDL').textContent = dl>=1000?(dl/1000).toFixed(1)+'k':dl;
+            var dl = items.reduce(function(acc, x){ return acc + (x.downloads || 0); }, 0);
+            document.getElementById('statDL').textContent = dl >= 1000 ? (dl / 1000).toFixed(1) + 'k' : dl;
         }
 
-        function buildCatFilters(items) {
-            var cats = {};
+        function buildCategoryPills(items) {
+            var catCounts = {};
             items.forEach(function(p){
-                (p.category||'').split(',').forEach(function(c){
-                    c=c.trim(); if(c) cats[c]=(cats[c]||0)+1;
+                (p.category || '').split(',').forEach(function(c){
+                    c = c.trim().toLowerCase();
+                    if (c) catCounts[c] = (catCounts[c] || 0) + 1;
                 });
             });
-            var catNames = {hot:'Hot',soft:'Soft',velocity:'Velocity',aesthetic:'Aesthetic',cinematic:'Cinematic'};
-            var html = '<span class="cat-chip active" data-cat="all">All ('+items.length+')</span>';
-            var sorted = Object.keys(cats).sort(function(a,b){ return cats[b]-cats[a]; });
-            sorted.forEach(function(c){
-                html += '<span class="cat-chip" data-cat="'+c+'">'+(catNames[c]||c)+' ('+cats[c]+')</span>';
+
+            var labelMap = {
+                hot: 'Hot',
+                soft: 'Soft',
+                velocity: 'Velocity',
+                aesthetic: 'Aesthetic',
+                cinematic: 'Cinematic'
+            };
+
+            var html = '<button type="button" class="sp-pill active" data-cat="all">All</button>';
+            var sortedCats = Object.keys(catCounts).sort(function(a, b){ return catCounts[b] - catCounts[a]; });
+            sortedCats.forEach(function(c){
+                html += '<button type="button" class="sp-pill" data-cat="' + c + '">' + (labelMap[c] || (c.charAt(0).toUpperCase() + c.slice(1))) + '</button>';
             });
-            document.getElementById('catFilters').innerHTML = html;
-            document.getElementById('catFilters').addEventListener('click', function(e){
-                var chip = e.target.closest('.cat-chip');
-                if (!chip) return;
-                document.querySelectorAll('.cat-chip').forEach(function(el){ el.classList.remove('active'); });
-                chip.classList.add('active');
-                activeCat = chip.getAttribute('data-cat');
-                var s = document.getElementById('audioSearch').value.toLowerCase().trim();
-                applyFilters(s);
+
+            var container = document.getElementById('catFilters');
+            container.innerHTML = html;
+            container.addEventListener('click', function(e){
+                var pill = e.target.closest('.sp-pill');
+                if (!pill) return;
+                document.querySelectorAll('.sp-pill').forEach(function(el){ el.classList.remove('active'); });
+                pill.classList.add('active');
+                activeCat = pill.getAttribute('data-cat');
+                applyFilters();
             });
         }
-        
-        function applyFilters(searchTerm) {
-            var filtered = allAudio;
-            if (activeCat !== 'all') { filtered = filtered.filter(function(p){ return (p.category||'').indexOf(activeCat)!==-1; }); }
-            if (searchTerm) { filtered = filtered.filter(function(p){ return [p.name,p.creator_nickname,p.author_name,p.description,p.desc].join(' ').toLowerCase().indexOf(searchTerm)!==-1; }); }
-            renderAudio(filtered);
-            updateStats(filtered);
-        }
-        
-        function renderAudio(items) {
-            var tableContainer = document.getElementById('audioTableContainer');
-            var emptyContainer = document.getElementById('audioGridEmpty');
-            var tableBody = document.getElementById('audioTableBody');
-            var catNames = { hot:'Hot',soft:'Soft',aesthetic:'Aesthetic',cinematic:'Cinematic',velocity:'Velocity',others:'Audio' };
-            
-            if (items.length === 0) {
-                tableContainer.style.display = 'none';
-                emptyContainer.style.display = 'block';
-                emptyContainer.innerHTML = '<div class="empty"><i class="fas fa-search"></i><p>No audio found matching your filters.</p></div>';
-                document.getElementById('resultsCount').textContent = '';
-            } else {
-                tableContainer.style.display = 'block';
-                emptyContainer.style.display = 'none';
-                
-                tableBody.innerHTML = items.map(function(p){
-                    var cats = (p.category||'').split(',').filter(Boolean);
-                    var catTag = cats.length > 0 ? '<span class="ac-tag">'+(catNames[cats[0].trim()]||cats[0])+'</span>' : '<span class="ac-tag">Audio</span>';
-                    var thumb = p.thumbnail 
-                        ? '<img src="'+p.thumbnail+'" alt="" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'block\'"><i class="fas fa-music" style="display:none"></i>' 
-                        : '<i class="fas fa-music"></i>';
-                    
-                    var hasCreator = Boolean((p.creator_nickname || p.author_name || '').trim());
-                    var creatorName = p.creator_nickname || p.author_name || '';
-                    var creatorAv = p.creator_avatar || '';
-                    var subText = '';
-                            '<div style="display:flex; align-items:center; gap:14px;">' +
-                                '<div class="ac-album-cell">' + thumb + '</div>' +
-                                '<div style="font-weight:700; font-family:\'Outfit\',sans-serif; font-size:0.95rem;">' + p.name + '</div>' +
-                            '</div>' +
-                        '</td>' +
-                        '<td>' + catTag + '</td>' +
-                        '<td>' +
-                            '<div class="creator-profile-cell">' +
-                                avImg +
-                                '<div class="cr-info"><h5>' + nameText + '</h5>' + subText + '</div>' +
-                            '</div>' +
-                        '</td>' +
-                        '<td style="text-align: right; font-weight:700; font-family:monospace; color:var(--text-muted);">' + (p.downloads||0) + '</td>' +
-                        '</td>' +
-                    '</tr>';
-                }).join('');
-                document.getElementById('resultsCount').textContent = items.length+' audio'+(items.length!==1?'s':'');
-                loadUploaderAvatars();
+
+        function applyFilters() {
+            var filtered = allAudio.slice();
+            if (activeCat !== 'all') {
+                filtered = filtered.filter(function(p){
+                    return (p.category || '').toLowerCase().indexOf(activeCat) !== -1;
+                });
             }
+            if (activeSearch) {
+                filtered = filtered.filter(function(p){
+                    var text = [p.name, p.creator_nickname, p.author_name, p.category, p.description].join(' ').toLowerCase();
+                    return text.indexOf(activeSearch) !== -1;
+                });
+            }
+            filteredTracks = filtered;
+            renderTrackTable(filtered);
         }
-        
-        var activeAudio = null, activeBtn = null;
-        async function playPreview(e, id, btn) {
-            e.preventDefault(); e.stopPropagation();
-            if (activeAudio && activeBtn === btn) {
-                if (!activeAudio.paused) { activeAudio.pause(); btn.innerHTML = '<i class="fas fa-play"></i>'; }
-                else { activeAudio.play(); btn.innerHTML = '<i class="fas fa-pause"></i>'; }
+
+        function renderTrackTable(items) {
+            var tbody = document.getElementById('audioTableBody');
+            if (!items.length) {
+                tbody.innerHTML = '<tr><td colspan="6"><div class="sp-empty-state"><i class="fas fa-magnifying-glass"></i><p>No tracks match your search or filter.</p></div></td></tr>';
                 return;
             }
-            if (activeAudio) { activeAudio.pause(); if (activeBtn) activeBtn.innerHTML = '<i class="fas fa-play"></i>'; }
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-            try {
-                var r = await fetch('/api/products?id='+encodeURIComponent(id));
-                var d = await r.json();
-                if (d && d.file_url) {
-                    activeAudio = new Audio(d.file_url); activeBtn = btn;
-                    activeAudio.addEventListener('ended',function(){ btn.innerHTML = '<i class="fas fa-play"></i>'; });
-                    activeAudio.play(); btn.innerHTML = '<i class="fas fa-pause"></i>';
-                } else {
-                    alert('Preview not available'); btn.innerHTML = '<i class="fas fa-play"></i>';
-                }
-            } catch(err) { btn.innerHTML = '<i class="fas fa-play"></i>'; }
+
+            var labelMap = { hot: 'Hot', soft: 'Soft', velocity: 'Velocity', aesthetic: 'Aesthetic', cinematic: 'Cinematic' };
+
+            tbody.innerHTML = items.map(function(track, idx){
+                var isCurrent = currentTrackIndex >= 0 && filteredTracks[currentTrackIndex] && filteredTracks[currentTrackIndex].id === track.id;
+                var isPlaying = isCurrent && !audioEngine.paused;
+
+                var thumb = track.thumbnail 
+                    ? '<img src="' + escapeHtml(track.thumbnail) + '" alt="" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'block\'"><i class="fas fa-music" style="display:none"></i>'
+                    : '<i class="fas fa-music"></i>';
+
+                var cats = (track.category || '').split(',').filter(Boolean);
+                var catPill = cats.length 
+                    ? '<span class="sp-genre-pill">' + escapeHtml(labelMap[cats[0].trim().toLowerCase()] || cats[0].trim()) + '</span>'
+                    : '<span class="sp-genre-pill">Audio</span>';
+
+                var artist = (track.creator_nickname || track.author_name || 'Zyrex Sound').trim();
+                var uploaderName = track.author_name || track.uploader_name || 'Community';
+                var uploaderId = track.author_id || track.uploader_id || '';
+                var fallbackAv = track.creator_avatar || track.uploader_avatar || '';
+
+                var dlCount = (track.downloads || 0).toLocaleString();
+
+                return '<tr class="sp-row ' + (isCurrent ? 'is-current' : '') + ' ' + (isPlaying ? 'is-playing' : '') + '" data-track-id="' + track.id + '" data-index="' + idx + '">' +
+                    '<td class="sp-num-cell">' +
+                        '<span class="sp-num-text">' + (idx + 1) + '</span>' +
+                        '<div class="sp-eq-bars"><span></span><span></span><span></span></div>' +
+                        '<button type="button" class="sp-row-play-btn" aria-label="Play">' +
+                            '<i class="fas ' + (isPlaying ? 'fa-pause' : 'fa-play') + '"></i>' +
+                        '</button>' +
+                    '</td>' +
+                    '<td>' +
+                        '<div class="sp-title-cell-wrap">' +
+                            '<div class="sp-track-thumb">' + thumb + '</div>' +
+                            '<div class="sp-track-meta">' +
+                                '<a href="/product-audio?id=' + track.id + '" class="sp-track-title" onclick="event.stopPropagation()">' + escapeHtml(track.name) + '</a>' +
+                                '<span class="sp-track-artist">' + escapeHtml(artist) + '</span>' +
+                            '</div>' +
+                        '</div>' +
+                    '</td>' +
+                    '<td>' + catPill + '</td>' +
+                    '<td>' +
+                        '<div class="sp-uploader-cell-wrap">' +
+                            '<img class="sp-uploader-avatar" data-uploader-id="' + uploaderId + '" data-fallback="' + fallbackAv + '" src="https://cdn.discordapp.com/embed/avatars/0.png" alt="">' +
+                            '<span class="sp-uploader-name">' + escapeHtml(uploaderName) + '</span>' +
+                        '</div>' +
+                    '</td>' +
+                    '<td class="sp-dl-cell">' + dlCount + '</td>' +
+                    '<td class="sp-actions-cell">' +
+                        '<a href="/product-audio?id=' + track.id + '" class="sp-row-action-btn" title="View details" onclick="event.stopPropagation()">' +
+                            '<i class="fas fa-arrow-up-right-from-square"></i>' +
+                        '</a>' +
+                    '</td>' +
+                '</tr>';
+            }).join('');
+
+            loadUploaderAvatars();
         }
-        
-        document.addEventListener('input', function(e) {
-            if (e.target.id !== 'audioSearch') return;
-            applyFilters(e.target.value.toLowerCase().trim());
+
+        // ================= PLAYER CONTROLS & LOGIC =================
+        async function playTrackByIndex(index) {
+            if (index < 0 || index >= filteredTracks.length) return;
+            var track = filteredTracks[index];
+            currentTrackIndex = index;
+
+            // Stream URL resolution
+            var streamUrl = track.file_url;
+            if (!streamUrl) {
+                try {
+                    var r = await fetch('/api/products?id=' + encodeURIComponent(track.id));
+                    var d = await r.json();
+                    if (d && d.file_url) {
+                        streamUrl = d.file_url;
+                        track.file_url = d.file_url;
+                    }
+                } catch(e) {}
+            }
+
+            if (!streamUrl) {
+                alert('Audio preview not available for this track.');
+                return;
+            }
+
+            audioEngine.src = streamUrl;
+            audioEngine.play().catch(function(e){ console.log("Autoplay check:", e); });
+
+            updatePlayerBarUI(track);
+            syncTrackTableState();
+        }
+
+        function togglePlayPause() {
+            if (currentTrackIndex === -1) {
+                if (filteredTracks.length > 0) playTrackByIndex(0);
+                return;
+            }
+            if (audioEngine.paused) {
+                audioEngine.play();
+            } else {
+                audioEngine.pause();
+            }
+            syncTrackTableState();
+            syncPlayerButtons();
+        }
+
+        function playNextTrack() {
+            if (filteredTracks.length === 0) return;
+            if (isShuffle) {
+                var next = Math.floor(Math.random() * filteredTracks.length);
+                playTrackByIndex(next);
+            } else {
+                var next = (currentTrackIndex + 1) % filteredTracks.length;
+                playTrackByIndex(next);
+            }
+        }
+
+        function playPrevTrack() {
+            if (filteredTracks.length === 0) return;
+            if (audioEngine.currentTime > 3) {
+                audioEngine.currentTime = 0;
+                return;
+            }
+            var prev = currentTrackIndex - 1;
+            if (prev < 0) prev = filteredTracks.length - 1;
+            playTrackByIndex(prev);
+        }
+
+        function updatePlayerBarUI(track) {
+            var playerBar = document.getElementById('playerBar');
+            playerBar.classList.remove('hidden');
+
+            document.getElementById('pTitle').textContent = track.name;
+            document.getElementById('pTitle').href = '/product-audio?id=' + track.id;
+            var artist = (track.creator_nickname || track.author_name || 'Zyrex Audio').trim();
+            document.getElementById('pArtist').textContent = artist;
+
+            var thumbEl = document.getElementById('pThumb');
+            if (track.thumbnail) {
+                thumbEl.innerHTML = '<img src="' + escapeHtml(track.thumbnail) + '" alt="">';
+            } else {
+                thumbEl.innerHTML = '<i class="fas fa-music"></i>';
+            }
+
+            document.getElementById('pDetailBtn').href = '/product-audio?id=' + track.id;
+            var dlBtn = document.getElementById('pDlBtn');
+            if (track.file_url) {
+                dlBtn.href = track.file_url;
+                dlBtn.style.display = 'inline-flex';
+            } else {
+                dlBtn.style.display = 'none';
+            }
+        }
+
+        function syncTrackTableState() {
+            var isPlaying = !audioEngine.paused && audioEngine.currentTime > 0;
+            document.querySelectorAll('.sp-row').forEach(function(row){
+                var idx = parseInt(row.getAttribute('data-index'), 10);
+                var isCur = (idx === currentTrackIndex);
+                row.classList.toggle('is-current', isCur);
+                row.classList.toggle('is-playing', isCur && isPlaying);
+
+                var playIcon = row.querySelector('.sp-row-play-btn i');
+                if (playIcon) {
+                    playIcon.className = 'fas ' + (isCur && isPlaying ? 'fa-pause' : 'fa-play');
+                }
+            });
+            syncPlayerButtons();
+        }
+
+        function syncPlayerButtons() {
+            var isPlaying = !audioEngine.paused && audioEngine.currentTime > 0;
+            var mainPlay = document.getElementById('mainPlayBtn');
+            if (mainPlay) {
+                mainPlay.classList.toggle('is-playing', isPlaying);
+                mainPlay.innerHTML = '<i class="fas ' + (isPlaying ? 'fa-pause' : 'fa-play') + '"></i>';
+            }
+            var ctrlPlay = document.getElementById('ctrlPlay');
+            if (ctrlPlay) {
+                ctrlPlay.classList.toggle('is-playing', isPlaying);
+                ctrlPlay.innerHTML = '<i class="fas ' + (isPlaying ? 'fa-pause' : 'fa-play') + '"></i>';
+            }
+        }
+
+        // Engine Audio Event Listeners
+        audioEngine.addEventListener('timeupdate', function(){
+            var cur = audioEngine.currentTime || 0;
+            var dur = audioEngine.duration || 0;
+            document.getElementById('pCurrentTime').textContent = formatTime(cur);
+            document.getElementById('pDuration').textContent = formatTime(dur);
+
+            var pct = (dur > 0) ? (cur / dur) * 100 : 0;
+            document.getElementById('pFill').style.width = pct + '%';
+            document.getElementById('pThumbPin').style.left = pct + '%';
+        });
+
+        audioEngine.addEventListener('play', syncTrackTableState);
+        audioEngine.addEventListener('pause', syncTrackTableState);
+        audioEngine.addEventListener('ended', function(){
+            if (isRepeat) {
+                audioEngine.currentTime = 0;
+                audioEngine.play();
+            } else {
+                playNextTrack();
+            }
+        });
+
+        // Tracklist Row Click Delegation
+        document.getElementById('audioTableBody').addEventListener('click', function(e){
+            var row = e.target.closest('.sp-row');
+            if (!row) return;
+            var idx = parseInt(row.getAttribute('data-index'), 10);
+
+            if (idx === currentTrackIndex) {
+                togglePlayPause();
+            } else {
+                playTrackByIndex(idx);
+            }
+        });
+
+        // Top Action Bar Buttons
+        document.getElementById('mainPlayBtn').addEventListener('click', togglePlayPause);
+        document.getElementById('mainShuffleBtn').addEventListener('click', function(){
+            isShuffle = !isShuffle;
+            this.classList.toggle('active', isShuffle);
+            document.getElementById('ctrlShuffle').classList.toggle('active', isShuffle);
+            if (isShuffle && (audioEngine.paused || currentTrackIndex === -1)) {
+                var rand = Math.floor(Math.random() * filteredTracks.length);
+                playTrackByIndex(rand);
+            }
+        });
+
+        // Bottom Player Bar Controls
+        document.getElementById('ctrlPlay').addEventListener('click', togglePlayPause);
+        document.getElementById('ctrlNext').addEventListener('click', playNextTrack);
+        document.getElementById('ctrlPrev').addEventListener('click', playPrevTrack);
+
+        document.getElementById('ctrlShuffle').addEventListener('click', function(){
+            isShuffle = !isShuffle;
+            this.classList.toggle('active', isShuffle);
+            document.getElementById('mainShuffleBtn').classList.toggle('active', isShuffle);
+        });
+
+        document.getElementById('ctrlRepeat').addEventListener('click', function(){
+            isRepeat = !isRepeat;
+            this.classList.toggle('active', isRepeat);
+        });
+
+        // Scrubber Seeking
+        var scrubber = document.getElementById('pScrubber');
+        scrubber.addEventListener('click', function(e){
+            if (!audioEngine.duration) return;
+            var rect = scrubber.getBoundingClientRect();
+            var clickX = e.clientX - rect.left;
+            var pct = Math.max(0, Math.min(1, clickX / rect.width));
+            audioEngine.currentTime = pct * audioEngine.duration;
+        });
+
+        // Volume Slider
+        var volSlider = document.getElementById('volSlider');
+        volSlider.addEventListener('input', function(e){
+            var val = parseFloat(e.target.value);
+            audioEngine.volume = val;
+            var icon = document.getElementById('volIcon');
+            if (val === 0) icon.className = 'fas fa-volume-xmark';
+            else if (val < 0.5) icon.className = 'fas fa-volume-low';
+            else icon.className = 'fas fa-volume-high';
+        });
+
+        // Search Input
+        var searchInput = document.getElementById('audioSearch');
+        searchInput.addEventListener('input', function(e){
+            activeSearch = e.target.value.toLowerCase().trim();
+            applyFilters();
+        });
+
+        // Global Keyboard Shortcut: Space for play/pause (when not typing in search/input)
+        document.addEventListener('keydown', function(e){
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            if (e.code === 'Space') {
+                e.preventDefault();
+                togglePlayPause();
+            } else if (e.code === 'ArrowRight') {
+                if (audioEngine.duration) {
+                    audioEngine.currentTime = Math.min(audioEngine.duration, audioEngine.currentTime + 5);
+                }
+            } else if (e.code === 'ArrowLeft') {
+                if (audioEngine.duration) {
+                    audioEngine.currentTime = Math.max(0, audioEngine.currentTime - 5);
+                }
+            }
         });
     </script>
 </body>
