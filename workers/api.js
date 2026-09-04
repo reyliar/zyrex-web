@@ -2055,7 +2055,7 @@ export default {
                                path === "/api/health" ||
                                path.startsWith("/api/lookup/") ||
                                path.startsWith("/api/products") ||
-                               (path.startsWith("/api/comments") && request.method === "GET") ||
+                               path.startsWith("/api/comments") ||
                                path.startsWith("/api/notifications") ||
                                path.startsWith("/api/guild/") ||
                                path.startsWith("/api/downloads/") ||
@@ -2064,10 +2064,30 @@ export default {
                                path.startsWith("/api/presets/") ||
                                path === "/api/resource-stats" ||
                                path === "/api/team" ||
-                               path.startsWith("/api/presence");
+                               path.startsWith("/api/presence") ||
+                               path.startsWith("/api/verify") ||
+                               path.startsWith("/api/sftpgo") ||
+                               path.startsWith("/api/cloud") ||
+                               path.startsWith("/api/admin") ||
+                               path.startsWith("/api/discord-user") ||
+                               path.startsWith("/api/check-uploader") ||
+                               path.startsWith("/api/search") ||
+                               path.startsWith("/api/hlx") ||
+                               path.startsWith("/api/scrape");
 
       const origin = request.headers.get("Origin") || request.headers.get("Referer") || "";
-      const isSiteInternal = origin.includes("zyrexediting.xyz") || origin.includes("localhost") || origin.includes("127.0.0.1");
+      const host = url.hostname || request.headers.get("Host") || "";
+      const secFetchSite = request.headers.get("Sec-Fetch-Site") || "";
+      const isSiteInternal = host.includes("zyrexediting.xyz") ||
+                             host.includes("localhost") ||
+                             host.includes("127.0.0.1") ||
+                             origin.includes("zyrexediting.xyz") || 
+                             origin.includes("localhost") || 
+                             origin.includes("127.0.0.1") ||
+                             secFetchSite === "same-origin" ||
+                             secFetchSite === "same-site" ||
+                             secFetchSite === "none" ||
+                             !!request.headers.get("Cookie");
 
       if (!isPublicEndpoint && !isSiteInternal) {
         const apiKey = request.headers.get("X-Zyrex-Key") || request.headers.get("X-API-Key") || request.headers.get("x-zyrex-key") || request.headers.get("x-api-key") || "";
