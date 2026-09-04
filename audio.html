@@ -745,6 +745,8 @@
             background: var(--cherry-light);
             border-radius: 2px;
             pointer-events: none;
+            will-change: width;
+            transition: none;
         }
         .sp-scrubber-thumb {
             position: absolute;
@@ -759,9 +761,42 @@
             opacity: 0;
             transition: opacity 0.15s ease;
             pointer-events: none;
+            will-change: left;
         }
         .sp-scrubber-track:hover .sp-scrubber-thumb {
             opacity: 1;
+        }
+
+        .sp-bar-close-btn {
+            position: absolute;
+            top: 10px;
+            right: 14px;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            cursor: pointer;
+            padding: 6px 8px;
+            line-height: 1;
+            border-radius: 6px;
+            transition: color 0.15s ease, background 0.15s ease, transform 0.15s ease;
+            z-index: 10;
+        }
+        .sp-bar-close-btn:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.1);
+        }
+
+        /* Lift global floating hub (scroll-to-top & notification button) above the player */
+        body.has-player .global-floating-hub {
+            bottom: 106px !important;
+            transition: bottom 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+        }
+        @media (max-width: 650px) {
+            body.has-player .global-floating-hub {
+                bottom: 92px !important;
+            }
         }
 
         /* Right: Volume & Details */
@@ -772,6 +807,7 @@
             gap: 14px;
             width: 28%;
             min-width: 180px;
+            padding-right: 24px;
         }
         .sp-vol-row {
             display: flex;
@@ -864,7 +900,6 @@
             <ul class="nav-links" id="navLinks">
                 <li><a href="/">Home</a></li>
                 <li><a href="/presets">Presets</a></li>
-                <li><a href="/audio.html" class="active">Audio</a></li>
                 <li><a href="/plugins">Plugins</a></li>
                 <li><a href="/more">More</a></li>
                 <li><a href="/#contact">Contact</a></li>
@@ -883,17 +918,15 @@
                 <i class="fas fa-headphones cover-bg-icon"></i>
             </div>
             <div class="sp-header-info">
-                <div class="sp-header-tag"><i class="fas fa-bolt"></i> Curated Playlist</div>
+                <div class="sp-header-tag"><i class="fas fa-bolt"></i> Zyrex™ Editing</div>
                 <h1 class="sp-header-title">Editing Audios</h1>
-                <p class="sp-header-desc">Curated sound packs, trend beats, velocity audios &amp; high-fidelity audio cuts for video creators.</p>
+                <p class="sp-header-desc">Edit audios for creators on Zyrex.</p>
                 <div class="sp-header-meta">
                     <span class="brand"><img src="/assets/content.png" alt=""> Zyrex Editing</span>
                     <span class="dot">·</span>
                     <span><span class="num" id="statTotal">--</span> tracks</span>
                     <span class="dot">·</span>
                     <span><span class="num" id="statDL">--</span> downloads</span>
-                    <span class="dot">·</span>
-                    <span><span class="num" id="statHot">--</span> hot picks</span>
                 </div>
             </div>
         </header>
@@ -991,6 +1024,10 @@
                 <input type="range" class="sp-vol-slider" id="volSlider" min="0" max="1" step="0.05" value="0.9" aria-label="Volume">
             </div>
         </div>
+
+        <button type="button" class="sp-bar-close-btn" id="ctrlClosePlayer" title="Close player" aria-label="Close player">
+            <i class="fas fa-times"></i>
+        </button>
     </div>
 
     <!-- Footer -->
@@ -1077,8 +1114,11 @@
 
         // Discord Avatar Fetcher
         async function fetchUploaderDiscordAvatar(uploaderId, fallbackHashOrUrl) {
+            if (fallbackHashOrUrl && fallbackHashOrUrl.startsWith('http')) {
+                if (uploaderId) discordAvatarCache[uploaderId] = fallbackHashOrUrl;
+                return fallbackHashOrUrl;
+            }
             if (!uploaderId) {
-                if (fallbackHashOrUrl && fallbackHashOrUrl.startsWith('http')) return fallbackHashOrUrl;
                 if (fallbackHashOrUrl) return '/api/avatar/0/' + fallbackHashOrUrl + '.png?size=128';
                 return 'https://cdn.discordapp.com/embed/avatars/0.png';
             }
@@ -1086,31 +1126,22 @@
 
             try {
                 var controller = new AbortController();
-                var timer = setTimeout(function(){ controller.abort(); }, 2500);
-
-                var resp = await fetch('/api/presence/' + uploaderId, {
-                    headers: {
-                        "X-Zyrex-Key": "zyrex_app_sec_k982f81a7b54c29013e9a",
-                        "Accept": "application/json"
-                    },
-                    signal: controller.signal
-                });
+                var timer = setTimeout(function(){ controller.abort(); }, 3000);
+                var resp = await fetch('/api/discord-user?userId=' + uploaderId, { signal: controller.signal });
                 clearTimeout(timer);
 
                 if (resp.ok) {
                     var json = await resp.json();
-                    var d = json.data || json[uploaderId] || json;
-                    var u = d.discord_user || d;
-                    if (u && u.avatar) {
-                        var avatarUrl = '';
-                        if (u.avatar.startsWith('http://') || u.avatar.startsWith('https://')) {
-                            avatarUrl = u.avatar;
-                        } else {
-                            var ext = u.avatar.startsWith('a_') ? 'gif' : 'png';
-                            avatarUrl = '/api/avatar/' + uploaderId + '/' + u.avatar + '.' + ext + '?size=128';
+                    if (json.success && json.user) {
+                        var avUrl = json.user.avatar_url;
+                        if (!avUrl && json.user.avatar) {
+                            var ext = json.user.avatar.startsWith('a_') ? 'gif' : 'png';
+                            avUrl = '/api/avatar/' + uploaderId + '/' + json.user.avatar + '.' + ext + '?size=128';
                         }
-                        discordAvatarCache[uploaderId] = avatarUrl;
-                        return avatarUrl;
+                        if (avUrl) {
+                            discordAvatarCache[uploaderId] = avUrl;
+                            return avUrl;
+                        }
                     }
                 }
             } catch(e) {}
@@ -1120,7 +1151,9 @@
                 var ext = fallbackHashOrUrl.startsWith('a_') ? 'gif' : 'png';
                 return '/api/avatar/' + uploaderId + '/' + fallbackHashOrUrl + '.' + ext + '?size=128';
             }
-            return 'https://cdn.discordapp.com/embed/avatars/0.png';
+            let defIdx = 0;
+            try { defIdx = Number((BigInt(uploaderId) >> 22n) % 6n); } catch(e) { defIdx = parseInt(uploaderId) % 5 || 0; }
+            return 'https://cdn.discordapp.com/embed/avatars/' + defIdx + '.png';
         }
 
         function loadUploaderAvatars() {
@@ -1155,11 +1188,11 @@
         })();
 
         function updateHeaderStats(items) {
-            document.getElementById('statTotal').textContent = items.length;
-            var hot = items.filter(function(x){ return (x.category || '').indexOf('hot') !== -1; }).length;
-            document.getElementById('statHot').textContent = hot;
+            var elTot = document.getElementById('statTotal');
+            if (elTot) elTot.textContent = items.length;
             var dl = items.reduce(function(acc, x){ return acc + (x.downloads || 0); }, 0);
-            document.getElementById('statDL').textContent = dl >= 1000 ? (dl / 1000).toFixed(1) + 'k' : dl;
+            var elDl = document.getElementById('statDL');
+            if (elDl) elDl.textContent = dl >= 1000 ? (dl / 1000).toFixed(1) + 'k' : dl;
         }
 
         function buildCategoryPills(items) {
@@ -1349,6 +1382,7 @@
         function updatePlayerBarUI(track) {
             var playerBar = document.getElementById('playerBar');
             playerBar.classList.remove('hidden');
+            document.body.classList.add('has-player');
 
             document.getElementById('pTitle').textContent = track.name;
             document.getElementById('pTitle').href = '/product-audio?id=' + track.id;
@@ -1373,7 +1407,7 @@
         }
 
         function syncTrackTableState() {
-            var isPlaying = !audioEngine.paused && audioEngine.currentTime > 0;
+            var isPlaying = !audioEngine.paused && !audioEngine.ended;
             document.querySelectorAll('.sp-row').forEach(function(row){
                 var idx = parseInt(row.getAttribute('data-index'), 10);
                 var isCur = (idx === currentTrackIndex);
@@ -1389,7 +1423,7 @@
         }
 
         function syncPlayerButtons() {
-            var isPlaying = !audioEngine.paused && audioEngine.currentTime > 0;
+            var isPlaying = !audioEngine.paused && !audioEngine.ended;
             var mainPlay = document.getElementById('mainPlayBtn');
             if (mainPlay) {
                 mainPlay.classList.toggle('is-playing', isPlaying);
@@ -1402,21 +1436,77 @@
             }
         }
 
+        // Smooth Scrubber Animation Loop (60fps continuous glide)
+        var rafScrubberId = null;
+        function renderSmoothPlayerScrubber() {
+            if (audioEngine.duration && !audioEngine.paused) {
+                var cur = audioEngine.currentTime || 0;
+                var dur = audioEngine.duration || 0;
+                var pct = (dur > 0) ? (cur / dur) * 100 : 0;
+                var pFill = document.getElementById('pFill');
+                var pThumb = document.getElementById('pThumbPin');
+                if (pFill) pFill.style.width = pct + '%';
+                if (pThumb) pThumb.style.left = pct + '%';
+                var pCur = document.getElementById('pCurrentTime');
+                if (pCur) pCur.textContent = formatTime(cur);
+            }
+            if (!audioEngine.paused && !audioEngine.ended) {
+                rafScrubberId = requestAnimationFrame(renderSmoothPlayerScrubber);
+            } else {
+                rafScrubberId = null;
+            }
+        }
+
+        function startSmoothScrubber() {
+            if (rafScrubberId) cancelAnimationFrame(rafScrubberId);
+            rafScrubberId = requestAnimationFrame(renderSmoothPlayerScrubber);
+        }
+
+        function stopSmoothScrubber() {
+            if (rafScrubberId) {
+                cancelAnimationFrame(rafScrubberId);
+                rafScrubberId = null;
+            }
+        }
+
         // Engine Audio Event Listeners
         audioEngine.addEventListener('timeupdate', function(){
             var cur = audioEngine.currentTime || 0;
             var dur = audioEngine.duration || 0;
-            document.getElementById('pCurrentTime').textContent = formatTime(cur);
-            document.getElementById('pDuration').textContent = formatTime(dur);
+            var pCur = document.getElementById('pCurrentTime');
+            var pDur = document.getElementById('pDuration');
+            if (pCur) pCur.textContent = formatTime(cur);
+            if (pDur) pDur.textContent = formatTime(dur);
 
-            var pct = (dur > 0) ? (cur / dur) * 100 : 0;
-            document.getElementById('pFill').style.width = pct + '%';
-            document.getElementById('pThumbPin').style.left = pct + '%';
+            if (audioEngine.paused) {
+                var pct = (dur > 0) ? (cur / dur) * 100 : 0;
+                var pFill = document.getElementById('pFill');
+                var pThumb = document.getElementById('pThumbPin');
+                if (pFill) pFill.style.width = pct + '%';
+                if (pThumb) pThumb.style.left = pct + '%';
+            }
         });
 
-        audioEngine.addEventListener('play', syncTrackTableState);
-        audioEngine.addEventListener('pause', syncTrackTableState);
+        audioEngine.addEventListener('loadedmetadata', function(){
+            var dur = audioEngine.duration || 0;
+            var pDur = document.getElementById('pDuration');
+            if (pDur) pDur.textContent = formatTime(dur);
+        });
+
+        audioEngine.addEventListener('play', function(){
+            startSmoothScrubber();
+            syncTrackTableState();
+        });
+        audioEngine.addEventListener('pause', function(){
+            stopSmoothScrubber();
+            syncTrackTableState();
+        });
         audioEngine.addEventListener('ended', function(){
+            stopSmoothScrubber();
+            var pFill = document.getElementById('pFill');
+            var pThumb = document.getElementById('pThumbPin');
+            if (pFill) pFill.style.width = '0%';
+            if (pThumb) pThumb.style.left = '0%';
             if (isRepeat) {
                 audioEngine.currentTime = 0;
                 audioEngine.play();
@@ -1466,6 +1556,21 @@
             this.classList.toggle('active', isRepeat);
         });
 
+        // Close Player Bar
+        var closeBtn = document.getElementById('ctrlClosePlayer');
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function(e){
+                e.stopPropagation();
+                audioEngine.pause();
+                stopSmoothScrubber();
+                var pb = document.getElementById('playerBar');
+                if (pb) pb.classList.add('hidden');
+                document.body.classList.remove('has-player');
+                currentTrackIndex = -1;
+                syncTrackTableState();
+            });
+        }
+
         // Scrubber Seeking
         var scrubber = document.getElementById('pScrubber');
         scrubber.addEventListener('click', function(e){
@@ -1474,6 +1579,12 @@
             var clickX = e.clientX - rect.left;
             var pct = Math.max(0, Math.min(1, clickX / rect.width));
             audioEngine.currentTime = pct * audioEngine.duration;
+            var pFill = document.getElementById('pFill');
+            var pThumb = document.getElementById('pThumbPin');
+            if (pFill) pFill.style.width = (pct * 100) + '%';
+            if (pThumb) pThumb.style.left = (pct * 100) + '%';
+            var pCur = document.getElementById('pCurrentTime');
+            if (pCur) pCur.textContent = formatTime(audioEngine.currentTime);
         });
 
         // Volume Slider

@@ -542,7 +542,6 @@
             <ul class="nav-links" id="navLinks">
                 <li><a href="/">Home</a></li>
                 <li><a href="/presets">Presets</a></li>
-                <li><a href="/audio.html" class="active">Audio</a></li>
                 <li><a href="/plugins">Plugins</a></li>
                 <li><a href="/more">More</a></li>
                 <li><a href="/#contact">Contact</a></li>
@@ -643,8 +642,11 @@
     let discordAvatarCache = {};
 
     async function fetchUploaderDiscordAvatar(uploaderId, fallbackHashOrUrl) {
+        if (fallbackHashOrUrl && fallbackHashOrUrl.startsWith('http')) {
+            if (uploaderId) discordAvatarCache[uploaderId] = fallbackHashOrUrl;
+            return fallbackHashOrUrl;
+        }
         if (!uploaderId) {
-            if (fallbackHashOrUrl && fallbackHashOrUrl.startsWith('http')) return fallbackHashOrUrl;
             if (fallbackHashOrUrl) return '/api/avatar/0/' + fallbackHashOrUrl + '.png?size=128';
             return 'https://cdn.discordapp.com/embed/avatars/0.png';
         }
@@ -652,31 +654,22 @@
 
         try {
             var controller = new AbortController();
-            var timer = setTimeout(function(){ controller.abort(); }, 2500);
-
-            var resp = await fetch('/api/presence/' + uploaderId, {
-                headers: {
-                    "X-Zyrex-Key": "zyrex_app_sec_k982f81a7b54c29013e9a",
-                    "Accept": "application/json"
-                },
-                signal: controller.signal
-            });
+            var timer = setTimeout(function(){ controller.abort(); }, 3000);
+            var resp = await fetch('/api/discord-user?userId=' + uploaderId, { signal: controller.signal });
             clearTimeout(timer);
 
             if (resp.ok) {
                 var json = await resp.json();
-                var d = json.data || json[uploaderId] || json;
-                var u = d.discord_user || d;
-                if (u && u.avatar) {
-                    var avatarUrl = '';
-                    if (u.avatar.startsWith('http://') || u.avatar.startsWith('https://')) {
-                        avatarUrl = u.avatar;
-                    } else {
-                        var ext = u.avatar.startsWith('a_') ? 'gif' : 'png';
-                        avatarUrl = '/api/avatar/' + uploaderId + '/' + u.avatar + '.' + ext + '?size=128';
+                if (json.success && json.user) {
+                    var avUrl = json.user.avatar_url;
+                    if (!avUrl && json.user.avatar) {
+                        var ext = json.user.avatar.startsWith('a_') ? 'gif' : 'png';
+                        avUrl = '/api/avatar/' + uploaderId + '/' + json.user.avatar + '.' + ext + '?size=128';
                     }
-                    discordAvatarCache[uploaderId] = avatarUrl;
-                    return avatarUrl;
+                    if (avUrl) {
+                        discordAvatarCache[uploaderId] = avUrl;
+                        return avUrl;
+                    }
                 }
             }
         } catch(e) {}
@@ -686,7 +679,9 @@
             var ext = fallbackHashOrUrl.startsWith('a_') ? 'gif' : 'png';
             return '/api/avatar/' + uploaderId + '/' + fallbackHashOrUrl + '.' + ext + '?size=128';
         }
-        return 'https://cdn.discordapp.com/embed/avatars/0.png';
+        let defIdx = 0;
+        try { defIdx = Number((BigInt(uploaderId) >> 22n) % 6n); } catch(e) { defIdx = parseInt(uploaderId) % 5 || 0; }
+        return 'https://cdn.discordapp.com/embed/avatars/' + defIdx + '.png';
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
@@ -925,7 +920,7 @@
 
                     <!-- Single Creator Profile -->
                     <div class="creator-row" style="margin-bottom:18px">
-                        <img src="https://cdn.discordapp.com/embed/avatars/0.png" alt="${escapeHtml(creatorName)}" class="creator-avatar" id="creatorAvatarImg" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+                        <img src="${(fallbackAv && fallbackAv.startsWith('http')) ? fallbackAv : 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="${escapeHtml(creatorName)}" class="creator-avatar" id="creatorAvatarImg" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
                         <div class="creator-info">
                             <h5>${escapeHtml(creatorName)}</h5>
                             <span style="color:var(--purple-audio);font-weight:600">Audio Creator</span>
@@ -936,19 +931,6 @@
                             </a>
                         ` : ''}
                     </div>
-
-                    <!-- Password Box (if any) -->
-                    ${p.password ? `
-                        <div class="pw-box">
-                            <div>
-                                <div style="font-size:0.72rem;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-bottom:2px">Password</div>
-                                <span class="pw-text">${escapeHtml(p.password)}</span>
-                            </div>
-                            <button class="pw-copy-btn" onclick="copyPassword('${escapeHtml(p.password)}', this)">
-                                <i class="far fa-copy"></i> Copy
-                            </button>
-                        </div>
-                    ` : ''}
 
                     ${dlBtnHtml}
                     ${mirrorsHtml}
@@ -1069,14 +1051,6 @@
         if (!text) return '';
         return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
     }
-
-    window.copyPassword = function(pw, btn) {
-        navigator.clipboard.writeText(pw).then(() => {
-            var orig = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
-            setTimeout(() => { btn.innerHTML = orig; }, 2000);
-        });
-    };
 
     window.toggleAudioLike = function(pid) {
         var key = 'zyrex_like_' + pid;

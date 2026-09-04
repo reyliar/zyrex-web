@@ -624,7 +624,7 @@
             </a>
             <ul class="nav-links" id="navLinks">
                 <li><a href="/">Home</a></li>
-                <li><a href="/presets" class="active">Presets</a></li>
+                <li><a href="/presets">Presets</a></li>
                 <li><a href="/plugins">Plugins</a></li>
                 <li><a href="/more">More</a></li>
                 <li><a href="/#contact">Contact</a></li>
@@ -783,9 +783,12 @@
         try {
             const resp = await fetch('/api/discord-user?userId=' + userId);
             const data = await resp.json();
-            if (data.success && data.user && data.user.avatar) {
-                const ext = data.user.avatar.startsWith('a_') ? 'gif' : 'png';
-                return '/api/avatar/' + userId + '/' + data.user.avatar + '.' + ext + '?size=128';
+            if (data.success && data.user) {
+                if (data.user.avatar_url) return data.user.avatar_url;
+                if (data.user.avatar) {
+                    const ext = data.user.avatar.startsWith('a_') ? 'gif' : 'png';
+                    return '/api/avatar/' + userId + '/' + data.user.avatar + '.' + ext + '?size=128';
+                }
             }
         } catch(e) {}
         let defIdx = 0;

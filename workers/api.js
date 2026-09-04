@@ -2841,11 +2841,16 @@ async function storeAndProxyImage(env, imageUrl) {
       // GUILD MEMBERS - Proxy to Bot
       if (path === "/api/guild/members") {
         const session = parseSession(request.headers.get("Cookie"));
-        const isAutocomplete = url.searchParams.has("q") || url.searchParams.get("autocomplete") === "1";
+        const queryQ = (url.searchParams.get("q") || "").trim();
+        const isAutocomplete = queryQ || url.searchParams.get("autocomplete") === "1" || (session && session.canUpload);
         if (!isAutocomplete && (!session || !ADMIN_IDS.includes(session.userId))) {
           return json({ error: "Unauthorized" }, 403);
         }
-        const targetUrl = `${BOT_API}/api/guild/members${url.search}`;
+        const botParams = new URLSearchParams(url.search);
+        if (queryQ || botParams.get("autocomplete") === "1") {
+          botParams.set("autocomplete", "1");
+        }
+        const targetUrl = `${BOT_API}/api/guild/members?${botParams.toString()}`;
         const proxyHeaders = {
           "Content-Type": "application/json",
         };
@@ -2861,7 +2866,32 @@ async function storeAndProxyImage(env, imageUrl) {
         });
         const data = await botResp.text();
         try {
-          return json(JSON.parse(data), botResp.status);
+          const parsed = JSON.parse(data);
+          if (parsed && Array.isArray(parsed.members)) {
+            const qLower = queryQ.toLowerCase();
+            const botKeywords = [
+              "dyno", "disboard", "arcane", "carl-bot", "probot", "mee6", 
+              "zyrex bot", "ticket tool", "hydra", "jockie", "midjourney", 
+              "yggdrasil", "dank memer", "tupperbox", "chip", "fredboat", 
+              "giveaway", "helper.gg", "server stats", "voice master", 
+              "autocode", "bleep", "ai helper", "statbot", "zyrex verify"
+            ];
+            parsed.members = parsed.members.filter(m => {
+              if (m.bot === true || m.is_bot === true) return false;
+              const u = (m.username || "").toLowerCase();
+              const d = (m.display_name || "").toLowerCase();
+              const uid = String(m.id || "");
+              if (botKeywords.some(b => u.includes(b) || d.includes(b))) return false;
+              if (qLower) {
+                return u.includes(qLower) || d.includes(qLower) || uid.includes(qLower);
+              }
+              return true;
+            });
+            if (qLower && parsed.members.length > 25) {
+              parsed.members = parsed.members.slice(0, 25);
+            }
+          }
+          return json(parsed, botResp.status);
         } catch {
           return new Response(data, { status: botResp.status, headers: corsHeaders });
         }
@@ -2869,7 +2899,7 @@ async function storeAndProxyImage(env, imageUrl) {
 
       // DISCORD USER PROFILE - Proxy to Bot
       if (path === "/api/discord-user") {
-        const userId = url.searchParams.get("userId") || "1421177012814614548";
+        const userId = (url.searchParams.get("userId") || "").trim();
         if (!/^\d{17,20}$/.test(userId)) {
           return json({ success: false, error: "Invalid userId" }, 400);
         }
@@ -2878,15 +2908,32 @@ async function storeAndProxyImage(env, imageUrl) {
         
         // Fallback: Query Discord REST directly if bot fails and token exists
         if (env.DISCORD_BOT_TOKEN) {
-          const ur = await fetch(`${DISCORD_API}/users/${userId}`, {
-            headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` },
-          });
-          if (ur.ok) {
-            const userData = await ur.json();
-            return json({ success: true, source: "discord-rest", user: userData });
-          }
+          try {
+            const ur = await fetch(`${DISCORD_API}/users/${userId}`, {
+              headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` },
+            });
+            if (ur.ok) {
+              const userData = await ur.json();
+              const disp = userData.global_name || userData.username;
+              let avUrl = "";
+              if (userData.avatar) {
+                const ext = userData.avatar.startsWith("a_") ? "gif" : "png";
+                avUrl = `https://cdn.discordapp.com/avatars/${userData.id}/${userData.avatar}.${ext}?size=128`;
+              } else {
+                try {
+                  const defIdx = Number((BigInt(userData.id) >> 22n) % 6n);
+                  avUrl = `https://cdn.discordapp.com/embed/avatars/${defIdx}.png`;
+                } catch(e) {
+                  avUrl = "https://cdn.discordapp.com/embed/avatars/0.png";
+                }
+              }
+              userData.display_name = disp;
+              userData.avatar_url = avUrl;
+              return json({ success: true, source: "discord-rest", user: userData });
+            }
+          } catch(e) {}
         }
-        return json({ success: false, error: "User not found" });
+        return json({ success: false, error: "User not found" }, 404);
       }
 
       // TEAM HIERARCHY / FAMILY TREE - Proxy to Bot
@@ -4212,6 +4259,7 @@ async function storeAndProxyImage(env, imageUrl) {
           proxyHeaders["X-User-Avatar"] = session.avatar || "";
           proxyHeaders["X-User-Can-Upload"] = session.canUpload ? "true" : "false";
           proxyHeaders["X-User-Is-Admin"] = ADMIN_IDS.includes(session.userId) ? "true" : "false";
+          proxyHeaders["X-Submitter-ID"] = session.userId || "";
         }
         const targetUrl = `${BOT_API}${path}${url.search}`;
         let body = request.method !== "GET" && request.method !== "HEAD" ? await request.text() : undefined;
@@ -4220,6 +4268,50 @@ async function storeAndProxyImage(env, imageUrl) {
         if (path === "/api/products/submit" && request.method === "POST" && body) {
           try {
             const submitData = JSON.parse(body);
+
+            // Credited uploader support (allow uploading on behalf of a discord member)
+            const rawCreditId = (submitData.credited_uploader_id || "").toString().trim();
+            const hasCredit = Boolean(rawCreditId && /^\d{17,20}$/.test(rawCreditId));
+
+            if (hasCredit) {
+              const creditedId = rawCreditId;
+              const creditedName = (submitData.credited_uploader_name || submitData.uploader_name || submitData.author_name || "").toString().trim();
+              const creditedAvatar = (submitData.credited_uploader_avatar || submitData.uploader_avatar || submitData.creator_avatar || "").toString().trim();
+
+              proxyHeaders["X-User-ID"] = creditedId;
+              if (creditedName) {
+                proxyHeaders["X-User-Name"] = creditedName;
+                proxyHeaders["X-User-Display-Name"] = creditedName;
+                submitData.author_name = creditedName;
+                submitData.uploader_name = creditedName;
+              }
+              if (creditedAvatar) {
+                proxyHeaders["X-User-Avatar"] = creditedAvatar;
+                submitData.uploader_avatar = creditedAvatar;
+                if (!submitData.creator_avatar || submitData.type === "audio") {
+                  submitData.creator_avatar = creditedAvatar;
+                }
+              }
+              submitData.author_id = creditedId;
+              submitData.uploader_id = creditedId;
+              if (submitData.type === "audio" && !submitData.creator_nickname && creditedName) {
+                submitData.creator_nickname = creditedName;
+              }
+            } else {
+              const sUid = session ? session.userId : "";
+              const sName = session ? (session.displayName || session.username) : "";
+              const sAv = session ? (session.avatar || "") : "";
+              if (!submitData.author_id) submitData.author_id = sUid;
+              if (!submitData.author_name) submitData.author_name = sName;
+              if (!submitData.uploader_id) submitData.uploader_id = sUid;
+              if (!submitData.uploader_name) submitData.uploader_name = sName;
+              if (!submitData.uploader_avatar && sAv) submitData.uploader_avatar = sAv;
+              if (submitData.type === "audio") {
+                if (!submitData.creator_avatar && sAv) submitData.creator_avatar = sAv;
+                if (!submitData.creator_nickname && sName) submitData.creator_nickname = sName;
+              }
+            }
+
             const rawThumb = submitData.thumbnail || submitData.cdn_thumbnail || "";
             if (rawThumb && !rawThumb.includes("thumbnail.zyrexediting.xyz")) {
               const cdnThumb = await storeAndProxyImage(env, rawThumb);

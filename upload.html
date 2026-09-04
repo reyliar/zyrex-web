@@ -1022,6 +1022,158 @@
             display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
         }
         .wiz-section-title i { color: var(--cherry-light); }
+
+        /* === UPLOADER CREDIT AUTOCOMPLETE === */
+        .uploader-credit-wrap {
+            position: relative;
+        }
+        .uploader-search-box {
+            display: flex;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            transition: var(--transition);
+        }
+        .uploader-search-box:focus-within {
+            border-color: var(--cherry-light);
+            box-shadow: 0 0 16px rgba(230, 21, 54, 0.15);
+        }
+        .uploader-search-box .search-icon {
+            margin-left: 14px;
+            color: var(--muted);
+            font-size: 0.88rem;
+        }
+        .uploader-search-box input {
+            border: none;
+            background: transparent;
+            padding: 12px 14px;
+            color: #fff;
+            font-size: 0.88rem;
+            flex: 1;
+            outline: none;
+        }
+        .btn-clear-credit {
+            background: transparent;
+            border: none;
+            color: var(--muted);
+            padding: 8px 14px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: var(--transition);
+        }
+        .btn-clear-credit:hover {
+            color: #fff;
+        }
+        .uploader-suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            margin-top: 6px;
+            background: rgba(14, 5, 10, 0.98);
+            border: 1px solid rgba(255, 43, 82, 0.3);
+            border-radius: var(--radius-md);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 16px 36px rgba(0,0,0,0.7);
+            max-height: 250px;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        .uploader-member-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 14px;
+            cursor: pointer;
+            transition: background 0.15s ease;
+            border-bottom: 1px solid rgba(255,255,255,0.03);
+        }
+        .uploader-member-item:last-child {
+            border-bottom: none;
+        }
+        .uploader-member-item:hover, .uploader-member-item.selected {
+            background: rgba(230, 21, 54, 0.15);
+        }
+        .uploader-member-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid rgba(255, 43, 82, 0.3);
+            background: #11050b;
+        }
+        .uploader-member-info {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            flex: 1;
+        }
+        .uploader-member-name {
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .uploader-member-handle {
+            font-size: 0.72rem;
+            color: var(--muted);
+        }
+        .uploader-member-id {
+            font-size: 0.68rem;
+            color: var(--muted);
+            font-family: monospace;
+            margin-left: auto;
+            opacity: 0.8;
+        }
+        .credited-user-badge {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 16px;
+            background: rgba(230, 21, 54, 0.10);
+            border: 1px solid rgba(230, 21, 54, 0.35);
+            border-radius: var(--radius-md);
+            margin-top: 4px;
+        }
+        .credited-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--cherry-light);
+        }
+        .credited-user-meta {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+        .credited-name {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: #fff;
+        }
+        .credited-id {
+            font-size: 0.72rem;
+            color: var(--cherry-light);
+            font-family: monospace;
+        }
+        .credited-remove-btn {
+            background: transparent;
+            border: none;
+            color: var(--muted);
+            padding: 6px 10px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .credited-remove-btn:hover {
+            color: #ff2b52;
+            background: rgba(255, 43, 82, 0.1);
+        }
     </style>
 </head>
 <body>
@@ -1219,6 +1371,31 @@
                                     </div>
                                     <span id="badgeStatus" style="font-size:0.68rem;font-weight:700;color:#ffb74d;background:rgba(255,183,77,0.1);border:1px solid rgba(255,183,77,0.2);padding:4px 10px;border-radius:12px;"><i class="fas fa-spinner fa-spin"></i> Scanning...</span>
                                 </div>
+                            </div>
+
+                            <!-- UPLOADER CREDIT (OPTIONAL) -->
+                            <div class="field">
+                                <label><i class="fab fa-discord"></i> Uploader Credit (optional)</label>
+                                <div class="uploader-credit-wrap">
+                                    <div class="uploader-search-box">
+                                        <i class="fas fa-search search-icon"></i>
+                                        <input type="text" id="uploaderSearchInput" placeholder="Search Discord member by username or display name..." autocomplete="off">
+                                        <button type="button" class="btn-clear-credit" id="clearCreditBtn" style="display:none" onclick="clearCreditedUploader()"><i class="fas fa-times"></i></button>
+                                    </div>
+                                    <div class="uploader-suggestions" id="uploaderSuggestions" style="display:none"></div>
+                                    <div class="credited-user-badge" id="creditedUserBadge" style="display:none">
+                                        <img src="https://cdn.discordapp.com/embed/avatars/0.png" id="creditedAvatar" class="credited-avatar" alt="">
+                                        <div class="credited-user-meta">
+                                            <span class="credited-name" id="creditedName"></span>
+                                            <span class="credited-id" id="creditedId"></span>
+                                        </div>
+                                        <button type="button" class="credited-remove-btn" onclick="clearCreditedUploader()" title="Remove credit"><i class="fas fa-times"></i></button>
+                                    </div>
+                                    <input type="hidden" id="customUploaderId" value="">
+                                    <input type="hidden" id="customUploaderName" value="">
+                                    <input type="hidden" id="customUploaderAvatar" value="">
+                                </div>
+                                <div class="field-hint" style="font-size:0.72rem;color:var(--muted);margin-top:6px">Search for any member on the Discord server. Selecting a member will bind their Discord User ID and profile as the uploader.</div>
                             </div>
 
                             <div class="field">
@@ -2438,14 +2615,163 @@
             }
         }
 
+        // === UPLOADER CREDIT AUTOCOMPLETE ===
+        var uploaderInput = document.getElementById('uploaderSearchInput');
+        var uploaderSuggestions = document.getElementById('uploaderSuggestions');
+        var clearCreditBtn = document.getElementById('clearCreditBtn');
+        var searchMembersTimeout = null;
+
+        if (uploaderInput) {
+            uploaderInput.addEventListener('input', function() {
+                var val = uploaderInput.value.trim();
+                if (clearCreditBtn) clearCreditBtn.style.display = val ? 'block' : 'none';
+                clearTimeout(searchMembersTimeout);
+                if (!val) {
+                    if (uploaderSuggestions) uploaderSuggestions.style.display = 'none';
+                    return;
+                }
+                searchMembersTimeout = setTimeout(function(){
+                    searchDiscordMembers(val);
+                }, 250);
+            });
+
+            uploaderInput.addEventListener('focus', function(){
+                var val = uploaderInput.value.trim();
+                if (val) searchDiscordMembers(val);
+            });
+        }
+
+        document.addEventListener('click', function(e){
+            if (!e.target.closest('.uploader-credit-wrap')) {
+                if (uploaderSuggestions) uploaderSuggestions.style.display = 'none';
+            }
+        });
+
+        async function searchDiscordMembers(query) {
+            if (!uploaderSuggestions) return;
+            var qTrim = query.trim();
+            if (/^\d{17,20}$/.test(qTrim)) {
+                try {
+                    uploaderSuggestions.style.display = 'block';
+                    uploaderSuggestions.innerHTML = '<div style="padding:12px;font-size:0.78rem;color:var(--muted);text-align:center"><i class="fas fa-spinner fa-spin"></i> Looking up Discord User ID...</div>';
+                    var uRes = await fetch('/api/discord-user?userId=' + qTrim);
+                    if (uRes.ok) {
+                        var uData = await uRes.json();
+                        if (uData.success && uData.user) {
+                            var u = uData.user;
+                            var memberObj = {
+                                id: u.id,
+                                username: u.username,
+                                display_name: u.display_name || u.global_name || u.username,
+                                avatar: u.avatar_url || ''
+                            };
+                            selectCreditedMember(memberObj);
+                            return;
+                        }
+                    }
+                } catch(e) {}
+            }
+            try {
+                uploaderSuggestions.style.display = 'block';
+                uploaderSuggestions.innerHTML = '<div style="padding:12px;font-size:0.78rem;color:var(--muted);text-align:center"><i class="fas fa-spinner fa-spin"></i> Searching Discord server members...</div>';
+                
+                var res = await fetch('/api/guild/members?q=' + encodeURIComponent(query) + '&autocomplete=1');
+                if (!res.ok) throw new Error('Failed to fetch');
+                var data = await res.json();
+                var rawMembers = (data && Array.isArray(data.members)) ? data.members : [];
+                
+                var qLower = query.toLowerCase().trim();
+                var botNames = ['dyno', 'disboard', 'arcane', 'carl-bot', 'probot', 'mee6', 'zyrex bot', 'ticket tool', 'hydra', 'jockie', 'midjourney', 'yggdrasil', 'dank memer', 'tupperbox', 'chip', 'fredboat', 'giveaway', 'helper.gg', 'server stats', 'voice master', 'autocode', 'bleep', 'ai helper', 'statbot', 'zyrex verify'];
+                var members = rawMembers.filter(function(m) {
+                    if (m.bot === true || m.is_bot === true) return false;
+                    var u = (m.username || '').toLowerCase();
+                    var d = (m.display_name || '').toLowerCase();
+                    var id = String(m.id || '');
+                    if (botNames.some(function(b){ return u === b || u.startsWith(b + '#') || (u.includes(b) && !u.includes('bottom')); })) return false;
+                    if (qLower) {
+                        return u.includes(qLower) || d.includes(qLower) || id.includes(qLower);
+                    }
+                    return true;
+                });
+                if (members.length > 25) {
+                    members = members.slice(0, 25);
+                }
+                
+                if (!members.length) {
+                    uploaderSuggestions.innerHTML = '<div style="padding:12px;font-size:0.78rem;color:var(--muted);text-align:center">No Discord members found matching "' + escapeHtml(query) + '"</div>';
+                    return;
+                }
+
+                uploaderSuggestions.innerHTML = members.map(function(m, idx){
+                    var dName = m.display_name || m.username || 'Unknown';
+                    var handle = m.username ? '@' + m.username : '';
+                    var av = m.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png';
+                    return '<div class="uploader-member-item" data-idx="' + idx + '">' +
+                        '<img src="' + escapeHtml(av) + '" class="uploader-member-avatar" onerror="this.src=\'https://cdn.discordapp.com/embed/avatars/0.png\'">' +
+                        '<div class="uploader-member-info">' +
+                            '<div class="uploader-member-name">' +
+                                escapeHtml(dName) +
+                                (m.is_admin ? '<i class="fas fa-circle-check" style="color:#0095F6;font-size:0.75rem" title="Admin"></i>' : '') +
+                            '</div>' +
+                            (handle ? '<span class="uploader-member-handle">' + escapeHtml(handle) + '</span>' : '') +
+                        '</div>' +
+                        '<span class="uploader-member-id">' + escapeHtml(m.id) + '</span>' +
+                    '</div>';
+                }).join('');
+
+                uploaderSuggestions.querySelectorAll('.uploader-member-item').forEach(function(item){
+                    item.addEventListener('click', function(){
+                        var idx = parseInt(item.getAttribute('data-idx'), 10);
+                        selectCreditedMember(members[idx]);
+                    });
+                });
+            } catch(e) {
+                uploaderSuggestions.innerHTML = '<div style="padding:12px;font-size:0.78rem;color:var(--cherry-light);text-align:center">Error searching members</div>';
+            }
+        }
+
+        function selectCreditedMember(m) {
+            if (!m) return;
+            document.getElementById('customUploaderId').value = m.id;
+            var name = m.display_name || m.username || '';
+            document.getElementById('customUploaderName').value = name;
+            document.getElementById('customUploaderAvatar').value = m.avatar || '';
+
+            document.getElementById('creditedAvatar').src = m.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png';
+            document.getElementById('creditedName').textContent = name + (m.username ? ' (@' + m.username + ')' : '');
+            document.getElementById('creditedId').textContent = 'Discord ID: ' + m.id;
+
+            document.getElementById('creditedUserBadge').style.display = 'flex';
+            if (uploaderSuggestions) uploaderSuggestions.style.display = 'none';
+            if (uploaderInput) uploaderInput.value = '';
+            if (clearCreditBtn) clearCreditBtn.style.display = 'none';
+        }
+
+        function clearCreditedUploader() {
+            document.getElementById('customUploaderId').value = '';
+            document.getElementById('customUploaderName').value = '';
+            document.getElementById('customUploaderAvatar').value = '';
+
+            document.getElementById('creditedUserBadge').style.display = 'none';
+            if (uploaderInput) uploaderInput.value = '';
+            if (clearCreditBtn) clearCreditBtn.style.display = 'none';
+            if (uploaderSuggestions) uploaderSuggestions.style.display = 'none';
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+        }
+
         function buildReview(){
             const n=document.getElementById('productName').value.trim()||'Untitled',
                   cat=(document.getElementById('productCategory')||{}).value||'others',
                   tags=document.getElementById('productTags').value.trim(),
                   desc=document.getElementById('productDesc').value.trim(),
                   cn=document.getElementById('creatorName').value||'N/A',
+                  cUpName=(document.getElementById('customUploaderName')||{}).value||'',
                   fp=transferred||'Not transferred';
-            document.getElementById('reviewSummary').innerHTML='<div class="rs-row"><span>Name</span><strong>'+n+'</strong></div><div class="rs-row"><span>Category</span><strong>'+cat+'</strong></div>'+(tags?'<div class="rs-row"><span>Tags</span><strong>'+tags+'</strong></div>':'')+'<div class="rs-row"><span>Creator</span><strong>'+cn+'</strong></div><div class="rs-row"><span>File Path</span><strong style="font-size:.7rem;color:var(--muted)">'+fp+'</strong></div>';
+            document.getElementById('reviewSummary').innerHTML='<div class="rs-row"><span>Name</span><strong>'+n+'</strong></div><div class="rs-row"><span>Category</span><strong>'+cat+'</strong></div>'+(tags?'<div class="rs-row"><span>Tags</span><strong>'+tags+'</strong></div>':'')+'<div class="rs-row"><span>Creator</span><strong>'+cn+'</strong></div>'+(cUpName?'<div class="rs-row"><span>Uploader Credit</span><strong>'+cUpName+'</strong></div>':'')+'<div class="rs-row"><span>File Path</span><strong style="font-size:.7rem;color:var(--muted)">'+fp+'</strong></div>';
         }
 
         async function submitProduct(){
@@ -2454,6 +2780,17 @@
             btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Submitting...';
             var thumbVal=document.getElementById('thumbUrl')?document.getElementById('thumbUrl').value.trim():'';
             var payhipVal=document.getElementById('payhipLink')?document.getElementById('payhipLink').value.trim():'';
+            var creditedId = (document.getElementById('customUploaderId') || {}).value || '';
+            var creditedName = (document.getElementById('customUploaderName') || {}).value || '';
+            var creditedAvatar = (document.getElementById('customUploaderAvatar') || {}).value || '';
+
+            if (!creditedId && uploaderInput) {
+                var rawIn = uploaderInput.value.trim();
+                if (/^\d{17,20}$/.test(rawIn)) {
+                    creditedId = rawIn;
+                }
+            }
+
             const payload={
                 id:prod.id,
                 name:document.getElementById('productName').value.trim(),
@@ -2469,7 +2806,15 @@
                 product_url:payhipVal,
                 source_url:payhipVal,
                 file_path:transferred||'',
-                type:'preset'
+                type:'preset',
+                credited_uploader_id: creditedId || undefined,
+                credited_uploader_name: creditedName || undefined,
+                credited_uploader_avatar: creditedAvatar || undefined,
+                uploader_id: creditedId || undefined,
+                uploader_name: creditedName || undefined,
+                uploader_avatar: creditedAvatar || undefined,
+                author_id: creditedId || undefined,
+                author_name: creditedName || undefined
             };
             if(!payload.name||!payload.category){
                 alertMsg('Fill required fields',true);

@@ -755,8 +755,6 @@
             <ul class="nav-links" id="navLinks">
                 <li><a href="/">Home</a></li>
                 <li><a href="/presets">Presets</a></li>
-                <li><a href="/scenepack.html" class="active">Scenepacks</a></li>
-                <li><a href="/audio.html">Audio</a></li>
                 <li><a href="/plugins">Plugins</a></li>
                 <li><a href="/more">More</a></li>
                 <li><a href="/#contact">Contact</a></li>
@@ -885,12 +883,25 @@
         renderSceneDetail(item);
     });
 
-    function showError(msg) {
-        document.getElementById('errState').style.display = 'block';
-        document.getElementById('errMsgText').innerHTML = msg;
+    async function fetchDiscordAvatar(userId) {
+        if (!userId) return '';
+        try {
+            const resp = await fetch('/api/discord-user?userId=' + userId);
+            const data = await resp.json();
+            if (data.success && data.user) {
+                if (data.user.avatar_url) return data.user.avatar_url;
+                if (data.user.avatar) {
+                    const ext = data.user.avatar.startsWith('a_') ? 'gif' : 'png';
+                    return '/api/avatar/' + userId + '/' + data.user.avatar + '.' + ext + '?size=128';
+                }
+            }
+        } catch(e) {}
+        let defIdx = 0;
+        try { defIdx = Number((BigInt(userId) >> 22n) % 6n); } catch(e) { defIdx = parseInt(userId) % 5; }
+        return '/api/avatar/default/' + defIdx + '.png';
     }
 
-            function renderSceneDetail(p) {
+    function renderSceneDetail(p) {
         document.title = (p.name || "Scenepack") + " - Zyrex";
         document.getElementById('breadSceneName').textContent = p.name || "Scenepack";
 
@@ -956,10 +967,13 @@
         }
 
         // Uploader details (Zyrex Discord Yükleyicisi)
-        var uploaderName = p.uploader_name || 'Zyrex Member';
-        var uploaderAv = p.uploader_avatar || 'https://cdn.discordapp.com/embed/avatars/0.png';
-        var uploaderId = p.uploader_id || '';
-        var uploaderValueHtml = `<span class="uploader-highlight-pill"><img src="${uploaderAv}" class="creator-mini-av" data-uploader-id="${uploaderId}" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'"> <span>${escapeHtml(uploaderName)}</span></span>`;
+        var uploaderName = p.uploader_name || p.author_name || 'Zyrex Member';
+        var uploaderId = p.uploader_id || p.author_id || '';
+        var uploaderAv = p.uploader_avatar || p.author_avatar || '';
+        if (!uploaderAv && uploaderId) {
+            uploaderAv = `https://cdn.discordapp.com/embed/avatars/${parseInt(uploaderId) % 5}.png`;
+        }
+        var uploaderValueHtml = `<span class="uploader-highlight-pill"><img src="${uploaderAv || 'https://cdn.discordapp.com/embed/avatars/0.png'}" id="sceneUploaderAv" class="creator-mini-av" data-uploader-id="${uploaderId}" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'"> <span>${escapeHtml(uploaderName)}</span></span>`;
 
         // Origin details (Explicit user p.origin ALWAYS WINS over guessed productions)
         var originTitle = (p.origin || '').trim() || (prod ? prod.title : '');
@@ -1161,6 +1175,13 @@
 
             <div id="relatedSceneContainer"></div>
         `;
+
+        if (uploaderId) {
+            fetchDiscordAvatar(uploaderId).then(function(avUrl) {
+                var upImg = document.getElementById('sceneUploaderAv');
+                if (upImg && avUrl) upImg.src = avUrl;
+            }).catch(function(){});
+        }
 
         loadRelatedScenepacks(p.id);
     }
