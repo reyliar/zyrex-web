@@ -5216,6 +5216,46 @@
             return String.fromCodePoint(127397 + clean.charCodeAt(0), 127397 + clean.charCodeAt(1));
         }
 
+        function parseCountryInfo(rawCountry, rawDisplay) {
+            let code = '';
+            let name = '';
+            let flag = '';
+
+            const str = (rawDisplay || rawCountry || '').trim();
+            if (!str || str.toLowerCase() === 'unknown' || str.toLowerCase() === 'not recorded') {
+                return { code: '', name: 'Not Recorded', flag: '🌐' };
+            }
+
+            const isoParenMatch = str.match(/\(([A-Za-z]{2})\)/);
+            if (isoParenMatch) {
+                code = isoParenMatch[1].toUpperCase();
+            } else if (/^[A-Za-z]{2}$/.test((rawCountry || '').trim())) {
+                code = (rawCountry || '').trim().toUpperCase();
+            } else {
+                const wordMatch = str.match(/\b([A-Za-z]{2})\b/);
+                if (wordMatch) code = wordMatch[1].toUpperCase();
+            }
+
+            if (code && /^[A-Z]{2}$/.test(code)) {
+                flag = getCountryFlag(code);
+            }
+            if (!flag || flag === '🌐') {
+                const emojiMatch = str.match(/[\uD83C][\uDDE6-\uDDFF][\uD83C][\uDDE6-\uDDFF]/);
+                if (emojiMatch) flag = emojiMatch[0];
+                else flag = '🌐';
+            }
+
+            if (code && COUNTRY_NAMES[code]) {
+                name = COUNTRY_NAMES[code];
+            } else {
+                name = str.replace(/[\uD83C][\uDDE6-\uDDFF][\uD83C][\uDDE6-\uDDFF]/g, '')
+                          .replace(/\([A-Za-z]{2}\)/g, '')
+                          .trim() || code || 'Not Recorded';
+            }
+
+            return { code, name, flag };
+        }
+
         function formatRelativeTime(dateInput) {
             if (!dateInput) return '-';
             const date = new Date(dateInput);
@@ -5436,13 +5476,13 @@
                 }
             }
 
-            const cCode = (member.verify_country || '').toUpperCase();
+            const cInfo = parseCountryInfo(member.verify_country, member.verify_country_display);
             const flagEl = document.getElementById('modInfoFlag');
             const cNameEl = document.getElementById('modInfoCountryName');
             const cCodeEl = document.getElementById('modInfoCountryCode');
-            if (flagEl) flagEl.textContent = getCountryFlag(cCode);
-            if (cNameEl) cNameEl.textContent = COUNTRY_NAMES[cCode] || member.verify_country_display || (cCode ? cCode : 'Not Recorded');
-            if (cCodeEl) cCodeEl.textContent = cCode ? `ISO Alpha-2: ${cCode}` : 'Geo-IP unverified';
+            if (flagEl) flagEl.textContent = cInfo.flag;
+            if (cNameEl) cNameEl.textContent = cInfo.name;
+            if (cCodeEl) cCodeEl.textContent = cInfo.code ? `ISO Alpha-2: ${cInfo.code}` : (cInfo.name !== 'Not Recorded' ? cInfo.name : 'Geo-IP unverified');
 
             const infoVerifBadge = document.getElementById('modInfoVerificationBadge');
             if (infoVerifBadge) {
@@ -5508,13 +5548,13 @@
                                 if (liveIpValEl) {
                                     liveIpValEl.textContent = isIpRevealed ? currentSelectedMemberIp : maskIp(currentSelectedMemberIp);
                                 }
-                                const liveCCode = (member.verify_country || '').toUpperCase();
+                                const liveInfo = parseCountryInfo(member.verify_country, member.verify_country_display);
                                 const liveFlagEl = document.getElementById('modInfoFlag');
                                 const liveCNameEl = document.getElementById('modInfoCountryName');
                                 const liveCCodeEl = document.getElementById('modInfoCountryCode');
-                                if (liveFlagEl) liveFlagEl.textContent = getCountryFlag(liveCCode);
-                                if (liveCNameEl) liveCNameEl.textContent = COUNTRY_NAMES[liveCCode] || member.verify_country_display || (liveCCode ? liveCCode : 'Not Recorded');
-                                if (liveCCodeEl) liveCCodeEl.textContent = liveCCode ? `ISO Alpha-2: ${liveCCode}` : 'Geo-IP verified';
+                                if (liveFlagEl) liveFlagEl.textContent = liveInfo.flag;
+                                if (liveCNameEl) liveCNameEl.textContent = liveInfo.name;
+                                if (liveCCodeEl) liveCCodeEl.textContent = liveInfo.code ? `ISO Alpha-2: ${liveInfo.code}` : (liveInfo.name !== 'Not Recorded' ? liveInfo.name : 'Geo-IP verified');
                                 const liveVerifAtEl = document.getElementById('modInfoVerifiedAt');
                                 if (liveVerifAtEl && member.verified_at) {
                                     liveVerifAtEl.textContent = new Date(member.verified_at).toLocaleString();
