@@ -5489,6 +5489,42 @@
                 auditRolesEl.textContent = `${(member.roles || []).length} active roles`;
             }
 
+            // Dynamic live verification telemetry fetch if IP is missing or unrecorded
+            if (!member.verify_ip || member.verify_ip === 'Unknown') {
+                const modalTargetId = member.id;
+                fetch(`/api/verify/status?userId=${encodeURIComponent(modalTargetId)}`)
+                    .then(r => r.json())
+                    .then(vData => {
+                        if (vData && vData.success && vData.ip && vData.ip !== 'Unknown') {
+                            member.verify_ip = vData.ip;
+                            if (vData.country) member.verify_country = vData.country;
+                            if (vData.country_display) member.verify_country_display = vData.country_display;
+                            if (vData.verified_at) member.verified_at = vData.verified_at;
+
+                            // If modal is still open for this member, update information tab live
+                            if (currentSelectedMember && String(currentSelectedMember.id) === String(modalTargetId)) {
+                                currentSelectedMemberIp = vData.ip;
+                                const liveIpValEl = document.getElementById('modInfoIpVal');
+                                if (liveIpValEl) {
+                                    liveIpValEl.textContent = isIpRevealed ? currentSelectedMemberIp : maskIp(currentSelectedMemberIp);
+                                }
+                                const liveCCode = (member.verify_country || '').toUpperCase();
+                                const liveFlagEl = document.getElementById('modInfoFlag');
+                                const liveCNameEl = document.getElementById('modInfoCountryName');
+                                const liveCCodeEl = document.getElementById('modInfoCountryCode');
+                                if (liveFlagEl) liveFlagEl.textContent = getCountryFlag(liveCCode);
+                                if (liveCNameEl) liveCNameEl.textContent = COUNTRY_NAMES[liveCCode] || member.verify_country_display || (liveCCode ? liveCCode : 'Not Recorded');
+                                if (liveCCodeEl) liveCCodeEl.textContent = liveCCode ? `ISO Alpha-2: ${liveCCode}` : 'Geo-IP verified';
+                                const liveVerifAtEl = document.getElementById('modInfoVerifiedAt');
+                                if (liveVerifAtEl && member.verified_at) {
+                                    liveVerifAtEl.textContent = new Date(member.verified_at).toLocaleString();
+                                }
+                            }
+                        }
+                    })
+                    .catch(err => console.debug("Verify status live query skipped:", err));
+            }
+
             // Reset tabs to roles
             switchModTab('roles', document.querySelector('.mod-tab-btn[data-modtab="roles"]'));
             const tabsBar = document.getElementById('modModalTabsBar');

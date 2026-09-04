@@ -2760,14 +2760,15 @@ async function storeAndProxyImage(env, imageUrl) {
         return json({ in_guild: false });
       }
 
-      // VERIFICATION STATUS - Session-bound proxy to the dedicated verify bot.
-      // The browser never chooses the Discord user ID, preventing status lookups
-      // for arbitrary accounts.
+      // VERIFICATION STATUS - Session-bound proxy to the dedicated verify bot (admins can query any member).
       if (path === "/api/verify/status") {
         const session = parseSession(request.headers.get("Cookie"));
         if (!session) return json({ success: false, verified: false, error: "Not logged in" }, 401);
         try {
-          const targetUrl = `${VERIFY_BOT_API}/api/verify/status?userId=${encodeURIComponent(session.userId)}`;
+          const isAdmin = ADMIN_IDS.includes(session.userId);
+          const requestedUserId = url.searchParams.get("userId");
+          const targetUserId = (isAdmin && requestedUserId) ? requestedUserId : session.userId;
+          const targetUrl = `${VERIFY_BOT_API}/api/verify/status?userId=${encodeURIComponent(targetUserId)}`;
           const botResp = await fetch(targetUrl);
           const payload = await botResp.text();
           return new Response(payload, {
