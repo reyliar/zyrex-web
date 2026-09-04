@@ -4,194 +4,1057 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zyrex | Bookmarks</title>
-    <meta name="description" content="Your saved Zyrex presets.">
+    <meta name="description" content="Access your saved Zyrex presets, plugins, scenepacks, and audio assets in one private vault.">
     <link rel="icon" type="image/png" href="/assets/content.png">
-    <link rel="stylesheet" href="css/style.css?v=24">
+    <link rel="stylesheet" href="css/style.css?v=25">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{background:var(--dark);color:var(--light);font-family:Poppins,sans-serif;min-height:100vh}
-        button,input,select{font:inherit}
-        [hidden]{display:none!important}
-        .bm-wrap{width:min(1220px,calc(100% - 40px));margin:0 auto;padding:126px 0 90px}
-        .bm-hero{position:relative;isolation:isolate;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:48px;min-height:290px;padding:48px 52px;margin-bottom:28px;border:1px solid rgba(255,255,255,.08);border-radius:26px;background:linear-gradient(120deg,rgba(30,4,10,.94),rgba(9,2,4,.88) 64%,rgba(39,4,11,.82));box-shadow:0 30px 80px rgba(0,0,0,.36),inset 0 1px 0 rgba(255,255,255,.04)}
-        .bm-hero::before{content:"";position:absolute;z-index:-2;width:440px;height:440px;right:-110px;top:-225px;border-radius:50%;background:radial-gradient(circle,rgba(230,21,54,.34),rgba(138,13,34,.08) 48%,transparent 70%);filter:blur(4px)}
-        .bm-hero::after{content:"";position:absolute;z-index:-1;inset:0;opacity:.18;background-image:linear-gradient(rgba(255,255,255,.035) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.035) 1px,transparent 1px);background-size:38px 38px;mask-image:linear-gradient(90deg,#000,transparent 75%)}
-        .bm-kicker{display:inline-flex;align-items:center;gap:9px;margin-bottom:16px;color:#ff6680;font-size:.72rem;font-weight:800;text-transform:uppercase;letter-spacing:.15em}
-        .bm-kicker::before{content:"";width:25px;height:1px;background:currentColor;box-shadow:0 0 12px currentColor}
-        .bm-hero h1{max-width:650px;margin:0 0 13px;font-family:Outfit,sans-serif;font-size:clamp(2.35rem,5vw,4.6rem);font-weight:800;line-height:.97;letter-spacing:-.055em}
-        .bm-hero h1 span{background:linear-gradient(135deg,#fff 20%,#ff4564 96%);-webkit-background-clip:text;background-clip:text;color:transparent}
-        .bm-hero p{max-width:600px;color:#b58f98;font-size:.93rem;line-height:1.75}
-        .bm-hero-actions{display:flex;align-items:center;gap:12px;margin-top:25px;flex-wrap:wrap}
-        .bm-primary,.bm-secondary{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:43px;padding:0 17px;border-radius:11px;text-decoration:none;font-size:.76rem;font-weight:800;transition:transform .25s ease,border-color .25s ease,background .25s ease,box-shadow .25s ease}
-        .bm-primary{color:#fff;background:linear-gradient(135deg,#d51232,#790d20);border:1px solid rgba(255,100,125,.35);box-shadow:0 10px 28px rgba(138,13,34,.25)}
-        .bm-primary:hover{color:#fff;transform:translateY(-2px);box-shadow:0 14px 34px rgba(168,14,40,.34)}
-        .bm-secondary{color:#dcbfc6;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.035)}
-        .bm-secondary:hover{color:#fff;border-color:rgba(255,255,255,.2);background:rgba(255,255,255,.065)}
-        .bm-stat{position:relative;width:186px;height:186px;display:flex;flex-direction:column;align-items:center;justify-content:center;border:1px solid rgba(255,83,112,.2);border-radius:50%;background:rgba(15,2,5,.68);box-shadow:inset 0 0 40px rgba(138,13,34,.15),0 0 0 13px rgba(138,13,34,.035),0 22px 55px rgba(0,0,0,.28)}
-        .bm-stat::before{content:"";position:absolute;inset:13px;border:1px dashed rgba(255,100,128,.18);border-radius:50%;animation:bm-spin 30s linear infinite}
-        .bm-stat i{margin-bottom:4px;color:#ff4867;font-size:1rem;filter:drop-shadow(0 0 10px rgba(255,56,92,.55))}
-        .bm-stat strong{font-family:Outfit,sans-serif;font-size:3.2rem;line-height:1;font-weight:800;letter-spacing:-.05em}
-        .bm-stat span{margin-top:4px;color:#9c747e;font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.13em}
-        @keyframes bm-spin{to{transform:rotate(360deg)}}
-        .bm-toolbar{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px;padding:13px;border:1px solid rgba(255,255,255,.07);border-radius:16px;background:rgba(255,255,255,.025);box-shadow:0 12px 34px rgba(0,0,0,.15);backdrop-filter:blur(16px)}
-        .bm-search{position:relative;flex:1;max-width:470px}
-        .bm-search i{position:absolute;left:15px;top:50%;transform:translateY(-50%);color:#795a62;font-size:.75rem;pointer-events:none}
-        .bm-search input{width:100%;height:43px;padding:0 42px 0 39px;border:1px solid transparent;border-radius:11px;outline:none;color:#fcedf0;background:rgba(0,0,0,.24);font-size:.76rem;transition:border-color .2s ease,background .2s ease,box-shadow .2s ease}
-        .bm-search input::placeholder{color:#765861}
-        .bm-search input:focus{border-color:rgba(230,21,54,.42);background:rgba(0,0,0,.36);box-shadow:0 0 0 3px rgba(138,13,34,.1)}
-        .bm-search-clear{position:absolute;right:9px;top:50%;width:27px;height:27px;transform:translateY(-50%);border:0;border-radius:7px;background:transparent;color:#96727b;cursor:pointer}
-        .bm-search-clear:hover{color:#fff;background:rgba(255,255,255,.06)}
-        .bm-tools{display:flex;align-items:center;gap:12px}
-        .bm-results{color:#8f6d76;font-size:.68rem;font-weight:600;white-space:nowrap}
-        .bm-sort{position:relative}
-        .bm-sort i{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:#a67b86;font-size:.66rem;pointer-events:none}
-        .bm-sort select{height:43px;padding:0 34px 0 34px;border:1px solid rgba(255,255,255,.08);border-radius:11px;outline:none;appearance:none;color:#d8bac1;background:#130509;font-size:.7rem;font-weight:700;cursor:pointer}
-        .bm-sort::after{content:"\f078";position:absolute;right:13px;top:50%;transform:translateY(-50%);font-family:"Font Awesome 6 Free";font-size:.55rem;font-weight:900;color:#7f5d66;pointer-events:none}
-        .bm-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
-        .bm-card{position:relative;overflow:hidden;border:1px solid rgba(255,255,255,.075);border-radius:18px;background:linear-gradient(150deg,rgba(25,7,11,.9),rgba(8,2,4,.94));box-shadow:0 15px 35px rgba(0,0,0,.23);animation:bm-rise .48s both;animation-delay:var(--delay,0ms);transition:transform .28s cubic-bezier(.2,.8,.2,1),border-color .28s ease,box-shadow .28s ease}
-        .bm-card:hover{transform:translateY(-6px);border-color:rgba(230,21,54,.29);box-shadow:0 24px 50px rgba(0,0,0,.38),0 0 25px rgba(138,13,34,.08)}
-        @keyframes bm-rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
-        .bm-img{position:relative;aspect-ratio:16/9;background:#11050a;overflow:hidden}
-        .bm-cover{position:absolute;inset:0;display:block}
-        .bm-img::after{content:"";position:absolute;inset:auto 0 0;height:55%;pointer-events:none;background:linear-gradient(transparent,rgba(8,2,4,.82))}
-        .bm-img img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s cubic-bezier(.2,.8,.2,1),filter .3s ease}
-        .bm-card:hover .bm-img img{transform:scale(1.055);filter:saturate(1.08)}
-        .bm-fallback{width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 30%,rgba(230,21,54,.17),transparent 42%),linear-gradient(135deg,#16050a,#080204)}
-        .bm-fallback i{font-size:3rem;color:rgba(255,67,99,.33);filter:drop-shadow(0 0 22px rgba(230,21,54,.25))}
-        .bm-badge{position:absolute;z-index:3;left:13px;top:13px;display:inline-flex;align-items:center;gap:6px;padding:6px 9px;border:1px solid rgba(255,255,255,.1);border-radius:8px;background:rgba(5,1,2,.66);backdrop-filter:blur(12px);color:#f4dce2;font-size:.58rem;font-weight:800;text-transform:uppercase;letter-spacing:.05em;pointer-events:none}
-        .bm-remove{position:absolute;z-index:4;right:13px;top:13px;width:34px;height:34px;border:1px solid rgba(255,255,255,.1);border-radius:9px;background:rgba(5,1,2,.7);backdrop-filter:blur(12px);color:#ff607b;cursor:pointer;transition:background .2s ease,color .2s ease,transform .2s ease,border-color .2s ease}
-        .bm-remove:hover{transform:scale(1.06);color:#fff;background:rgba(172,13,41,.88);border-color:rgba(255,125,147,.4)}
-        .bm-body{padding:17px 18px 18px}
-        .bm-saved-label{display:flex;align-items:center;gap:7px;margin-bottom:8px;color:#a77b86;font-size:.58rem;font-weight:800;text-transform:uppercase;letter-spacing:.09em}
-        .bm-saved-label i{color:#ef2b4d}
-        .bm-title-link{text-decoration:none;color:inherit}
-        .bm-title{min-height:42px;margin:0 0 8px;font-family:Outfit,sans-serif;font-size:1.04rem;font-weight:750;line-height:1.3;display:-webkit-box;-webkit-line-clamp:2;line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;transition:color .2s ease}
-        .bm-title-link:hover .bm-title{color:#ff6680}
-        .bm-desc{min-height:40px;margin:0 0 16px;color:#89666f;font-size:.68rem;line-height:1.55}
-        .bm-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-top:13px;border-top:1px solid rgba(255,255,255,.055);color:#96727b;font-size:.65rem}
-        .bm-creator{min-width:0;display:flex;align-items:center;gap:8px}
-        .bm-avatar{width:26px;height:26px;border-radius:8px;overflow:hidden;background:rgba(var(--cherry-rgb),.14);border:1px solid rgba(var(--cherry-rgb),.18);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-        .bm-avatar img{width:100%;height:100%;object-fit:cover}
-        .bm-avatar i{font-size:.58rem;color:#ff5571}
-        .bm-creator span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-        .bm-downloads{display:inline-flex;align-items:center;gap:5px;flex-shrink:0}
-        .bm-downloads i{color:#e52a49;font-size:.62rem}
-        .bm-state{max-width:760px;margin:38px auto 0;padding:58px 28px;border:1px solid rgba(255,255,255,.07);border-radius:22px;background:linear-gradient(145deg,rgba(25,6,10,.74),rgba(8,2,4,.75));text-align:center;color:#99747d;box-shadow:0 22px 55px rgba(0,0,0,.2)}
-        .bm-state-icon{position:relative;width:74px;height:74px;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;border:1px solid rgba(230,21,54,.22);border-radius:22px;color:#fa3657;background:linear-gradient(145deg,rgba(230,21,54,.13),rgba(138,13,34,.035));font-size:1.55rem;box-shadow:0 14px 35px rgba(138,13,34,.12)}
-        .bm-state h2{margin-bottom:8px;color:#f7e9ec;font-family:Outfit,sans-serif;font-size:1.35rem}
-        .bm-state p{max-width:470px;margin:0 auto 22px;font-size:.78rem;line-height:1.7}
-        .bm-loading-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px}
-        .bm-skeleton{overflow:hidden;border:1px solid rgba(255,255,255,.055);border-radius:18px;background:rgba(255,255,255,.018)}
-        .bm-skeleton-img,.bm-skeleton-line{position:relative;overflow:hidden;background:rgba(255,255,255,.045)}
-        .bm-skeleton-img{aspect-ratio:16/9}
-        .bm-skeleton-body{padding:18px}
-        .bm-skeleton-line{height:10px;margin-bottom:11px;border-radius:10px}
-        .bm-skeleton-line:first-child{width:70%;height:14px}.bm-skeleton-line:last-child{width:46%}
-        .bm-skeleton-img::after,.bm-skeleton-line::after{content:"";position:absolute;inset:0;transform:translateX(-100%);background:linear-gradient(90deg,transparent,rgba(255,255,255,.055),transparent);animation:bm-shimmer 1.4s infinite}
-        @keyframes bm-shimmer{to{transform:translateX(100%)}}
-        .bm-toast{position:fixed;z-index:1000;left:50%;bottom:28px;display:flex;align-items:center;gap:9px;padding:11px 15px;border:1px solid rgba(255,255,255,.1);border-radius:11px;color:#f7e9ec;background:rgba(20,4,8,.94);box-shadow:0 18px 45px rgba(0,0,0,.45);font-size:.72rem;font-weight:700;backdrop-filter:blur(16px);transform:translate(-50%,18px);opacity:0;pointer-events:none;transition:opacity .25s ease,transform .25s ease}
-        .bm-toast.visible{opacity:1;transform:translate(-50%,0)}
-        .bm-toast i{color:#ff4563}
-        @media(max-width:900px){
-            .bm-hero{padding:42px 38px;gap:25px}.bm-stat{width:155px;height:155px}.bm-stat strong{font-size:2.7rem}
-            .bm-grid,.bm-loading-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        @media(max-width:680px){
-            .bm-wrap{width:min(100% - 28px,1220px);padding:105px 0 62px}
-            .bm-hero{display:block;min-height:0;padding:33px 25px;border-radius:20px}.bm-hero h1{font-size:2.55rem}.bm-hero p{font-size:.8rem}.bm-stat{display:none}
-            .bm-toolbar{align-items:stretch;flex-direction:column}.bm-search{max-width:none}.bm-tools{justify-content:space-between}.bm-results{padding-left:3px}
+
+        body {
+            background: var(--dark, #070305);
+            color: var(--light, #ffffff);
+            font-family: 'Poppins', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
         }
-        @media(max-width:540px){
-            .bm-grid,.bm-loading-grid{grid-template-columns:1fr}.bm-hero h1{font-size:2.15rem}.bm-hero-actions{align-items:stretch;flex-direction:column}.bm-primary,.bm-secondary{width:100%}
-            .bm-state{padding:44px 20px}.bm-sort select{max-width:180px}.bm-card{border-radius:16px}
+
+        button, input, select {
+            font: inherit;
         }
-        @media(prefers-reduced-motion:reduce){.bm-stat::before,.bm-skeleton-img::after,.bm-skeleton-line::after{animation:none}.bm-card{animation:none}.bm-card,.bm-img img,.bm-primary,.bm-secondary{transition:none}}
+
+        [hidden] {
+            display: none !important;
+        }
+
+        /* ================== HERO ENTRANCE BLUR ANIMATION ================== */
+        @keyframes heroEntranceBlur {
+            0% {
+                opacity: 0;
+                filter: blur(24px);
+                transform: translateY(28px) scale(0.97);
+            }
+            60% {
+                filter: blur(3px);
+            }
+            100% {
+                opacity: 1;
+                filter: blur(0px);
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .bm-wrap {
+            width: min(1240px, calc(100% - 40px));
+            margin: 0 auto;
+            padding: 130px 0 90px;
+        }
+
+        /* ================== LIQUID GLASS HERO ================== */
+        .bm-hero-modern {
+            position: relative;
+            isolation: isolate;
+            overflow: hidden;
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) auto;
+            align-items: center;
+            gap: 40px;
+            padding: 46px 52px;
+            margin-bottom: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 28px;
+            background: linear-gradient(135deg, rgba(25, 8, 14, 0.85) 0%, rgba(10, 3, 6, 0.92) 100%);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(255, 255, 255, 0.12);
+            animation: heroEntranceBlur 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .bm-hero-modern::before {
+            content: "";
+            position: absolute;
+            z-index: -1;
+            width: 450px;
+            height: 450px;
+            right: -100px;
+            top: -200px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 43, 82, 0.28), rgba(184, 20, 50, 0.08) 50%, transparent 70%);
+            filter: blur(30px);
+            pointer-events: none;
+        }
+
+        .bm-brand-lockup {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            margin-bottom: 18px;
+        }
+        .bm-brand-icon {
+            width: 38px;
+            height: 38px;
+            object-fit: contain;
+            filter: drop-shadow(0 0 12px rgba(255, 43, 82, 0.4));
+        }
+        .bm-brand-text {
+            display: flex;
+            flex-direction: column;
+            line-height: 1;
+        }
+        .bm-brand-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.35rem;
+            font-weight: 800;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+        }
+        .bm-brand-sub {
+            font-size: 0.58rem;
+            font-weight: 800;
+            color: var(--cherry-light, #ff3b60);
+            letter-spacing: 2.5px;
+            margin-top: 2px;
+        }
+
+        .bm-pill-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 5px 14px;
+            border-radius: 999px;
+            background: rgba(255, 43, 82, 0.12);
+            border: 1px solid rgba(255, 43, 82, 0.3);
+            color: #ff758f;
+            font-size: 0.68rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            margin-bottom: 14px;
+        }
+        .bm-pill-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #ff2b52;
+            box-shadow: 0 0 8px #ff2b52;
+            animation: pulseDot 2s infinite;
+        }
+        @keyframes pulseDot {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.85); }
+        }
+
+        .bm-hero-modern h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(2.2rem, 4.5vw, 3.8rem);
+            font-weight: 800;
+            line-height: 1.05;
+            letter-spacing: -1.5px;
+            margin: 0 0 12px;
+            color: #ffffff;
+        }
+        .cherry-text {
+            background: linear-gradient(135deg, #ffffff 20%, #ff3b60 95%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .bm-hero-modern p {
+            max-width: 580px;
+            color: rgba(255, 255, 255, 0.65);
+            font-size: 0.92rem;
+            line-height: 1.65;
+            margin: 0;
+        }
+
+        .bm-hero-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+
+        /* Ellipse Liquid Buttons */
+        .btn-liquid-cherry {
+            background: linear-gradient(135deg, rgba(255, 43, 82, 0.9) 0%, rgba(184, 20, 50, 0.95) 100%);
+            border: 1px solid rgba(255, 117, 143, 0.45);
+            box-shadow: 0 10px 30px rgba(255, 43, 82, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            color: #ffffff !important;
+            font-size: 0.88rem;
+            font-weight: 700;
+            padding: 11px 22px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            transition: transform 0.22s ease, box-shadow 0.22s ease;
+            text-decoration: none;
+        }
+        .btn-liquid-cherry:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 14px 36px rgba(255, 43, 82, 0.55), inset 0 1px 1px rgba(255, 255, 255, 0.5);
+            color: #ffffff !important;
+        }
+        .btn-liquid-cherry .arrow-bubble {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.25);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.68rem;
+        }
+
+        .btn-liquid-glass {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.15), 0 6px 20px rgba(0, 0, 0, 0.2);
+            color: #ffffff !important;
+            font-size: 0.88rem;
+            font-weight: 600;
+            padding: 11px 20px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.22s ease, background 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .btn-liquid-glass:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 43, 82, 0.4);
+            transform: translateY(-2px);
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.25), 0 10px 30px rgba(255, 43, 82, 0.2);
+            color: #ffffff !important;
+        }
+
+        /* Hero Stat Display */
+        .bm-hero-stat-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 28px 36px;
+            border-radius: 24px;
+            background: rgba(16, 6, 10, 0.7);
+            border: 1px solid rgba(255, 43, 82, 0.25);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+            min-width: 200px;
+            text-align: center;
+        }
+        .bm-hero-stat-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(255, 43, 82, 0.25), rgba(184, 20, 50, 0.15));
+            border: 1px solid rgba(255, 43, 82, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--cherry-light, #ff3b60);
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+            box-shadow: 0 0 20px rgba(255, 43, 82, 0.3);
+        }
+        .bm-hero-stat-card strong {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3.2rem;
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: -1px;
+            color: #ffffff;
+        }
+        .bm-hero-stat-card span {
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            margin-top: 6px;
+        }
+
+        /* ================== FILTER & CONTROLS TOOLBAR ================== */
+        .bm-toolbar-wrap {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .bm-type-tabs {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .bm-tab-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 18px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            backdrop-filter: blur(16px);
+            transition: all 0.22s ease;
+        }
+        .bm-tab-btn:hover {
+            color: #ffffff;
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 43, 82, 0.3);
+        }
+        .bm-tab-btn.active {
+            background: linear-gradient(135deg, rgba(255, 43, 82, 0.25), rgba(184, 20, 50, 0.3));
+            border-color: rgba(255, 43, 82, 0.5);
+            color: #ffffff;
+            box-shadow: 0 0 16px rgba(255, 43, 82, 0.25);
+        }
+        .bm-tab-count {
+            padding: 2px 7px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.12);
+            font-size: 0.68rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+        .bm-tab-btn.active .bm-tab-count {
+            background: rgba(255, 43, 82, 0.5);
+        }
+
+        .bm-search-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            padding: 12px 18px;
+            border-radius: 20px;
+            background: rgba(18, 8, 14, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            box-shadow: 0 12px 34px rgba(0, 0, 0, 0.25);
+        }
+        .bm-search-input-wrap {
+            position: relative;
+            flex: 1;
+            max-width: 480px;
+        }
+        .bm-search-input-wrap i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.4);
+            font-size: 0.85rem;
+            pointer-events: none;
+        }
+        .bm-search-input-wrap input {
+            width: 100%;
+            height: 42px;
+            padding: 0 40px 0 38px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(0, 0, 0, 0.35);
+            color: #ffffff;
+            font-size: 0.82rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+        .bm-search-input-wrap input:focus {
+            border-color: rgba(255, 43, 82, 0.5);
+            background: rgba(0, 0, 0, 0.5);
+            box-shadow: 0 0 0 3px rgba(255, 43, 82, 0.15);
+        }
+        .bm-search-input-wrap input::placeholder {
+            color: rgba(255, 255, 255, 0.35);
+        }
+        .bm-clear-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.6);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .bm-clear-btn:hover {
+            background: rgba(255, 43, 82, 0.3);
+            color: #ffffff;
+        }
+
+        .bm-toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .bm-results-count {
+            color: rgba(255, 255, 255, 0.55);
+            font-size: 0.75rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .bm-sort-wrap {
+            position: relative;
+        }
+        .bm-sort-wrap select {
+            height: 42px;
+            padding: 0 36px 0 16px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            background: rgba(0, 0, 0, 0.4);
+            color: rgba(255, 255, 255, 0.85);
+            font-size: 0.78rem;
+            font-weight: 600;
+            outline: none;
+            appearance: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .bm-sort-wrap select:hover, .bm-sort-wrap select:focus {
+            border-color: rgba(255, 43, 82, 0.4);
+        }
+        .bm-sort-wrap::after {
+            content: "\f078";
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-family: "Font Awesome 6 Free";
+            font-size: 0.6rem;
+            font-weight: 900;
+            color: rgba(255, 255, 255, 0.4);
+            pointer-events: none;
+        }
+
+        /* ================== LIQUID GLASS CARDS GRID ================== */
+        .bm-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 22px;
+        }
+        @media (max-width: 980px) {
+            .bm-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 600px) {
+            .bm-grid { grid-template-columns: 1fr; }
+        }
+
+        .bm-card {
+            position: relative;
+            overflow: hidden;
+            border-radius: 22px;
+            background: rgba(18, 8, 14, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.35);
+            display: flex;
+            flex-direction: column;
+            transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.28s ease, box-shadow 0.28s ease;
+            animation: heroEntranceBlur 0.6s both;
+            animation-delay: var(--delay, 0ms);
+        }
+        .bm-card:hover {
+            transform: translateY(-6px);
+            border-color: rgba(255, 43, 82, 0.4);
+            box-shadow: 0 24px 55px rgba(0, 0, 0, 0.5), 0 0 28px rgba(255, 43, 82, 0.15);
+        }
+        .bm-card.is-removing {
+            transform: scale(0.92);
+            opacity: 0;
+            transition: transform 0.3s ease, opacity 0.3s ease;
+        }
+
+        .bm-card-media {
+            position: relative;
+            aspect-ratio: 16/9;
+            background: #11050a;
+            overflow: hidden;
+        }
+        .bm-card-cover {
+            position: absolute;
+            inset: 0;
+            display: block;
+        }
+        .bm-card-media img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), filter 0.3s ease;
+        }
+        .bm-card:hover .bm-card-media img {
+            transform: scale(1.06);
+            filter: saturate(1.1);
+        }
+        .bm-card-media::after {
+            content: "";
+            position: absolute;
+            inset: auto 0 0;
+            height: 60%;
+            pointer-events: none;
+            background: linear-gradient(transparent, rgba(10, 3, 6, 0.88));
+        }
+        .bm-card-fallback {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at 50% 30%, rgba(255, 43, 82, 0.15), transparent 50%), linear-gradient(135deg, #18060f, #090205);
+        }
+        .bm-card-fallback i {
+            font-size: 2.8rem;
+            color: rgba(255, 43, 82, 0.35);
+        }
+
+        /* Type & Category Badges */
+        .bm-badge-group {
+            position: absolute;
+            z-index: 3;
+            left: 14px;
+            top: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+        .bm-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 10px;
+            border-radius: 999px;
+            font-size: 0.65rem;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(8, 2, 5, 0.7);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        .bm-badge-type-preset {
+            border-color: rgba(255, 43, 82, 0.45);
+            background: linear-gradient(135deg, rgba(255, 43, 82, 0.35), rgba(184, 20, 50, 0.4));
+            color: #ffd1dc;
+        }
+        .bm-badge-type-plugin {
+            border-color: rgba(168, 85, 247, 0.45);
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.35), rgba(126, 34, 206, 0.4));
+            color: #f3e8ff;
+        }
+        .bm-badge-type-scenepack {
+            border-color: rgba(6, 182, 212, 0.45);
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.35), rgba(14, 116, 144, 0.4));
+            color: #cffafe;
+        }
+        .bm-badge-type-audio {
+            border-color: rgba(34, 197, 94, 0.45);
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.35), rgba(21, 128, 61, 0.4));
+            color: #dcfce7;
+        }
+
+        /* Remove Bookmark Button */
+        .bm-card-remove {
+            position: absolute;
+            z-index: 4;
+            right: 14px;
+            top: 14px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 43, 82, 0.3);
+            background: rgba(15, 3, 7, 0.8);
+            backdrop-filter: blur(14px);
+            color: #ff4d6d;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            transition: all 0.22s ease;
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+        }
+        .bm-card-remove:hover {
+            transform: scale(1.1);
+            background: rgba(225, 29, 72, 0.95);
+            border-color: #ff758f;
+            color: #ffffff;
+            box-shadow: 0 0 20px rgba(255, 43, 82, 0.5);
+        }
+
+        .bm-card-body {
+            padding: 18px 20px;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+        .bm-card-meta-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.72rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+        .bm-card-title-link {
+            text-decoration: none;
+            color: inherit;
+        }
+        .bm-card-title {
+            margin: 0 0 8px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.12rem;
+            font-weight: 700;
+            line-height: 1.35;
+            color: #ffffff;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            transition: color 0.2s ease;
+        }
+        .bm-card-title-link:hover .bm-card-title {
+            color: var(--cherry-light, #ff3b60);
+        }
+        .bm-card-desc {
+            font-size: 0.76rem;
+            color: rgba(255, 255, 255, 0.55);
+            line-height: 1.55;
+            margin-bottom: 18px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            flex: 1;
+        }
+        .bm-card-foot {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding-top: 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.75rem;
+        }
+        .bm-card-creator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            min-width: 0;
+        }
+        .bm-card-avatar {
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: rgba(255, 43, 82, 0.15);
+            border: 1px solid rgba(255, 43, 82, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+        .bm-card-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .bm-card-avatar i {
+            font-size: 0.65rem;
+            color: #ff3b60;
+        }
+        .bm-card-creator span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            font-weight: 600;
+        }
+        .bm-card-downloads {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.65);
+        }
+        .bm-card-downloads i {
+            color: #ff3b60;
+        }
+
+        /* ================== EMPTY & NO RESULTS STATE ================== */
+        .bm-state-card {
+            max-width: 720px;
+            margin: 40px auto 0;
+            padding: 56px 32px;
+            border-radius: 26px;
+            background: rgba(18, 8, 14, 0.55);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(24px);
+            text-align: center;
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.35);
+            animation: heroEntranceBlur 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .bm-state-icon-wrap {
+            width: 76px;
+            height: 76px;
+            border-radius: 50%;
+            margin: 0 auto 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(255, 43, 82, 0.2), rgba(184, 20, 50, 0.08));
+            border: 1px solid rgba(255, 43, 82, 0.35);
+            color: #ff3b60;
+            font-size: 2rem;
+            box-shadow: 0 0 30px rgba(255, 43, 82, 0.25);
+        }
+        .bm-state-card h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.65rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 10px;
+        }
+        .bm-state-card p {
+            font-size: 0.88rem;
+            color: rgba(255, 255, 255, 0.6);
+            line-height: 1.65;
+            max-width: 480px;
+            margin: 0 auto 26px;
+        }
+        .bm-state-actions {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        /* Loading Skeletons */
+        .bm-loading-grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 22px;
+        }
+        @media (max-width: 980px) {
+            .bm-loading-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 600px) {
+            .bm-loading-grid { grid-template-columns: 1fr; }
+        }
+        .bm-skeleton {
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 22px;
+            background: rgba(255, 255, 255, 0.02);
+        }
+        .bm-skeleton-img, .bm-skeleton-line {
+            position: relative;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .bm-skeleton-img { aspect-ratio: 16/9; }
+        .bm-skeleton-body { padding: 18px; }
+        .bm-skeleton-line { height: 12px; margin-bottom: 12px; border-radius: 10px; }
+        .bm-skeleton-line:first-child { width: 70%; height: 16px; }
+        .bm-skeleton-line:last-child { width: 45%; margin-bottom: 0; }
+        .bm-skeleton-img::after, .bm-skeleton-line::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            transform: translateX(-100%);
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.06), transparent);
+            animation: bmShimmer 1.4s infinite;
+        }
+        @keyframes bmShimmer {
+            to { transform: translateX(100%); }
+        }
+
+        /* ================== LIQUID GLASS TOAST ================== */
+        .bm-toast {
+            position: fixed;
+            z-index: 10000;
+            left: 50%;
+            bottom: 32px;
+            transform: translate(-50%, 20px);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 22px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 43, 82, 0.35);
+            background: rgba(18, 5, 10, 0.95);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            color: #ffffff;
+            font-size: 0.82rem;
+            font-weight: 700;
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 25px rgba(255, 43, 82, 0.25);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+        .bm-toast.visible {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+        .bm-toast i {
+            color: #ff3b60;
+        }
+
+        /* Responsive Breakpoints */
+        @media (max-width: 900px) {
+            .bm-hero-modern {
+                padding: 36px 30px;
+                gap: 28px;
+            }
+            .bm-hero-stat-card {
+                padding: 22px 26px;
+                min-width: 160px;
+            }
+            .bm-hero-stat-card strong {
+                font-size: 2.6rem;
+            }
+        }
+        @media (max-width: 720px) {
+            .bm-wrap {
+                width: min(100% - 30px, 1240px);
+                padding: 110px 0 60px;
+            }
+            .bm-hero-modern {
+                grid-template-columns: 1fr;
+                padding: 30px 24px;
+            }
+            .bm-hero-stat-card {
+                width: 100%;
+            }
+            .bm-search-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .bm-search-input-wrap {
+                max-width: none;
+            }
+            .bm-toolbar-right {
+                justify-content: space-between;
+            }
+        }
+        @media (max-width: 480px) {
+            .bm-hero-modern h1 {
+                font-size: 2rem;
+            }
+            .bm-hero-actions {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .btn-liquid-cherry, .btn-liquid-glass {
+                width: 100%;
+                justify-content: center;
+            }
+        }
     </style>
 </head>
 <body>
     <div class="bg-aura"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
-    <nav class="navbar"><div class="container">
-        <a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a>
-        <ul class="nav-links" id="navLinks">
-            <li><a href="/">Home</a></li>
-            <li><a href="/presets">Resources</a></li>
-            <li><a href="/plugins">Plugins</a></li>
-            <li><a href="/more">More</a></li>
-            <li><a href="/#contact">Contact</a></li>
-        </ul>
-        <div class="nav-actions">
-            <div id="authBtn"></div>
-            <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
-        </div>
-    </div></nav>
 
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo">
+                <img src="/assets/content.png" alt="ZYREX" class="logo-img">
+                <span class="logo-text">yrex</span>
+            </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="/">Home</a></li>
+                <li><a href="/presets">Presets</a></li>
+                <li><a href="/plugins">Plugins</a></li>
+                <li><a href="/more">More</a></li>
+                <li><a href="/bookmarks" class="active">Bookmarks</a></li>
+            </ul>
+            <div class="nav-actions">
+                <div id="authBtn"></div>
+                <button class="hamburger" id="hamburger" aria-label="Menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN CONTENT -->
     <main class="bm-wrap">
-        <section class="bm-hero" aria-labelledby="bookmarksTitle">
+        <!-- HERO SECTION -->
+        <section class="bm-hero-modern" aria-labelledby="bookmarksTitle">
             <div class="bm-hero-copy">
-                <span class="bm-kicker">Bookmarks</span>
-                <h1 id="bookmarksTitle">Saved <span>Presets</span></h1>
-                <p>Access all your bookmarked presets and resources in one place.</p>
+                <div class="bm-brand-lockup">
+                    <img src="/assets/content.png" alt="Zyrex Logo" class="bm-brand-icon">
+                    <div class="bm-brand-text">
+                        <span class="bm-brand-title">Zyrex<sup>™</sup></span>
+                        <span class="bm-brand-sub">EDITING</span>
+                    </div>
+                </div>
+
+                <div class="bm-pill-badge">
+                    <span class="bm-pill-dot"></span>
+                    <span>Personal Saved Vault</span>
+                </div>
+
+                <h1 id="bookmarksTitle">
+                    Your saved<br>
+                    <span class="cherry-text">bookmarks.</span>
+                </h1>
+
+                <p>
+                    Direct access to all your bookmarked presets, plugins, scenepacks, and audio assets saved across Zyrex.
+                </p>
+
                 <div class="bm-hero-actions">
-                    <a class="bm-primary" href="/presets"><i class="fas fa-compass"></i> Discover Resources</a>
-                    <a class="bm-secondary" href="/"><i class="fas fa-arrow-left"></i> Back to Home</a>
+                    <a href="/presets" class="btn-liquid-cherry">
+                        <i class="fas fa-sliders"></i>
+                        <span>Browse Presets</span>
+                        <span class="arrow-bubble"><i class="fas fa-arrow-right"></i></span>
+                    </a>
+                    <a href="/plugins" class="btn-liquid-glass">
+                        <i class="fas fa-cubes"></i>
+                        <span>Browse Plugins</span>
+                    </a>
+                    <a href="/more" class="btn-liquid-glass">
+                        <i class="fas fa-compass"></i>
+                        <span>Browse More</span>
+                    </a>
                 </div>
             </div>
-            <div class="bm-stat" aria-label="Saved preset count">
-                <i class="fas fa-bookmark"></i>
+
+            <!-- Total Saved Stat Box -->
+            <div class="bm-hero-stat-card">
+                <div class="bm-hero-stat-icon">
+                    <i class="fas fa-bookmark"></i>
+                </div>
                 <strong id="bookmarkCount">0</strong>
-                <span id="bookmarkCountLabel">Saved presets</span>
+                <span id="bookmarkCountLabel">Saved Assets</span>
             </div>
         </section>
 
-        <section aria-label="Saved presets">
-            <div class="bm-toolbar" id="bookmarkToolbar" hidden>
-                <label class="bm-search" for="bookmarkSearch">
-                    <i class="fas fa-magnifying-glass"></i>
-                    <input id="bookmarkSearch" type="search" placeholder="Search saved presets..." autocomplete="off">
-                    <button class="bm-search-clear" id="clearSearch" type="button" aria-label="Clear search" hidden><i class="fas fa-xmark"></i></button>
-                </label>
-                <div class="bm-tools">
-                    <span class="bm-results" id="bookmarkResults" aria-live="polite"></span>
-                    <label class="bm-sort" aria-label="Sort saved presets">
-                        <i class="fas fa-arrow-down-wide-short"></i>
-                        <select id="bookmarkSort">
-                            <option value="saved">Saved order</option>
-                            <option value="name-asc">Name: A to Z</option>
-                            <option value="name-desc">Name: Z to A</option>
-                            <option value="downloads">Most downloaded</option>
-                        </select>
-                    </label>
+        <!-- BOOKMARKS CONTROLS & CONTENT -->
+        <section aria-label="Saved bookmarks list">
+            <!-- Toolbar & Filter Tabs -->
+            <div class="bm-toolbar-wrap" id="bookmarkToolbar" hidden>
+                <!-- Type Filter Pills -->
+                <div class="bm-type-tabs">
+                    <button type="button" class="bm-tab-btn active" data-tab="all" onclick="switchFilterTab('all', this)">
+                        <i class="fas fa-border-all"></i> All <span class="bm-tab-count" id="tabCountAll">0</span>
+                    </button>
+                    <button type="button" class="bm-tab-btn" data-tab="preset" onclick="switchFilterTab('preset', this)">
+                        <i class="fas fa-sliders"></i> Presets <span class="bm-tab-count" id="tabCountPreset">0</span>
+                    </button>
+                    <button type="button" class="bm-tab-btn" data-tab="plugin" onclick="switchFilterTab('plugin', this)">
+                        <i class="fas fa-cubes"></i> Plugins <span class="bm-tab-count" id="tabCountPlugin">0</span>
+                    </button>
+                    <button type="button" class="bm-tab-btn" data-tab="scenepack" onclick="switchFilterTab('scenepack', this)">
+                        <i class="fas fa-clapperboard"></i> Scenepacks <span class="bm-tab-count" id="tabCountScenepack">0</span>
+                    </button>
+                    <button type="button" class="bm-tab-btn" data-tab="audio" onclick="switchFilterTab('audio', this)">
+                        <i class="fas fa-music"></i> Audio <span class="bm-tab-count" id="tabCountAudio">0</span>
+                    </button>
+                </div>
+
+                <!-- Search & Sort Bar -->
+                <div class="bm-search-bar">
+                    <div class="bm-search-input-wrap">
+                        <i class="fas fa-magnifying-glass"></i>
+                        <input id="bookmarkSearch" type="search" placeholder="Search saved presets, plugins, scenepacks..." autocomplete="off">
+                        <button class="bm-clear-btn" id="clearSearch" type="button" aria-label="Clear search" hidden><i class="fas fa-xmark"></i></button>
+                    </div>
+
+                    <div class="bm-toolbar-right">
+                        <span class="bm-results-count" id="bookmarkResults"></span>
+                        <div class="bm-sort-wrap">
+                            <select id="bookmarkSort" aria-label="Sort saved items">
+                                <option value="saved">Saved order</option>
+                                <option value="name-asc">Name: A to Z</option>
+                                <option value="name-desc">Name: Z to A</option>
+                                <option value="downloads">Most downloaded</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <div class="bm-loading-grid" id="bookmarkLoading" aria-label="Loading saved presets">
+            <!-- Loading Skeleton Grid -->
+            <div class="bm-loading-grid" id="bookmarkLoading" aria-label="Loading saved items">
                 <div class="bm-skeleton"><div class="bm-skeleton-img"></div><div class="bm-skeleton-body"><div class="bm-skeleton-line"></div><div class="bm-skeleton-line"></div></div></div>
                 <div class="bm-skeleton"><div class="bm-skeleton-img"></div><div class="bm-skeleton-body"><div class="bm-skeleton-line"></div><div class="bm-skeleton-line"></div></div></div>
                 <div class="bm-skeleton"><div class="bm-skeleton-img"></div><div class="bm-skeleton-body"><div class="bm-skeleton-line"></div><div class="bm-skeleton-line"></div></div></div>
             </div>
+
+            <!-- Cards Grid -->
             <div class="bm-grid" id="bookmarksGrid" hidden></div>
-            <div class="bm-state" id="bookmarksEmpty" hidden>
-                <div class="bm-state-icon"><i class="far fa-bookmark"></i></div>
-                <h2>Your bookmarks list is empty</h2>
-                <p>Save presets or resources to access them quickly.</p>
-                <a class="bm-primary" href="/presets"><i class="fas fa-compass"></i> Explore Resources</a>
+
+            <!-- Empty State -->
+            <div class="bm-state-card" id="bookmarksEmpty" hidden>
+                <div class="bm-state-icon-wrap"><i class="far fa-bookmark"></i></div>
+                <h2>Your bookmarks vault is empty</h2>
+                <p>You haven't saved any presets, plugins, scenepacks, or audio tracks yet. Click the bookmark icon on any asset page to keep it in your vault.</p>
+                <div class="bm-state-actions">
+                    <a class="btn-liquid-cherry" href="/presets"><i class="fas fa-sliders"></i> Explore Presets</a>
+                    <a class="btn-liquid-glass" href="/plugins"><i class="fas fa-cubes"></i> Explore Plugins</a>
+                    <a class="btn-liquid-glass" href="/more"><i class="fas fa-compass"></i> Explore More</a>
+                </div>
             </div>
-            <div class="bm-state" id="bookmarksNoResults" hidden>
-                <div class="bm-state-icon"><i class="fas fa-magnifying-glass"></i></div>
-                <h2>No matching presets</h2>
-                <p>Try a different title, creator, or category.</p>
-                <button class="bm-secondary" id="resetSearch" type="button"><i class="fas fa-rotate-left"></i> Reset Search</button>
+
+            <!-- No Search Results State -->
+            <div class="bm-state-card" id="bookmarksNoResults" hidden>
+                <div class="bm-state-icon-wrap"><i class="fas fa-magnifying-glass"></i></div>
+                <h2>No matching bookmarks found</h2>
+                <p>We couldn't find any saved items matching your active search query or filter selection.</p>
+                <button class="btn-liquid-cherry" id="resetSearch" type="button"><i class="fas fa-rotate-left"></i> Reset Filters</button>
             </div>
         </section>
     </main>
-    <div class="bm-toast" id="bookmarkToast" role="status" aria-live="polite"><i class="fas fa-circle-check"></i> Bookmark removed</div>
 
+    <!-- Liquid Glass Toast -->
+    <div class="bm-toast" id="bookmarkToast" role="status" aria-live="polite">
+        <i class="fas fa-circle-check"></i>
+        <span id="bookmarkToastText">Bookmark removed</span>
+    </div>
+
+    <!-- FOOTER -->
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
-                                <div class="footer-brand">
+                <div class="footer-brand">
                     <a href="/" class="hero-brand-lockup footer-brand-lockup">
                         <img src="/assets/content.png" alt="Zyrex Logo" class="hero-brand-icon">
                         <div class="hero-brand-text-col">
@@ -199,13 +1062,13 @@
                             <span class="hero-brand-sub">EDITING</span>
                         </div>
                     </a>
-                    <p>Premium editing community &amp; resources.</p>
+                    <p>Free video editing presets, effects, and plugins.</p>
                 </div>
                 <div class="footer-links">
                     <h4>Quick Links</h4>
                     <ul>
                         <li><a href="/">Home</a></li>
-                        <li><a href="/presets">Resources</a></li>
+                        <li><a href="/presets">Presets</a></li>
                         <li><a href="/plugins">Plugins</a></li>
                         <li><a href="/more">More</a></li>
                     </ul>
@@ -220,10 +1083,14 @@
                 </div>
                 <div class="footer-links">
                     <h4>Community</h4>
-                    <ul><li><a href="https://discord.gg/fAydSzpafA">Discord</a></li></ul>
+                    <ul>
+                        <li><a href="https://discord.gg/fAydSzpafA" target="_blank">Discord</a></li>
+                    </ul>
                 </div>
             </div>
-            <div class="footer-bottom"><p>&copy; 2026 Zyrex Editing. All rights reserved.</p></div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Zyrex Editing. All rights reserved.</p>
+            </div>
         </div>
     </footer>
 
@@ -233,26 +1100,40 @@
     <script>
     (function(){
         var PRODUCTS_CACHE_KEY = 'zyrex_products_cache';
+        var activeTab = 'all';
+        var allBookmarks = [];
+        var toastTimer = null;
+
         var CATEGORY_LABELS = {
             'after-effects': 'After Effects',
             'premiere-pro': 'Premiere Pro',
             'photoshop': 'Photoshop',
             'video-star': 'Video Star',
             'topaz-labs': 'Topaz Labs',
-            'others': 'Others',
-            'other': 'Others'
+            'capcut': 'CapCut',
+            'alight-motion': 'Alight Motion',
+            'sfx': 'Sound FX',
+            'music': 'Music',
+            'transitions': 'Transitions',
+            'color-grades': 'Color Grades',
+            'velocity': 'Velocity',
+            'others': 'General',
+            'other': 'General'
         };
+
         var CATEGORY_ICONS = {
             'after-effects': 'fa-film',
             'premiere-pro': 'fa-video',
             'photoshop': 'fa-image',
             'video-star': 'fa-star',
             'topaz-labs': 'fa-gem',
+            'capcut': 'fa-scissors',
+            'alight-motion': 'fa-wand-magic-sparkles',
+            'sfx': 'fa-volume-high',
+            'music': 'fa-music',
             'others': 'fa-folder',
             'other': 'fa-folder'
         };
-        var allBookmarks = [];
-        var toastTimer;
 
         function escapeHtml(value) {
             return String(value || '').replace(/[&<>"']/g, function(char) {
@@ -298,7 +1179,7 @@
             var merged = [];
             var seen = {};
             (products.concat(window.presetsData || [])).forEach(function(item) {
-                if (!item || (item.type && item.type !== 'preset')) return;
+                if (!item) return;
                 var id = String(item.id || '');
                 if (!id || seen[id]) return;
                 seen[id] = true;
@@ -307,9 +1188,59 @@
             return merged;
         }
 
-        function updateCount(count) {
-            document.getElementById('bookmarkCount').textContent = count;
-            document.getElementById('bookmarkCountLabel').textContent = count === 1 ? 'Saved preset' : 'Saved presets';
+        function getProductUrl(item) {
+            var id = encodeURIComponent(String(item.id || ''));
+            var type = (item.type || '').toLowerCase();
+            if (type === 'scenepack') return '/product-scenepack?id=' + id;
+            if (type === 'audio') return '/product-audio?id=' + id;
+            if (type === 'plugin' || type === 'software') return '/product?id=' + id;
+            return '/preset?id=' + id;
+        }
+
+        function getTypeInfo(item) {
+            var t = (item.type || 'preset').toLowerCase();
+            if (t === 'scenepack') {
+                return { label: 'Scenepack', icon: 'fa-clapperboard', cls: 'bm-badge-type-scenepack' };
+            }
+            if (t === 'audio') {
+                return { label: 'Audio', icon: 'fa-music', cls: 'bm-badge-type-audio' };
+            }
+            if (t === 'plugin' || t === 'software') {
+                return { label: 'Plugin', icon: 'fa-cubes', cls: 'bm-badge-type-plugin' };
+            }
+            return { label: 'Preset', icon: 'fa-sliders', cls: 'bm-badge-type-preset' };
+        }
+
+        function updateCounts() {
+            var total = allBookmarks.length;
+            var presetCount = 0;
+            var pluginCount = 0;
+            var scenepackCount = 0;
+            var audioCount = 0;
+
+            allBookmarks.forEach(function(item) {
+                var t = (item.type || 'preset').toLowerCase();
+                if (t === 'preset') presetCount++;
+                else if (t === 'plugin' || t === 'software') pluginCount++;
+                else if (t === 'scenepack') scenepackCount++;
+                else if (t === 'audio') audioCount++;
+            });
+
+            var countEl = document.getElementById('bookmarkCount');
+            if (countEl) countEl.textContent = total;
+            var labelEl = document.getElementById('bookmarkCountLabel');
+            if (labelEl) labelEl.textContent = total === 1 ? 'Saved Asset' : 'Saved Assets';
+
+            var tAll = document.getElementById('tabCountAll');
+            if (tAll) tAll.textContent = total;
+            var tPre = document.getElementById('tabCountPreset');
+            if (tPre) tPre.textContent = presetCount;
+            var tPlu = document.getElementById('tabCountPlugin');
+            if (tPlu) tPlu.textContent = pluginCount;
+            var tScn = document.getElementById('tabCountScenepack');
+            if (tScn) tScn.textContent = scenepackCount;
+            var tAud = document.getElementById('tabCountAudio');
+            if (tAud) tAud.textContent = audioCount;
         }
 
         function renderEmpty() {
@@ -318,7 +1249,7 @@
             document.getElementById('bookmarkToolbar').hidden = true;
             document.getElementById('bookmarksNoResults').hidden = true;
             document.getElementById('bookmarksEmpty').hidden = false;
-            updateCount(0);
+            updateCounts();
         }
 
         function renderCards(items) {
@@ -328,43 +1259,60 @@
             document.getElementById('bookmarksNoResults').hidden = true;
             document.getElementById('bookmarkToolbar').hidden = false;
             grid.hidden = false;
-            document.getElementById('bookmarkResults').textContent = items.length === allBookmarks.length
-                ? items.length + (items.length === 1 ? ' saved item' : ' saved items')
+
+            var resultsText = items.length === allBookmarks.length
+                ? items.length + (items.length === 1 ? ' saved asset' : ' saved assets')
                 : 'Showing ' + items.length + ' of ' + allBookmarks.length;
+            document.getElementById('bookmarkResults').textContent = resultsText;
+
             grid.innerHTML = items.map(function(item, index) {
+                var typeInfo = getTypeInfo(item);
                 var category = item.category || 'others';
                 var categoryLabel = CATEGORY_LABELS[category] || category;
-                var icon = CATEGORY_ICONS[category] || 'fa-sliders';
+                var catIcon = CATEGORY_ICONS[category] || 'fa-tag';
                 var avatar = item.creator_avatar || '';
                 var creator = item.creator_nickname || item.author_name || 'Zyrex';
                 var downloads = item.downloads || 0;
                 var itemName = item.name || 'Untitled Resource';
                 var itemId = String(item.id || '');
-                var itemType = (item.type || '').toLowerCase();
-                var presetUrl = '/preset?id=' + encodeURIComponent(itemId);
-                if (itemType === 'scenepack') presetUrl = '/product-scenepack?id=' + encodeURIComponent(itemId);
-                else if (itemType === 'audio') presetUrl = '/product-audio?id=' + encodeURIComponent(itemId);
-                else if (itemType === 'plugin' || itemType === 'software') presetUrl = '/product?id=' + encodeURIComponent(itemId);
-                var thumb = item.thumbnail
-                    ? '<img src="' + escapeHtml(item.thumbnail) + '" alt="" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.style.display=&quot;flex&quot;"><div class="bm-fallback" style="display:none"><i class="fas ' + icon + '"></i></div>'
-                    : '<div class="bm-fallback"><i class="fas ' + icon + '"></i></div>';
+                var productUrl = getProductUrl(item);
+
+                var thumbHtml = item.thumbnail
+                    ? '<img src="' + escapeHtml(item.thumbnail) + '" alt="' + escapeHtml(itemName) + '" loading="lazy" onerror="this.hidden=true;this.nextElementSibling.style.display=\'flex\'"><div class="bm-card-fallback" style="display:none"><i class="fas ' + typeInfo.icon + '"></i></div>'
+                    : '<div class="bm-card-fallback"><i class="fas ' + typeInfo.icon + '"></i></div>';
+
                 var avatarHtml = avatar
-                    ? '<img src="' + escapeHtml(avatar) + '" alt="" onerror="this.hidden=true;this.nextElementSibling.style.display=&quot;block&quot;"><i class="fas fa-user" style="display:none"></i>'
+                    ? '<img src="' + escapeHtml(avatar) + '" alt="" onerror="this.hidden=true;this.nextElementSibling.style.display=\'block\'"><i class="fas fa-user" style="display:none"></i>'
                     : '<i class="fas fa-user"></i>';
 
-                return '<article class="bm-card" style="--delay:' + Math.min(index * 55, 330) + 'ms">' +
-                    '<div class="bm-img">' +
-                        '<a class="bm-cover" href="' + presetUrl + '" aria-label="Open ' + escapeHtml(itemName) + '">' + thumb + '</a>' +
-                        '<span class="bm-badge"><i class="fas ' + icon + '"></i> ' + escapeHtml(categoryLabel) + '</span>' +
-                        '<button class="bm-remove" type="button" data-bookmark-id="' + escapeHtml(itemId) + '" aria-label="Remove ' + escapeHtml(itemName) + ' from bookmarks" title="Remove bookmark"><i class="fas fa-bookmark"></i></button>' +
+                var desc = item.description || item.desc || 'Click to view details, files, and high-speed cloud download options in your vault.';
+
+                return '<article class="bm-card" id="bmCard-' + escapeHtml(itemId) + '" style="--delay:' + Math.min(index * 45, 300) + 'ms">' +
+                    '<div class="bm-card-media">' +
+                        '<a class="bm-card-cover" href="' + productUrl + '" aria-label="Open ' + escapeHtml(itemName) + '">' + thumbHtml + '</a>' +
+                        '<div class="bm-badge-group">' +
+                            '<span class="bm-badge ' + typeInfo.cls + '"><i class="fas ' + typeInfo.icon + '"></i> ' + escapeHtml(typeInfo.label) + '</span>' +
+                            '<span class="bm-badge"><i class="fas ' + catIcon + '"></i> ' + escapeHtml(categoryLabel) + '</span>' +
+                        '</div>' +
+                        '<button class="bm-card-remove" type="button" data-bookmark-id="' + escapeHtml(itemId) + '" aria-label="Remove ' + escapeHtml(itemName) + ' from bookmarks" title="Remove from bookmarks">' +
+                            '<i class="fas fa-bookmark"></i>' +
+                        '</button>' +
                     '</div>' +
-                    '<div class="bm-body">' +
-                        '<span class="bm-saved-label"><i class="fas fa-bookmark"></i> Saved to your library</span>' +
-                        '<a class="bm-title-link" href="' + presetUrl + '"><h3 class="bm-title" title="' + escapeHtml(itemName) + '">' + escapeHtml(itemName) + '</h3></a>' +
-                        '<p class="bm-desc">Open this preset to view its files, details, and download options.</p>' +
-                        '<div class="bm-foot">' +
-                            '<div class="bm-creator"><span class="bm-avatar">' + avatarHtml + '</span><span>' + escapeHtml(creator) + '</span></div>' +
-                            '<span class="bm-downloads" title="Downloads"><i class="fas fa-arrow-down"></i> ' + escapeHtml(downloads) + '</span>' +
+                    '<div class="bm-card-body">' +
+                        '<div class="bm-card-meta-top">' +
+                            '<span><i class="fas fa-shield-halved" style="color:var(--cherry-light)"></i> Verified Asset</span>' +
+                            '<span>100% Free</span>' +
+                        '</div>' +
+                        '<a class="bm-card-title-link" href="' + productUrl + '">' +
+                            '<h3 class="bm-card-title" title="' + escapeHtml(itemName) + '">' + escapeHtml(itemName) + '</h3>' +
+                        '</a>' +
+                        '<p class="bm-card-desc">' + escapeHtml(desc) + '</p>' +
+                        '<div class="bm-card-foot">' +
+                            '<div class="bm-card-creator">' +
+                                '<span class="bm-card-avatar">' + avatarHtml + '</span>' +
+                                '<span>' + escapeHtml(creator) + '</span>' +
+                            '</div>' +
+                            '<span class="bm-card-downloads" title="Total Downloads"><i class="fas fa-arrow-down"></i> ' + Number(downloads).toLocaleString() + '</span>' +
                         '</div>' +
                     '</div>' +
                 '</article>';
@@ -378,26 +1326,54 @@
             }
 
             var searchInput = document.getElementById('bookmarkSearch');
-            var query = searchInput.value.trim().toLocaleLowerCase('en');
-            var sort = document.getElementById('bookmarkSort').value;
+            var query = (searchInput ? searchInput.value : '').trim().toLowerCase();
+            var sort = document.getElementById('bookmarkSort') ? document.getElementById('bookmarkSort').value : 'saved';
+
             var items = allBookmarks.filter(function(item) {
-                var category = CATEGORY_LABELS[item.category] || item.category || 'Other';
-                var creator = item.creator_nickname || item.author_name || 'Zyrex';
-                return !query || [item.name, category, creator].some(function(value) {
-                    return String(value || '').toLocaleLowerCase('en').indexOf(query) !== -1;
-                });
+                var t = (item.type || 'preset').toLowerCase();
+                // Tab filter
+                if (activeTab !== 'all') {
+                    if (activeTab === 'plugin') {
+                        if (t !== 'plugin' && t !== 'software') return false;
+                    } else if (t !== activeTab) {
+                        return false;
+                    }
+                }
+
+                // Query search
+                if (query) {
+                    var cat = CATEGORY_LABELS[item.category] || item.category || '';
+                    var creator = item.creator_nickname || item.author_name || '';
+                    var tags = Array.isArray(item.tags) ? item.tags.join(' ') : (item.tags || '');
+                    var match = (item.name || '').toLowerCase().indexOf(query) !== -1 ||
+                                cat.toLowerCase().indexOf(query) !== -1 ||
+                                creator.toLowerCase().indexOf(query) !== -1 ||
+                                tags.toLowerCase().indexOf(query) !== -1 ||
+                                t.toLowerCase().indexOf(query) !== -1;
+                    if (!match) return false;
+                }
+
+                return true;
             });
 
-            if (sort === 'name-asc' || sort === 'name-desc') {
+            // Sorting
+            if (sort === 'name-asc') {
                 items.sort(function(a, b) {
-                    var result = String(a.name || '').localeCompare(String(b.name || ''), 'en', { sensitivity: 'base' });
-                    return sort === 'name-desc' ? -result : result;
+                    return String(a.name || '').localeCompare(String(b.name || ''));
+                });
+            } else if (sort === 'name-desc') {
+                items.sort(function(a, b) {
+                    return String(b.name || '').localeCompare(String(a.name || ''));
                 });
             } else if (sort === 'downloads') {
-                items.sort(function(a, b) { return Number(b.downloads || 0) - Number(a.downloads || 0); });
+                items.sort(function(a, b) {
+                    return Number(b.downloads || 0) - Number(a.downloads || 0);
+                });
             }
 
-            document.getElementById('clearSearch').hidden = !query;
+            var clearBtn = document.getElementById('clearSearch');
+            if (clearBtn) clearBtn.hidden = !query;
+
             if (!items.length) {
                 document.getElementById('bookmarkLoading').hidden = true;
                 document.getElementById('bookmarksEmpty').hidden = true;
@@ -407,33 +1383,56 @@
                 document.getElementById('bookmarkResults').textContent = 'No matches';
                 return;
             }
+
             renderCards(items);
         }
 
+        window.switchFilterTab = function(tabKey, btn) {
+            activeTab = tabKey;
+            document.querySelectorAll('.bm-tab-btn').forEach(function(b) {
+                b.classList.remove('active');
+            });
+            if (btn) btn.classList.add('active');
+            applyFilters();
+        };
+
         function showToast(message) {
             var toast = document.getElementById('bookmarkToast');
-            toast.lastChild.nodeValue = ' ' + message;
+            var textEl = document.getElementById('bookmarkToastText');
+            if (textEl) textEl.textContent = message;
             toast.classList.add('visible');
             clearTimeout(toastTimer);
-            toastTimer = setTimeout(function() { toast.classList.remove('visible'); }, 2400);
+            toastTimer = setTimeout(function() {
+                toast.classList.remove('visible');
+            }, 2400);
         }
 
         function removeBookmark(id) {
-            try {
-                localStorage.removeItem('zyrex_bookmark_' + id);
-                var counts = JSON.parse(localStorage.getItem('zyrex_bookmarks_count') || '{}');
-                counts[id] = Math.max(0, Number(counts[id] || 0) - 1);
-                localStorage.setItem('zyrex_bookmarks_count', JSON.stringify(counts));
-            } catch(e) {}
-            allBookmarks = allBookmarks.filter(function(item) { return String(item.id) !== String(id); });
-            updateCount(allBookmarks.length);
-            applyFilters();
-            showToast('Bookmark removed');
+            var cardEl = document.getElementById('bmCard-' + id);
+            if (cardEl) {
+                cardEl.classList.add('is-removing');
+            }
+
+            setTimeout(function() {
+                try {
+                    localStorage.removeItem('zyrex_bookmark_' + id);
+                    var counts = JSON.parse(localStorage.getItem('zyrex_bookmarks_count') || '{}');
+                    counts[id] = Math.max(0, Number(counts[id] || 0) - 1);
+                    localStorage.setItem('zyrex_bookmarks_count', JSON.stringify(counts));
+                } catch(e) {}
+
+                allBookmarks = allBookmarks.filter(function(item) {
+                    return String(item.id) !== String(id);
+                });
+
+                updateCounts();
+                applyFilters();
+                showToast('Removed from bookmarks');
+            }, 260);
         }
 
         async function initBookmarks() {
             var ids = getBookmarkedIds();
-            updateCount(ids.length);
             if (!ids.length) {
                 renderEmpty();
                 return;
@@ -441,36 +1440,69 @@
 
             var products = await loadProducts();
             var byId = {};
-            products.forEach(function(item) { byId[String(item.id)] = item; });
-            allBookmarks = ids.map(function(id) { return byId[id]; }).filter(Boolean);
-            updateCount(allBookmarks.length);
+            products.forEach(function(item) {
+                byId[String(item.id)] = item;
+            });
+
+            allBookmarks = ids.map(function(id) {
+                return byId[id] || null;
+            }).filter(Boolean);
+
+            updateCounts();
             if (!allBookmarks.length) {
                 renderEmpty();
                 return;
             }
+
             applyFilters();
         }
 
         document.addEventListener('DOMContentLoaded', function(){
             initBookmarks();
-            document.getElementById('bookmarkSearch').addEventListener('input', applyFilters);
-            document.getElementById('bookmarkSort').addEventListener('change', applyFilters);
-            document.getElementById('clearSearch').addEventListener('click', function() {
-                document.getElementById('bookmarkSearch').value = '';
-                document.getElementById('bookmarkSearch').focus();
+
+            var searchEl = document.getElementById('bookmarkSearch');
+            if (searchEl) searchEl.addEventListener('input', applyFilters);
+
+            var sortEl = document.getElementById('bookmarkSort');
+            if (sortEl) sortEl.addEventListener('change', applyFilters);
+
+            var clearBtn = document.getElementById('clearSearch');
+            if (clearBtn) clearBtn.addEventListener('click', function() {
+                var s = document.getElementById('bookmarkSearch');
+                if (s) {
+                    s.value = '';
+                    s.focus();
+                }
                 applyFilters();
             });
-            document.getElementById('resetSearch').addEventListener('click', function() {
-                document.getElementById('bookmarkSearch').value = '';
-                document.getElementById('bookmarkSort').value = 'saved';
+
+            var resetBtn = document.getElementById('resetSearch');
+            if (resetBtn) resetBtn.addEventListener('click', function() {
+                var s = document.getElementById('bookmarkSearch');
+                if (s) s.value = '';
+                var sortEl = document.getElementById('bookmarkSort');
+                if (sortEl) sortEl.value = 'saved';
+                activeTab = 'all';
+                document.querySelectorAll('.bm-tab-btn').forEach(function(b, idx) {
+                    b.classList.toggle('active', idx === 0);
+                });
                 applyFilters();
             });
-            document.getElementById('bookmarksGrid').addEventListener('click', function(event) {
-                var button = event.target.closest('.bm-remove');
-                if (button) removeBookmark(button.getAttribute('data-bookmark-id'));
+
+            var grid = document.getElementById('bookmarksGrid');
+            if (grid) grid.addEventListener('click', function(event) {
+                var button = event.target.closest('.bm-card-remove');
+                if (button) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    removeBookmark(button.getAttribute('data-bookmark-id'));
+                }
             });
-            document.getElementById('hamburger')?.addEventListener('click', function(){
-                document.getElementById('navLinks')?.classList.toggle('active');
+
+            var hamburger = document.getElementById('hamburger');
+            if (hamburger) hamburger.addEventListener('click', function(){
+                var navLinks = document.getElementById('navLinks');
+                if (navLinks) navLinks.classList.toggle('active');
             });
         });
     })();
