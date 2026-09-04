@@ -147,28 +147,49 @@
             margin: 0 auto 38px;
             font-weight: 400;
         }
+        /* ================== HERO OPENING BLUR & OPACITY ANIMATION ================== */
+        @keyframes heroEntranceBlur {
+            0% {
+                opacity: 0;
+                filter: blur(24px);
+                transform: translateY(28px) scale(0.97);
+            }
+            60% {
+                filter: blur(3px);
+            }
+            100% {
+                opacity: 1;
+                filter: blur(0px);
+                transform: translateY(0) scale(1);
+            }
+        }
+        .hero-helix .hero-inner-open {
+            animation: heroEntranceBlur 1.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            will-change: opacity, filter, transform;
+        }
+
         .hero-cta-group {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 16px;
+            gap: 14px;
             flex-wrap: wrap;
             margin-bottom: 10px;
         }
         .btn-liquid-cherry {
             background: linear-gradient(135deg, rgba(255, 43, 82, 0.9) 0%, rgba(184, 20, 50, 0.95) 100%);
             border: 1px solid rgba(255, 117, 143, 0.45);
-            box-shadow: 0 12px 35px rgba(255, 43, 82, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+            box-shadow: 0 10px 30px rgba(255, 43, 82, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.4);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             color: #ffffff !important;
-            font-size: 0.98rem;
+            font-size: 0.94rem;
             font-weight: 700;
-            padding: 13px 22px;
-            border-radius: 14px;
+            padding: 12px 24px;
+            border-radius: 999px;
             display: inline-flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
             transition: transform 0.22s ease, box-shadow 0.22s ease;
             text-decoration: none;
         }
@@ -178,39 +199,87 @@
             color: #ffffff !important;
         }
         .btn-liquid-cherry .arrow-bubble {
-            width: 26px;
-            height: 26px;
+            width: 24px;
+            height: 24px;
             border-radius: 50%;
             background: rgba(255, 255, 255, 0.25);
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            font-size: 0.72rem;
+            font-size: 0.7rem;
             margin-left: 2px;
         }
         .btn-liquid-glass {
             background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.14);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.15);
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.15), 0 6px 20px rgba(0, 0, 0, 0.25);
             color: #ffffff !important;
-            font-size: 0.98rem;
+            font-size: 0.94rem;
             font-weight: 600;
-            padding: 13px 28px;
-            border-radius: 14px;
+            padding: 12px 22px;
+            border-radius: 999px;
             display: inline-flex;
             align-items: center;
             gap: 8px;
-            transition: transform 0.22s ease, background 0.22s ease, border-color 0.22s ease;
+            transition: transform 0.22s ease, background 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
             text-decoration: none;
         }
         .btn-liquid-glass:hover {
             background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(255, 43, 82, 0.4);
+            border-color: rgba(255, 43, 82, 0.45);
             transform: translateY(-2px);
-            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.25), 0 0 25px rgba(255, 43, 82, 0.2);
+            box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.25), 0 10px 30px rgba(255, 43, 82, 0.22);
             color: #ffffff !important;
+        }
+
+        /* ================== RESTORED HERO STATS GRID ================== */
+        .hero-stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            max-width: 840px;
+            margin: 42px auto 6px;
+            padding: 22px 28px;
+            border-radius: 24px;
+            background: rgba(18, 8, 14, 0.5);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 18px 45px rgba(0, 0, 0, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.12);
+            animation: heroEntranceBlur 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .hero-stats-grid .stat-box {
+            text-align: center;
+            padding: 8px 12px;
+        }
+        .hero-stats-grid .stat-box .number {
+            font-size: 2.2rem;
+            font-weight: 800;
+            font-family: 'Outfit', sans-serif;
+            color: #ffffff;
+            line-height: 1.1;
+            margin-bottom: 4px;
+            letter-spacing: -0.5px;
+        }
+        .hero-stats-grid .stat-box .label {
+            font-size: 0.74rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.6);
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+        }
+        @media (max-width: 768px) {
+            .hero-stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                margin-top: 32px;
+                padding: 16px;
+                gap: 12px;
+            }
+            .hero-stats-grid .stat-box .number {
+                font-size: 1.8rem;
+            }
         }
 
         /* ================== SIMPLIFIED MISSION & VISION ================== */
@@ -355,16 +424,45 @@
                     Free video editing presets, effects, and plugins.
                 </p>
 
-                <!-- Dual Action Buttons -->
+                <!-- Action Buttons (Liquid Glass Ellipses) -->
                 <div class="hero-cta-group">
                     <a href="/presets" class="btn-liquid-cherry">
                         <i class="fas fa-sliders"></i>
                         <span>Browse Presets</span>
                         <span class="arrow-bubble"><i class="fas fa-arrow-right"></i></span>
                     </a>
-                    <a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-liquid-glass">
-                        <i class="fab fa-discord"></i> Join Discord
+                    <a href="/plugins" class="btn-liquid-glass">
+                        <i class="fas fa-cubes"></i>
+                        <span>Browse Plugins &amp; Software</span>
                     </a>
+                    <a href="/more" class="btn-liquid-glass">
+                        <i class="fas fa-compass"></i>
+                        <span>Browse More</span>
+                    </a>
+                    <a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-liquid-glass">
+                        <i class="fab fa-discord"></i>
+                        <span>Join Discord</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- REAL DYNAMIC METRIC COUNTERS GRID -->
+            <div class="hero-stats-grid">
+                <div class="stat-box">
+                    <div class="number" id="heroStatPresets">0</div>
+                    <div class="label">Presets</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number" id="heroStatPlugins">0</div>
+                    <div class="label">Plugins</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number" id="heroStatScenepacks">0</div>
+                    <div class="label">Scenepacks</div>
+                </div>
+                <div class="stat-box">
+                    <div class="number" id="heroStatAudios">0</div>
+                    <div class="label">Audios</div>
                 </div>
             </div>
         </div>
