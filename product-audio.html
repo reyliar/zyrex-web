@@ -249,7 +249,7 @@
             width: 0%;
             background: linear-gradient(90deg, var(--cherry-neon), var(--purple-audio));
             border-radius: 999px;
-            transition: width 0.1s linear;
+            will-change: width;
         }
         .deck-time-row {
             display: flex;
@@ -290,12 +290,10 @@
             color: #fff;
         }
 
-        /* 2-COL BOTTOM */
+        /* 1-COL CENTERED BOTTOM */
         .audio-bottom-grid {
-            display: grid;
-            grid-template-columns: 1fr 340px;
-            gap: 28px;
-            align-items: start;
+            max-width: 520px;
+            margin: 0 auto;
         }
 
         .glass-card {
@@ -426,11 +424,14 @@
             margin-bottom: 18px;
         }
         .creator-avatar {
-            width: 42px;
-            height: 42px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
             object-fit: cover;
-            border: 1.5px solid rgba(255, 255, 255, 0.15);
+            border: 2px solid rgba(255, 43, 82, 0.45);
+            background: rgba(0, 0, 0, 0.4);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+            flex-shrink: 0;
         }
         .creator-info h5 {
             margin: 0;
@@ -638,6 +639,55 @@
     <script>
     let currentAudio = document.getElementById('globalAudioPlayer');
     let isPlaying = false;
+    let animFrameId = null;
+    let discordAvatarCache = {};
+
+    async function fetchUploaderDiscordAvatar(uploaderId, fallbackHashOrUrl) {
+        if (!uploaderId) {
+            if (fallbackHashOrUrl && fallbackHashOrUrl.startsWith('http')) return fallbackHashOrUrl;
+            if (fallbackHashOrUrl) return '/api/avatar/0/' + fallbackHashOrUrl + '.png?size=128';
+            return 'https://cdn.discordapp.com/embed/avatars/0.png';
+        }
+        if (discordAvatarCache[uploaderId]) return discordAvatarCache[uploaderId];
+
+        try {
+            var controller = new AbortController();
+            var timer = setTimeout(function(){ controller.abort(); }, 2500);
+
+            var resp = await fetch('/api/presence/' + uploaderId, {
+                headers: {
+                    "X-Zyrex-Key": "zyrex_app_sec_k982f81a7b54c29013e9a",
+                    "Accept": "application/json"
+                },
+                signal: controller.signal
+            });
+            clearTimeout(timer);
+
+            if (resp.ok) {
+                var json = await resp.json();
+                var d = json.data || json[uploaderId] || json;
+                var u = d.discord_user || d;
+                if (u && u.avatar) {
+                    var avatarUrl = '';
+                    if (u.avatar.startsWith('http://') || u.avatar.startsWith('https://')) {
+                        avatarUrl = u.avatar;
+                    } else {
+                        var ext = u.avatar.startsWith('a_') ? 'gif' : 'png';
+                        avatarUrl = '/api/avatar/' + uploaderId + '/' + u.avatar + '.' + ext + '?size=128';
+                    }
+                    discordAvatarCache[uploaderId] = avatarUrl;
+                    return avatarUrl;
+                }
+            }
+        } catch(e) {}
+
+        if (fallbackHashOrUrl) {
+            if (fallbackHashOrUrl.startsWith('http')) return fallbackHashOrUrl;
+            var ext = fallbackHashOrUrl.startsWith('a_') ? 'gif' : 'png';
+            return '/api/avatar/' + uploaderId + '/' + fallbackHashOrUrl + '.' + ext + '?size=128';
+        }
+        return 'https://cdn.discordapp.com/embed/avatars/0.png';
+    }
 
     document.addEventListener('DOMContentLoaded', async () => {
         const params = new URLSearchParams(window.location.search);
@@ -701,9 +751,10 @@
         var isLiked = localStorage.getItem(likeKey) === '1';
         var isBookmarked = localStorage.getItem(bookKey) === '1';
 
-        // Creator details (Original Musician / Editor)
-        var creatorName = (p.creator_nickname || p.author_name || '').trim();
-        var creatorAv = p.creator_avatar || '';
+        // Creator details (In audio, the uploader IS the creator)
+        var creatorName = (p.creator_nickname || p.author_name || p.uploader_name || 'Community Member').trim();
+        var uploaderId = p.author_id || p.uploader_id || '';
+        var fallbackAv = p.creator_avatar || p.uploader_avatar || '';
         var socialUrl = (p.creator_social_url || p.social_url || p.author_social || '').trim();
         var socialIcon = 'fas fa-arrow-up-right-from-square';
 
@@ -716,11 +767,6 @@
             else if (sLow.includes('instagram.com')) socialIcon = 'fab fa-instagram';
             else if (sLow.includes('discord.gg') || sLow.includes('discord.com')) socialIcon = 'fab fa-discord';
         }
-
-        // Uploader details (Zyrex Community Member)
-        var uploaderName = p.uploader_name || 'Zyrex Member';
-        var uploaderAv = p.uploader_avatar || 'https://cdn.discordapp.com/embed/avatars/0.png';
-        var uploaderId = p.uploader_id || '';
 
         // Format detection
         var formatText = 'MP3 / WAV';
@@ -809,7 +855,7 @@
             <div class="audio-hero-card">
                 <div class="audio-top-row">
                     <div class="album-cover-box">
-                        ${thumb ? `<img src="${thumb}" alt="${escapeHtml(p.name)}" class="album-cover-img" onerror="this.outerHTML='<div class=\'album-fallback-icon\'><i class=\'fas fa-music\'></i></div>'">` : `<div class="album-fallback-icon"><i class="fas fa-music"></i></div>`}
+                        ${thumb ? `<img src="${thumb}" alt="${escapeHtml(p.name)}" class="album-cover-img" onerror="this.outerHTML='<div class=\\'album-fallback-icon\\'><i class=\\'fas fa-music\\'></i></div>'">` : `<div class="album-fallback-icon"><i class="fas fa-music"></i></div>`}
                     </div>
                     <div class="audio-meta-block">
                         <span class="audio-badge"><i class="fas fa-wave-square"></i> ${catLabel}</span>
@@ -870,50 +916,39 @@
                 </div>
             </div>
 
-            <!-- BOTTOM INFO & DOWNLOAD -->
+            <!-- BOTTOM DOWNLOAD PACKAGE -->
             <div class="audio-bottom-grid">
-                <!-- REAL DESCRIPTION & NOTES (ZERO FAKE AI SLOP) -->
-                <div class="glass-card">
-                    <div class="card-header-title">
-                        <i class="fas fa-circle-info"></i> Audio Resource Info
-                    </div>
-                    ${realDesc ? `<p style=\"color:rgba(255,255,255,0.85);font-size:0.92rem;line-height:1.75;margin-bottom:14px\">${escapeHtml(realDesc).split('\n').join('<br>')}</p>` : '<p style="color:rgba(255,255,255,0.55);font-size:0.88rem;margin-bottom:14px">Clean audio resource for video editing and AMVs.</p>'}
-                    ${p.notes ? `
-                        <div style="padding:12px 16px;background:rgba(168,85,247,0.06);border-left:3px solid var(--purple-audio);border-radius:0 10px 10px 0;font-size:0.86rem;color:rgba(255,255,255,0.85)">
-                            <strong>Note:</strong> ${escapeHtml(p.notes)}
-                        </div>
-                    ` : ''}
-                </div>
-
                 <div class="glass-card">
                     <div class="card-header-title">
                         <i class="fas fa-download"></i> Download Package
                     </div>
 
-                    <!-- Creator / Uploader Profile -->
-                    ${creatorName ? `
-                        <div class="creator-row" style="margin-bottom:14px">
-                            ${creatorAv ? `<img src="${creatorAv}" alt="" class="creator-avatar" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">` : `<div class="creator-avatar" style="background:rgba(168,85,247,0.2);display:flex;align-items:center;justify-content:center;color:#c084fc"><i class="fas fa-music"></i></div>`}
-                            <div class="creator-info">
-                                <h5>${escapeHtml(creatorName)}</h5>
-                                <span style="color:var(--purple-audio);font-weight:600">Audio Creator</span>
+                    <!-- Single Creator Profile -->
+                    <div class="creator-row" style="margin-bottom:18px">
+                        <img src="https://cdn.discordapp.com/embed/avatars/0.png" alt="${escapeHtml(creatorName)}" class="creator-avatar" id="creatorAvatarImg" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+                        <div class="creator-info">
+                            <h5>${escapeHtml(creatorName)}</h5>
+                            <span style="color:var(--purple-audio);font-weight:600">Audio Creator</span>
+                        </div>
+                        ${socialUrl ? `
+                            <a href="${socialUrl}" target="_blank" rel="noopener" class="action-pill-btn" style="margin-left:auto;padding:6px 12px;font-size:0.75rem">
+                                <i class="${socialIcon}"></i> Profile
+                            </a>
+                        ` : ''}
+                    </div>
+
+                    <!-- Password Box (if any) -->
+                    ${p.password ? `
+                        <div class="pw-box">
+                            <div>
+                                <div style="font-size:0.72rem;color:rgba(255,255,255,0.5);text-transform:uppercase;margin-bottom:2px">Password</div>
+                                <span class="pw-text">${escapeHtml(p.password)}</span>
                             </div>
-                            ${socialUrl ? `
-                                <a href="${socialUrl}" target="_blank" rel="noopener" class="action-pill-btn" style="margin-left:auto;padding:6px 12px;font-size:0.75rem">
-                                    <i class="${socialIcon}"></i> Profile
-                                </a>
-                            ` : ''}
+                            <button class="pw-copy-btn" onclick="copyPassword('${escapeHtml(p.password)}', this)">
+                                <i class="far fa-copy"></i> Copy
+                            </button>
                         </div>
                     ` : ''}
-
-                    <!-- Uploader info -->
-                    <div class="creator-row" style="padding-top:10px;border-top:1px solid rgba(255,255,255,0.06);margin-bottom:18px">
-                        <img src="${uploaderAv}" alt="" class="creator-avatar" data-uploader-id="${uploaderId}" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
-                        <div class="creator-info">
-                            <h5>${escapeHtml(uploaderName)}</h5>
-                            <span>Resource Uploader</span>
-                        </div>
-                    </div>
 
                     ${dlBtnHtml}
                     ${mirrorsHtml}
@@ -927,32 +962,72 @@
             <div id="relatedAudioContainer"></div>
         `;
 
+        // Fetch Creator Discord Avatar dynamically
+        if (uploaderId) {
+            fetchUploaderDiscordAvatar(uploaderId, fallbackAv).then(function(url) {
+                var el = document.getElementById('creatorAvatarImg');
+                if (el && url) el.src = url;
+            });
+        } else if (fallbackAv && fallbackAv.startsWith('http')) {
+            var el = document.getElementById('creatorAvatarImg');
+            if (el) el.src = fallbackAv;
+        }
+
         setupAudioEvents();
         loadRelatedAudio(p.id);
+    }
+
+    function renderSmoothScrubber() {
+        if (currentAudio && !currentAudio.paused && currentAudio.duration) {
+            var pct = (currentAudio.currentTime / currentAudio.duration) * 100;
+            var fill = document.getElementById('waveFill');
+            if (fill) fill.style.width = pct + '%';
+
+            var cur = document.getElementById('timeCurrent');
+            if (cur) cur.textContent = formatTime(currentAudio.currentTime);
+
+            animFrameId = requestAnimationFrame(renderSmoothScrubber);
+        }
     }
 
     function setupAudioEvents() {
         if (!currentAudio) return;
 
-        currentAudio.ontimeupdate = () => {
-            if (!currentAudio.duration) return;
-            const pct = (currentAudio.currentTime / currentAudio.duration) * 100;
-            const fill = document.getElementById('waveFill');
-            if (fill) fill.style.width = pct + '%';
-
-            const cur = document.getElementById('timeCurrent');
-            if (cur) cur.textContent = formatTime(currentAudio.currentTime);
+        currentAudio.onplay = () => {
+            isPlaying = true;
+            var icon = document.getElementById('deckPlayIcon');
+            if (icon) icon.className = 'fas fa-pause';
+            if (animFrameId) cancelAnimationFrame(animFrameId);
+            animFrameId = requestAnimationFrame(renderSmoothScrubber);
         };
 
-        currentAudio.onloadedmetadata = () => {
-            const tot = document.getElementById('timeTotal');
-            if (tot) tot.textContent = formatTime(currentAudio.duration);
+        currentAudio.onpause = () => {
+            isPlaying = false;
+            var icon = document.getElementById('deckPlayIcon');
+            if (icon) icon.className = 'fas fa-play';
+            if (animFrameId) {
+                cancelAnimationFrame(animFrameId);
+                animFrameId = null;
+            }
         };
 
         currentAudio.onended = () => {
             isPlaying = false;
-            const icon = document.getElementById('deckPlayIcon');
+            var icon = document.getElementById('deckPlayIcon');
             if (icon) icon.className = 'fas fa-play';
+            if (animFrameId) {
+                cancelAnimationFrame(animFrameId);
+                animFrameId = null;
+            }
+            var fill = document.getElementById('waveFill');
+            if (fill) fill.style.width = '0%';
+            var cur = document.getElementById('timeCurrent');
+            if (cur) cur.textContent = '0:00';
+        };
+
+        currentAudio.onloadedmetadata = () => {
+            var tot = document.getElementById('timeTotal');
+            if (tot) tot.textContent = formatTime(currentAudio.duration);
         };
     }
 
@@ -961,17 +1036,10 @@
             alert("No preview audio file available for this resource.");
             return;
         }
-        const icon = document.getElementById('deckPlayIcon');
-
         if (isPlaying) {
             currentAudio.pause();
-            isPlaying = false;
-            if (icon) icon.className = 'fas fa-play';
         } else {
-            currentAudio.play().then(() => {
-                isPlaying = true;
-                if (icon) icon.className = 'fas fa-pause';
-            }).catch(e => {
+            currentAudio.play().catch(e => {
                 alert("Audio preview could not be played in your browser. You can download the sound file directly.");
             });
         }
@@ -979,12 +1047,15 @@
 
     function seekDeckAudio(e) {
         if (!currentAudio || !currentAudio.duration) return;
-        const track = document.getElementById('waveTrack');
-        const rect = track.getBoundingClientRect();
-        const clickX = e.clientX - rect.left;
-        const width = rect.width;
-        const targetTime = (clickX / width) * currentAudio.duration;
-        currentAudio.currentTime = targetTime;
+        var track = document.getElementById('waveTrack');
+        var rect = track.getBoundingClientRect();
+        var clickX = e.clientX - rect.left;
+        var pct = Math.max(0, Math.min(1, clickX / rect.width));
+        currentAudio.currentTime = pct * currentAudio.duration;
+        var fill = document.getElementById('waveFill');
+        if (fill) fill.style.width = (pct * 100) + '%';
+        var cur = document.getElementById('timeCurrent');
+        if (cur) cur.textContent = formatTime(currentAudio.currentTime);
     }
 
     function formatTime(sec) {
