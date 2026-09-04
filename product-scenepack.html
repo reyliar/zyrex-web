@@ -889,16 +889,21 @@
             const resp = await fetch('/api/discord-user?userId=' + userId);
             const data = await resp.json();
             if (data.success && data.user) {
+                const liveName = data.user.display_name || data.user.global_name || data.user.username;
+                if (liveName) {
+                    var nEl = document.getElementById('sceneUploaderNameText');
+                    if (nEl) nEl.textContent = liveName;
+                }
                 if (data.user.avatar_url) return data.user.avatar_url;
                 if (data.user.avatar) {
                     const ext = data.user.avatar.startsWith('a_') ? 'gif' : 'png';
-                    return '/api/avatar/' + userId + '/' + data.user.avatar + '.' + ext + '?size=128';
+                    return 'https://cdn.discordapp.com/avatars/' + userId + '/' + data.user.avatar + '.' + ext + '?size=128';
                 }
             }
         } catch(e) {}
         let defIdx = 0;
         try { defIdx = Number((BigInt(userId) >> 22n) % 6n); } catch(e) { defIdx = parseInt(userId) % 5; }
-        return '/api/avatar/default/' + defIdx + '.png';
+        return 'https://cdn.discordapp.com/embed/avatars/' + defIdx + '.png';
     }
 
     function renderSceneDetail(p) {
@@ -967,13 +972,16 @@
         }
 
         // Uploader details (Zyrex Discord Yükleyicisi)
-        var uploaderName = p.uploader_name || p.author_name || 'Zyrex Member';
-        var uploaderId = p.uploader_id || p.author_id || '';
-        var uploaderAv = p.uploader_avatar || p.author_avatar || '';
+        var discordIdMatch = (p.creator_avatar || p.uploader_avatar || '').match(/\/avatars\/(\d{17,20})\//);
+        var extractedDiscordId = discordIdMatch ? discordIdMatch[1] : '';
+
+        var uploaderName = p.uploader_name || p.creator_nickname || p.author_name || 'Zyrex Member';
+        var uploaderId = p.uploader_id || extractedDiscordId || p.author_id || '';
+        var uploaderAv = p.uploader_avatar || p.creator_avatar || p.author_avatar || '';
         if (!uploaderAv && uploaderId) {
             uploaderAv = `https://cdn.discordapp.com/embed/avatars/${parseInt(uploaderId) % 5}.png`;
         }
-        var uploaderValueHtml = `<span class="uploader-highlight-pill"><img src="${uploaderAv || 'https://cdn.discordapp.com/embed/avatars/0.png'}" id="sceneUploaderAv" class="creator-mini-av" data-uploader-id="${uploaderId}" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'"> <span>${escapeHtml(uploaderName)}</span></span>`;
+        var uploaderValueHtml = `<span class="uploader-highlight-pill"><img src="${uploaderAv || 'https://cdn.discordapp.com/embed/avatars/0.png'}" id="sceneUploaderAv" class="creator-mini-av" data-uploader-id="${uploaderId}" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'"> <span id="sceneUploaderNameText">${escapeHtml(uploaderName)}</span></span>`;
 
         // Origin details (Explicit user p.origin ALWAYS WINS over guessed productions)
         var originTitle = (p.origin || '').trim() || (prod ? prod.title : '');

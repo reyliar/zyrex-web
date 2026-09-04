@@ -663,8 +663,13 @@
                         }
                         if (avUrl) {
                             discordAvatarCache[uploaderId] = avUrl;
-                            return avUrl;
                         }
+                        var liveName = json.user.display_name || json.user.global_name || json.user.username;
+                        if (liveName) {
+                            var h = document.getElementById('creatorNameHeading');
+                            if (h) h.textContent = liveName;
+                        }
+                        if (avUrl) return avUrl;
                     }
                 }
             } catch(e) {}
@@ -750,9 +755,12 @@
         var isBookmarked = localStorage.getItem(bookKey) === '1';
 
         // Creator & Uploader details
-        var creatorName = (p.uploader_name || p.author_name || p.creator_nickname || 'Community Member').trim();
-        var uploaderId = (p.uploader_id || p.author_id || '').trim();
-        var fallbackAv = (p.uploader_avatar || p.author_avatar || p.creator_avatar || '').trim();
+        var discordIdMatch = (p.creator_avatar || p.uploader_avatar || '').match(/\/avatars\/(\d{17,20})\//);
+        var extractedDiscordId = discordIdMatch ? discordIdMatch[1] : '';
+
+        var creatorName = (p.uploader_name || p.creator_nickname || p.author_name || 'Community Member').trim();
+        var uploaderId = (p.uploader_id || extractedDiscordId || p.author_id || '').trim();
+        var fallbackAv = (p.uploader_avatar || p.creator_avatar || p.author_avatar || '').trim();
         var socialUrl = (p.creator_social_url || p.social_url || p.author_social || '').trim();
         var socialIcon = 'fas fa-arrow-up-right-from-square';
 
@@ -925,7 +933,7 @@
                     <div class="creator-row" style="margin-bottom:18px">
                         <img src="${(fallbackAv && fallbackAv.startsWith('http')) ? fallbackAv : 'https://cdn.discordapp.com/embed/avatars/0.png'}" alt="${escapeHtml(creatorName)}" class="creator-avatar" id="creatorAvatarImg" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
                         <div class="creator-info">
-                            <h5>${escapeHtml(creatorName)}</h5>
+                            <h5 id="creatorNameHeading">${escapeHtml(creatorName)}</h5>
                             <span style="color:var(--purple-audio);font-weight:600">Audio Creator</span>
                         </div>
                         ${socialUrl ? `

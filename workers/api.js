@@ -4270,7 +4270,7 @@ async function storeAndProxyImage(env, imageUrl) {
             const submitData = JSON.parse(body);
 
             // Credited uploader support (allow uploading on behalf of a discord member)
-            const rawCreditId = (submitData.credited_uploader_id || "").toString().trim();
+            const rawCreditId = (submitData.credited_uploader_id || submitData.uploader_id || "").toString().trim();
             const hasCredit = Boolean(rawCreditId && /^\d{17,20}$/.test(rawCreditId));
 
             if (hasCredit) {
@@ -4294,6 +4294,7 @@ async function storeAndProxyImage(env, imageUrl) {
               }
               submitData.author_id = creditedId;
               submitData.uploader_id = creditedId;
+              submitData.credited_uploader_id = creditedId;
               if (submitData.type === "audio" && !submitData.creator_nickname && creditedName) {
                 submitData.creator_nickname = creditedName;
               }

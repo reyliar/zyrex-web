@@ -800,8 +800,11 @@
         document.title = (p.name || "Preset") + " - Zyrex";
         document.getElementById('breadPresetName').textContent = p.name || "Preset";
 
+        const discordIdMatch = (p.creator_avatar || p.uploader_avatar || '').match(/\/avatars\/(\d{17,20})\//);
+        const extractedDiscordId = discordIdMatch ? discordIdMatch[1] : '';
+
         // Asynchronously fetch uploader Discord avatar from bot API if available
-        const uploaderIdVal = p.uploader_id || p.author_id || '';
+        const uploaderIdVal = p.uploader_id || extractedDiscordId || p.author_id || '';
         if (uploaderIdVal) {
             fetchDiscordAvatar(uploaderIdVal).then(avUrl => {
                 const upImg = document.getElementById('upAvatarImg');
@@ -844,9 +847,9 @@
 
         // Creator & Uploader resolution
         const creatorName = p.creator_nickname || '';
-        const uploaderName = p.uploader_name || p.author_name || (creatorName ? '' : 'Zyrex');
-        const uploaderId = p.uploader_id || p.author_id || '';
-        let uploaderAvatar = p.uploader_avatar || p.author_avatar || '';
+        const uploaderName = p.uploader_name || (creatorName ? (p.author_name || '') : (p.author_name || 'Zyrex'));
+        const uploaderId = p.uploader_id || extractedDiscordId || p.author_id || '';
+        let uploaderAvatar = p.uploader_avatar || p.creator_avatar || p.author_avatar || '';
         
         if (!uploaderAvatar && uploaderId) {
             uploaderAvatar = `https://cdn.discordapp.com/embed/avatars/${parseInt(uploaderId) % 5}.png`;

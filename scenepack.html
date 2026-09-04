@@ -957,9 +957,12 @@
                 var imageSrc = (p.thumbnail && p.thumbnail !== 'assets/content.png' && p.thumbnail !== '/assets/content.png') ? p.thumbnail : (prod ? prod.poster : 'assets/content.png');
                 var idString = String(p.id);
 
-                var uploaderName = (p.uploader_name || p.author_name || p.creator_nickname || 'Zyrex Member').trim();
-                var uploaderId = (p.uploader_id || p.author_id || '').trim();
-                var uploaderAv = (p.uploader_avatar || p.author_avatar || '').trim();
+                var discordIdMatch = (p.creator_avatar || p.uploader_avatar || '').match(/\/avatars\/(\d{17,20})\//);
+                var extractedDiscordId = discordIdMatch ? discordIdMatch[1] : '';
+
+                var uploaderName = (p.uploader_name || p.creator_nickname || p.author_name || 'Zyrex Member').trim();
+                var uploaderId = (p.uploader_id || extractedDiscordId || p.author_id || '').trim();
+                var uploaderAv = (p.uploader_avatar || p.creator_avatar || p.author_avatar || '').trim();
 
                 var avHtml = '<img class="sp-uploader-avatar" data-uploader-id="' + uploaderId + '" data-fallback="' + uploaderAv + '" src="https://cdn.discordapp.com/embed/avatars/0.png" alt="">';
                 var nameHtml = '<span class="sp-uploader-name" data-uploader-id="' + uploaderId + '">' + escapeHtml(uploaderName) + '</span>';

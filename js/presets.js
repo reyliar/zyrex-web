@@ -356,9 +356,13 @@ function renderPresets(items) {
         const icons = { 'after-effects':'fa-film','premiere-pro':'fa-video','photoshop':'fa-image','video-star':'fa-star','topaz-labs':'fa-gem','others':'fa-folder' };
         const icon = icons[item.category] || 'fa-sliders';
         const descriptionText = item.description || item.desc || '';
-        const uploaderName = (item.uploader_name || item.author_name || item.creator_nickname || 'Zyrex').trim();
-        const uploaderId = (item.uploader_id || item.author_id || '').trim();
-        const uploaderAv = (item.uploader_avatar || item.author_avatar || item.creator_avatar || '').trim();
+        const shortDesc = descriptionText ? descriptionText.substring(0, 80) + (descriptionText.length > 80 ? '...' : '') : '';
+        const discordIdMatch = (item.creator_avatar || item.uploader_avatar || '').match(/\/avatars\/(\d{17,20})\//);
+        const extractedDiscordId = discordIdMatch ? discordIdMatch[1] : '';
+
+        const uploaderName = (item.uploader_name || item.creator_nickname || item.author_name || 'Zyrex').trim();
+        const uploaderId = (item.uploader_id || extractedDiscordId || item.author_id || '').trim();
+        const uploaderAv = (item.uploader_avatar || item.creator_avatar || item.author_avatar || '').trim();
         const avatarHtml = `<img src="${uploaderAv || window.DEFAULT_AVATAR}" class="preset-card-avatar" data-uploader-id="${uploaderId}" data-fallback="${uploaderAv}" alt="" onerror="window.handleAvatarError(this)">`;
         const nickname = uploaderName;
         const dlCount = downloadCounts[item.id] || item.downloads || 0;

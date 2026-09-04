@@ -1279,10 +1279,13 @@
                     ? '<span class="sp-genre-pill">' + escapeHtml(labelMap[cats[0].trim().toLowerCase()] || cats[0].trim()) + '</span>'
                     : '<span class="sp-genre-pill">Audio</span>';
 
+                var discordIdMatch = (track.creator_avatar || track.uploader_avatar || '').match(/\/avatars\/(\d{17,20})\//);
+                var extractedDiscordId = discordIdMatch ? discordIdMatch[1] : '';
+
                 var artist = (track.creator_nickname || track.creator_username || 'Zyrex Sound').trim();
-                var uploaderName = (track.uploader_name || track.author_name || 'Community').trim();
-                var uploaderId = (track.uploader_id || track.author_id || '').trim();
-                var fallbackAv = (track.uploader_avatar || track.author_avatar || '').trim();
+                var uploaderName = (track.uploader_name || track.creator_nickname || track.author_name || 'Community').trim();
+                var uploaderId = (track.uploader_id || extractedDiscordId || track.author_id || '').trim();
+                var fallbackAv = (track.uploader_avatar || track.creator_avatar || track.author_avatar || '').trim();
 
                 var dlCount = (track.downloads || 0).toLocaleString();
 
