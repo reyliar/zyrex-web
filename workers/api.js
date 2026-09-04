@@ -4247,7 +4247,7 @@ async function storeAndProxyImage(env, imageUrl) {
 
       // ============ BOT PROXY (admin, comments, notifications, guild, cloud link/unlink, downloads, hlx, verify, products) ============
       if (path.startsWith("/api/guild/") || path.startsWith("/api/notifications") || path.startsWith("/api/comments") || path.startsWith("/api/lookup/") ||
-                               path.startsWith("/api/products") || path.startsWith("/api/admin/") || path.startsWith("/api/cloud/") || path.startsWith("/api/downloads/") || path.startsWith("/api/hlx/") || path.startsWith("/api/verify") || path.startsWith("/api/sftpgo/") || path.startsWith("/api/search/") || path === "/api/resource-stats") {
+                               path.startsWith("/api/products") || path.startsWith("/api/admin/") || path.startsWith("/api/cloud/") || path.startsWith("/api/downloads/") || path.startsWith("/api/hlx/") || path.startsWith("/api/verify") || path.startsWith("/api/sftpgo/") || path.startsWith("/api/search/") || path === "/api/resource-stats" || path === "/api/discord-user" || path === "/api/check-uploader" || path === "/api/team") {
         const session = parseSession(request.headers.get("Cookie"));
         const proxyHeaders = {
           "Content-Type": "application/json",

@@ -1114,45 +1114,55 @@
 
         // Discord Avatar Fetcher
         async function fetchUploaderDiscordAvatar(uploaderId, fallbackHashOrUrl) {
-            if (fallbackHashOrUrl && fallbackHashOrUrl.startsWith('http')) {
-                if (uploaderId) discordAvatarCache[uploaderId] = fallbackHashOrUrl;
-                return fallbackHashOrUrl;
+            if (uploaderId && discordAvatarCache[uploaderId]) {
+                return discordAvatarCache[uploaderId];
             }
-            if (!uploaderId) {
-                if (fallbackHashOrUrl) return '/api/avatar/0/' + fallbackHashOrUrl + '.png?size=128';
-                return 'https://cdn.discordapp.com/embed/avatars/0.png';
-            }
-            if (discordAvatarCache[uploaderId]) return discordAvatarCache[uploaderId];
 
-            try {
-                var controller = new AbortController();
-                var timer = setTimeout(function(){ controller.abort(); }, 3000);
-                var resp = await fetch('/api/discord-user?userId=' + uploaderId, { signal: controller.signal });
-                clearTimeout(timer);
+            if (uploaderId && /^\d{17,20}$/.test(uploaderId)) {
+                try {
+                    var controller = new AbortController();
+                    var timer = setTimeout(function(){ controller.abort(); }, 3500);
+                    var resp = await fetch('/api/discord-user?userId=' + uploaderId, { signal: controller.signal });
+                    clearTimeout(timer);
 
-                if (resp.ok) {
-                    var json = await resp.json();
-                    if (json.success && json.user) {
-                        var avUrl = json.user.avatar_url;
-                        if (!avUrl && json.user.avatar) {
-                            var ext = json.user.avatar.startsWith('a_') ? 'gif' : 'png';
-                            avUrl = '/api/avatar/' + uploaderId + '/' + json.user.avatar + '.' + ext + '?size=128';
-                        }
-                        if (avUrl) {
-                            discordAvatarCache[uploaderId] = avUrl;
-                            return avUrl;
+                    if (resp.ok) {
+                        var json = await resp.json();
+                        if (json.success && json.user) {
+                            var avUrl = json.user.avatar_url;
+                            if (!avUrl && json.user.avatar) {
+                                var ext = json.user.avatar.startsWith('a_') ? 'gif' : 'png';
+                                avUrl = 'https://cdn.discordapp.com/avatars/' + uploaderId + '/' + json.user.avatar + '.' + ext + '?size=128';
+                            }
+                            if (avUrl) {
+                                discordAvatarCache[uploaderId] = avUrl;
+                            }
+                            var liveName = json.user.display_name || json.user.global_name || json.user.username;
+                            if (liveName) {
+                                document.querySelectorAll('.sp-uploader-name[data-uploader-id="' + uploaderId + '"]').forEach(function(el) {
+                                    el.textContent = liveName;
+                                });
+                            }
+                            if (avUrl) return avUrl;
                         }
                     }
-                }
-            } catch(e) {}
+                } catch(e) {}
+            }
 
             if (fallbackHashOrUrl) {
-                if (fallbackHashOrUrl.startsWith('http')) return fallbackHashOrUrl;
+                if (fallbackHashOrUrl.startsWith('http')) {
+                    if (uploaderId) discordAvatarCache[uploaderId] = fallbackHashOrUrl;
+                    return fallbackHashOrUrl;
+                }
                 var ext = fallbackHashOrUrl.startsWith('a_') ? 'gif' : 'png';
-                return '/api/avatar/' + uploaderId + '/' + fallbackHashOrUrl + '.' + ext + '?size=128';
+                var uUrl = 'https://cdn.discordapp.com/avatars/' + (uploaderId || '0') + '/' + fallbackHashOrUrl + '.' + ext + '?size=128';
+                if (uploaderId) discordAvatarCache[uploaderId] = uUrl;
+                return uUrl;
             }
+
             let defIdx = 0;
-            try { defIdx = Number((BigInt(uploaderId) >> 22n) % 6n); } catch(e) { defIdx = parseInt(uploaderId) % 5 || 0; }
+            if (uploaderId && /^\d+$/.test(uploaderId)) {
+                try { defIdx = Number((BigInt(uploaderId) >> 22n) % 6n); } catch(e) { defIdx = parseInt(uploaderId) % 5 || 0; }
+            }
             return 'https://cdn.discordapp.com/embed/avatars/' + defIdx + '.png';
         }
 
@@ -1258,7 +1268,7 @@
 
             tbody.innerHTML = items.map(function(track, idx){
                 var isCurrent = currentTrackIndex >= 0 && filteredTracks[currentTrackIndex] && filteredTracks[currentTrackIndex].id === track.id;
-                var isPlaying = isCurrent && !audioEngine.paused;
+                var isPlaying = isCurrent && !audioEngine.paused && !audioEngine.ended;
 
                 var thumb = track.thumbnail 
                     ? '<img src="' + escapeHtml(track.thumbnail) + '" alt="" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'block\'"><i class="fas fa-music" style="display:none"></i>'
@@ -1269,10 +1279,10 @@
                     ? '<span class="sp-genre-pill">' + escapeHtml(labelMap[cats[0].trim().toLowerCase()] || cats[0].trim()) + '</span>'
                     : '<span class="sp-genre-pill">Audio</span>';
 
-                var artist = (track.creator_nickname || track.author_name || 'Zyrex Sound').trim();
-                var uploaderName = track.author_name || track.uploader_name || 'Community';
-                var uploaderId = track.author_id || track.uploader_id || '';
-                var fallbackAv = track.creator_avatar || track.uploader_avatar || '';
+                var artist = (track.creator_nickname || track.creator_username || 'Zyrex Sound').trim();
+                var uploaderName = (track.uploader_name || track.author_name || 'Community').trim();
+                var uploaderId = (track.uploader_id || track.author_id || '').trim();
+                var fallbackAv = (track.uploader_avatar || track.author_avatar || '').trim();
 
                 var dlCount = (track.downloads || 0).toLocaleString();
 
@@ -1297,7 +1307,7 @@
                     '<td>' +
                         '<div class="sp-uploader-cell-wrap">' +
                             '<img class="sp-uploader-avatar" data-uploader-id="' + uploaderId + '" data-fallback="' + fallbackAv + '" src="https://cdn.discordapp.com/embed/avatars/0.png" alt="">' +
-                            '<span class="sp-uploader-name">' + escapeHtml(uploaderName) + '</span>' +
+                            '<span class="sp-uploader-name" data-uploader-id="' + uploaderId + '">' + escapeHtml(uploaderName) + '</span>' +
                         '</div>' +
                     '</td>' +
                     '<td class="sp-dl-cell">' + dlCount + '</td>' +
@@ -1337,10 +1347,17 @@
             }
 
             audioEngine.src = streamUrl;
-            audioEngine.play().catch(function(e){ console.log("Autoplay check:", e); });
-
+            var p = audioEngine.play();
             updatePlayerBarUI(track);
-            syncTrackTableState();
+            syncTrackTableState(true);
+            if (p !== undefined) {
+                p.then(function(){
+                    syncTrackTableState(true);
+                }).catch(function(e){
+                    console.log("Autoplay check:", e);
+                    syncTrackTableState(false);
+                });
+            }
         }
 
         function togglePlayPause() {
@@ -1349,12 +1366,15 @@
                 return;
             }
             if (audioEngine.paused) {
-                audioEngine.play();
+                var p = audioEngine.play();
+                syncTrackTableState(true);
+                if (p !== undefined) {
+                    p.catch(function(){ syncTrackTableState(false); });
+                }
             } else {
                 audioEngine.pause();
+                syncTrackTableState(false);
             }
-            syncTrackTableState();
-            syncPlayerButtons();
         }
 
         function playNextTrack() {
@@ -1386,7 +1406,7 @@
 
             document.getElementById('pTitle').textContent = track.name;
             document.getElementById('pTitle').href = '/product-audio?id=' + track.id;
-            var artist = (track.creator_nickname || track.author_name || 'Zyrex Audio').trim();
+            var artist = (track.creator_nickname || track.creator_username || 'Zyrex Sound').trim();
             document.getElementById('pArtist').textContent = artist;
 
             var thumbEl = document.getElementById('pThumb');
@@ -1406,8 +1426,8 @@
             }
         }
 
-        function syncTrackTableState() {
-            var isPlaying = !audioEngine.paused && !audioEngine.ended;
+        function syncTrackTableState(forcePlaying) {
+            var isPlaying = (typeof forcePlaying === 'boolean') ? forcePlaying : (!audioEngine.paused && !audioEngine.ended);
             document.querySelectorAll('.sp-row').forEach(function(row){
                 var idx = parseInt(row.getAttribute('data-index'), 10);
                 var isCur = (idx === currentTrackIndex);
@@ -1419,11 +1439,11 @@
                     playIcon.className = 'fas ' + (isCur && isPlaying ? 'fa-pause' : 'fa-play');
                 }
             });
-            syncPlayerButtons();
+            syncPlayerButtons(isPlaying);
         }
 
-        function syncPlayerButtons() {
-            var isPlaying = !audioEngine.paused && !audioEngine.ended;
+        function syncPlayerButtons(forcePlaying) {
+            var isPlaying = (typeof forcePlaying === 'boolean') ? forcePlaying : (!audioEngine.paused && !audioEngine.ended);
             var mainPlay = document.getElementById('mainPlayBtn');
             if (mainPlay) {
                 mainPlay.classList.toggle('is-playing', isPlaying);
@@ -1493,16 +1513,21 @@
             if (pDur) pDur.textContent = formatTime(dur);
         });
 
+        audioEngine.addEventListener('playing', function(){
+            startSmoothScrubber();
+            syncTrackTableState(true);
+        });
         audioEngine.addEventListener('play', function(){
             startSmoothScrubber();
-            syncTrackTableState();
+            syncTrackTableState(true);
         });
         audioEngine.addEventListener('pause', function(){
             stopSmoothScrubber();
-            syncTrackTableState();
+            syncTrackTableState(false);
         });
         audioEngine.addEventListener('ended', function(){
             stopSmoothScrubber();
+            syncTrackTableState(false);
             var pFill = document.getElementById('pFill');
             var pThumb = document.getElementById('pThumbPin');
             if (pFill) pFill.style.width = '0%';

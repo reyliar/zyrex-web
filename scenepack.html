@@ -829,34 +829,49 @@
 
         // Fetch Discord profile photo via Zyrex VPS Bot API
         async function fetchUploaderDiscordAvatar(uploaderId, fallbackHashOrUrl) {
-            if (!uploaderId) {
-                if (fallbackHashOrUrl && fallbackHashOrUrl.startsWith('http')) return fallbackHashOrUrl;
-                if (fallbackHashOrUrl) return '/api/avatar/0/' + fallbackHashOrUrl + '.png?size=128';
-                return 'https://cdn.discordapp.com/embed/avatars/0.png';
-            }
-            if (discordAvatarCache[uploaderId]) return discordAvatarCache[uploaderId];
-            
-            try {
-                var res = await fetch('/api/discord-user/' + uploaderId);
-                if (res.ok) {
-                    var data = await res.json();
-                    if (data && data.avatar_url) {
-                        discordAvatarCache[uploaderId] = data.avatar_url;
-                        return data.avatar_url;
+            if (uploaderId && discordAvatarCache[uploaderId]) return discordAvatarCache[uploaderId];
+
+            if (uploaderId && /^\d{17,20}$/.test(uploaderId)) {
+                try {
+                    var res = await fetch('/api/discord-user?userId=' + uploaderId);
+                    if (res.ok) {
+                        var json = await res.json();
+                        if (json && json.success && json.user) {
+                            var avUrl = json.user.avatar_url;
+                            if (!avUrl && json.user.avatar) {
+                                var ext = json.user.avatar.startsWith('a_') ? 'gif' : 'png';
+                                avUrl = 'https://cdn.discordapp.com/avatars/' + uploaderId + '/' + json.user.avatar + '.' + ext + '?size=128';
+                            }
+                            if (avUrl) {
+                                discordAvatarCache[uploaderId] = avUrl;
+                            }
+                            var liveName = json.user.display_name || json.user.global_name || json.user.username;
+                            if (liveName) {
+                                document.querySelectorAll('.sp-uploader-name[data-uploader-id="' + uploaderId + '"]').forEach(function(el) {
+                                    el.textContent = liveName;
+                                });
+                            }
+                            if (avUrl) return avUrl;
+                        }
                     }
-                }
-            } catch(e) {}
+                } catch(e) {}
+            }
             
             if (fallbackHashOrUrl && fallbackHashOrUrl.startsWith('http')) {
-                discordAvatarCache[uploaderId] = fallbackHashOrUrl;
+                if (uploaderId) discordAvatarCache[uploaderId] = fallbackHashOrUrl;
                 return fallbackHashOrUrl;
             }
             if (fallbackHashOrUrl) {
-                var url = '/api/avatar/' + uploaderId + '/' + fallbackHashOrUrl + '.png?size=128';
-                discordAvatarCache[uploaderId] = url;
+                var ext = fallbackHashOrUrl.startsWith('a_') ? 'gif' : 'png';
+                var url = 'https://cdn.discordapp.com/avatars/' + (uploaderId || '0') + '/' + fallbackHashOrUrl + '.' + ext + '?size=128';
+                if (uploaderId) discordAvatarCache[uploaderId] = url;
                 return url;
             }
-            return 'https://cdn.discordapp.com/embed/avatars/0.png';
+            let defIdx = 0;
+            if (uploaderId && /^\d+$/.test(uploaderId)) {
+                try { defIdx = Number((BigInt(uploaderId) >> 22n) % 6n); } catch(e) { defIdx = parseInt(uploaderId) % 5 || 0; }
+            }
+            return 'https://cdn.discordapp.com/embed/avatars/' + defIdx + '.png';
         }
 
         function loadUploaderAvatars() {
@@ -942,23 +957,12 @@
                 var imageSrc = (p.thumbnail && p.thumbnail !== 'assets/content.png' && p.thumbnail !== '/assets/content.png') ? p.thumbnail : (prod ? prod.poster : 'assets/content.png');
                 var idString = String(p.id);
 
-                var hasCreator = Boolean((p.creator_nickname || p.author_name || '').trim());
-                var creatorName = p.creator_nickname || p.author_name || '';
-                var creatorAv = p.creator_avatar || '';
-                var uploaderName = p.uploader_name || 'Zyrex Member';
-                var uploaderAv = p.uploader_avatar || 'https://cdn.discordapp.com/embed/avatars/0.png';
-                var uploaderId = p.uploader_id || '';
+                var uploaderName = (p.uploader_name || p.author_name || p.creator_nickname || 'Zyrex Member').trim();
+                var uploaderId = (p.uploader_id || p.author_id || '').trim();
+                var uploaderAv = (p.uploader_avatar || p.author_avatar || '').trim();
 
-                var avHtml = '';
-                var nameHtml = '';
-
-                if (hasCreator) {
-                    avHtml = '<img class="sp-uploader-avatar" src="' + (creatorAv || 'assets/content.png') + '" onerror="this.src=\'assets/content.png\'" alt="">';
-                    nameHtml = '<span class="sp-uploader-name">' + escapeHtml(creatorName) + '</span>';
-                } else {
-                    avHtml = '<img class="sp-uploader-avatar" data-uploader-id="' + uploaderId + '" data-fallback="' + uploaderAv + '" src="https://cdn.discordapp.com/embed/avatars/0.png" alt="">';
-                    nameHtml = '<span class="sp-uploader-name">' + escapeHtml(uploaderName) + '</span>';
-                }
+                var avHtml = '<img class="sp-uploader-avatar" data-uploader-id="' + uploaderId + '" data-fallback="' + uploaderAv + '" src="https://cdn.discordapp.com/embed/avatars/0.png" alt="">';
+                var nameHtml = '<span class="sp-uploader-name" data-uploader-id="' + uploaderId + '">' + escapeHtml(uploaderName) + '</span>';
 
                 var rawCat = (p.category || (prod && prod.category) || 'scenepack').toLowerCase();
                 var catLabel = 'Scenepack';

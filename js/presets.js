@@ -8,6 +8,62 @@ window.handleAvatarError = function(img) {
     img.src = window.DEFAULT_AVATAR;
 };
 
+var presetDiscordAvatarCache = {};
+async function fetchPresetDiscordAvatar(userId, fallback) {
+    if (userId && presetDiscordAvatarCache[userId]) return presetDiscordAvatarCache[userId];
+    if (userId && /^\d{17,20}$/.test(userId)) {
+        try {
+            const resp = await fetch('/api/discord-user?userId=' + userId);
+            if (resp.ok) {
+                const data = await resp.json();
+                if (data && data.success && data.user) {
+                    let avUrl = data.user.avatar_url;
+                    if (!avUrl && data.user.avatar) {
+                        const ext = data.user.avatar.startsWith('a_') ? 'gif' : 'png';
+                        avUrl = 'https://cdn.discordapp.com/avatars/' + userId + '/' + data.user.avatar + '.' + ext + '?size=128';
+                    }
+                    if (avUrl) {
+                        presetDiscordAvatarCache[userId] = avUrl;
+                    }
+                    const liveName = data.user.display_name || data.user.global_name || data.user.username;
+                    if (liveName) {
+                        document.querySelectorAll('.preset-card-name[data-uploader-id="' + userId + '"]').forEach(el => {
+                            el.textContent = liveName;
+                        });
+                    }
+                    if (avUrl) return avUrl;
+                }
+            }
+        } catch(e) {}
+    }
+    if (fallback && fallback.startsWith('http')) {
+        if (userId) presetDiscordAvatarCache[userId] = fallback;
+        return fallback;
+    }
+    if (fallback) {
+        const ext = fallback.startsWith('a_') ? 'gif' : 'png';
+        const url = 'https://cdn.discordapp.com/avatars/' + (userId || '0') + '/' + fallback + '.' + ext + '?size=128';
+        if (userId) presetDiscordAvatarCache[userId] = url;
+        return url;
+    }
+    let defIdx = 0;
+    if (userId && /^\d+$/.test(userId)) {
+        try { defIdx = Number((BigInt(userId) >> 22n) % 6n); } catch(e) { defIdx = parseInt(userId) % 5 || 0; }
+    }
+    return 'https://cdn.discordapp.com/embed/avatars/' + defIdx + '.png';
+}
+
+function loadPresetAvatars() {
+    document.querySelectorAll('.preset-card-avatar[data-uploader-id]').forEach(async function(img) {
+        var uid = img.getAttribute('data-uploader-id');
+        var fb = img.getAttribute('data-fallback') || '';
+        if (uid) {
+            var url = await fetchPresetDiscordAvatar(uid, fb);
+            if (url) img.src = url;
+        }
+    });
+}
+
 // Cache helpers for products data
 var PRODUCTS_CACHE_KEY = 'zyrex_products_cache';
 var PRODUCTS_CACHE_TTL = 15 * 60 * 1000; // 15 minutes
@@ -300,10 +356,11 @@ function renderPresets(items) {
         const icons = { 'after-effects':'fa-film','premiere-pro':'fa-video','photoshop':'fa-image','video-star':'fa-star','topaz-labs':'fa-gem','others':'fa-folder' };
         const icon = icons[item.category] || 'fa-sliders';
         const descriptionText = item.description || item.desc || '';
-        const shortDesc = descriptionText ? descriptionText.substring(0, 80) + (descriptionText.length > 80 ? '...' : '') : '';
-        const avatarUrl = item.creator_avatar || '';
-        const avatarHtml = avatarUrl ? `<img src="${avatarUrl}" alt="" onerror="window.handleAvatarError(this)">` : `<img src="${window.DEFAULT_AVATAR}" alt="" style="opacity:0.6">`;
-        const nickname = item.creator_nickname || item.author_name || 'Zyrex';
+        const uploaderName = (item.uploader_name || item.author_name || item.creator_nickname || 'Zyrex').trim();
+        const uploaderId = (item.uploader_id || item.author_id || '').trim();
+        const uploaderAv = (item.uploader_avatar || item.author_avatar || item.creator_avatar || '').trim();
+        const avatarHtml = `<img src="${uploaderAv || window.DEFAULT_AVATAR}" class="preset-card-avatar" data-uploader-id="${uploaderId}" data-fallback="${uploaderAv}" alt="" onerror="window.handleAvatarError(this)">`;
+        const nickname = uploaderName;
         const dlCount = downloadCounts[item.id] || item.downloads || 0;
         const likeCount = likeCounts[item.id] || 0;
 
@@ -333,12 +390,14 @@ function renderPresets(items) {
             '<div class="rc-footer">' +
             '<div class="rc-meta">' +
             '<div class="rava-fb">' + avatarHtml + '</div>' +
-            '<span class="rname">' + nickname + '</span></div>' +
+            '<span class="rname preset-card-name" data-uploader-id="' + uploaderId + '">' + nickname + '</span></div>' +
             '<div class="rc-actions">' +
             '<span><i class="fas fa-download"></i> ' + dlCount + '</span>' +
             '<span><i class="fas fa-heart"></i> ' + likeCount + '</span>' +
             '</div></div></div></a>';
     }).join('');
+
+    loadPresetAvatars();
 
     requestAnimationFrame(() => {
         const items = grid.querySelectorAll('.rc');

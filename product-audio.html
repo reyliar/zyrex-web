@@ -642,45 +642,48 @@
     let discordAvatarCache = {};
 
     async function fetchUploaderDiscordAvatar(uploaderId, fallbackHashOrUrl) {
-        if (fallbackHashOrUrl && fallbackHashOrUrl.startsWith('http')) {
-            if (uploaderId) discordAvatarCache[uploaderId] = fallbackHashOrUrl;
-            return fallbackHashOrUrl;
+        if (uploaderId && discordAvatarCache[uploaderId]) {
+            return discordAvatarCache[uploaderId];
         }
-        if (!uploaderId) {
-            if (fallbackHashOrUrl) return '/api/avatar/0/' + fallbackHashOrUrl + '.png?size=128';
-            return 'https://cdn.discordapp.com/embed/avatars/0.png';
-        }
-        if (discordAvatarCache[uploaderId]) return discordAvatarCache[uploaderId];
 
-        try {
-            var controller = new AbortController();
-            var timer = setTimeout(function(){ controller.abort(); }, 3000);
-            var resp = await fetch('/api/discord-user?userId=' + uploaderId, { signal: controller.signal });
-            clearTimeout(timer);
+        if (uploaderId && /^\d{17,20}$/.test(uploaderId)) {
+            try {
+                var controller = new AbortController();
+                var timer = setTimeout(function(){ controller.abort(); }, 3500);
+                var resp = await fetch('/api/discord-user?userId=' + uploaderId, { signal: controller.signal });
+                clearTimeout(timer);
 
-            if (resp.ok) {
-                var json = await resp.json();
-                if (json.success && json.user) {
-                    var avUrl = json.user.avatar_url;
-                    if (!avUrl && json.user.avatar) {
-                        var ext = json.user.avatar.startsWith('a_') ? 'gif' : 'png';
-                        avUrl = '/api/avatar/' + uploaderId + '/' + json.user.avatar + '.' + ext + '?size=128';
-                    }
-                    if (avUrl) {
-                        discordAvatarCache[uploaderId] = avUrl;
-                        return avUrl;
+                if (resp.ok) {
+                    var json = await resp.json();
+                    if (json.success && json.user) {
+                        var avUrl = json.user.avatar_url;
+                        if (!avUrl && json.user.avatar) {
+                            var ext = json.user.avatar.startsWith('a_') ? 'gif' : 'png';
+                            avUrl = 'https://cdn.discordapp.com/avatars/' + uploaderId + '/' + json.user.avatar + '.' + ext + '?size=128';
+                        }
+                        if (avUrl) {
+                            discordAvatarCache[uploaderId] = avUrl;
+                            return avUrl;
+                        }
                     }
                 }
-            }
-        } catch(e) {}
+            } catch(e) {}
+        }
 
         if (fallbackHashOrUrl) {
-            if (fallbackHashOrUrl.startsWith('http')) return fallbackHashOrUrl;
+            if (fallbackHashOrUrl.startsWith('http')) {
+                if (uploaderId) discordAvatarCache[uploaderId] = fallbackHashOrUrl;
+                return fallbackHashOrUrl;
+            }
             var ext = fallbackHashOrUrl.startsWith('a_') ? 'gif' : 'png';
-            return '/api/avatar/' + uploaderId + '/' + fallbackHashOrUrl + '.' + ext + '?size=128';
+            var uUrl = 'https://cdn.discordapp.com/avatars/' + (uploaderId || '0') + '/' + fallbackHashOrUrl + '.' + ext + '?size=128';
+            if (uploaderId) discordAvatarCache[uploaderId] = uUrl;
+            return uUrl;
         }
         let defIdx = 0;
-        try { defIdx = Number((BigInt(uploaderId) >> 22n) % 6n); } catch(e) { defIdx = parseInt(uploaderId) % 5 || 0; }
+        if (uploaderId && /^\d+$/.test(uploaderId)) {
+            try { defIdx = Number((BigInt(uploaderId) >> 22n) % 6n); } catch(e) { defIdx = parseInt(uploaderId) % 5 || 0; }
+        }
         return 'https://cdn.discordapp.com/embed/avatars/' + defIdx + '.png';
     }
 
@@ -746,10 +749,10 @@
         var isLiked = localStorage.getItem(likeKey) === '1';
         var isBookmarked = localStorage.getItem(bookKey) === '1';
 
-        // Creator details (In audio, the uploader IS the creator)
-        var creatorName = (p.creator_nickname || p.author_name || p.uploader_name || 'Community Member').trim();
-        var uploaderId = p.author_id || p.uploader_id || '';
-        var fallbackAv = p.creator_avatar || p.uploader_avatar || '';
+        // Creator & Uploader details
+        var creatorName = (p.uploader_name || p.author_name || p.creator_nickname || 'Community Member').trim();
+        var uploaderId = (p.uploader_id || p.author_id || '').trim();
+        var fallbackAv = (p.uploader_avatar || p.author_avatar || p.creator_avatar || '').trim();
         var socialUrl = (p.creator_social_url || p.social_url || p.author_social || '').trim();
         var socialIcon = 'fas fa-arrow-up-right-from-square';
 
