@@ -30,11 +30,11 @@ Write-Host "  All site assets synced successfully!" -ForegroundColor Green
 
 # Deploy zyrex-api worker (scan-creator-links, scrape, etc.)
 Write-Host "`nDeploying zyrex-api worker..." -ForegroundColor Cyan
-cmd /c npx wrangler deploy --config wrangler.workers.toml
+cmd /c npx -y wrangler deploy --config wrangler.workers.toml
 
 # Deploy zyrex-site-gate (serves the HTML files to zyrexediting.xyz)
 Write-Host "`nDeploying zyrex-site-gate..." -ForegroundColor Cyan
-cmd /c npx wrangler deploy --config wrangler.site-gate.toml
+cmd /c npx -y wrangler deploy --config wrangler.site-gate.toml
 
 Write-Host "`nAll deployed! Live at: https://zyrexediting.xyz" -ForegroundColor Green
 
