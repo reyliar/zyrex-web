@@ -252,55 +252,94 @@ window.handleAvatarError = function(img) {
     img.src = window.DEFAULT_AVATAR;
 };
 
-/* ===================== NAVBAR SCROLL EFFECT ===================== */
+/* ===================== NAVBAR SYNC & SCROLL EFFECT ===================== */
 const navbar = document.querySelector('.navbar');
-const navLinks = document.querySelectorAll('.nav-links a');
 
-let lastScrollY = 0;
-let scrollTimeout = null;
+function syncNavbarActiveState() {
+    const navLinks = document.querySelectorAll('.nav-links a');
+    if (!navLinks.length) return;
+    const path = (window.location.pathname || '/').toLowerCase().replace(/\/index\.html$/, '/');
+    const hash = (window.location.hash || '').toLowerCase();
 
-if (navbar) {
-window.addEventListener('scroll', () => {
-    const currentScrollY = window.scrollY;
-    
-    // Scrolled class (compact style when not at top)
-    if (currentScrollY > 50) {
-        navbar.classList.add('scrolled');
-    } else {
-        navbar.classList.remove('scrolled');
-        navbar.classList.remove('nav-hidden');
+    // The ONLY pages reachable directly from the header:
+    let activeHref = null;
+    if (path === '/' || path === '') {
+        activeHref = (hash === '#contact') ? '/#contact' : '/';
+    } else if (path === '/presets' || path === '/presets.html' || path === '/resources' || path === '/resources.html') {
+        activeHref = '/presets';
+    } else if (path === '/plugins' || path === '/plugins.html') {
+        activeHref = '/plugins';
+    } else if (path === '/more' || path === '/more.html') {
+        activeHref = '/more';
     }
-    
-    // Hide on scroll down, show on scroll up (only when past 100px)
-    if (currentScrollY > 100) {
-        if (currentScrollY > lastScrollY) {
-            // Scrolling down → hide
-            navbar.classList.add('nav-hidden');
-        } else {
-            // Scrolling up → show
-            navbar.classList.remove('nav-hidden');
-        }
-    }
-    
-    lastScrollY = currentScrollY;
-
-    // Active link on scroll
-    let current = '';
-    const sections = document.querySelectorAll('section[id]');
-    sections.forEach(section => {
-        const sectionTop = section.offsetTop - 150;
-        if (window.scrollY >= sectionTop) {
-            current = section.getAttribute('id');
-        }
-    });
+    // Any other page (/audio, /scenepack, /preset, /product, /bookmarks, /settings, etc.) -> activeHref remains null!
 
     navLinks.forEach(link => {
-        link.classList.remove('active');
-        if (link.getAttribute('href') === `#${current}`) {
+        const href = link.getAttribute('href');
+        if (activeHref && (href === activeHref || (activeHref === '/' && (href === '#hero' || href === '/')) || (activeHref === '/#contact' && (href === '#contact' || href === '/#contact')))) {
             link.classList.add('active');
+        } else {
+            link.classList.remove('active');
         }
     });
-});
+}
+
+// Run active state sync immediately and on navigation
+syncNavbarActiveState();
+window.addEventListener('popstate', syncNavbarActiveState);
+window.addEventListener('hashchange', syncNavbarActiveState);
+
+let lastScrollY = 0;
+
+if (navbar) {
+    window.addEventListener('scroll', () => {
+        const currentScrollY = window.scrollY;
+        
+        // Scrolled class (compact style when not at top)
+        if (currentScrollY > 50) {
+            navbar.classList.add('scrolled');
+        } else {
+            navbar.classList.remove('scrolled');
+            navbar.classList.remove('nav-hidden');
+        }
+        
+        // Hide on scroll down, show on scroll up (only when past 100px)
+        if (currentScrollY > 100) {
+            if (currentScrollY > lastScrollY) {
+                // Scrolling down → hide
+                navbar.classList.add('nav-hidden');
+            } else {
+                // Scrolling up → show
+                navbar.classList.remove('nav-hidden');
+            }
+        }
+        
+        lastScrollY = currentScrollY;
+
+        // Active link on scroll (Home page single-page section scrolling only)
+        const path = (window.location.pathname || '/').toLowerCase();
+        const isHomePage = (path === '/' || path === '/index.html' || path === '');
+        if (isHomePage) {
+            let current = 'hero';
+            const sections = document.querySelectorAll('section[id], header[id]');
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop - 180;
+                if (window.scrollY >= sectionTop) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            const navLinks = document.querySelectorAll('.nav-links a');
+            navLinks.forEach(link => {
+                const href = link.getAttribute('href');
+                if (href === `#${current}` || (current === 'hero' && (href === '/' || href === '#hero')) || (current === 'contact' && (href === '#contact' || href === '/#contact'))) {
+                    link.classList.add('active');
+                } else if (href.startsWith('#') || href === '/') {
+                    link.classList.remove('active');
+                }
+            });
+        }
+    });
 }
 
 /* ===================== MOBILE HAMBURGER MENU ===================== */
@@ -308,18 +347,18 @@ const hamburger = document.getElementById('hamburger');
 const navLinksContainer = document.getElementById('navLinks');
 
 if (hamburger && navLinksContainer) {
-hamburger.addEventListener('click', () => {
-    hamburger.classList.toggle('active');
-    navLinksContainer.classList.toggle('open');
-});
-
-// Close menu on link click
-navLinks.forEach(link => {
-    link.addEventListener('click', () => {
-        hamburger.classList.remove('active');
-        navLinksContainer.classList.remove('open');
+    hamburger.addEventListener('click', () => {
+        hamburger.classList.toggle('active');
+        navLinksContainer.classList.toggle('open');
     });
-});
+
+    // Close menu on link click
+    document.querySelectorAll('.nav-links a').forEach(link => {
+        link.addEventListener('click', () => {
+            hamburger.classList.remove('active');
+            navLinksContainer.classList.remove('open');
+        });
+    });
 }
 
 /* ===================== DISCORD API - TEAM PROFILES ===================== */
