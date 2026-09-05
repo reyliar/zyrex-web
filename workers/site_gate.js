@@ -57,7 +57,7 @@ async function probeServer(env) {
   } catch (error) {
     lastHealthReason = "request-error";
     console.warn("Server health probe failed", error?.message || String(error));
-    return healthState.initialized ? healthState.available : true;
+    return false;
   } finally {
     clearTimeout(timeout);
   }
@@ -90,27 +90,193 @@ function maintenanceHtml() {
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
   <meta name="robots" content="noindex,nofollow">
-  <title>Servers Offline · Zyrex Editing</title>
+  <title>System Offline · Zyrex Editing</title>
+  <link rel="icon" type="image/png" href="/assets/content.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
-    :root{color-scheme:dark;--bg:#07070a;--panel:#111116;--line:#292932;--text:#f5f5f7;--muted:#a4a4af;--red:#ff4d5e}
-    *{box-sizing:border-box}html,body{height:100%;margin:0}body{display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 50% 20%,#1b1117 0,#0b0b0f 38%,var(--bg) 72%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
-    main{width:min(620px,100%);padding:42px 34px;text-align:center;background:rgba(17,17,22,.92);border:1px solid var(--line);border-radius:24px;box-shadow:0 30px 80px #0008;backdrop-filter:blur(18px)}
-    .mark{display:inline-flex;align-items:center;gap:9px;padding:8px 13px;border:1px solid #4a2830;border-radius:999px;background:#261118;color:#ff9ca6;font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase}
-    .dot{width:9px;height:9px;border-radius:50%;background:var(--red);box-shadow:0 0 0 0 #ff4d5e80;animation:pulse 1.8s infinite}
-    h1{margin:25px 0 13px;font-size:clamp(29px,6vw,48px);line-height:1.08;letter-spacing:-.04em}p{margin:0 auto;max-width:490px;color:var(--muted);font-size:16px;line-height:1.7}
-    button{margin-top:28px;padding:12px 19px;border:1px solid #393943;border-radius:12px;background:#1b1b22;color:var(--text);font:inherit;font-weight:650;cursor:pointer}button:hover{background:#24242c;border-color:#50505c}.note{display:block;margin-top:17px;color:#73737e;font-size:12px}
-    @keyframes pulse{70%{box-shadow:0 0 0 10px #ff4d5e00}100%{box-shadow:0 0 0 0 #ff4d5e00}}
+    :root {
+      --cherry: #ff2b52;
+      --cherry-light: #ff6b8b;
+      --dark: #060108;
+      --panel: rgba(18, 9, 14, 0.92);
+      --border: rgba(255, 43, 82, 0.28);
+      --text: #f8f5f6;
+      --muted: #a49da2;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0 }
+    html, body {
+      min-height: 100vh;
+      background: #060108;
+      background-image: 
+        radial-gradient(circle at 50% 15%, rgba(255, 43, 82, 0.18) 0%, transparent 60%),
+        radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.12) 0%, transparent 50%);
+      color: var(--text);
+      font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      user-select: none;
+    }
+    .lock-card {
+      width: min(640px, 100%);
+      padding: 48px 38px;
+      text-align: center;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.8), 0 0 40px rgba(255, 43, 82, 0.15);
+      backdrop-filter: blur(24px);
+      position: relative;
+      overflow: hidden;
+    }
+    .lock-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, transparent, var(--cherry), var(--cherry-light), transparent);
+    }
+    .brand-lockup {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      text-decoration: none;
+    }
+    .brand-logo {
+      width: 42px; height: 42px;
+      border-radius: 12px;
+      box-shadow: 0 0 20px rgba(255, 43, 82, 0.35);
+    }
+    .brand-name {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: #fff;
+    }
+    .brand-name span { color: var(--cherry-light); }
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 16px;
+      border: 1px solid rgba(255, 77, 94, 0.4);
+      border-radius: 999px;
+      background: rgba(255, 43, 82, 0.12);
+      color: #ff9ca6;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+    .dot-pulse {
+      width: 9px; height: 9px;
+      border-radius: 50%;
+      background: #ff2b52;
+      box-shadow: 0 0 0 0 rgba(255, 43, 82, 0.7);
+      animation: pulse 1.8s infinite;
+    }
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      margin: 12px 0 14px;
+      font-size: clamp(1.8rem, 5vw, 2.5rem);
+      font-weight: 800;
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+      color: #fff;
+    }
+    p {
+      margin: 0 auto 26px;
+      max-width: 520px;
+      color: var(--muted);
+      font-size: 0.94rem;
+      line-height: 1.7;
+    }
+    .action-group {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+    .btn-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 13px 26px;
+      border: 1px solid var(--cherry);
+      border-radius: 14px;
+      background: linear-gradient(135deg, #ff2b52, #b81432);
+      color: #fff;
+      text-decoration: none;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 0.94rem;
+      box-shadow: 0 8px 25px rgba(255, 43, 82, 0.35);
+      transition: all 0.25s ease;
+    }
+    .btn-status:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 32px rgba(255, 43, 82, 0.5);
+      border-color: var(--cherry-light);
+    }
+    .btn-retry {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 13px 22px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 600;
+      font-size: 0.94rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-retry:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.25);
+    }
+    .auto-note {
+      display: block;
+      margin-top: 24px;
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 0.78rem;
+    }
+    @keyframes pulse {
+      0% { box-shadow: 0 0 0 0 rgba(255, 43, 82, 0.7); }
+      70% { box-shadow: 0 0 0 10px rgba(255, 43, 82, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(255, 43, 82, 0); }
+    }
   </style>
 </head>
 <body>
-  <main>
-    <span class="mark"><span class="dot"></span>System offline</span>
-    <h1>Our servers are currently offline</h1>
-    <p>Zyrex Editing is temporarily unavailable because the server cannot be reached. The site will automatically return when the server is online again.</p>
-    <button type="button" onclick="location.reload()">Check again</button>
-    <span class="note">This page checks the server automatically every 15 seconds.</span>
-  </main>
-  <script>setTimeout(function(){location.reload()},15000)</script>
+  <div class="lock-card">
+    <div class="brand-lockup">
+      <img src="/assets/content.png" alt="Zyrex Logo" class="brand-logo" onerror="this.style.display='none'">
+      <div class="brand-name">Zyrex<span>™</span> EDITING</div>
+    </div>
+    <br>
+    <div class="status-badge">
+      <span class="dot-pulse"></span> VPS OFFLINE · SISTEM KİLİTLENDİ
+    </div>
+    <h1>Sistem Geçici Olarak Kilitlendi</h1>
+    <p>
+      Zyrex VPS altyapısı ve bot servisimizle şu anda bağlantı kurulamıyor. Veri güvenliği ve kesintisiz deneyim sağlamak amacıyla sayfalara erişim Cloudflare Edge üzerinde geçici olarak durdurulmuştur.
+    </p>
+    <div class="action-group">
+      <a href="/status" class="btn-status"><i class="fas fa-signal"></i> Sistem Durumunu Görüntüle (/status)</a>
+      <button type="button" class="btn-retry" onclick="location.reload()"><i class="fas fa-rotate"></i> Yeniden Dene</button>
+    </div>
+    <span class="auto-note"><i class="fas fa-shield-halved"></i> Sayfa her 15 saniyede bir otomatik yenilenir. VPS aktif olduğunda kilit anında kalkar.</span>
+  </div>
+  <script>setTimeout(function(){ location.reload(); }, 15000);</script>
 </body>
 </html>`;
 }
@@ -131,12 +297,12 @@ function offlineResponse(request) {
     headers["Content-Type"] = "application/json; charset=UTF-8";
     return new Response(JSON.stringify({
       error: "service_unavailable",
-      message: "The server is offline. The site is temporarily unavailable.",
+      message: "Zyrex VPS / Bot server is offline. Please check /status for real-time telemetry.",
+      status_page: "https://zyrexediting.xyz/status"
     }), { status: 503, headers });
   }
 
   headers["Content-Type"] = "text/html; charset=UTF-8";
-  headers["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; base-uri 'none'; form-action 'none'; frame-ancestors 'none'";
   return new Response(request.method === "HEAD" ? null : maintenanceHtml(), {
     status: 503,
     headers,
@@ -193,6 +359,40 @@ export default {
     const url = new URL(request.url);
     const pathname = url.pathname;
 
+    // 1. Status page, Status API, and static assets needed to render them
+    const isStatusPage = pathname === "/status" || pathname === "/status.html";
+    const isStatusApi = pathname.startsWith("/api/status") || pathname === "/api/health";
+    const isStaticAsset = pathname.startsWith("/assets/") || 
+                          pathname.startsWith("/css/") || 
+                          pathname.startsWith("/js/") || 
+                          pathname === "/favicon.ico" ||
+                          pathname.endsWith(".png") ||
+                          pathname.endsWith(".svg") ||
+                          pathname.endsWith(".jpg") ||
+                          pathname.endsWith(".jpeg") ||
+                          pathname.endsWith(".woff2") ||
+                          pathname.endsWith(".css") ||
+                          pathname.endsWith(".js");
+
+    // Real-time VPS health check at Cloudflare Edge
+    const serverAvailable = await isServerAvailable(env);
+
+    // ============ UNBREAKABLE VPS OFFLINE EDGE LOCKDOWN ============
+    if (!serverAvailable) {
+      if (isStatusPage) {
+        return env.ASSETS.fetch(request);
+      }
+      if (isStatusApi && env.API) {
+        return env.API.fetch(request);
+      }
+      if (isStaticAsset) {
+        return env.ASSETS.fetch(request);
+      }
+      // Deny access to all other pages and return high-security 503 Maintenance Screen
+      return offlineResponse(request);
+    }
+
+    // ============ NORMAL TRAFFIC (VPS ONLINE) ============
     if (isAdminPublishPage(pathname)) {
       const denied = await authorizeAdminPublish(request, env);
       if (denied) return denied;
@@ -208,11 +408,12 @@ export default {
       return env.ASSETS.fetch(request);
     }
 
+
     if (isApiRequest(pathname) && env.API) {
       return env.API.fetch(request);
     }
 
-    // Static site assets (HTML, CSS, JS) are served instantly from Cloudflare CDN with ZERO blocking delay!
+    // Static site assets (HTML, CSS, JS) served from Cloudflare CDN
     return env.ASSETS.fetch(request);
   },
 };

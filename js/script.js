@@ -1250,4 +1250,97 @@ window.showToast = function(title, message, type = 'success') {
     setTimeout(setupHub, 1000);
 })();
 
+/* ===================== GLOBAL FOOTER STATUS PREVIEW ===================== */
+(function() {
+    var statusCacheKey = 'zyrex_status_cache';
+    var statusCacheTtl = 30000; // 30 seconds
+
+    function injectFooterStatus() {
+        var footerBottom = document.querySelector('.footer-bottom');
+        if (!footerBottom) return;
+
+        var existingPill = footerBottom.querySelector('.zyrex-footer-status');
+        if (!existingPill) {
+            var pill = document.createElement('a');
+            pill.href = '/status';
+            pill.className = 'zyrex-footer-status operational';
+            pill.id = 'zyrexFooterStatus';
+            pill.setAttribute('title', 'View live system status & uptime telemetry');
+            pill.innerHTML = '<span class="zyrex-footer-status-dot"></span><span class="zyrex-footer-status-text">All systems operational</span>';
+
+            if (footerBottom.firstElementChild && footerBottom.firstElementChild.nextSibling) {
+                footerBottom.insertBefore(pill, footerBottom.firstElementChild.nextSibling);
+            } else {
+                footerBottom.appendChild(pill);
+            }
+        }
+
+        var existingLegal = footerBottom.querySelector('.footer-legal-inline');
+        if (!existingLegal) {
+            var legal = document.createElement('div');
+            legal.className = 'footer-legal-inline';
+            legal.innerHTML = '<a href="/privacy">Privacy</a> &bull; <a href="/terms">Terms</a> &bull; <a href="/dmca">DMCA</a>';
+            footerBottom.appendChild(legal);
+        }
+
+        syncFooterStatus();
+    }
+
+    function syncFooterStatus() {
+        var pill = document.querySelector('.zyrex-footer-status');
+        if (!pill) return;
+
+        try {
+            var raw = localStorage.getItem(statusCacheKey);
+            if (raw) {
+                var cached = JSON.parse(raw);
+                if (Date.now() - cached.ts < statusCacheTtl) {
+                    applyStatusToPill(pill, cached.status);
+                    return;
+                }
+            }
+        } catch (e) {}
+
+        fetch('/api/status/summary', { cache: 'no-store' })
+            .then(function(res) {
+                if (!res.ok) throw new Error('HTTP ' + res.status);
+                return res.json();
+            })
+            .then(function(data) {
+                var status = data.status || 'operational';
+                try {
+                    localStorage.setItem(statusCacheKey, JSON.stringify({ status: status, ts: Date.now() }));
+                } catch (e) {}
+                applyStatusToPill(pill, status);
+            })
+            .catch(function() {
+                applyStatusToPill(pill, 'operational');
+            });
+    }
+
+    function applyStatusToPill(pill, status) {
+        var textEl = pill.querySelector('.zyrex-footer-status-text');
+        pill.classList.remove('operational', 'degraded', 'outage');
+
+        if (status === 'outage' || status === 'offline') {
+            pill.classList.add('outage');
+            if (textEl) textEl.innerText = 'Major service outage';
+        } else if (status === 'degraded') {
+            pill.classList.add('degraded');
+            if (textEl) textEl.innerText = 'Partial service disruption';
+        } else {
+            pill.classList.add('operational');
+            if (textEl) textEl.innerText = 'All systems operational';
+        }
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', injectFooterStatus);
+    } else {
+        injectFooterStatus();
+    }
+    setTimeout(injectFooterStatus, 400);
+    setInterval(syncFooterStatus, 45000);
+})();
+
 console.log('Zyrex - Website loaded successfully!');
