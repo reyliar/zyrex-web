@@ -697,13 +697,15 @@
     <script src="js/auth.js?v=10"></script>
     <script src="js/script.js?v=5"></script>
 
-    <!-- LIVE TELEMETRY ENGINE & CHART ENGINE -->
+    <!-- 100% REAL TELEMETRY & DYNAMIC OUTAGES CHART ENGINE -->
     <script>
     (function() {
         var isFetching = false;
         var barTooltip = document.getElementById('barTooltip');
+        var liveDataCache = null;
+        var currentRange = '1W';
 
-        // Subsystems Configuration (Exact requested names & descriptions)
+        // 7 Core Subsystems
         var SUBSYSTEMS = [
             {
                 id: 'storage',
@@ -756,32 +758,55 @@
             }
         ];
 
-        // 90-Day Vertical Pill Bars Generator
-        function generateBarsHtml(status, uptimePercent) {
+        // Format Date string YYYY-MM-DD
+        function toDateKey(d) {
+            var year = d.getFullYear();
+            var month = String(d.getMonth() + 1).padStart(2, '0');
+            var day = String(d.getDate()).padStart(2, '0');
+            return year + '-' + month + '-' + day;
+        }
+
+        // Real 90-Day Vertical Pill Bars Generator
+        function generateBarsHtml(subsystemId, currentStatus, uptimePercent, incidentsHistory) {
             var html = '';
             var now = new Date();
-            var totalBars = 65; // Matches visual aspect ratio in screenshot
+            var totalBars = 65;
+
+            // Map incidents for this subsystem by date key
+            var incidentMap = {};
+            if (incidentsHistory && Array.isArray(incidentsHistory)) {
+                incidentsHistory.forEach(function(inc) {
+                    if (inc.subsystem === subsystemId && inc.date) {
+                        incidentMap[inc.date] = inc;
+                    }
+                });
+            }
+
             for (var i = totalBars - 1; i >= 0; i--) {
                 var d = new Date(now.getTime() - (i * 24 * 60 * 60 * 1000));
+                var dateKey = toDateKey(d);
                 var dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 
                 var barClass = '';
                 var statusText = '100% operational';
 
+                // Real status evaluation:
                 if (i === 0) {
-                    if (status === 'outage' || status === 'offline') {
+                    // Today: live telemetry
+                    if (currentStatus === 'outage' || currentStatus === 'offline') {
                         barClass = 'outage';
                         statusText = 'Major outage today';
-                    } else if (status === 'degraded') {
+                    } else if (currentStatus === 'degraded') {
                         barClass = 'degraded';
                         statusText = 'Degraded performance today';
+                    } else {
+                        statusText = 'Operational today';
                     }
-                } else if (i === 28 && uptimePercent < 98) {
-                    barClass = 'outage';
-                    statusText = 'Incident resolved (42m)';
-                } else if (i === 14 && uptimePercent < 99.5) {
-                    barClass = 'degraded';
-                    statusText = 'Elevated latency (15m)';
+                } else if (incidentMap[dateKey]) {
+                    // Actual recorded historical incident on this date
+                    var inc = incidentMap[dateKey];
+                    barClass = inc.severity === 'outage' || inc.severity === 'critical' ? 'outage' : 'degraded';
+                    statusText = (inc.title || 'Service degradation') + (inc.duration ? ' (' + inc.duration + ')' : '');
                 }
 
                 html += '<div class="status-v-bar ' + barClass + '" data-date="' + dateStr + '" data-status="' + statusText + '"></div>';
@@ -789,8 +814,8 @@
             return html;
         }
 
-        // Render Subsystems into Unified Card
-        function renderSubsystems(subsystemsData) {
+        // Render Subsystems into Unified Card with 100% Real Telemetry
+        function renderSubsystems(subsystemsData, incidentsHistory) {
             var container = document.getElementById('subsystemList');
             if (!container) return;
 
@@ -818,7 +843,7 @@
                         '</div>' +
                     '</div>' +
                     '<div class="bars-container">' +
-                        generateBarsHtml(status, uptimeVal) +
+                        generateBarsHtml(sub.id, status, uptimeVal, incidentsHistory) +
                     '</div>' +
                     '<p class="subsystem-desc">' + sub.desc + '</p>' +
                 '</div>';
@@ -855,15 +880,15 @@
             var btn = document.getElementById('btnRefresh');
             if (btn) btn.innerText = 'Checking...';
 
-            var startTime = performance.now();
-
             fetch('/api/status?t=' + Date.now(), { cache: 'no-store' })
                 .then(function(res) {
                     if (!res.ok) throw new Error('HTTP ' + res.status);
                     return res.json();
                 })
                 .then(function(data) {
+                    liveDataCache = data;
                     updateUI(data);
+                    renderDynamicChart(currentRange, data);
                 })
                 .catch(function(err) {
                     console.warn('Status fetch error:', err);
@@ -912,7 +937,7 @@
                 lastCheckedEl.innerText = 'Last checked ' + new Date().toLocaleTimeString();
             }
 
-            renderSubsystems(data.subsystems);
+            renderSubsystems(data.subsystems, data.incidents_history);
 
             // Update footer status pill
             var footerPill = document.getElementById('zyrexFooterStatus');
@@ -937,35 +962,12 @@
             renderSubsystems();
         }
 
-        // ======================== ALL OUTAGES CHART ENGINE ========================
-        var currentRange = '1W';
-
-        // 7 days data structure modeled exactly like Image 2 & 3
-        var CHART_DATA_1W = {
-            days: ['Mon 31', 'Tue 1', 'Wed 2', 'Thu 3', 'Fri 4', 'Sat 5', 'Sun 6'],
-            points: [
-                // Mon 31
-                { downloads: 0, requests: 0, uploads: 0, accounts: 0, membership: 0, comments: 0, discord: 0 },
-                // Tue 1
-                { downloads: 0, requests: 1, uploads: 0, accounts: 0, membership: 0, comments: 2, discord: 3 },
-                // Wed 2
-                { downloads: 0, requests: 0, uploads: 0, accounts: 0, membership: 0, comments: 0, discord: 0 },
-                // Thu 3
-                { downloads: 0, requests: 0, uploads: 0, accounts: 0, membership: 0, comments: 0, discord: 0 },
-                // Fri 4
-                { downloads: 0, requests: 2, uploads: 0, accounts: 0, membership: 0, comments: 0, discord: 0 },
-                // Sat 5
-                { downloads: 0, requests: 2, uploads: 0, accounts: 0, membership: 0, comments: 0, discord: 0 },
-                // Sun 6
-                { downloads: 0, requests: 0, uploads: 0, accounts: 0, membership: 0, comments: 0, discord: 0 }
-            ]
-        };
-
+        // ======================== REAL TIME-SERIES CHART ENGINE ========================
         window.setChartRange = function(range, btn) {
             currentRange = range;
             document.querySelectorAll('.range-btn').forEach(function(b) { b.classList.remove('active'); });
             if (btn) btn.classList.add('active');
-            renderChart();
+            renderDynamicChart(currentRange, liveDataCache);
         };
 
         function renderLegend() {
@@ -982,9 +984,125 @@
             legendEl.innerHTML = html;
         }
 
-        function renderChart() {
+        // Build real dynamic time slots and problem counts for range (1D, 1W, 2W, 1M, 3M)
+        function buildRealTimeSeries(range, apiData) {
+            var now = new Date();
+            var slots = [];
+            var numSlots = 7;
+            var dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+            var incidents = (apiData && apiData.incidents_history) ? apiData.incidents_history : [];
+
+            if (range === '1D') {
+                // Last 24 Hours (6 slots of 4 hours)
+                numSlots = 6;
+                for (var i = numSlots - 1; i >= 0; i--) {
+                    var t = new Date(now.getTime() - i * 4 * 3600 * 1000);
+                    var timeLabel = t.getHours() + ':00';
+                    if (i === 0) timeLabel = 'Now';
+                    slots.push({
+                        label: timeLabel,
+                        dateKey: toDateKey(t),
+                        isNow: i === 0
+                    });
+                }
+            } else if (range === '1W') {
+                // Last 7 Days
+                numSlots = 7;
+                for (var i = numSlots - 1; i >= 0; i--) {
+                    var d = new Date(now.getTime() - i * 24 * 3600 * 1000);
+                    slots.push({
+                        label: dayNames[d.getDay()] + ' ' + d.getDate(),
+                        dateKey: toDateKey(d),
+                        isNow: i === 0
+                    });
+                }
+            } else if (range === '2W') {
+                // Last 14 Days
+                numSlots = 14;
+                for (var i = numSlots - 1; i >= 0; i--) {
+                    var d = new Date(now.getTime() - i * 24 * 3600 * 1000);
+                    slots.push({
+                        label: (i % 2 === 0) ? (dayNames[d.getDay()] + ' ' + d.getDate()) : '',
+                        fullLabel: dayNames[d.getDay()] + ' ' + d.getDate(),
+                        dateKey: toDateKey(d),
+                        isNow: i === 0
+                    });
+                }
+            } else if (range === '1M') {
+                // Last 30 Days
+                numSlots = 30;
+                for (var i = numSlots - 1; i >= 0; i--) {
+                    var d = new Date(now.getTime() - i * 24 * 3600 * 1000);
+                    slots.push({
+                        label: (i % 5 === 0) ? (d.getMonth() + 1) + '/' + d.getDate() : '',
+                        fullLabel: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                        dateKey: toDateKey(d),
+                        isNow: i === 0
+                    });
+                }
+            } else {
+                // 3M: Last 90 Days
+                numSlots = 45;
+                for (var i = numSlots - 1; i >= 0; i--) {
+                    var d = new Date(now.getTime() - i * 2 * 24 * 3600 * 1000);
+                    slots.push({
+                        label: (i % 9 === 0) ? (d.getMonth() + 1) + '/' + d.getDate() : '',
+                        fullLabel: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                        dateKey: toDateKey(d),
+                        isNow: i === 0
+                    });
+                }
+            }
+
+            // Calculate real counts for each slot and subsystem
+            var points = slots.map(function(slot) {
+                var counts = {};
+                SUBSYSTEMS.forEach(function(sub) {
+                    counts[sub.id] = 0;
+                });
+
+                // Match historical incidents
+                incidents.forEach(function(inc) {
+                    if (inc.date === slot.dateKey && counts[inc.subsystem] !== undefined) {
+                        counts[inc.subsystem] += (inc.outages_count || 1);
+                    }
+                });
+
+                // If this slot represents today/now, verify live state
+                if (slot.isNow && apiData && apiData.subsystems) {
+                    SUBSYSTEMS.forEach(function(sub) {
+                        var liveSub = apiData.subsystems[sub.id];
+                        if (liveSub) {
+                            if (liveSub.status === 'outage') {
+                                counts[sub.id] = Math.max(counts[sub.id], 4);
+                            } else if (liveSub.status === 'degraded') {
+                                counts[sub.id] = Math.max(counts[sub.id], 1);
+                            }
+                        }
+                    });
+                }
+
+                return {
+                    label: slot.label,
+                    fullLabel: slot.fullLabel || slot.label,
+                    counts: counts
+                };
+            });
+
+            return {
+                slots: slots,
+                points: points
+            };
+        }
+
+        function renderDynamicChart(range, apiData) {
             var svg = document.getElementById('chartSvg');
             if (!svg) return;
+
+            var timeSeries = buildRealTimeSeries(range, apiData);
+            var points = timeSeries.points;
+            var numPoints = points.length;
 
             var W = 800;
             var H = 200;
@@ -995,10 +1113,13 @@
             var chartW = W - padL - padR;
             var chartH = H - padT - padB;
 
-            var data = CHART_DATA_1W;
-            var days = data.days;
-            var numPoints = days.length;
+            // Find maximum outage count to dynamically scale Y axis (minimum 4)
             var maxVal = 4;
+            points.forEach(function(p) {
+                Object.keys(p.counts).forEach(function(k) {
+                    if (p.counts[k] > maxVal) maxVal = p.counts[k];
+                });
+            });
 
             var svgContent = '';
 
@@ -1009,43 +1130,31 @@
                 svgContent += '<text x="' + (padL - 12) + '" y="' + (yPos + 4) + '" class="axis-label" text-anchor="end">' + yVal + '</text>';
             }
 
-            // 2. X-axis Day Labels
+            // 2. X-axis Labels
             var xCoords = [];
             for (var i = 0; i < numPoints; i++) {
                 var xPos = padL + (i / (numPoints - 1)) * chartW;
                 xCoords.push(xPos);
-                svgContent += '<text x="' + xPos + '" y="' + (H - 8) + '" class="axis-label" text-anchor="middle">' + days[i] + '</text>';
+                if (points[i].label) {
+                    svgContent += '<text x="' + xPos + '" y="' + (H - 8) + '" class="axis-label" text-anchor="middle">' + points[i].label + '</text>';
+                }
             }
 
-            // Mapping curves for subsystems that had outages (modeled from screenshot):
-            var series = [
-                {
-                    id: 'discord',
-                    sub: SUBSYSTEMS[6], // Discord role sync (Pink)
-                    values: [0, 3, 0, 0, 2, 2, 0]
-                },
-                {
-                    id: 'comments',
-                    sub: SUBSYSTEMS[5], // Comments and votes (Green)
-                    values: [0, 2, 0, 0, 0, 0, 0]
-                },
-                {
-                    id: 'requests',
-                    sub: SUBSYSTEMS[1], // Requests (Yellow)
-                    values: [0, 1, 0, 0, 2, 2, 0]
-                }
-            ];
+            // 3. Render Smooth Spline Bezier Paths for active services
+            SUBSYSTEMS.forEach(function(sub, sIdx) {
+                var values = points.map(function(p) { return p.counts[sub.id] || 0; });
+                var totalOutages = values.reduce(function(a, b) { return a + b; }, 0);
 
-            // 3. Render Smooth Spline Bezier Paths with Area Gradients
-            series.forEach(function(s, sIdx) {
+                // If service has no outages in this window, skip drawing path to keep chart crystal clear
+                if (totalOutages === 0) return;
+
                 var pts = [];
                 for (var i = 0; i < numPoints; i++) {
                     var x = xCoords[i];
-                    var y = padT + chartH - (s.values[i] / maxVal) * chartH;
+                    var y = padT + chartH - (values[i] / maxVal) * chartH;
                     pts.push({ x: x, y: y });
                 }
 
-                // Generate smooth SVG cubic bezier path
                 var pathD = 'M ' + pts[0].x + ' ' + pts[0].y;
                 for (var i = 0; i < pts.length - 1; i++) {
                     var p0 = pts[i];
@@ -1057,44 +1166,42 @@
                     pathD += ' C ' + cp1x + ' ' + cp1y + ', ' + cp2x + ' ' + cp2y + ', ' + p1.x + ' ' + p1.y;
                 }
 
-                // Area gradient below line
                 var areaD = pathD + ' L ' + pts[pts.length - 1].x + ' ' + (padT + chartH) + ' L ' + pts[0].x + ' ' + (padT + chartH) + ' Z';
-                var gradId = 'areaGrad_' + s.id;
+                var gradId = 'areaGrad_' + sub.id + '_' + range;
 
                 svgContent += '<defs>' +
                     '<linearGradient id="' + gradId + '" x1="0" y1="0" x2="0" y2="1">' +
-                        '<stop offset="0%" stop-color="' + s.sub.color + '" stop-opacity="0.22" />' +
-                        '<stop offset="100%" stop-color="' + s.sub.color + '" stop-opacity="0" />' +
+                        '<stop offset="0%" stop-color="' + sub.color + '" stop-opacity="0.25" />' +
+                        '<stop offset="100%" stop-color="' + sub.color + '" stop-opacity="0" />' +
                     '</linearGradient>' +
                 '</defs>';
 
                 svgContent += '<path d="' + areaD + '" fill="url(#' + gradId + ')" />';
-                svgContent += '<path d="' + pathD + '" stroke="' + s.sub.color + '" class="chart-line" />';
+                svgContent += '<path d="' + pathD + '" stroke="' + sub.color + '" class="chart-line" />';
 
-                // Render marker dot at hovered points
+                // Marker dot at peaks
                 pts.forEach(function(pt, ptIdx) {
-                    if (s.values[ptIdx] > 0) {
-                        svgContent += '<circle cx="' + pt.x + '" cy="' + pt.y + '" r="4" fill="' + s.sub.color + '" stroke="#111114" stroke-width="2" class="point-dot pt-day-' + ptIdx + '" />';
+                    if (values[ptIdx] > 0) {
+                        svgContent += '<circle cx="' + pt.x + '" cy="' + pt.y + '" r="4" fill="' + sub.color + '" stroke="#111114" stroke-width="2" />';
                     }
                 });
             });
 
             svg.innerHTML = svgContent;
-            attachChartHoverEvents(xCoords, days, data.points);
+            attachChartHoverEvents(xCoords, points);
         }
 
-        function attachChartHoverEvents(xCoords, days, points) {
+        function attachChartHoverEvents(xCoords, points) {
             var box = document.getElementById('chartBox');
             var tooltip = document.getElementById('chartTooltip');
             var tooltipDate = document.getElementById('chartTooltipDate');
             var tooltipRows = document.getElementById('chartTooltipRows');
             if (!box || !tooltip) return;
 
-            box.addEventListener('mousemove', function(e) {
+            box.onmousemove = function(e) {
                 var rect = box.getBoundingClientRect();
                 var mouseX = ((e.clientX - rect.left) / rect.width) * 800;
 
-                // Find closest day
                 var closestIdx = 0;
                 var minDiff = 99999;
                 xCoords.forEach(function(x, idx) {
@@ -1105,18 +1212,12 @@
                     }
                 });
 
-                var dayName = days[closestIdx];
-                var pData = points[closestIdx];
-
-                tooltipDate.innerText = dayName;
+                var p = points[closestIdx];
+                tooltipDate.innerText = p.fullLabel || p.label;
 
                 var rowsHtml = '';
                 SUBSYSTEMS.forEach(function(sub) {
-                    var count = 0;
-                    if (sub.id === 'api_gateway') count = pData.requests;
-                    else if (sub.id === 'comments') count = pData.comments;
-                    else if (sub.id === 'discord_auth') count = pData.discord;
-
+                    var count = p.counts[sub.id] || 0;
                     rowsHtml += '<div class="chart-tooltip-row">' +
                         '<span class="chart-tooltip-name" style="color:' + sub.color + '">' + sub.name + ' : </span>' +
                         '<span class="chart-tooltip-val">' + count + '</span>' +
@@ -1125,16 +1226,16 @@
 
                 tooltipRows.innerHTML = rowsHtml;
                 tooltip.classList.add('visible');
-            });
+            };
 
-            box.addEventListener('mouseleave', function() {
+            box.onmouseleave = function() {
                 tooltip.classList.remove('visible');
-            });
+            };
         }
 
         // Initialize Everything
         renderLegend();
-        renderChart();
+        renderDynamicChart(currentRange);
         renderSubsystems();
         fetchStatus(false);
 
