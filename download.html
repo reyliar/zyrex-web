@@ -167,7 +167,121 @@
         .product-meta i { color: var(--cherry); font-size: .7rem }
         .product-meta .sep { width:3px; height:3px; border-radius:50%; background:rgba(255,255,255,.3) }
 
-        /* Creator */
+        .cat-svg-icon {
+            display: inline-block;
+            width: 1.15em;
+            height: 1.15em;
+            vertical-align: -0.22em;
+            background-color: currentColor;
+            -webkit-mask-size: contain;
+            mask-size: contain;
+            -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+            -webkit-mask-position: center;
+            mask-position: center;
+            flex-shrink: 0;
+            transition: transform 0.2s ease;
+        }
+        .cat-icon-ae {
+            -webkit-mask-image: url('/assets/brand-logos/after-effects.svg');
+            mask-image: url('/assets/brand-logos/after-effects.svg');
+        }
+        .cat-icon-pr {
+            -webkit-mask-image: url('/assets/brand-logos/premiere-pro.svg');
+            mask-image: url('/assets/brand-logos/premiere-pro.svg');
+        }
+        .cat-icon-ps {
+            -webkit-mask-image: url('/assets/brand-logos/photoshop.svg');
+            mask-image: url('/assets/brand-logos/photoshop.svg');
+        }
+        .cat-icon-vs {
+            -webkit-mask-image: url('/assets/brand-logos/video-star.svg');
+            mask-image: url('/assets/brand-logos/video-star.svg');
+        }
+        .cat-icon-topaz {
+            -webkit-mask-image: url('/assets/brand-logos/topaz-badge.svg');
+            mask-image: url('/assets/brand-logos/topaz-badge.svg');
+        }
+        .cat-icon-others {
+            -webkit-mask-image: url('/assets/brand-logos/others.svg');
+            mask-image: url('/assets/brand-logos/others.svg');
+        }
+
+        /* Modern Duo Strip */
+        .download-duo-strip {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 22px;
+            width: 100%;
+        }
+        .duo-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            backdrop-filter: blur(14px);
+            transition: all 0.25s ease;
+        }
+        .duo-card:hover {
+            border-color: rgba(255, 255, 255, 0.16);
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .duo-card.admin-card {
+            background: rgba(0, 149, 246, 0.06);
+            border-color: rgba(0, 149, 246, 0.26);
+        }
+        .duo-card.admin-card:hover {
+            border-color: rgba(0, 149, 246, 0.45);
+            box-shadow: 0 0 20px rgba(0, 149, 246, 0.15);
+        }
+        .duo-card img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .duo-card img.admin-glow-ring {
+            border-color: rgba(0, 149, 246, 0.55);
+            box-shadow: 0 0 12px rgba(0, 149, 246, 0.35);
+        }
+        .duo-info {
+            min-width: 0;
+            flex: 1;
+        }
+        .duo-label {
+            display: block;
+            font-size: 0.68rem;
+            color: var(--gray);
+            text-transform: uppercase;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+        .duo-card strong {
+            display: block;
+            font-size: 0.86rem;
+            color: #fff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            font-family: 'Outfit', sans-serif;
+        }
+        .duo-link {
+            font-size: 0.72rem;
+            color: var(--cherry-light);
+            text-decoration: none;
+            margin-left: auto;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+        .duo-link:hover { text-decoration: underline; }
+
+        /* Creator & Uploader legacy fallback */
         .creator-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07); border-radius: 16px; margin-bottom: 14px; width: 100% }
         .creator-row img { width:36px; height:36px; border-radius:50%; border:2px solid rgba(var(--cherry-rgb),.3); object-fit:cover }
         .creator-row .cav-fb { width:36px; height:36px; border-radius:50%; background:rgba(var(--cherry-rgb),.15); display:flex; align-items:center; justify-content:center; color:var(--cherry); font-size:.75rem }
@@ -175,7 +289,6 @@
         .creator-row a { font-size:.72rem; color:var(--cherry-light); text-decoration:none; margin-left:auto; font-weight:700 }
         .creator-row a:hover { text-decoration:underline }
 
-        /* Uploader */
         .uploader-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: rgba(88,101,242,.06); border: 1px solid rgba(88,101,242,.18); border-radius: 16px; margin-bottom: 20px; width: 100% }
         .uploader-row img { width:34px; height:34px; border-radius:50%; border:2px solid rgba(88,101,242,.3); object-fit:cover }
         .uploader-row .uav-fb { width:34px; height:34px; border-radius:50%; background:rgba(88,101,242,.15); display:flex; align-items:center; justify-content:center; color:#5865F2; font-size:.85rem }
@@ -629,36 +742,60 @@
                 displayUploaderAv = p.uploader_avatar;
             }
 
+            function getCategorySvgClass(cat) {
+                const key = (cat || '').toLowerCase().trim();
+                if (key === 'after-effects' || key === 'ae') return 'cat-icon-ae';
+                if (key === 'premiere-pro' || key === 'premiere' || key === 'pr') return 'cat-icon-pr';
+                if (key === 'photoshop' || key === 'ps') return 'cat-icon-ps';
+                if (key === 'video-star' || key === 'vs') return 'cat-icon-vs';
+                if (key === 'topaz-labs' || key === 'topaz') return 'cat-icon-topaz';
+                return 'cat-icon-others';
+            }
+            const catSvgClass = getCategorySvgClass(p.category);
+            const catSvgIcon = '<span class="cat-svg-icon ' + catSvgClass + '"></span>';
+
+            const ADMIN_IDS = ["1421177012814614548", "1382421118098346174"];
+            const isUploaderAdmin = p.uploader_is_admin === true || 
+                                    ADMIN_IDS.includes(String(authorId)) || 
+                                    ADMIN_IDS.includes(String(p.uploader_id)) || 
+                                    (uploaderName && (uploaderName.toLowerCase().includes('reyli') || uploaderName.toLowerCase().includes('zyrex')));
+
             let html = '';
 
             // Thumbnail
             html += '<div class="thumb-wrap">';
             if (p.thumbnail) {
-                html += '<img src="' + p.thumbnail + '" alt="' + p.name + '" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'block\'">';
+                html += '<img src="' + p.thumbnail + '" alt="' + p.name + '" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">';
             }
-            html += '<i class="fas ' + ic + ' ph-icon" style="' + (p.thumbnail ? 'display:none' : '') + '"></i>';
+            html += '<div class="ph-icon" style="' + (p.thumbnail ? 'display:none;' : '') + 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><span class="cat-svg-icon ' + catSvgClass + '" style="font-size:4.5rem;color:var(--cherry);opacity:0.25"></span></div>';
             var adFreeBadge = window.isAdFreeUser ? '<span class="tbadge adfree" style="background:linear-gradient(135deg,#eab308,#f59e0b);color:#000;font-weight:700"><i class="fas fa-bolt"></i> Ad-Free</span>' : '';
-            html += '<div class="thumb-badges"><span class="tbadge"><i class="fas ' + ic + '"></i> ' + cat + '</span><span class="tbadge free"><i class="fas fa-circle-check"></i> Free</span>' + adFreeBadge + '</div>';
+            html += '<div class="thumb-badges"><span class="tbadge">' + catSvgIcon + ' ' + cat + '</span><span class="tbadge free"><i class="fas fa-circle-check"></i> Free</span>' + adFreeBadge + '</div>';
             html += '</div>';
 
             // Title
             html += '<h1 class="product-title">' + p.name + '</h1>';
-            html += '<div class="product-meta"><i class="fas ' + ic + '"></i> ' + cat + ' <span class="sep"></span> <i class="fas fa-download"></i> <span id="dlCount">0</span> downloads</div>';
+            html += '<div class="product-meta">' + catSvgIcon + ' ' + cat + ' <span class="sep"></span> <i class="fas fa-download"></i> <span id="dlCount">0</span> downloads</div>';
 
-            // Creator
-            html += '<div class="creator-row">';
+            // Duo Strip (Creator & Uploader with Admin Blue Checkmark)
+            html += '<div class="download-duo-strip">';
+            // Creator Card
+            html += '<div class="duo-card creator-card">';
             html += av ? '<img src="' + av + '" alt="" onerror="window.handleAvatarError(this)">' : '<img src="' + window.DEFAULT_AVATAR + '" alt="" style="width:36px;height:36px;border-radius:50%;opacity:0.6">';
-            html += '<strong>' + nick + '</strong>';
-            if (p.creator_social_url) html += '<a href="' + p.creator_social_url + '" target="_blank"><i class="fas fa-external-link-alt"></i> Profile</a>';
+            html += '<div class="duo-info"><span class="duo-label">Creator</span><strong>' + nick + '</strong></div>';
+            if (p.creator_social_url) html += '<a href="' + p.creator_social_url + '" target="_blank" class="duo-link"><i class="fas fa-arrow-up-right-from-square"></i> Profile</a>';
             html += '</div>';
 
-            // Uploader
+            // Uploader Card
             if (uploaderName) {
-                html += '<div class="uploader-row">';
-                html += displayUploaderAv ? '<img src="' + displayUploaderAv + '" alt="" onerror="window.handleAvatarError(this)">' : '<div class="uav-fb"><i class="fab fa-discord"></i></div>';
-                html += '<div><strong>' + uploaderName + '</strong><span>Community Uploader</span></div>';
+                html += '<div class="duo-card uploader-card ' + (isUploaderAdmin ? 'admin-card' : '') + '">';
+                html += displayUploaderAv ? '<img src="' + displayUploaderAv + '" alt="" class="' + (isUploaderAdmin ? 'admin-glow-ring' : '') + '" onerror="window.handleAvatarError(this)">' : '<div class="uav-fb" style="width:36px;height:36px;border-radius:50%;background:rgba(88,101,242,0.15);display:flex;align-items:center;justify-content:center;color:#5865F2"><i class="fab fa-discord"></i></div>';
+                html += '<div class="duo-info">';
+                html += '<span class="duo-label" style="' + (isUploaderAdmin ? 'color:#0095F6;font-weight:800' : '') + '">' + (isUploaderAdmin ? 'Verified Admin' : 'Uploader') + '</span>';
+                html += '<strong style="display:flex;align-items:center;gap:5px"><span>' + uploaderName + '</span>' + (isUploaderAdmin ? '<i class="fas fa-circle-check" style="color:#0095F6;font-size:0.88rem;flex-shrink:0" title="Verified Admin"></i>' : '') + '</strong>';
+                html += '</div>';
                 html += '</div>';
             }
+            html += '</div>';
 
             // Description
             if (desc) {

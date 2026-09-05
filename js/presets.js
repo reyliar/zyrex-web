@@ -350,11 +350,22 @@ function renderPresets(items) {
     try { likeCounts = JSON.parse(localStorage.getItem('zyrex_likes_count') || '{}'); } catch(e) {}
     try { bookmarkCounts = JSON.parse(localStorage.getItem('zyrex_bookmarks_count') || '{}'); } catch(e) {}
 
+function getCategorySvgClass(cat) {
+    const key = (cat || '').toLowerCase().trim();
+    if (key === 'after-effects' || key === 'ae') return 'cat-icon-ae';
+    if (key === 'premiere-pro' || key === 'premiere' || key === 'pr') return 'cat-icon-pr';
+    if (key === 'photoshop' || key === 'ps') return 'cat-icon-ps';
+    if (key === 'video-star' || key === 'vs') return 'cat-icon-vs';
+    if (key === 'topaz-labs' || key === 'topaz') return 'cat-icon-topaz';
+    return 'cat-icon-others';
+}
+window.getCategorySvgClass = getCategorySvgClass;
+
     grid.innerHTML = pageItems.map(item => {
         const cat = getCategoryLabel(item.category);
         const catClass = 'tag-' + (item.category || 'others');
-        const icons = { 'after-effects':'fa-film','premiere-pro':'fa-video','photoshop':'fa-image','video-star':'fa-star','topaz-labs':'fa-gem','others':'fa-folder' };
-        const icon = icons[item.category] || 'fa-sliders';
+        const catSvgClass = getCategorySvgClass(item.category);
+        const catSvgIcon = `<span class="cat-svg-icon ${catSvgClass}" style="margin-right:4px"></span>`;
         const descriptionText = item.description || item.desc || '';
         const shortDesc = descriptionText ? descriptionText.substring(0, 80) + (descriptionText.length > 80 ? '...' : '') : '';
         const discordIdMatch = (item.creator_avatar || item.uploader_avatar || '').match(/\/avatars\/(\d{17,20})\//);
@@ -370,8 +381,8 @@ function renderPresets(items) {
 
         const thumbHtml = item.thumbnail ? 
             `<img src="${item.thumbnail}" class="rimg" alt="" loading="lazy" onerror="this.style.display='none';this.parentElement.querySelector('.rimg-fallback').style.display='flex'">` +
-            `<div class="rimg-fallback" style="display:none"><i class="fas ${icon}"></i></div>` : 
-            `<div class="rimg-fallback"><i class="fas ${icon}"></i></div>`;
+            `<div class="rimg-fallback" style="display:none"><span class="cat-svg-icon ${catSvgClass}" style="font-size:2.8rem"></span></div>` : 
+            `<div class="rimg-fallback"><span class="cat-svg-icon ${catSvgClass}" style="font-size:2.8rem"></span></div>`;
 
         const itemType = (item.type || '').toLowerCase();
         let detailUrl = '/preset?id=' + encodeURIComponent(item.id);
@@ -383,12 +394,12 @@ function renderPresets(items) {
             '<div class="rc-img">' +
             thumbHtml +
             '<div class="roverlay"></div>' +
-            '<div class="rbadge grid-badge"><span class="' + catClass + '">' + cat + '</span><span class="tag-free">Free</span></div>' +
+            '<div class="rbadge grid-badge"><span class="' + catClass + '">' + catSvgIcon + cat + '</span><span class="tag-free">Free</span></div>' +
             '</div>' +
             '<div class="rc-content">' +
             '<div class="rc-head">' +
             '<h3 class="rc-title" title="' + item.name + '">' + item.name + '</h3>' +
-            '<div class="rbadge list-badge"><span class="' + catClass + '">' + cat + '</span><span class="tag-free">Free</span></div>' +
+            '<div class="rbadge list-badge"><span class="' + catClass + '">' + catSvgIcon + cat + '</span><span class="tag-free">Free</span></div>' +
             '</div>' +
             (shortDesc ? '<p class="rc-desc">' + shortDesc + '</p>' : '') +
             '<div class="rc-footer">' +

@@ -407,17 +407,58 @@
             font-weight: 800;
             border-radius: 999px;
         }
+        .cat-svg-icon {
+            display: inline-block;
+            width: 1.15em;
+            height: 1.15em;
+            vertical-align: -0.22em;
+            background-color: currentColor;
+            -webkit-mask-size: contain;
+            mask-size: contain;
+            -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+            -webkit-mask-position: center;
+            mask-position: center;
+            flex-shrink: 0;
+            transition: transform 0.2s ease;
+        }
+        .cat-icon-ae {
+            -webkit-mask-image: url('/assets/brand-logos/after-effects.svg');
+            mask-image: url('/assets/brand-logos/after-effects.svg');
+        }
+        .cat-icon-pr {
+            -webkit-mask-image: url('/assets/brand-logos/premiere-pro.svg');
+            mask-image: url('/assets/brand-logos/premiere-pro.svg');
+        }
+        .cat-icon-ps {
+            -webkit-mask-image: url('/assets/brand-logos/photoshop.svg');
+            mask-image: url('/assets/brand-logos/photoshop.svg');
+        }
+        .cat-icon-vs {
+            -webkit-mask-image: url('/assets/brand-logos/video-star.svg');
+            mask-image: url('/assets/brand-logos/video-star.svg');
+        }
+        .cat-icon-topaz {
+            -webkit-mask-image: url('/assets/brand-logos/topaz-badge.svg');
+            mask-image: url('/assets/brand-logos/topaz-badge.svg');
+        }
+        .cat-icon-others {
+            -webkit-mask-image: url('/assets/brand-logos/others.svg');
+            mask-image: url('/assets/brand-logos/others.svg');
+        }
+
         .comment-input-glass {
             background: rgba(255, 255, 255, 0.02);
             border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 20px;
-            padding: 20px;
-            margin-bottom: 30px;
-            transition: all 0.3s ease;
+            border-radius: 18px;
+            padding: 14px 18px;
+            margin-bottom: 28px;
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .comment-input-glass:focus-within {
             border-color: rgba(255, 43, 82, 0.4);
-            box-shadow: 0 0 25px rgba(255, 43, 82, 0.1);
+            box-shadow: 0 0 25px rgba(255, 43, 82, 0.12);
             background: rgba(255, 255, 255, 0.04);
         }
         .comment-textarea {
@@ -428,28 +469,168 @@
             color: #fff;
             font-family: inherit;
             font-size: 0.92rem;
-            line-height: 1.6;
-            resize: vertical;
-            min-height: 70px;
+            line-height: 1.5;
+            resize: none;
+            height: 38px;
+            min-height: 38px;
+            max-height: 220px;
+            overflow-y: hidden;
+            box-sizing: border-box;
+            padding: 4px 0;
+            transition: height 0.15s ease;
         }
         .comment-textarea::placeholder {
             color: rgba(255, 255, 255, 0.35);
         }
+        .comment-tools-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 10px;
+            padding-top: 8px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            gap: 10px;
+            flex-wrap: wrap;
+            position: relative;
+        }
+        .comment-tools-left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            position: relative;
+        }
+        .comment-tool-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: var(--text-sub);
+            padding: 6px 12px;
+            border-radius: 999px;
+            font-size: 0.76rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+        .comment-tool-btn:hover, .comment-tool-btn.active {
+            background: rgba(255, 43, 82, 0.12);
+            color: #fff;
+            border-color: rgba(255, 43, 82, 0.35);
+        }
+        .comment-media-wrap {
+            margin-top: 10px;
+            margin-bottom: 6px;
+        }
+        .comment-media-embed {
+            max-width: 240px;
+            max-height: 180px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            object-fit: cover;
+            background: rgba(0, 0, 0, 0.3);
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: block;
+        }
+        .comment-media-embed:hover {
+            transform: scale(1.02);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+        }
+        .popover-card {
+            position: absolute;
+            bottom: calc(100% + 12px);
+            left: 0;
+            width: 340px;
+            max-width: 88vw;
+            background: rgba(18, 10, 22, 0.97);
+            backdrop-filter: blur(28px);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            border-radius: 16px;
+            padding: 12px;
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.85), 0 0 30px rgba(255, 43, 82, 0.15);
+            z-index: 1000;
+            animation: popoverFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes popoverFadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .popover-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            max-height: 250px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .popover-grid::-webkit-scrollbar { width: 4px; }
+        .popover-grid::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+        .popover-item {
+            cursor: pointer;
+            border-radius: 8px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.04);
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            transition: transform 0.15s ease, border-color 0.15s ease;
+            position: relative;
+        }
+        .popover-item:hover {
+            transform: scale(1.05);
+            border-color: var(--cherry-neon);
+        }
+        .popover-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+        .popover-search-input {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 8px 12px;
+            font-size: 0.82rem;
+            color: #fff;
+            outline: none;
+            margin-bottom: 10px;
+            font-family: inherit;
+        }
+        .popover-search-input:focus {
+            border-color: var(--cherry-neon);
+        }
+        .tree-folder-group { margin-bottom: 3px; }
+        .tree-folder-row { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 8px; cursor: pointer; user-select: none; font-size: 0.82rem; color: #fff; transition: background 0.15s; }
+        .tree-folder-row:hover { background: rgba(255, 255, 255, 0.05); }
+        .tree-arrow { width: 14px; font-size: 0.7rem; color: var(--text-sub); transition: transform 0.2s; display: inline-flex; align-items: center; justify-content: center; }
+        .tree-arrow.collapsed { transform: rotate(-90deg); }
+        .tree-icon-folder { color: #f59e0b; font-size: 0.85rem; }
+        .tree-folder-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tree-file-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; border-radius: 8px; font-size: 0.8rem; color: rgba(255, 255, 255, 0.85); transition: background 0.15s; }
+        .tree-file-row:hover { background: rgba(255, 255, 255, 0.04); color: #fff; }
+        .tree-file-left { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
+        .tree-file-size { font-size: 0.72rem; color: var(--text-sub); flex-shrink: 0; margin-left: 8px; }
+
         .comment-btn-submit {
-            padding: 9px 22px;
+            padding: 7px 18px;
             background: linear-gradient(135deg, var(--cherry-bright), var(--cherry-deep));
             border: none;
             border-radius: 999px;
             color: #fff;
             font-weight: 700;
-            font-size: 0.85rem;
+            font-size: 0.82rem;
             font-family: inherit;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
             gap: 8px;
             transition: all 0.25s ease;
-            box-shadow: 0 4px 16px rgba(255, 43, 82, 0.3);
+            box-shadow: 0 4px 14px rgba(255, 43, 82, 0.3);
         }
         .comment-btn-submit:hover:not(:disabled) {
             transform: translateY(-2px);
@@ -820,17 +1001,20 @@
             "topaz-labs": "Topaz Labs",
             "others": "Others"
         };
-        const iconMap = {
-            "after-effects": "fa-film",
-            "premiere-pro": "fa-video",
-            "photoshop": "fa-image",
-            "video-star": "fa-star",
-            "topaz-labs": "fa-gem",
-            "others": "fa-sliders"
-        };
+        function getCategorySvgClass(cat) {
+            const key = (cat || '').toLowerCase().trim();
+            if (key === 'after-effects' || key === 'ae') return 'cat-icon-ae';
+            if (key === 'premiere-pro' || key === 'premiere' || key === 'pr') return 'cat-icon-pr';
+            if (key === 'photoshop' || key === 'ps') return 'cat-icon-ps';
+            if (key === 'video-star' || key === 'vs') return 'cat-icon-vs';
+            if (key === 'topaz-labs' || key === 'topaz') return 'cat-icon-topaz';
+            return 'cat-icon-others';
+        }
+        window.getCategorySvgClass = getCategorySvgClass;
 
         const cat = catMap[p.category] || "Preset";
-        const catIcon = iconMap[p.category] || "fa-sliders";
+        const catSvgClass = getCategorySvgClass(p.category);
+        const catSvgIcon = `<span class="cat-svg-icon ${catSvgClass}"></span>`;
         const desc = p.description || p.desc || "High quality video editing preset designed for modern creators.";
         const nick = p.creator_nickname || p.author_name || "Zyrex Creator";
         const av = p.creator_avatar || "";
@@ -920,6 +1104,7 @@
             </a>`;
         }).join("") : '';
 
+        window.currentPresetProduct = p;
         const root = document.getElementById('presetRoot');
         root.style.display = 'block';
 
@@ -929,15 +1114,15 @@
                 <!-- LEFT: VISUAL STAGE -->
                 <div class="preset-stage-card">
                     <div class="stage-floating-pills">
-                        <span class="stage-pill"><i class="fas ${catIcon}"></i> ${cat}</span>
+                        <span class="stage-pill">${catSvgIcon} ${cat}</span>
                         <span class="stage-pill stage-pill-free"><i class="fas fa-circle-check"></i> Free</span>
                     </div>
 
                     ${p.thumbnail ? `
                         <img src="${p.thumbnail}" alt="" class="ambient-backdrop">
-                        <img src="${p.thumbnail}" alt="${p.name}" class="main-stage-img" onerror="this.outerHTML='<div class=\\'fallback-icon-box\\'><i class=\\'fas ${catIcon}\\'></i></div>'">
+                        <img src="${p.thumbnail}" alt="${p.name}" class="main-stage-img" onerror="this.outerHTML='<div class=\\'fallback-icon-box\\'><span class=\\'cat-svg-icon ${catSvgClass}\\' style=\\'font-size:3.5rem\\'></span></div>'">
                     ` : `
-                        <div class="fallback-icon-box"><i class="fas ${catIcon}"></i></div>
+                        <div class="fallback-icon-box"><span class="cat-svg-icon ${catSvgClass}" style="font-size:3.5rem"></span></div>
                     `}
                 </div>
 
@@ -946,16 +1131,16 @@
                     <div class="action-top-info">
                         <h1 class="preset-headline">${p.name}</h1>
                         
-                        <!-- META STATS: DOWNLOADS & VIEWS -->
-                        <div style="display:flex;align-items:center;flex-wrap:wrap;gap:14px;margin:-4px 0 16px;font-size:0.8rem;color:var(--text-sub)">
+                        <!-- META STATS: DOWNLOADS ONLY (MINIMALIST) -->
+                        <div style="display:flex;align-items:center;gap:12px;margin:2px 0 16px;font-size:0.82rem;color:var(--text-sub)">
                             <div style="display:inline-flex;align-items:center;gap:6px">
                                 <i class="fas fa-cloud-arrow-down" style="color:var(--cherry-neon)"></i>
                                 <span><strong id="metaDownloadsCount" style="color:#fff;font-weight:700">0</strong> downloads</span>
                             </div>
                             <span style="opacity:0.25">•</span>
                             <div style="display:inline-flex;align-items:center;gap:6px">
-                                <i class="fas fa-eye" style="color:#a855f7"></i>
-                                <span><strong id="metaViewsCount" style="color:#fff;font-weight:700">0</strong> views</span>
+                                ${catSvgIcon}
+                                <span>${cat}</span>
                             </div>
                         </div>
 
@@ -1034,6 +1219,7 @@
             <div class="preset-details-deck">
                 <div class="details-tab-header">
                     <button class="details-tab-btn active" onclick="switchTab('desc', this)"><i class="fas fa-align-left"></i> Description</button>
+                    <button class="details-tab-btn" onclick="switchTab('files', this)"><i class="fas fa-folder-tree"></i> Files</button>
                     <button class="details-tab-btn" onclick="switchTab('guide', this)"><i class="fas fa-circle-question"></i> How to Install</button>
                 </div>
 
@@ -1042,12 +1228,20 @@
                         <p style="margin:0">${desc.replace(/\n/g, '<br>')}</p>
                     </div>
 
+                    <div class="tab-pane-view" id="tab-files">
+                        <div id="presetFilesContainer" style="min-height:80px">
+                            <div style="text-align:center;padding:24px;color:var(--text-sub)">
+                                <i class="fas fa-spinner fa-spin" style="color:var(--cherry-neon);margin-right:8px"></i> Loading package preview...
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="tab-pane-view" id="tab-guide">
                         <h4 style="color:#fff;margin-bottom:12px">Installation Guide:</h4>
                         <ol style="padding-left:22px;line-height:2">
                             <li>Click the <strong>Instant Download</strong> button to get the zip package.</li>
                             <li>Extract the archive into your editing workspace or user presets directory.</li>
-                            <li>Import the file (<code>.ffx</code>, <code>.cube</code>, <code>.prfpset</code>, or project file) into ${cat}.</li>
+                            <li>Import the file into ${cat}.</li>
                             <li>Drag the preset onto your video footage or adjustment layer.</li>
                         </ol>
                     </div>
@@ -1078,10 +1272,317 @@
         `;
         initPresetStats(p.id);
         initPresetComments(p.id);
+        loadPresetFilesPreview(p);
     }
 
     let currentCommentsPresetId = null;
     let currentUserData = null;
+    let currentGuildStickers = null;
+    const GIPHY_API_KEY = 'hF2tiiF3deZinjO4V7X75pc1q1CwLTkp';
+
+    function autoResizeCommentTextarea(el) {
+        if (!el) return;
+        el.style.height = 'auto';
+        const newH = Math.min(el.scrollHeight, 220);
+        el.style.height = Math.max(38, newH) + 'px';
+        el.style.overflowY = el.scrollHeight > 220 ? 'auto' : 'hidden';
+    }
+    window.autoResizeCommentTextarea = autoResizeCommentTextarea;
+
+    async function toggleStickerPicker(btn) {
+        const pop = document.getElementById('commentPickerPopover');
+        if (!pop) return;
+        if (pop.style.display === 'block' && pop.getAttribute('data-type') === 'stickers') {
+            closePickerPopover();
+            return;
+        }
+        document.querySelectorAll('.comment-tool-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        pop.setAttribute('data-type', 'stickers');
+        pop.style.display = 'block';
+        pop.innerHTML = `
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                <span style="font-size:0.75rem;font-weight:700;color:var(--cherry-neon);text-transform:uppercase;letter-spacing:0.5px">
+                    <i class="fab fa-discord"></i> Discord Server Stickers
+                </span>
+                <button type="button" onclick="closePickerPopover()" style="background:none;border:none;color:var(--text-sub);cursor:pointer;font-size:1rem">&times;</button>
+            </div>
+            <div class="popover-grid" id="stickersGrid">
+                <div style="grid-column:1/-1;text-align:center;padding:25px 0;color:var(--text-sub)">
+                    <i class="fas fa-spinner fa-spin" style="color:var(--cherry-neon);margin-bottom:6px"></i>
+                    <div>Loading server stickers...</div>
+                </div>
+            </div>
+        `;
+
+        try {
+            if (!currentGuildStickers) {
+                const resp = await fetch('/api/guild/stickers');
+                const data = await resp.json();
+                currentGuildStickers = (data && data.stickers) ? data.stickers : [];
+            }
+            const grid = document.getElementById('stickersGrid');
+            if (!grid) return;
+            if (currentGuildStickers.length === 0) {
+                grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--text-sub)">No server stickers found</div>';
+                return;
+            }
+            grid.innerHTML = currentGuildStickers.map(stk => `
+                <div class="popover-item" onclick="insertStickerToComment('${stk.name.replace(/'/g, "\\'")}', '${stk.url}')" title="${stk.name}">
+                    <img src="${stk.url}" alt="${stk.name}" loading="lazy">
+                </div>
+            `).join('');
+        } catch(err) {
+            const grid = document.getElementById('stickersGrid');
+            if (grid) grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:rgba(255,100,100,0.8)">Error loading stickers</div>';
+        }
+    }
+    window.toggleStickerPicker = toggleStickerPicker;
+
+    let giphySearchTimeout = null;
+    async function toggleGifPicker(btn) {
+        const pop = document.getElementById('commentPickerPopover');
+        if (!pop) return;
+        if (pop.style.display === 'block' && pop.getAttribute('data-type') === 'gifs') {
+            closePickerPopover();
+            return;
+        }
+        document.querySelectorAll('.comment-tool-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        pop.setAttribute('data-type', 'gifs');
+        pop.style.display = 'block';
+        pop.innerHTML = `
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                <span style="font-size:0.75rem;font-weight:700;color:#00d2ff;text-transform:uppercase;letter-spacing:0.5px">
+                    <i class="fas fa-film"></i> Giphy GIFs
+                </span>
+                <button type="button" onclick="closePickerPopover()" style="background:none;border:none;color:var(--text-sub);cursor:pointer;font-size:1rem">&times;</button>
+            </div>
+            <input type="text" class="popover-search-input" id="giphySearchInput" placeholder="Search GIFs..." oninput="onGiphySearchInput(this.value)">
+            <div class="popover-grid" id="gifsGrid">
+                <div style="grid-column:1/-1;text-align:center;padding:25px 0;color:var(--text-sub)">
+                    <i class="fas fa-spinner fa-spin" style="color:#00d2ff;margin-bottom:6px"></i>
+                    <div>Loading trending GIFs...</div>
+                </div>
+            </div>
+        `;
+        setTimeout(() => {
+            const inp = document.getElementById('giphySearchInput');
+            if (inp) inp.focus();
+        }, 50);
+        fetchGiphyGifs('');
+    }
+    window.toggleGifPicker = toggleGifPicker;
+
+    function onGiphySearchInput(val) {
+        clearTimeout(giphySearchTimeout);
+        giphySearchTimeout = setTimeout(() => {
+            fetchGiphyGifs(val.trim());
+        }, 350);
+    }
+    window.onGiphySearchInput = onGiphySearchInput;
+
+    async function fetchGiphyGifs(query) {
+        const grid = document.getElementById('gifsGrid');
+        if (!grid) return;
+        grid.innerHTML = `
+            <div style="grid-column:1/-1;text-align:center;padding:25px 0;color:var(--text-sub)">
+                <i class="fas fa-spinner fa-spin" style="color:#00d2ff;margin-bottom:6px"></i>
+                <div>Searching GIFs...</div>
+            </div>
+        `;
+        try {
+            let url = `https://api.giphy.com/v1/gifs/trending?api_key=${GIPHY_API_KEY}&limit=24&rating=g`;
+            if (query) {
+                url = `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=${encodeURIComponent(query)}&limit=24&rating=g`;
+            }
+            const res = await fetch(url);
+            const json = await res.json();
+            const gifs = (json && json.data) ? json.data : [];
+            if (gifs.length === 0) {
+                grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:25px;color:var(--text-sub)">No GIFs found</div>';
+                return;
+            }
+            grid.innerHTML = gifs.map(g => {
+                const previewUrl = (g.images && g.images.fixed_height_small && g.images.fixed_height_small.url) || g.images.fixed_height.url;
+                const fullUrl = (g.images && g.images.fixed_height && g.images.fixed_height.url) || g.images.original.url;
+                const title = g.title || 'GIF';
+                return `
+                    <div class="popover-item" onclick="insertGifToComment('${fullUrl}')" title="${title.replace(/'/g, "\\'")}">
+                        <img src="${previewUrl}" alt="${title}" loading="lazy">
+                    </div>
+                `;
+            }).join('');
+        } catch(e) {
+            grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:rgba(255,100,100,0.8)">Error loading GIFs</div>';
+        }
+    }
+
+    function closePickerPopover() {
+        const pop = document.getElementById('commentPickerPopover');
+        if (pop) pop.style.display = 'none';
+        document.querySelectorAll('.comment-tool-btn').forEach(b => b.classList.remove('active'));
+    }
+    window.closePickerPopover = closePickerPopover;
+
+    function insertStickerToComment(name, url) {
+        const txt = document.getElementById('mainCommentText');
+        if (!txt) return;
+        const tag = `![sticker:${name}](${url})`;
+        txt.value = txt.value.trim() ? (txt.value.trim() + ' ' + tag) : tag;
+        closePickerPopover();
+        autoResizeCommentTextarea(txt);
+        txt.focus();
+    }
+    window.insertStickerToComment = insertStickerToComment;
+
+    function insertGifToComment(url) {
+        const txt = document.getElementById('mainCommentText');
+        if (!txt) return;
+        const tag = `![gif](${url})`;
+        txt.value = txt.value.trim() ? (txt.value.trim() + ' ' + tag) : tag;
+        closePickerPopover();
+        autoResizeCommentTextarea(txt);
+        txt.focus();
+    }
+    window.insertGifToComment = insertGifToComment;
+
+    // Close popover when clicking outside
+    document.addEventListener('click', function(e) {
+        const pop = document.getElementById('commentPickerPopover');
+        if (!pop || pop.style.display !== 'block') return;
+        if (!pop.contains(e.target) && !e.target.closest('.comment-tool-btn')) {
+            closePickerPopover();
+        }
+    });
+
+    async function loadPresetFilesPreview(p) {
+        const container = document.getElementById('presetFilesContainer');
+        if (!container) return;
+        
+        let fileList = p.files || [];
+        if (fileList.length === 0 && (p.id || p.file_path)) {
+            try {
+                const listUrl = '/api/files/list-path?product_id=' + encodeURIComponent(p.id || '') + (p.file_path ? '&path=' + encodeURIComponent(p.file_path) : '');
+                const resp = await fetch(listUrl, { credentials: 'include' });
+                const data = await resp.json();
+                if (data && data.success && data.files) {
+                    fileList = data.files;
+                }
+            } catch(e) {}
+        }
+
+        const watermarkNames = ['LEAKED BY ZYREX.txt', 'Visit for more resources!.url'];
+        const realFiles = fileList.filter(f => !watermarkNames.includes(f.name));
+
+        if (realFiles.length === 0) {
+            container.innerHTML = `
+                <div style="text-align:center;padding:30px 10px;color:var(--text-sub)">
+                    <i class="fas fa-box-open" style="font-size:1.8rem;color:rgba(255,255,255,0.2);margin-bottom:8px;display:block"></i>
+                    <div>Direct archive package (ZIP/RAR). Download above to inspect files.</div>
+                </div>
+            `;
+            return;
+        }
+
+        function buildTree(files) {
+            var root = { name: '', isFolder: true, children: {} };
+            files.forEach(function(f) {
+                var nameStr = (f.name || '').replace(/\\/g, '/');
+                var parts = nameStr.split('/');
+                var current = root;
+                parts.forEach(function(part, index) {
+                    if (!part) return;
+                    var isLast = index === parts.length - 1;
+                    if (!current.children[part]) {
+                        if (isLast) {
+                            current.children[part] = {
+                                name: part,
+                                fullName: nameStr,
+                                isFolder: false,
+                                size: f.size
+                            };
+                        } else {
+                            current.children[part] = {
+                                name: part,
+                                isFolder: true,
+                                children: {}
+                            };
+                        }
+                    }
+                    current = current.children[part];
+                });
+            });
+            return root;
+        }
+
+        function renderTreeHTML(node, depth) {
+            var tHtml = '';
+            var keys = Object.keys(node.children).sort(function(a, b) {
+                var nodeA = node.children[a];
+                var nodeB = node.children[b];
+                if (nodeA.isFolder && !nodeB.isFolder) return -1;
+                if (!nodeA.isFolder && nodeB.isFolder) return 1;
+                return a.localeCompare(b);
+            });
+
+            keys.forEach(function(key) {
+                var child = node.children[key];
+                var indent = depth * 16;
+                if (child.isFolder) {
+                    tHtml += '<div class="tree-folder-group">';
+                    tHtml += '<div class="tree-folder-row" style="padding-left:' + (indent + 8) + 'px" onclick="togglePresetFolderCollapse(this)">';
+                    tHtml += '<span class="tree-arrow"><i class="fas fa-chevron-down"></i></span>';
+                    tHtml += '<i class="fas fa-folder tree-icon-folder"></i>';
+                    tHtml += '<span class="tree-folder-name" title="' + child.name + '">' + child.name + '</span>';
+                    tHtml += '</div>';
+                    tHtml += '<div class="tree-folder-content" style="display:block">';
+                    tHtml += renderTreeHTML(child, depth + 1);
+                    tHtml += '</div>';
+                    tHtml += '</div>';
+                } else {
+                    var sz = child.size ? (child.size > 1048576 ? (child.size/1048576).toFixed(1)+' MB' : (child.size/1024).toFixed(1)+' KB') : '--';
+                    var ext = child.name.split('.').pop().toLowerCase();
+                    var iconMap = {mp4:'fa-file-video',mov:'fa-file-video',webm:'fa-file-video',mp3:'fa-file-audio',wav:'fa-file-audio',aac:'fa-file-audio',png:'fa-file-image',jpg:'fa-file-image',jpeg:'fa-file-image',gif:'fa-file-image',webp:'fa-file-image',zip:'fa-file-zipper',rar:'fa-file-zipper','7z':'fa-file-zipper',pdf:'fa-file-pdf',aep:'fa-file-video',prproj:'fa-file-video',psd:'fa-file-image',ffx:'fa-sliders'};
+                    var fi = iconMap[ext] || 'fa-file-lines';
+
+                    tHtml += '<div class="tree-file-row" style="padding-left:' + (indent + 12) + 'px">';
+                    tHtml += '<div class="tree-file-left">';
+                    tHtml += '<i class="fas ' + fi + '" style="color:var(--cherry-neon);font-size:0.85rem"></i>';
+                    tHtml += '<span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + child.name + '">' + child.name + '</span>';
+                    tHtml += '</div>';
+                    tHtml += '<span class="tree-file-size">' + sz + '</span>';
+                    tHtml += '</div>';
+                }
+            });
+            return tHtml;
+        }
+
+        const treeData = buildTree(realFiles);
+        container.innerHTML = `
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;margin-bottom:12px;font-size:0.8rem;color:var(--text-sub)">
+                <span><i class="fas fa-folder-open" style="color:var(--cherry-neon);margin-right:6px"></i> Package files (<strong>${realFiles.length}</strong>)</span>
+                <span style="font-size:0.75rem;color:rgba(255,255,255,0.45)"><i class="fas fa-lock" style="font-size:0.7rem"></i> Preview only</span>
+            </div>
+            <div style="max-height:280px;overflow-y:auto;padding-right:4px">
+                ${renderTreeHTML(treeData, 0)}
+            </div>
+        `;
+    }
+
+    function togglePresetFolderCollapse(el) {
+        const arrow = el.querySelector('.tree-arrow');
+        const content = el.nextElementSibling;
+        if (!content) return;
+        if (content.style.display === 'none') {
+            content.style.display = 'block';
+            if (arrow) arrow.classList.remove('collapsed');
+        } else {
+            content.style.display = 'none';
+            if (arrow) arrow.classList.add('collapsed');
+        }
+    }
+    window.togglePresetFolderCollapse = togglePresetFolderCollapse;
 
     async function initPresetComments(productId) {
         currentCommentsPresetId = productId;
@@ -1124,22 +1625,32 @@
             const dName = currentUserData.global_name || currentUserData.displayName || currentUserData.username || 'Zyrex Member';
 
             box.innerHTML = `
-                <form id="mainCommentForm" onsubmit="handleCommentSubmit(event)" style="margin:0">
-                    <div style="display:flex;align-items:flex-start;gap:14px">
-                        <img src="${avatarUrl}" alt="${dName}" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:1px solid rgba(255,255,255,0.12)" onerror="window.handleAvatarError(this)">
+                <form id="mainCommentForm" onsubmit="handleCommentSubmit(event)" style="margin:0;position:relative">
+                    <div style="display:flex;align-items:flex-start;gap:12px">
+                        <img src="${avatarUrl}" alt="${dName}" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:1px solid rgba(255,255,255,0.12)" onerror="window.handleAvatarError(this)">
                         <div style="flex:1;min-width:0">
-                            <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;font-size:0.82rem;color:var(--text-sub)">
+                            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;font-size:0.8rem;color:var(--text-sub)">
                                 <strong style="color:#fff">${dName}</strong>
                             </div>
-                            <textarea id="mainCommentText" class="comment-textarea" placeholder="Write a comment... (Enter to send, Shift+Enter for new line)" required maxlength="1000" onkeydown="handleCommentKeydown(event, this)"></textarea>
+                            <textarea id="mainCommentText" class="comment-textarea" placeholder="Write a comment... (Shift+Enter for new line)" required maxlength="1000" oninput="autoResizeCommentTextarea(this)" onkeydown="handleCommentKeydown(event, this)"></textarea>
                             
-                            <div style="display:flex;align-items:center;justify-content:flex-end;margin-top:10px;gap:8px">
+                            <div class="comment-tools-row">
+                                <div class="comment-tools-left">
+                                    <button type="button" class="comment-tool-btn" id="btnStickerPicker" onclick="toggleStickerPicker(this)" title="Discord Server Stickers">
+                                        <i class="fas fa-face-smile"></i> <span>Sticker</span>
+                                    </button>
+                                    <button type="button" class="comment-tool-btn" id="btnGifPicker" onclick="toggleGifPicker(this)" title="Search GIFs via Giphy">
+                                        <i class="fas fa-film"></i> <span>GIF</span>
+                                    </button>
+                                </div>
                                 <button type="submit" id="btnSubmitComment" class="comment-btn-submit">
-                                    <i class="fas fa-paper-plane"></i> Post Comment
+                                    <i class="fas fa-paper-plane"></i> Post
                                 </button>
                             </div>
                         </div>
                     </div>
+                    <!-- Floating Popovers Container -->
+                    <div id="commentPickerPopover" class="popover-card" style="display:none"></div>
                 </form>
             `;
             setTimeout(bindMentionAutocompleteToAllInputs, 50);
@@ -1183,6 +1694,14 @@
     function formatCommentContentWithMentions(rawContent) {
         if (!rawContent) return '';
         let escaped = escapeHtml(rawContent);
+        // Replace markdown images: ![alt](https://...)
+        escaped = escaped.replace(/!\[(.*?)\]\((https?:\/\/[^\s\)\"'>]+)\)/g, function(match, alt, url) {
+            return `<div class="comment-media-wrap"><img src="${url}" alt="${alt}" class="comment-media-embed" loading="lazy" onclick="window.open(this.src,'_blank')"></div>`;
+        });
+        // Replace standalone image/gif URLs
+        escaped = escaped.replace(/(^|\s)(https?:\/\/[^\s<]+?\.(?:gif|png|jpe?g|webp)(\?[^\s<]*)?)($|\s)/gi, function(match, p1, url, q, p2) {
+            return `${p1}<div class="comment-media-wrap"><img src="${url}" class="comment-media-embed" loading="lazy" onclick="window.open(this.src,'_blank')"></div>${p2}`;
+        });
         // Replace @mentions: @Username
         escaped = escaped.replace(/@([a-zA-Z0-9_\.\-]+)/g, '<span class="mention-tag"><i class="fas fa-at" style="font-size:0.75em;opacity:0.75"></i>$1</span>');
         // Replace <@12345>
@@ -1427,6 +1946,8 @@
             const data = await res.json();
             if (res.ok && data.success) {
                 ta.value = '';
+                ta.style.height = '38px';
+                closePickerPopover();
                 await loadCommentsData(currentCommentsPresetId);
             } else {
                 alert(data.error || 'Failed to post comment');
