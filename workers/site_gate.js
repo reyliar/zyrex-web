@@ -93,166 +93,152 @@ function maintenanceHtml() {
   <title>System Offline · Zyrex Editing</title>
   <link rel="icon" type="image/png" href="/assets/content.png">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --cherry: #ff2b52;
-      --cherry-light: #ff6b8b;
-      --dark: #060108;
-      --panel: rgba(18, 9, 14, 0.92);
-      --border: rgba(255, 43, 82, 0.28);
-      --text: #f8f5f6;
-      --muted: #a49da2;
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0 }
-    html, body {
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
       min-height: 100vh;
-      background: #060108;
-      background-image: 
-        radial-gradient(circle at 50% 15%, rgba(255, 43, 82, 0.18) 0%, transparent 60%),
-        radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.12) 0%, transparent 50%);
-      color: var(--text);
-      font-family: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #09090b;
+      background-image: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.03) 0%, transparent 70%);
+      color: #fafafa;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       display: flex;
       align-items: center;
       justify-content: center;
       padding: 24px;
       user-select: none;
+      -webkit-font-smoothing: antialiased;
     }
     .lock-card {
-      width: min(640px, 100%);
-      padding: 48px 38px;
+      width: min(480px, 100%);
+      padding: 38px 32px;
       text-align: center;
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 28px;
-      box-shadow: 0 25px 80px rgba(0, 0, 0, 0.8), 0 0 40px rgba(255, 43, 82, 0.15);
-      backdrop-filter: blur(24px);
-      position: relative;
-      overflow: hidden;
-    }
-    .lock-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0; height: 3px;
-      background: linear-gradient(90deg, transparent, var(--cherry), var(--cherry-light), transparent);
+      background: #121215;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.7);
     }
     .brand-lockup {
       display: inline-flex;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 24px;
+      gap: 10px;
+      margin-bottom: 22px;
       text-decoration: none;
     }
     .brand-logo {
-      width: 42px; height: 42px;
-      border-radius: 12px;
-      box-shadow: 0 0 20px rgba(255, 43, 82, 0.35);
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
     }
     .brand-name {
-      font-family: 'Outfit', sans-serif;
-      font-size: 1.5rem;
-      font-weight: 800;
-      letter-spacing: -0.5px;
-      color: #fff;
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: -0.02em;
     }
-    .brand-name span { color: var(--cherry-light); }
+    .brand-name sup {
+      font-size: 0.65rem;
+      color: #a1a1aa;
+      font-weight: 500;
+      margin-left: 1px;
+    }
     .status-badge {
       display: inline-flex;
       align-items: center;
-      gap: 9px;
-      padding: 8px 16px;
-      border: 1px solid rgba(255, 77, 94, 0.4);
-      border-radius: 999px;
-      background: rgba(255, 43, 82, 0.12);
-      color: #ff9ca6;
-      font-size: 0.78rem;
-      font-weight: 700;
-      letter-spacing: 0.08em;
+      gap: 8px;
+      padding: 5px 12px;
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      border-radius: 9999px;
+      background: rgba(239, 68, 68, 0.08);
+      color: #f87171;
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
       text-transform: uppercase;
-      margin-bottom: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      margin-bottom: 18px;
     }
     .dot-pulse {
-      width: 9px; height: 9px;
+      width: 6px;
+      height: 6px;
       border-radius: 50%;
-      background: #ff2b52;
-      box-shadow: 0 0 0 0 rgba(255, 43, 82, 0.7);
+      background: #ef4444;
+      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
       animation: pulse 1.8s infinite;
     }
     h1 {
-      font-family: 'Outfit', sans-serif;
-      margin: 12px 0 14px;
-      font-size: clamp(1.8rem, 5vw, 2.5rem);
-      font-weight: 800;
-      line-height: 1.15;
-      letter-spacing: -0.03em;
-      color: #fff;
+      margin: 0 0 10px;
+      font-size: 1.55rem;
+      font-weight: 700;
+      line-height: 1.25;
+      letter-spacing: -0.025em;
+      color: #ffffff;
     }
     p {
-      margin: 0 auto 26px;
-      max-width: 520px;
-      color: var(--muted);
-      font-size: 0.94rem;
-      line-height: 1.7;
+      margin: 0 auto 24px;
+      max-width: 400px;
+      color: #a1a1aa;
+      font-size: 0.88rem;
+      line-height: 1.6;
     }
     .action-group {
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 14px;
+      gap: 10px;
       flex-wrap: wrap;
-      margin-top: 10px;
     }
     .btn-status {
       display: inline-flex;
       align-items: center;
-      gap: 9px;
-      padding: 13px 26px;
-      border: 1px solid var(--cherry);
-      border-radius: 14px;
-      background: linear-gradient(135deg, #ff2b52, #b81432);
-      color: #fff;
+      gap: 8px;
+      padding: 9px 18px;
+      border: 1px solid #ffffff;
+      border-radius: 9px;
+      background: #ffffff;
+      color: #09090b;
       text-decoration: none;
-      font-family: 'Outfit', sans-serif;
-      font-weight: 700;
-      font-size: 0.94rem;
-      box-shadow: 0 8px 25px rgba(255, 43, 82, 0.35);
-      transition: all 0.25s ease;
+      font-weight: 600;
+      font-size: 0.86rem;
+      transition: all 0.15s ease;
     }
     .btn-status:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 12px 32px rgba(255, 43, 82, 0.5);
-      border-color: var(--cherry-light);
+      background: #e4e4e7;
+      border-color: #e4e4e7;
+      transform: translateY(-1px);
     }
     .btn-retry {
       display: inline-flex;
       align-items: center;
-      gap: 8px;
-      padding: 13px 22px;
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      border-radius: 14px;
-      background: rgba(255, 255, 255, 0.05);
-      color: #fff;
-      font-family: 'Outfit', sans-serif;
-      font-weight: 600;
-      font-size: 0.94rem;
+      gap: 7px;
+      padding: 9px 16px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 9px;
+      background: rgba(255, 255, 255, 0.04);
+      color: #d4d4d8;
+      font-weight: 500;
+      font-size: 0.86rem;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.15s ease;
     }
     .btn-retry:hover {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: rgba(255, 255, 255, 0.25);
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.22);
+      color: #ffffff;
     }
     .auto-note {
-      display: block;
-      margin-top: 24px;
-      color: rgba(255, 255, 255, 0.4);
-      font-size: 0.78rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 22px;
+      color: #71717a;
+      font-size: 0.74rem;
+      font-family: 'JetBrains Mono', monospace;
     }
     @keyframes pulse {
-      0% { box-shadow: 0 0 0 0 rgba(255, 43, 82, 0.7); }
-      70% { box-shadow: 0 0 0 10px rgba(255, 43, 82, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(255, 43, 82, 0); }
+      0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+      70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
     }
   </style>
 </head>
@@ -260,23 +246,36 @@ function maintenanceHtml() {
   <div class="lock-card">
     <div class="brand-lockup">
       <img src="/assets/content.png" alt="Zyrex Logo" class="brand-logo" onerror="this.style.display='none'">
-      <div class="brand-name">Zyrex<span>™</span> EDITING</div>
+      <div class="brand-name">Zyrex<sup>™</sup></div>
     </div>
     <br>
     <div class="status-badge">
-      <span class="dot-pulse"></span> VPS OFFLINE · SISTEM KİLİTLENDİ
+      <span class="dot-pulse"></span> SYSTEM TEMPORARILY LOCKED
     </div>
-    <h1>Sistem Geçici Olarak Kilitlendi</h1>
+    <h1>System Temporarily Locked</h1>
     <p>
-      Zyrex VPS altyapısı ve bot servisimizle şu anda bağlantı kurulamıyor. Veri güvenliği ve kesintisiz deneyim sağlamak amacıyla sayfalara erişim Cloudflare Edge üzerinde geçici olarak durdurulmuştur.
+      The core infrastructure is currently unreachable. Access has been locked at the edge to protect user data and ensure platform security.
     </p>
     <div class="action-group">
-      <a href="/status" class="btn-status"><i class="fas fa-signal"></i> Sistem Durumunu Görüntüle (/status)</a>
-      <button type="button" class="btn-retry" onclick="location.reload()"><i class="fas fa-rotate"></i> Yeniden Dene</button>
+      <a href="/status" class="btn-status"><i class="fas fa-chart-line"></i> View System Status</a>
+      <button type="button" class="btn-retry" onclick="location.reload()"><i class="fas fa-rotate"></i> Retry</button>
     </div>
-    <span class="auto-note"><i class="fas fa-shield-halved"></i> Sayfa her 15 saniyede bir otomatik yenilenir. VPS aktif olduğunda kilit anında kalkar.</span>
+    <div class="auto-note">
+      <i class="fas fa-shield-halved"></i> Auto-refreshing in <span id="countdown">15</span>s &bull; Edge Lock Active
+    </div>
   </div>
-  <script>setTimeout(function(){ location.reload(); }, 15000);</script>
+  <script>
+    var sec = 15;
+    var el = document.getElementById('countdown');
+    var timer = setInterval(function() {
+      sec--;
+      if (el) el.innerText = sec;
+      if (sec <= 0) {
+        clearInterval(timer);
+        location.reload();
+      }
+    }, 1000);
+  </script>
 </body>
 </html>`;
 }
