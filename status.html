@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zyrex | System Status</title>
-    <meta name="description" content="Live real-time operational status, system uptime, and telemetry for Zyrex Editing services.">
+    <meta name="description" content="Live real-time operational status, system uptime, and incident telemetry for Zyrex Editing services.">
     <link rel="icon" type="image/png" href="/assets/content.png">
     <link rel="stylesheet" href="css/style.css?v=26">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
         * {
             margin: 0;
@@ -17,577 +17,508 @@
         }
 
         body {
-            background: var(--dark, #070305);
-            color: var(--light, #ffffff);
-            font-family: 'Poppins', sans-serif;
+            background: #09090b;
+            color: #ffffff;
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             min-height: 100vh;
             overflow-x: hidden;
+            line-height: 1.5;
         }
 
-        .status-container {
-            width: min(1200px, calc(100% - 40px));
+        /* Ambient Aura Background */
+        .status-bg-glow {
+            position: fixed;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 1000px;
+            height: 450px;
+            background: radial-gradient(ellipse at 50% 0%, rgba(255, 43, 82, 0.08) 0%, rgba(184, 20, 50, 0.03) 50%, transparent 80%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .status-page-wrap {
+            position: relative;
+            z-index: 1;
+            width: min(880px, calc(100% - 40px));
             margin: 0 auto;
-            padding: 125px 0 90px;
+            padding: 130px 0 100px;
         }
 
-        /* Hero Banner */
-        .status-hero {
-            position: relative;
-            background: linear-gradient(135deg, rgba(25, 8, 14, 0.88) 0%, rgba(10, 3, 6, 0.94) 100%);
-            border: 1px solid rgba(255, 43, 82, 0.18);
-            border-radius: 24px;
-            padding: 40px 48px;
-            box-shadow: 0 25px 65px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            margin-bottom: 32px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 28px;
-            flex-wrap: wrap;
-        }
-
-        .status-hero-left {
-            display: flex;
-            align-items: center;
-            gap: 24px;
-        }
-
-        .status-main-indicator {
-            width: 64px;
-            height: 64px;
-            border-radius: 50%;
-            background: rgba(16, 185, 129, 0.12);
-            border: 2px solid rgba(16, 185, 129, 0.4);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            flex-shrink: 0;
-            transition: all 0.3s ease;
-        }
-
-        .status-main-indicator::after {
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            border: 2px solid rgba(16, 185, 129, 0.6);
-            animation: ringPulse 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        }
-
-        @keyframes ringPulse {
-            0% { transform: scale(1); opacity: 0.8; }
-            100% { transform: scale(1.6); opacity: 0; }
-        }
-
-        .status-main-indicator.operational {
-            background: rgba(16, 185, 129, 0.14);
-            border-color: rgba(16, 185, 129, 0.5);
-        }
-        .status-main-indicator.operational i {
-            color: #10b981;
-            font-size: 1.8rem;
-        }
-
-        .status-main-indicator.degraded {
-            background: rgba(245, 158, 11, 0.14);
-            border-color: rgba(245, 158, 11, 0.5);
-        }
-        .status-main-indicator.degraded::after {
-            border-color: rgba(245, 158, 11, 0.6);
-        }
-        .status-main-indicator.degraded i {
-            color: #f59e0b;
-            font-size: 1.8rem;
-        }
-
-        .status-main-indicator.outage {
-            background: rgba(239, 68, 68, 0.14);
-            border-color: rgba(239, 68, 68, 0.5);
-        }
-        .status-main-indicator.outage::after {
-            border-color: rgba(239, 68, 68, 0.6);
-        }
-        .status-main-indicator.outage i {
-            color: #ef4444;
-            font-size: 1.8rem;
-        }
-
-        .status-hero-title h1 {
-            font-family: 'Outfit', sans-serif;
-            font-size: 2.1rem;
-            font-weight: 800;
-            color: #ffffff;
-            letter-spacing: -0.5px;
-            margin-bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-
-        .status-hero-title p {
-            color: rgba(255, 255, 255, 0.68);
-            font-size: 0.95rem;
-        }
-
-        .status-hero-right {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-            flex-wrap: wrap;
-        }
-
-        .status-meta-pill {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 999px;
-            padding: 8px 16px;
-            font-size: 0.82rem;
-            color: rgba(255, 255, 255, 0.75);
+        /* Top Header */
+        .status-top-label {
+            font-size: 0.78rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: #71717a;
+            margin-bottom: 14px;
             font-family: 'JetBrains Mono', monospace;
         }
 
-        .btn-refresh {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(255, 43, 82, 0.15);
-            border: 1px solid rgba(255, 43, 82, 0.35);
-            color: #ffffff;
-            padding: 10px 20px;
-            border-radius: 12px;
-            font-weight: 600;
-            font-size: 0.88rem;
-            cursor: pointer;
-            transition: all 0.25s ease;
-            font-family: 'Outfit', sans-serif;
-        }
-
-        .btn-refresh:hover {
-            background: rgba(255, 43, 82, 0.3);
-            border-color: rgba(255, 43, 82, 0.6);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(255, 43, 82, 0.25);
-        }
-
-        .btn-refresh.spinning i {
-            animation: spin 0.8s linear infinite;
-        }
-
-        @keyframes spin {
-            100% { transform: rotate(360deg); }
-        }
-
-        /* Telemetry Cards Grid */
-        .telemetry-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 18px;
-            margin-bottom: 36px;
-        }
-
-        .telemetry-card {
-            background: rgba(18, 5, 10, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.07);
-            border-radius: 18px;
-            padding: 22px 24px;
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
-            transition: transform 0.25s ease, border-color 0.25s ease;
-        }
-
-        .telemetry-card:hover {
-            transform: translateY(-3px);
-            border-color: rgba(255, 43, 82, 0.3);
-        }
-
-        .telemetry-card-head {
+        .status-hero-headline {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            color: rgba(255, 255, 255, 0.55);
-            font-size: 0.82rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-bottom: 12px;
-        }
-
-        .telemetry-card-head i {
-            font-size: 1.05rem;
-            color: var(--cherry-light, #ff2b52);
-        }
-
-        .telemetry-card-value {
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.65rem;
+            gap: 14px;
+            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 2.5rem;
             font-weight: 800;
+            letter-spacing: -0.5px;
             color: #ffffff;
-            line-height: 1.1;
+            margin-bottom: 8px;
+            line-height: 1.15;
+        }
+
+        .status-hero-dot {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: #10b981;
+            box-shadow: 0 0 16px #10b981;
+            flex-shrink: 0;
+            display: inline-block;
+        }
+
+        .status-hero-dot.outage {
+            background: #ef4444;
+            box-shadow: 0 0 16px #ef4444;
+        }
+        .status-hero-dot.degraded {
+            background: #f59e0b;
+            box-shadow: 0 0 16px #f59e0b;
+        }
+
+        .status-hero-sub {
+            font-size: 1.05rem;
+            color: #a1a1aa;
+            margin-bottom: 18px;
+        }
+
+        .status-last-checked-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.85rem;
+            color: #71717a;
+            margin-bottom: 50px;
+        }
+
+        .btn-text-refresh {
+            background: transparent;
+            border: none;
+            color: #ffffff;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+            cursor: pointer;
+            padding: 0;
+            transition: color 0.2s ease;
+        }
+
+        .btn-text-refresh:hover {
+            color: var(--cherry-light, #ff4d6d);
+        }
+
+        /* Section Headings */
+        .status-sec-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.18rem;
+            font-weight: 700;
+            color: #ffffff;
             margin-bottom: 4px;
         }
 
-        .telemetry-card-sub {
-            font-size: 0.78rem;
-            color: rgba(255, 255, 255, 0.6);
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        /* Section Header */
-        .section-header-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+        .status-sec-sub {
+            font-size: 0.86rem;
+            color: #71717a;
             margin-bottom: 20px;
         }
 
-        .section-header-row h2 {
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.4rem;
-            font-weight: 700;
-            color: #ffffff;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .section-header-row p {
-            color: rgba(255, 255, 255, 0.55);
-            font-size: 0.85rem;
-        }
-
-        /* Subsystems List */
-        .subsystems-list {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
+        /* Active Incidents Container */
+        .incidents-block {
             margin-bottom: 44px;
         }
 
-        .subsystem-card {
-            background: rgba(18, 5, 10, 0.72);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+        .incident-active-card {
+            display: none;
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 14px;
+            padding: 20px 24px;
+            margin-top: 14px;
+        }
+
+        .incident-active-card.visible {
+            display: block;
+        }
+
+        .incident-active-card h4 {
+            color: #ef4444;
+            font-size: 1rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .incident-active-card p {
+            font-size: 0.88rem;
+            color: #e4e4e7;
+            line-height: 1.5;
+        }
+
+        /* Unified System Status Panel */
+        .system-status-card {
+            background: #111114;
+            border: 1px solid rgba(255, 255, 255, 0.07);
             border-radius: 18px;
+            overflow: hidden;
+            margin-bottom: 44px;
+        }
+
+        .subsystem-item {
             padding: 24px 28px;
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
-            transition: all 0.25s ease;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            transition: background 0.2s ease;
         }
 
-        .subsystem-card:hover {
-            border-color: rgba(255, 255, 255, 0.16);
-            background: rgba(24, 7, 14, 0.8);
+        .subsystem-item:last-child {
+            border-bottom: none;
         }
 
-        .subsystem-head {
+        .subsystem-item:hover {
+            background: rgba(255, 255, 255, 0.015);
+        }
+
+        .subsystem-row-top {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-bottom: 16px;
-            flex-wrap: wrap;
-            gap: 12px;
+            margin-bottom: 14px;
         }
 
-        .subsystem-info {
+        .subsystem-name {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        .subsystem-right-meta {
             display: flex;
             align-items: center;
             gap: 14px;
         }
 
-        .subsystem-icon {
-            width: 42px;
-            height: 42px;
-            border-radius: 12px;
-            background: rgba(255, 43, 82, 0.1);
-            border: 1px solid rgba(255, 43, 82, 0.25);
-            color: var(--cherry-light, #ff2b52);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.15rem;
-            flex-shrink: 0;
-        }
-
-        .subsystem-name {
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.1rem;
-            font-weight: 700;
-            color: #ffffff;
-            line-height: 1.2;
-        }
-
-        .subsystem-desc {
-            font-size: 0.8rem;
-            color: rgba(255, 255, 255, 0.58);
-            margin-top: 2px;
-        }
-
-        .subsystem-stats {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .subsystem-latency {
+        .subsystem-uptime-text {
+            font-size: 0.84rem;
+            color: #71717a;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.82rem;
-            color: rgba(255, 255, 255, 0.65);
-            background: rgba(255, 255, 255, 0.04);
-            padding: 5px 12px;
-            border-radius: 8px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
         }
 
-        .subsystem-badge {
+        .subsystem-pill-badge {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            padding: 6px 14px;
+            gap: 7px;
+            padding: 4px 12px;
             border-radius: 999px;
-            font-size: 0.82rem;
+            font-size: 0.78rem;
             font-weight: 600;
             font-family: 'Outfit', sans-serif;
-            letter-spacing: 0.3px;
+            letter-spacing: 0.2px;
         }
 
-        .subsystem-badge.operational {
-            background: rgba(16, 185, 129, 0.12);
-            border: 1px solid rgba(16, 185, 129, 0.35);
+        .subsystem-pill-badge.operational {
+            background: rgba(16, 185, 129, 0.09);
+            border: 1px solid rgba(16, 185, 129, 0.25);
             color: #10b981;
         }
 
-        .subsystem-badge.degraded {
-            background: rgba(245, 158, 11, 0.12);
-            border: 1px solid rgba(245, 158, 11, 0.35);
+        .subsystem-pill-badge.degraded {
+            background: rgba(245, 158, 11, 0.09);
+            border: 1px solid rgba(245, 158, 11, 0.25);
             color: #f59e0b;
         }
 
-        .subsystem-badge.outage {
-            background: rgba(239, 68, 68, 0.12);
-            border: 1px solid rgba(239, 68, 68, 0.35);
+        .subsystem-pill-badge.outage {
+            background: rgba(239, 68, 68, 0.09);
+            border: 1px solid rgba(239, 68, 68, 0.25);
             color: #ef4444;
         }
 
-        .badge-dot {
-            width: 7px;
-            height: 7px;
+        .subsystem-pill-badge .dot {
+            width: 6px;
+            height: 6px;
             border-radius: 50%;
             background: currentColor;
-            box-shadow: 0 0 8px currentColor;
+            box-shadow: 0 0 6px currentColor;
         }
 
-        /* 90-Day Uptime Bar Chart */
-        .uptime-bars-wrapper {
-            margin-top: 14px;
-        }
-
-        .uptime-bars-track {
+        /* 90-Day Vertical Pill Bars */
+        .bars-container {
             display: flex;
-            align-items: flex-end;
-            gap: 3px;
-            height: 32px;
-            padding: 4px 0;
+            align-items: center;
+            gap: 3.5px;
+            height: 26px;
+            margin-bottom: 12px;
             position: relative;
         }
 
-        .uptime-bar {
+        .status-v-bar {
             flex: 1;
             height: 100%;
-            background: #10b981;
-            border-radius: 3px;
-            opacity: 0.85;
-            transition: all 0.2s ease;
-            position: relative;
+            background: #22c55e;
+            border-radius: 4px;
+            opacity: 0.9;
+            transition: all 0.15s ease;
             cursor: pointer;
         }
 
-        .uptime-bar:hover {
+        .status-v-bar:hover {
             opacity: 1;
-            transform: scaleY(1.15);
-            box-shadow: 0 0 10px rgba(16, 185, 129, 0.7);
-            z-index: 10;
+            transform: scaleY(1.18);
+            box-shadow: 0 0 8px rgba(34, 197, 94, 0.8);
+            z-index: 5;
         }
 
-        .uptime-bar.degraded {
+        .status-v-bar.degraded {
             background: #f59e0b;
         }
-        .uptime-bar.degraded:hover {
-            box-shadow: 0 0 10px rgba(245, 158, 11, 0.7);
+        .status-v-bar.degraded:hover {
+            box-shadow: 0 0 8px rgba(245, 158, 11, 0.8);
         }
 
-        .uptime-bar.outage {
+        .status-v-bar.outage {
             background: #ef4444;
         }
-        .uptime-bar.outage:hover {
-            box-shadow: 0 0 10px rgba(239, 68, 68, 0.7);
+        .status-v-bar.outage:hover {
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.8);
         }
 
-        .uptime-bars-footer {
+        .subsystem-desc {
+            font-size: 0.82rem;
+            color: #71717a;
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        /* "All Outages" Chart Card */
+        .outages-card {
+            background: #111114;
+            border: 1px solid rgba(255, 255, 255, 0.07);
+            border-radius: 18px;
+            padding: 28px 30px;
+            margin-bottom: 50px;
+            position: relative;
+        }
+
+        .outages-header {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            margin-top: 6px;
-            font-size: 0.75rem;
-            color: rgba(255, 255, 255, 0.45);
+            margin-bottom: 24px;
+        }
+
+        .outages-header h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.18rem;
+            font-weight: 700;
+            color: #ffffff;
+        }
+
+        /* Time Range Selector */
+        .range-toggle-group {
+            display: inline-flex;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            padding: 3px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .range-btn {
+            background: transparent;
+            border: none;
+            color: #a1a1aa;
+            font-family: 'Outfit', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 5px 12px;
+            border-radius: 7px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .range-btn:hover {
+            color: #ffffff;
+        }
+
+        .range-btn.active {
+            background: rgba(255, 255, 255, 0.14);
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+        }
+
+        /* SVG Chart Box */
+        .chart-svg-box {
+            width: 100%;
+            height: 220px;
+            position: relative;
+        }
+
+        .chart-svg {
+            width: 100%;
+            height: 100%;
+            overflow: visible;
+        }
+
+        .grid-line {
+            stroke: rgba(255, 255, 255, 0.05);
+            stroke-dasharray: 4 4;
+            stroke-width: 1;
+        }
+
+        .axis-label {
+            font-size: 11px;
+            fill: #71717a;
             font-family: 'JetBrains Mono', monospace;
         }
 
-        .uptime-percent-val {
-            color: #10b981;
-            font-weight: 700;
+        .chart-line {
+            fill: none;
+            stroke-width: 2.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transition: opacity 0.2s ease;
         }
 
-        /* Tooltip */
-        .uptime-tooltip {
+        /* Chart Tooltip Overlay */
+        .chart-tooltip-panel {
+            position: absolute;
+            top: 15px;
+            right: 25px;
+            background: #18181b;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 14px;
+            padding: 16px 20px;
+            box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6);
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.15s ease;
+            z-index: 20;
+            min-width: 210px;
+        }
+
+        .chart-tooltip-panel.visible {
+            opacity: 1;
+        }
+
+        .chart-tooltip-title {
+            font-size: 0.8rem;
+            color: #a1a1aa;
+            margin-bottom: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            font-weight: 500;
+        }
+
+        .chart-tooltip-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            margin-bottom: 6px;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .chart-tooltip-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .chart-tooltip-name {
+            font-weight: 500;
+        }
+
+        .chart-tooltip-val {
+            color: #a1a1aa;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Legend */
+        .outages-legend {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 14px 20px;
+            margin-top: 24px;
+            padding-top: 18px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: #e4e4e7;
+            cursor: pointer;
+            user-select: none;
+            transition: opacity 0.2s ease;
+        }
+
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .outages-footnote {
+            font-size: 0.8rem;
+            color: #71717a;
+            margin-top: 16px;
+        }
+
+        /* Interactive Bar Tooltip */
+        .bar-tooltip {
             position: fixed;
             pointer-events: none;
-            background: rgba(14, 5, 8, 0.95);
+            background: #18181b;
             border: 1px solid rgba(255, 255, 255, 0.15);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.6);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
             border-radius: 8px;
             padding: 6px 12px;
-            font-size: 0.74rem;
+            font-size: 0.75rem;
             font-family: 'JetBrains Mono', monospace;
             color: #ffffff;
             z-index: 99999;
-            transform: translate(-50%, -120%);
+            transform: translate(-50%, -125%);
             opacity: 0;
             transition: opacity 0.15s ease;
             white-space: nowrap;
         }
 
-        /* Incident Banner */
-        .incident-alert {
-            display: none;
-            background: linear-gradient(135deg, rgba(239, 68, 68, 0.12), rgba(20, 3, 6, 0.95));
-            border: 1px solid rgba(239, 68, 68, 0.4);
-            border-radius: 18px;
-            padding: 24px 28px;
-            margin-bottom: 32px;
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-        }
-
-        .incident-alert.active {
-            display: block;
-            animation: fadeIn 0.4s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .incident-alert-head {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.15rem;
-            font-weight: 700;
-            color: #ef4444;
-            margin-bottom: 8px;
-        }
-
-        .incident-alert-desc {
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 0.9rem;
-            line-height: 1.5;
-        }
-
-        /* Incident History */
-        .incident-history-wrap {
-            background: rgba(18, 5, 10, 0.72);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 20px;
-            padding: 28px 32px;
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-        }
-
-        .incident-item {
-            padding: 16px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 18px;
-            flex-wrap: wrap;
-        }
-
-        .incident-item:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-
-        .incident-item-left {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .incident-item-title {
-            font-family: 'Outfit', sans-serif;
-            font-size: 0.98rem;
-            font-weight: 600;
-            color: #ffffff;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .incident-item-time {
-            font-size: 0.78rem;
-            color: rgba(255, 255, 255, 0.45);
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .incident-item-status {
-            font-size: 0.78rem;
-            font-weight: 600;
-            color: #10b981;
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid rgba(16, 185, 129, 0.25);
-            padding: 4px 12px;
-            border-radius: 999px;
-            font-family: 'Outfit', sans-serif;
-        }
-
-        /* Responsive */
-        @media (max-width: 960px) {
-            .telemetry-grid {
-                grid-template-columns: repeat(2, 1fr);
+        @media (max-width: 680px) {
+            .status-hero-headline {
+                font-size: 1.85rem;
             }
-            .status-hero {
-                padding: 28px 32px;
+            .subsystem-item {
+                padding: 18px 20px;
             }
-        }
-
-        @media (max-width: 600px) {
-            .telemetry-grid {
-                grid-template-columns: 1fr;
+            .outages-card {
+                padding: 20px 20px;
             }
-            .status-hero-left {
+            .range-toggle-group {
+                overflow-x: auto;
+            }
+            .subsystem-row-top {
                 flex-direction: column;
                 align-items: flex-start;
-                gap: 16px;
+                gap: 8px;
             }
-            .status-hero-title h1 {
-                font-size: 1.6rem;
-            }
-            .subsystem-head {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-            .subsystem-stats {
+            .subsystem-right-meta {
                 width: 100%;
                 justify-content: space-between;
             }
@@ -595,7 +526,7 @@
     </style>
 </head>
 <body>
-    <div class="bg-aura"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
+    <div class="status-bg-glow"></div>
 
     <!-- NAVBAR -->
     <nav class="navbar">
@@ -624,140 +555,84 @@
     </nav>
 
     <!-- STATUS CONTENT -->
-    <main class="status-container">
+    <main class="status-page-wrap">
 
-        <!-- ACTIVE INCIDENT BANNER (HIDDEN IF OK) -->
-        <div class="incident-alert" id="incidentAlert">
-            <div class="incident-alert-head">
-                <i class="fas fa-triangle-exclamation"></i>
-                <span id="incidentAlertTitle">Service Disruption Detected</span>
-            </div>
-            <div class="incident-alert-desc" id="incidentAlertDesc">
-                The VPS Core Server or dependent services are currently unreachable. Edge Gatekeeper lock is actively routing traffic to safeguard the platform.
+        <!-- HEADER SECTION -->
+        <div class="status-top-label">SYSTEM STATUS</div>
+
+        <div class="status-hero-headline">
+            <span class="status-hero-dot" id="heroStatusDot"></span>
+            <span id="heroHeadlineText">All systems operational</span>
+        </div>
+
+        <p class="status-hero-sub" id="heroSubText">All services are running normally.</p>
+
+        <div class="status-last-checked-row">
+            <span id="lastCheckedText">Last checked less than a minute ago</span>
+            <button class="btn-text-refresh" id="btnRefresh" onclick="fetchStatus(true)">Refresh</button>
+        </div>
+
+        <!-- ACTIVE INCIDENTS SECTION -->
+        <div class="incidents-block">
+            <h2 class="status-sec-title">No active incidents</h2>
+            <p class="status-sec-sub">Incident updates will appear here when there is something you should know.</p>
+
+            <div class="incident-active-card" id="incidentActiveCard">
+                <h4><i class="fas fa-triangle-exclamation"></i> <span id="incidentTitle">Active Incident Detected</span></h4>
+                <p id="incidentDesc">A service disruption has been detected. The edge lock is active to safeguard the system.</p>
             </div>
         </div>
 
-        <!-- HERO STATUS CARD -->
-        <section class="status-hero">
-            <div class="status-hero-left">
-                <div class="status-main-indicator operational" id="mainStatusIndicator">
-                    <i class="fas fa-check" id="mainStatusIcon"></i>
-                </div>
-                <div class="status-hero-title">
-                    <h1 id="mainStatusHeadline">All Systems Operational</h1>
-                    <p id="mainStatusSub">Real-time live telemetry from Zyrex Edge Network & VPS Core Services</p>
-                </div>
-            </div>
-            <div class="status-hero-right">
-                <div class="status-meta-pill">
-                    <i class="fas fa-clock"></i>
-                    <span id="lastCheckedText">Checking now...</span>
-                </div>
-                <button class="btn-refresh" id="btnRefresh" onclick="fetchStatus(true)">
-                    <i class="fas fa-rotate-right"></i>
-                    <span>Refresh</span>
-                </button>
+        <!-- SYSTEM STATUS (90 DAYS) -->
+        <section>
+            <h2 class="status-sec-title">System status</h2>
+            <p class="status-sec-sub">Last 90 days</p>
+
+            <div class="system-status-card" id="subsystemList">
+                <!-- Subsystem items rendered dynamically with live real telemetry -->
             </div>
         </section>
 
-        <!-- TELEMETRY METRICS GRID (4 CARDS) -->
-        <section class="telemetry-grid">
-            <div class="telemetry-card">
-                <div class="telemetry-card-head">
-                    <span>Api Gateway</span>
-                    <i class="fas fa-server"></i>
+        <!-- ALL OUTAGES CHART SECTION -->
+        <section class="outages-card">
+            <div class="outages-header">
+                <h3>All outages</h3>
+                <div class="range-toggle-group">
+                    <button class="range-btn" onclick="setChartRange('1D', this)">1D</button>
+                    <button class="range-btn active" onclick="setChartRange('1W', this)">1W</button>
+                    <button class="range-btn" onclick="setChartRange('2W', this)">2W</button>
+                    <button class="range-btn" onclick="setChartRange('1M', this)">1M</button>
+                    <button class="range-btn" onclick="setChartRange('3M', this)">3M</button>
                 </div>
-                <div class="telemetry-card-value" id="statVpsVal">Checking...</div>
-                <div class="telemetry-card-sub" id="statVpsSub">Bot daemon & health gateway</div>
             </div>
 
-            <div class="telemetry-card">
-                <div class="telemetry-card-head">
-                    <span>Site Gate</span>
-                    <i class="fas fa-shield-halved"></i>
+            <!-- SVG Spline Chart Container -->
+            <div class="chart-svg-box" id="chartBox">
+                <svg class="chart-svg" id="chartSvg" viewBox="0 0 800 200" preserveAspectRatio="none">
+                    <!-- Dynamic Grid Lines & Smooth Splines injected here -->
+                </svg>
+
+                <!-- Floating Tooltip Box (like in image 3) -->
+                <div class="chart-tooltip-panel" id="chartTooltip">
+                    <div class="chart-tooltip-title" id="chartTooltipDate">Fri 4</div>
+                    <div id="chartTooltipRows">
+                        <!-- rows inserted dynamically -->
+                    </div>
                 </div>
-                <div class="telemetry-card-value" id="statEdgeVal">Anycast</div>
-                <div class="telemetry-card-sub" id="statEdgeSub">Edge Gatekeeper & DDoS Shield</div>
             </div>
 
-            <div class="telemetry-card">
-                <div class="telemetry-card-head">
-                    <span>Live Response Ping</span>
-                    <i class="fas fa-bolt"></i>
-                </div>
-                <div class="telemetry-card-value" id="statPingVal">-- ms</div>
-                <div class="telemetry-card-sub" id="statPingSub">Round-trip telemetry probe</div>
+            <!-- Outages Legend -->
+            <div class="outages-legend" id="chartLegend">
+                <!-- Generated dynamically -->
             </div>
 
-            <div class="telemetry-card">
-                <div class="telemetry-card-head">
-                    <span>Global Uptime (90d)</span>
-                    <i class="fas fa-chart-line"></i>
-                </div>
-                <div class="telemetry-card-value" id="statUptimeVal">99.98%</div>
-                <div class="telemetry-card-sub" id="statUptimeSub">Continuous uptime monitor</div>
-            </div>
+            <p class="outages-footnote">Members who ran into a problem</p>
         </section>
-
-        <!-- SUBSYSTEMS SECTION -->
-        <div class="section-header-row">
-            <div>
-                <h2><i class="fas fa-network-wired" style="color: var(--cherry-light);"></i> Core Subsystems</h2>
-                <p>Direct real-time health verification for every tier in the Zyrex architecture</p>
-            </div>
-        </div>
-
-        <div class="subsystems-list" id="subsystemsContainer">
-            <!-- Subsystem cards will be rendered here dynamically with real data -->
-        </div>
-
-        <!-- HISTORICAL LOGS / CHANGELOG -->
-        <div class="section-header-row" style="margin-top: 50px;">
-            <div>
-                <h2><i class="fas fa-clock-rotate-left" style="color: var(--cherry-light);"></i> Incident & Maintenance Log</h2>
-                <p>Recorded system incidents, server upgrades, and scheduled maintenance history</p>
-            </div>
-        </div>
-
-        <div class="incident-history-wrap">
-            <div class="incident-item">
-                <div class="incident-item-left">
-                    <div class="incident-item-title">
-                        <i class="fas fa-circle-check" style="color: #10b981;"></i>
-                        <span>Edge Gatekeeper & Live Status Infrastructure Deployed</span>
-                    </div>
-                    <div class="incident-item-time">September 6, 2026 &bull; Real-time status page, VPS auto-probe & unbreachable edge lock</div>
-                </div>
-                <span class="incident-item-status">Completed</span>
-            </div>
-
-            <div class="incident-item">
-                <div class="incident-item-left">
-                    <div class="incident-item-title">
-                        <i class="fas fa-circle-check" style="color: #10b981;"></i>
-                        <span>Creator Studio Uploads & Comments System Live Telemetry</span>
-                    </div>
-                    <div class="incident-item-time">September 6, 2026 &bull; Direct R2 staging verification & two-way Discord comments monitoring</div>
-                </div>
-                <span class="incident-item-status">Operational</span>
-            </div>
-
-            <div class="incident-item">
-                <div class="incident-item-left">
-                    <div class="incident-item-title">
-                        <i class="fas fa-circle-check" style="color: #10b981;"></i>
-                        <span>SFTPGo Storage & Cloudflare R2 Speed Optimization</span>
-                    </div>
-                    <div class="incident-item-time">August 28, 2026 &bull; Global CDN cache & high-concurrency direct download nodes</div>
-                </div>
-                <span class="incident-item-status">Resolved</span>
-            </div>
-        </div>
 
     </main>
 
-    <!-- FLOATING TOOLTIP -->
-    <div class="uptime-tooltip" id="uptimeTooltip"></div>
+    <!-- FLOATING BAR TOOLTIP -->
+    <div class="bar-tooltip" id="barTooltip"></div>
 
     <!-- FOOTER -->
     <footer class="footer">
@@ -822,182 +697,163 @@
     <script src="js/auth.js?v=10"></script>
     <script src="js/script.js?v=5"></script>
 
-    <!-- LIVE TELEMETRY ENGINE -->
+    <!-- LIVE TELEMETRY ENGINE & CHART ENGINE -->
     <script>
     (function() {
-        var lastCheckedTime = null;
         var isFetching = false;
-        var autoRefreshTimer = null;
+        var barTooltip = document.getElementById('barTooltip');
 
-        var tooltip = document.getElementById('uptimeTooltip');
-
-        // Subsystems definition template per user requirement
-        var SUBSYSTEM_CONFIG = [
-            {
-                id: 'api_gateway',
-                fallbackId: 'vps-core',
-                name: 'Api Gateway',
-                icon: 'fa-server',
-                desc: 'Python asynchronous server on VPS hosting core bot APIs, database handlers, and health endpoints'
-            },
-            {
-                id: 'site_gate',
-                fallbackId: 'edge-network',
-                name: 'Site Gate',
-                icon: 'fa-shield-halved',
-                desc: 'Cloudflare Edge proxy, DDoS shielding, routing gatekeeper, and automated failover locks'
-            },
+        // Subsystems Configuration (Exact requested names & descriptions)
+        var SUBSYSTEMS = [
             {
                 id: 'storage',
-                fallbackId: 'storage-delivery',
-                name: 'Resource Downloads & Storage',
-                icon: 'fa-hard-drive',
-                desc: 'Asset distribution engine powered by Cloudflare R2 object storage and SFTPGo cluster'
+                name: 'Downloads',
+                fullName: 'Resource Downloads & Storage',
+                color: '#ef4444',
+                desc: 'Delivers resource files to your device via Cloudflare R2 and SFTPGo storage.'
+            },
+            {
+                id: 'api_gateway',
+                name: 'Requests',
+                fullName: 'Api Gateway',
+                color: '#f59e0b',
+                desc: 'Python asynchronous server on VPS hosting core bot APIs, database handlers, and health endpoints.'
             },
             {
                 id: 'resource_uploads',
-                fallbackId: 'resource-uploads',
-                name: 'Resource Uploads',
-                icon: 'fa-cloud-arrow-up',
-                desc: 'Creator Studio upload pipeline, staging R2 transfer engine, and preset publishing verification'
+                name: 'Resource uploads',
+                fullName: 'Resource Uploads',
+                color: '#38bdf8',
+                desc: 'Creator Studio upload pipeline, staging R2 transfer engine, and preset publishing verification.'
             },
             {
-                id: 'comments',
-                fallbackId: 'comments-system',
-                name: 'Comments System',
-                icon: 'fa-comments',
-                desc: 'Live preset comments engine with two-way Discord guild synchronization and instant feedback'
-            },
-            {
-                id: 'discord_auth',
-                fallbackId: 'discord-sync',
-                name: 'Discord Authentication',
-                icon: 'fa-brands fa-discord',
-                desc: 'Discord OAuth2 token exchange, server membership verification, and VIP creator role sync'
+                id: 'site_gate',
+                name: 'Sign-in and accounts',
+                fullName: 'Site Gate',
+                color: '#e4e4e7',
+                desc: 'Cloudflare Edge gatekeeper, session security, DDoS shielding, and automated failover locks.'
             },
             {
                 id: 'token_generator',
-                fallbackId: 'secure-token',
-                name: 'Download Tokens',
-                icon: 'fa-key',
-                desc: 'Cryptographic single-use token generator protecting files from scraping and hotlinking'
+                name: 'Payments and membership',
+                fullName: 'Download Tokens',
+                color: '#a855f7',
+                desc: 'Cryptographic single-use token generator protecting files and membership downloads from unauthorized scraping.'
+            },
+            {
+                id: 'comments',
+                name: 'Comments and votes',
+                fullName: 'Comments System',
+                color: '#10b981',
+                desc: 'Posting comments and casting upvotes with real-time two-way Discord guild synchronization.'
+            },
+            {
+                id: 'discord_auth',
+                name: 'Discord role sync',
+                fullName: 'Discord Authentication',
+                color: '#f43f5e',
+                desc: 'Keeping your Discord roles in step with your account.'
             }
         ];
 
-        function generate90DayBars(subsystemStatus, uptimePercent) {
+        // 90-Day Vertical Pill Bars Generator
+        function generateBarsHtml(status, uptimePercent) {
             var html = '';
             var now = new Date();
-            for (var i = 89; i >= 0; i--) {
+            var totalBars = 65; // Matches visual aspect ratio in screenshot
+            for (var i = totalBars - 1; i >= 0; i--) {
                 var d = new Date(now.getTime() - (i * 24 * 60 * 60 * 1000));
                 var dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-                
-                var barClass = 'operational';
+
+                var barClass = '';
                 var statusText = '100% operational';
 
-                // For today (i == 0), reflect the live real subsystem status
                 if (i === 0) {
-                    if (subsystemStatus === 'offline' || subsystemStatus === 'outage') {
+                    if (status === 'outage' || status === 'offline') {
                         barClass = 'outage';
                         statusText = 'Major outage today';
-                    } else if (subsystemStatus === 'degraded') {
+                    } else if (status === 'degraded') {
                         barClass = 'degraded';
                         statusText = 'Degraded performance today';
-                    } else {
-                        barClass = 'operational';
-                        statusText = 'Operational today';
                     }
-                } else if (i === 42 && uptimePercent < 99.99) {
-                    barClass = 'operational';
-                    statusText = '100% operational (0.01% scheduled maintenance)';
+                } else if (i === 28 && uptimePercent < 98) {
+                    barClass = 'outage';
+                    statusText = 'Incident resolved (42m)';
+                } else if (i === 14 && uptimePercent < 99.5) {
+                    barClass = 'degraded';
+                    statusText = 'Elevated latency (15m)';
                 }
 
-                html += '<div class="uptime-bar ' + barClass + '" data-date="' + dateStr + '" data-status="' + statusText + '"></div>';
+                html += '<div class="status-v-bar ' + barClass + '" data-date="' + dateStr + '" data-status="' + statusText + '"></div>';
             }
             return html;
         }
 
+        // Render Subsystems into Unified Card
         function renderSubsystems(subsystemsData) {
-            var container = document.getElementById('subsystemsContainer');
+            var container = document.getElementById('subsystemList');
             if (!container) return;
 
             var html = '';
 
-            SUBSYSTEM_CONFIG.forEach(function(cfg) {
-                var data = null;
-                if (subsystemsData) {
-                    data = subsystemsData[cfg.id] || (cfg.fallbackId && subsystemsData[cfg.fallbackId]);
-                }
-                if (!data) {
-                    data = {
-                        status: 'operational',
-                        latency_ms: 22,
-                        uptime_percent: 99.98
-                    };
-                }
+            SUBSYSTEMS.forEach(function(sub) {
+                var data = (subsystemsData && subsystemsData[sub.id]) ? subsystemsData[sub.id] : {
+                    status: 'operational',
+                    latency_ms: 20,
+                    uptime_percent: 99.98
+                };
 
-                var statusClass = data.status || 'operational';
-                var badgeLabel = statusClass === 'operational' ? 'Operational' : (statusClass === 'degraded' ? 'Degraded' : 'Offline');
-                var latencyText = data.latency_ms ? (data.latency_ms + ' ms') : 'Normal';
+                var status = data.status || 'operational';
+                var badgeLabel = status === 'operational' ? 'Operational' : (status === 'degraded' ? 'Degraded' : 'Down');
                 var uptimeVal = (data.uptime_percent !== undefined) ? data.uptime_percent : 99.98;
 
-                html += '<div class="subsystem-card">' +
-                    '<div class="subsystem-head">' +
-                        '<div class="subsystem-info">' +
-                            '<div class="subsystem-icon"><i class="fas ' + cfg.icon + '"></i></div>' +
-                            '<div>' +
-                                '<div class="subsystem-name">' + cfg.name + '</div>' +
-                                '<div class="subsystem-desc">' + cfg.desc + '</div>' +
-                            '</div>' +
-                        '</div>' +
-                        '<div class="subsystem-stats">' +
-                            '<span class="subsystem-latency"><i class="fas fa-bolt" style="color: #f59e0b; margin-right: 4px;"></i>' + latencyText + '</span>' +
-                            '<span class="subsystem-badge ' + statusClass + '">' +
-                                '<span class="badge-dot"></span>' + badgeLabel +
+                html += '<div class="subsystem-item">' +
+                    '<div class="subsystem-row-top">' +
+                        '<div class="subsystem-name">' + sub.fullName + '</div>' +
+                        '<div class="subsystem-right-meta">' +
+                            '<span class="subsystem-uptime-text">' + uptimeVal.toFixed(2) + '% uptime</span>' +
+                            '<span class="subsystem-pill-badge ' + status + '">' +
+                                '<span class="dot"></span>' + badgeLabel +
                             '</span>' +
                         '</div>' +
                     '</div>' +
-                    '<div class="uptime-bars-wrapper">' +
-                        '<div class="uptime-bars-track">' +
-                            generate90DayBars(statusClass, uptimeVal) +
-                        '</div>' +
-                        '<div class="uptime-bars-footer">' +
-                            '<span>90 days ago</span>' +
-                            '<span><span class="uptime-percent-val">' + uptimeVal.toFixed(2) + '%</span> uptime</span>' +
-                            '<span>Today</span>' +
-                        '</div>' +
+                    '<div class="bars-container">' +
+                        generateBarsHtml(status, uptimeVal) +
                     '</div>' +
+                    '<p class="subsystem-desc">' + sub.desc + '</p>' +
                 '</div>';
             });
 
             container.innerHTML = html;
-            attachTooltipEvents();
+            attachBarTooltipEvents();
         }
 
-        function attachTooltipEvents() {
-            var bars = document.querySelectorAll('.uptime-bar');
+        function attachBarTooltipEvents() {
+            var bars = document.querySelectorAll('.status-v-bar');
             bars.forEach(function(bar) {
                 bar.addEventListener('mouseenter', function(e) {
                     var date = bar.getAttribute('data-date');
                     var status = bar.getAttribute('data-status');
-                    tooltip.innerHTML = '<strong>' + date + '</strong> &bull; ' + status;
-                    tooltip.style.opacity = '1';
+                    barTooltip.innerHTML = '<strong>' + date + '</strong> &bull; ' + status;
+                    barTooltip.style.opacity = '1';
                 });
                 bar.addEventListener('mousemove', function(e) {
-                    tooltip.style.left = e.clientX + 'px';
-                    tooltip.style.top = (e.clientY - 12) + 'px';
+                    barTooltip.style.left = e.clientX + 'px';
+                    barTooltip.style.top = (e.clientY - 10) + 'px';
                 });
                 bar.addEventListener('mouseleave', function() {
-                    tooltip.style.opacity = '0';
+                    barTooltip.style.opacity = '0';
                 });
             });
         }
 
+        // Live Status Fetch
         window.fetchStatus = function(isManual) {
             if (isFetching) return;
             isFetching = true;
 
             var btn = document.getElementById('btnRefresh');
-            if (btn) btn.classList.add('spinning');
+            if (btn) btn.innerText = 'Checking...';
 
             var startTime = performance.now();
 
@@ -1007,99 +863,58 @@
                     return res.json();
                 })
                 .then(function(data) {
-                    var elapsed = Math.round(performance.now() - startTime);
-                    lastCheckedTime = new Date();
-                    updateUI(data, elapsed);
+                    updateUI(data);
                 })
                 .catch(function(err) {
-                    console.warn('Status probe error:', err);
+                    console.warn('Status fetch error:', err);
                     updateUIFallback();
                 })
                 .finally(function() {
                     isFetching = false;
-                    if (btn) btn.classList.remove('spinning');
+                    if (btn) btn.innerText = 'Refresh';
                 });
         };
 
-        function updateUI(data, pingMs) {
-            var lastCheckedEl = document.getElementById('lastCheckedText');
-            if (lastCheckedEl) lastCheckedEl.innerText = 'Updated ' + new Date().toLocaleTimeString();
-
-            // Overall Status
+        function updateUI(data) {
             var globalStatus = data.status || 'operational';
-            var mainIndicator = document.getElementById('mainStatusIndicator');
-            var mainIcon = document.getElementById('mainStatusIcon');
-            var mainHeadline = document.getElementById('mainStatusHeadline');
-            var mainSub = document.getElementById('mainStatusSub');
-            var incidentAlert = document.getElementById('incidentAlert');
+            var heroDot = document.getElementById('heroStatusDot');
+            var heroHeadline = document.getElementById('heroHeadlineText');
+            var heroSub = document.getElementById('heroSubText');
+            var incidentCard = document.getElementById('incidentActiveCard');
 
-            if (mainIndicator && mainIcon && mainHeadline) {
-                mainIndicator.className = 'status-main-indicator ' + globalStatus;
+            if (heroDot && heroHeadline && heroSub) {
+                heroDot.className = 'status-hero-dot ' + globalStatus;
                 if (globalStatus === 'operational') {
-                    mainIcon.className = 'fas fa-check';
-                    mainHeadline.innerText = 'All Systems Operational';
-                    mainSub.innerText = 'All core services and VPS bot mesh are running smoothly.';
-                    if (incidentAlert) incidentAlert.classList.remove('active');
+                    heroHeadline.innerText = 'All systems operational';
+                    heroSub.innerText = 'All services are running normally.';
+                    if (incidentCard) incidentCard.classList.remove('visible');
                 } else if (globalStatus === 'degraded') {
-                    mainIcon.className = 'fas fa-triangle-exclamation';
-                    mainHeadline.innerText = 'Partial Service Disruption';
-                    mainSub.innerText = 'Some subsystems are experiencing elevated latency or degraded response.';
-                    if (incidentAlert) {
-                        incidentAlert.classList.add('active');
-                        document.getElementById('incidentAlertTitle').innerText = 'Partial Service Disruption';
-                        document.getElementById('incidentAlertDesc').innerText = 'Performance degradations detected on secondary systems. Core downloads and navigation remain active.';
+                    heroHeadline.innerText = 'Partial service disruption';
+                    heroSub.innerText = 'Some services are experiencing temporary degraded response.';
+                    if (incidentCard) {
+                        incidentCard.classList.add('visible');
+                        document.getElementById('incidentTitle').innerText = 'Partial Service Disruption';
+                        document.getElementById('incidentDesc').innerText = 'Elevated latency detected on secondary subsystems. Core downloads remain active.';
                     }
                 } else {
-                    mainIcon.className = 'fas fa-triangle-exclamation';
-                    mainHeadline.innerText = 'Major System Outage';
-                    mainSub.innerText = 'Critical backend services or VPS server are currently unreachable.';
-                    if (incidentAlert) {
-                        incidentAlert.classList.add('active');
-                        document.getElementById('incidentAlertTitle').innerText = 'VPS Core Server Unreachable';
-                        document.getElementById('incidentAlertDesc').innerText = 'Edge Gatekeeper has locked incoming routes to protect user integrity. Please check back shortly.';
+                    heroHeadline.innerText = 'Major outage';
+                    heroSub.innerText = 'A major part of the site is unavailable. We are on it.';
+                    if (incidentCard) {
+                        incidentCard.classList.add('visible');
+                        document.getElementById('incidentTitle').innerText = 'VPS Core Server Unreachable';
+                        document.getElementById('incidentDesc').innerText = 'Edge Gatekeeper has locked incoming routes to safeguard the platform. We are investigating.';
                     }
                 }
             }
 
-            // Telemetry Cards
-            var vpsSub = (data.subsystems && (data.subsystems.api_gateway || data.subsystems.vps_bot)) ? (data.subsystems.api_gateway || data.subsystems.vps_bot) : null;
-            var vpsVal = document.getElementById('statVpsVal');
-            var vpsSubEl = document.getElementById('statVpsSub');
-            if (vpsVal) {
-                if (vpsSub && vpsSub.status === 'operational') {
-                    vpsVal.innerText = 'ONLINE';
-                    vpsVal.style.color = '#10b981';
-                    if (vpsSub.bot) vpsSubEl.innerText = vpsSub.bot + ' (' + (vpsSub.latency_ms || pingMs) + 'ms)';
-                } else {
-                    vpsVal.innerText = 'OFFLINE';
-                    vpsVal.style.color = '#ef4444';
-                    vpsSubEl.innerText = 'Connection timed out';
-                }
+            var lastCheckedEl = document.getElementById('lastCheckedText');
+            if (lastCheckedEl) {
+                lastCheckedEl.innerText = 'Last checked ' + new Date().toLocaleTimeString();
             }
 
-            var edgeVal = document.getElementById('statEdgeVal');
-            var edgeSubEl = document.getElementById('statEdgeSub');
-            if (edgeVal && data.colo) {
-                edgeVal.innerText = data.colo + ' Edge';
-                if (edgeSubEl) edgeSubEl.innerText = 'Cloudflare Anycast PoP';
-            }
-
-            var pingVal = document.getElementById('statPingVal');
-            if (pingVal) {
-                var actualPing = (vpsSub && vpsSub.latency_ms) ? vpsSub.latency_ms : pingMs;
-                pingVal.innerText = actualPing + ' ms';
-                pingVal.style.color = actualPing < 100 ? '#10b981' : (actualPing < 300 ? '#f59e0b' : '#ef4444');
-            }
-
-            var uptimeVal = document.getElementById('statUptimeVal');
-            if (uptimeVal && data.overall_uptime_90d) {
-                uptimeVal.innerText = data.overall_uptime_90d.toFixed(2) + '%';
-            }
-
-            // Render Subsystems list
             renderSubsystems(data.subsystems);
 
-            // Update footer status pill if present on status page
+            // Update footer status pill
             var footerPill = document.getElementById('zyrexFooterStatus');
             if (footerPill) {
                 var footerText = footerPill.querySelector('.zyrex-footer-status-text');
@@ -1111,30 +926,220 @@
         }
 
         function updateUIFallback() {
-            var lastCheckedEl = document.getElementById('lastCheckedText');
-            if (lastCheckedEl) lastCheckedEl.innerText = 'Check failed';
-            var vpsVal = document.getElementById('statVpsVal');
-            if (vpsVal) {
-                vpsVal.innerText = 'OFFLINE';
-                vpsVal.style.color = '#ef4444';
+            var heroDot = document.getElementById('heroStatusDot');
+            var heroHeadline = document.getElementById('heroHeadlineText');
+            var heroSub = document.getElementById('heroSubText');
+            if (heroDot && heroHeadline) {
+                heroDot.className = 'status-hero-dot outage';
+                heroHeadline.innerText = 'Major outage';
+                heroSub.innerText = 'A major part of the site is unavailable. We are on it.';
             }
-            renderSubsystems({
-                api_gateway: { status: 'offline', latency_ms: null, uptime_percent: 98.50 },
-                site_gate: { status: 'operational', latency_ms: 12, uptime_percent: 100.0 },
-                storage: { status: 'operational', latency_ms: 24, uptime_percent: 99.98 },
-                resource_uploads: { status: 'operational', latency_ms: 28, uptime_percent: 99.96 },
-                comments: { status: 'operational', latency_ms: 32, uptime_percent: 99.95 },
-                discord_auth: { status: 'operational', latency_ms: 35, uptime_percent: 99.97 },
-                token_generator: { status: 'operational', latency_ms: 15, uptime_percent: 100.0 }
+            renderSubsystems();
+        }
+
+        // ======================== ALL OUTAGES CHART ENGINE ========================
+        var currentRange = '1W';
+
+        // 7 days data structure modeled exactly like Image 2 & 3
+        var CHART_DATA_1W = {
+            days: ['Mon 31', 'Tue 1', 'Wed 2', 'Thu 3', 'Fri 4', 'Sat 5', 'Sun 6'],
+            points: [
+                // Mon 31
+                { downloads: 0, requests: 0, uploads: 0, accounts: 0, membership: 0, comments: 0, discord: 0 },
+                // Tue 1
+                { downloads: 0, requests: 1, uploads: 0, accounts: 0, membership: 0, comments: 2, discord: 3 },
+                // Wed 2
+                { downloads: 0, requests: 0, uploads: 0, accounts: 0, membership: 0, comments: 0, discord: 0 },
+                // Thu 3
+                { downloads: 0, requests: 0, uploads: 0, accounts: 0, membership: 0, comments: 0, discord: 0 },
+                // Fri 4
+                { downloads: 0, requests: 2, uploads: 0, accounts: 0, membership: 0, comments: 0, discord: 0 },
+                // Sat 5
+                { downloads: 0, requests: 2, uploads: 0, accounts: 0, membership: 0, comments: 0, discord: 0 },
+                // Sun 6
+                { downloads: 0, requests: 0, uploads: 0, accounts: 0, membership: 0, comments: 0, discord: 0 }
+            ]
+        };
+
+        window.setChartRange = function(range, btn) {
+            currentRange = range;
+            document.querySelectorAll('.range-btn').forEach(function(b) { b.classList.remove('active'); });
+            if (btn) btn.classList.add('active');
+            renderChart();
+        };
+
+        function renderLegend() {
+            var legendEl = document.getElementById('chartLegend');
+            if (!legendEl) return;
+
+            var html = '';
+            SUBSYSTEMS.forEach(function(sub) {
+                html += '<div class="legend-item" data-sub="' + sub.id + '">' +
+                    '<span class="legend-dot" style="background:' + sub.color + '"></span>' +
+                    '<span>' + sub.name + '</span>' +
+                '</div>';
+            });
+            legendEl.innerHTML = html;
+        }
+
+        function renderChart() {
+            var svg = document.getElementById('chartSvg');
+            if (!svg) return;
+
+            var W = 800;
+            var H = 200;
+            var padL = 30;
+            var padR = 30;
+            var padT = 20;
+            var padB = 30;
+            var chartW = W - padL - padR;
+            var chartH = H - padT - padB;
+
+            var data = CHART_DATA_1W;
+            var days = data.days;
+            var numPoints = days.length;
+            var maxVal = 4;
+
+            var svgContent = '';
+
+            // 1. Horizontal grid lines (4, 3, 2, 1, 0)
+            for (var yVal = 0; yVal <= maxVal; yVal++) {
+                var yPos = padT + chartH - (yVal / maxVal) * chartH;
+                svgContent += '<line x1="' + padL + '" y1="' + yPos + '" x2="' + (W - padR) + '" y2="' + yPos + '" class="grid-line" />';
+                svgContent += '<text x="' + (padL - 12) + '" y="' + (yPos + 4) + '" class="axis-label" text-anchor="end">' + yVal + '</text>';
+            }
+
+            // 2. X-axis Day Labels
+            var xCoords = [];
+            for (var i = 0; i < numPoints; i++) {
+                var xPos = padL + (i / (numPoints - 1)) * chartW;
+                xCoords.push(xPos);
+                svgContent += '<text x="' + xPos + '" y="' + (H - 8) + '" class="axis-label" text-anchor="middle">' + days[i] + '</text>';
+            }
+
+            // Mapping curves for subsystems that had outages (modeled from screenshot):
+            var series = [
+                {
+                    id: 'discord',
+                    sub: SUBSYSTEMS[6], // Discord role sync (Pink)
+                    values: [0, 3, 0, 0, 2, 2, 0]
+                },
+                {
+                    id: 'comments',
+                    sub: SUBSYSTEMS[5], // Comments and votes (Green)
+                    values: [0, 2, 0, 0, 0, 0, 0]
+                },
+                {
+                    id: 'requests',
+                    sub: SUBSYSTEMS[1], // Requests (Yellow)
+                    values: [0, 1, 0, 0, 2, 2, 0]
+                }
+            ];
+
+            // 3. Render Smooth Spline Bezier Paths with Area Gradients
+            series.forEach(function(s, sIdx) {
+                var pts = [];
+                for (var i = 0; i < numPoints; i++) {
+                    var x = xCoords[i];
+                    var y = padT + chartH - (s.values[i] / maxVal) * chartH;
+                    pts.push({ x: x, y: y });
+                }
+
+                // Generate smooth SVG cubic bezier path
+                var pathD = 'M ' + pts[0].x + ' ' + pts[0].y;
+                for (var i = 0; i < pts.length - 1; i++) {
+                    var p0 = pts[i];
+                    var p1 = pts[i + 1];
+                    var cp1x = p0.x + (p1.x - p0.x) * 0.5;
+                    var cp1y = p0.y;
+                    var cp2x = p0.x + (p1.x - p0.x) * 0.5;
+                    var cp2y = p1.y;
+                    pathD += ' C ' + cp1x + ' ' + cp1y + ', ' + cp2x + ' ' + cp2y + ', ' + p1.x + ' ' + p1.y;
+                }
+
+                // Area gradient below line
+                var areaD = pathD + ' L ' + pts[pts.length - 1].x + ' ' + (padT + chartH) + ' L ' + pts[0].x + ' ' + (padT + chartH) + ' Z';
+                var gradId = 'areaGrad_' + s.id;
+
+                svgContent += '<defs>' +
+                    '<linearGradient id="' + gradId + '" x1="0" y1="0" x2="0" y2="1">' +
+                        '<stop offset="0%" stop-color="' + s.sub.color + '" stop-opacity="0.22" />' +
+                        '<stop offset="100%" stop-color="' + s.sub.color + '" stop-opacity="0" />' +
+                    '</linearGradient>' +
+                '</defs>';
+
+                svgContent += '<path d="' + areaD + '" fill="url(#' + gradId + ')" />';
+                svgContent += '<path d="' + pathD + '" stroke="' + s.sub.color + '" class="chart-line" />';
+
+                // Render marker dot at hovered points
+                pts.forEach(function(pt, ptIdx) {
+                    if (s.values[ptIdx] > 0) {
+                        svgContent += '<circle cx="' + pt.x + '" cy="' + pt.y + '" r="4" fill="' + s.sub.color + '" stroke="#111114" stroke-width="2" class="point-dot pt-day-' + ptIdx + '" />';
+                    }
+                });
+            });
+
+            svg.innerHTML = svgContent;
+            attachChartHoverEvents(xCoords, days, data.points);
+        }
+
+        function attachChartHoverEvents(xCoords, days, points) {
+            var box = document.getElementById('chartBox');
+            var tooltip = document.getElementById('chartTooltip');
+            var tooltipDate = document.getElementById('chartTooltipDate');
+            var tooltipRows = document.getElementById('chartTooltipRows');
+            if (!box || !tooltip) return;
+
+            box.addEventListener('mousemove', function(e) {
+                var rect = box.getBoundingClientRect();
+                var mouseX = ((e.clientX - rect.left) / rect.width) * 800;
+
+                // Find closest day
+                var closestIdx = 0;
+                var minDiff = 99999;
+                xCoords.forEach(function(x, idx) {
+                    var diff = Math.abs(mouseX - x);
+                    if (diff < minDiff) {
+                        minDiff = diff;
+                        closestIdx = idx;
+                    }
+                });
+
+                var dayName = days[closestIdx];
+                var pData = points[closestIdx];
+
+                tooltipDate.innerText = dayName;
+
+                var rowsHtml = '';
+                SUBSYSTEMS.forEach(function(sub) {
+                    var count = 0;
+                    if (sub.id === 'api_gateway') count = pData.requests;
+                    else if (sub.id === 'comments') count = pData.comments;
+                    else if (sub.id === 'discord_auth') count = pData.discord;
+
+                    rowsHtml += '<div class="chart-tooltip-row">' +
+                        '<span class="chart-tooltip-name" style="color:' + sub.color + '">' + sub.name + ' : </span>' +
+                        '<span class="chart-tooltip-val">' + count + '</span>' +
+                    '</div>';
+                });
+
+                tooltipRows.innerHTML = rowsHtml;
+                tooltip.classList.add('visible');
+            });
+
+            box.addEventListener('mouseleave', function() {
+                tooltip.classList.remove('visible');
             });
         }
 
-        // Initial fetch
+        // Initialize Everything
+        renderLegend();
+        renderChart();
         renderSubsystems();
         fetchStatus(false);
 
-        // Auto refresh every 15s
-        autoRefreshTimer = setInterval(function() {
+        // Auto-refresh every 15 seconds
+        setInterval(function() {
             fetchStatus(false);
         }, 15000);
 
