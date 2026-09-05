@@ -764,6 +764,122 @@
             font-weight: 600;
         }
 
+        .comment-media-wrap {
+            margin: 8px 0;
+            display: inline-block;
+            max-width: 100%;
+        }
+        .comment-media-embed {
+            max-width: 280px;
+            max-height: 220px;
+            border-radius: 10px;
+            object-fit: cover;
+            cursor: pointer;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: block;
+        }
+        .comment-media-embed:hover {
+            transform: scale(1.02);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+        }
+        .comment-sticker-embed {
+            width: 110px;
+            height: 110px;
+            object-fit: contain;
+            border: none;
+            background: transparent;
+            cursor: default;
+        }
+        .comment-sticker-embed:hover {
+            transform: scale(1.05);
+            box-shadow: none;
+        }
+        .comment-tenor-embed {
+            width: 280px;
+            max-width: 100%;
+            height: 180px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: block;
+        }
+        /* Discord Markdown Elements */
+        .discord-spoiler {
+            background: #202225;
+            color: transparent;
+            border-radius: 4px;
+            padding: 1px 6px;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.15s ease, color 0.15s ease;
+            display: inline;
+        }
+        .discord-spoiler.revealed {
+            background: rgba(255, 255, 255, 0.1);
+            color: inherit;
+            user-select: text;
+        }
+        .discord-quote {
+            border-left: 4px solid #4f545c;
+            padding-left: 12px;
+            margin: 6px 0;
+            color: #dcddde;
+            font-style: normal;
+        }
+        .discord-code-block {
+            background: #1e1f22;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            padding: 10px 14px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.82rem;
+            color: #e3e5e8;
+            overflow-x: auto;
+            margin: 6px 0;
+            line-height: 1.5;
+            white-space: pre;
+        }
+        .discord-code-block code {
+            font-family: inherit;
+            color: inherit;
+            background: transparent;
+            padding: 0;
+        }
+        .discord-inline-code {
+            background: #1e1f22;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-family: 'Consolas', 'Courier New', monospace;
+            font-size: 0.82rem;
+            color: #e3e5e8;
+        }
+        .discord-subtext {
+            font-size: 0.76rem;
+            color: #949ba4;
+            display: block;
+            margin-top: 3px;
+        }
+        .discord-custom-emoji {
+            width: 22px;
+            height: 22px;
+            vertical-align: -4px;
+            display: inline-block;
+            object-fit: contain;
+            margin: 0 2px;
+        }
+        .discord-channel-pill {
+            background: rgba(88, 101, 242, 0.15);
+            color: #949cf7;
+            padding: 1px 6px;
+            border-radius: 4px;
+            font-size: 0.82rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 500;
+        }
+
         .turnstile-box-clean {
             display: inline-block;
             height: 65px;
@@ -1289,14 +1405,24 @@
     }
     window.autoResizeCommentTextarea = autoResizeCommentTextarea;
 
-    async function toggleStickerPicker(btn) {
-        const pop = document.getElementById('commentPickerPopover');
+    let activeCommentInputId = 'mainCommentText';
+    let activeCommentPopoverId = 'commentPickerPopover';
+
+    async function toggleStickerPicker(btn, targetInputId, popoverId) {
+        const targetInput = targetInputId || 'mainCommentText';
+        const targetPopId = popoverId || 'commentPickerPopover';
+        const pop = document.getElementById(targetPopId);
         if (!pop) return;
+
         if (pop.style.display === 'block' && pop.getAttribute('data-type') === 'stickers') {
             closePickerPopover();
             return;
         }
-        document.querySelectorAll('.comment-tool-btn').forEach(b => b.classList.remove('active'));
+
+        closePickerPopover();
+        activeCommentInputId = targetInput;
+        activeCommentPopoverId = targetPopId;
+
         btn.classList.add('active');
         pop.setAttribute('data-type', 'stickers');
         pop.style.display = 'block';
@@ -1307,7 +1433,7 @@
                 </span>
                 <button type="button" onclick="closePickerPopover()" style="background:none;border:none;color:var(--text-sub);cursor:pointer;font-size:1rem">&times;</button>
             </div>
-            <div class="popover-grid" id="stickersGrid">
+            <div class="popover-grid" id="${targetPopId}_stickersGrid">
                 <div style="grid-column:1/-1;text-align:center;padding:25px 0;color:var(--text-sub)">
                     <i class="fas fa-spinner fa-spin" style="color:var(--cherry-neon);margin-bottom:6px"></i>
                     <div>Loading server stickers...</div>
@@ -1321,7 +1447,7 @@
                 const data = await resp.json();
                 currentGuildStickers = (data && data.stickers) ? data.stickers : [];
             }
-            const grid = document.getElementById('stickersGrid');
+            const grid = document.getElementById(`${targetPopId}_stickersGrid`);
             if (!grid) return;
             if (currentGuildStickers.length === 0) {
                 grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--text-sub)">No server stickers found</div>';
@@ -1333,21 +1459,28 @@
                 </div>
             `).join('');
         } catch(err) {
-            const grid = document.getElementById('stickersGrid');
+            const grid = document.getElementById(`${targetPopId}_stickersGrid`);
             if (grid) grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:rgba(255,100,100,0.8)">Error loading stickers</div>';
         }
     }
     window.toggleStickerPicker = toggleStickerPicker;
 
     let giphySearchTimeout = null;
-    async function toggleGifPicker(btn) {
-        const pop = document.getElementById('commentPickerPopover');
+    async function toggleGifPicker(btn, targetInputId, popoverId) {
+        const targetInput = targetInputId || 'mainCommentText';
+        const targetPopId = popoverId || 'commentPickerPopover';
+        const pop = document.getElementById(targetPopId);
         if (!pop) return;
+
         if (pop.style.display === 'block' && pop.getAttribute('data-type') === 'gifs') {
             closePickerPopover();
             return;
         }
-        document.querySelectorAll('.comment-tool-btn').forEach(b => b.classList.remove('active'));
+
+        closePickerPopover();
+        activeCommentInputId = targetInput;
+        activeCommentPopoverId = targetPopId;
+
         btn.classList.add('active');
         pop.setAttribute('data-type', 'gifs');
         pop.style.display = 'block';
@@ -1358,8 +1491,8 @@
                 </span>
                 <button type="button" onclick="closePickerPopover()" style="background:none;border:none;color:var(--text-sub);cursor:pointer;font-size:1rem">&times;</button>
             </div>
-            <input type="text" class="popover-search-input" id="giphySearchInput" placeholder="Search GIFs..." oninput="onGiphySearchInput(this.value)">
-            <div class="popover-grid" id="gifsGrid">
+            <input type="text" class="popover-search-input" id="${targetPopId}_giphySearchInput" placeholder="Search GIFs..." oninput="onGiphySearchInput(this.value, '${targetPopId}')">
+            <div class="popover-grid" id="${targetPopId}_gifsGrid">
                 <div style="grid-column:1/-1;text-align:center;padding:25px 0;color:var(--text-sub)">
                     <i class="fas fa-spinner fa-spin" style="color:#00d2ff;margin-bottom:6px"></i>
                     <div>Loading trending GIFs...</div>
@@ -1367,23 +1500,24 @@
             </div>
         `;
         setTimeout(() => {
-            const inp = document.getElementById('giphySearchInput');
+            const inp = document.getElementById(`${targetPopId}_giphySearchInput`);
             if (inp) inp.focus();
         }, 50);
-        fetchGiphyGifs('');
+        fetchGiphyGifs('', targetPopId);
     }
     window.toggleGifPicker = toggleGifPicker;
 
-    function onGiphySearchInput(val) {
+    function onGiphySearchInput(val, popoverId) {
         clearTimeout(giphySearchTimeout);
         giphySearchTimeout = setTimeout(() => {
-            fetchGiphyGifs(val.trim());
+            fetchGiphyGifs(val.trim(), popoverId || activeCommentPopoverId);
         }, 350);
     }
     window.onGiphySearchInput = onGiphySearchInput;
 
-    async function fetchGiphyGifs(query) {
-        const grid = document.getElementById('gifsGrid');
+    async function fetchGiphyGifs(query, popoverId) {
+        const targetPopId = popoverId || activeCommentPopoverId || 'commentPickerPopover';
+        const grid = document.getElementById(`${targetPopId}_gifsGrid`);
         if (!grid) return;
         grid.innerHTML = `
             <div style="grid-column:1/-1;text-align:center;padding:25px 0;color:var(--text-sub)">
@@ -1419,14 +1553,13 @@
     }
 
     function closePickerPopover() {
-        const pop = document.getElementById('commentPickerPopover');
-        if (pop) pop.style.display = 'none';
+        document.querySelectorAll('.popover-card').forEach(p => p.style.display = 'none');
         document.querySelectorAll('.comment-tool-btn').forEach(b => b.classList.remove('active'));
     }
     window.closePickerPopover = closePickerPopover;
 
     function insertStickerToComment(name, url) {
-        const txt = document.getElementById('mainCommentText');
+        const txt = document.getElementById(activeCommentInputId || 'mainCommentText');
         if (!txt) return;
         const tag = `![sticker:${name}](${url})`;
         txt.value = txt.value.trim() ? (txt.value.trim() + ' ' + tag) : tag;
@@ -1437,7 +1570,7 @@
     window.insertStickerToComment = insertStickerToComment;
 
     function insertGifToComment(url) {
-        const txt = document.getElementById('mainCommentText');
+        const txt = document.getElementById(activeCommentInputId || 'mainCommentText');
         if (!txt) return;
         const tag = `![gif](${url})`;
         txt.value = txt.value.trim() ? (txt.value.trim() + ' ' + tag) : tag;
@@ -1447,11 +1580,11 @@
     }
     window.insertGifToComment = insertGifToComment;
 
-    // Close popover when clicking outside
+    // Close popovers when clicking outside
     document.addEventListener('click', function(e) {
-        const pop = document.getElementById('commentPickerPopover');
-        if (!pop || pop.style.display !== 'block') return;
-        if (!pop.contains(e.target) && !e.target.closest('.comment-tool-btn')) {
+        const openPopover = document.querySelector('.popover-card[style*="display: block"]');
+        if (!openPopover) return;
+        if (!openPopover.contains(e.target) && !e.target.closest('.comment-tool-btn')) {
             closePickerPopover();
         }
     });
@@ -1694,22 +1827,95 @@
     function formatCommentContentWithMentions(rawContent) {
         if (!rawContent) return '';
         let escaped = escapeHtml(rawContent);
-        // Replace markdown images: ![alt](https://...)
+
+        // 1. Extract and protect code blocks: ```lang\ncode```
+        const codeBlocks = [];
+        escaped = escaped.replace(/```(?:([a-zA-Z0-9_-]+)?\n)?([\s\S]*?)```/g, function(match, lang, code) {
+            const placeholder = `__DC_CODE_BLOCK_${codeBlocks.length}__`;
+            codeBlocks.push(`<pre class="discord-code-block"><code>${code}</code></pre>`);
+            return placeholder;
+        });
+
+        // 2. Extract and protect inline code: `code`
+        const inlineCodes = [];
+        escaped = escaped.replace(/`([^`\n]+)`/g, function(match, code) {
+            const placeholder = `__DC_INLINE_CODE_${inlineCodes.length}__`;
+            inlineCodes.push(`<code class="discord-inline-code">${code}</code>`);
+            return placeholder;
+        });
+
+        // 3. Spoilers: ||spoiler||
+        escaped = escaped.replace(/\|\|([\s\S]+?)\|\|/g, '<span class="discord-spoiler" onclick="this.classList.toggle(\'revealed\')" title="Click to reveal spoiler">$1</span>');
+
+        // 4. Custom stickers and GIFs
+        escaped = escaped.replace(/!\[sticker:(.*?)\]\((https?:\/\/[^\s\)\"'>]+)\)/g, function(match, name, url) {
+            return `<div class="comment-media-wrap"><img src="${url}" alt="${name}" class="comment-media-embed comment-sticker-embed" loading="lazy"></div>`;
+        });
+        escaped = escaped.replace(/!\[gif\]\((https?:\/\/[^\s\)\"'>]+)\)/g, function(match, url) {
+            return `<div class="comment-media-wrap"><img src="${url}" alt="GIF" class="comment-media-embed" loading="lazy" onclick="window.open(this.src,'_blank')"></div>`;
+        });
         escaped = escaped.replace(/!\[(.*?)\]\((https?:\/\/[^\s\)\"'>]+)\)/g, function(match, alt, url) {
             return `<div class="comment-media-wrap"><img src="${url}" alt="${alt}" class="comment-media-embed" loading="lazy" onclick="window.open(this.src,'_blank')"></div>`;
         });
-        // Replace standalone image/gif URLs
+
+        // 5. Tenor links (standalone or embedded): https://tenor.com/view/...-12345 or https://tenor.com/embed/12345
+        escaped = escaped.replace(/(?:^|\s)(?:https?:\/\/(?:www\.)?tenor\.com\/view\/[a-zA-Z0-9_\-]+-(\d+)|https?:\/\/(?:www\.)?tenor\.com\/embed\/(\d+))(?:\s|$)/g, function(match, id1, id2) {
+            const tid = id1 || id2;
+            return `<div class="comment-media-wrap"><iframe src="https://tenor.com/embed/${tid}" class="comment-tenor-embed" frameborder="0" scrolling="no" allowfullscreen></iframe></div>`;
+        });
+
+        // 6. Standalone image / gif URLs
         escaped = escaped.replace(/(^|\s)(https?:\/\/[^\s<]+?\.(?:gif|png|jpe?g|webp)(\?[^\s<]*)?)($|\s)/gi, function(match, p1, url, q, p2) {
             return `${p1}<div class="comment-media-wrap"><img src="${url}" class="comment-media-embed" loading="lazy" onclick="window.open(this.src,'_blank')"></div>${p2}`;
         });
-        // Replace @mentions: @Username
+
+        // 7. Discord custom emojis: <:name:id> or <a:name:id>
+        escaped = escaped.replace(/&lt;(a?):([a-zA-Z0-9_]+):(\d{17,20})&gt;/g, function(match, animated, name, id) {
+            const ext = animated ? 'gif' : 'png';
+            return `<img class="discord-custom-emoji" src="https://cdn.discordapp.com/emojis/${id}.${ext}?size=48" alt=":${name}:" title=":${name}:">`;
+        });
+
+        // 8. Discord channel mentions: <#123456789>
+        escaped = escaped.replace(/&lt;#(\d{17,20})&gt;/g, '<span class="discord-channel-pill"><i class="fas fa-hashtag"></i>channel</span>');
+
+        // 9. Discord user mentions: <@123456789> or <@!123456789>
+        escaped = escaped.replace(/&lt;@!?(\d{17,20})&gt;/g, '<span class="mention-tag"><i class="fas fa-at" style="font-size:0.75em;opacity:0.75"></i>User</span>');
+
+        // 10. Plain @mentions: @Username
         escaped = escaped.replace(/@([a-zA-Z0-9_\.\-]+)/g, '<span class="mention-tag"><i class="fas fa-at" style="font-size:0.75em;opacity:0.75"></i>$1</span>');
-        // Replace <@12345>
-        escaped = escaped.replace(/&lt;@!?(\d+)&gt;/g, '<span class="mention-tag"><i class="fas fa-at" style="font-size:0.75em;opacity:0.75"></i>User</span>');
-        // Parse markdown basics
+
+        // 11. Discord Blockquotes:
+        // Multiline quote: >>> text
+        escaped = escaped.replace(/(?:^|\n)&gt;&gt;&gt;\s*([\s\S]+)$/g, function(match, quote) {
+            return `<blockquote class="discord-quote">${quote.replace(/\n/g, '<br>')}</blockquote>`;
+        });
+        // Singleline quote: > text
+        escaped = escaped.replace(/(?:^|\n)&gt;\s*([^\n]+)/g, '<blockquote class="discord-quote">$1</blockquote>');
+
+        // 12. Discord Subtext: -# text
+        escaped = escaped.replace(/(?:^|\n)-#\s*([^\n]+)/g, '<small class="discord-subtext">$1</small>');
+
+        // 13. Discord Basic Formatting:
+        // Bold Italic: ***text***
+        escaped = escaped.replace(/\*\*\*(.*?)\*\*\*/g, '<strong><em>$1</em></strong>');
+        // Bold: **text**
         escaped = escaped.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        escaped = escaped.replace(/\*(.*?)\*/g, '<em>$1</em>');
-        escaped = escaped.replace(/`([^`]+)`/g, '<code style="background:rgba(255,255,255,0.08);padding:1px 4px;border-radius:4px;font-size:0.85em;color:#ff8da1">$1</code>');
+        // Underline: __text__
+        escaped = escaped.replace(/__(.*?)__/g, '<u>$1</u>');
+        // Italic: *text* or _text_
+        escaped = escaped.replace(/\*([^\*\n]+)\*/g, '<em>$1</em>');
+        escaped = escaped.replace(/\b_([^_\n]+)_\b/g, '<em>$1</em>');
+        // Strikethrough: ~~text~~
+        escaped = escaped.replace(/~~(.*?)~~/g, '<s>$1</s>');
+
+        // 14. Restore protected code blocks and inline codes
+        codeBlocks.forEach((cb, idx) => {
+            escaped = escaped.replace(`__DC_CODE_BLOCK_${idx}__`, cb);
+        });
+        inlineCodes.forEach((ic, idx) => {
+            escaped = escaped.replace(`__DC_INLINE_CODE_${idx}__`, ic);
+        });
+
         return escaped.replace(/\n/g, '<br>');
     }
 
@@ -1778,7 +1984,7 @@
                     <div id="editBox-${c.id}" class="reply-box-inline" style="display:none;background:rgba(255,43,82,0.05);border-color:rgba(255,43,82,0.25)">
                         <form onsubmit="handleEditSubmit(event, '${c.id}')" style="margin:0">
                             <div style="font-size:0.75rem;color:var(--cherry-neon);margin-bottom:6px;font-weight:600"><i class="fas fa-pen"></i> Edit comment:</div>
-                            <textarea id="editText-${c.id}" class="comment-textarea mentionable-input" style="min-height:55px;font-size:0.85rem" required maxlength="1000" onkeydown="handleEditKeydown(event, '${c.id}')">${escapeHtml(c.content)}</textarea>
+                            <textarea id="editText-${c.id}" class="comment-textarea mentionable-input" style="min-height:55px;font-size:0.85rem" required maxlength="1000" oninput="autoResizeCommentTextarea(this)" onkeydown="handleEditKeydown(event, '${c.id}')">${escapeHtml(c.content)}</textarea>
                             <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px">
                                 <span id="editCooldownNotice-${c.id}" style="font-size:0.72rem;color:#ff6b8b"></span>
                                 <div style="display:flex;gap:8px">
@@ -1791,22 +1997,32 @@
                         </form>
                     </div>
 
-                    <!-- INLINE REPLY BOX -->
-                    <div id="replyBox-${c.id}" class="reply-box-inline" style="display:none">
+                    <!-- INLINE REPLY BOX WITH STICKER & GIF TOOLS -->
+                    <div id="replyBox-${c.id}" class="reply-box-inline" style="display:none;position:relative">
                         <form onsubmit="handleReplySubmit(event, '${c.id}')" style="margin:0">
-                            <textarea id="replyText-${c.id}" class="comment-textarea mentionable-input" style="min-height:50px;font-size:0.85rem" placeholder="Write a reply... (Type @ to mention, Enter to send)" required maxlength="1000" onkeydown="handleReplyKeydown(event, '${c.id}')"></textarea>
-                            <div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-top:8px">
-                                <button type="button" class="comment-act-btn" onclick="toggleReplyBox('${c.id}')">Cancel</button>
-                                <button type="submit" class="comment-btn-submit" style="padding:6px 16px;font-size:0.78rem">
-                                    <i class="fas fa-paper-plane"></i> Reply
-                                </button>
+                            <textarea id="replyText-${c.id}" class="comment-textarea mentionable-input" style="min-height:48px;font-size:0.85rem" placeholder="Write a reply... (Type @ to mention, Shift+Enter for new line)" required maxlength="1000" oninput="autoResizeCommentTextarea(this)" onkeydown="handleReplyKeydown(event, '${c.id}')"></textarea>
+                            <div class="comment-tools-row" style="margin-top:8px">
+                                <div class="comment-tools-left">
+                                    <button type="button" class="comment-tool-btn" onclick="toggleStickerPicker(this, 'replyText-${c.id}', 'replyPicker-${c.id}')" title="Discord Server Stickers">
+                                        <i class="fas fa-face-smile"></i> <span>Sticker</span>
+                                    </button>
+                                    <button type="button" class="comment-tool-btn" onclick="toggleGifPicker(this, 'replyText-${c.id}', 'replyPicker-${c.id}')" title="Search GIFs via Giphy">
+                                        <i class="fas fa-film"></i> <span>GIF</span>
+                                    </button>
+                                </div>
+                                <div style="display:flex;align-items:center;gap:8px">
+                                    <button type="button" class="comment-act-btn" onclick="toggleReplyBox('${c.id}')">Cancel</button>
+                                    <button type="submit" class="comment-btn-submit" style="padding:6px 16px;font-size:0.78rem">
+                                        <i class="fas fa-paper-plane"></i> Reply
+                                    </button>
+                                </div>
                             </div>
+                            <div id="replyPicker-${c.id}" class="popover-card" style="display:none"></div>
                         </form>
                     </div>
 
                     ${repliesHtml}
                 </div>
-            </div>
         `;
     }
 
@@ -1921,6 +2137,8 @@
                 ta.focus();
                 ta.setSelectionRange(ta.value.length, ta.value.length);
             }
+        } else {
+            closePickerPopover();
         }
     };
 
@@ -1981,6 +2199,7 @@
             const data = await res.json();
             if (res.ok && data.success) {
                 ta.value = '';
+                closePickerPopover();
                 toggleReplyBox(parentId);
                 await loadCommentsData(currentCommentsPresetId);
             } else {
