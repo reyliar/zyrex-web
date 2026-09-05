@@ -1075,22 +1075,24 @@
         img.src = window.DEFAULT_AVATAR;
     };
 
-    async function fetchDiscordAvatar(userId) {
-        if (!userId) return '';
+    async function fetchDiscordUser(userId) {
+        if (!userId) return null;
         try {
             const resp = await fetch('/api/discord-user?userId=' + userId);
             const data = await resp.json();
             if (data.success && data.user) {
-                if (data.user.avatar_url) return data.user.avatar_url;
-                if (data.user.avatar) {
+                let avUrl = data.user.avatar_url || '';
+                if (!avUrl && data.user.avatar) {
                     const ext = data.user.avatar.startsWith('a_') ? 'gif' : 'png';
-                    return '/api/avatar/' + userId + '/' + data.user.avatar + '.' + ext + '?size=128';
+                    avUrl = '/api/avatar/' + userId + '/' + data.user.avatar + '.' + ext + '?size=128';
                 }
+                const name = data.user.display_name || data.user.global_name || data.user.username || '';
+                return { avatarUrl: avUrl, name: name };
             }
         } catch(e) {}
         let defIdx = 0;
         try { defIdx = Number((BigInt(userId) >> 22n) % 6n); } catch(e) { defIdx = parseInt(userId) % 5; }
-        return '/api/avatar/default/' + defIdx + '.png';
+        return { avatarUrl: '/api/avatar/default/' + defIdx + '.png', name: '' };
     }
 
     function renderPresetPage(p) {
@@ -1100,12 +1102,20 @@
         const discordIdMatch = (p.creator_avatar || p.uploader_avatar || '').match(/\/avatars\/(\d{17,20})\//);
         const extractedDiscordId = discordIdMatch ? discordIdMatch[1] : '';
 
-        // Asynchronously fetch uploader Discord avatar from bot API if available
-        const uploaderIdVal = p.uploader_id || extractedDiscordId || p.author_id || '';
+        // Asynchronously fetch uploader Discord avatar and real display name from bot API if available
+        const uploaderIdVal = String(p.uploader_id || extractedDiscordId || p.author_id || '');
         if (uploaderIdVal) {
-            fetchDiscordAvatar(uploaderIdVal).then(avUrl => {
+            fetchDiscordUser(uploaderIdVal).then(uData => {
+                if (!uData) return;
                 const upImg = document.getElementById('upAvatarImg');
-                if (upImg && avUrl) upImg.src = avUrl;
+                if (upImg && uData.avatarUrl) upImg.src = uData.avatarUrl;
+                const upNameEl = document.getElementById('upNameSpan');
+                if (upNameEl && uData.name) {
+                    const cNick = (p.creator_nickname || '').trim().toLowerCase();
+                    if (!upNameEl.textContent || (cNick && upNameEl.textContent.trim().toLowerCase() === cNick)) {
+                        upNameEl.textContent = uData.name;
+                    }
+                }
             }).catch(() => {});
         }
 
@@ -1146,9 +1156,10 @@
         const bookCount = bookCounts[p.id] || 0;
 
         // Creator & Uploader resolution
-        const creatorName = p.creator_nickname || '';
-        const uploaderName = p.uploader_name || (creatorName ? (p.author_name || '') : (p.author_name || 'Zyrex'));
-        const uploaderId = p.uploader_id || extractedDiscordId || p.author_id || '';
+        const creatorName = (p.creator_nickname || '').trim();
+        const authorName = (p.author_name || '').trim();
+        let uploaderName = (p.uploader_name || '').trim();
+        const uploaderId = String(p.uploader_id || extractedDiscordId || p.author_id || '');
         let uploaderAvatar = p.uploader_avatar || p.creator_avatar || p.author_avatar || '';
         
         if (!uploaderAvatar && uploaderId) {
@@ -1157,10 +1168,26 @@
 
         const ADMIN_IDS = ["1421177012814614548", "1382421118098346174"];
         const isUploaderAdmin = p.uploader_is_admin === true || 
-                                ADMIN_IDS.includes(String(uploaderId)) || 
+                                ADMIN_IDS.includes(uploaderId) || 
                                 ADMIN_IDS.includes(String(p.author_id)) || 
                                 ADMIN_IDS.includes(String(p.uploader_id)) ||
                                 (uploaderName && (uploaderName.toLowerCase().includes('reyli') || uploaderName.toLowerCase().includes('zyrex')));
+
+        // If uploaderName was erroneously duplicated from creator_nickname, separate them
+        if (creatorName && uploaderName.toLowerCase() === creatorName.toLowerCase()) {
+            if (authorName && authorName.toLowerCase() !== creatorName.toLowerCase()) {
+                uploaderName = authorName;
+            } else if (isUploaderAdmin) {
+                uploaderName = 'reyli';
+            } else {
+                uploaderName = '';
+            }
+        }
+        if (!uploaderName && isUploaderAdmin) {
+            uploaderName = 'reyli';
+        } else if (!uploaderName) {
+            uploaderName = authorName || 'Zyrex';
+        }
 
         // Source link system
         const sourceUrl = p.product_url || p.source_url || p.creator_social_url || '';
@@ -1247,11 +1274,16 @@
                     <div class="action-top-info">
                         <h1 class="preset-headline">${p.name}</h1>
                         
-                        <!-- META STATS: DOWNLOADS ONLY (MINIMALIST) -->
-                        <div style="display:flex;align-items:center;gap:12px;margin:2px 0 16px;font-size:0.82rem;color:var(--text-sub)">
+                        <!-- META STATS: DOWNLOADS, VIEWS & CATEGORY -->
+                        <div style="display:flex;align-items:center;gap:12px;margin:2px 0 16px;font-size:0.82rem;color:var(--text-sub);flex-wrap:wrap">
                             <div style="display:inline-flex;align-items:center;gap:6px">
                                 <i class="fas fa-cloud-arrow-down" style="color:var(--cherry-neon)"></i>
-                                <span><strong id="metaDownloadsCount" style="color:#fff;font-weight:700">0</strong> downloads</span>
+                                <span><strong id="metaDownloadsCount" style="color:#fff;font-weight:700">${(p.downloads || 0).toLocaleString()}</strong> downloads</span>
+                            </div>
+                            <span style="opacity:0.25">•</span>
+                            <div style="display:inline-flex;align-items:center;gap:6px">
+                                <i class="fas fa-eye" style="color:#a855f7"></i>
+                                <span><strong id="metaViewsCount" style="color:#fff;font-weight:700">${(p.views || 0).toLocaleString()}</strong> views</span>
                             </div>
                             <span style="opacity:0.25">•</span>
                             <div style="display:inline-flex;align-items:center;gap:6px">
@@ -1264,10 +1296,10 @@
                         <div style="display:grid;grid-template-columns:${uploaderName ? '1fr 1fr' : '1fr'};gap:10px;margin-bottom:20px">
                             <!-- Creator Card -->
                             <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:16px">
-                                ${av ? `<img src="${av}" alt="${nick}" style="width:36px;height:36px;border-radius:50%;object-fit:cover" onerror="window.handleAvatarError(this)">` : `<img src="${window.DEFAULT_AVATAR}" alt="" style="width:36px;height:36px;border-radius:50%;opacity:0.6">`}
-                                <div style="min-width:0;flex:1">
-                                    <div style="font-size:0.68rem;color:var(--text-sub);text-transform:uppercase;font-weight:700">Creator</div>
-                                    <strong style="display:block;font-size:0.86rem;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${nick}</strong>
+                                ${av ? `<img src="${av}" alt="${nick}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="window.handleAvatarError(this)">` : `<img src="${window.DEFAULT_AVATAR}" alt="" style="width:36px;height:36px;border-radius:50%;opacity:0.6;flex-shrink:0">`}
+                                <div style="min-width:0;flex:1;display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:2px">
+                                    <div style="font-size:0.68rem;color:var(--text-sub);text-transform:uppercase;font-weight:700;text-align:left;width:100%">Creator</div>
+                                    <strong style="display:block;font-size:0.86rem;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;width:100%">${nick}</strong>
                                     ${p.creator_social_url ? `<a href="${p.creator_social_url}" target="_blank" style="font-size:0.7rem;color:var(--cherry-neon);text-decoration:none"><i class="fas fa-arrow-up-right-from-square"></i> Profile</a>` : ''}
                                 </div>
                             </div>
@@ -1275,14 +1307,14 @@
                             <!-- Uploader Card -->
                             ${uploaderName ? `
                             <div style="display:flex;align-items:center;gap:10px;padding:12px 14px;background:${isUploaderAdmin ? 'rgba(56,189,248,0.06)' : 'rgba(88,101,242,0.06)'};border:1px solid ${isUploaderAdmin ? 'rgba(56,189,248,0.25)' : 'rgba(88,101,242,0.18)'};border-radius:16px">
-                                <img id="upAvatarImg" src="${uploaderAvatar || window.DEFAULT_AVATAR}" alt="${uploaderName}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;${isUploaderAdmin ? 'box-shadow:0 0 10px rgba(56,189,248,0.35);border:1px solid rgba(56,189,248,0.45)' : ''}" onerror="window.handleAvatarError(this)">
-                                <div style="min-width:0;flex:1">
-                                    <div style="font-size:0.68rem;color:${isUploaderAdmin ? 'rgba(56,189,248,0.9)' : 'rgba(180,190,255,0.7)'};text-transform:uppercase;font-weight:700">${isUploaderAdmin ? 'Verified Admin' : 'Uploader'}</div>
-                                    <strong style="display:flex;align-items:center;font-size:0.86rem;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-                                        <span style="overflow:hidden;text-overflow:ellipsis">${uploaderName}</span>
+                                <img id="upAvatarImg" src="${uploaderAvatar || window.DEFAULT_AVATAR}" alt="${uploaderName}" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0;${isUploaderAdmin ? 'box-shadow:0 0 10px rgba(56,189,248,0.35);border:1px solid rgba(56,189,248,0.45)' : ''}" onerror="window.handleAvatarError(this)">
+                                <div style="min-width:0;flex:1;display:flex;flex-direction:column;align-items:flex-start;text-align:left;gap:2px">
+                                    <div style="font-size:0.68rem;color:${isUploaderAdmin ? 'rgba(56,189,248,0.9)' : 'rgba(180,190,255,0.7)'};text-transform:uppercase;font-weight:700;text-align:left;width:100%">${isUploaderAdmin ? 'Verified Admin' : 'Uploader'}</div>
+                                    <strong style="display:flex;align-items:center;font-size:0.86rem;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;width:100%">
+                                        <span id="upNameSpan" style="overflow:hidden;text-overflow:ellipsis">${uploaderName}</span>
                                         ${isUploaderAdmin ? `<i class="fas fa-circle-check" style="color:#38bdf8;margin-left:5px;font-size:0.85rem;flex-shrink:0" title="Verified Admin"></i>` : ''}
                                     </strong>
-                                    <span style="font-size:0.7rem;color:rgba(255,255,255,0.45)">Discord Community</span>
+                                    <span style="font-size:0.7rem;color:rgba(255,255,255,0.45);text-align:left">Discord Community</span>
                                 </div>
                             </div>
                             ` : ''}

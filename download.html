@@ -252,24 +252,38 @@
         .duo-info {
             min-width: 0;
             flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+            text-align: left;
+            gap: 2px;
         }
         .duo-label {
             display: block;
+            width: 100%;
+            text-align: left;
             font-size: 0.68rem;
             color: var(--gray);
             text-transform: uppercase;
             font-weight: 700;
             letter-spacing: 0.5px;
-            margin-bottom: 2px;
+            margin: 0;
+            padding: 0;
         }
         .duo-card strong {
-            display: block;
+            display: flex;
+            align-items: center;
+            text-align: left;
+            width: 100%;
             font-size: 0.86rem;
             color: #fff;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             font-family: 'Outfit', sans-serif;
+            margin: 0;
+            padding: 0;
         }
         .duo-link {
             font-size: 0.72rem;
@@ -591,19 +605,31 @@
         const iconMap = {"after-effects":"fa-film","premiere-pro":"fa-video","photoshop":"fa-image","video-star":"fa-star","topaz-labs":"fa-gem","others":"fa-folder"};
         const catLabels = {"after-effects":"After Effects","premiere-pro":"Premiere Pro","photoshop":"Photoshop","video-star":"Video Star","topaz-labs":"Topaz Labs","others":"Others"};
 
-        async function fetchDiscordAvatar(userId) {
-            if (!userId) return '';
+        async function fetchDiscordUser(userId) {
+            if (!userId) return null;
             try {
                 const resp = await fetch('/api/discord-user?userId=' + userId);
                 const data = await resp.json();
-                if (data.success && data.user && data.user.avatar) {
-                    const ext = data.user.avatar.startsWith('a_') ? 'gif' : 'png';
-                    return '/api/avatar/' + userId + '/' + data.user.avatar + '.' + ext + '?size=64';
+                if (data.success && data.user) {
+                    let av = '';
+                    if (data.user.avatar_url) {
+                        av = data.user.avatar_url;
+                    } else if (data.user.avatar) {
+                        const ext = data.user.avatar.startsWith('a_') ? 'gif' : 'png';
+                        av = '/api/avatar/' + userId + '/' + data.user.avatar + '.' + ext + '?size=64';
+                    }
+                    const name = data.user.display_name || data.user.global_name || data.user.username || '';
+                    return { avatarUrl: av, name: name };
                 }
             } catch(e) {}
             let defIdx = 0;
             try { defIdx = Number((BigInt(userId) >> 22n) % 6n); } catch(e) { defIdx = parseInt(userId) % 5; }
-            return '/api/avatar/default/' + defIdx + '.png';
+            return { avatarUrl: '/api/avatar/default/' + defIdx + '.png', name: '' };
+        }
+
+        async function fetchDiscordAvatar(userId) {
+            const u = await fetchDiscordUser(userId);
+            return u ? u.avatarUrl : '';
         }
 
         // Init
@@ -735,9 +761,49 @@
 
             const desc = p.description || p.desc || '';
             const authorId = p.author_id || '';
-            const uploaderName = p.uploader_name || '';
+            const creatorNick = (p.creator_nickname || '').trim();
+            const authorName = (p.author_name || '').trim();
+            let uploaderName = (p.uploader_name || '').trim();
 
-            let displayUploaderAv = await fetchDiscordAvatar(authorId);
+            const ADMIN_IDS = ["1421177012814614548", "1382421118098346174"];
+            const isUploaderAdmin = p.uploader_is_admin === true || 
+                                    ADMIN_IDS.includes(String(authorId)) || 
+                                    ADMIN_IDS.includes(String(p.uploader_id)) || 
+                                    (uploaderName && (uploaderName.toLowerCase().includes('reyli') || uploaderName.toLowerCase().includes('zyrex')));
+
+            // Discard duplicate uploaderName if it equals creator_nickname
+            if (creatorNick && uploaderName.toLowerCase() === creatorNick.toLowerCase()) {
+                if (authorName && authorName.toLowerCase() !== creatorNick.toLowerCase()) {
+                    uploaderName = authorName;
+                } else if (isUploaderAdmin) {
+                    uploaderName = 'reyli';
+                } else {
+                    uploaderName = '';
+                }
+            }
+            if (!uploaderName && isUploaderAdmin) {
+                uploaderName = 'reyli';
+            } else if (!uploaderName) {
+                uploaderName = authorName || 'Zyrex';
+            }
+
+            let displayUploaderAv = '';
+            if (authorId || p.uploader_id) {
+                try {
+                    const uData = await fetchDiscordUser(p.uploader_id || authorId);
+                    if (uData && uData.avatarUrl) {
+                        displayUploaderAv = uData.avatarUrl;
+                    }
+                    if (uData && uData.name) {
+                        if (!uploaderName || (creatorNick && uploaderName.toLowerCase() === creatorNick.toLowerCase())) {
+                            uploaderName = uData.name;
+                        }
+                    }
+                } catch(e) {}
+            }
+            if (!displayUploaderAv) {
+                displayUploaderAv = await fetchDiscordAvatar(authorId);
+            }
             if (p.uploader_avatar && (p.uploader_avatar.includes('discordapp.com') || p.uploader_avatar.includes('discord.com'))) {
                 displayUploaderAv = p.uploader_avatar;
             }
@@ -753,12 +819,6 @@
             }
             const catSvgClass = getCategorySvgClass(p.category);
             const catSvgIcon = '<span class="cat-svg-icon ' + catSvgClass + '"></span>';
-
-            const ADMIN_IDS = ["1421177012814614548", "1382421118098346174"];
-            const isUploaderAdmin = p.uploader_is_admin === true || 
-                                    ADMIN_IDS.includes(String(authorId)) || 
-                                    ADMIN_IDS.includes(String(p.uploader_id)) || 
-                                    (uploaderName && (uploaderName.toLowerCase().includes('reyli') || uploaderName.toLowerCase().includes('zyrex')));
 
             let html = '';
 
@@ -780,7 +840,7 @@
             html += '<div class="download-duo-strip">';
             // Creator Card
             html += '<div class="duo-card creator-card">';
-            html += av ? '<img src="' + av + '" alt="" onerror="window.handleAvatarError(this)">' : '<img src="' + window.DEFAULT_AVATAR + '" alt="" style="width:36px;height:36px;border-radius:50%;opacity:0.6">';
+            html += av ? '<img src="' + av + '" alt="" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="window.handleAvatarError(this)">' : '<img src="' + window.DEFAULT_AVATAR + '" alt="" style="width:36px;height:36px;border-radius:50%;opacity:0.6;flex-shrink:0">';
             html += '<div class="duo-info"><span class="duo-label">Creator</span><strong>' + nick + '</strong></div>';
             if (p.creator_social_url) html += '<a href="' + p.creator_social_url + '" target="_blank" class="duo-link"><i class="fas fa-arrow-up-right-from-square"></i> Profile</a>';
             html += '</div>';
@@ -788,10 +848,10 @@
             // Uploader Card
             if (uploaderName) {
                 html += '<div class="duo-card uploader-card ' + (isUploaderAdmin ? 'admin-card' : '') + '">';
-                html += displayUploaderAv ? '<img src="' + displayUploaderAv + '" alt="" class="' + (isUploaderAdmin ? 'admin-glow-ring' : '') + '" onerror="window.handleAvatarError(this)">' : '<div class="uav-fb" style="width:36px;height:36px;border-radius:50%;background:rgba(88,101,242,0.15);display:flex;align-items:center;justify-content:center;color:#5865F2"><i class="fab fa-discord"></i></div>';
+                html += displayUploaderAv ? '<img id="upAvatarImg" src="' + displayUploaderAv + '" alt="" class="' + (isUploaderAdmin ? 'admin-glow-ring' : '') + '" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="window.handleAvatarError(this)">' : '<div class="uav-fb" style="width:36px;height:36px;border-radius:50%;background:rgba(88,101,242,0.15);display:flex;align-items:center;justify-content:center;color:#5865F2;flex-shrink:0"><i class="fab fa-discord"></i></div>';
                 html += '<div class="duo-info">';
                 html += '<span class="duo-label" style="' + (isUploaderAdmin ? 'color:#0095F6;font-weight:800' : '') + '">' + (isUploaderAdmin ? 'Verified Admin' : 'Uploader') + '</span>';
-                html += '<strong style="display:flex;align-items:center;gap:5px"><span>' + uploaderName + '</span>' + (isUploaderAdmin ? '<i class="fas fa-circle-check" style="color:#0095F6;font-size:0.88rem;flex-shrink:0" title="Verified Admin"></i>' : '') + '</strong>';
+                html += '<strong style="display:flex;align-items:center;gap:5px"><span id="upNameSpan">' + uploaderName + '</span>' + (isUploaderAdmin ? '<i class="fas fa-circle-check" style="color:#0095F6;font-size:0.88rem;flex-shrink:0" title="Verified Admin"></i>' : '') + '</strong>';
                 html += '</div>';
                 html += '</div>';
             }
