@@ -705,56 +705,49 @@
         var liveDataCache = null;
         var currentRange = '1W';
 
-        // 7 Core Subsystems
+        // 7 Real Core Subsystems (Identical across System Status & Outages Chart)
         var SUBSYSTEMS = [
             {
-                id: 'storage',
-                name: 'Downloads',
-                fullName: 'Resource Downloads & Storage',
-                color: '#ef4444',
-                desc: 'Delivers resource files to your device.'
-            },
-            {
                 id: 'api_gateway',
-                name: 'Requests',
-                fullName: 'Api Gateway',
+                name: 'Api Gateway',
                 color: '#f59e0b',
                 desc: 'Handles site requests, bot integration, and live services.'
             },
             {
-                id: 'resource_uploads',
-                name: 'Resource uploads',
-                fullName: 'Resource Uploads',
-                color: '#38bdf8',
-                desc: 'Processes and publishes creator presets and files.'
-            },
-            {
                 id: 'site_gate',
-                name: 'Sign-in and accounts',
-                fullName: 'Site Gate',
-                color: '#e4e4e7',
+                name: 'Site Gate',
+                color: '#06b6d4',
                 desc: 'Manages user logins, site access, and shield security.'
             },
             {
-                id: 'token_generator',
-                name: 'Payments and membership',
-                fullName: 'Download Tokens',
+                id: 'storage',
+                name: 'Resource Downloads & Storage',
+                color: '#ef4444',
+                desc: 'Delivers resource files to your device.'
+            },
+            {
+                id: 'resource_uploads',
+                name: 'Resource Uploads',
                 color: '#a855f7',
-                desc: 'Generates secure single-use tokens for member downloads.'
+                desc: 'Processes and publishes creator presets and files.'
             },
             {
                 id: 'comments',
-                name: 'Comments and votes',
-                fullName: 'Comments System',
+                name: 'Comments System',
                 color: '#10b981',
                 desc: 'Posting comments and casting upvotes on presets.'
             },
             {
                 id: 'discord_auth',
-                name: 'Discord role sync',
-                fullName: 'Discord Authentication',
+                name: 'Discord Authentication',
                 color: '#f43f5e',
                 desc: 'Keeping your Discord roles in step with your account.'
+            },
+            {
+                id: 'token_generator',
+                name: 'Download Tokens',
+                color: '#3b82f6',
+                desc: 'Generates secure single-use tokens for member downloads.'
             }
         ];
 
@@ -834,7 +827,7 @@
 
                 html += '<div class="subsystem-item">' +
                     '<div class="subsystem-row-top">' +
-                        '<div class="subsystem-name">' + sub.fullName + '</div>' +
+                        '<div class="subsystem-name">' + sub.name + '</div>' +
                         '<div class="subsystem-right-meta">' +
                             '<span class="subsystem-uptime-text">' + uptimeVal.toFixed(2) + '% uptime</span>' +
                             '<span class="subsystem-pill-badge ' + status + '">' +
@@ -963,10 +956,22 @@
         }
 
         // ======================== REAL TIME-SERIES CHART ENGINE ========================
+        var activeFilterSubId = null;
+
         window.setChartRange = function(range, btn) {
             currentRange = range;
             document.querySelectorAll('.range-btn').forEach(function(b) { b.classList.remove('active'); });
             if (btn) btn.classList.add('active');
+            renderDynamicChart(currentRange, liveDataCache);
+        };
+
+        window.toggleServiceFilter = function(subId) {
+            if (activeFilterSubId === subId) {
+                activeFilterSubId = null;
+            } else {
+                activeFilterSubId = subId;
+            }
+            renderLegend();
             renderDynamicChart(currentRange, liveDataCache);
         };
 
@@ -976,7 +981,12 @@
 
             var html = '';
             SUBSYSTEMS.forEach(function(sub) {
-                html += '<div class="legend-item" data-sub="' + sub.id + '">' +
+                var isFiltered = activeFilterSubId && activeFilterSubId !== sub.id;
+                var isActive = activeFilterSubId === sub.id;
+                var opacityStyle = isFiltered ? 'opacity: 0.35;' : 'opacity: 1;';
+                var borderStyle = isActive ? 'font-weight: 600; text-decoration: underline;' : '';
+
+                html += '<div class="legend-item" style="' + opacityStyle + borderStyle + ' cursor: pointer;" onclick="toggleServiceFilter(\'' + sub.id + '\')" title="Click to isolate ' + sub.name + '">' +
                     '<span class="legend-dot" style="background:' + sub.color + '"></span>' +
                     '<span>' + sub.name + '</span>' +
                 '</div>';
@@ -994,15 +1004,19 @@
             var incidents = (apiData && apiData.incidents_history) ? apiData.incidents_history : [];
 
             if (range === '1D') {
-                // Last 24 Hours (6 slots of 4 hours)
+                // Last 24 Hours: 6 slots of 4 hours
                 numSlots = 6;
                 for (var i = numSlots - 1; i >= 0; i--) {
-                    var t = new Date(now.getTime() - i * 4 * 3600 * 1000);
-                    var timeLabel = t.getHours() + ':00';
+                    var tStart = new Date(now.getTime() - (i + 1) * 4 * 3600 * 1000);
+                    var tEnd = new Date(now.getTime() - i * 4 * 3600 * 1000);
+                    var timeLabel = tEnd.getHours() + ':00';
                     if (i === 0) timeLabel = 'Now';
                     slots.push({
                         label: timeLabel,
-                        dateKey: toDateKey(t),
+                        fullLabel: (i === 0 ? 'Today ' : '') + timeLabel,
+                        startMs: tStart.getTime(),
+                        endMs: tEnd.getTime(),
+                        dateKey: toDateKey(tEnd),
                         isNow: i === 0
                     });
                 }
@@ -1013,6 +1027,7 @@
                     var d = new Date(now.getTime() - i * 24 * 3600 * 1000);
                     slots.push({
                         label: dayNames[d.getDay()] + ' ' + d.getDate(),
+                        fullLabel: d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
                         dateKey: toDateKey(d),
                         isNow: i === 0
                     });
@@ -1035,7 +1050,7 @@
                 for (var i = numSlots - 1; i >= 0; i--) {
                     var d = new Date(now.getTime() - i * 24 * 3600 * 1000);
                     slots.push({
-                        label: (i % 5 === 0) ? (d.getMonth() + 1) + '/' + d.getDate() : '',
+                        label: (i % 5 === 0) ? ((d.getMonth() + 1) + '/' + d.getDate()) : '',
                         fullLabel: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
                         dateKey: toDateKey(d),
                         isNow: i === 0
@@ -1047,7 +1062,7 @@
                 for (var i = numSlots - 1; i >= 0; i--) {
                     var d = new Date(now.getTime() - i * 2 * 24 * 3600 * 1000);
                     slots.push({
-                        label: (i % 9 === 0) ? (d.getMonth() + 1) + '/' + d.getDate() : '',
+                        label: (i % 9 === 0) ? ((d.getMonth() + 1) + '/' + d.getDate()) : '',
                         fullLabel: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
                         dateKey: toDateKey(d),
                         isNow: i === 0
@@ -1064,8 +1079,15 @@
 
                 // Match historical incidents
                 incidents.forEach(function(inc) {
-                    if (inc.date === slot.dateKey && counts[inc.subsystem] !== undefined) {
-                        counts[inc.subsystem] += (inc.outages_count || 1);
+                    if (range === '1D') {
+                        var incTime = inc.timestamp ? new Date(inc.timestamp).getTime() : (inc.date ? new Date(inc.date + 'T12:00:00Z').getTime() : 0);
+                        if (incTime >= slot.startMs && incTime <= slot.endMs && counts[inc.subsystem] !== undefined) {
+                            counts[inc.subsystem] += (inc.outages_count || 1);
+                        }
+                    } else {
+                        if (inc.date === slot.dateKey && counts[inc.subsystem] !== undefined) {
+                            counts[inc.subsystem] += (inc.outages_count || 1);
+                        }
                     }
                 });
 
@@ -1140,13 +1162,12 @@
                 }
             }
 
-            // 3. Render Smooth Spline Bezier Paths for active services
+            // 3. Render Baselines & Smooth Spline Bezier Paths for real services
             SUBSYSTEMS.forEach(function(sub, sIdx) {
+                if (activeFilterSubId && activeFilterSubId !== sub.id) return;
+
                 var values = points.map(function(p) { return p.counts[sub.id] || 0; });
                 var totalOutages = values.reduce(function(a, b) { return a + b; }, 0);
-
-                // If service has no outages in this window, skip drawing path to keep chart crystal clear
-                if (totalOutages === 0) return;
 
                 var pts = [];
                 for (var i = 0; i < numPoints; i++) {
@@ -1155,47 +1176,58 @@
                     pts.push({ x: x, y: y });
                 }
 
-                var pathD = 'M ' + pts[0].x + ' ' + pts[0].y;
-                for (var i = 0; i < pts.length - 1; i++) {
-                    var p0 = pts[i];
-                    var p1 = pts[i + 1];
-                    var cp1x = p0.x + (p1.x - p0.x) * 0.5;
-                    var cp1y = p0.y;
-                    var cp2x = p0.x + (p1.x - p0.x) * 0.5;
-                    var cp2y = p1.y;
-                    pathD += ' C ' + cp1x + ' ' + cp1y + ', ' + cp2x + ' ' + cp2y + ', ' + p1.x + ' ' + p1.y;
-                }
-
-                var areaD = pathD + ' L ' + pts[pts.length - 1].x + ' ' + (padT + chartH) + ' L ' + pts[0].x + ' ' + (padT + chartH) + ' Z';
-                var gradId = 'areaGrad_' + sub.id + '_' + range;
-
-                svgContent += '<defs>' +
-                    '<linearGradient id="' + gradId + '" x1="0" y1="0" x2="0" y2="1">' +
-                        '<stop offset="0%" stop-color="' + sub.color + '" stop-opacity="0.25" />' +
-                        '<stop offset="100%" stop-color="' + sub.color + '" stop-opacity="0" />' +
-                    '</linearGradient>' +
-                '</defs>';
-
-                svgContent += '<path d="' + areaD + '" fill="url(#' + gradId + ')" />';
-                svgContent += '<path d="' + pathD + '" stroke="' + sub.color + '" class="chart-line" />';
-
-                // Marker dot at peaks
-                pts.forEach(function(pt, ptIdx) {
-                    if (values[ptIdx] > 0) {
-                        svgContent += '<circle cx="' + pt.x + '" cy="' + pt.y + '" r="4" fill="' + sub.color + '" stroke="#111114" stroke-width="2" />';
+                if (totalOutages > 0) {
+                    // Smooth spline curve with area gradient
+                    var pathD = 'M ' + pts[0].x + ' ' + pts[0].y;
+                    for (var i = 0; i < pts.length - 1; i++) {
+                        var p0 = pts[i];
+                        var p1 = pts[i + 1];
+                        var cp1x = p0.x + (p1.x - p0.x) * 0.5;
+                        var cp1y = p0.y;
+                        var cp2x = p0.x + (p1.x - p0.x) * 0.5;
+                        var cp2y = p1.y;
+                        pathD += ' C ' + cp1x + ' ' + cp1y + ', ' + cp2x + ' ' + cp2y + ', ' + p1.x + ' ' + p1.y;
                     }
-                });
+
+                    var areaD = pathD + ' L ' + pts[pts.length - 1].x + ' ' + (padT + chartH) + ' L ' + pts[0].x + ' ' + (padT + chartH) + ' Z';
+                    var gradId = 'areaGrad_' + sub.id + '_' + range;
+
+                    svgContent += '<defs>' +
+                        '<linearGradient id="' + gradId + '" x1="0" y1="0" x2="0" y2="1">' +
+                            '<stop offset="0%" stop-color="' + sub.color + '" stop-opacity="0.28" />' +
+                            '<stop offset="100%" stop-color="' + sub.color + '" stop-opacity="0" />' +
+                        '</linearGradient>' +
+                    '</defs>';
+
+                    svgContent += '<path d="' + areaD + '" fill="url(#' + gradId + ')" />';
+                    svgContent += '<path d="' + pathD + '" stroke="' + sub.color + '" class="chart-line" stroke-width="2.5" />';
+
+                    // Marker dots at peak points
+                    pts.forEach(function(pt, ptIdx) {
+                        if (values[ptIdx] > 0) {
+                            svgContent += '<circle cx="' + pt.x + '" cy="' + pt.y + '" r="4" fill="' + sub.color + '" stroke="#111114" stroke-width="2" />';
+                        }
+                    });
+                } else if (activeFilterSubId === sub.id || sub.id === 'storage') {
+                    // Operational 0-baseline for isolated service or core storage
+                    var baselineY = padT + chartH;
+                    svgContent += '<line x1="' + padL + '" y1="' + baselineY + '" x2="' + (W - padR) + '" y2="' + baselineY + '" stroke="' + sub.color + '" stroke-width="1.8" opacity="0.65" />';
+                }
             });
 
+            // Container for interactive hover guide line & dots
+            svgContent += '<g id="chartHoverGroup" opacity="0"></g>';
+
             svg.innerHTML = svgContent;
-            attachChartHoverEvents(xCoords, points);
+            attachChartHoverEvents(xCoords, points, padT, chartH, maxVal);
         }
 
-        function attachChartHoverEvents(xCoords, points) {
+        function attachChartHoverEvents(xCoords, points, padT, chartH, maxVal) {
             var box = document.getElementById('chartBox');
             var tooltip = document.getElementById('chartTooltip');
             var tooltipDate = document.getElementById('chartTooltipDate');
             var tooltipRows = document.getElementById('chartTooltipRows');
+            var hoverGroup = document.getElementById('chartHoverGroup');
             if (!box || !tooltip) return;
 
             box.onmousemove = function(e) {
@@ -1213,23 +1245,52 @@
                 });
 
                 var p = points[closestIdx];
+                var curX = xCoords[closestIdx];
                 tooltipDate.innerText = p.fullLabel || p.label;
 
                 var rowsHtml = '';
+                var hoverSvg = '<line x1="' + curX + '" y1="' + padT + '" x2="' + curX + '" y2="' + (padT + chartH) + '" stroke="rgba(255, 255, 255, 0.3)" stroke-dasharray="3 3" stroke-width="1.5" />';
+
                 SUBSYSTEMS.forEach(function(sub) {
                     var count = p.counts[sub.id] || 0;
-                    rowsHtml += '<div class="chart-tooltip-row">' +
+
+                    rowsHtml += '<div class="chart-tooltip-row" style="' + (count > 0 ? 'font-weight:600;' : '') + '">' +
                         '<span class="chart-tooltip-name" style="color:' + sub.color + '">' + sub.name + ' : </span>' +
-                        '<span class="chart-tooltip-val">' + count + '</span>' +
+                        '<span class="chart-tooltip-val" style="' + (count > 0 ? 'color:#ffffff; font-weight:700;' : '') + '">' + count + '</span>' +
                     '</div>';
+
+                    // Draw dot on vertical line for services
+                    if (count > 0) {
+                        var yPos = padT + chartH - (count / maxVal) * chartH;
+                        hoverSvg += '<circle cx="' + curX + '" cy="' + yPos + '" r="4.5" fill="' + sub.color + '" stroke="#18181b" stroke-width="2" />';
+                    } else if (sub.id === 'storage' || activeFilterSubId === sub.id) {
+                        hoverSvg += '<circle cx="' + curX + '" cy="' + (padT + chartH) + '" r="3.5" fill="' + sub.color + '" stroke="#18181b" stroke-width="1.5" />';
+                    }
                 });
+
+                if (hoverGroup) {
+                    hoverGroup.innerHTML = hoverSvg;
+                    hoverGroup.setAttribute('opacity', '1');
+                }
 
                 tooltipRows.innerHTML = rowsHtml;
                 tooltip.classList.add('visible');
+
+                // Dynamic left/right tooltip alignment so cursor never hides it
+                if (mouseX > 420) {
+                    tooltip.style.left = '25px';
+                    tooltip.style.right = 'auto';
+                } else {
+                    tooltip.style.right = '25px';
+                    tooltip.style.left = 'auto';
+                }
             };
 
             box.onmouseleave = function() {
                 tooltip.classList.remove('visible');
+                if (hoverGroup) {
+                    hoverGroup.setAttribute('opacity', '0');
+                }
             };
         }
 

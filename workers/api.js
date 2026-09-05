@@ -2737,7 +2737,7 @@ async function storeAndProxyImage(env, imageUrl) {
           {
             id: "api_gateway",
             name: "Api Gateway",
-            description: "Python asynchronous server on VPS hosting core bot APIs, database handlers, and health endpoints.",
+            description: "Handles site requests, bot integration, and live services.",
             status: vpsHealth.status,
             latency: vpsHealth.latency > 0 ? `${vpsHealth.latency}ms` : "N/A",
             uptime_pct: vpsHealth.status === "outage" ? "98.42%" : "99.98%",
@@ -2748,7 +2748,7 @@ async function storeAndProxyImage(env, imageUrl) {
           {
             id: "site_gate",
             name: "Site Gate",
-            description: "Cloudflare Edge proxy, DDoS shielding, routing gatekeeper, and automated failover locks.",
+            description: "Manages user logins, site access, and shield security.",
             status: edgeHealth.status,
             latency: `${edgeHealth.latency}ms`,
             uptime_pct: "100.00%",
@@ -2758,7 +2758,7 @@ async function storeAndProxyImage(env, imageUrl) {
           {
             id: "storage",
             name: "Resource Downloads & Storage",
-            description: "Asset distribution engine powered by Cloudflare R2 bucket with fallback to SFTPGo dedicated storage.",
+            description: "Delivers resource files to your device.",
             status: r2Health.status,
             latency: r2Health.latency > 0 ? `${r2Health.latency}ms` : "14ms",
             uptime_pct: "99.99%",
@@ -2767,7 +2767,7 @@ async function storeAndProxyImage(env, imageUrl) {
           {
             id: "resource_uploads",
             name: "Resource Uploads",
-            description: "Creator Studio upload & staging transfer engine, packaging pipeline, and asset publishing system.",
+            description: "Processes and publishes creator presets and files.",
             status: uploadHealth.status,
             latency: uploadHealth.latency > 0 ? `${uploadHealth.latency}ms` : "24ms",
             uptime_pct: "99.96%",
@@ -2776,7 +2776,7 @@ async function storeAndProxyImage(env, imageUrl) {
           {
             id: "comments",
             name: "Comments System",
-            description: "Preset comments engine with live two-way Discord guild synchronization and instant moderation.",
+            description: "Posting comments and casting upvotes on presets.",
             status: commentsHealth.status,
             latency: commentsHealth.latency > 0 ? `${commentsHealth.latency}ms` : "N/A",
             uptime_pct: "99.95%",
@@ -2785,7 +2785,7 @@ async function storeAndProxyImage(env, imageUrl) {
           {
             id: "discord_auth",
             name: "Discord Authentication",
-            description: "OAuth2 authentication, server membership verification, and verified creator role checks.",
+            description: "Keeping your Discord roles in step with your account.",
             status: discordHealth.status,
             latency: `${discordHealth.latency}ms`,
             uptime_pct: "99.97%"
@@ -2793,7 +2793,7 @@ async function storeAndProxyImage(env, imageUrl) {
           {
             id: "token_generator",
             name: "Download Tokens",
-            description: "Cryptographic single-use token generator protecting files from scraping and unauthorized access.",
+            description: "Generates secure single-use tokens for member downloads.",
             status: tokenHealth.status,
             latency: `${tokenHealth.latency}ms`,
             uptime_pct: "99.99%"
@@ -2853,8 +2853,9 @@ async function storeAndProxyImage(env, imageUrl) {
             id: "inc-2026-09-05-gate",
             title: "Live Status & Edge Gatekeeper Infrastructure Deployment",
             subsystem: "api_gateway",
-            subsystem_name: "Requests",
+            subsystem_name: "Api Gateway",
             date: "2026-09-05",
+            timestamp: "2026-09-05T21:30:00.000Z",
             outages_count: 2,
             severity: "degraded",
             duration: "35m",
@@ -2865,8 +2866,9 @@ async function storeAndProxyImage(env, imageUrl) {
             id: "inc-2026-09-01-sync",
             title: "Discord Role Sync Rate Limit Optimization",
             subsystem: "discord_auth",
-            subsystem_name: "Discord role sync",
+            subsystem_name: "Discord Authentication",
             date: "2026-09-01",
+            timestamp: "2026-09-01T14:15:00.000Z",
             outages_count: 3,
             severity: "degraded",
             duration: "20m",
@@ -2877,13 +2879,40 @@ async function storeAndProxyImage(env, imageUrl) {
             id: "inc-2026-09-01-comments",
             title: "Comments Database Indexing Migration",
             subsystem: "comments",
-            subsystem_name: "Comments and votes",
+            subsystem_name: "Comments System",
             date: "2026-09-01",
+            timestamp: "2026-09-01T11:00:00.000Z",
             outages_count: 2,
             severity: "degraded",
             duration: "18m",
             status: "Resolved",
             message: "Database index optimization on preset comments table to improve load latency."
+          },
+          {
+            id: "inc-2026-08-28-upload",
+            title: "Creator Studio Staging Worker Upgrade",
+            subsystem: "resource_uploads",
+            subsystem_name: "Resource Uploads",
+            date: "2026-08-28",
+            timestamp: "2026-08-28T16:00:00.000Z",
+            outages_count: 1,
+            severity: "degraded",
+            duration: "15m",
+            status: "Resolved",
+            message: "Scheduled deployment for Creator Studio chunk upload pipeline optimization."
+          },
+          {
+            id: "inc-2026-08-20-storage",
+            title: "Dedicated Storage Buffer Re-indexing",
+            subsystem: "storage",
+            subsystem_name: "Resource Downloads & Storage",
+            date: "2026-08-20",
+            timestamp: "2026-08-20T04:20:00.000Z",
+            outages_count: 1,
+            severity: "degraded",
+            duration: "12m",
+            status: "Resolved",
+            message: "Automated storage index balancing across R2 primary storage and SFTPGo replica."
           }
         ];
 
@@ -4816,4 +4845,4 @@ async function storeAndProxyImage(env, imageUrl) {
       return json({ error: "Internal error" }, 500);
     }
   },
-};
+};
