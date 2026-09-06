@@ -3242,7 +3242,18 @@ async function storeAndProxyImage(env, imageUrl) {
               .map(b => b.toString(16).padStart(2, "0"))
               .join("");
             const ticket = `${du.id}.${ts}.${hexSig}`;
-            redirectTo = `https://storage.zyrexediting.xyz/web/client/auth/discord?ticket=${encodeURIComponent(ticket)}&uid=${encodeURIComponent(du.id)}`;
+            const displayName = du.global_name || du.username || "";
+            let avatarUrl = "";
+            if (du.avatar) {
+              const ext = du.avatar.startsWith("a_") ? "gif" : "png";
+              avatarUrl = `https://cdn.discordapp.com/avatars/${du.id}/${du.avatar}.${ext}?size=256`;
+            } else {
+              try {
+                const defaultIdx = (BigInt(du.id) >> 22n) % 6n;
+                avatarUrl = `https://cdn.discordapp.com/embed/avatars/${defaultIdx}.png`;
+              } catch(e) {}
+            }
+            redirectTo = `https://storage.zyrexediting.xyz/web/client/auth/discord?ticket=${encodeURIComponent(ticket)}&uid=${encodeURIComponent(du.id)}&name=${encodeURIComponent(displayName)}&avatar=${encodeURIComponent(avatarUrl)}`;
           } catch(sigErr) {
             console.error("SFTPGo HMAC ticket signing failed:", sigErr);
             redirectTo = "/?error=ticket_sign_failed";
