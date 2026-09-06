@@ -622,17 +622,121 @@
         .popover-search-input:focus {
             border-color: var(--cherry-neon);
         }
-        .tree-folder-group { margin-bottom: 3px; }
-        .tree-folder-row { display: flex; align-items: center; gap: 8px; padding: 7px 10px; border-radius: 8px; cursor: pointer; user-select: none; font-size: 0.82rem; color: #fff; transition: background 0.15s; }
-        .tree-folder-row:hover { background: rgba(255, 255, 255, 0.05); }
-        .tree-arrow { width: 14px; font-size: 0.7rem; color: var(--text-sub); transition: transform 0.2s; display: inline-flex; align-items: center; justify-content: center; }
-        .tree-arrow.collapsed { transform: rotate(-90deg); }
-        .tree-icon-folder { color: #f59e0b; font-size: 0.85rem; }
-        .tree-folder-name { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .tree-file-row { display: flex; align-items: center; justify-content: space-between; padding: 6px 10px; border-radius: 8px; font-size: 0.8rem; color: rgba(255, 255, 255, 0.85); transition: background 0.15s; }
-        .tree-file-row:hover { background: rgba(255, 255, 255, 0.04); color: #fff; }
-        .tree-file-left { display: flex; align-items: center; gap: 8px; min-width: 0; flex: 1; }
-        .tree-file-size { font-size: 0.72rem; color: var(--text-sub); flex-shrink: 0; margin-left: 8px; }
+        /* Files Block & Scroll (identical to download.html) */
+        .files-block { width: 100%; margin-bottom: 20px; }
+        .files-scroll { max-height: 280px; overflow-y: auto; border-radius: 14px; padding-right: 4px; }
+        .files-scroll::-webkit-scrollbar { width: 4px; }
+        .files-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 2px; }
+        .files-scroll::-webkit-scrollbar-track { background: transparent; }
+        .files-label { font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; color: rgba(255,255,255,.4); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; justify-content: space-between; }
+        .files-label i { color: var(--cherry-neon); font-size: .75rem; }
+        .file-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: rgba(255,255,255,.02); border: 1px solid rgba(255,255,255,.05); border-radius: 12px; margin-bottom: 6px; font-size: .8rem; transition: .2s; }
+        .file-item:hover { background: rgba(255, 43, 82, 0.05); border-color: rgba(255, 43, 82, 0.15); }
+        .file-item .fl { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+        .file-item .fl i { color: var(--cherry-neon); font-size: .75rem; flex-shrink: 0; }
+        .file-item .fl span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
+        .file-item .fs { color: var(--text-sub); font-size: .72rem; flex-shrink: 0; margin-left: 8px; }
+
+        /* Tree folder styling (identical to download.html) */
+        .tree-folder-group { margin-bottom: 2px; text-align: left; }
+        .tree-folder-row { display: flex; align-items: center; gap: 8px; padding: 9px 12px; background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.02); border-radius: 8px; cursor: pointer; user-select: none; font-size: 0.78rem; transition: 0.15s; margin-bottom: 2px; }
+        .tree-folder-row:hover { background: rgba(255, 43, 82, 0.03); border-color: rgba(255, 43, 82, 0.08); }
+        .tree-arrow { display: inline-flex; align-items: center; justify-content: center; width: 12px; font-size: 0.65rem; color: var(--text-sub); transition: transform 0.2s; }
+        .tree-icon-folder { color: #ffca28; font-size: 0.8rem; }
+        .tree-folder-name { font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .tree-folder-content { overflow: hidden; }
+        .tree-folder-content.collapsed { display: none; }
+
+        /* Dedicated Source Link Card in preset.html */
+        .preset-source-card {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 13px 18px;
+            margin-bottom: 14px;
+            background: linear-gradient(135deg, rgba(255, 43, 82, 0.08) 0%, rgba(255, 255, 255, 0.02) 100%);
+            border: 1px solid rgba(255, 43, 82, 0.28);
+            border-radius: 18px;
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .preset-source-card:hover {
+            border-color: rgba(255, 43, 82, 0.5);
+            background: linear-gradient(135deg, rgba(255, 43, 82, 0.14) 0%, rgba(255, 255, 255, 0.04) 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 16px 40px rgba(255, 43, 82, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+        .psc-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
+        }
+        .psc-icon-badge {
+            width: 38px;
+            height: 38px;
+            border-radius: 12px;
+            background: rgba(255, 43, 82, 0.14);
+            border: 1px solid rgba(255, 43, 82, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--cherry-neon);
+            font-size: 1.1rem;
+            flex-shrink: 0;
+        }
+        .psc-icon-badge img {
+            width: 18px;
+            height: 18px;
+            border-radius: 4px;
+            object-fit: contain;
+        }
+        .psc-text {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            text-align: left;
+        }
+        .psc-label {
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            font-weight: 700;
+            color: var(--text-sub);
+        }
+        .psc-title {
+            font-size: 0.9rem;
+            font-weight: 800;
+            color: #fff;
+            font-family: 'Outfit', sans-serif;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .psc-action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 8px 14px;
+            border-radius: 10px;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #fff;
+            text-decoration: none;
+            font-size: 0.76rem;
+            font-weight: 700;
+            white-space: nowrap;
+            transition: all 0.2s ease;
+        }
+        .psc-action-btn:hover {
+            background: var(--cherry-neon);
+            border-color: #ff5577;
+            box-shadow: 0 4px 16px rgba(255, 43, 82, 0.4);
+            transform: translateX(2px);
+        }
 
         .comment-btn-submit {
             padding: 7px 18px;
@@ -1240,10 +1344,19 @@
             }
 
             sourceLinkBtn = `
-                <a href="${sourceUrl}" target="_blank" rel="noopener" class="mirror-link-pill" style="border-color:rgba(255,43,82,0.3);background:rgba(255,43,82,0.06)">
-                    <span style="display:flex;align-items:center;gap:8px;color:#fff">${iconHtml} <strong>${pLabel}</strong></span>
-                    <span style="font-size:0.75rem;color:var(--cherry-neon)"><i class="fas fa-arrow-up-right-from-square"></i> Visit</span>
-                </a>
+                <div class="preset-source-card">
+                    <div class="psc-left">
+                        <div class="psc-icon-badge">${iconHtml}</div>
+                        <div class="psc-text">
+                            <span class="psc-label">Official Store / Source</span>
+                            <strong class="psc-title">${pLabel}</strong>
+                        </div>
+                    </div>
+                    <a href="${sourceUrl}" target="_blank" rel="noopener" class="psc-action-btn">
+                        <span>Visit Store</span>
+                        <i class="fas fa-arrow-up-right-from-square"></i>
+                    </a>
+                </div>
             `;
         }
 
@@ -1354,11 +1467,14 @@
                             <i class="fas fa-shield-halved" style="color:var(--cherry-neon)"></i> Encrypted Download
                         </div>
 
-                        <!-- MIRRORS & SOURCE -->
+                        <!-- OFFICIAL STORE SOURCE -->
+                        ${sourceLinkBtn}
+
+                        <!-- MIRRORS -->
+                        ${mirrorsHtml ? `
                         <div class="mirrors-deck">
-                            ${sourceLinkBtn}
                             ${mirrorsHtml}
-                        </div>
+                        </div>` : ''}
                     </div>
 
                     <!-- REACTION BAR -->
@@ -1699,6 +1815,18 @@
             return root;
         }
 
+        window.getFileExtIcon = function(filename) {
+            if (!filename) return '';
+            var ext = String(filename).trim().split('.').pop().toLowerCase();
+            var icons = {
+                'ffx': '/assets/ffx.png',
+                'aep': '/assets/Adobe-Icon_Adobe_After_Effects_Filetype_AEP.png',
+                'prproj': '/assets/free-adobe-premiere-pro-file-icon-svg-download-png-3516520.webp',
+                'psd': '/assets/PSD_file_icon.svg.webp'
+            };
+            return icons[ext] || '';
+        };
+
         function renderTreeHTML(node, depth) {
             var tHtml = '';
             var keys = Object.keys(node.children).sort(function(a, b) {
@@ -1719,7 +1847,7 @@
                     tHtml += '<i class="fas fa-folder tree-icon-folder"></i>';
                     tHtml += '<span class="tree-folder-name" title="' + child.name + '">' + child.name + '</span>';
                     tHtml += '</div>';
-                    tHtml += '<div class="tree-folder-content" style="display:block">';
+                    tHtml += '<div class="tree-folder-content expanded" style="display:block">';
                     tHtml += renderTreeHTML(child, depth + 1);
                     tHtml += '</div>';
                     tHtml += '</div>';
@@ -1728,13 +1856,17 @@
                     var ext = child.name.split('.').pop().toLowerCase();
                     var iconMap = {mp4:'fa-file-video',mov:'fa-file-video',webm:'fa-file-video',mp3:'fa-file-audio',wav:'fa-file-audio',aac:'fa-file-audio',png:'fa-file-image',jpg:'fa-file-image',jpeg:'fa-file-image',gif:'fa-file-image',webp:'fa-file-image',zip:'fa-file-zipper',rar:'fa-file-zipper','7z':'fa-file-zipper',pdf:'fa-file-pdf',aep:'fa-file-video',prproj:'fa-file-video',psd:'fa-file-image',ffx:'fa-sliders'};
                     var fi = iconMap[ext] || 'fa-file-lines';
+                    var customIcon = window.getFileExtIcon(child.name);
+                    var iconDisplay = customIcon 
+                        ? '<img src="' + customIcon + '" alt="" style="width:16px;height:16px;object-fit:contain;vertical-align:middle;flex-shrink:0" onerror="this.style.display=\'none\';if(this.nextElementSibling)this.nextElementSibling.style.display=\'inline-block\'"><i class="fas ' + fi + '" style="display:none"></i>' 
+                        : '<i class="fas ' + fi + '"></i>';
 
-                    tHtml += '<div class="tree-file-row" style="padding-left:' + (indent + 12) + 'px">';
-                    tHtml += '<div class="tree-file-left">';
-                    tHtml += '<i class="fas ' + fi + '" style="color:var(--cherry-neon);font-size:0.85rem"></i>';
-                    tHtml += '<span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="' + child.name + '">' + child.name + '</span>';
+                    tHtml += '<div class="file-item" style="padding-left:' + (indent + 12) + 'px">';
+                    tHtml += '<div class="fl">';
+                    tHtml += iconDisplay;
+                    tHtml += '<span title="' + child.name + '">' + child.name + '</span>';
                     tHtml += '</div>';
-                    tHtml += '<span class="tree-file-size">' + sz + '</span>';
+                    tHtml += '<span class="fs">' + sz + '</span>';
                     tHtml += '</div>';
                 }
             });
@@ -1743,26 +1875,37 @@
 
         const treeData = buildTree(realFiles);
         container.innerHTML = `
-            <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;margin-bottom:12px;font-size:0.8rem;color:var(--text-sub)">
-                <span><i class="fas fa-folder-open" style="color:var(--cherry-neon);margin-right:6px"></i> Package files (<strong>${realFiles.length}</strong>)</span>
-                <span style="font-size:0.75rem;color:rgba(255,255,255,0.45)"><i class="fas fa-lock" style="font-size:0.7rem"></i> Preview only</span>
-            </div>
-            <div style="max-height:280px;overflow-y:auto;padding-right:4px">
-                ${renderTreeHTML(treeData, 0)}
+            <div class="files-block">
+                <div class="files-label">
+                    <div style="display:flex;align-items:center;gap:8px">
+                        <i class="fas fa-folder-open" style="color:var(--cherry-neon)"></i>
+                        <span>Files in this pack (<strong>${realFiles.length}</strong>)</span>
+                    </div>
+                    <span style="font-size:0.72rem;color:rgba(255,255,255,0.45);font-weight:600"><i class="fas fa-shield-halved" style="color:var(--cherry-neon);font-size:0.7rem"></i> Package Explorer</span>
+                </div>
+                <div class="files-scroll">
+                    ${renderTreeHTML(treeData, 0)}
+                </div>
             </div>
         `;
     }
 
     function togglePresetFolderCollapse(el) {
-        const arrow = el.querySelector('.tree-arrow');
-        const content = el.nextElementSibling;
+        var group = el.closest('.tree-folder-group');
+        if (!group) return;
+        var content = group.querySelector('.tree-folder-content');
+        var arrow = el.querySelector('.tree-arrow i');
         if (!content) return;
-        if (content.style.display === 'none') {
+        if (content.classList.contains('collapsed') || content.style.display === 'none') {
+            content.classList.remove('collapsed');
+            content.classList.add('expanded');
             content.style.display = 'block';
-            if (arrow) arrow.classList.remove('collapsed');
+            if (arrow) arrow.className = 'fas fa-chevron-down';
         } else {
+            content.classList.remove('expanded');
+            content.classList.add('collapsed');
             content.style.display = 'none';
-            if (arrow) arrow.classList.add('collapsed');
+            if (arrow) arrow.className = 'fas fa-chevron-right';
         }
     }
     window.togglePresetFolderCollapse = togglePresetFolderCollapse;

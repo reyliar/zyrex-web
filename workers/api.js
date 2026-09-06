@@ -1098,6 +1098,102 @@ async function scrapePayhip(url) {
   }
 }
 
+// ============ MULTI-PAGE PAYHIP CATALOG SCRAPER ============
+async function scrapePayhipStoreProducts(storeUrl, maxPages = 25) {
+  if (!storeUrl) return [];
+  const storeBase = storeUrl.replace(/\/$/, "").replace(/\/collection\/all.*$/, "");
+  const seenUrls = new Set();
+  const allProducts = [];
+
+  const headers = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9"
+  };
+
+  for (let page = 1; page <= maxPages; page++) {
+    const pageUrl = `${storeBase}/collection/all?page=${page}`;
+    try {
+      const resp = await fetch(pageUrl, { headers, redirect: "follow" });
+      if (!resp.ok) break;
+      const html = await resp.text();
+      const cards = html.split(/<div[^>]+class=["'][^"']*product-card-wrapper/i);
+      let pageFound = 0;
+
+      for (let i = 1; i < cards.length; i++) {
+        const card = cards[i];
+        const slugMatch = card.match(/\/b\/([a-zA-Z0-9]+)/);
+        if (!slugMatch) continue;
+        const slug = slugMatch[1];
+        const prodUrl = `https://payhip.com/b/${slug}`;
+        if (seenUrls.has(prodUrl)) continue;
+        seenUrls.add(prodUrl);
+        pageFound++;
+
+        const titleMatch = card.match(/<h[2-4][^>]*class=["'][^"']*card__heading[^"']*["'][^>]*>[\s\r\n]*<a[^>]+>([\s\S]*?)<\/a>/i) ||
+                           card.match(/<h[2-4][^>]*>[\s\r\n]*<a[^>]+>([\s\S]*?)<\/a>/i);
+        const title = titleMatch ? titleMatch[1].replace(/<[^>]+>/g, '').trim() : `Product #${slug}`;
+
+        const imgMatch = card.match(/<img[^>]+(?:src|data-src)=["']([^"']+)["']/i);
+        let img = imgMatch ? imgMatch[1].trim() : "";
+        if (img.startsWith("//")) img = "https:" + img;
+
+        const priceMatch = card.match(/\$(\d+(?:\.\d{2})?)/);
+        const price = priceMatch ? `$${priceMatch[1]}` : "";
+
+        allProducts.push({ title, url: prodUrl, image: img, price });
+      }
+
+      if (pageFound === 0) break;
+    } catch(e) {
+      break;
+    }
+  }
+
+  // Fallback: if collection/all had 0 products, try the store root URL
+  if (allProducts.length === 0) {
+    try {
+      const resp = await fetch(storeBase, { headers, redirect: "follow" });
+      if (resp.ok) {
+        const html = await resp.text();
+        const cards = html.split(/<div[^>]+class=["'][^"']*product-card-wrapper/i);
+        if (cards.length > 1) {
+          for (let i = 1; i < cards.length; i++) {
+            const card = cards[i];
+            const slugMatch = card.match(/\/b\/([a-zA-Z0-9]+)/);
+            if (!slugMatch) continue;
+            const slug = slugMatch[1];
+            const prodUrl = `https://payhip.com/b/${slug}`;
+            if (seenUrls.has(prodUrl)) continue;
+            seenUrls.add(prodUrl);
+
+            const titleMatch = card.match(/<h[2-4][^>]*class=["'][^"']*card__heading[^"']*["'][^>]*>[\s\r\n]*<a[^>]+>([\s\S]*?)<\/a>/i) ||
+                               card.match(/<h[2-4][^>]*>[\s\r\n]*<a[^>]+>([\s\S]*?)<\/a>/i);
+            const title = titleMatch ? titleMatch[1].replace(/<[^>]+>/g, '').trim() : `Product #${slug}`;
+            const imgMatch = card.match(/<img[^>]+(?:src|data-src)=["']([^"']+)["']/i);
+            let img = imgMatch ? imgMatch[1].trim() : "";
+            if (img.startsWith("//")) img = "https:" + img;
+            const priceMatch = card.match(/\$(\d+(?:\.\d{2})?)/);
+            const price = priceMatch ? `$${priceMatch[1]}` : "";
+            allProducts.push({ title, url: prodUrl, image: img, price });
+          }
+        } else {
+          const matches = [...html.matchAll(/\/b\/([a-zA-Z0-9]+)/g)];
+          for (const m of matches) {
+            const prodUrl = `https://payhip.com/b/${m[1]}`;
+            if (!seenUrls.has(prodUrl)) {
+              seenUrls.add(prodUrl);
+              allProducts.push({ title: `Product #${m[1]}`, url: prodUrl, image: "", price: "" });
+            }
+          }
+        }
+      }
+    } catch(e) {}
+  }
+
+  return allProducts;
+}
+
 // ============ TIKTOK & BIO CREATOR SCANNER ============
 async function scanCreatorLinks(rawUrl) {
   let targetUrl = String(rawUrl || "").trim();
@@ -1333,27 +1429,9 @@ async function scanCreatorLinks(rawUrl) {
   if (result.found && result.storeUrl) {
     if (result.platform === "payhip" || result.storeUrl.includes("payhip.com")) {
       try {
-        const storeHtml = await fetchText(result.payhipUrl || result.storeUrl);
-        if (storeHtml) {
-          const products = [];
-          const prodRegex = /<a[^>]+href="(\/b\/[\w]+|https?:\/\/payhip\.com\/b\/[\w]+)"[^>]*>([\s\S]*?)<\/a>/gi;
-          let match;
-          const seenUrls = new Set();
-          while ((match = prodRegex.exec(storeHtml)) !== null && products.length < 100) {
-            let pUrl = match[1];
-            if (pUrl.startsWith("/")) pUrl = `https://payhip.com${pUrl}`;
-            if (seenUrls.has(pUrl)) continue;
-            seenUrls.add(pUrl);
-            const cardSnippet = match[2];
-            const titleMatch = cardSnippet.match(/(?:class="[^"]*title[^"]*"[^>]*|h3|h4)[^>]*>([^<]+)/i);
-            const title = titleMatch ? titleMatch[1].trim() : "Product";
-            const imgMatch = cardSnippet.match(/src="(https:\/\/[^"]+)"/i);
-            const image = imgMatch ? imgMatch[1] : "";
-            const priceMatch = cardSnippet.match(/\$([\d.]+)/);
-            const price = priceMatch ? `$${priceMatch[1]}` : "";
-            if (title && pUrl) products.push({ title, url: pUrl, image, price });
-          }
-          result.products = products;
+        const payhipProducts = await scrapePayhipStoreProducts(result.payhipUrl || result.storeUrl, 25);
+        if (payhipProducts && payhipProducts.length > 0) {
+          result.products = payhipProducts;
         }
       } catch(e) {}
     } else if (result.platform === "boosty" || result.storeUrl.includes("boosty.to")) {
@@ -2347,9 +2425,11 @@ export default {
       // 1. Run Worker multi-strategy scanner first
       let workerRes = await scanCreatorLinks(scanUrl);
 
-      // 2. Query BOT_API backend if no products found or to fetch multi-page products
-      const hasProducts = workerRes && workerRes.products && workerRes.products.length > 0;
-      if (!hasProducts) {
+      // 2. Query BOT_API backend if no products found or if Payhip store (to get complete multi-page collection from server IP)
+      const needBotScan = !workerRes || !workerRes.products || workerRes.products.length === 0 || 
+                          (workerRes.platform === "payhip" && workerRes.products.length <= 12) ||
+                          (workerRes.storeUrl && workerRes.storeUrl.includes("payhip.com") && workerRes.products.length <= 12);
+      if (needBotScan) {
         try {
           const targetForBot = (workerRes && workerRes.found && workerRes.storeUrl) ? workerRes.storeUrl : scanUrl;
           const botResp = await fetch(`${BOT_API}/api/scan-creator-links?url=${encodeURIComponent(targetForBot)}`, { headers: corsHeaders });
@@ -2358,7 +2438,18 @@ export default {
             if (data && data.success) {
               if (data.products && data.products.length > 0) {
                 if (workerRes) {
-                  workerRes.products = data.products;
+                  const pMap = new Map((workerRes.products || []).map(p => [p.url, p]));
+                  for (const p of data.products) {
+                    if (!pMap.has(p.url)) {
+                      pMap.set(p.url, p);
+                    } else {
+                      const cur = pMap.get(p.url);
+                      if ((!cur.title || cur.title.startsWith("Product #") || cur.title === "Product") && p.title) cur.title = p.title;
+                      if (!cur.image && p.image) cur.image = p.image;
+                      if (!cur.price && p.price) cur.price = p.price;
+                    }
+                  }
+                  workerRes.products = Array.from(pMap.values());
                   if (!workerRes.storeUrl && data.storeUrl) workerRes.storeUrl = data.storeUrl;
                   if (!workerRes.platform && data.platform) workerRes.platform = data.platform;
                   workerRes.found = true;
@@ -2373,118 +2464,23 @@ export default {
         } catch(e) {}
       }
 
-      // 3. Multi-page collection fetch for Payhip stores to unlock products beyond page 1 (12 items)
+      // 3. Multi-page collection fetch for Payhip stores to unlock all products across all pages
       if (workerRes && workerRes.found && workerRes.storeUrl && (workerRes.platform === "payhip" || workerRes.storeUrl.includes("payhip.com"))) {
         try {
-          const storeBase = workerRes.storeUrl.replace(/\/$/, "");
-          // Fetch up to 20 pages to capture all products
-          const pageUrls = [];
-          for (let p = 1; p <= 20; p++) {
-            pageUrls.push(`${storeBase}/collection/all?page=${p}`);
-          }
-
-          const seenUrls = new Set((workerRes.products || []).map(p => p.url));
-          const allProducts = [...(workerRes.products || [])];
-
-          const pageFetches = pageUrls.map(pUrl =>
-            fetch(`${BOT_API}/api/scan-creator-links?url=${encodeURIComponent(pUrl)}`, { headers: corsHeaders })
-              .then(r => r.ok ? r.json() : null)
-              .catch(() => null)
-          );
-
-          const results = await Promise.all(pageFetches);
-          for (const res of results) {
-            if (res && res.success && res.products) {
-              for (const prod of res.products) {
-                if (prod && prod.url && !seenUrls.has(prod.url)) {
-                  seenUrls.add(prod.url);
-                  allProducts.push(prod);
-                }
+          const freshPayhipProds = await scrapePayhipStoreProducts(workerRes.storeUrl, 25);
+          if (freshPayhipProds && freshPayhipProds.length > 0) {
+            const existingMap = new Map((workerRes.products || []).map(p => [p.url, p]));
+            for (const p of freshPayhipProds) {
+              if (!existingMap.has(p.url)) {
+                existingMap.set(p.url, p);
+              } else {
+                const cur = existingMap.get(p.url);
+                if ((!cur.title || cur.title.startsWith("Product #")) && p.title) cur.title = p.title;
+                if (!cur.image && p.image) cur.image = p.image;
+                if (!cur.price && p.price) cur.price = p.price;
               }
             }
-          }
-          workerRes.products = allProducts;
-        } catch(e) {}
-      }
-
-      // 3b. Direct Payhip HTML fallback: fetch collection pages and parse product cards
-      // This catches products that the BOT_API scraper might miss (e.g. last row)
-      if (workerRes && workerRes.found && workerRes.storeUrl && (workerRes.platform === "payhip" || workerRes.storeUrl.includes("payhip.com"))) {
-        try {
-          const storeBase = workerRes.storeUrl.replace(/\/$/, "");
-          const collectionUrl = `${storeBase}/collection/all`;
-          const htmlResp = await fetch(collectionUrl, {
-            headers: {
-              "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-              "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
-            }
-          });
-          if (htmlResp.ok) {
-            const html = await htmlResp.text();
-            // Match ALL product URLs in the page: /b/XXXXX (in href, data-url, text content, etc.)
-            const rawUrlMatches = [...html.matchAll(/["'](https?:\/\/payhip\.com\/b\/([a-zA-Z0-9]+))["']/g)];
-            const allProdUrls = [...new Set(rawUrlMatches.map(m => m[1]))];
-
-            if (allProdUrls.length > 0) {
-              const seenUrls = new Set((workerRes.products || []).map(p => p.url));
-              for (const url of allProdUrls) {
-                if (!seenUrls.has(url)) {
-                  seenUrls.add(url);
-                  workerRes.products.push({ url, title: "", price: "", image: "" });
-                }
-              }
-            }
-
-            // Also try to extract titles & images from product cards
-            // Strategy: find blocks around each product URL and extract metadata
-            for (const prodUrl of allProdUrls) {
-              const prod = (workerRes.products || []).find(p => p.url === prodUrl);
-              if (!prod) continue;
-              if (prod.title && prod.image) continue; // already enriched
-
-              // Find the surrounding HTML context (500 chars before and after the URL)
-              const urlIdx = html.indexOf(prodUrl);
-              if (urlIdx === -1) continue;
-              const contextStart = Math.max(0, urlIdx - 800);
-              const contextEnd = Math.min(html.length, urlIdx + 1500);
-              const context = html.slice(contextStart, contextEnd);
-
-              // Extract image: look for <img> tags with src
-              if (!prod.image) {
-                const imgMatch = context.match(/<img[^>]+src="([^"]+)"[^>]*>/i);
-                if (imgMatch) {
-                  let imgSrc = imgMatch[1];
-                  if (imgSrc.startsWith("//")) imgSrc = "https:" + imgSrc;
-                  if (imgSrc.includes("payhip.com") || imgSrc.includes("cdn") || imgSrc.match(/\.(jpg|jpeg|png|webp|gif)/i)) {
-                    prod.image = imgSrc;
-                  }
-                }
-              }
-
-              // Extract title: look for alt text on image, or product name heading
-              if (!prod.title) {
-                const altMatch = context.match(/alt="([^"]{3,120})"/i);
-                if (altMatch) {
-                  const t = altMatch[1].trim();
-                  if (t.length > 2 && !t.startsWith("http") && !/^(Product|Image|Photo|Picture)$/i.test(t)) {
-                    prod.title = t;
-                  }
-                }
-                if (!prod.title) {
-                  const headingMatch = context.match(/<h[2-4][^>]*>([^<]{3,120})<\/h[2-4]>/i);
-                  if (headingMatch) {
-                    const t = headingMatch[1].trim();
-                    if (t.length > 2 && !t.startsWith("http")) prod.title = t;
-                  }
-                }
-              }
-
-              // Extract price
-              if (!prod.price) {
-                const priceMatch = context.match(/\$(\d+\.?\d{0,2})/);
-                if (priceMatch) prod.price = `$${priceMatch[1]}`;
-              }
-            }
+            workerRes.products = Array.from(existingMap.values());
           }
         } catch(e) {}
       }

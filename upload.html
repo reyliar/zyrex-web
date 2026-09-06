@@ -615,6 +615,11 @@
         }
         .scanner-modal::-webkit-scrollbar { width: 4px; }
         .scanner-modal::-webkit-scrollbar-thumb { background: rgba(255,43,82,0.2); border-radius: 2px; }
+        .wiz-top-glow {
+            position: absolute; top: 0; left: 10%; right: 10%; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--cherry), rgba(168,85,247,0.8), transparent);
+            pointer-events: none;
+        }
 
         @keyframes wizardPopIn {
             from { opacity: 0; transform: scale(0.92) translateY(20px); }
@@ -1187,6 +1192,7 @@
     <!-- ============================================================ -->
     <div id="creatorWizardModal" class="scanner-modal-overlay" onclick="if(event.target===this)closeCreatorWizard()">
         <div class="scanner-modal" id="wizModalContainer">
+            <div class="wiz-top-glow"></div>
             <!-- Header -->
             <div class="wiz-header">
                 <div class="wiz-header-brand">
@@ -1543,51 +1549,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- SOCIAL LOOKUP MODAL -->
-    <div id="hlxOverlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(4,1,2,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)toggleHlx()">
-        <div style="background:#0d0407;border:1px solid var(--border-hover);border-radius:24px;padding:32px;width:100%;max-width:440px;box-shadow:0 25px 80px rgba(0,0,0,0.8), 0 0 35px rgba(230,21,54,0.15);position:relative;animation:modalPop 0.3s cubic-bezier(0.16,1,0.3,1)">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
-                <div style="display:flex;align-items:center;gap:12px">
-                    <div style="width:38px;height:38px;border-radius:12px;background:rgba(230,21,54,0.12);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--cherry-light);font-size:1rem">
-                        <i class="fas fa-wand-magic-sparkles"></i>
-                    </div>
-                    <div>
-                        <h3 style="font-size:1.1rem;font-weight:800;color:#fff;margin:0">Social Lookup</h3>
-                        <p style="font-size:0.75rem;color:var(--muted);margin:0">Auto-detect creator nickname & avatar</p>
-                    </div>
-                </div>
-                <button type="button" onclick="toggleHlx()" style="background:rgba(255,255,255,0.05);border:none;color:var(--muted);width:32px;height:32px;border-radius:50%;cursor:pointer;display:inline-flex;align-items:center;justify-content:center"><i class="fas fa-times"></i></button>
-            </div>
-
-            <!-- Platform Tabs -->
-            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:20px" id="hlxPlatforms">
-                <button type="button" class="btn-icon active" data-plat="tiktok" onclick="selHlxPlat(this,'tiktok')" style="padding:10px;border-radius:12px;background:rgba(230,21,54,0.15);border:1px solid var(--cherry-light);color:#fff;cursor:pointer;transition:var(--transition);display:flex;flex-direction:column;align-items:center;gap:4px;font-size:0.75rem;font-weight:700">
-                    <i class="fab fa-tiktok" style="font-size:1.2rem;color:#ff0050"></i> TikTok
-                </button>
-                <button type="button" class="btn-icon" data-plat="instagram" onclick="selHlxPlat(this,'instagram')" style="padding:10px;border-radius:12px;background:rgba(230,21,54,0.04);border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:var(--transition);display:flex;flex-direction:column;align-items:center;gap:4px;font-size:0.75rem;font-weight:700">
-                    <i class="fab fa-instagram" style="font-size:1.2rem;color:#e1306c"></i> Instagram
-                </button>
-                <button type="button" class="btn-icon" data-plat="youtube" onclick="selHlxPlat(this,'youtube')" style="padding:10px;border-radius:12px;background:rgba(230,21,54,0.04);border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:var(--transition);display:flex;flex-direction:column;align-items:center;gap:4px;font-size:0.75rem;font-weight:700">
-                    <i class="fab fa-youtube" style="font-size:1.2rem;color:#ff0000"></i> YouTube
-                </button>
-                <button type="button" class="btn-icon" data-plat="x" onclick="selHlxPlat(this,'x')" style="padding:10px;border-radius:12px;background:rgba(230,21,54,0.04);border:1px solid var(--border);color:var(--muted);cursor:pointer;transition:var(--transition);display:flex;flex-direction:column;align-items:center;gap:4px;font-size:0.75rem;font-weight:700">
-                    <i class="fab fa-x-twitter" style="font-size:1.2rem;color:#fff"></i> X / Twitter
-                </button>
-            </div>
-
-            <div style="display:flex;background:rgba(0,0,0,0.5);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:20px">
-                <span style="padding:14px 0 14px 16px;color:var(--cherry-light);font-size:0.9rem;font-weight:700" id="hlxPrefix">@</span>
-                <input id="hlxUser" placeholder="username..." style="flex:1;padding:14px 12px;background:transparent;border:none;color:#fff;font-family:inherit;font-size:0.88rem;outline:none" onkeydown="if(event.key==='Enter')hlxLookup()">
-            </div>
-
-            <button type="button" class="btn btn-primary" id="btnHlxLookup" style="width:100%;padding:14px;font-size:0.88rem" onclick="hlxLookup()">
-                <i class="fas fa-search"></i> Fetch Profile Info
-            </button>
-            
-            <div id="hlxStatus" style="display:none;margin-top:16px;padding:12px;border-radius:12px;font-size:0.8rem;text-align:center"></div>
         </div>
     </div>
 
