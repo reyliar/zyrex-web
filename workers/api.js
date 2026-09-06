@@ -2195,19 +2195,29 @@ export default {
           }
 
           let rating = "";
+          let votes = "";
           let genres = "";
           let directors = "";
           let cast = item.s || "";
           let plot = "";
+          let runtime = "";
+          let awards = "";
+          let rated = "";
+          let released = "";
 
           const omdb = (omdbResults[idx] && omdbResults[idx].status === "fulfilled") ? omdbResults[idx].value : null;
           if (omdb && omdb.Response === "True") {
             if (omdb.imdbRating && omdb.imdbRating !== "N/A") rating = omdb.imdbRating;
+            if (omdb.imdbVotes && omdb.imdbVotes !== "N/A") votes = omdb.imdbVotes;
             if (omdb.Genre && omdb.Genre !== "N/A") genres = omdb.Genre;
             if (omdb.Director && omdb.Director !== "N/A") directors = omdb.Director;
             else if (omdb.Writer && omdb.Writer !== "N/A") directors = omdb.Writer;
             if (omdb.Actors && omdb.Actors !== "N/A") cast = omdb.Actors;
             if (omdb.Plot && omdb.Plot !== "N/A") plot = omdb.Plot;
+            if (omdb.Runtime && omdb.Runtime !== "N/A") runtime = omdb.Runtime;
+            if (omdb.Awards && omdb.Awards !== "N/A") awards = omdb.Awards;
+            if (omdb.Rated && omdb.Rated !== "N/A") rated = omdb.Rated;
+            if (omdb.Released && omdb.Released !== "N/A") released = omdb.Released;
           }
 
           return {
@@ -2218,11 +2228,16 @@ export default {
             type: mType,
             category: mCat,
             rating: rating,
+            votes: votes,
             genres: genres,
             directors: directors,
             cast: cast,
             stars: item.s || "",
             plot: plot,
+            runtime: runtime,
+            awards: awards,
+            rated: rated,
+            released: released,
             poster: img,
             banner: img
           };
@@ -2263,14 +2278,23 @@ export default {
               banner = g.background_image;
             }
 
+            const platformsList = (g.platforms || []).map(p => p.platform?.name).filter(Boolean).join(", ");
+            const metacriticScore = g.metacritic ? String(g.metacritic) : "";
+            const ratingsCount = g.ratings_count ? String(g.ratings_count) : "";
+
             return {
               id: g.slug || String(g.id),
               title: g.name,
               year: g.released ? g.released.split("-")[0] : "",
+              released: g.released || "",
               type: "Game",
               category: "games",
               rating: rating,
+              metacritic: metacriticScore,
+              ratings_count: ratingsCount,
               genres: (g.genres || []).map(x => x.name).join(", "),
+              platforms: platformsList,
+              directors: "",
               poster: g.background_image || "",
               banner: banner
             };
@@ -2289,10 +2313,15 @@ export default {
                   id: `steam-${s.id}`,
                   title: s.name,
                   year: "",
+                  released: "",
                   type: "Game",
                   category: "games",
-                  rating: "9.0",
+                  rating: "",
+                  metacritic: "",
+                  ratings_count: "",
                   genres: "Video Game",
+                  platforms: "PC (Steam)",
+                  directors: "",
                   poster: `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${s.id}/header.jpg`,
                   banner: `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${s.id}/capsule_616x353.jpg`
                 }));
@@ -2841,8 +2870,8 @@ async function storeAndProxyImage(env, imageUrl) {
 
         if (vpsHealth.status === "outage") {
           overallStatus = "outage";
-          statusHeadline = "Major service outage - VPS Offline";
-          statusLead = "The core VPS bot server is currently unreachable. Site access has been locked to protect user data.";
+          statusHeadline = "Service Disruption - Upstream Provider Issue";
+          statusLead = "We are currently experiencing an issue related to our upstream service provider affecting the core VPS API gateway. Services are expected to be restored shortly.";
         } else if (vpsHealth.status === "degraded" || commentsHealth.status === "degraded" || uploadHealth.status === "degraded" || r2Health.status === "degraded") {
           overallStatus = "degraded";
           statusHeadline = "Partial service disruption";
@@ -3020,17 +3049,17 @@ async function storeAndProxyImage(env, imageUrl) {
         if (vpsHealth.status === "outage") {
           const currentOutage = {
             id: "inc-vps-outage",
-            title: "Core VPS Server Connection Timeout",
+            title: "Upstream Service Provider Issue",
             subsystem: "api_gateway",
-            subsystem_name: "Requests",
+            subsystem_name: "Api Gateway",
             severity: "critical",
-            outages_count: 4,
+            outages_count: 1,
             status: "Investigating",
-            impact: "Major disruption to API requests, database queries, and Discord sync.",
+            impact: "Core API gateway and VPS services are temporarily affected.",
             created_at: new Date(Date.now() - 120000).toISOString(),
             date: new Date().toISOString().split("T")[0],
             updated_at: new Date().toISOString(),
-            message: "Our edge monitors detected that the VPS server (storage.zyrexediting.xyz) is currently unreachable. Edge lockout is active to protect user data."
+            message: "We are currently experiencing an issue related to our upstream service provider affecting the core VPS API gateway. Our provider is actively resolving the disruption, and services are expected to be restored shortly."
           };
           incidents.push(currentOutage);
           incidentsHistory.unshift(currentOutage);

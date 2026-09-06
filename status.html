@@ -47,6 +47,14 @@
         }
 
         /* Top Header */
+        .status-hero-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
         .status-top-label {
             font-size: 0.78rem;
             font-weight: 700;
@@ -55,11 +63,13 @@
             color: #71717a;
             margin-bottom: 14px;
             font-family: 'JetBrains Mono', monospace;
+            text-align: center;
         }
 
         .status-hero-headline {
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 14px;
             font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
             font-size: 2.5rem;
@@ -68,6 +78,7 @@
             color: #ffffff;
             margin-bottom: 8px;
             line-height: 1.15;
+            text-align: center;
         }
 
         .status-hero-dot {
@@ -93,15 +104,18 @@
             font-size: 1.05rem;
             color: #a1a1aa;
             margin-bottom: 18px;
+            text-align: center;
         }
 
         .status-last-checked-row {
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 12px;
             font-size: 0.85rem;
             color: #71717a;
-            margin-bottom: 50px;
+            margin-bottom: 42px;
+            text-align: center;
         }
 
         .btn-text-refresh {
@@ -558,18 +572,20 @@
     <main class="status-page-wrap">
 
         <!-- HEADER SECTION -->
-        <div class="status-top-label">SYSTEM STATUS</div>
+        <div class="status-hero-wrap">
+            <div class="status-top-label">SYSTEM STATUS</div>
 
-        <div class="status-hero-headline">
-            <span class="status-hero-dot" id="heroStatusDot"></span>
-            <span id="heroHeadlineText">All systems operational</span>
-        </div>
+            <div class="status-hero-headline">
+                <span class="status-hero-dot" id="heroStatusDot"></span>
+                <span id="heroHeadlineText">All systems operational</span>
+            </div>
 
-        <p class="status-hero-sub" id="heroSubText">All services are running normally.</p>
+            <p class="status-hero-sub" id="heroSubText">All services are running normally.</p>
 
-        <div class="status-last-checked-row">
-            <span id="lastCheckedText">Last checked less than a minute ago</span>
-            <button class="btn-text-refresh" id="btnRefresh" onclick="fetchStatus(true)">Refresh</button>
+            <div class="status-last-checked-row">
+                <span id="lastCheckedText">Last checked less than a minute ago</span>
+                <button class="btn-text-refresh" id="btnRefresh" onclick="fetchStatus(true)">Refresh</button>
+            </div>
         </div>
 
         <!-- ACTIVE INCIDENTS SECTION -->
@@ -578,8 +594,8 @@
             <p class="status-sec-sub">Incident updates will appear here when there is something you should know.</p>
 
             <div class="incident-active-card" id="incidentActiveCard">
-                <h4><i class="fas fa-triangle-exclamation"></i> <span id="incidentTitle">Active Incident Detected</span></h4>
-                <p id="incidentDesc">A service disruption has been detected. The edge lock is active to safeguard the system.</p>
+                <h4><i class="fas fa-triangle-exclamation"></i> <span id="incidentTitle">Upstream Service Provider Issue</span></h4>
+                <p id="incidentDesc">We are currently experiencing an issue related to our upstream service provider affecting the core VPS API gateway. Our provider is actively resolving the disruption, and services are expected to be restored shortly.</p>
             </div>
         </div>
 
@@ -915,12 +931,13 @@
                         document.getElementById('incidentDesc').innerText = 'Elevated latency detected on secondary subsystems. Core downloads remain active.';
                     }
                 } else {
-                    heroHeadline.innerText = 'Major outage';
-                    heroSub.innerText = 'A major part of the site is unavailable. We are on it.';
+                    heroHeadline.innerText = 'Service disruption';
+                    heroSub.innerText = 'Core gateway is temporarily unavailable.';
                     if (incidentCard) {
                         incidentCard.classList.add('visible');
-                        document.getElementById('incidentTitle').innerText = 'VPS Core Server Unreachable';
-                        document.getElementById('incidentDesc').innerText = 'Edge Gatekeeper has locked incoming routes to safeguard the platform. We are investigating.';
+                        var activeInc = (data.incidents && data.incidents[0]) ? data.incidents[0] : null;
+                        document.getElementById('incidentTitle').innerText = (activeInc && activeInc.title) ? activeInc.title : 'Upstream Service Provider Issue';
+                        document.getElementById('incidentDesc').innerText = (activeInc && activeInc.message) ? activeInc.message : 'We are currently experiencing an issue related to our upstream service provider affecting the core VPS API gateway. Our provider is actively resolving the disruption, and services are expected to be restored shortly.';
                     }
                 }
             }
@@ -947,10 +964,18 @@
             var heroDot = document.getElementById('heroStatusDot');
             var heroHeadline = document.getElementById('heroHeadlineText');
             var heroSub = document.getElementById('heroSubText');
-            if (heroDot && heroHeadline) {
+            var incidentCard = document.getElementById('incidentActiveCard');
+            if (heroDot && heroHeadline && heroSub) {
                 heroDot.className = 'status-hero-dot outage';
-                heroHeadline.innerText = 'Major outage';
-                heroSub.innerText = 'A major part of the site is unavailable. We are on it.';
+                heroHeadline.innerText = 'Service disruption';
+                heroSub.innerText = 'Core gateway is temporarily unavailable.';
+            }
+            if (incidentCard) {
+                incidentCard.classList.add('visible');
+                var t = document.getElementById('incidentTitle');
+                var d = document.getElementById('incidentDesc');
+                if (t) t.innerText = 'Upstream Service Provider Issue';
+                if (d) d.innerText = 'We are currently experiencing an issue related to our upstream service provider affecting the core VPS API gateway. Our provider is actively resolving the disruption, and services are expected to be restored shortly.';
             }
             renderSubsystems();
         }

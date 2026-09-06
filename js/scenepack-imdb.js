@@ -434,7 +434,7 @@ function findProductionForScenepack(item) {
 
         var explicitYear = item.release_date ? item.release_date.split('-')[0] : (item.year || '');
         var explicitRating = (item.rating || item.imdb_rating || '').toString().trim().replace(/\/10$/, '');
-        var explicitDirectors = item.directors || item.director || item.studio || (isGame ? 'Game Studio' : '');
+        var explicitDirectors = item.directors || item.director || item.studio || '';
         var explicitGenres = item.genres || (isGame ? 'Video Game' : (cat ? cat.toUpperCase() : 'Film / TV'));
         var explicitCast = item.cast || item.stars || item.characters || '';
         var explicitTagline = item.tagline || item.plot || '';
@@ -454,6 +454,7 @@ function findProductionForScenepack(item) {
             directors: explicitDirectors,
             genres: explicitGenres,
             cast: explicitCast,
+            plot: item.plot || explicitTagline,
             tagline: explicitTagline,
             poster: explicitPoster,
             banner: explicitBanner,

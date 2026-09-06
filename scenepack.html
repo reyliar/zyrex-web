@@ -740,11 +740,17 @@
             <div id="productionShowcaseContainer" style="display:none;"></div>
 
             <div id="hubGridContainer">
-                <div class="hub-subtabs">
-                    <button type="button" class="hub-pill active" onclick="filterHubCategory('all')">All Titles</button>
-                    <button type="button" class="hub-pill" onclick="filterHubCategory('movies_series')">TV &amp; Movies</button>
-                    <button type="button" class="hub-pill" onclick="filterHubCategory('games')">Video Games</button>
-                    <button type="button" class="hub-pill" onclick="filterHubCategory('anime')">Anime</button>
+                <div class="hub-subtabs" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
+                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                        <button type="button" class="hub-pill active" onclick="filterHubCategory('all')">All Titles</button>
+                        <button type="button" class="hub-pill" onclick="filterHubCategory('movies_series')">TV &amp; Movies</button>
+                        <button type="button" class="hub-pill" onclick="filterHubCategory('games')">Video Games</button>
+                        <button type="button" class="hub-pill" onclick="filterHubCategory('anime')">Anime</button>
+                    </div>
+                    <div class="sp-search-box" style="margin:0;max-width:300px;padding:8px 14px;">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search titles index..." oninput="filterHubTitles(this.value)">
+                    </div>
                 </div>
                 <div class="productions-grid" id="hubGrid"></div>
             </div>
@@ -1093,8 +1099,17 @@
                 }
             }
 
+            var hubQuery = (window._hubSearchQuery || '').toLowerCase().trim();
+            if (hubQuery) {
+                activeList = activeList.filter(function(item) {
+                    var p = item.prod;
+                    var text = [p.title, p.genres, p.directors, p.cast, p.year].join(' ').toLowerCase();
+                    return text.indexOf(hubQuery) !== -1;
+                });
+            }
+
             if (activeList.length === 0) {
-                grid.innerHTML = '<div class="sp-empty"><i class="fas fa-cubes"></i><p>No titles found in this category yet.</p></div>';
+                grid.innerHTML = '<div class="sp-empty"><i class="fas fa-cubes"></i><p>No titles found in this category or search.</p></div>';
                 return;
             }
 
@@ -1106,12 +1121,13 @@
                 var isGame = (pr.type === 'Game' || pr.category === 'game');
                 var badgeStyle = isGame ? 'background:#7c3aed;color:#fff' : 'background:rgba(0,0,0,0.85);color:#f5c518;border:1px solid rgba(245,197,24,0.5)';
                 var badgeIcon = isGame ? 'fas fa-gamepad' : 'fab fa-imdb';
-                var ratingVal = pr.rating || '9.0';
+                var ratingVal = (pr.rating || '').toString().trim().replace(/\/10$/, '');
+                var badgeMarkup = ratingVal ? ('<div class="prod-imdb-badge" style="' + badgeStyle + '"><i class="' + badgeIcon + '"></i> ' + escapeHtml(ratingVal) + '</div>') : '';
 
                 return '<div class="prod-card" onclick="openProductionView(\'' + pr.id + '\')">' +
                     '<div class="prod-poster-box">' +
                         '<img src="' + posterImg + '" alt="' + escapeHtml(pr.title) + '" class="prod-poster-img" onerror="this.src=\'assets/content.png\'">' +
-                        '<div class="prod-imdb-badge" style="' + badgeStyle + '"><i class="' + badgeIcon + '"></i> ' + escapeHtml(ratingVal) + '</div>' +
+                        badgeMarkup +
                         '<div class="prod-count-pill">' + matchingCount + ' pack' + (matchingCount !== 1 ? 's' : '') + '</div>' +
                     '</div>' +
                     '<div class="prod-body">' +
@@ -1121,6 +1137,11 @@
                 '</div>';
             }).join('');
         }
+
+        window.filterHubTitles = function(query) {
+            window._hubSearchQuery = query;
+            renderHubGrid();
+        };
 
         function openProductionView(prodId) {
             var pr = (typeof getProductionById === 'function') ? getProductionById(prodId, allSP) : null;
@@ -1147,13 +1168,36 @@
 
             var backBtnHtml = '<button class="showcase-back-btn" onclick="closeProductionView()"><i class="fas fa-arrow-left"></i> Back to All Titles</button>';
 
-            var badgeHtml = isGame
-                ? '<span class="badge-imdb" style="background:#7c3aed;color:#fff"><i class="fas fa-gamepad"></i> ' + (pr.rating || '9.0') + '/10</span>'
-                : '<span class="badge-imdb"><i class="fab fa-imdb"></i> ' + (pr.rating || '8.5') + '/10</span>';
+            var ratingClean = (pr.rating || '').toString().trim().replace(/\/10$/, '');
+            var badgeHtml = '';
+            if (ratingClean) {
+                badgeHtml = isGame
+                    ? '<span class="badge-imdb" style="background:#7c3aed;color:#fff"><i class="fas fa-gamepad"></i> ' + escapeHtml(ratingClean) + '/10</span>'
+                    : '<span class="badge-imdb"><i class="fab fa-imdb"></i> ' + escapeHtml(ratingClean) + '/10</span>';
+            }
 
-            var metaDesc = isGame
-                ? `${escapeHtml(pr.year || '')} · Developer: ${escapeHtml(pr.directors || 'Game Studio')} · ${escapeHtml(pr.genres || 'Video Game')}`
-                : `${escapeHtml(pr.year || '')} · Directed by ${escapeHtml(pr.directors || 'Director')} · ${escapeHtml(pr.genres || 'Film')}`;
+            var metaParts = [];
+            if (pr.year) metaParts.push(escapeHtml(pr.year));
+            if (isGame) {
+                if (pr.directors) metaParts.push('Developer: ' + escapeHtml(pr.directors));
+                if (pr.genres) metaParts.push(escapeHtml(pr.genres));
+                else metaParts.push('Video Game');
+            } else {
+                if (pr.directors) metaParts.push('Directed by ' + escapeHtml(pr.directors));
+                if (pr.genres) metaParts.push(escapeHtml(pr.genres));
+                else if (pr.type) metaParts.push(escapeHtml(pr.type));
+            }
+            var metaDesc = metaParts.join(' · ');
+
+            var metaBadges = [];
+            if (pr.runtime) metaBadges.push('<span><i class="far fa-clock"></i> ' + escapeHtml(pr.runtime) + '</span>');
+            if (pr.votes) metaBadges.push('<span><i class="fas fa-users"></i> ' + escapeHtml(pr.votes) + ' votes</span>');
+            if (pr.metacritic) metaBadges.push('<span><i class="fas fa-chart-line" style="color:#10b981"></i> Metacritic ' + escapeHtml(pr.metacritic) + '</span>');
+            if (pr.platforms) metaBadges.push('<span><i class="fas fa-desktop"></i> ' + escapeHtml(pr.platforms) + '</span>');
+            if (pr.awards && pr.awards !== 'N/A') metaBadges.push('<span><i class="fas fa-trophy" style="color:#f59e0b"></i> ' + escapeHtml(pr.awards) + '</span>');
+            var metaBadgesHtml = metaBadges.length > 0 ? ('<div style="display:flex;flex-wrap:wrap;gap:12px;font-size:0.8rem;color:var(--text-muted);margin:8px 0 10px 0">' + metaBadges.join('') + '</div>') : '';
+
+            var plotHtml = pr.plot ? ('<p style="font-size:0.88rem;color:#d4d4d8;line-height:1.55;margin:8px 0 14px 0;max-width:800px;">' + escapeHtml(pr.plot) + '</p>') : '';
 
             container.innerHTML = `
                 ${backBtnHtml}
@@ -1165,15 +1209,16 @@
                         <div class="showcase-info">
                             <h1>${escapeHtml(pr.title)}</h1>
                             <div class="showcase-meta">${metaDesc}</div>
+                            ${metaBadgesHtml}
                             <div class="showcase-stats-strip">
                                 <span><strong>${matchingPacks.length}</strong> scenepacks</span>
                                 <span>·</span>
                                 <span><strong>${totalDL.toLocaleString()}</strong> downloads</span>
                                 <div style="margin-left:auto; display:flex; gap:8px;">
                                     ${badgeHtml}
-                                    ${pr.rotten ? `<span class="badge-rotten"><i class="fas fa-fire"></i> ${pr.rotten}</span>` : ''}
                                 </div>
                             </div>
+                            ${plotHtml}
                             ${pr.cast ? `<div style="font-size:0.82rem; color:var(--text-muted); margin-bottom:16px;"><strong>Cast:</strong> ${escapeHtml(pr.cast)}</div>` : ''}
                             
                             <div class="sp-search-box" style="max-width:100%; margin-top:14px;">
@@ -1197,7 +1242,7 @@
             }
             return packs.map(function(p) {
                 var creator = p.creator_nickname || p.author_name || 'Zyrex Creator';
-                var size = p.file_size || p.size || '3.5 GB';
+                var size = p.file_size || p.size || (p.quality ? (p.quality + ' Clip') : 'HD Pack');
                 var downloads = (p.downloads || 0).toLocaleString();
 
                 return '<div class="showcase-table-row">' +
