@@ -2425,11 +2425,9 @@ export default {
       // 1. Run Worker multi-strategy scanner first
       let workerRes = await scanCreatorLinks(scanUrl);
 
-      // 2. Query BOT_API backend if no products found or if Payhip store (to get complete multi-page collection from server IP)
-      const needBotScan = !workerRes || !workerRes.products || workerRes.products.length === 0 || 
-                          (workerRes.platform === "payhip" && workerRes.products.length <= 12) ||
-                          (workerRes.storeUrl && workerRes.storeUrl.includes("payhip.com") && workerRes.products.length <= 12);
-      if (needBotScan) {
+      // 2. Query BOT_API backend if no products found or to fetch multi-page products
+      const hasProducts = workerRes && workerRes.products && workerRes.products.length > 0;
+      if (!hasProducts) {
         try {
           const targetForBot = (workerRes && workerRes.found && workerRes.storeUrl) ? workerRes.storeUrl : scanUrl;
           const botResp = await fetch(`${BOT_API}/api/scan-creator-links?url=${encodeURIComponent(targetForBot)}`, { headers: corsHeaders });
@@ -2438,18 +2436,7 @@ export default {
             if (data && data.success) {
               if (data.products && data.products.length > 0) {
                 if (workerRes) {
-                  const pMap = new Map((workerRes.products || []).map(p => [p.url, p]));
-                  for (const p of data.products) {
-                    if (!pMap.has(p.url)) {
-                      pMap.set(p.url, p);
-                    } else {
-                      const cur = pMap.get(p.url);
-                      if ((!cur.title || cur.title.startsWith("Product #") || cur.title === "Product") && p.title) cur.title = p.title;
-                      if (!cur.image && p.image) cur.image = p.image;
-                      if (!cur.price && p.price) cur.price = p.price;
-                    }
-                  }
-                  workerRes.products = Array.from(pMap.values());
+                  workerRes.products = data.products;
                   if (!workerRes.storeUrl && data.storeUrl) workerRes.storeUrl = data.storeUrl;
                   if (!workerRes.platform && data.platform) workerRes.platform = data.platform;
                   workerRes.found = true;
@@ -3233,6 +3220,32 @@ async function storeAndProxyImage(env, imageUrl) {
             }
           } catch(e) {
             redirectTo = "/verify?result=error&msg=Service+unavailable";
+          }
+        }
+
+        // If this is an SFTPGo Cloud login flow, sign an HMAC ticket and redirect to storage endpoint
+        if (redirectTo === "sftpgo_cloud" || redirectTo.startsWith("sftpgo_cloud")) {
+          try {
+            const secret = env.ZYREX_API_KEY || "zyrex_app_sec_k982f81a7b54c29013e9a";
+            const ts = Math.floor(Date.now() / 1000);
+            const data = `${du.id}:${ts}`;
+            const enc = new TextEncoder();
+            const key = await crypto.subtle.importKey(
+              "raw",
+              enc.encode(secret),
+              { name: "HMAC", hash: "SHA-256" },
+              false,
+              ["sign"]
+            );
+            const sigBuf = await crypto.subtle.sign("HMAC", key, enc.encode(data));
+            const hexSig = Array.from(new Uint8Array(sigBuf))
+              .map(b => b.toString(16).padStart(2, "0"))
+              .join("");
+            const ticket = `${du.id}.${ts}.${hexSig}`;
+            redirectTo = `https://storage.zyrexediting.xyz/web/client/auth/discord?ticket=${encodeURIComponent(ticket)}&uid=${encodeURIComponent(du.id)}`;
+          } catch(sigErr) {
+            console.error("SFTPGo HMAC ticket signing failed:", sigErr);
+            redirectTo = "/?error=ticket_sign_failed";
           }
         }
 
@@ -4626,6 +4639,9 @@ async function storeAndProxyImage(env, imageUrl) {
           
           for (const f of files) {
             try { await stagingBucket.delete(f.srcKey); } catch (e) { /* ignore */ }
+          }
+          if (srcPrefix) {
+            try { await stagingBucket.delete(srcPrefix); } catch (e) { /* ignore */ }
           }
           
           const filePath = dstPrefix;
