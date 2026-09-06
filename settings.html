@@ -4350,9 +4350,13 @@
                 var item = JSON.parse(jsonStr);
                 if (!item) return;
 
+                window._lastAppliedLookup = item;
                 if (item.title) document.getElementById('editProductOrigin').value = item.title;
                 if (item.poster) document.getElementById('editProductThumbnail').value = item.poster;
                 if (item.rating) document.getElementById('editProductImdbRating').value = item.rating;
+                if (item.year && document.getElementById('editProductReleaseDate')) {
+                    document.getElementById('editProductReleaseDate').value = item.year;
+                }
 
                 var catSelect = document.getElementById('editProductCategory');
                 if (item.type === 'Series') catSelect.value = 'series';
@@ -4367,6 +4371,7 @@
         }
 
         function openEditModal(productId) {
+            window._lastAppliedLookup = null;
             const product = allProducts.find(p => String(p.id) === String(productId));
             if (!product) {
                 console.error("Product not found:", productId);
@@ -4478,6 +4483,15 @@
                 file_size: (document.getElementById('editProductFileSize') ? document.getElementById('editProductFileSize').value.trim() : ''),
                 release_date: (document.getElementById('editProductReleaseDate') ? document.getElementById('editProductReleaseDate').value.trim() : '')
             };
+
+            if (window._lastAppliedLookup) {
+                if (window._lastAppliedLookup.id) payload.imdb_id = window._lastAppliedLookup.id;
+                if (window._lastAppliedLookup.genres) payload.genres = window._lastAppliedLookup.genres;
+                if (window._lastAppliedLookup.directors) payload.directors = window._lastAppliedLookup.directors;
+                if (window._lastAppliedLookup.cast) payload.cast = window._lastAppliedLookup.cast;
+                if (window._lastAppliedLookup.banner) payload.banner = window._lastAppliedLookup.banner;
+                if (window._lastAppliedLookup.type) payload.origin_type = window._lastAppliedLookup.type;
+            }
 
             if (type === 'plugin' || type === 'software') {
                 payload.links = [{ url: sourceUrl || '', label: 'Download' }];

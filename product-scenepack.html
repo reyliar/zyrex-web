@@ -560,6 +560,12 @@
             box-shadow: 0 4px 14px rgba(0, 0, 0, 0.7);
             letter-spacing: 0.5px;
             z-index: 3;
+            transition: all 0.3s ease;
+        }
+        .poster-imdb-badge.game-badge {
+            background: linear-gradient(135deg, #7c3aed, #4f46e5);
+            color: #ffffff;
+            box-shadow: 0 4px 16px rgba(124, 58, 237, 0.45);
         }
         .poster-imdb-badge i { font-size: 1.1rem; }
 
@@ -997,8 +1003,8 @@
         // File size (if present)
         var fileSizeVal = p.file_size || p.size || '';
 
-        // Rating: ONLY if explicitly present on product
-        var explicitRating = (p.rating || p.imdb_rating || '').trim();
+        // Rating: Prioritize product rating, then matched production
+        var explicitRating = (p.rating || p.imdb_rating || (prod ? prod.rating : '') || '').toString().trim().replace(/\/10$/, '');
 
         // Normalize download links
         var links = [];
@@ -1079,7 +1085,7 @@
                 <div class="scenepack-poster-col">
                     <div class="scenepack-poster-frame">
                         <img src="${poster}" alt="${escapeHtml(p.name)}" class="scenepack-poster-img" onerror="this.src='/assets/content.png'">
-                        ${explicitRating ? `<div class="poster-imdb-badge"><i class="${isGame ? 'fas fa-gamepad' : 'fab fa-imdb'}"></i> ${escapeHtml(explicitRating)}/10</div>` : ''}
+                        <div id="sceneImdbBadge" class="poster-imdb-badge ${isGame ? 'game-badge' : ''}" style="${explicitRating ? '' : 'display:none'}"><i class="${isGame ? 'fas fa-gamepad' : 'fab fa-imdb'}"></i> <span id="sceneRatingNum">${escapeHtml(explicitRating)}</span>/10</div>
                     </div>
                 </div>
 
@@ -1165,21 +1171,41 @@
                 </div>
             ` : ''}
 
-            <!-- PRODUCTION / GAME INFO CARD (ONLY IF CURATED DATA EXISTS) -->
-            ${(prod && prod.directors && prod.cast) ? `
-                <div class="production-info-card">
+            <!-- PRODUCTION / GAME INFO CARD -->
+            ${(prod && (prod.directors || prod.cast || prod.genres || prod.tagline || prod.year || p.directors || p.cast || p.genres)) ? `
+                <div class="production-info-card" id="sceneProdInfoCard">
                     <div class="production-info-header">
-                        <h3><i class="${isGame ? 'fas fa-gamepad' : 'fas fa-clapperboard'}" style="color:var(--cherry-light)"></i> About ${isGame ? 'the Game' : 'the Production'}: ${escapeHtml(prod.title)}</h3>
-                        <a href="/scenepack.html?origin=${encodeURIComponent(prod.title)}" class="action-pill-btn" style="color:#67e8f9;border-color:rgba(6,182,212,0.3)">
-                            Browse all ${escapeHtml(prod.title)} packs <i class="fas fa-arrow-right"></i>
-                        </a>
+                        <h3><i class="${isGame ? 'fas fa-gamepad' : 'fas fa-clapperboard'}" style="color:var(--cherry-light)"></i> About ${isGame ? 'the Game' : 'the Production'}: ${escapeHtml(prod.title || originTitle)}</h3>
+                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                            ${(p.imdb_id || (prod && prod.imdbId)) ? `
+                                <a href="https://www.imdb.com/title/${encodeURIComponent(p.imdb_id || prod.imdbId)}/" target="_blank" rel="noopener" class="action-pill-btn" style="color:#f5c518;border-color:rgba(245,197,24,0.3)">
+                                    <i class="fab fa-imdb"></i> IMDb Details <i class="fas fa-arrow-up-right-from-square" style="font-size:0.65rem"></i>
+                                </a>
+                            ` : ''}
+                            ${isGame ? `
+                                <a href="https://rawg.io/search?query=${encodeURIComponent(prod.title || originTitle)}" target="_blank" rel="noopener" class="action-pill-btn" style="color:#06b6d4;border-color:rgba(6,182,212,0.3)">
+                                    <i class="fas fa-gamepad"></i> Game Info <i class="fas fa-arrow-up-right-from-square" style="font-size:0.65rem"></i>
+                                </a>
+                            ` : ''}
+                            <a href="/scenepack.html?origin=${encodeURIComponent(prod.title || originTitle)}" class="action-pill-btn" style="color:#67e8f9;border-color:rgba(6,182,212,0.3)">
+                                Browse all ${escapeHtml(prod.title || originTitle)} packs <i class="fas fa-arrow-right"></i>
+                            </a>
+                        </div>
                     </div>
-                    <div class="prod-detail-line"><strong>${isGame ? 'Released & Genres' : 'Year & Genres'}:</strong> ${escapeHtml(prod.year)} · ${escapeHtml(prod.type)} · ${escapeHtml(prod.genres)}</div>
-                    <div class="prod-detail-line"><strong>${isGame ? 'Developer / Studio' : 'Directors / Creators'}:</strong> ${escapeHtml(prod.directors)}</div>
-                    <div class="prod-detail-line"><strong>${isGame ? 'Characters' : 'Cast'}:</strong> ${escapeHtml(prod.cast)}</div>
-                    ${prod.tagline ? `<div class="prod-detail-line" style="font-style:italic;color:rgba(255,255,255,0.5);margin-top:8px">"${escapeHtml(prod.tagline)}"</div>` : ''}
+                    ${(prod.year || p.release_date || prod.genres || p.genres) ? `
+                        <div class="prod-detail-line"><strong>${isGame ? 'Released & Genres' : 'Year & Genres'}:</strong> ${escapeHtml([prod.year || p.release_date, prod.type || catLabel, prod.genres || p.genres].filter(Boolean).join(' · '))}</div>
+                    ` : ''}
+                    ${(prod.directors || p.directors) ? `
+                        <div class="prod-detail-line"><strong>${isGame ? 'Developer / Studio' : 'Directors / Creators'}:</strong> ${escapeHtml(prod.directors || p.directors)}</div>
+                    ` : ''}
+                    ${(prod.cast || p.cast) ? `
+                        <div class="prod-detail-line"><strong>${isGame ? 'Characters' : 'Cast'}:</strong> ${escapeHtml(prod.cast || p.cast)}</div>
+                    ` : ''}
+                    ${(prod.tagline || p.tagline || p.plot) ? `
+                        <div class="prod-detail-line" style="font-style:italic;color:rgba(255,255,255,0.6);margin-top:8px">"${escapeHtml(prod.tagline || p.tagline || p.plot)}"</div>
+                    ` : ''}
                 </div>
-            ` : ''}
+            ` : '<div id="sceneProdInfoCard" style="display:none"></div>'}
 
             <div id="relatedSceneContainer"></div>
         `;
@@ -1191,7 +1217,35 @@
             }).catch(function(){});
         }
 
+        // Real-time asynchronous database enrichment if rating is missing
+        if (!explicitRating && originTitle) {
+            enrichSceneMetadata(p, isGame, originTitle);
+        }
+
         loadRelatedScenepacks(p.id);
+    }
+
+    async function enrichSceneMetadata(p, isGame, originTitle) {
+        var query = originTitle || (p.name || '').split('—')[0].split('-')[0].trim();
+        if (!query) return;
+        try {
+            var endpoint = isGame ? '/api/lookup/games?q=' : '/api/lookup/imdb?q=';
+            var res = await fetch(endpoint + encodeURIComponent(query));
+            if (!res.ok) return;
+            var data = await res.json();
+            var results = data && data.results ? data.results : [];
+            if (!results.length) return;
+            var match = results[0];
+            if (match && match.rating) {
+                var badgeEl = document.getElementById('sceneImdbBadge');
+                var numEl = document.getElementById('sceneRatingNum');
+                if (badgeEl && numEl) {
+                    numEl.textContent = match.rating;
+                    badgeEl.className = 'poster-imdb-badge ' + (isGame ? 'game-badge' : '');
+                    badgeEl.style.display = 'inline-flex';
+                }
+            }
+        } catch(e) {}
     }
 
     function escapeHtml(text) {

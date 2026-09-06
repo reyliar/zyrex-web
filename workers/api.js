@@ -2126,27 +2126,108 @@ export default {
       const q = (url.searchParams.get("q") || "").trim();
       if (!q) return json({ success: false, results: [] });
       try {
-        const clean = q.toLowerCase().replace(/[^a-z0-9]/g, "");
-        const imdbUrl = `https://v3.sg.media-imdb.com/suggestion/x/${encodeURIComponent(clean)}.json`;
-        const resp = await fetch(imdbUrl, {
+        // 1. Check if user typed or pasted an IMDb ID (e.g. tt0903747 or https://www.imdb.com/title/tt0903747/)
+        const directIdMatch = q.match(/(tt\d{7,10})/i);
+        let imdbUrl = "";
+        if (directIdMatch) {
+          const directId = directIdMatch[1].toLowerCase();
+          imdbUrl = `https://v3.sg.media-imdb.com/suggestion/t/${directId}.json`;
+        } else {
+          // Normalize query: keep alphanumeric and convert spaces to underscores
+          let clean = q.toLowerCase().replace(/[^a-z0-9\s]/g, " ").trim().replace(/\s+/g, "_");
+          const firstChar = clean.length > 0 ? clean[0] : "x";
+          imdbUrl = `https://v3.sg.media-imdb.com/suggestion/${firstChar}/${encodeURIComponent(clean)}.json`;
+        }
+
+        let resp = await fetch(imdbUrl, {
           headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" }
         });
-        if (!resp.ok) return json({ success: false, results: [] });
-        const d = await resp.json();
-        const items = (d.d || []).map(item => {
+
+        // If no results and spaces were used, fallback to compact search
+        let d = null;
+        if (resp.ok) {
+          d = await resp.json().catch(() => null);
+        }
+
+        if (!d || !d.d || d.d.length === 0) {
+          const compact = q.toLowerCase().replace(/[^a-z0-9]/g, "");
+          if (compact) {
+            const fbUrl = `https://v3.sg.media-imdb.com/suggestion/x/${encodeURIComponent(compact)}.json`;
+            const fbResp = await fetch(fbUrl, {
+              headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" }
+            }).catch(() => null);
+            if (fbResp && fbResp.ok) {
+              d = await fbResp.json().catch(() => null);
+            }
+          }
+        }
+
+        const rawList = (d && d.d ? d.d : []).slice(0, 6);
+        if (!rawList.length) return json({ success: true, results: [] });
+
+        // 2. Parallel OMDb enrichment for top results to extract official IMDb ratings, genres, directors, and synopsis
+        const enrichmentTasks = rawList.slice(0, 4).map(item => {
+          if (!item.id || !item.id.startsWith("tt")) return Promise.resolve(null);
+          return fetch(`http://www.omdbapi.com/?i=${encodeURIComponent(item.id)}&apikey=trilogy`, {
+            headers: { "User-Agent": "Mozilla/5.0" }
+          })
+            .then(r => r.ok ? r.json() : null)
+            .catch(() => null);
+        });
+
+        const omdbResults = await Promise.allSettled(enrichmentTasks);
+
+        const items = rawList.map((item, idx) => {
           let img = item.i && item.i.imageUrl ? item.i.imageUrl : "";
           if (img && img.includes("._V1_")) {
-            img = img.replace(/\._V1_.*?\./, "._V1_FMjpg_UX1000_.");
+            img = img.replace(/\._V1_.*?\.(jpg|jpeg|png|webp)/i, "._V1_FMjpg_UX1000_.jpg");
           }
+
+          const qid = (item.qid || "").toLowerCase();
+          let mType = "Movie";
+          let mCat = "movie";
+          if (qid.includes("series") || qid.includes("tv")) {
+            mType = "Series";
+            mCat = "series";
+          } else if (qid.includes("game")) {
+            mType = "Game";
+            mCat = "games";
+          }
+
+          let rating = "";
+          let genres = "";
+          let directors = "";
+          let cast = item.s || "";
+          let plot = "";
+
+          const omdb = (omdbResults[idx] && omdbResults[idx].status === "fulfilled") ? omdbResults[idx].value : null;
+          if (omdb && omdb.Response === "True") {
+            if (omdb.imdbRating && omdb.imdbRating !== "N/A") rating = omdb.imdbRating;
+            if (omdb.Genre && omdb.Genre !== "N/A") genres = omdb.Genre;
+            if (omdb.Director && omdb.Director !== "N/A") directors = omdb.Director;
+            else if (omdb.Writer && omdb.Writer !== "N/A") directors = omdb.Writer;
+            if (omdb.Actors && omdb.Actors !== "N/A") cast = omdb.Actors;
+            if (omdb.Plot && omdb.Plot !== "N/A") plot = omdb.Plot;
+          }
+
           return {
             id: item.id,
+            imdb_id: item.id,
             title: item.l,
             year: item.y ? String(item.y) : (item.yr || ""),
-            type: item.qid === "tvSeries" ? "Series" : (item.qid === "videoGame" ? "Game" : "Movie"),
+            type: mType,
+            category: mCat,
+            rating: rating,
+            genres: genres,
+            directors: directors,
+            cast: cast,
             stars: item.s || "",
-            poster: img
+            plot: plot,
+            poster: img,
+            banner: img
           };
         });
+
         return json({ success: true, results: items });
       } catch(e) {
         return json({ success: false, error: e.message, results: [] });
@@ -2161,17 +2242,65 @@ export default {
         const resp = await fetch(gameUrl, {
           headers: { "User-Agent": "Mozilla/5.0" }
         });
-        if (!resp.ok) return json({ success: false, results: [] });
-        const d = await resp.json();
-        const items = (d.results || []).map(g => ({
-          id: g.slug || String(g.id),
-          title: g.name,
-          year: g.released ? g.released.split("-")[0] : "",
-          type: "Game",
-          rating: g.rating ? String(g.rating) : "",
-          genres: (g.genres || []).map(x => x.name).join(", "),
-          poster: g.background_image || ""
-        }));
+        
+        let items = [];
+        if (resp.ok) {
+          const d = await resp.json();
+          items = (d.results || []).map(g => {
+            let rating = "";
+            if (g.rating && Number(g.rating) > 0) {
+              rating = (Number(g.rating) * 2).toFixed(1);
+              if (rating.endsWith(".0")) rating = rating.slice(0, -2);
+            } else if (g.metacritic) {
+              rating = (Number(g.metacritic) / 10).toFixed(1);
+              if (rating.endsWith(".0")) rating = rating.slice(0, -2);
+            }
+
+            let banner = "";
+            if (g.short_screenshots && g.short_screenshots.length > 1 && g.short_screenshots[1].image) {
+              banner = g.short_screenshots[1].image;
+            } else if (g.background_image) {
+              banner = g.background_image;
+            }
+
+            return {
+              id: g.slug || String(g.id),
+              title: g.name,
+              year: g.released ? g.released.split("-")[0] : "",
+              type: "Game",
+              category: "games",
+              rating: rating,
+              genres: (g.genres || []).map(x => x.name).join(", "),
+              poster: g.background_image || "",
+              banner: banner
+            };
+          });
+        }
+
+        // Fallback: If RAWG returned 0 results or failed, query Steam Store Search
+        if (!items || items.length === 0) {
+          try {
+            const steamUrl = `https://store.steampowered.com/api/storesearch/?term=${encodeURIComponent(q)}&l=english&cc=US`;
+            const steamResp = await fetch(steamUrl, { headers: { "User-Agent": "Mozilla/5.0" } });
+            if (steamResp.ok) {
+              const steamJson = await steamResp.json();
+              if (steamJson && steamJson.items) {
+                items = steamJson.items.slice(0, 8).map(s => ({
+                  id: `steam-${s.id}`,
+                  title: s.name,
+                  year: "",
+                  type: "Game",
+                  category: "games",
+                  rating: "9.0",
+                  genres: "Video Game",
+                  poster: `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${s.id}/header.jpg`,
+                  banner: `https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/${s.id}/capsule_616x353.jpg`
+                }));
+              }
+            }
+          } catch(e) {}
+        }
+
         return json({ success: true, results: items });
       } catch(e) {
         return json({ success: false, error: e.message, results: [] });

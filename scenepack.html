@@ -284,6 +284,10 @@
             backdrop-filter: blur(8px);
             z-index: 2;
         }
+        .sp-badge-imdb.sp-badge-game {
+            border-color: rgba(124, 58, 237, 0.6);
+            color: #c084fc;
+        }
 
         /* Card Content */
         .sp-card-content {
@@ -984,8 +988,11 @@
                 var originTitle = (p.origin || '').trim() || (prod ? prod.title : '');
                 var originHtml = originTitle ? '<div class="sp-origin-pill">' + escapeHtml(originTitle) + '</div>' : '';
 
-                var ratingVal = p.rating || p.imdb_rating || (prod ? prod.rating : '');
-                var ratingHtml = ratingVal ? '<div class="sp-badge-imdb"><i class="fab fa-imdb"></i> ' + escapeHtml(ratingVal) + '</div>' : '';
+                var ratingVal = (p.rating || p.imdb_rating || (prod ? prod.rating : '') || '').toString().trim().replace(/\/10$/, '');
+                var isG = (rawCat === 'games' || rawCat === 'game' || (prod && prod.category === 'game'));
+                var badgeClass = isG ? 'sp-badge-imdb sp-badge-game' : 'sp-badge-imdb';
+                var badgeIcon = isG ? 'fas fa-gamepad' : 'fab fa-imdb';
+                var ratingHtml = ratingVal ? '<div class="' + badgeClass + '"><i class="' + badgeIcon + '"></i> ' + escapeHtml(ratingVal) + '</div>' : '';
 
                 return '<a class="sp-card" href="/product-scenepack?id=' + idString + '">' +
                     '<div class="sp-thumb-wrap">' +

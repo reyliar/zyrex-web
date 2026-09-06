@@ -432,21 +432,31 @@ function findProductionForScenepack(item) {
             }
         }
 
+        var explicitYear = item.release_date ? item.release_date.split('-')[0] : (item.year || '');
+        var explicitRating = (item.rating || item.imdb_rating || '').toString().trim().replace(/\/10$/, '');
+        var explicitDirectors = item.directors || item.director || item.studio || (isGame ? 'Game Studio' : '');
+        var explicitGenres = item.genres || (isGame ? 'Video Game' : (cat ? cat.toUpperCase() : 'Film / TV'));
+        var explicitCast = item.cast || item.stars || item.characters || '';
+        var explicitTagline = item.tagline || item.plot || '';
+        var explicitBanner = item.banner || (item.thumbnail && !item.thumbnail.includes('content.png') ? item.thumbnail : '');
+        var explicitPoster = (item.thumbnail && !item.thumbnail.includes('content.png')) ? item.thumbnail : '/assets/content.png';
+
         // Return honest dynamic production for custom origin
         return {
             id: originSlug || 'custom-origin',
+            imdbId: item.imdb_id || item.imdbId || '',
             title: origin,
-            year: item.release_date ? item.release_date.split('-')[0] : '',
+            year: explicitYear,
             type: isGame ? 'Game' : (isSeries ? 'Series' : (isMovie ? 'Movie' : (isAnime ? 'Anime' : 'Production'))),
             category: isGame ? 'game' : (cat || 'production'),
-            rating: item.rating || item.imdb_rating || '',
+            rating: explicitRating,
             rotten: '',
-            directors: isGame ? 'Game Studio' : 'Director',
-            genres: isGame ? 'Video Game' : (cat ? cat.toUpperCase() : 'Film/TV'),
-            cast: '',
-            tagline: '',
-            poster: (item.thumbnail && !item.thumbnail.includes('content.png')) ? item.thumbnail : '/assets/content.png',
-            banner: (item.thumbnail && !item.thumbnail.includes('content.png')) ? item.thumbnail : '',
+            directors: explicitDirectors,
+            genres: explicitGenres,
+            cast: explicitCast,
+            tagline: explicitTagline,
+            poster: explicitPoster,
+            banner: explicitBanner,
             keywords: [originLower],
             isDynamic: true
         };

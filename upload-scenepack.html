@@ -739,6 +739,35 @@
                     </button>
                 </div>
 
+                <!-- IMPORTED DATABASE CARD PREVIEW -->
+                <div id="importedProdCard" style="display:none;margin-bottom:20px;padding:14px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:16px;align-items:center;gap:16px;position:relative">
+                    <img id="importedThumb" src="/assets/content.png" style="width:52px;height:72px;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,0.15);flex-shrink:0" onerror="this.src='/assets/content.png'">
+                    <div style="flex:1;min-width:0">
+                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;flex-wrap:wrap">
+                            <span id="importedBadge" style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:6px;font-size:0.72rem;font-weight:800;background:#f5c518;color:#000">
+                                <i class="fab fa-imdb"></i> <span id="importedRatingText">9.5/10</span>
+                            </span>
+                            <span id="importedCategoryPill" style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:6px;font-size:0.72rem;font-weight:700;background:rgba(255,255,255,0.08);color:#d4d4d8">
+                                Film/TV
+                            </span>
+                            <span style="font-size:0.68rem;color:#10b981;font-weight:600"><i class="fas fa-check-circle"></i> Synced</span>
+                        </div>
+                        <h4 id="importedTitle" style="margin:0 0 3px;font-size:0.96rem;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Production Title</h4>
+                        <div id="importedMeta" style="font-size:0.76rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Genres · Directors · Cast</div>
+                    </div>
+                    <button type="button" onclick="clearImportedProd()" style="padding:6px 12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#a1a1aa;font-size:0.74rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all 0.15s ease">
+                        <i class="fas fa-times"></i> Clear
+                    </button>
+                </div>
+
+                <input type="hidden" id="spImdbId" value="">
+                <input type="hidden" id="spReleaseDate" value="">
+                <input type="hidden" id="spGenres" value="">
+                <input type="hidden" id="spDirectors" value="">
+                <input type="hidden" id="spCast" value="">
+                <input type="hidden" id="spBanner" value="">
+                <input type="hidden" id="spOriginType" value="">
+
                 <div class="field">
                     <label><i class="fas fa-clapperboard"></i> Scenepack Name *</label>
                     <input type="text" id="spName" placeholder="e.g. Steve Harrington — Season 2 (or Elden Ring - Boss Clips)">
@@ -759,6 +788,10 @@
                             <option value="anime">Anime</option>
                             <option value="character">Character / Person</option>
                         </select>
+                    </div>
+                    <div class="field">
+                        <label><i class="fab fa-imdb" style="color:#f5c518"></i> IMDb / IGDB Rating (optional)</label>
+                        <input type="text" id="spRating" placeholder="Auto-filled from database or e.g. 8.8">
                     </div>
                 </div>
 
@@ -1216,10 +1249,15 @@
 
                 rl.innerHTML = results.map(function(item) {
                     var poster = item.poster || '/assets/content.png';
-                    var metaLine = [item.year, item.type, item.stars || item.genres].filter(Boolean).join(' · ');
+                    var metaPieces = [item.year, item.type, item.genres || item.stars, item.directors].filter(Boolean);
+                    var metaLine = metaPieces.join(' · ');
                     var ratingTag = '';
                     if (item.rating) {
-                        ratingTag = '<span style="color:#f5c518;font-weight:900;font-size:0.72rem"><i class="fas fa-star"></i> ' + item.rating + '</span>';
+                        var isG = (item.type === 'Game' || item.category === 'games' || activeLookupSource === 'games');
+                        var badgeBg = isG ? 'linear-gradient(135deg, #7c3aed, #4f46e5)' : '#f5c518';
+                        var badgeColor = isG ? '#ffffff' : '#000000';
+                        var iconClass = isG ? 'fas fa-gamepad' : 'fab fa-imdb';
+                        ratingTag = '<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:6px;background:' + badgeBg + ';color:' + badgeColor + ';font-weight:900;font-size:0.7rem;margin-left:6px"><i class="' + iconClass + '"></i> ' + escapeHtml(item.rating) + '/10</span>';
                     }
 
                     return '<div class="lookup-card-row">' +
@@ -1249,8 +1287,10 @@
                 var item = JSON.parse(jsonStr);
                 if (!item) return;
 
+                var isGame = (item.type === 'Game' || item.category === 'games' || activeLookupSource === 'games');
+
                 // 1. Set origin
-                document.getElementById('spOrigin').value = item.title;
+                document.getElementById('spOrigin').value = item.title || '';
 
                 // 2. Set thumbnail
                 if (item.poster) {
@@ -1258,23 +1298,84 @@
                     previewThumb(item.poster);
                 }
 
-                // 3. Auto-fill Scenepack name prefix if empty or default
+                // 3. Set rating & rich metadata
+                var ratingVal = (item.rating || '').toString().trim().replace(/\/10$/, '');
+                if (document.getElementById('spRating')) {
+                    document.getElementById('spRating').value = ratingVal;
+                }
+                if (document.getElementById('spImdbId')) document.getElementById('spImdbId').value = item.imdb_id || item.id || '';
+                if (document.getElementById('spReleaseDate')) document.getElementById('spReleaseDate').value = item.year || '';
+                if (document.getElementById('spGenres')) document.getElementById('spGenres').value = item.genres || '';
+                if (document.getElementById('spDirectors')) document.getElementById('spDirectors').value = item.directors || '';
+                if (document.getElementById('spCast')) document.getElementById('spCast').value = item.cast || item.stars || '';
+                if (document.getElementById('spBanner')) document.getElementById('spBanner').value = item.banner || item.poster || '';
+                if (document.getElementById('spOriginType')) document.getElementById('spOriginType').value = item.type || (isGame ? 'Game' : 'Movie');
+
+                // 4. Update preview card
+                var card = document.getElementById('importedProdCard');
+                if (card) {
+                    card.style.display = 'flex';
+                    var thumbEl = document.getElementById('importedThumb');
+                    if (thumbEl) thumbEl.src = item.poster || '/assets/content.png';
+
+                    var titleEl = document.getElementById('importedTitle');
+                    if (titleEl) titleEl.textContent = item.title + (item.year ? ' (' + item.year + ')' : '');
+
+                    var badgeEl = document.getElementById('importedBadge');
+                    var rateText = document.getElementById('importedRatingText');
+                    if (badgeEl && rateText) {
+                        if (ratingVal) {
+                            badgeEl.style.display = 'inline-flex';
+                            badgeEl.style.background = isGame ? 'linear-gradient(135deg, #7c3aed, #4f46e5)' : '#f5c518';
+                            badgeEl.style.color = isGame ? '#ffffff' : '#000000';
+                            badgeEl.innerHTML = '<i class="' + (isGame ? 'fas fa-gamepad' : 'fab fa-imdb') + '"></i> ' + escapeHtml(ratingVal) + '/10';
+                        } else {
+                            badgeEl.style.display = 'none';
+                        }
+                    }
+
+                    var catPill = document.getElementById('importedCategoryPill');
+                    if (catPill) {
+                        catPill.textContent = item.type || (isGame ? 'Game' : 'Film/TV');
+                    }
+
+                    var metaEl = document.getElementById('importedMeta');
+                    if (metaEl) {
+                        var pieces = [item.genres, item.directors, item.cast || item.stars].filter(Boolean);
+                        metaEl.textContent = pieces.join(' · ') || 'Database metadata synced';
+                    }
+                }
+
+                // 5. Auto-fill Scenepack name prefix if empty or default
                 var nameInput = document.getElementById('spName');
                 if (!nameInput.value || nameInput.value.includes('—') || nameInput.value.includes('-')) {
                     nameInput.value = item.title + ' — ';
                 }
 
-                // 4. Auto-select category
+                // 6. Auto-select category
                 var catSelect = document.getElementById('spCat');
                 if (item.type === 'Series') catSelect.value = 'series';
-                else if (item.type === 'Game') catSelect.value = 'games';
+                else if (item.type === 'Game' || isGame) catSelect.value = 'games';
                 else if (item.type === 'Movie') catSelect.value = 'movie';
 
-                alertMsg('Imported from ' + (activeLookupSource === 'imdb' ? 'IMDb' : 'IGDB') + ': ' + item.title + (item.year ? ' (' + item.year + ')' : ''), false);
+                alertMsg('Imported from ' + (isGame ? 'IGDB' : 'IMDb') + ': ' + item.title + (item.year ? ' (' + item.year + ')' : ''), false);
                 closeProdLookupModal();
             } catch(err) {
                 console.error('Error selecting item:', err);
             }
+        }
+
+        function clearImportedProd() {
+            var card = document.getElementById('importedProdCard');
+            if (card) card.style.display = 'none';
+            if (document.getElementById('spRating')) document.getElementById('spRating').value = '';
+            if (document.getElementById('spImdbId')) document.getElementById('spImdbId').value = '';
+            if (document.getElementById('spReleaseDate')) document.getElementById('spReleaseDate').value = '';
+            if (document.getElementById('spGenres')) document.getElementById('spGenres').value = '';
+            if (document.getElementById('spDirectors')) document.getElementById('spDirectors').value = '';
+            if (document.getElementById('spCast')) document.getElementById('spCast').value = '';
+            if (document.getElementById('spBanner')) document.getElementById('spBanner').value = '';
+            if (document.getElementById('spOriginType')) document.getElementById('spOriginType').value = '';
         }
 
         function previewThumb(url) {
@@ -1460,12 +1561,24 @@
             }
 
             try {
+                var rawRating = (document.getElementById('spRating') ? document.getElementById('spRating').value.trim() : '');
+                var cleanRating = rawRating ? rawRating.replace(/\/10$/, '').trim() : '';
+
                 var payload = {
                     id: generatedId,
                     type: 'scenepack',
                     name: name,
                     category: document.getElementById('spCat').value || 'scenepack',
                     origin: document.getElementById('spOrigin').value.trim(),
+                    rating: cleanRating || undefined,
+                    imdb_rating: cleanRating || undefined,
+                    imdb_id: (document.getElementById('spImdbId') ? document.getElementById('spImdbId').value.trim() : '') || undefined,
+                    release_date: (document.getElementById('spReleaseDate') ? document.getElementById('spReleaseDate').value.trim() : '') || undefined,
+                    genres: (document.getElementById('spGenres') ? document.getElementById('spGenres').value.trim() : '') || undefined,
+                    directors: (document.getElementById('spDirectors') ? document.getElementById('spDirectors').value.trim() : '') || undefined,
+                    cast: (document.getElementById('spCast') ? document.getElementById('spCast').value.trim() : '') || undefined,
+                    banner: (document.getElementById('spBanner') ? document.getElementById('spBanner').value.trim() : '') || undefined,
+                    origin_type: (document.getElementById('spOriginType') ? document.getElementById('spOriginType').value.trim() : '') || undefined,
                     description: document.getElementById('spDesc').value.trim(),
                     source_url: link,
                     product_url: link,
