@@ -762,6 +762,30 @@
             opacity: 0.5;
             cursor: not-allowed;
         }
+        .login-prompt-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 22px;
+            background: #5865f2;
+            color: #fff !important;
+            font-size: 0.88rem;
+            font-weight: 700;
+            border-radius: 12px;
+            text-decoration: none;
+            cursor: pointer;
+            box-shadow: 0 4px 16px rgba(88, 101, 242, 0.35);
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .login-prompt-btn:hover {
+            background: #4752c4;
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 24px rgba(88, 101, 242, 0.55);
+            color: #fff !important;
+        }
+        .login-prompt-btn:active {
+            transform: translateY(0) scale(0.98);
+        }
         .comment-item {
             display: flex;
             gap: 16px;
@@ -1760,15 +1784,77 @@
         if (!container) return;
         
         let fileList = p.files || [];
+        let authRequired = false;
+        let notVerified = false;
+
+        // Check if user session exists in cache or memory
+        let user = currentUserData;
+        if (!user) {
+            try {
+                const raw = localStorage.getItem('zyrex_auth_user');
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    if (parsed && parsed.data) user = parsed.data;
+                    else if (parsed && (parsed.id || parsed.username)) user = parsed;
+                }
+            } catch(e) {}
+        }
+        
         if (fileList.length === 0 && (p.id || p.file_path)) {
             try {
                 const listUrl = '/api/files/list-path?product_id=' + encodeURIComponent(p.id || '') + (p.file_path ? '&path=' + encodeURIComponent(p.file_path) : '');
                 const resp = await fetch(listUrl, { credentials: 'include' });
+                if (resp.status === 401) {
+                    authRequired = true;
+                } else if (resp.status === 403) {
+                    notVerified = true;
+                }
                 const data = await resp.json();
                 if (data && data.success && data.files) {
                     fileList = data.files;
+                } else if (data && (data.error === 'Not logged in' || data.error === 'Unauthorized' || data.error === 'Invalid or expired token')) {
+                    authRequired = true;
+                } else if (data && data.error === 'Verified role required') {
+                    notVerified = true;
                 }
             } catch(e) {}
+        }
+
+        const isUserLoggedIn = Boolean(user && (user.id || user.username) && !authRequired);
+
+        // If user is not logged in, prompt to log in instead of archive package message
+        if (!isUserLoggedIn || authRequired) {
+            const redirectUrl = encodeURIComponent(window.location.pathname + window.location.search);
+            container.innerHTML = `
+                <div style="text-align:center;padding:36px 16px;color:var(--text-sub)">
+                    <div style="width:48px;height:48px;border-radius:50%;background:rgba(88,101,242,0.12);display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px;border:1px solid rgba(88,101,242,0.25)">
+                        <i class="fab fa-discord" style="font-size:1.4rem;color:#5865f2"></i>
+                    </div>
+                    <div style="color:#fff;font-weight:700;font-size:1rem;margin-bottom:6px">Login Required to View Files</div>
+                    <div style="font-size:0.84rem;color:var(--text-sub);max-width:360px;margin:0 auto 16px;line-height:1.5">Please log in with your Discord account to inspect the contents and files of this preset.</div>
+                    <a href="/api/login?redirect=${redirectUrl}" class="login-prompt-btn">
+                        <i class="fab fa-discord"></i> Login with Discord
+                    </a>
+                </div>
+            `;
+            return;
+        }
+
+        if (notVerified && fileList.length === 0) {
+            const redirectUrl = encodeURIComponent(window.location.pathname + window.location.search);
+            container.innerHTML = `
+                <div style="text-align:center;padding:36px 16px;color:var(--text-sub)">
+                    <div style="width:48px;height:48px;border-radius:50%;background:rgba(255,170,0,0.12);display:inline-flex;align-items:center;justify-content:center;margin-bottom:12px;border:1px solid rgba(255,170,0,0.25)">
+                        <i class="fas fa-shield-halved" style="font-size:1.4rem;color:#ffaa00"></i>
+                    </div>
+                    <div style="color:#fff;font-weight:700;font-size:1rem;margin-bottom:6px">Discord Verification Required</div>
+                    <div style="font-size:0.84rem;color:var(--text-sub);max-width:360px;margin:0 auto 16px;line-height:1.5">You must have the Verified role in our Discord server to inspect files and download presets.</div>
+                    <a href="https://discord.gg/zyrex" target="_blank" class="login-prompt-btn">
+                        <i class="fab fa-discord"></i> Join Discord Server
+                    </a>
+                </div>
+            `;
+            return;
         }
 
         const watermarkNames = ['LEAKED BY ZYREX.txt', 'Visit for more resources!.url'];
