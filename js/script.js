@@ -485,7 +485,7 @@ function renderTeamMembers(founders, staff, container, contributors) {
         var isContributor = roleStr.toLowerCase() === 'contributor';
         
         var roleClass = isFounder ? 'role-founder' : (isCoFounder ? 'role-co-founder' : (isContributor ? 'role-contributor' : 'role-staff-team'));
-        var iconClass = (isFounder || isCoFounder) ? 'fa-crown' : (isContributor ? 'fa-code' : 'fa-shield-halved');
+        var iconClass = (isFounder || isCoFounder) ? 'fa-crown' : (isContributor ? 'fa-code-branch' : 'fa-shield-halved');
         var src = formatTeamAvatarUrl(m.avatar, m.id);
         
         var avaHtml = src 
