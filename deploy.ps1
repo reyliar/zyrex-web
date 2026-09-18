@@ -13,6 +13,15 @@ Get-ChildItem -Path . -Filter "*.html" | ForEach-Object {
     Copy-Item -Path $_.FullName -Destination ".site-assets\$($_.Name)" -Force
 }
 
+if (Test-Path ".site-assets") {
+    Get-ChildItem -Path ".site-assets" -Filter "*.html" | ForEach-Object {
+        if (-not (Test-Path $_.Name)) {
+            Remove-Item -Path $_.FullName -Force
+            Write-Host "  Removed deleted page from .site-assets: $($_.Name)" -ForegroundColor Yellow
+        }
+    }
+}
+
 @("js", "css", "assets", "plugins") | ForEach-Object {
     if (Test-Path $_) {
         Copy-Item -Path $_ -Destination ".site-assets" -Recurse -Force
