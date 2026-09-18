@@ -450,7 +450,7 @@ function formatTeamAvatarUrl(url, userId) {
     return url;
 }
 
-function renderTeamMembers(founders, staff, container) {
+function renderTeamMembers(founders, staff, container, contributors) {
     if (!container) return;
     
     var allMembers = [];
@@ -464,6 +464,7 @@ function renderTeamMembers(founders, staff, container) {
 
     var activeFounders = (founders && founders.length > 0) ? founders : defaultFounders;
     var activeStaff = (staff && staff.length > 0) ? staff : defaultStaff;
+    var activeContributors = (contributors && contributors.length > 0) ? contributors : [];
 
     // Ensure default staff (JINA) is merged if missing from API array
     defaultStaff.forEach(function(ds) {
@@ -474,15 +475,17 @@ function renderTeamMembers(founders, staff, container) {
 
     activeFounders.forEach(function(f) { allMembers.push(f); });
     activeStaff.forEach(function(s) { allMembers.push(s); });
+    activeContributors.forEach(function(c) { allMembers.push(c); });
 
     var html = '';
     allMembers.forEach(function(m) {
         var roleStr = m.role || 'Staff Team';
         var isFounder = roleStr.toLowerCase() === 'founder';
         var isCoFounder = roleStr.toLowerCase() === 'co-founder';
+        var isContributor = roleStr.toLowerCase() === 'contributor';
         
-        var roleClass = isFounder ? 'role-founder' : (isCoFounder ? 'role-co-founder' : 'role-staff-team');
-        var iconClass = (isFounder || isCoFounder) ? 'fa-crown' : 'fa-shield-halved';
+        var roleClass = isFounder ? 'role-founder' : (isCoFounder ? 'role-co-founder' : (isContributor ? 'role-contributor' : 'role-staff-team'));
+        var iconClass = (isFounder || isCoFounder) ? 'fa-crown' : (isContributor ? 'fa-code' : 'fa-shield-halved');
         var src = formatTeamAvatarUrl(m.avatar, m.id);
         
         var avaHtml = src 
@@ -515,7 +518,7 @@ async function loadTeamMembers() {
     // 2. Fetch live data from bot API / worker
     var data = await fetchTeamData();
     if (data && data.success) {
-        renderTeamMembers(data.founders, data.staff, teamGrid);
+        renderTeamMembers(data.founders, data.staff, teamGrid, data.contributors);
     }
 }
 

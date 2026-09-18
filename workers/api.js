@@ -3458,10 +3458,12 @@ async function storeAndProxyImage(env, imageUrl) {
         
         const guildId = env.GUILD_ID || "1518954946110685184";
         const staffRoleId = "1523366782327459952";
+        const contributorRoleId = "1550619278498078720";
         const founderIds = ["1421177012814614548"];
         
         let founders = [];
         let staff = [];
+        let contributors = [];
 
         if (env.DISCORD_BOT_TOKEN) {
           try {
@@ -3500,6 +3502,16 @@ async function storeAndProxyImage(env, imageUrl) {
                     role_color: "#e61536",
                     status: "online"
                   });
+                } else if (Array.isArray(m.roles) && m.roles.includes(contributorRoleId)) {
+                  contributors.push({
+                    id: m.user.id,
+                    username: m.user.username,
+                    global_name: m.user.global_name || m.nick || m.user.username,
+                    avatar: m.user.avatar ? `https://cdn.discordapp.com/avatars/${m.user.id}/${m.user.avatar}.png` : '',
+                    role: "Contributor",
+                    role_color: "#a855f7",
+                    status: "online"
+                  });
                 }
               }
             }
@@ -3516,7 +3528,9 @@ async function storeAndProxyImage(env, imageUrl) {
           success: true,
           founders: founders,
           staff: staff,
+          contributors: contributors,
           role_id: staffRoleId,
+          contributor_role_id: contributorRoleId,
           source: "worker-fallback"
         });
       }
