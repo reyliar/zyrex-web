@@ -1742,6 +1742,273 @@
             opacity: 0.82 !important;
             position: relative;
         }
+
+        /* === BANNED MEMBERS & UNBAN STYLES === */
+        .member-card.is-banned {
+            border-color: rgba(239, 68, 68, 0.45);
+            background: radial-gradient(circle at top left, rgba(239, 68, 68, 0.12), rgba(18, 8, 12, 0.85) 60%);
+        }
+        .member-card.is-banned::before {
+            background: linear-gradient(90deg, #ef4444, #b91c1c);
+            box-shadow: 0 0 16px rgba(239, 68, 68, 0.8);
+        }
+        .ban-reason-callout {
+            margin-top: 10px;
+            padding: 9px 12px;
+            border-radius: 12px;
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            font-size: 0.78rem;
+            color: #fca5a5;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            line-height: 1.4;
+            word-break: break-word;
+        }
+        .ban-reason-callout i {
+            color: #ef4444;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+        .btn-card-unban {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.22), rgba(21, 128, 61, 0.35));
+            border: 1px solid rgba(34, 197, 94, 0.45);
+            color: #86efac;
+            padding: 7px 13px;
+            border-radius: 10px;
+            font-size: 0.78rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-family: inherit;
+        }
+        .btn-card-unban:hover {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.38), rgba(21, 128, 61, 0.55));
+            border-color: rgba(34, 197, 94, 0.8);
+            color: #fff;
+            box-shadow: 0 4px 14px rgba(34, 197, 94, 0.35);
+            transform: translateY(-1px);
+        }
+
+        /* === UPLOADER INTELLIGENCE & DOSSIER PANEL STYLES === */
+        .uploaders-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 18px;
+            margin-top: 18px;
+        }
+        @media (max-width: 768px) {
+            .uploaders-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .uploader-card {
+            position: relative;
+            background: rgba(18, 11, 20, 0.72);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            overflow: hidden;
+        }
+        .uploader-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #38bdf8, #0ea5e9);
+            transition: all 0.3s ease;
+        }
+        .uploader-card.is-active::before {
+            background: linear-gradient(90deg, #22c55e, #10b981);
+            box-shadow: 0 0 12px rgba(34, 197, 94, 0.5);
+        }
+        .uploader-card.is-former::before {
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+            box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+        }
+        .uploader-card.is-zero::before {
+            background: linear-gradient(90deg, #60a5fa, #3b82f6);
+            box-shadow: 0 0 10px rgba(96, 165, 250, 0.3);
+        }
+        .uploader-card.is-left::before {
+            background: linear-gradient(90deg, #8b5cf6, #6366f1);
+        }
+        .uploader-card:hover {
+            border-color: rgba(255, 255, 255, 0.18);
+            transform: translateY(-3px);
+            box-shadow: 0 16px 36px rgba(0,0,0,0.55);
+        }
+        .uploader-card-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+        }
+        .uploader-card-avatar {
+            position: relative;
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            overflow: hidden;
+            flex-shrink: 0;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+        .uploader-card-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .uploader-card-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .uploader-card-name-row {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-bottom: 2px;
+        }
+        .uploader-card-name {
+            font-size: 0.98rem;
+            font-weight: 700;
+            color: #fff;
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .uploader-badge {
+            font-size: 0.63rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            letter-spacing: 0.2px;
+        }
+        .uploader-badge.badge-active {
+            background: rgba(34, 197, 94, 0.15);
+            color: #86efac;
+            border: 1px solid rgba(34, 197, 94, 0.35);
+        }
+        .uploader-badge.badge-former {
+            background: rgba(245, 158, 11, 0.18);
+            color: #fde68a;
+            border: 1px solid rgba(245, 158, 11, 0.45);
+        }
+        .uploader-badge.badge-zero {
+            background: rgba(96, 165, 250, 0.15);
+            color: #93c5fd;
+            border: 1px solid rgba(96, 165, 250, 0.35);
+        }
+        .uploader-badge.badge-left {
+            background: rgba(139, 92, 246, 0.15);
+            color: #c4b5fd;
+            border: 1px solid rgba(139, 92, 246, 0.35);
+        }
+        .uploader-stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            padding: 10px 12px;
+            background: rgba(0, 0, 0, 0.28);
+            border-radius: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+        }
+        .uploader-stat-item {
+            display: flex;
+            flex-direction: column;
+        }
+        .uploader-stat-val {
+            font-size: 1.12rem;
+            font-weight: 800;
+            color: #fff;
+            line-height: 1.2;
+            font-family: 'Outfit', sans-serif;
+        }
+        .uploader-stat-lbl {
+            font-size: 0.68rem;
+            color: rgba(255, 255, 255, 0.45);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+            margin-top: 2px;
+        }
+        .uploader-types-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .uploader-type-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 3px 8px;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.85);
+        }
+        .uploader-timeline {
+            font-size: 0.72rem;
+            color: rgba(255, 255, 255, 0.45);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 4px;
+        }
+        .uploader-products-drawer {
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            padding-top: 10px;
+        }
+        .uploader-products-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 220px;
+            overflow-y: auto;
+            margin-top: 8px;
+            padding-right: 4px;
+        }
+        .uploader-product-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 6px 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            font-size: 0.75rem;
+            transition: background 0.2s ease;
+        }
+        .uploader-product-row:hover {
+            background: rgba(255, 255, 255, 0.06);
+        }
+        .uploader-product-name {
+            color: #eee;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 170px;
+        }
         .mod-modal-header {
             padding: 24px 28px 18px;
             background: linear-gradient(180deg, rgba(35, 10, 20, 0.85) 0%, rgba(15, 4, 8, 0.95) 100%);
@@ -2541,6 +2808,9 @@
                     <li class="menu-item" data-tab="members">
                         <button onclick="switchTab('members')"><i class="fas fa-users"></i> Discord Members</button>
                     </li>
+                    <li class="menu-item" data-tab="uploaders">
+                        <button onclick="switchTab('uploaders')"><i class="fas fa-layer-group"></i> Uploader Intelligence</button>
+                    </li>
                     <li class="menu-item" data-tab="system">
                         <button onclick="switchTab('system')"><i class="fas fa-server"></i> System Telemetry</button>
                     </li>
@@ -2931,9 +3201,9 @@
                         <div class="mod-stat-num" id="modStatOnline" style="color:#23a55a">-</div>
                         <div class="mod-stat-lbl"><i class="fas fa-circle" style="color:#23a55a;font-size:0.55rem;vertical-align:middle;margin-right:2px"></i> Online Now</div>
                     </div>
-                    <div class="mod-stat-card">
+                    <div class="mod-stat-card" onclick="switchTab('uploaders')" style="cursor:pointer" title="Jump to Uploader Intelligence Dossier">
                         <div class="mod-stat-num" id="modStatUploaders" style="color:#38bdf8">-</div>
-                        <div class="mod-stat-lbl"><i class="fas fa-cloud-arrow-up"></i> Uploaders</div>
+                        <div class="mod-stat-lbl"><i class="fas fa-cloud-arrow-up"></i> Uploaders <i class="fas fa-arrow-up-right-from-square" style="font-size:0.6rem;opacity:0.7;margin-left:3px"></i></div>
                     </div>
                     <div class="mod-stat-card">
                         <div class="mod-stat-num" id="modStatVerified" style="color:#4ade80">-</div>
@@ -2942,6 +3212,10 @@
                     <div class="mod-stat-card">
                         <div class="mod-stat-num" id="modStatTimedOut" style="color:#f43f5e">-</div>
                         <div class="mod-stat-lbl"><i class="fas fa-clock"></i> Timed Out</div>
+                    </div>
+                    <div class="mod-stat-card" onclick="setMemberFilter('banned', document.querySelector('.mod-chip[data-filter=\'banned\']'))" style="cursor:pointer" title="View banned members">
+                        <div class="mod-stat-num" id="modStatBanned" style="color:#ef4444">-</div>
+                        <div class="mod-stat-lbl"><i class="fas fa-ban" style="color:#ef4444"></i> Banned Members</div>
                     </div>
                 </div>
 
@@ -2978,11 +3252,93 @@
                     <button class="mod-chip" data-filter="timeout" onclick="setMemberFilter('timeout', this)"><i class="fas fa-clock" style="color:#f43f5e"></i> Timed Out (<span id="chipCountTimeout">0</span>)</button>
                     <button class="mod-chip" data-filter="voice" onclick="setMemberFilter('voice', this)"><i class="fas fa-headphones" style="color:#a855f7"></i> In Voice (<span id="chipCountVoice">0</span>)</button>
                     <button class="mod-chip" data-filter="bot" onclick="setMemberFilter('bot', this)"><i class="fas fa-robot" style="color:#94a3b8"></i> Bots (<span id="chipCountBot">0</span>)</button>
+                    <button class="mod-chip" data-filter="banned" onclick="setMemberFilter('banned', this)"><i class="fas fa-ban" style="color:#ef4444"></i> Banned (<span id="chipCountBanned">0</span>)</button>
                 </div>
 
                 <!-- Members Card Grid -->
                 <div class="members-grid" id="discordMembersGrid">
                     <p style="color:var(--text-muted);font-size:0.85rem"><i class="fas fa-spinner fa-spin"></i> Fetching guild members & live states...</p>
+                </div>
+            </div>
+
+            <!-- TAB: UPLOADER INTELLIGENCE & DOSSIER -->
+            <div class="tab-panel" id="pane-uploaders">
+                <div class="pane-hero">
+                    <div class="pane-hero-icon" style="background:linear-gradient(135deg,rgba(56,189,248,0.3),rgba(14,165,233,0.15))">
+                        <i class="fas fa-layer-group" style="color:#38bdf8"></i>
+                    </div>
+                    <div style="flex:1">
+                        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+                            <div>
+                                <h2 class="pane-title" style="margin-bottom:4px">Uploader Intelligence & Dossier</h2>
+                                <p style="font-size:0.88rem;color:rgba(255,255,255,0.5);margin:0">Complete genealogical upload tracking: historical contributions, product distribution, active vs former uploaders, and lifetime downloads.</p>
+                            </div>
+                            <div style="display:flex;gap:8px">
+                                <button class="btn-ghost" onclick="fetchUploaderAnalytics(true)" id="refreshUploadersBtn" title="Refresh live uploader data">
+                                    <i class="fas fa-arrows-rotate"></i> Refresh
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI Metric Strip -->
+                <div class="mod-stats-strip">
+                    <div class="mod-stat-card">
+                        <div class="mod-stat-num" id="upStatTotalUploaders" style="color:#38bdf8">-</div>
+                        <div class="mod-stat-lbl"><i class="fas fa-users-gear"></i> Total Uploaders</div>
+                    </div>
+                    <div class="mod-stat-card">
+                        <div class="mod-stat-num" id="upStatActive" style="color:#22c55e">-</div>
+                        <div class="mod-stat-lbl"><i class="fas fa-circle-check" style="color:#22c55e"></i> Active Roles</div>
+                    </div>
+                    <div class="mod-stat-card">
+                        <div class="mod-stat-num" id="upStatFormer" style="color:#f59e0b">-</div>
+                        <div class="mod-stat-lbl"><i class="fas fa-user-clock" style="color:#f59e0b"></i> Former / No Role</div>
+                    </div>
+                    <div class="mod-stat-card">
+                        <div class="mod-stat-num" id="upStatTotalProducts" style="color:#e11d48">-</div>
+                        <div class="mod-stat-lbl"><i class="fas fa-box-open"></i> Total Products</div>
+                    </div>
+                    <div class="mod-stat-card">
+                        <div class="mod-stat-num" id="upStatPresets" style="color:#ec4899">-</div>
+                        <div class="mod-stat-lbl"><i class="fas fa-sliders"></i> Presets</div>
+                    </div>
+                    <div class="mod-stat-card">
+                        <div class="mod-stat-num" id="upStatDownloads" style="color:#a855f7">-</div>
+                        <div class="mod-stat-lbl"><i class="fas fa-download"></i> Lifetime DLs</div>
+                    </div>
+                </div>
+
+                <!-- Toolbar & Filters -->
+                <div class="mod-toolbar">
+                    <div class="mod-search-wrap">
+                        <i class="fas fa-magnifying-glass"></i>
+                        <input type="text" id="uploaderSearchInput" placeholder="Search uploader name, Discord ID, or product title..." oninput="handleUploaderSearch()">
+                        <button type="button" id="clearUploaderSearchBtn" onclick="clearUploaderSearch()" style="display:none"><i class="fas fa-xmark"></i></button>
+                    </div>
+                    <div class="mod-filter-selects">
+                        <select id="uploaderSortSelect" class="mod-select" onchange="filterUploaders()">
+                            <option value="uploads">Sort: Most Uploads</option>
+                            <option value="downloads">Sort: Most Downloads</option>
+                            <option value="recent">Sort: Recently Active</option>
+                            <option value="oldest">Sort: Oldest Uploaders</option>
+                            <option value="name">Sort: Name (A-Z)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Status Filter Chips -->
+                <div class="mod-chips-row">
+                    <button class="mod-chip active" data-filter="all" onclick="setUploaderFilter('all', this)">All Uploaders (<span id="upChipAll">0</span>)</button>
+                    <button class="mod-chip" data-filter="active" onclick="setUploaderFilter('active', this)"><span class="chip-dot" style="background:#22c55e"></span> Active Roles (<span id="upChipActive">0</span>)</button>
+                    <button class="mod-chip" data-filter="former" onclick="setUploaderFilter('former', this)"><i class="fas fa-user-clock" style="color:#f59e0b"></i> Former / Inactive (<span id="upChipFormer">0</span>)</button>
+                    <button class="mod-chip" data-filter="zero" onclick="setUploaderFilter('zero', this)"><i class="fas fa-circle-notch" style="color:#60a5fa"></i> 0 Uploads (<span id="upChipZero">0</span>)</button>
+                </div>
+
+                <!-- Uploaders Grid -->
+                <div class="uploaders-grid" id="uploadersGrid">
+                    <p style="color:var(--text-muted);font-size:0.85rem"><i class="fas fa-spinner fa-spin"></i> Loading uploader intelligence dossier...</p>
                 </div>
             </div>
 
@@ -3729,6 +4085,8 @@
                 fetchSFTPGoUsers();
             } else if (tabName === 'members') {
                 fetchDiscordGuildMembers();
+            } else if (tabName === 'uploaders') {
+                fetchUploaderAnalytics();
             } else if (tabName === 'system') {
                 fetchSystemTelemetry();
             } else if (tabName === 'logs') {
@@ -4894,6 +5252,7 @@
 
         // ================== DISCORD MEMBERS & ADVANCED MODERATION ==================
         let rawGuildMembers = [];
+        let rawBannedMembers = [];
         let guildRolesList = [];
         let currentSelectedMember = null;
         let activeMemberFilter = 'all';
@@ -4943,21 +5302,37 @@
             const refreshBtn = document.getElementById('refreshMembersBtn');
             if (refreshBtn) refreshBtn.innerHTML = '<i class="fas fa-arrows-rotate fa-spin"></i> Loading...';
             if (grid && (!rawGuildMembers.length || force)) {
-                grid.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem"><i class="fas fa-spinner fa-spin"></i> Fetching live Discord guild directory & telemetry...</p>';
+                grid.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem"><i class="fas fa-spinner fa-spin"></i> Fetching live Discord guild directory & bans telemetry...</p>';
             }
 
             try {
                 // Fetch roles list in parallel
                 fetchGuildRolesList();
 
-                const resp = await fetch('/api/guild/members');
-                const data = await resp.json();
-                if (data.success && data.members) {
-                    rawGuildMembers = data.members;
-                    updateMemberStats(rawGuildMembers);
-                    renderMembersList(filterAndSortMembers(rawGuildMembers));
+                const [mResp, bResp] = await Promise.all([
+                    fetch('/api/guild/members').catch(e => null),
+                    fetch('/api/guild/bans').catch(e => null)
+                ]);
+
+                if (mResp && mResp.ok) {
+                    const data = await mResp.json();
+                    if (data.success && data.members) {
+                        rawGuildMembers = data.members;
+                    }
+                }
+
+                if (bResp && bResp.ok) {
+                    const bData = await bResp.json();
+                    if (bData.success && bData.bans) {
+                        rawBannedMembers = bData.bans;
+                    }
+                }
+
+                updateMemberStats(rawGuildMembers);
+                if (activeMemberFilter === 'banned') {
+                    renderMembersList(filterAndSortBanned(rawBannedMembers));
                 } else {
-                    if (grid) grid.innerHTML = `<p style="color:var(--cherry-light)">Error loading members: ${escapeHtml(data.error || 'Permission denied')}</p>`;
+                    renderMembersList(filterAndSortMembers(rawGuildMembers));
                 }
             } catch (e) {
                 if (grid) grid.innerHTML = '<p style="color:var(--cherry-light)">Failed to connect to Discord API Gateway.</p>';
@@ -4992,6 +5367,7 @@
             const timedOut = members.filter(m => m.is_timed_out).length;
             const inVoice = members.filter(m => m.voice).length;
             const bots = members.filter(m => m.is_bot).length;
+            const banned = (rawBannedMembers || []).length;
 
             const setNum = (id, n) => {
                 const el = document.getElementById(id);
@@ -5004,6 +5380,7 @@
             setNum('modStatUploaders', uploaders);
             setNum('modStatVerified', verified);
             setNum('modStatTimedOut', timedOut);
+            setNum('modStatBanned', banned);
 
             setNum('chipCountAll', total);
             setNum('chipCountStaff', staff);
@@ -5014,6 +5391,7 @@
             setNum('chipCountTimeout', timedOut);
             setNum('chipCountVoice', inVoice);
             setNum('chipCountBot', bots);
+            setNum('chipCountBanned', banned);
         }
 
         function setMemberFilter(filterKey, el) {
@@ -5039,7 +5417,67 @@
         }
 
         function filterMembers() {
-            renderMembersList(filterAndSortMembers(rawGuildMembers));
+            if (activeMemberFilter === 'banned') {
+                renderMembersList(filterAndSortBanned(rawBannedMembers));
+            } else {
+                renderMembersList(filterAndSortMembers(rawGuildMembers));
+            }
+        }
+
+        function filterAndSortBanned(bans) {
+            const q = (document.getElementById('memberSearchInput')?.value || '').trim().toLowerCase();
+            const sortMode = document.getElementById('memberSortSelect')?.value || 'name';
+
+            let list = (bans || []).filter(b => {
+                if (q) {
+                    const matchUser = (b.username || '').toLowerCase().includes(q);
+                    const matchGlobal = (b.global_name || '').toLowerCase().includes(q);
+                    const matchId = (b.id || '').includes(q);
+                    const matchReason = (b.reason || '').toLowerCase().includes(q);
+                    if (!matchUser && !matchGlobal && !matchId && !matchReason) return false;
+                }
+                return true;
+            });
+
+            if (sortMode === 'name') {
+                list.sort((a, b) => (a.global_name || a.username || '').localeCompare(b.global_name || b.username || ''));
+            } else {
+                list.sort((a, b) => (b.id || '').localeCompare(a.id || ''));
+            }
+            return list;
+        }
+
+        async function promptUnbanMember(userId, userName, btnEl) {
+            const reason = prompt(`Unban ${userName} from the Discord server?\nEnter optional unban reason:`, "Unbanned via Web Panel");
+            if (reason === null) return;
+
+            await withBtnLoading(btnEl, 'Unbanning...', async () => {
+                try {
+                    const resp = await fetch('/api/guild/members/unban', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            user_id: userId,
+                            reason: reason.trim() || 'Unbanned via Web Panel'
+                        })
+                    });
+                    const data = await resp.json();
+                    if (data.success) {
+                        showModToast(data.message || `Successfully unbanned ${userName}!`, 'success');
+                        rawBannedMembers = (rawBannedMembers || []).filter(b => String(b.id) !== String(userId));
+                        const bCount = rawBannedMembers.length;
+                        const statEl = document.getElementById('modStatBanned');
+                        if (statEl) statEl.textContent = bCount.toLocaleString();
+                        const chipEl = document.getElementById('chipCountBanned');
+                        if (chipEl) chipEl.textContent = bCount.toLocaleString();
+                        renderMembersList(filterAndSortBanned(rawBannedMembers));
+                    } else {
+                        showModToast(data.error || 'Failed to unban user', 'error');
+                    }
+                } catch(e) {
+                    showModToast('Unban request failed', 'error');
+                }
+            });
         }
 
         function filterAndSortMembers(members) {
@@ -5103,6 +5541,61 @@
         function renderMembersList(members) {
             const grid = document.getElementById('discordMembersGrid');
             if (!grid) return;
+
+            // Render Banned Members View
+            if (activeMemberFilter === 'banned') {
+                if (!members || members.length === 0) {
+                    grid.innerHTML = '<p style="color:var(--text-muted);font-size:0.88rem;grid-column:1/-1;padding:28px 0;text-align:center"><i class="fas fa-user-shield" style="color:#22c55e;margin-right:6px"></i> No banned members found on the server.</p>';
+                    return;
+                }
+
+                grid.innerHTML = members.map((b, idx) => {
+                    const avatar = b.avatar || `https://cdn.discordapp.com/embed/avatars/${(BigInt(b.id || 0) >> 22n) % 6n}.png`;
+                    const displayName = escapeHtml(b.global_name || b.username || 'Banned User');
+                    const handle = escapeHtml(b.username || 'unknown');
+                    const reason = escapeHtml(b.reason || 'No reason specified');
+
+                    return `
+                        <div class="member-card is-banned" data-user-id="${b.id}" style="--card-index:${idx}">
+                            <div class="member-card-top">
+                                <div class="member-avatar-wrap">
+                                    <img src="${avatar}" alt="${handle}" loading="lazy" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+                                    <span class="presence-dot offline" style="background:#ef4444" title="Status: Banned"></span>
+                                </div>
+                                <div class="member-meta">
+                                    <div class="member-name-row">
+                                        <h4 class="member-display-name">${displayName}</h4>
+                                        <span class="badge" style="background:linear-gradient(135deg,#ef4444,#991b1b);color:#fff;font-size:0.62rem;padding:2px 6px;font-weight:700;box-shadow:0 0 10px rgba(239,68,68,0.4)">BANNED</span>
+                                        ${b.bot ? '<span class="badge" style="background:rgba(255,255,255,0.1);color:#cbd5e1;font-size:0.62rem;padding:1px 5px">BOT</span>' : ''}
+                                    </div>
+                                    <span class="member-handle">@${handle}</span>
+                                    <span class="member-id-tag" onclick="copyId('${b.id}', this)" title="Click to copy ID"><i class="far fa-copy"></i> ${b.id}</span>
+                                </div>
+                            </div>
+
+                            <div class="ban-reason-callout">
+                                <i class="fas fa-gavel"></i>
+                                <div style="flex:1">
+                                    <strong style="color:#f87171">Ban Reason:</strong>
+                                    <span>${reason}</span>
+                                </div>
+                            </div>
+
+                            <div class="member-card-actions" style="margin-top:14px">
+                                <button class="btn-card-action" onclick="copyId('${b.id}', this)" title="Copy ID">
+                                    <i class="far fa-copy"></i>
+                                    <span>Copy ID</span>
+                                </button>
+                                <button class="btn-card-unban" onclick="promptUnbanMember('${b.id}', '${escapeHtml(displayName)}', this)">
+                                    <i class="fas fa-user-check"></i>
+                                    <span>Unban Member</span>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                return;
+            }
 
             if (!members || members.length === 0) {
                 grid.innerHTML = '<p style="color:var(--text-muted);font-size:0.88rem;grid-column:1/-1;padding:24px 0"><i class="fas fa-user-slash" style="margin-right:6px"></i> No members matched the active filter criteria.</p>';
@@ -6113,8 +6606,16 @@
                         showModToast(data.message, 'success');
                         closeMemberModModal();
                         rawGuildMembers = rawGuildMembers.filter(m => String(m.id) !== String(currentSelectedMember.id));
+                        rawBannedMembers.unshift({
+                            id: currentSelectedMember.id,
+                            username: currentSelectedMember.username,
+                            global_name: currentSelectedMember.nickname || currentSelectedMember.global_name || currentSelectedMember.username,
+                            avatar: currentSelectedMember.avatar,
+                            bot: Boolean(currentSelectedMember.is_bot),
+                            reason: reason || 'Banned via Web Panel'
+                        });
                         updateMemberStats(rawGuildMembers);
-                        renderMembersList(filterAndSortMembers(rawGuildMembers));
+                        filterMembers();
                     } else {
                         showModToast(data.error || 'Ban failed', 'error');
                     }
@@ -6122,6 +6623,306 @@
                     showModToast('Ban request failed', 'error');
                 }
             });
+        }
+
+        // ================== UPLOADER INTELLIGENCE & DOSSIER ENGINE ==================
+        let rawUploadersData = null;
+        let activeUploaderFilter = 'all';
+
+        async function fetchUploaderAnalytics(force = false) {
+            const grid = document.getElementById('uploadersGrid');
+            const refreshBtn = document.getElementById('refreshUploadersBtn');
+            if (refreshBtn) refreshBtn.innerHTML = '<i class="fas fa-arrows-rotate fa-spin"></i> Loading...';
+            if (grid && (!rawUploadersData || force)) {
+                grid.innerHTML = '<p style="color:var(--text-muted);font-size:0.85rem;padding:24px 0"><i class="fas fa-spinner fa-spin"></i> Fetching uploader intelligence & historical dossiers...</p>';
+            }
+
+            try {
+                const resp = await fetch('/api/guild/uploaders/analytics');
+                const data = await resp.json();
+                if (data.success && data.uploaders) {
+                    rawUploadersData = data;
+                    updateUploaderStats(data.stats, data.uploaders);
+                    renderUploadersList(filterAndSortUploaders(data.uploaders));
+                } else {
+                    if (grid) grid.innerHTML = `<p style="color:var(--cherry-light);padding:24px 0">Error loading uploader intelligence: ${escapeHtml(data.error || 'Permission denied')}</p>`;
+                }
+            } catch (e) {
+                if (grid) grid.innerHTML = '<p style="color:var(--cherry-light);padding:24px 0">Failed to connect to Uploader Intelligence Gateway.</p>';
+            } finally {
+                if (refreshBtn) refreshBtn.innerHTML = '<i class="fas fa-arrows-rotate"></i> Refresh';
+            }
+        }
+
+        function updateUploaderStats(stats, uploaders) {
+            const setNum = (id, val) => {
+                const el = document.getElementById(id);
+                if (el) el.textContent = typeof val === 'number' ? val.toLocaleString() : (val || '0');
+            };
+
+            const total = uploaders.length;
+            const active = uploaders.filter(u => u.status === 'active' || u.status === 'active_zero').length;
+            const former = uploaders.filter(u => u.status === 'former' || u.status === 'left_guild').length;
+            const zero = uploaders.filter(u => u.status === 'active_zero').length;
+
+            setNum('upStatTotalUploaders', stats?.total_uploaders || total);
+            setNum('upStatActive', stats?.active_uploaders || active);
+            setNum('upStatFormer', stats?.former_uploaders || former);
+            setNum('upStatTotalProducts', stats?.total_products || 0);
+            setNum('upStatPresets', stats?.type_totals?.preset || 0);
+            setNum('upStatDownloads', stats?.total_downloads || 0);
+
+            setNum('upChipAll', total);
+            setNum('upChipActive', active);
+            setNum('upChipFormer', former);
+            setNum('upChipZero', zero);
+        }
+
+        function setUploaderFilter(filterKey, el) {
+            activeUploaderFilter = filterKey;
+            document.querySelectorAll('#pane-uploaders .mod-chip').forEach(c => c.classList.remove('active'));
+            if (el) el.classList.add('active');
+            filterUploaders();
+        }
+
+        function handleUploaderSearch() {
+            const q = document.getElementById('uploaderSearchInput').value.trim();
+            const clearBtn = document.getElementById('clearUploaderSearchBtn');
+            if (clearBtn) clearBtn.style.display = q ? 'inline-flex' : 'none';
+            filterUploaders();
+        }
+
+        function clearUploaderSearch() {
+            const input = document.getElementById('uploaderSearchInput');
+            if (input) input.value = '';
+            const clearBtn = document.getElementById('clearUploaderSearchBtn');
+            if (clearBtn) clearBtn.style.display = 'none';
+            filterUploaders();
+        }
+
+        function filterUploaders() {
+            if (!rawUploadersData || !rawUploadersData.uploaders) return;
+            renderUploadersList(filterAndSortUploaders(rawUploadersData.uploaders));
+        }
+
+        function filterAndSortUploaders(uploaders) {
+            if (!uploaders) return [];
+            const q = (document.getElementById('uploaderSearchInput')?.value || '').trim().toLowerCase();
+            const sortMode = document.getElementById('uploaderSortSelect')?.value || 'uploads';
+
+            let list = uploaders.filter(u => {
+                if (q) {
+                    const matchName = (u.name || '').toLowerCase().includes(q);
+                    const matchGlobal = (u.global_name || '').toLowerCase().includes(q);
+                    const matchId = (u.id || '').includes(q);
+                    const matchCloud = (u.sftpgo_username || '').toLowerCase().includes(q);
+                    const matchProducts = (u.products || []).some(p => (p.name || '').toLowerCase().includes(q));
+                    if (!matchName && !matchGlobal && !matchId && !matchCloud && !matchProducts) return false;
+                }
+
+                if (activeUploaderFilter === 'active' && u.status !== 'active' && u.status !== 'active_zero') return false;
+                if (activeUploaderFilter === 'former' && u.status !== 'former' && u.status !== 'left_guild') return false;
+                if (activeUploaderFilter === 'zero' && u.status !== 'active_zero') return false;
+
+                return true;
+            });
+
+            if (sortMode === 'uploads') {
+                list.sort((a, b) => (b.total_uploads || 0) - (a.total_uploads || 0) || (b.total_downloads || 0) - (a.total_downloads || 0));
+            } else if (sortMode === 'downloads') {
+                list.sort((a, b) => (b.total_downloads || 0) - (a.total_downloads || 0) || (b.total_uploads || 0) - (a.total_uploads || 0));
+            } else if (sortMode === 'recent') {
+                list.sort((a, b) => new Date(b.latest_upload_at || 0) - new Date(a.latest_upload_at || 0));
+            } else if (sortMode === 'oldest') {
+                list.sort((a, b) => new Date(a.first_upload_at || 0) - new Date(b.first_upload_at || 0));
+            } else if (sortMode === 'name') {
+                list.sort((a, b) => (a.global_name || a.name || '').localeCompare(b.global_name || b.name || ''));
+            }
+
+            return list;
+        }
+
+        function formatUploaderDate(isoStr) {
+            if (!isoStr) return 'None';
+            try {
+                const d = new Date(isoStr);
+                if (isNaN(d.getTime())) return String(isoStr).slice(0, 10);
+                return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+            } catch (e) {
+                return String(isoStr).slice(0, 10);
+            }
+        }
+
+        function toggleUploaderProducts(uid) {
+            const el = document.getElementById(`uploader-products-${uid}`);
+            const btn = document.getElementById(`uploader-btn-${uid}`);
+            if (!el) return;
+            if (el.style.display === 'none' || !el.style.display) {
+                el.style.display = 'block';
+                if (btn) btn.innerHTML = `<i class="fas fa-chevron-up"></i> Hide Products`;
+            } else {
+                el.style.display = 'none';
+                const cnt = btn?.getAttribute('data-count') || '';
+                if (btn) btn.innerHTML = `<i class="fas fa-chevron-down"></i> View Products (${cnt})`;
+            }
+        }
+
+        function jumpToDiscordMember(userId) {
+            switchTab('members');
+            const input = document.getElementById('memberSearchInput');
+            if (input) input.value = userId;
+            const clearBtn = document.getElementById('clearMemberSearchBtn');
+            if (clearBtn) clearBtn.style.display = 'inline-flex';
+            setMemberFilter('all', document.querySelector('.mod-chip[data-filter="all"]'));
+        }
+
+        function renderUploadersList(uploaders) {
+            const grid = document.getElementById('uploadersGrid');
+            if (!grid) return;
+
+            if (!uploaders || uploaders.length === 0) {
+                grid.innerHTML = '<p style="color:var(--text-muted);font-size:0.88rem;grid-column:1/-1;padding:32px 0;text-align:center"><i class="fas fa-users-slash" style="margin-right:6px"></i> No uploaders matched the active filter criteria.</p>';
+                return;
+            }
+
+            grid.innerHTML = uploaders.map((u, idx) => {
+                const avatar = u.avatar || `https://cdn.discordapp.com/embed/avatars/${(BigInt(u.id && u.id.length >= 17 ? u.id : '0') >> 22n) % 6n}.png`;
+                const displayName = escapeHtml(u.global_name || u.name || 'Unknown Uploader');
+                const handle = escapeHtml(u.name || 'unknown');
+                const totalUploads = u.total_uploads || 0;
+                const totalDownloads = u.total_downloads || 0;
+
+                let cardStatusClass = 'is-active';
+                let statusBadgeHtml = '';
+
+                if (u.status === 'active') {
+                    cardStatusClass = 'is-active';
+                    const rolesLabel = (u.held_uploader_roles || []).join(' & ') || 'Uploader Role';
+                    statusBadgeHtml = `<span class="uploader-badge badge-active" title="Currently holding ${escapeHtml(rolesLabel)}"><i class="fas fa-circle-check"></i> Active Uploader</span>`;
+                } else if (u.status === 'active_zero') {
+                    cardStatusClass = 'is-zero';
+                    statusBadgeHtml = `<span class="uploader-badge badge-zero" title="Has uploader role but 0 uploads"><i class="fas fa-circle-notch"></i> Role Holder · 0 Uploads</span>`;
+                } else if (u.status === 'former') {
+                    cardStatusClass = 'is-former';
+                    statusBadgeHtml = `<span class="uploader-badge badge-former" title="Previously uploaded products, but currently has NO uploader role"><i class="fas fa-user-clock"></i> Former Uploader (No Role)</span>`;
+                } else if (u.status === 'left_guild') {
+                    cardStatusClass = 'is-left';
+                    statusBadgeHtml = `<span class="uploader-badge badge-left" title="Previously uploaded products, but no longer in server"><i class="fas fa-door-open"></i> Left Server</span>`;
+                }
+
+                // Type breakdown pills
+                const types = u.types_breakdown || {};
+                const typePills = [];
+                if (types.preset) {
+                    typePills.push(`<span class="uploader-type-pill" style="border-color:rgba(236,72,153,0.3);color:#f472b6"><i class="fas fa-sliders" style="color:#ec4899"></i> ${types.preset} Presets</span>`);
+                }
+                if (types.scenepack) {
+                    typePills.push(`<span class="uploader-type-pill" style="border-color:rgba(56,189,248,0.3);color:#7dd3fc"><i class="fas fa-film" style="color:#38bdf8"></i> ${types.scenepack} Scenepacks</span>`);
+                }
+                if (types.audio) {
+                    typePills.push(`<span class="uploader-type-pill" style="border-color:rgba(245,158,11,0.3);color:#fde68a"><i class="fas fa-music" style="color:#f59e0b"></i> ${types.audio} Audios</span>`);
+                }
+                if (types.plugin) {
+                    typePills.push(`<span class="uploader-type-pill" style="border-color:rgba(34,197,94,0.3);color:#86efac"><i class="fas fa-plug" style="color:#22c55e"></i> ${types.plugin} Plugins</span>`);
+                }
+                Object.keys(types).forEach(t => {
+                    if (!['preset', 'scenepack', 'audio', 'plugin'].includes(t)) {
+                        typePills.push(`<span class="uploader-type-pill"><i class="fas fa-box"></i> ${types[t]} ${escapeHtml(t)}</span>`);
+                    }
+                });
+
+                // Products list drawer
+                const products = u.products || [];
+                let productsDrawerHtml = '';
+                if (products.length > 0) {
+                    const productRows = products.map(p => {
+                        const icon = p.type === 'scenepack' ? 'fa-film' : (p.type === 'audio' ? 'fa-music' : (p.type === 'plugin' ? 'fa-plug' : 'fa-sliders'));
+                        return `
+                            <div class="uploader-product-row">
+                                <div style="display:flex;align-items:center;gap:7px;min-width:0">
+                                    <i class="fas ${icon}" style="color:var(--cherry-light);font-size:0.75rem;flex-shrink:0"></i>
+                                    <span class="uploader-product-name" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</span>
+                                </div>
+                                <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;color:rgba(255,255,255,0.45);font-size:0.7rem">
+                                    <span><i class="fas fa-download" style="color:#38bdf8;font-size:0.65rem"></i> ${p.downloads || 0}</span>
+                                    <span>${formatUploaderDate(p.created_at)}</span>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+
+                    productsDrawerHtml = `
+                        <div class="uploader-products-drawer">
+                            <button id="uploader-btn-${u.id}" class="btn-ghost" data-count="${products.length}" style="width:100%;font-size:0.75rem;padding:6px 10px;justify-content:center" onclick="toggleUploaderProducts('${u.id}')">
+                                <i class="fas fa-chevron-down"></i> View Products (${products.length})
+                            </button>
+                            <div id="uploader-products-${u.id}" class="uploader-products-list" style="display:none">
+                                ${productRows}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Cloud link pill
+                let cloudPill = '';
+                if (u.sftpgo_username) {
+                    cloudPill = `<span class="flag-pill flag-cloud" title="Linked SFTPGo Storage Account"><i class="fas fa-cloud"></i> @${escapeHtml(u.sftpgo_username)}</span>`;
+                }
+
+                const isCurrentUploaderRole = (u.held_uploader_roles || []).length > 0;
+
+                return `
+                    <div class="uploader-card ${cardStatusClass}" data-uploader-id="${u.id}" style="--card-index:${idx}">
+                        <div class="uploader-card-header">
+                            <div class="uploader-card-avatar">
+                                <img src="${avatar}" alt="${handle}" loading="lazy" onerror="this.src='https://cdn.discordapp.com/embed/avatars/0.png'">
+                            </div>
+                            <div class="uploader-card-info">
+                                <div class="uploader-card-name-row">
+                                    <h4 class="uploader-card-name" title="${displayName}">${displayName}</h4>
+                                    ${statusBadgeHtml}
+                                </div>
+                                <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+                                    <span class="member-handle" style="font-size:0.78rem;color:rgba(255,255,255,0.5)">@${handle}</span>
+                                    <span class="member-id-tag" onclick="copyId('${u.id}', this)" title="Click to copy ID"><i class="far fa-copy"></i> ${u.id}</span>
+                                    ${cloudPill}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="uploader-stats-grid">
+                            <div class="uploader-stat-item">
+                                <span class="uploader-stat-val" style="color:#38bdf8">${totalUploads.toLocaleString()}</span>
+                                <span class="uploader-stat-lbl"><i class="fas fa-box-archive"></i> Total Uploads</span>
+                            </div>
+                            <div class="uploader-stat-item">
+                                <span class="uploader-stat-val" style="color:#a855f7">${totalDownloads.toLocaleString()}</span>
+                                <span class="uploader-stat-lbl"><i class="fas fa-download"></i> Lifetime DLs</span>
+                            </div>
+                        </div>
+
+                        ${typePills.length > 0 ? `<div class="uploader-types-row">${typePills.join('')}</div>` : ''}
+
+                        <div class="uploader-timeline">
+                            <span><i class="far fa-calendar-plus" style="color:#22c55e"></i> 1st: <strong>${formatUploaderDate(u.first_upload_at)}</strong></span>
+                            <span><i class="fas fa-clock-rotate-left" style="color:#38bdf8"></i> Latest: <strong>${formatUploaderDate(u.latest_upload_at)}</strong></span>
+                        </div>
+
+                        ${productsDrawerHtml}
+
+                        <div class="member-card-actions" style="margin-top:auto">
+                            <button class="btn-card-action" onclick="jumpToDiscordMember('${u.id}')" title="Inspect member profile & moderation">
+                                <i class="fab fa-discord" style="color:#7c83ff"></i>
+                                <span>Inspect User</span>
+                            </button>
+                            <button class="btn-card-action" onclick="quickToggleUploader('${u.id}', ${isCurrentUploaderRole}, this)" title="${isCurrentUploaderRole ? 'Revoke Preset Uploader role' : 'Grant Preset Uploader role'}">
+                                <i class="fas fa-cloud-arrow-up" style="color:${isCurrentUploaderRole ? '#38bdf8' : 'rgba(255,255,255,0.4)'}"></i>
+                                <span>${isCurrentUploaderRole ? 'Revoke' : 'Make'} Uploader</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
         // ================== SYSTEM TELEMETRY TAB ==================
