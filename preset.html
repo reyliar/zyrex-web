@@ -1288,7 +1288,7 @@
             uploaderAvatar = `https://cdn.discordapp.com/embed/avatars/${parseInt(uploaderId) % 5}.png`;
         }
 
-        const ADMIN_IDS = ["1421177012814614548", "1382421118098346174"];
+        const ADMIN_IDS = ["1421177012814614548"];
         const isUploaderAdmin = p.uploader_is_admin === true || 
                                 ADMIN_IDS.includes(uploaderId) || 
                                 ADMIN_IDS.includes(String(p.author_id)) || 
@@ -2132,8 +2132,8 @@
 
     function renderSingleComment(c, isReply = false) {
         const timeAgo = formatTimeAgo(c.created_at);
-        const isAdmin = c.is_admin || (c.user_id && ["1421177012814614548", "1382421118098346174"].includes(String(c.user_id)));
-        const isCurrentAuthor = currentUserData && (String(currentUserData.id) === String(c.user_id) || (currentUserData.id && ["1421177012814614548", "1382421118098346174"].includes(String(currentUserData.id))));
+        const isAdmin = c.is_admin || (c.user_id && ["1421177012814614548"].includes(String(c.user_id)));
+        const isCurrentAuthor = currentUserData && (String(currentUserData.id) === String(c.user_id) || (currentUserData.id && ["1421177012814614548"].includes(String(currentUserData.id))));
         const avatar = c.user_avatar || window.DEFAULT_AVATAR;
         const sourceLabel = c.source === 'discord' ? `<span class="source-pill-dc" title="Sent from Discord"><i class="fab fa-discord"></i> Discord</span>` : '';
         const rawAuthorName = c.user_name || 'User';

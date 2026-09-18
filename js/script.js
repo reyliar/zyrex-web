@@ -381,11 +381,6 @@ const teamMembers = [
         userId: '1421177012814614548',
         role: 'Founder',
         roleColor: '#184b61'
-    },
-    {
-        userId: '1382421118098346174',
-        role: 'Co-Founder',
-        roleColor: '#d39f9f'
     }
 ];
 
@@ -460,8 +455,7 @@ function renderTeamMembers(founders, staff, container) {
     
     var allMembers = [];
     var defaultFounders = [
-        { id: "1421177012814614548", username: "reyliar", global_name: "reyli", avatar: "/api/avatar/1421177012814614548/66077819163365312e485b95e30001d8.png", role: "Founder", status: "online" },
-        { id: "1382421118098346174", username: "dvmonaep", global_name: "kerem", avatar: "/api/avatar/1382421118098346174/d6a983ec1a87e899b737422ee50fb441.png", role: "Co-Founder", status: "online" }
+        { id: "1421177012814614548", username: "reyliar", global_name: "reyli", avatar: "/api/avatar/1421177012814614548/66077819163365312e485b95e30001d8.png", role: "Founder", status: "online" }
     ];
 
     var defaultStaff = [

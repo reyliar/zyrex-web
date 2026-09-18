@@ -4,7 +4,7 @@ const BOT_API = "https://storage.zyrexediting.xyz";
 const VERIFY_BOT_API = "https://storage.zyrexediting.xyz";
 const FILE_API = "https://storage.zyrexediting.xyz";  // Python file server via Cloudflare Tunnel (local)
 const SFTPGO_API = "https://storage.zyrexediting.xyz/api/v2";  // SFTPGo via Cloudflare Tunnel (local)
-const ADMIN_IDS = ["1421177012814614548", "1382421118098346174"];
+const ADMIN_IDS = ["1421177012814614548"];
 
 // Category display names & emojis
 const CATEGORY_INFO = {
@@ -1794,12 +1794,6 @@ const presenceCache = new Map();
 
 // Known fallback profiles for founders
 const FOUNDER_PROFILES = {
-  "1382421118098346174": {
-    id: "1382421118098346174",
-    username: "dvmonaep",
-    global_name: "kerem",
-    avatar: "https://cdn.discordapp.com/avatars/1382421118098346174/d6a983ec1a87e899b737422ee50fb441.png?size=256"
-  },
   "1421177012814614548": {
     id: "1421177012814614548",
     username: "reyliar",
@@ -1860,7 +1854,7 @@ async function handlePresenceAPI(request, env) {
   }
   
   if (!idsParam) {
-    idsParam = "1382421118098346174,1421177012814614548";
+    idsParam = "1421177012814614548";
   }
 
   const ids = idsParam.split(",").map(i => i.trim()).filter(Boolean);
@@ -3464,7 +3458,7 @@ async function storeAndProxyImage(env, imageUrl) {
         
         const guildId = env.GUILD_ID || "1518954946110685184";
         const staffRoleId = "1523366782327459952";
-        const founderIds = ["1421177012814614548", "1382421118098346174"];
+        const founderIds = ["1421177012814614548"];
         
         let founders = [];
         let staff = [];
@@ -3482,8 +3476,8 @@ async function storeAndProxyImage(env, imageUrl) {
                   username: m.user.username,
                   global_name: m.user.global_name || m.nick || m.user.username,
                   avatar: m.user.avatar ? `https://cdn.discordapp.com/avatars/${m.user.id}/${m.user.avatar}.png` : '',
-                  role: m.user.id === "1421177012814614548" ? "Founder" : "Co-Founder",
-                  role_color: m.user.id === "1421177012814614548" ? "#184b61" : "#d39f9f",
+                  role: "Founder",
+                  role_color: "#184b61",
                   status: "online"
                 });
               }
@@ -3514,8 +3508,7 @@ async function storeAndProxyImage(env, imageUrl) {
         
         if (founders.length === 0) {
           founders = [
-            { id: "1421177012814614548", username: "reyli", global_name: "Reyli", avatar: "", role: "Founder", role_color: "#184b61", status: "online" },
-            { id: "1382421118098346174", username: "zyrex", global_name: "Zyrex", avatar: "", role: "Co-Founder", role_color: "#d39f9f", status: "online" }
+            { id: "1421177012814614548", username: "reyli", global_name: "Reyli", avatar: "", role: "Founder", role_color: "#184b61", status: "online" }
           ];
         }
 
