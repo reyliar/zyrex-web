@@ -2758,14 +2758,17 @@
 
     async function initPresetStats(productId) {
         if (!productId) return;
-        const viewedKey = 'zyrex_viewed_' + productId;
-        const isNewView = !sessionStorage.getItem(viewedKey);
-        if (isNewView) {
-            sessionStorage.setItem(viewedKey, '1');
+        const viewedKey = 'zyrex_view_ts_' + productId;
+        const lastViewTs = parseInt(sessionStorage.getItem(viewedKey) || '0', 10);
+        const now = Date.now();
+        // Increment view count on each visit/view (10s throttle per tab to prevent accidental F5 double-counting)
+        const shouldIncrement = (now - lastViewTs) > 10000;
+        if (shouldIncrement) {
+            sessionStorage.setItem(viewedKey, String(now));
         }
 
         try {
-            const res = await fetch('/api/presets/stats?id=' + encodeURIComponent(productId) + (isNewView ? '&increment_view=1' : ''));
+            const res = await fetch('/api/presets/stats?id=' + encodeURIComponent(productId) + (shouldIncrement ? '&increment_view=1' : ''));
             if (res.ok) {
                 const data = await res.json();
                 if (data.success) {
@@ -2774,8 +2777,8 @@
                     const metaDl = document.getElementById('metaDownloadsCount');
                     const metaVw = document.getElementById('metaViewsCount');
                     
-                    if (metaDl) metaDl.textContent = dl.toLocaleString();
-                    if (metaVw) metaVw.textContent = vw.toLocaleString();
+                    if (metaDl) metaDl.textContent = Number(dl).toLocaleString();
+                    if (metaVw) metaVw.textContent = Number(vw).toLocaleString();
                 }
             }
         } catch(e) {

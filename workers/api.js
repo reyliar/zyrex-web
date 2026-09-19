@@ -3792,57 +3792,37 @@ async function storeAndProxyImage(env, imageUrl) {
         });
       }
 
-      // ============ PRESET STATS (Download Count + Real View Count) ============
+      // ============ PRESET STATS (Download Count + Real View Count, proxied to Bot VPS) ============
       if (path === "/api/presets/stats") {
         const id = url.searchParams.get("id");
-        const shouldIncrementView = url.searchParams.get("increment_view") === "1" || request.method === "POST";
-        
         if (!id) return json({ success: false, error: "id parameter required" }, 400);
 
-        let dlCount = 0;
-        if (!globalThis.REAL_PRESET_VIEWS) globalThis.REAL_PRESET_VIEWS = new Map();
-        let viewCount = globalThis.REAL_PRESET_VIEWS.get(id) || 0;
-
-        // 1. Fetch download counts from bot API
         try {
-          const resp = await fetch(`${BOT_API}/api/downloads/counts`);
-          if (resp.ok) {
-            const data = await resp.json();
-            const counts = data.counts || {};
-            dlCount = counts[id] || 0;
-          }
-        } catch(e) {}
-
-        // 2. Increment & persist real view count
-        if (shouldIncrementView) {
-          viewCount++;
-          globalThis.REAL_PRESET_VIEWS.set(id, viewCount);
-          try {
-            fetch(`${BOT_API}/api/presets/view`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ id, views: viewCount }),
-            }).catch(() => {});
-          } catch(e) {}
-        }
-
-        try {
-          const vResp = await fetch(`${BOT_API}/api/presets/views?id=${encodeURIComponent(id)}`);
-          if (vResp.ok) {
-            const vData = await vResp.json();
-            if (typeof vData.views === "number" && vData.views > viewCount) {
-              viewCount = vData.views;
-              globalThis.REAL_PRESET_VIEWS.set(id, viewCount);
-            }
-          }
+          const resp = await fetch(`${BOT_API}/api/presets/stats?${url.searchParams.toString()}`, {
+            method: request.method,
+            headers: { "Content-Type": "application/json" },
+          });
+          if (resp.ok) return json(await resp.json());
         } catch(e) {}
 
         return json({
           success: true,
           id,
-          downloads: dlCount,
-          views: viewCount,
+          downloads: 0,
+          views: 0,
         });
+      }
+
+      if (path === "/api/presets/views" || path === "/api/presets/view") {
+        try {
+          const resp = await fetch(`${BOT_API}${path}${url.search ? url.search : ''}`, {
+            method: request.method,
+            headers: request.headers,
+            body: request.method !== "GET" ? request.body : undefined,
+          });
+          if (resp.ok) return json(await resp.json());
+        } catch(e) {}
+        return json({ success: true, views: {} });
       }
 
       // ============ PRESET COMMENTS (Two-Way Discord <-> Web) ============
