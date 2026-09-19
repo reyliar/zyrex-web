@@ -953,14 +953,69 @@ async function scanDetectedResources(discordId, env) {
   }
 }
 
-// ============ PAYHIP SCRAPER (Direct) ============
+// ============ PAYHIP SCRAPER (Direct + Proxy Fallback) ============
 async function scrapePayhip(url) {
   try {
-    const resp = await fetch(url, {
-      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" },
-    });
-    if (!resp.ok) return { success: false, error: `HTTP ${resp.status}` };
-    const html = await resp.text();
+    let html = "";
+    let isMarkdown = false;
+    try {
+      const resp = await fetch(url, {
+        headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36" },
+      });
+      if (resp.ok) {
+        const t = await resp.text();
+        if (!t.includes("Just a moment...") && !t.includes("Attention Required! | Cloudflare") && !t.includes("cf-chl")) {
+          html = t;
+        }
+      }
+    } catch(e) {}
+
+    // Fallback to r.jina.ai if Cloudflare challenge or non-200
+    if (!html) {
+      try {
+        const cleanUrl = url.replace(/^https?:\/\//, "");
+        const jinaResp = await fetch(`https://r.jina.ai/https://${cleanUrl}`, {
+          headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" }
+        });
+        if (jinaResp.ok) {
+          html = await jinaResp.text();
+          isMarkdown = true;
+        }
+      } catch(e) {}
+    }
+
+    if (!html) return { success: false, error: "Could not fetch Payhip product page" };
+
+    if (isMarkdown) {
+      let title = (html.match(/Title:\s*([^\n\r]+)/i) || [])[1]?.replace(/[|–\-]\s*Payhip.*/i, "").trim() || "";
+      if (!title) title = (html.match(/^#\s*([^\n\r]+)/m) || [])[1]?.trim() || "";
+      title = title.replace(/&amp;/g, "&").replace(/&#39;/g, "'");
+
+      let price = "";
+      const pMatch = html.match(/(?:[A-Z]{1,3}\$|\$|€|£)\s*(\d+(?:\.\d{2})?)/);
+      if (pMatch) price = pMatch[0].trim();
+
+      const thumbnails = new Set();
+      let primaryImage = "";
+      const imgMatches = [...html.matchAll(/!\[[^\]]*\]\((https?:\/\/[^\)]+)\)/g)];
+      for (const m of imgMatches) {
+        const u = m[1];
+        if (u.includes("logo") || u.includes("favicon") || u.includes("avatar")) continue;
+        if (u.includes("pe56d.s3.amazonaws.com") || u.includes("payhip.com/cdn-cgi/image/")) {
+          if (!primaryImage) primaryImage = u;
+          thumbnails.add(u);
+        }
+      }
+
+      return {
+        success: true,
+        title: title || "Preset Pack",
+        description: "",
+        image: primaryImage,
+        price,
+        thumbnails: [...thumbnails].slice(0, 8)
+      };
+    }
 
     // Title
     let title = (html.match(/<title>(.*?)<\/title>/i) || [])[1]?.replace(/[|–\-]\s*Payhip.*/i, "").trim() || "";
@@ -1098,37 +1153,104 @@ async function scrapePayhip(url) {
   }
 }
 
-// ============ MULTI-PAGE PAYHIP CATALOG SCRAPER ============
-async function scrapePayhipStoreProducts(storeUrl, maxPages = 25) {
-  if (!storeUrl) return [];
-  const storeBase = storeUrl.replace(/\/$/, "").replace(/\/collection\/all.*$/, "");
-  const seenUrls = new Set();
-  const allProducts = [];
-
+// ============ UNLIMITED MULTI-COLLECTION PAYHIP CATALOG SCRAPER ============
+async function fetchPayhipRaw(targetUrl) {
   const headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.9"
   };
+  try {
+    const resp = await fetch(targetUrl, { headers, redirect: "follow" });
+    if (resp.ok) {
+      const text = await resp.text();
+      if (!text.includes("Just a moment...") && !text.includes("Attention Required! | Cloudflare") && !text.includes("cf-chl")) {
+        return { type: "html", text };
+      }
+    }
+  } catch (e) {}
 
-  for (let page = 1; page <= maxPages; page++) {
-    const pageUrl = `${storeBase}/collection/all?page=${page}`;
-    try {
-      const resp = await fetch(pageUrl, { headers, redirect: "follow" });
-      if (!resp.ok) break;
-      const html = await resp.text();
-      const cards = html.split(/<div[^>]+class=["'][^"']*product-card-wrapper/i);
-      let pageFound = 0;
+  // Fallback to r.jina.ai when Cloudflare challenge / 403 occurs
+  try {
+    const cleanUrl = targetUrl.replace(/^https?:\/\//, "");
+    const jinaResp = await fetch(`https://r.jina.ai/https://${cleanUrl}`, {
+      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" }
+    });
+    if (jinaResp.ok) {
+      const text = await jinaResp.text();
+      return { type: "markdown", text };
+    }
+  } catch (e) {}
 
+  return null;
+}
+
+function parsePayhipProductsAndCollections(payload) {
+  const products = [];
+  const collections = new Set();
+  if (!payload || !payload.text) return { products, collections };
+
+  const { type, text } = payload;
+
+  if (type === "markdown") {
+    // 1. Markdown link format: [Title](https://payhip.com/b/SLUG)
+    const matches = [...text.matchAll(/\[([^\]]+)\]\(https?:\/\/(?:www\.)?payhip\.com\/b\/([a-zA-Z0-9]+)\)/g)];
+    const seen = new Set();
+    for (const m of matches) {
+      const title = m[1].trim();
+      const slug = m[2];
+      const prodUrl = `https://payhip.com/b/${slug}`;
+      if (seen.has(prodUrl)) continue;
+      if (['shop', 'view all results', 'buy now', 'read more', 'cart'].includes(title.toLowerCase())) continue;
+      seen.add(prodUrl);
+
+      // Extract image preceding product link (up to 500 chars before)
+      const idx = m.index;
+      const pre = text.substring(Math.max(0, idx - 500), idx);
+      const imgMatches = [...pre.matchAll(/!\[[^\]]*\]\((https?:\/\/[^\)]+)\)/g)];
+      let image = imgMatches.length > 0 ? imgMatches[imgMatches.length - 1][1] : "";
+      if (image.includes("logo") || image.includes("favicon") || image.includes("avatar")) image = "";
+
+      // Extract price following product link (up to 200 chars after)
+      const post = text.substring(idx + m[0].length, Math.min(text.length, idx + m[0].length + 200));
+      const pMatch = post.match(/(?:[A-Z]{1,3}\$|\$|€|£)\s*(\d+(?:\.\d{2})?)|Free/i);
+      const price = pMatch ? pMatch[0].trim() : "";
+
+      products.push({ title, url: prodUrl, image, price, slug });
+    }
+
+    // Bare /b/SLUG fallback
+    const bareSlugs = [...text.matchAll(/payhip\.com\/b\/([a-zA-Z0-9]+)/g)];
+    for (const bs of bareSlugs) {
+      const s = bs[1];
+      const u = `https://payhip.com/b/${s}`;
+      if (!seen.has(u)) {
+        seen.add(u);
+        products.push({ title: `Product #${s}`, url: u, image: "", price: "", slug: s });
+      }
+    }
+
+    // Extract collection slugs
+    const colMatches = [...text.matchAll(/\/collection\/([a-zA-Z0-9_\-]+)/g)];
+    for (const c of colMatches) {
+      const cSlug = c[1].toLowerCase().trim();
+      if (!['all', 'users', 'cart', 'login', 'signup'].includes(cSlug)) {
+        collections.add(cSlug);
+      }
+    }
+  } else {
+    // HTML format
+    const cards = text.split(/<div[^>]+class=["'][^"']*product-card-wrapper/i);
+    const seen = new Set();
+    if (cards.length > 1) {
       for (let i = 1; i < cards.length; i++) {
         const card = cards[i];
         const slugMatch = card.match(/\/b\/([a-zA-Z0-9]+)/);
         if (!slugMatch) continue;
         const slug = slugMatch[1];
         const prodUrl = `https://payhip.com/b/${slug}`;
-        if (seenUrls.has(prodUrl)) continue;
-        seenUrls.add(prodUrl);
-        pageFound++;
+        if (seen.has(prodUrl)) continue;
+        seen.add(prodUrl);
 
         const titleMatch = card.match(/<h[2-4][^>]*class=["'][^"']*card__heading[^"']*["'][^>]*>[\s\r\n]*<a[^>]+>([\s\S]*?)<\/a>/i) ||
                            card.match(/<h[2-4][^>]*>[\s\r\n]*<a[^>]+>([\s\S]*?)<\/a>/i);
@@ -1141,57 +1263,137 @@ async function scrapePayhipStoreProducts(storeUrl, maxPages = 25) {
         const priceMatch = card.match(/\$(\d+(?:\.\d{2})?)/);
         const price = priceMatch ? `$${priceMatch[1]}` : "";
 
-        allProducts.push({ title, url: prodUrl, image: img, price });
+        products.push({ title, url: prodUrl, image, price, slug });
       }
+    } else {
+      const matches = [...text.matchAll(/\/b\/([a-zA-Z0-9]+)/g)];
+      for (const m of matches) {
+        const slug = m[1];
+        const prodUrl = `https://payhip.com/b/${slug}`;
+        if (!seen.has(prodUrl)) {
+          seen.add(prodUrl);
+          products.push({ title: `Product #${slug}`, url: prodUrl, image: "", price: "", slug });
+        }
+      }
+    }
 
-      if (pageFound === 0) break;
-    } catch(e) {
-      break;
+    const colMatches = [...text.matchAll(/\/collection\/([a-zA-Z0-9_\-]+)/gi)];
+    for (const c of colMatches) {
+      const cSlug = c[1].toLowerCase().trim();
+      if (!['all', 'users', 'cart', 'login', 'signup'].includes(cSlug)) {
+        collections.add(cSlug);
+      }
     }
   }
 
-  // Fallback: if collection/all had 0 products, try the store root URL
-  if (allProducts.length === 0) {
-    try {
-      const resp = await fetch(storeBase, { headers, redirect: "follow" });
-      if (resp.ok) {
-        const html = await resp.text();
-        const cards = html.split(/<div[^>]+class=["'][^"']*product-card-wrapper/i);
-        if (cards.length > 1) {
-          for (let i = 1; i < cards.length; i++) {
-            const card = cards[i];
-            const slugMatch = card.match(/\/b\/([a-zA-Z0-9]+)/);
-            if (!slugMatch) continue;
-            const slug = slugMatch[1];
-            const prodUrl = `https://payhip.com/b/${slug}`;
-            if (seenUrls.has(prodUrl)) continue;
-            seenUrls.add(prodUrl);
+  return { products, collections };
+}
 
-            const titleMatch = card.match(/<h[2-4][^>]*class=["'][^"']*card__heading[^"']*["'][^>]*>[\s\r\n]*<a[^>]+>([\s\S]*?)<\/a>/i) ||
-                               card.match(/<h[2-4][^>]*>[\s\r\n]*<a[^>]+>([\s\S]*?)<\/a>/i);
-            const title = titleMatch ? titleMatch[1].replace(/<[^>]+>/g, '').trim() : `Product #${slug}`;
-            const imgMatch = card.match(/<img[^>]+(?:src|data-src)=["']([^"']+)["']/i);
-            let img = imgMatch ? imgMatch[1].trim() : "";
-            if (img.startsWith("//")) img = "https:" + img;
-            const priceMatch = card.match(/\$(\d+(?:\.\d{2})?)/);
-            const price = priceMatch ? `$${priceMatch[1]}` : "";
-            allProducts.push({ title, url: prodUrl, image: img, price });
-          }
-        } else {
-          const matches = [...html.matchAll(/\/b\/([a-zA-Z0-9]+)/g)];
-          for (const m of matches) {
-            const prodUrl = `https://payhip.com/b/${m[1]}`;
-            if (!seenUrls.has(prodUrl)) {
-              seenUrls.add(prodUrl);
-              allProducts.push({ title: `Product #${m[1]}`, url: prodUrl, image: "", price: "" });
-            }
-          }
-        }
+async function scrapePayhipStoreProducts(storeUrl) {
+  if (!storeUrl) return [];
+  const storeBase = storeUrl.replace(/\/$/, "").replace(/\/collection\/.*$/, "");
+
+  // 1. Try BOT_API backend first (runs on dedicated IP without Cloudflare rate limits)
+  try {
+    const botResp = await fetch(`${BOT_API}/api/scan-creator-links?url=${encodeURIComponent(storeBase)}`, {
+      headers: { "Accept": "application/json" }
+    });
+    if (botResp.ok) {
+      const bData = await botResp.json();
+      if (bData && bData.success && bData.products && bData.products.length > 0) {
+        return bData.products;
       }
-    } catch(e) {}
+    }
+  } catch (e) {}
+
+  const productMap = new Map();
+
+  // 2. Initial discovery from root and /collection/all
+  const [rootRes, allRes] = await Promise.all([
+    fetchPayhipRaw(storeBase),
+    fetchPayhipRaw(`${storeBase}/collection/all`)
+  ]);
+
+  const allDiscoveredCols = new Set();
+  for (const res of [rootRes, allRes]) {
+    if (res) {
+      const { products, collections } = parsePayhipProductsAndCollections(res);
+      for (const p of products) {
+        if (!productMap.has(p.url)) productMap.set(p.url, p);
+      }
+      for (const c of collections) allDiscoveredCols.add(c);
+    }
   }
 
-  return allProducts;
+  // Standard collection slugs common across creator stores
+  const standardCols = ['all', 'packs', 'colorings', 'effects-pjfs', 'twixtor', 'presets', 'plugins', 'project-files', 'shakes', 'bundles', 'cc', 'editing-packs', 'free', 'templates', 'luts', 'assets'];
+  for (const sc of standardCols) allDiscoveredCols.add(sc);
+
+  // 2. Fetch all collections in parallel batches (batch size 6)
+  const colsList = Array.from(allDiscoveredCols);
+  const colBatchSize = 6;
+  for (let i = 0; i < colsList.length; i += colBatchSize) {
+    const batch = colsList.slice(i, i + colBatchSize);
+    const batchResults = await Promise.all(
+      batch.map(colSlug => fetchPayhipRaw(`${storeBase}/collection/${colSlug}`))
+    );
+    for (const res of batchResults) {
+      if (!res) continue;
+      const { products } = parsePayhipProductsAndCollections(res);
+      for (const p of products) {
+        if (!productMap.has(p.url)) {
+          productMap.set(p.url, p);
+        } else {
+          const cur = productMap.get(p.url);
+          if ((!cur.title || cur.title.startsWith("Product #")) && p.title && !p.title.startsWith("Product #")) cur.title = p.title;
+          if (!cur.image && p.image) cur.image = p.image;
+          if (!cur.price && p.price) cur.price = p.price;
+        }
+      }
+    }
+  }
+
+  // 3. Product Graph Spidering: crawl up to 15 product pages to discover unlisted items
+  const spiderCandidates = Array.from(productMap.keys()).slice(0, 15);
+  if (spiderCandidates.length > 0) {
+    const spiderResults = await Promise.all(
+      spiderCandidates.map(pUrl => fetchPayhipRaw(pUrl))
+    );
+    for (const sRes of spiderResults) {
+      if (!sRes) continue;
+      const { products } = parsePayhipProductsAndCollections(sRes);
+      for (const p of products) {
+        if (!productMap.has(p.url)) {
+          productMap.set(p.url, p);
+        }
+      }
+    }
+  }
+
+  // 4. Metadata enrichment for any products missing title/image
+  const missingMeta = Array.from(productMap.values()).filter(p => !p.image || !p.title || p.title.startsWith("Product #"));
+  if (missingMeta.length > 0) {
+    const toEnrich = missingMeta.slice(0, 10);
+    const enrichResults = await Promise.all(
+      toEnrich.map(p => fetchPayhipRaw(p.url))
+    );
+    for (let i = 0; i < toEnrich.length; i++) {
+      const eRes = enrichResults[i];
+      const p = toEnrich[i];
+      if (!eRes || !eRes.text) continue;
+      if (eRes.type === "markdown") {
+        const tMatch = eRes.text.match(/Title:\s*([^\n\r]+)/i);
+        if (tMatch && p.title.startsWith("Product #")) {
+          const cleanT = tMatch[1].replace(/[|–\-]\s*Payhip.*/i, "").trim();
+          if (cleanT) p.title = cleanT;
+        }
+        const imgMatch = eRes.text.match(/!\[[^\]]*\]\((https?:\/\/pe56d\.s3\.amazonaws\.com\/[^\)]+|https?:\/\/payhip\.com\/cdn-cgi\/[^\)]+)\)/);
+        if (imgMatch && !p.image) p.image = imgMatch[1];
+      }
+    }
+  }
+
+  return Array.from(productMap.values());
 }
 
 // ============ TIKTOK & BIO CREATOR SCANNER ============
