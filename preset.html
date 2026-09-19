@@ -537,25 +537,6 @@
             color: #fff;
             border-color: rgba(255, 43, 82, 0.35);
         }
-        .comment-media-wrap {
-            margin-top: 10px;
-            margin-bottom: 6px;
-        }
-        .comment-media-embed {
-            max-width: 240px;
-            max-height: 180px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            object-fit: cover;
-            background: rgba(0, 0, 0, 0.3);
-            cursor: pointer;
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            display: block;
-        }
-        .comment-media-embed:hover {
-            transform: scale(1.02);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-        }
         .popover-card {
             position: absolute;
             bottom: calc(100% + 12px);
@@ -786,11 +767,18 @@
         .login-prompt-btn:active {
             transform: translateY(0) scale(0.98);
         }
+        .comments-tree {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            width: 100%;
+        }
         .comment-item {
             display: flex;
             gap: 16px;
-            margin-bottom: 22px;
+            align-items: flex-start;
             position: relative;
+            width: 100%;
         }
         .comment-avatar-wrap {
             flex-shrink: 0;
@@ -911,9 +899,17 @@
         }
 
         .comment-media-wrap {
-            margin: 8px 0;
-            display: inline-block;
+            margin: 10px 0;
+            display: block;
+            width: fit-content;
             max-width: 100%;
+            clear: both;
+        }
+        .comment-media-wrap:first-child {
+            margin-top: 2px;
+        }
+        .comment-media-wrap:last-child {
+            margin-bottom: 2px;
         }
         .comment-media-embed {
             max-width: 280px;
@@ -930,12 +926,15 @@
             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
         }
         .comment-sticker-embed {
-            width: 110px;
-            height: 110px;
+            width: 120px;
+            height: 120px;
+            max-width: 120px;
+            max-height: 120px;
             object-fit: contain;
             border: none;
             background: transparent;
             cursor: default;
+            display: block;
         }
         .comment-sticker-embed:hover {
             transform: scale(1.05);
@@ -1752,7 +1751,7 @@
         const txt = document.getElementById(activeCommentInputId || 'mainCommentText');
         if (!txt) return;
         const tag = `![sticker:${name}](${url})`;
-        txt.value = txt.value.trim() ? (txt.value.trim() + ' ' + tag) : tag;
+        txt.value = txt.value.trim() ? (txt.value.trim() + '\n' + tag) : tag;
         closePickerPopover();
         autoResizeCommentTextarea(txt);
         txt.focus();
@@ -1763,7 +1762,7 @@
         const txt = document.getElementById(activeCommentInputId || 'mainCommentText');
         if (!txt) return;
         const tag = `![gif](${url})`;
-        txt.value = txt.value.trim() ? (txt.value.trim() + ' ' + tag) : tag;
+        txt.value = txt.value.trim() ? (txt.value.trim() + '\n' + tag) : tag;
         closePickerPopover();
         autoResizeCommentTextarea(txt);
         txt.focus();
@@ -2127,25 +2126,25 @@
         escaped = escaped.replace(/\|\|([\s\S]+?)\|\|/g, '<span class="discord-spoiler" onclick="this.classList.toggle(\'revealed\')" title="Click to reveal spoiler">$1</span>');
 
         // 4. Custom stickers and GIFs
-        escaped = escaped.replace(/!\[sticker:(.*?)\]\((https?:\/\/[^\s\)\"'>]+)\)/g, function(match, name, url) {
+        escaped = escaped.replace(/(?:\r?\n|\s)*!\[sticker:(.*?)\]\((https?:\/\/[^\s\)\"'>]+)\)(?:\r?\n|\s)*/g, function(match, name, url) {
             return `<div class="comment-media-wrap"><img src="${url}" alt="${name}" class="comment-media-embed comment-sticker-embed" loading="lazy"></div>`;
         });
-        escaped = escaped.replace(/!\[gif\]\((https?:\/\/[^\s\)\"'>]+)\)/g, function(match, url) {
+        escaped = escaped.replace(/(?:\r?\n|\s)*!\[gif\]\((https?:\/\/[^\s\)\"'>]+)\)(?:\r?\n|\s)*/g, function(match, url) {
             return `<div class="comment-media-wrap"><img src="${url}" alt="GIF" class="comment-media-embed" loading="lazy" onclick="window.open(this.src,'_blank')"></div>`;
         });
-        escaped = escaped.replace(/!\[(.*?)\]\((https?:\/\/[^\s\)\"'>]+)\)/g, function(match, alt, url) {
+        escaped = escaped.replace(/(?:\r?\n|\s)*!\[(.*?)\]\((https?:\/\/[^\s\)\"'>]+)\)(?:\r?\n|\s)*/g, function(match, alt, url) {
             return `<div class="comment-media-wrap"><img src="${url}" alt="${alt}" class="comment-media-embed" loading="lazy" onclick="window.open(this.src,'_blank')"></div>`;
         });
 
         // 5. Tenor links (standalone or embedded): https://tenor.com/view/...-12345 or https://tenor.com/embed/12345
-        escaped = escaped.replace(/(?:^|\s)(?:https?:\/\/(?:www\.)?tenor\.com\/view\/[a-zA-Z0-9_\-]+-(\d+)|https?:\/\/(?:www\.)?tenor\.com\/embed\/(\d+))(?:\s|$)/g, function(match, id1, id2) {
+        escaped = escaped.replace(/(?:\r?\n|\s)*(?:https?:\/\/(?:www\.)?tenor\.com\/view\/[a-zA-Z0-9_\-]+-(\d+)|https?:\/\/(?:www\.)?tenor\.com\/embed\/(\d+))(?:\r?\n|\s)*/g, function(match, id1, id2) {
             const tid = id1 || id2;
             return `<div class="comment-media-wrap"><iframe src="https://tenor.com/embed/${tid}" class="comment-tenor-embed" frameborder="0" scrolling="no" allowfullscreen></iframe></div>`;
         });
 
         // 6. Standalone image / gif URLs
-        escaped = escaped.replace(/(^|\s)(https?:\/\/[^\s<]+?\.(?:gif|png|jpe?g|webp)(\?[^\s<]*)?)($|\s)/gi, function(match, p1, url, q, p2) {
-            return `${p1}<div class="comment-media-wrap"><img src="${url}" class="comment-media-embed" loading="lazy" onclick="window.open(this.src,'_blank')"></div>${p2}`;
+        escaped = escaped.replace(/(?:\r?\n|\s)*(https?:\/\/[^\s<]+?\.(?:gif|png|jpe?g|webp)(\?[^\s<]*)?)(?:\r?\n|\s)*/gi, function(match, url) {
+            return `<div class="comment-media-wrap"><img src="${url}" class="comment-media-embed" loading="lazy" onclick="window.open(this.src,'_blank')"></div>`;
         });
 
         // 7. Discord custom emojis: <:name:id> or <a:name:id>
@@ -2195,7 +2194,10 @@
             escaped = escaped.replace(`__DC_INLINE_CODE_${idx}__`, ic);
         });
 
-        return escaped.replace(/\n/g, '<br>');
+        escaped = escaped.replace(/\n/g, '<br>');
+        escaped = escaped.replace(/(?:<br>\s*)+<div class="comment-media-wrap">/g, '<div class="comment-media-wrap">');
+        escaped = escaped.replace(/<\/div>(?:\s*<br>)+/g, '</div>');
+        return escaped;
     }
 
     function renderCommentsTree(comments) {
@@ -2302,6 +2304,7 @@
 
                     ${repliesHtml}
                 </div>
+            </div>
         `;
     }
 
