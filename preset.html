@@ -2125,26 +2125,41 @@
         // 3. Spoilers: ||spoiler||
         escaped = escaped.replace(/\|\|([\s\S]+?)\|\|/g, '<span class="discord-spoiler" onclick="this.classList.toggle(\'revealed\')" title="Click to reveal spoiler">$1</span>');
 
-        // 4. Custom stickers and GIFs
+        // 4. Protected Media Blocks (Stickers, GIFs, Tenor, Attachments, Standalone Images)
+        const mediaBlocks = [];
+        function addMediaBlock(html) {
+            const placeholder = `__DC_MEDIA_BLOCK_${mediaBlocks.length}__`;
+            mediaBlocks.push(html);
+            return placeholder;
+        }
+
+        // 4a. Custom stickers: ![sticker:name](url)
         escaped = escaped.replace(/(?:\r?\n|\s)*!\[sticker:(.*?)\]\((https?:\/\/[^\s\)\"'>]+)\)(?:\r?\n|\s)*/g, function(match, name, url) {
-            return `<div class="comment-media-wrap"><img src="${url}" alt="${name}" class="comment-media-embed comment-sticker-embed" loading="lazy"></div>`;
+            return addMediaBlock(`<div class="comment-media-wrap"><img src="${url}" alt="${name}" class="comment-media-embed comment-sticker-embed" loading="lazy"></div>`);
         });
+
+        // 4b. GIFs: ![gif](url)
         escaped = escaped.replace(/(?:\r?\n|\s)*!\[gif\]\((https?:\/\/[^\s\)\"'>]+)\)(?:\r?\n|\s)*/g, function(match, url) {
-            return `<div class="comment-media-wrap"><img src="${url}" alt="GIF" class="comment-media-embed" loading="lazy" onclick="window.open(this.src,'_blank')"></div>`;
+            const tenorMatch = url.match(/tenor\.com\/(?:view\/[a-zA-Z0-9_\-]+-|embed\/|)(\d+)/);
+            if (tenorMatch) {
+                return addMediaBlock(`<div class="comment-media-wrap"><iframe src="https://tenor.com/embed/${tenorMatch[1]}" class="comment-tenor-embed" frameborder="0" scrolling="no" allowfullscreen></iframe></div>`);
+            }
+            return addMediaBlock(`<div class="comment-media-wrap"><img src="${url}" alt="GIF" class="comment-media-embed" loading="lazy" onclick="window.open(this.src,'_blank')"></div>`);
         });
+
+        // 4c. General markdown images/attachments: ![alt](url)
         escaped = escaped.replace(/(?:\r?\n|\s)*!\[(.*?)\]\((https?:\/\/[^\s\)\"'>]+)\)(?:\r?\n|\s)*/g, function(match, alt, url) {
-            return `<div class="comment-media-wrap"><img src="${url}" alt="${alt}" class="comment-media-embed" loading="lazy" onclick="window.open(this.src,'_blank')"></div>`;
+            return addMediaBlock(`<div class="comment-media-wrap"><img src="${url}" alt="${alt}" class="comment-media-embed" loading="lazy" onclick="window.open(this.src,'_blank')"></div>`);
         });
 
-        // 5. Tenor links (standalone or embedded): https://tenor.com/view/...-12345 or https://tenor.com/embed/12345
-        escaped = escaped.replace(/(?:\r?\n|\s)*(?:https?:\/\/(?:www\.)?tenor\.com\/view\/[a-zA-Z0-9_\-]+-(\d+)|https?:\/\/(?:www\.)?tenor\.com\/embed\/(\d+))(?:\r?\n|\s)*/g, function(match, id1, id2) {
-            const tid = id1 || id2;
-            return `<div class="comment-media-wrap"><iframe src="https://tenor.com/embed/${tid}" class="comment-tenor-embed" frameborder="0" scrolling="no" allowfullscreen></iframe></div>`;
+        // 4d. Standalone Tenor links: https://tenor.com/...
+        escaped = escaped.replace(/(?:\r?\n|\s)*(?:https?:\/\/(?:www\.)?tenor\.com\/(?:view\/[a-zA-Z0-9_\-]+-|embed\/|)(\d+)[^\s<]*)(?:\r?\n|\s)*/gi, function(match, tid) {
+            return addMediaBlock(`<div class="comment-media-wrap"><iframe src="https://tenor.com/embed/${tid}" class="comment-tenor-embed" frameborder="0" scrolling="no" allowfullscreen></iframe></div>`);
         });
 
-        // 6. Standalone image / gif URLs
-        escaped = escaped.replace(/(?:\r?\n|\s)*(https?:\/\/[^\s<]+?\.(?:gif|png|jpe?g|webp)(\?[^\s<]*)?)(?:\r?\n|\s)*/gi, function(match, url) {
-            return `<div class="comment-media-wrap"><img src="${url}" class="comment-media-embed" loading="lazy" onclick="window.open(this.src,'_blank')"></div>`;
+        // 4e. Standalone Image / GIF URLs: https://...
+        escaped = escaped.replace(/(?:\r?\n|\s)*(https?:\/\/[^\s<]+?\.(?:gif|png|jpe?g|webp)(\?[^\s<]*)?|https?:\/\/media\.tenor\.com\/[^\s<]+|https?:\/\/media[0-9]?\.giphy\.com\/media\/[^\s<]+)(?:\r?\n|\s)*/gi, function(match, url) {
+            return addMediaBlock(`<div class="comment-media-wrap"><img src="${url}" class="comment-media-embed" loading="lazy" onclick="window.open(this.src,'_blank')"></div>`);
         });
 
         // 7. Discord custom emojis: <:name:id> or <a:name:id>
@@ -2186,7 +2201,10 @@
         // Strikethrough: ~~text~~
         escaped = escaped.replace(/~~(.*?)~~/g, '<s>$1</s>');
 
-        // 14. Restore protected code blocks and inline codes
+        // 14. Restore protected code blocks, inline codes, and media blocks
+        mediaBlocks.forEach((mb, idx) => {
+            escaped = escaped.replace(`__DC_MEDIA_BLOCK_${idx}__`, mb);
+        });
         codeBlocks.forEach((cb, idx) => {
             escaped = escaped.replace(`__DC_CODE_BLOCK_${idx}__`, cb);
         });
