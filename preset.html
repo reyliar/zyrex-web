@@ -2109,7 +2109,7 @@
         // 1. Extract and protect code blocks: ```lang\ncode```
         const codeBlocks = [];
         escaped = escaped.replace(/```(?:([a-zA-Z0-9_-]+)?\n)?([\s\S]*?)```/g, function(match, lang, code) {
-            const placeholder = `__DC_CODE_BLOCK_${codeBlocks.length}__`;
+            const placeholder = `@@@ZYREX_CODE_BLOCK_${codeBlocks.length}@@@`;
             codeBlocks.push(`<pre class="discord-code-block"><code>${code}</code></pre>`);
             return placeholder;
         });
@@ -2117,7 +2117,7 @@
         // 2. Extract and protect inline code: `code`
         const inlineCodes = [];
         escaped = escaped.replace(/`([^`\n]+)`/g, function(match, code) {
-            const placeholder = `__DC_INLINE_CODE_${inlineCodes.length}__`;
+            const placeholder = `@@@ZYREX_INLINE_CODE_${inlineCodes.length}@@@`;
             inlineCodes.push(`<code class="discord-inline-code">${code}</code>`);
             return placeholder;
         });
@@ -2128,7 +2128,7 @@
         // 4. Protected Media Blocks (Stickers, GIFs, Tenor, Attachments, Standalone Images)
         const mediaBlocks = [];
         function addMediaBlock(html) {
-            const placeholder = `__DC_MEDIA_BLOCK_${mediaBlocks.length}__`;
+            const placeholder = `@@@ZYREX_MEDIA_BLOCK_${mediaBlocks.length}@@@`;
             mediaBlocks.push(html);
             return placeholder;
         }
@@ -2203,13 +2203,13 @@
 
         // 14. Restore protected code blocks, inline codes, and media blocks
         mediaBlocks.forEach((mb, idx) => {
-            escaped = escaped.replace(`__DC_MEDIA_BLOCK_${idx}__`, mb);
+            escaped = escaped.replace(`@@@ZYREX_MEDIA_BLOCK_${idx}@@@`, mb);
         });
         codeBlocks.forEach((cb, idx) => {
-            escaped = escaped.replace(`__DC_CODE_BLOCK_${idx}__`, cb);
+            escaped = escaped.replace(`@@@ZYREX_CODE_BLOCK_${idx}@@@`, cb);
         });
         inlineCodes.forEach((ic, idx) => {
-            escaped = escaped.replace(`__DC_INLINE_CODE_${idx}__`, ic);
+            escaped = escaped.replace(`@@@ZYREX_INLINE_CODE_${idx}@@@`, ic);
         });
 
         escaped = escaped.replace(/\n/g, '<br>');
