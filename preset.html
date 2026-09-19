@@ -1599,10 +1599,9 @@
 
     const MEDIA_SERVICE_ERROR_MSG = "An issue occurred with our GIF and sticker service. (Error Code: ERR_MEDIA_SERVICE_UNAVAILABLE)";
 
-    function containsMediaBlocks(text) {
+    function hasCorruptedMediaBlock(text) {
         if (!text) return false;
-        const mediaPattern = /!\[.*?\]\([^\)]+\)|https?:\/\/(?:www\.)?tenor\.com\/|https?:\/\/(?:[a-zA-Z0-9_\-]+\.)?giphy\.com\/|https?:\/\/[^\s<]+?\.(?:gif|png|jpe?g|webp)/i;
-        return mediaPattern.test(text);
+        return /(?:DC|ZYREX)_MEDIA_BLOCK/i.test(text);
     }
 
     async function toggleStickerPicker(btn, targetInputId, popoverId) {
@@ -2219,6 +2218,10 @@
             escaped = escaped.replace(`@@@ZYREX_INLINE_CODE_${idx}@@@`, ic);
         });
 
+        // Corrupted media block fallback (renders warning badge instead of broken raw token)
+        const corruptedMediaBadge = `<div class="comment-media-wrap"><div style="display:inline-flex;align-items:center;gap:8px;padding:8px 12px;background:rgba(255,43,82,0.1);border:1px solid rgba(255,43,82,0.3);border-radius:8px;color:#ff6b8b;font-size:0.8rem"><i class="fas fa-triangle-exclamation"></i> <span>${MEDIA_SERVICE_ERROR_MSG}</span></div></div>`;
+        escaped = escaped.replace(/(?:<u>)?(?:__|@@@)?(?:DC|ZYREX)_MEDIA_BLOCK_\d+(?:__|@@@)?(?:<\/u>)?/gi, corruptedMediaBadge);
+
         escaped = escaped.replace(/\n/g, '<br>');
         escaped = escaped.replace(/(?:<br>\s*)+<div class="comment-media-wrap">/g, '<div class="comment-media-wrap">');
         escaped = escaped.replace(/<\/div>(?:\s*<br>)+/g, '</div>');
@@ -2367,7 +2370,7 @@
         const btn = document.getElementById('btnSaveEdit-' + commentId);
         if (!ta || !ta.value.trim() || !commentId) return;
 
-        if (containsMediaBlocks(ta.value)) {
+        if (hasCorruptedMediaBlock(ta.value)) {
             alert(MEDIA_SERVICE_ERROR_MSG);
             return;
         }
@@ -2459,7 +2462,7 @@
         const btn = document.getElementById('btnSubmitComment');
         if (!ta || !ta.value.trim() || !currentCommentsPresetId) return;
 
-        if (containsMediaBlocks(ta.value)) {
+        if (hasCorruptedMediaBlock(ta.value)) {
             alert(MEDIA_SERVICE_ERROR_MSG);
             return;
         }
@@ -2499,7 +2502,7 @@
         const ta = document.getElementById('replyText-' + parentId);
         if (!ta || !ta.value.trim() || !currentCommentsPresetId) return;
 
-        if (containsMediaBlocks(ta.value)) {
+        if (hasCorruptedMediaBlock(ta.value)) {
             alert(MEDIA_SERVICE_ERROR_MSG);
             return;
         }

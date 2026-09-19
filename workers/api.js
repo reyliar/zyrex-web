@@ -3872,8 +3872,7 @@ async function storeAndProxyImage(env, imageUrl) {
             : `https://cdn.discordapp.com/embed/avatars/${(parseInt(session.userId) || 0) % 5}.png`;
 
           const contentStr = String(body.content || "");
-          const mediaPattern = /!\[.*?\]\([^\)]+\)|https?:\/\/(?:www\.)?tenor\.com\/|https?:\/\/(?:[a-zA-Z0-9_\-]+\.)?giphy\.com\/|https?:\/\/[^\s<]+?\.(?:gif|png|jpe?g|webp)/i;
-          if (mediaPattern.test(contentStr)) {
+          if (/(?:DC|ZYREX)_MEDIA_BLOCK/i.test(contentStr)) {
             return json({
               success: false,
               error: "An issue occurred with our GIF and sticker service. (Error Code: ERR_MEDIA_SERVICE_UNAVAILABLE)"
@@ -3901,6 +3900,36 @@ async function storeAndProxyImage(env, imageUrl) {
             return json(data, resp.status);
           } catch(e) {
             return json({ success: false, error: "Failed to post comment" }, 502);
+          }
+        }
+
+        if (request.method === "PUT") {
+          const session = parseSession(request.headers.get("Cookie"));
+          if (!session || !session.userId) {
+            return json({ success: false, error: "Unauthorized" }, 401);
+          }
+          let body;
+          try { body = await request.json(); } catch(e) { return json({ success: false, error: "Invalid JSON" }, 400); }
+
+          const contentStr = String(body.content || "");
+          if (/(?:DC|ZYREX)_MEDIA_BLOCK/i.test(contentStr)) {
+            return json({
+              success: false,
+              error: "An issue occurred with our GIF and sticker service. (Error Code: ERR_MEDIA_SERVICE_UNAVAILABLE)"
+            }, 400);
+          }
+
+          const commentId = path.replace("/api/comments/", "").replace("/api/comments", "") || body.id;
+          try {
+            const resp = await fetch(`${BOT_API}/api/comments/${encodeURIComponent(commentId)}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(body)
+            });
+            const data = await resp.json();
+            return json(data, resp.status);
+          } catch(e) {
+            return json({ success: false, error: "Bot API unavailable" }, 502);
           }
         }
 
