@@ -974,9 +974,11 @@ async function scrapePayhip(url) {
     if (!html) {
       try {
         const cleanUrl = url.replace(/^https?:\/\//, "");
-        const jinaResp = await fetch(`https://r.jina.ai/https://${cleanUrl}`, {
-          headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" }
-        });
+        const jHeaders = { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" };
+        if (typeof env !== "undefined" && env?.JINA_API_KEY) {
+          jHeaders["Authorization"] = `Bearer ${env.JINA_API_KEY}`;
+        }
+        const jinaResp = await fetch(`https://r.jina.ai/https://${cleanUrl}`, { headers: jHeaders });
         if (jinaResp.ok) {
           html = await jinaResp.text();
           isMarkdown = true;
@@ -1173,9 +1175,11 @@ async function fetchPayhipRaw(targetUrl) {
   // Fallback to r.jina.ai when Cloudflare challenge / 403 occurs
   try {
     const cleanUrl = targetUrl.replace(/^https?:\/\//, "");
-    const jinaResp = await fetch(`https://r.jina.ai/https://${cleanUrl}`, {
-      headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" }
-    });
+    const jHeaders = { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" };
+    if (typeof env !== "undefined" && env?.JINA_API_KEY) {
+      jHeaders["Authorization"] = `Bearer ${env.JINA_API_KEY}`;
+    }
+    const jinaResp = await fetch(`https://r.jina.ai/https://${cleanUrl}`, { headers: jHeaders });
     if (jinaResp.ok) {
       const text = await jinaResp.text();
       return { type: "markdown", text };
