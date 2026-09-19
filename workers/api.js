@@ -3871,6 +3871,15 @@ async function storeAndProxyImage(env, imageUrl) {
             ? `https://cdn.discordapp.com/avatars/${session.userId}/${session.avatar}.png?size=128`
             : `https://cdn.discordapp.com/embed/avatars/${(parseInt(session.userId) || 0) % 5}.png`;
 
+          const contentStr = String(body.content || "");
+          const mediaPattern = /!\[.*?\]\([^\)]+\)|https?:\/\/(?:www\.)?tenor\.com\/|https?:\/\/(?:[a-zA-Z0-9_\-]+\.)?giphy\.com\/|https?:\/\/[^\s<]+?\.(?:gif|png|jpe?g|webp)/i;
+          if (mediaPattern.test(contentStr)) {
+            return json({
+              success: false,
+              error: "An issue occurred with our GIF and sticker service. (Error Code: ERR_MEDIA_SERVICE_UNAVAILABLE)"
+            }, 400);
+          }
+
           const payload = {
             preset_id: body.preset_id || body.id,
             user_id: session.userId,
