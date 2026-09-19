@@ -1606,12 +1606,100 @@
     }
 
     async function toggleStickerPicker(btn, targetInputId, popoverId) {
-        alert(MEDIA_SERVICE_ERROR_MSG);
+        const targetInput = targetInputId || 'mainCommentText';
+        const targetPopId = popoverId || 'commentPickerPopover';
+        const pop = document.getElementById(targetPopId);
+        if (!pop) return;
+
+        if (pop.style.display === 'block' && pop.getAttribute('data-type') === 'stickers') {
+            closePickerPopover();
+            return;
+        }
+
+        closePickerPopover();
+        activeCommentInputId = targetInput;
+        activeCommentPopoverId = targetPopId;
+
+        btn.classList.add('active');
+        pop.setAttribute('data-type', 'stickers');
+        pop.style.display = 'block';
+        pop.innerHTML = `
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                <span style="font-size:0.75rem;font-weight:700;color:var(--cherry-neon);text-transform:uppercase;letter-spacing:0.5px">
+                    <i class="fab fa-discord"></i> Discord Server Stickers
+                </span>
+                <button type="button" onclick="closePickerPopover()" style="background:none;border:none;color:var(--text-sub);cursor:pointer;font-size:1rem">&times;</button>
+            </div>
+            <div class="popover-grid" id="${targetPopId}_stickersGrid">
+                <div style="grid-column:1/-1;text-align:center;padding:25px 0;color:var(--text-sub)">
+                    <i class="fas fa-spinner fa-spin" style="color:var(--cherry-neon);margin-bottom:6px"></i>
+                    <div>Loading server stickers...</div>
+                </div>
+            </div>
+        `;
+
+        try {
+            if (!currentGuildStickers) {
+                const resp = await fetch('/api/guild/stickers');
+                const data = await resp.json();
+                currentGuildStickers = (data && data.stickers) ? data.stickers : [];
+            }
+            const grid = document.getElementById(`${targetPopId}_stickersGrid`);
+            if (!grid) return;
+            if (currentGuildStickers.length === 0) {
+                grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:var(--text-sub)">No server stickers found</div>';
+                return;
+            }
+            grid.innerHTML = currentGuildStickers.map(stk => `
+                <div class="popover-item" onclick="insertStickerToComment('${stk.name.replace(/'/g, "\\'")}', '${stk.url}')" title="${stk.name}">
+                    <img src="${stk.url}" alt="${stk.name}" loading="lazy">
+                </div>
+            `).join('');
+        } catch(err) {
+            const grid = document.getElementById(`${targetPopId}_stickersGrid`);
+            if (grid) grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:rgba(255,100,100,0.8)">Error loading stickers</div>';
+        }
     }
     window.toggleStickerPicker = toggleStickerPicker;
 
     async function toggleGifPicker(btn, targetInputId, popoverId) {
-        alert(MEDIA_SERVICE_ERROR_MSG);
+        const targetInput = targetInputId || 'mainCommentText';
+        const targetPopId = popoverId || 'commentPickerPopover';
+        const pop = document.getElementById(targetPopId);
+        if (!pop) return;
+
+        if (pop.style.display === 'block' && pop.getAttribute('data-type') === 'gifs') {
+            closePickerPopover();
+            return;
+        }
+
+        closePickerPopover();
+        activeCommentInputId = targetInput;
+        activeCommentPopoverId = targetPopId;
+
+        btn.classList.add('active');
+        pop.setAttribute('data-type', 'gifs');
+        pop.style.display = 'block';
+        pop.innerHTML = `
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+                <span style="font-size:0.75rem;font-weight:700;color:#00d2ff;text-transform:uppercase;letter-spacing:0.5px">
+                    <i class="fas fa-film"></i> Giphy GIFs
+                </span>
+                <button type="button" onclick="closePickerPopover()" style="background:none;border:none;color:var(--text-sub);cursor:pointer;font-size:1rem">&times;</button>
+            </div>
+            <input type="text" class="popover-search-input" id="${targetPopId}_giphySearchInput" placeholder="Search GIFs..." oninput="onGiphySearchInput(this.value, '${targetPopId}')">
+            <div class="popover-grid" id="${targetPopId}_gifsGrid">
+                <div style="grid-column:1/-1;text-align:center;padding:25px 0;color:var(--text-sub)">
+                    <i class="fas fa-spinner fa-spin" style="color:#00d2ff;margin-bottom:6px"></i>
+                    <div>Loading trending GIFs...</div>
+                </div>
+            </div>
+        `;
+        setTimeout(() => {
+            const inp = document.getElementById(`${targetPopId}_giphySearchInput`);
+            if (inp) inp.focus();
+        }, 50);
+        fetchGiphyGifs('', targetPopId);
     }
     window.toggleGifPicker = toggleGifPicker;
 
