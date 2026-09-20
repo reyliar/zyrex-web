@@ -4965,29 +4965,36 @@
 
             const payload = {
                 id: id,
-                name: document.getElementById('editProductName').value,
+                name: (document.getElementById('editProductName') ? document.getElementById('editProductName').value : ''),
                 type: type,
-                category: document.getElementById('editProductCategory').value,
-                resource_category: finalSubcats.join(','),
-                resource_subcategories: finalSubcats,
-                setting_preset_type: settingPresetType,
-                description: document.getElementById('editProductDesc').value,
-                file_path: document.getElementById('editProductFilePath').value,
-                thumbnail: document.getElementById('editProductThumbnail').value,
+                category: (document.getElementById('editProductCategory') ? document.getElementById('editProductCategory').value : ''),
+                description: (document.getElementById('editProductDesc') ? document.getElementById('editProductDesc').value : ''),
+                file_path: (document.getElementById('editProductFilePath') ? document.getElementById('editProductFilePath').value : ''),
+                thumbnail: (document.getElementById('editProductThumbnail') ? document.getElementById('editProductThumbnail').value : ''),
                 source_url: sourceUrl,
                 product_url: sourceUrl,
-                platform: document.getElementById('editProductPlatform').value,
-                password: document.getElementById('editProductPassword').value,
-                notes: document.getElementById('editProductNotes').value,
-                creator_social_url: document.getElementById('editProductCreatorSocialUrl').value,
-                creator_nickname: document.getElementById('editProductCreatorNickname').value,
-                creator_avatar: document.getElementById('editProductCreatorAvatar').value,
+                creator_social_url: (document.getElementById('editProductCreatorSocialUrl') ? document.getElementById('editProductCreatorSocialUrl').value : ''),
+                creator_nickname: (document.getElementById('editProductCreatorNickname') ? document.getElementById('editProductCreatorNickname').value : ''),
+                creator_avatar: (document.getElementById('editProductCreatorAvatar') ? document.getElementById('editProductCreatorAvatar').value : ''),
                 origin: (document.getElementById('editProductOrigin') ? document.getElementById('editProductOrigin').value.trim() : ''),
                 rating: (document.getElementById('editProductImdbRating') ? document.getElementById('editProductImdbRating').value.trim() : ''),
                 imdb_rating: (document.getElementById('editProductImdbRating') ? document.getElementById('editProductImdbRating').value.trim() : ''),
                 file_size: (document.getElementById('editProductFileSize') ? document.getElementById('editProductFileSize').value.trim() : ''),
                 release_date: (document.getElementById('editProductReleaseDate') ? document.getElementById('editProductReleaseDate').value.trim() : '')
             };
+
+            if (type === 'resource') {
+                payload.resource_category = finalSubcats.join(',');
+                payload.resource_subcategories = finalSubcats;
+                payload.setting_preset_type = settingPresetType;
+            }
+
+            if (type === 'plugin' || type === 'software') {
+                payload.platform = (document.getElementById('editProductPlatform') ? document.getElementById('editProductPlatform').value : '');
+                payload.password = (document.getElementById('editProductPassword') ? document.getElementById('editProductPassword').value : '');
+                payload.notes = (document.getElementById('editProductNotes') ? document.getElementById('editProductNotes').value : '');
+                payload.links = [{ url: sourceUrl || '', label: 'Download' }];
+            }
 
             if (window._lastAppliedLookup) {
                 if (window._lastAppliedLookup.id) payload.imdb_id = window._lastAppliedLookup.id;
@@ -4996,10 +5003,6 @@
                 if (window._lastAppliedLookup.cast) payload.cast = window._lastAppliedLookup.cast;
                 if (window._lastAppliedLookup.banner) payload.banner = window._lastAppliedLookup.banner;
                 if (window._lastAppliedLookup.type) payload.origin_type = window._lastAppliedLookup.type;
-            }
-
-            if (type === 'plugin' || type === 'software') {
-                payload.links = [{ url: sourceUrl || '', label: 'Download' }];
             }
 
             try {
