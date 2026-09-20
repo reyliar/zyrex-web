@@ -2932,6 +2932,7 @@
                 cdn_thumbnail:cdnThumb,
                 product_url:payhipVal,
                 source_url:payhipVal,
+                request_id: (new URLSearchParams(location.search).get('request_id')) || undefined,
                 file_path:transferred||'',
                 type:'preset',
                 resource_category: finalSubcats.join(','),
@@ -2963,6 +2964,26 @@
             btn.innerHTML='<i class="fas fa-paper-plane"></i> Publish Resource';
         }
         
+        // Prefill from request URL params if fulfilling a request
+        (function() {
+            var params = new URLSearchParams(location.search);
+            var reqTitle = params.get('title');
+            var reqUrl = params.get('url');
+            var reqCreator = params.get('creator');
+            if (reqTitle) {
+                var pName = document.getElementById('productName');
+                if (pName && !pName.value) pName.value = reqTitle;
+            }
+            if (reqUrl) {
+                var pUrl = document.getElementById('payhipUrl');
+                if (pUrl && !pUrl.value) pUrl.value = reqUrl;
+            }
+            if (reqCreator) {
+                var cName = document.getElementById('creatorName');
+                if (cName && !cName.value) cName.value = reqCreator;
+            }
+        })();
+
         updateLivePreview();
     </script>
 </body>
