@@ -67,6 +67,31 @@ if (fs.existsSync(cssDir)) {
 }
 
 // Process HTML files in .site-assets
+function safeMinifyHtml(html) {
+    let res = html.replace(/<!--(?!\[if)[\s\S]*?-->/g, '');
+    const parts = [];
+    let lastIndex = 0;
+    const tagRegex = /<(script|style|pre|textarea)\b[^>]*>[\s\S]*?<\/\1>/gi;
+    let match;
+    while ((match = tagRegex.exec(res)) !== null) {
+        let before = res.slice(lastIndex, match.index);
+        before = before.replace(/>\s+</g, '><');
+        parts.push(before);
+
+        let blockContent = match[0];
+        if (/^<style\b/i.test(blockContent)) {
+            blockContent = blockContent.replace(/(<style\b[^>]*>)([\s\S]*?)(<\/style>)/i, (_, open, css, close) => {
+                return open + minifyCss(css) + close;
+            });
+        }
+        parts.push(blockContent);
+        lastIndex = tagRegex.lastIndex;
+    }
+    let rest = res.slice(lastIndex).replace(/>\s+</g, '><');
+    parts.push(rest);
+    return parts.join('');
+}
+
 const htmlFiles = fs.readdirSync(ASSETS_DIR).filter(f => f.endsWith('.html'));
 
 // Fast and safe in-process HTML minification
@@ -78,12 +103,8 @@ for (const file of htmlFiles) {
     // Inject critical connection hints
     content = injectPreloads(content);
 
-    // Single-line compact HTML minification
-    const minified = content
-        .replace(/<!--(?!\[if)[\s\S]*?-->/g, '')
-        .replace(/>\s+</g, '><')
-        .replace(/\s+/g, ' ')
-        .trim();
+    // Minify HTML structure safely without corrupting inline JavaScript
+    const minified = safeMinifyHtml(content);
 
     fs.writeFileSync(fullPath, minified, 'utf8');
     totalMinifiedBytes += minified.length;
