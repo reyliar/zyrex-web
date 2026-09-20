@@ -1,5 +1,4 @@
 
-/* ===================== ZYREX SECURE API FETCH INTERCEPTOR ===================== */
 (function() {
     window.ZYREX_API_KEY = "zyrex_app_sec_k982f81a7b54c29013e9a";
     var origFetch = window.fetch;
@@ -271,7 +270,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-/* ===================== COOKIES CONSENT SYSTEM ===================== */
 
 function shouldSkipCookieConsent() {
     const host = window.location.hostname.toLowerCase();

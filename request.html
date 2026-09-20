@@ -468,7 +468,6 @@
     </div>
 
     <script>
-        // ===== HELPERS =====
         function escapeHtml(str) {
             if (!str) return '';
             return str.replace(/[&<>'""]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
@@ -507,7 +506,6 @@
             try { localStorage.setItem('zyrex_upvotes', JSON.stringify(arr)); } catch {}
         }
 
-        // ===== RENDER =====
         var currentReq = null;
 
         function renderPage(req) {
@@ -687,7 +685,6 @@
             checkAndShowAdminPanel();
         }
 
-        // ===== UPVOTE =====
         async function handleUpvote() {
             if (!currentReq) return;
             var btn = document.getElementById('detailUpvoteBtn');
@@ -723,7 +720,6 @@
             } catch(e) { console.warn('Upvote error:', e); }
         }
 
-        // ===== INIT =====
         async function init() {
             var params = new URLSearchParams(location.search);
             var id = params.get('id');
@@ -864,7 +860,6 @@
     <script src="/js/auth.js?v=11"></script>
     <script src="/js/script.js?v=45"></script>
     <script>
-        // ===== ADMIN ACTIONS =====
         var _adminUser = null;
 
         // Called after auth.js loads the user

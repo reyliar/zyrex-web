@@ -248,7 +248,6 @@ function clearCookie() {
   return "zyrex_session=; Domain=.zyrexediting.xyz; Path=/; HttpOnly; SameSite=Lax; Max-Age=0; Secure";
 }
 
-// ============ R2 FILE HELPERS ============
 async function r2List(env, prefix, useProd = false) {
   const bucket = useProd ? (env.STORAGE_PROD || env.STORAGE) : env.STORAGE;
   const objects = [];
@@ -487,7 +486,6 @@ function makeCentralDirEntry(nameBytes, size, crc, offset) {
   return buf;
 }
 
-// ============ SFTPGO DIRECT API HELPERS ============
 async function sftpgoAuth(env) {
   if (sftpgoToken && Date.now() < sftpgoTokenExpiry) {
     return sftpgoToken;
@@ -953,7 +951,6 @@ async function scanDetectedResources(discordId, env) {
   }
 }
 
-// ============ PAYHIP SCRAPER (Direct + Proxy Fallback) ============
 async function scrapePayhip(url) {
   try {
     let html = "";
@@ -1037,7 +1034,6 @@ async function scrapePayhip(url) {
       if (m?.[1]) { price = "$" + m[1]; break; }
     }
 
-    // --- Image extraction: smarter priority-based selection ---
     let primaryImage = "";
     const thumbnails = new Set();
 
@@ -1155,7 +1151,6 @@ async function scrapePayhip(url) {
   }
 }
 
-// ============ UNLIMITED MULTI-COLLECTION PAYHIP CATALOG SCRAPER ============
 async function fetchPayhipRaw(targetUrl, env = null) {
   const headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
@@ -1409,7 +1404,6 @@ async function scrapePayhipStoreProducts(storeUrl, maxPages = 25, env = null) {
   return Array.from(productMap.values());
 }
 
-// ============ TIKTOK & BIO CREATOR SCANNER ============
 async function scanCreatorLinks(rawUrl, env = null) {
   let targetUrl = String(rawUrl || "").trim();
   if (!targetUrl) return { success: false, error: "URL or username is required" };
@@ -1500,13 +1494,11 @@ async function scanCreatorLinks(rawUrl, env = null) {
     return null;
   }
 
-  // === CASE 1: Input is already a store link ===
   if (STORE_DOMAINS.some(d => targetUrl.includes(d))) {
     applyStore(extractStoreLinks(targetUrl));
     if (!result.found) { result.found = true; result.storeUrl = targetUrl; result.platform = "unknown"; }
   }
 
-  // === CASE 2: Input is already an aggregator link ===
   if (!result.found && AGGREGATOR_DOMAINS.some(d => targetUrl.includes(d))) {
     const html = await fetchText(targetUrl);
     if (html) applyStore(extractStoreLinks(html));
@@ -1526,7 +1518,6 @@ async function scanCreatorLinks(rawUrl, env = null) {
     }
   }
 
-  // === CASE 3: Social media profile — multi-strategy scan ===
   if (!result.found && username && username.length >= 2) {
     let actualBioLink = null;
 
@@ -1640,7 +1631,6 @@ async function scanCreatorLinks(rawUrl, env = null) {
     }
   }
 
-  // === Fetch product catalog if Payhip / Boosty / Patreon store found ===
   if (result.found && result.storeUrl) {
     if (result.platform === "payhip" || result.storeUrl.includes("payhip.com")) {
       try {
@@ -1714,7 +1704,6 @@ function cleanSocialNickname(name, username) {
   return clean;
 }
 
-// ============ SOCIAL PROFILE RESOLVER (HLX) ============
 async function resolveSocialProfile(targetUrl) {
   if (!targetUrl) return { success: false, error: "URL is required" };
 
@@ -2004,7 +1993,6 @@ async function cacheThumbnail(env, imageUrl, filename) {
   }
 }
 
-// ============ REAL-TIME PRESENCE & STATUS API ============
 const presenceCache = new Map();
 
 // Known fallback profiles for founders
@@ -2333,7 +2321,6 @@ export default {
       return new Response(null, { headers: corsHeaders });
     }
 
-    // ============ ZYREX API KEY SECURITY GATEKEEPER ============
     if (path.startsWith("/api/")) {
       const isPublicEndpoint = path === "/api/login" || 
                                path === "/api/auth/callback" || 
@@ -2386,12 +2373,10 @@ export default {
       }
     }
 
-    // ============ REAL-TIME PRESENCE & STATUS API ============
     if (path.startsWith("/api/presence")) {
       return handlePresenceAPI(request, env);
     }
 
-    // ============ THUMBNAIL UPLOAD (internal API for migration/scraper) ============
     if (path === "/api/thumbnails/upload" && request.method === "POST") {
       try {
         const body = await request.json();
@@ -2408,7 +2393,6 @@ export default {
       }
     }
 
-        // ============ IMDB & IGDB PRODUCTION & GAME LOOKUP APIs ============
     if (path === "/api/lookup/imdb" && request.method === "GET") {
       const q = (url.searchParams.get("q") || "").trim();
       if (!q) return json({ success: false, results: [] });
@@ -2623,7 +2607,6 @@ export default {
       }
     }
 
-    // ============ TIKTOK & BIO CREATOR SCANNER API (Runs Worker scanner first, fallbacks to BOT_API) ============
     if ((path === "/api/scan-creator-links" || path === "/api/scan-creator-links/") && (request.method === "GET" || request.method === "POST")) {
       let scanUrl = url.searchParams.get("url") || "";
       if (request.method === "POST") {
@@ -2794,7 +2777,6 @@ async function storeAndProxyImage(env, imageUrl) {
     }
 
 
-    // ============ AUDIO UPLOAD: direct file upload to R2 ============
     if (path === "/api/audio/upload" && request.method === "POST") {
       try {
         const body = await request.json();
@@ -2842,7 +2824,6 @@ async function storeAndProxyImage(env, imageUrl) {
       } catch(e) { return json({ error: e.message }, 500); }
     }
 
-    // ============ CREATOR INDEX: serve + upload from R2 ============
     if (path === "/api/data/creators.json") {
       if (request.method === "GET") {
         try {
@@ -2868,7 +2849,6 @@ async function storeAndProxyImage(env, imageUrl) {
       }
     }
 
-    // ============ AVATAR & BANNER PROXY (bypass Discord CDN blocks) ============
     if (path.startsWith("/api/avatar/")) {
       const cacheTTL = 86400;
       try {
@@ -3849,7 +3829,6 @@ async function storeAndProxyImage(env, imageUrl) {
         }
       }
 
-      // ============ SCRAPER (Unified — Proxied to Bot) ============
       if (path === "/api/scrape" || path === "/api/payhip/scrape" || path === "/api/patreon/scrape" || path === "/api/boosty/scrape") {
         const scrapeUrl = url.searchParams.get("url");
         if (!scrapeUrl) {
@@ -3874,7 +3853,6 @@ async function storeAndProxyImage(env, imageUrl) {
         }
       }
 
-      // ============ DOWNLOAD: Validate Token (self-contained) ============
       if (path === "/api/downloads/validate") {
         const token = url.searchParams.get("token");
         if (!token) return json({ error: "Token required" }, 400);
@@ -3895,7 +3873,6 @@ async function storeAndProxyImage(env, imageUrl) {
         });
       }
 
-      // ============ DOWNLOAD: Request Token (R2 production bucket) ============
       if (path === "/api/downloads/check-access") {
         const session = parseSession(request.headers.get("Cookie"));
         if (!session) return json({ can_download: false, reason: "not_logged_in" });
@@ -4000,7 +3977,6 @@ async function storeAndProxyImage(env, imageUrl) {
         });
       }
 
-      // ============ PRESET STATS (Download Count + Real View Count, proxied to Bot VPS) ============
       if (path === "/api/presets/stats") {
         const id = url.searchParams.get("id");
         if (!id) return json({ success: false, error: "id parameter required" }, 400);
@@ -4033,7 +4009,6 @@ async function storeAndProxyImage(env, imageUrl) {
         return json({ success: true, views: {} });
       }
 
-      // ============ PRESET COMMENTS (Two-Way Discord <-> Web) ============
       if (path === "/api/comments" || path.startsWith("/api/comments/")) {
         if (request.method === "GET") {
           try {
@@ -4137,7 +4112,6 @@ async function storeAndProxyImage(env, imageUrl) {
         }
       }
 
-      // ============ DOWNLOAD COUNTER (proxied to Bot VPS — single source of truth) ============
       if (path === "/api/downloads/counts") {
         try {
           const resp = await fetch(`${BOT_API}/api/downloads/counts`);
@@ -4159,7 +4133,6 @@ async function storeAndProxyImage(env, imageUrl) {
         } catch (e) { return json({ success: false, error: "Bot API unreachable" }, 502); }
       }
 
-      // ============ R2 FILE PREVIEW: Direct Stream from Cloudflare R2 Production/Staging Bucket ============
       if (path === "/api/downloads/preview" || path === "/api/files/preview") {
         const token = url.searchParams.get("token");
         const filePathParam = url.searchParams.get("file_path") || url.searchParams.get("path");
@@ -4303,7 +4276,6 @@ async function storeAndProxyImage(env, imageUrl) {
         return new Response(fileObj.body, { status: 200, headers });
       }
 
-      // ============ DOWNLOAD: Binary ZIP Stream (R2 production bucket) ============
       if (path === "/api/downloads/download") {
         const token = url.searchParams.get("token");
         if (!token) return json({ error: "Token required" }, 400);
@@ -4458,7 +4430,6 @@ async function storeAndProxyImage(env, imageUrl) {
         }
       }
 
-      // ============ SFTPGO: Account Info (bot first, fallback to direct) ============
       if (path === "/api/sftpgo/account") {
         const session = parseSession(request.headers.get("Cookie"));
         if (!session) return json({ error: "Not logged in" }, 401);
@@ -4482,7 +4453,6 @@ async function storeAndProxyImage(env, imageUrl) {
         return json(result, result.success ? 200 : 404);
       }
 
-      // ============ SFTPGO: List Files (local file API server) ============
       if (path === "/api/sftpgo/files") {
         const session = parseSession(request.headers.get("Cookie"));
         if (!session) return json({ error: "Not logged in" }, 401);
@@ -4511,7 +4481,6 @@ async function storeAndProxyImage(env, imageUrl) {
         return json({ success: false, error: "File listing service unavailable" }, 500);
       }
 
-      // ============ SFTPGO: Detected Resources (R2-first) ============
       if (path === "/api/sftpgo/detected-resources") {
         const session = parseSession(request.headers.get("Cookie"));
         if (!session) return json({ error: "Not logged in" }, 401);
@@ -4556,7 +4525,6 @@ async function storeAndProxyImage(env, imageUrl) {
         return json(result, result.success ? 200 : 500);
       }
 
-      // ============ ADMIN: List production folders (for orphaned resource detection) ============
       if (path === "/api/admin/production-folders") {
         const session = parseSession(request.headers.get("Cookie"));
         if (!session || !ADMIN_IDS.includes(session.userId)) return json({ error: "Admin only" }, 403);
@@ -4601,7 +4569,6 @@ async function storeAndProxyImage(env, imageUrl) {
         }
       }
 
-      // ============ CLOUD DIRECT: Change Password ============
       if (path === "/api/cloud/change-password" && request.method === "POST") {
         const session = parseSession(request.headers.get("Cookie"));
         if (!session) return json({ error: "Not logged in" }, 401);
@@ -4634,7 +4601,6 @@ async function storeAndProxyImage(env, imageUrl) {
         }
       }
 
-      // ============ PRODUCTS: Destination Editors (R2 prod bucket) ============
       if (path === "/api/products/destination-editors") {
         const session = parseSession(request.headers.get("Cookie"));
         if (!session) return json({ error: "Not logged in" }, 401);
@@ -4669,7 +4635,6 @@ async function storeAndProxyImage(env, imageUrl) {
         return json({ success: false, error: "Editor listing unavailable" }, 500);
       }
 
-      // ============ FILES: List files by path (R2 production bucket) ============
       if (path === "/api/files/list-path") {
         // Accept either session cookie OR valid download token
         let userId = null;
@@ -4727,7 +4692,6 @@ async function storeAndProxyImage(env, imageUrl) {
         } catch (e) { console.error("list-path error:", e.message); return json({ success: false, error: "File listing failed: " + e.message }, 500); }
       }
 
-      // ============ PRODUCTS: Create Editor Folder (R2 prod bucket) ============
       if (path === "/api/products/create-editor" && (request.method === "POST" || request.method === "PUT")) {
         const session = parseSession(request.headers.get("Cookie"));
         if (!session) return json({ error: "Not logged in" }, 401);
@@ -4761,7 +4725,6 @@ async function storeAndProxyImage(env, imageUrl) {
         return json({ success: false, error: "Create editor failed" }, 500);
       }
 
-      // ============ PRODUCTS: Transfer to Production (R2 direct via FILE_API or Worker) ============
       if (path === "/api/products/transfer" && (request.method === "POST" || request.method === "PUT")) {
         const session = parseSession(request.headers.get("Cookie"));
         if (!session) return json({ error: "Not logged in" }, 401);
@@ -4902,7 +4865,6 @@ async function storeAndProxyImage(env, imageUrl) {
         }
       }
 
-      // ============ PUBLISH: Move from staging R2 → production R2 ============
       if (path === "/api/publish" && request.method === "POST") {
         const session = parseSession(request.headers.get("Cookie"));
         if (!session) return json({ error: "Not logged in" }, 401);
@@ -4922,7 +4884,6 @@ async function storeAndProxyImage(env, imageUrl) {
         }
       }
 
-      // ============ SFTPGO ADMIN & CLOUD (direct bot proxy with auth) ============
       if (path.startsWith("/api/admin/sftpgo") || path.startsWith("/api/cloud/")) {
         const session = parseSession(request.headers.get("Cookie"));
         if (!session) return json({ error: "Not logged in" }, 401);
@@ -4950,7 +4911,6 @@ async function storeAndProxyImage(env, imageUrl) {
         }
       }
 
-      // ============ VIRUSTOTAL ADMIN MASS SCANNER ============
       if (path === "/api/admin/vt-scan" && request.method === "POST") {
         const session = parseSession(request.headers.get("Cookie"));
         if (!session?.userId || !ADMIN_IDS.includes(session.userId)) {
@@ -5000,7 +4960,6 @@ async function storeAndProxyImage(env, imageUrl) {
         }
       }
 
-      // ============ COMMUNITY REQUESTS SYSTEM (CLOUDFLARE R2 BACKED) ============
       if (path === "/api/requests" || path.startsWith("/api/requests/")) {
         const REQUESTS_R2_KEY = "requests/data.json";
         const REQUESTS_QUOTA_KEY = "requests/quota_tracking.json";
@@ -5461,7 +5420,6 @@ async function storeAndProxyImage(env, imageUrl) {
             userAvatar = "/assets/content.png";
           }
 
-          // === ENFORCE DAILY 3-REQUEST LIMIT & DETAILED AUDIT TRACKING ===
           const currentAllowance = await getUserAllowance(userId, clientIp, isAdmin);
           if (!isAdmin && currentAllowance.used_today >= DAILY_REQUEST_LIMIT) {
             // Record blocked submission in audit log
@@ -5717,7 +5675,6 @@ async function storeAndProxyImage(env, imageUrl) {
         return json({ error: "Not found" }, 404);
       }
 
-      // ============ BOT PROXY (admin, comments, notifications, guild, cloud link/unlink, downloads, hlx, verify, products) ============
       if (path.startsWith("/api/guild/") || path.startsWith("/api/notifications") || path.startsWith("/api/comments") || path.startsWith("/api/lookup/") ||
                                path.startsWith("/api/products") || path.startsWith("/api/admin/") || path.startsWith("/api/cloud/") || path.startsWith("/api/downloads/") || path.startsWith("/api/hlx/") || path.startsWith("/api/verify") || path.startsWith("/api/sftpgo/") || path.startsWith("/api/search/") || path === "/api/resource-stats" || path === "/api/discord-user" || path === "/api/check-uploader" || path === "/api/team") {
         const session = parseSession(request.headers.get("Cookie"));
@@ -5897,7 +5854,6 @@ async function storeAndProxyImage(env, imageUrl) {
         }
       }
 
-      // ============ PRESET PAGE: Inject OG meta tags for social sharing ============
       if (path === "/preset" || path === "/preset.html") {
         const presetId = url.searchParams.get("id") || "";
         const userAgent = (request.headers.get("User-Agent") || "").toLowerCase();

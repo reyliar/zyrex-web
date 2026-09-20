@@ -6,9 +6,7 @@
 (function () {
     'use strict';
 
-    // ----------------------------------------------------
     // DISABLE RIGHT-CLICK & DEVTOOLS SHORTCUTS (F12, Ctrl+Shift+I/J/C, Ctrl+U)
-    // ----------------------------------------------------
     document.addEventListener('contextmenu', (e) => {
         e.preventDefault();
         return false;
@@ -36,9 +34,7 @@
         }
     });
 
-    // ----------------------------------------------------
     // 0. LOADING SCREEN DISMISSAL
-    // ----------------------------------------------------
     const loaderScreen = document.getElementById('loaderScreen');
     function hideLoader() {
         if (loaderScreen && !loaderScreen.classList.contains('fade-out')) {
@@ -56,9 +52,7 @@
         setTimeout(hideLoader, 800);
     }
 
-    // ----------------------------------------------------
     // 1. GUARANTEED LINK CLICK & TOUCH NAVIGATION HANDLER
-    // ----------------------------------------------------
     function initClickHandlers() {
         const links = document.querySelectorAll('.icon-link-btn, .profile-footer, .page-corner-copyright');
         links.forEach(link => {
@@ -90,9 +84,7 @@
         initClickHandlers();
     }
 
-    // ----------------------------------------------------
     // 2. CUSTOM AESTHETIC THEME CURSOR ENGINE (Desktop Only)
-    // ----------------------------------------------------
     const isMobile = /Mobi|Android|iPhone|iPad|iPod|Touch/i.test(navigator.userAgent) || window.matchMedia('(pointer: coarse)').matches;
 
     const cursorDot = document.getElementById('customCursorDot');
@@ -140,9 +132,7 @@
         if (cursorRing) cursorRing.style.display = 'none';
     }
 
-    // ----------------------------------------------------
     // 3. STAGGERED 7s+ LIFETIME PIXEL STARS WITH PARTICLE SCATTER
-    // ----------------------------------------------------
     const canvas = document.getElementById('starfield');
     if (!canvas) return;
 
@@ -407,9 +397,7 @@
         height = canvas.height = window.innerHeight;
     });
 
-    // ----------------------------------------------------
     // 4. LIVE DISCORD PRESENCE SYNC (INSTANT LOCALSTORAGE CACHE)
-    // ----------------------------------------------------
     const profileCard = document.querySelector('.profile-card');
     if (!profileCard) return;
 
@@ -701,9 +689,7 @@
     }
     connectLanyardWS();
 
-    // ----------------------------------------------------
     // 5. FAST 3D PARALLAX TILT ENGINE (Desktop Only)
-    // ----------------------------------------------------
     const neonCard = document.querySelector('.neon-card-container');
     if (neonCard && !isMobile) {
         let currentTiltX = 0;

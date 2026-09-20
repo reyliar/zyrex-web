@@ -37,6 +37,9 @@ if (Test-Path ".site-assets") {
 }
 Write-Host "  All site assets synced successfully!" -ForegroundColor Green
 
+# Optimize and minify site assets for production (Single-line HTML, minified CSS & JS, preloads)
+node tools/build-optimizer.js
+
 # Deploy zyrex-api worker (scan-creator-links, scrape, etc.)
 Write-Host "`nDeploying zyrex-api worker..." -ForegroundColor Cyan
 cmd /c npx wrangler deploy --config wrangler.workers.toml

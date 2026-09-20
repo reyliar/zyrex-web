@@ -519,7 +519,6 @@ export default {
     // Real-time VPS health check at Cloudflare Edge
     const serverAvailable = await isServerAvailable(env);
 
-    // ============ UNBREAKABLE VPS OFFLINE EDGE LOCKDOWN ============
     if (!serverAvailable) {
       if (isStatusPage) {
         return env.ASSETS.fetch(request);
@@ -534,7 +533,6 @@ export default {
       return offlineResponse(request);
     }
 
-    // ============ NORMAL TRAFFIC (VPS ONLINE) ============
     const authDenied = await authorizeProtectedPage(request, env);
     if (authDenied) return authDenied;
 

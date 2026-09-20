@@ -1,4 +1,3 @@
-/* ===================== PRESETS GRID RENDERER ===================== */
 
 function getProductSubcategories(item) {
     if (!item) return ['preset'];

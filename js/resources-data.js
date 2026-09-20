@@ -1,4 +1,3 @@
-/* ===================== COMPLETE RESOURCES DATA ===================== */
 const PASSWORD = '';  // No ZIP password for presets
 
 function makeId(name) {

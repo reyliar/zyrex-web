@@ -1,4 +1,3 @@
-/* ===================== ZYREX THEME ENGINE ===================== */
 window.ZYREX_THEMES = {
     cherry: {
         name: 'Cherry Obsidian',
@@ -244,7 +243,6 @@ try {
     window.applyGlobalTheme(savedTheme);
 } catch(e) {}
 
-/* ===================== GLOBAL AVATAR ERROR HANDLER ===================== */
 window.DEFAULT_AVATAR = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2EwYTBiMCI+PHBhdGggZD0iTTEyIDEyYzIuMjEgMCA0LTEuNzkgNC00cy0xLjc5LTQtNC00LTQgMS43OS00IDQgMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYyaDE2di0yYzAtMi42Ni01LjMzLTQtOC00eiIvPjwvc3ZnPg==";
 window.handleAvatarError = function(img) {
     if (!img) return;
@@ -252,7 +250,6 @@ window.handleAvatarError = function(img) {
     img.src = window.DEFAULT_AVATAR;
 };
 
-/* ===================== NAVBAR SYNC & SCROLL EFFECT ===================== */
 const navbar = document.querySelector('.navbar');
 
 function syncNavbarActiveState() {
@@ -350,7 +347,6 @@ if (navbar) {
     });
 }
 
-/* ===================== MOBILE HAMBURGER MENU ===================== */
 const hamburger = document.getElementById('hamburger');
 const navLinksContainer = document.getElementById('navLinks');
 
@@ -369,7 +365,6 @@ if (hamburger && navLinksContainer) {
     });
 }
 
-/* ===================== DISCORD API - TEAM PROFILES ===================== */
 const BOT_API = 'http://93.115.101.154:12988';
 const CDN_BASE = 'https://cdn.discordapp.com';
 
@@ -537,7 +532,6 @@ if (document.readyState === 'loading') {
     loadTeamMembers();
 }
 
-/* ===================== DISCORD GUILD STATS ===================== */
 var GUILD_STATS_CACHE_KEY = 'zyrex_guild_stats';
 var GUILD_STATS_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
 
@@ -590,7 +584,6 @@ function applyGuildStats(data) {
     });
 }
 
-/* ===================== UNIVERSAL STALE-WHILE-REVALIDATE LOCALSTORAGE HELPER ===================== */
 window.zyrexCacheFetch = async function(url, options) {
     options = options || {};
     var cacheKey = 'zyrex_cache_' + url.replace(/[^a-zA-Z0-9_-]/g, '_');
@@ -631,7 +624,6 @@ window.zyrexCacheFetch = async function(url, options) {
 };
 window.fetchWithCache = window.zyrexCacheFetch;
 
-/* ===================== HERO REAL RESOURCE COUNTERS ===================== */
 function fetchResourceStatsForHero() {
     // 0. Render immediately from local storage cache
     try {
@@ -739,7 +731,6 @@ if (document.getElementById('heroStatPresets') || document.getElementById('heroS
 
 if (document.querySelector('.stats-badge, .stats-item, .stats-number')) {
 fetchGuildStats().then(() => {
-    /* ===================== COUNTER ANIMATION ===================== */
 const counters = document.querySelectorAll('.stats-number');
 
 const animateCounter = (counter) => {
@@ -776,7 +767,6 @@ counters.forEach(counter => counterObserver.observe(counter));
 });
 }
 
-/* ===================== CONTACT FORM ===================== */
 const contactForm = document.getElementById('contactForm');
 
 if (contactForm) {
@@ -808,7 +798,6 @@ if (contactForm) {
     });
 }
 
-/* ===================== SCROLL REVEAL ANIMATION ===================== */
 function initScrollReveal() {
     const revealElements = document.querySelectorAll('.reveal, .reveal-scale, .reveal-left, .reveal-right, .resource-card, .team-card, .contact-grid, .stats-item, .about-intro-card');
     if (!revealElements.length) return;
@@ -844,7 +833,6 @@ function initScrollReveal() {
 
 initScrollReveal();
 
-/* ===================== SMOOTH SCROLL ===================== */
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
         const href = this.getAttribute('href');
@@ -861,7 +849,6 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     });
 });
 
-/* ===================== PARTICLE BACKGROUND ===================== */
 const particlesContainer = document.getElementById('particles');
 if (particlesContainer) {
     const compactParticles = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
@@ -895,12 +882,10 @@ if (particlesContainer) {
     document.head.appendChild(style);
 }
 
-/* ===================== INIT ===================== */
 document.addEventListener('DOMContentLoaded', () => {
     loadTeamMembers();
 });
 
-/* ===================== TOAST SYSTEM ===================== */
 window.showToast = function(title, message, type = 'success') {
     let container = document.getElementById('toastContainer');
     if (!container) {
@@ -964,7 +949,6 @@ window.showToast = function(title, message, type = 'success') {
     }, 4500);
 };
 
-/* ===================== GLOBAL NOTIFICATIONS & SCROLL-TO-TOP HUB ===================== */
 (function initGlobalFloatingHub() {
     let cachedLiveNotifs = [];
 
@@ -1316,7 +1300,6 @@ window.showToast = function(title, message, type = 'success') {
     setTimeout(setupHub, 1000);
 })();
 
-/* ===================== GLOBAL FOOTER STATUS PREVIEW ===================== */
 (function() {
     var statusCacheKey = 'zyrex_status_cache';
     var statusCacheTtl = 30000; // 30 seconds

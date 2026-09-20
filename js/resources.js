@@ -1,4 +1,3 @@
-/* ===================== RESOURCES GRID RENDERER ===================== */
 // Data is loaded from resources-data.js via window.resourcesData
 
 let _mergedData = null;
