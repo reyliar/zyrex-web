@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Community request detail on Zyrex.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://zyrexediting.xyz/request">
+    <meta property="og:title" content="Zyrex | Request">
+    <meta property="og:description" content="View community resource request details on Zyrex.">
+    <meta property="og:image" content="https://zyrexediting.xyz/assets/banner.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://zyrexediting.xyz/assets/banner.png">
+    <meta name="author" content="Zyrex">
+    <title>Zyrex | Request</title>
+    <link rel="icon" type="image/png" href="/assets/content.png">
+    <link rel="stylesheet" href="/css/style.css?v=45">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --req-accent: #ff2b52;
+            --req-accent-glow: rgba(255, 43, 82, 0.4);
+            --card-glass: rgba(14, 8, 18, 0.82);
+            --card-border: rgba(255, 255, 255, 0.09);
+            --text-main: #f8f5f6;
+            --text-sub: rgba(255, 255, 255, 0.65);
+        }
+
+        body {
+            background: #060108;
+            background-image:
+                radial-gradient(circle at 25% 10%, rgba(255, 43, 82, 0.14) 0%, transparent 55%),
+                radial-gradient(circle at 75% 25%, rgba(168, 85, 247, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 50% 80%, rgba(255, 43, 82, 0.08) 0%, transparent 60%);
+            color: var(--text-main);
+            font-family: 'Poppins', sans-serif;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .req-detail-wrap {
+            padding: 125px 24px 90px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        /* BREADCRUMB */
+        .breadcrumb-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 28px;
+            font-size: 0.84rem;
+        }
+        .breadcrumb-bar a {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: var(--text-sub);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .breadcrumb-bar a:hover { color: var(--req-accent); }
+        .breadcrumb-bar .sep { color: rgba(255,255,255,0.2); }
+        .breadcrumb-bar .current { color: #fff; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 320px; }
+
+        /* SKELETON */
+        .skeleton-block {
+            background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+            background-size: 200% 100%;
+            animation: skeletonShimmer 1.4s infinite;
+            border-radius: 12px;
+        }
+        @keyframes skeletonShimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* HERO SPLIT */
+        .req-hero-split {
+            display: grid;
+            grid-template-columns: 1fr 1.3fr;
+            gap: 28px;
+            align-items: start;
+            margin-bottom: 28px;
+        }
+
+        /* LEFT: THUMBNAIL */
+        .req-stage-card {
+            position: relative;
+            background: rgba(18, 18, 22, 0.72);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            overflow: hidden;
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 300px;
+            aspect-ratio: 1 / 1;
+        }
+        .req-stage-card .ambient-backdrop {
+            position: absolute;
+            inset: -20px;
+            width: calc(100% + 40px);
+            height: calc(100% + 40px);
+            object-fit: cover;
+            filter: blur(28px) brightness(0.3);
+            pointer-events: none;
+            display: none;
+        }
+        .req-stage-card .main-thumb {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 20px;
+        }
+        .req-stage-placeholder {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 14px;
+            color: rgba(255,255,255,0.25);
+        }
+        .req-stage-placeholder i { font-size: 3.5rem; }
+        .req-stage-placeholder span { font-size: 0.9rem; }
+
+        /* RIGHT: INFO PANEL */
+        .req-info-panel {
+            background: var(--card-glass);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .req-badges-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .req-type-pill {
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .type-preset { background: rgba(255,43,82,0.15); color: #ff6b87; border: 1px solid rgba(255,43,82,0.3); }
+        .type-project_file, .type-project-file { background: rgba(168,85,247,0.15); color: #c084fc; border: 1px solid rgba(168,85,247,0.3); }
+        .type-plugin { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+        .type-software { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+        .type-scenepack { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
+        .type-other { background: rgba(255,255,255,0.08); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.18); }
+
+        .req-status-pill {
+            padding: 4px 12px;
+            border-radius: 999px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .status-pending { background: rgba(245,158,11,0.12); color: #fbbf24; border: 1px solid rgba(245,158,11,0.25); }
+        .status-completed { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+        .status-in_progress { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+
+        .req-detail-title {
+            font-size: 1.65rem;
+            font-weight: 800;
+            line-height: 1.25;
+            color: #fff;
+            margin: 0;
+        }
+
+        /* CREATOR BLOCK */
+        .req-creator-block {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 14px;
+        }
+        .req-creator-avatar-lg {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255,255,255,0.15);
+            flex-shrink: 0;
+        }
+        .req-creator-info { flex: 1; min-width: 0; }
+        .req-creator-label { font-size: 0.7rem; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+        .req-creator-name-link {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #ff6b87;
+            text-decoration: none;
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .req-creator-name-link:hover { text-decoration: underline; }
+        .req-creator-name-static {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #fff;
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* PRICE */
+        .req-price-block {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 7px 16px;
+            background: rgba(167,243,208,0.07);
+            border: 1px solid rgba(167,243,208,0.2);
+            border-radius: 10px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #a7f3d0;
+            font-family: 'JetBrains Mono', monospace;
+            width: fit-content;
+        }
+
+        /* DESCRIPTION */
+        .req-detail-desc {
+            font-size: 0.92rem;
+            color: var(--text-sub);
+            line-height: 1.75;
+            white-space: pre-line;
+        }
+
+        /* PRODUCT LINK */
+        .req-product-link-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 12px;
+            color: #fff;
+            text-decoration: none;
+            font-size: 0.88rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .req-product-link-btn:hover {
+            background: rgba(255,43,82,0.12);
+            border-color: rgba(255,43,82,0.3);
+            color: #ff6b87;
+        }
+
+        /* UPVOTE */
+        .req-detail-upvote-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 28px;
+            border-radius: 999px;
+            border: 1.5px solid rgba(255,255,255,0.18);
+            background: rgba(255,255,255,0.06);
+            color: rgba(255,255,255,0.75);
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.22s;
+            font-family: inherit;
+        }
+        .req-detail-upvote-btn:hover {
+            border-color: var(--req-accent);
+            background: rgba(255,43,82,0.12);
+            color: #ff6b87;
+        }
+        .req-detail-upvote-btn.upvoted {
+            border-color: var(--req-accent);
+            background: rgba(255,43,82,0.15);
+            color: #ff4d6d;
+        }
+        .req-detail-upvote-btn i { font-size: 1rem; transition: transform 0.2s; }
+        .req-detail-upvote-btn.upvoted i { transform: translateY(-2px); }
+
+        /* REQUESTER INFO CARD */
+        .req-submitter-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.07);
+            border-radius: 16px;
+            padding: 18px 22px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        .req-submitter-avatar {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid rgba(255,255,255,0.1);
+            flex-shrink: 0;
+            background: rgba(255,255,255,0.05);
+        }
+        .req-submitter-info .req-submitter-label {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.4);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 2px;
+        }
+        .req-submitter-info .req-submitter-name {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #fff;
+        }
+        .req-submitter-info .req-submitter-time {
+            font-size: 0.77rem;
+            color: rgba(255,255,255,0.4);
+            margin-top: 2px;
+        }
+
+        /* ERROR / NOT FOUND */
+        .req-detail-error {
+            text-align: center;
+            padding: 80px 20px;
+        }
+        .req-detail-error i {
+            font-size: 3rem;
+            color: rgba(255,255,255,0.2);
+            margin-bottom: 16px;
+            display: block;
+        }
+        .req-detail-error h2 { color: #fff; font-size: 1.5rem; margin-bottom: 10px; }
+        .req-detail-error p { color: var(--text-sub); margin-bottom: 24px; }
+        .req-detail-error a {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 24px;
+            background: rgba(255,43,82,0.15);
+            border: 1px solid rgba(255,43,82,0.3);
+            border-radius: 10px;
+            color: #ff6b87;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .req-detail-error a:hover { background: rgba(255,43,82,0.25); }
+
+        /* SECTION DIVIDER */
+        .req-detail-section {
+            background: var(--card-glass);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 24px 28px;
+            margin-bottom: 16px;
+        }
+        .req-detail-section-title {
+            font-size: 0.78rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: rgba(255,255,255,0.35);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 700px) {
+            .req-hero-split {
+                grid-template-columns: 1fr;
+            }
+            .req-stage-card {
+                min-height: 220px;
+                aspect-ratio: 16 / 9;
+            }
+            .req-detail-title { font-size: 1.3rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- NAVBAR included via style.css global nav -->
+    <nav class="navbar" id="mainNav">
+        <div class="nav-container">
+            <a href="/" class="nav-logo">
+                <img src="/assets/content.png" alt="Zyrex Logo" class="nav-logo-img">
+                <span class="nav-logo-text">Zyrex</span>
+            </a>
+            <div class="nav-links" id="navLinks">
+                <a href="/resources" class="nav-link">Resources</a>
+                <a href="/requests" class="nav-link active">Requests</a>
+                <a href="/upload" class="nav-link">Upload</a>
+            </div>
+            <div class="nav-actions" id="navActions">
+                <div class="nav-auth-btns" id="navAuthArea">
+                    <div class="nav-skeleton"></div>
+                </div>
+            </div>
+            <button class="nav-burger" id="navBurger" onclick="toggleMobileNav()">
+                <span></span><span></span><span></span>
+            </button>
+        </div>
+    </nav>
+
+    <div class="req-detail-wrap" id="pageWrap">
+        <!-- Skeleton while loading -->
+        <div id="skeletonView">
+            <div class="breadcrumb-bar">
+                <div class="skeleton-block" style="width:80px;height:18px;"></div>
+                <span class="sep">/</span>
+                <div class="skeleton-block" style="width:180px;height:18px;"></div>
+            </div>
+            <div class="req-hero-split">
+                <div class="req-stage-card skeleton-block" style="min-height:300px;"></div>
+                <div style="display:flex;flex-direction:column;gap:16px;">
+                    <div class="skeleton-block" style="height:32px;width:60%;border-radius:8px;"></div>
+                    <div class="skeleton-block" style="height:22px;width:80%;border-radius:8px;"></div>
+                    <div class="skeleton-block" style="height:22px;width:70%;border-radius:8px;"></div>
+                    <div class="skeleton-block" style="height:60px;border-radius:14px;"></div>
+                    <div class="skeleton-block" style="height:80px;border-radius:14px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actual content -->
+        <div id="contentView" style="display:none;"></div>
+
+        <!-- Error state -->
+        <div id="errorView" style="display:none;" class="req-detail-error">
+            <i class="fas fa-exclamation-circle"></i>
+            <h2>Request Not Found</h2>
+            <p>This request may have been removed or the link is invalid.</p>
+            <a href="/requests"><i class="fas fa-arrow-left"></i> Back to Requests</a>
+        </div>
+    </div>
+
+    <script>
+        // ===== HELPERS =====
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>'""]/g, tag => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;' }[tag] || tag));
+        }
+
+        function formatRelativeTime(ts) {
+            if (!ts) return '';
+            var d = new Date(ts);
+            var diff = (Date.now() - d.getTime()) / 1000;
+            if (diff < 60) return 'just now';
+            if (diff < 3600) return Math.floor(diff / 60) + 'm ago';
+            if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
+            if (diff < 2592000) return Math.floor(diff / 86400) + 'd ago';
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        }
+
+        function getTypeIcon(t) {
+            switch(t) {
+                case 'preset': return 'sliders-h';
+                case 'project_file':
+                case 'project-file': return 'folder-open';
+                case 'plugin': return 'puzzle-piece';
+                case 'software': return 'laptop-code';
+                case 'scenepack': return 'film';
+                default: return 'cube';
+            }
+        }
+
+        function getLocalUpvotes() {
+            try { return JSON.parse(localStorage.getItem('zyrex_upvotes') || '[]'); } catch { return []; }
+        }
+        function toggleLocalUpvote(id) {
+            var arr = getLocalUpvotes();
+            var idx = arr.indexOf(id);
+            if (idx > -1) arr.splice(idx, 1); else arr.push(id);
+            try { localStorage.setItem('zyrex_upvotes', JSON.stringify(arr)); } catch {}
+        }
+
+        // ===== RENDER =====
+        var currentReq = null;
+
+        function renderPage(req) {
+            currentReq = req;
+            var localUpvotes = getLocalUpvotes();
+            var isUpvoted = req.has_upvoted || localUpvotes.includes(req.id);
+            var typeLabel = (req.type || 'other').replace(/_/g,' ').replace(/-/g,' ');
+            var typeClass = 'type-' + (req.type || 'other').replace(/_/g,'-');
+
+            var statusClass, statusText;
+            if (req.status === 'completed') {
+                statusClass = 'status-completed';
+                statusText = '<i class="fas fa-check-circle"></i> Completed';
+            } else if (req.status === 'in_progress') {
+                statusClass = 'status-in_progress';
+                statusText = '<i class="fas fa-spinner fa-spin"></i> In Progress';
+            } else {
+                statusClass = 'status-pending';
+                statusText = '<i class="fas fa-clock"></i> Pending';
+            }
+
+            // Thumbnail / stage
+            var stageHtml;
+            if (req.thumbnail) {
+                stageHtml = `
+                    <img class="ambient-backdrop" src="${escapeHtml(req.thumbnail)}" aria-hidden="true" style="display:block;">
+                    <img class="main-thumb" src="${escapeHtml(req.thumbnail)}" alt="${escapeHtml(req.title)}"
+                         onerror="this.style.display='none';this.previousElementSibling.style.display='none';document.getElementById('thumbPlaceholder').style.display='flex';">
+                    <div class="req-stage-placeholder" id="thumbPlaceholder" style="display:none;">
+                        <i class="fas fa-${getTypeIcon(req.type)}"></i>
+                        <span>No preview</span>
+                    </div>
+                `;
+            } else {
+                stageHtml = `
+                    <div class="req-stage-placeholder">
+                        <i class="fas fa-${getTypeIcon(req.type)}"></i>
+                        <span>No preview available</span>
+                    </div>
+                `;
+            }
+
+            // Creator block
+            var creatorHtml = '';
+            if (req.creator_name || req.creator_social_url) {
+                var crName = req.creator_name || 'Creator';
+                var crAvatar = req.creator_avatar
+                    ? `<img src="${escapeHtml(req.creator_avatar)}" class="req-creator-avatar-lg" alt="${escapeHtml(crName)}" onerror="this.src='/assets/content.png'">`
+                    : `<div class="req-creator-avatar-lg" style="background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;"><i class="fas fa-user" style="color:rgba(255,255,255,0.3)"></i></div>`;
+                var crNameHtml = req.creator_social_url
+                    ? `<a href="${escapeHtml(req.creator_social_url)}" target="_blank" rel="noopener" class="req-creator-name-link">${escapeHtml(crName)}</a>`
+                    : `<span class="req-creator-name-static">${escapeHtml(crName)}</span>`;
+                creatorHtml = `
+                    <div class="req-creator-block">
+                        ${crAvatar}
+                        <div class="req-creator-info">
+                            <div class="req-creator-label"><i class="fas fa-user-circle"></i> Creator</div>
+                            ${crNameHtml}
+                        </div>
+                        ${req.creator_social_url ? `<a href="${escapeHtml(req.creator_social_url)}" target="_blank" rel="noopener" style="color:rgba(255,255,255,0.3);font-size:1.1rem;transition:color 0.2s;" onmouseover="this.style.color='#ff6b87'" onmouseout="this.style.color='rgba(255,255,255,0.3)'"><i class="fas fa-external-link-alt"></i></a>` : ''}
+                    </div>
+                `;
+            }
+
+            // Price
+            var priceHtml = req.price
+                ? `<div class="req-price-block"><i class="fas fa-tag"></i> ${escapeHtml(req.price)}</div>`
+                : '';
+
+            // Description
+            var descHtml = req.description
+                ? `<p class="req-detail-desc">${escapeHtml(req.description)}</p>`
+                : '';
+
+            // Product URL
+            var productHtml = req.product_url
+                ? `<a href="${escapeHtml(req.product_url)}" target="_blank" rel="noopener" class="req-product-link-btn">
+                        <i class="fas fa-external-link-alt"></i> View Original Store Page
+                   </a>`
+                : '';
+
+            // Submitter
+            var requesterName = req.is_anonymous ? 'Anonymous' : (req.user_name || 'Zyrex Member');
+            var requesterAvatar = (req.is_anonymous || !req.user_avatar) ? '/assets/content.png' : req.user_avatar;
+
+            // Update page title/meta
+            document.title = `Zyrex | ${req.title || 'Request'}`;
+            var metaDesc = document.querySelector('meta[name="description"]');
+            if (metaDesc) metaDesc.setAttribute('content', req.description ? req.description.substring(0,160) : 'Community request on Zyrex.');
+
+            var html = `
+                <div class="breadcrumb-bar">
+                    <a href="/requests"><i class="fas fa-arrow-left"></i> Requests</a>
+                    <span class="sep">/</span>
+                    <span class="current">${escapeHtml(req.title)}</span>
+                </div>
+
+                <div class="req-hero-split">
+                    <!-- LEFT: Thumbnail -->
+                    <div class="req-stage-card">
+                        ${stageHtml}
+                    </div>
+
+                    <!-- RIGHT: Info panel -->
+                    <div class="req-info-panel">
+                        <div class="req-badges-row">
+                            <span class="req-type-pill ${typeClass}">${typeLabel}</span>
+                            <span class="req-status-pill ${statusClass}">${statusText}</span>
+                        </div>
+
+                        <h1 class="req-detail-title">${escapeHtml(req.title)}</h1>
+
+                        ${priceHtml}
+                        ${creatorHtml}
+                        ${descHtml}
+                        ${productHtml}
+
+                        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-top:6px;">
+                            <button class="req-detail-upvote-btn ${isUpvoted ? 'upvoted' : ''}" id="detailUpvoteBtn" onclick="handleUpvote()">
+                                <i class="fas fa-arrow-up"></i>
+                                <span id="detailUpvoteCount">${req.upvotes_count || 1}</span> Upvotes
+                            </button>
+                        </div>
+
+                        <div class="req-submitter-card">
+                            <img src="${escapeHtml(requesterAvatar)}" class="req-submitter-avatar" alt="${escapeHtml(requesterName)}" onerror="this.src='/assets/content.png'">
+                            <div class="req-submitter-info">
+                                <div class="req-submitter-label"><i class="fas fa-paper-plane"></i> Requested by</div>
+                                <div class="req-submitter-name">${escapeHtml(requesterName)}</div>
+                                <div class="req-submitter-time">${formatRelativeTime(req.created_at)}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('contentView').innerHTML = html;
+            document.getElementById('skeletonView').style.display = 'none';
+            document.getElementById('contentView').style.display = 'block';
+        }
+
+        // ===== UPVOTE =====
+        async function handleUpvote() {
+            if (!currentReq) return;
+            var btn = document.getElementById('detailUpvoteBtn');
+            var countEl = document.getElementById('detailUpvoteCount');
+            if (!btn || !countEl) return;
+
+            var wasUpvoted = btn.classList.contains('upvoted');
+            var curCount = parseInt(countEl.textContent, 10) || 1;
+            var newCount = wasUpvoted ? Math.max(1, curCount - 1) : curCount + 1;
+
+            // Optimistic
+            btn.classList.toggle('upvoted', !wasUpvoted);
+            countEl.textContent = newCount;
+            currentReq.upvotes_count = newCount;
+            currentReq.has_upvoted = !wasUpvoted;
+            toggleLocalUpvote(currentReq.id);
+
+            try {
+                var resp = await fetch('/api/requests/' + currentReq.id + '/upvote', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include'
+                });
+                if (resp.ok) {
+                    var data = await resp.json();
+                    if (data.success) {
+                        countEl.textContent = data.upvotes;
+                        btn.classList.toggle('upvoted', !!data.upvoted);
+                        currentReq.upvotes_count = data.upvotes;
+                        currentReq.has_upvoted = !!data.upvoted;
+                    }
+                }
+            } catch(e) { console.warn('Upvote error:', e); }
+        }
+
+        // ===== INIT =====
+        async function init() {
+            var params = new URLSearchParams(location.search);
+            var id = params.get('id');
+
+            if (!id) {
+                document.getElementById('skeletonView').style.display = 'none';
+                document.getElementById('errorView').style.display = 'block';
+                return;
+            }
+
+            try {
+                var resp = await fetch('/api/requests/' + encodeURIComponent(id), { credentials: 'include' });
+                if (!resp.ok) throw new Error('not found');
+                var req = await resp.json();
+                if (req.error) throw new Error(req.error);
+                renderPage(req);
+            } catch(e) {
+                console.warn('Failed to load request:', e);
+                document.getElementById('skeletonView').style.display = 'none';
+                document.getElementById('errorView').style.display = 'block';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+
+    <!-- Global nav JS (auth state etc.) -->
+    <script src="/js/main.js?v=45" defer></script>
+</body>
+</html>

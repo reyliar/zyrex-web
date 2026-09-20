@@ -5315,6 +5315,21 @@ async function storeAndProxyImage(env, imageUrl) {
           });
         }
 
+        // GET /api/requests/:id (Single request detail)
+        if (path.match(/^\/api\/requests\/[^/]+$/) && request.method === "GET") {
+          const reqId = path.split("/")[3];
+          const allReqs = await loadRequestsFromR2();
+          const targetReq = allReqs.find(r => r.id === reqId);
+          if (!targetReq) return json({ error: "Request not found" }, 404);
+          const session = parseSession(request.headers.get("Cookie"));
+          const clientIp = request.headers.get("cf-connecting-ip") || "unknown";
+          const voterKey = session ? session.userId : clientIp;
+          return json({
+            ...targetReq,
+            has_upvoted: Array.isArray(targetReq.upvoters) && targetReq.upvoters.includes(voterKey)
+          });
+        }
+
         // POST /api/requests/:id/upvote
         if (path.match(/^\/api\/requests\/[^/]+\/upvote$/) && request.method === "POST") {
           const reqId = path.split("/")[3];

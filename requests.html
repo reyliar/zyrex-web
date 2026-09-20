@@ -1902,7 +1902,7 @@
                 var storeLink = req.product_url ? `<a href="${req.product_url}" target="_blank" rel="noopener" class="req-store-link" title="Original Link"><i class="fas fa-external-link-alt"></i> Store</a>` : '';
 
                 html += `
-                    <div class="req-card" id="req-card-${req.id}">
+                    <div class="req-card" id="req-card-${req.id}" onclick="location.href='/request?id=${req.id}'" style="cursor:pointer;">
                         <div>
                             <div class="req-card-top">
                                 <span class="req-type-pill ${typeClass}">${typeLabel}</span>
@@ -1923,7 +1923,7 @@
                                 <img src="${requesterAvatar}" class="req-requester-avatar" alt="${requesterName}" onerror="this.src='/assets/content.png'">
                                 <span>${escapeHtml(requesterName)} &bull; ${formatRelativeTime(req.created_at)}</span>
                             </div>
-                            <div style="display:flex;align-items:center;gap:10px;">
+                            <div style="display:flex;align-items:center;gap:10px;" onclick="event.stopPropagation()">
                                 ${storeLink}
                                 <button class="req-upvote-btn ${isUpvoted ? 'upvoted' : ''}" onclick="toggleUpvote('${req.id}')" title="Upvote this request">
                                     <i class="fas fa-arrow-up"></i> <span id="upvotes-count-${req.id}">${req.upvotes_count || 1}</span>
