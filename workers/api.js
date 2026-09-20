@@ -5371,37 +5371,55 @@ async function storeAndProxyImage(env, imageUrl) {
             return json({ error: "Title is required" }, 400);
           }
 
-          function cleanUrlForCompare(u) {
+          function extractCanonicalStoreKey(rawUrl) {
+            if (!rawUrl || typeof rawUrl !== "string") return "";
+            const u = rawUrl.trim();
             if (!u) return "";
-            return u.toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").split("?")[0].replace(/\/$/, "").trim();
+            const clean = u.split("?")[0].split("#")[0].replace(/\/+$/, "");
+
+            // 1. Payhip: payhip.com/b/<id> or payhip.com/<creator>/<id>
+            const payhipMatch = clean.match(/payhip\.com\/(?:b\/)?([a-zA-Z0-9_-]+)/i);
+            if (payhipMatch) return "payhip:" + payhipMatch[1].toLowerCase();
+
+            // 2. Gumroad: gumroad.com/l/<slug> or <creator>.gumroad.com/l/<slug>
+            const gumroadMatch = clean.match(/gumroad\.com\/(?:l|d)\/([a-zA-Z0-9_-]+)/i);
+            if (gumroadMatch) return "gumroad:" + gumroadMatch[1].toLowerCase();
+
+            // 3. Ko-fi: ko-fi.com/s/<id>
+            const kofiMatch = clean.match(/ko-fi\.com\/s\/([a-zA-Z0-9_-]+)/i);
+            if (kofiMatch) return "kofi:" + kofiMatch[1].toLowerCase();
+
+            // 4. Fallback normalized URL (protocol & www stripped, lowercase)
+            return clean.toLowerCase().replace(/^https?:\/\//i, "").replace(/^www\./i, "");
           }
 
           if (productUrl) {
-            const targetClean = cleanUrlForCompare(productUrl);
-            try {
-              const pResp = await fetch(`${BOT_API}/api/products`, {
-                headers: { "X-Zyrex-Key": "zyrex_app_sec_k982f81a7b54c29013e9a" }
-              });
-              if (pResp.ok) {
-                const products = await pResp.json();
-                if (Array.isArray(products)) {
-                  const dup = products.find(p => {
-                    const pUrl = cleanUrlForCompare(p.product_url);
-                    const sUrl = cleanUrlForCompare(p.source_url);
-                    return (targetClean && (targetClean === pUrl || targetClean === sUrl)) ||
-                           (title && p.name && title.toLowerCase() === p.name.toLowerCase().trim());
-                  });
-                  if (dup) {
-                    return json({
-                      error: "already_exists",
-                      message: "This resource is already available on Zyrex!",
-                      product: { id: dup.id, name: dup.name }
-                    }, 409);
+            const targetKey = extractCanonicalStoreKey(productUrl);
+            if (targetKey) {
+              try {
+                const pResp = await fetch(`${BOT_API}/api/products`, {
+                  headers: { "X-Zyrex-Key": "zyrex_app_sec_k982f81a7b54c29013e9a" }
+                });
+                if (pResp.ok) {
+                  const products = await pResp.json();
+                  if (Array.isArray(products)) {
+                    const dup = products.find(p => {
+                      const pKey = extractCanonicalStoreKey(p.product_url);
+                      const sKey = extractCanonicalStoreKey(p.source_url);
+                      return (pKey && pKey === targetKey) || (sKey && sKey === targetKey);
+                    });
+                    if (dup) {
+                      return json({
+                        error: "already_exists",
+                        message: "This resource is already available on Zyrex!",
+                        product: { id: dup.id, name: dup.name }
+                      }, 409);
+                    }
                   }
                 }
+              } catch (e) {
+                console.warn("Product duplicate check failed:", e.message);
               }
-            } catch (e) {
-              console.warn("Product duplicate check failed:", e.message);
             }
           }
 

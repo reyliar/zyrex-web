@@ -2436,20 +2436,41 @@
             }
         }
 
-        // Check Duplicates in Client against cached products
-        function checkClientDuplicate(productUrl, title) {
-            var cleanUrl = (productUrl || '').toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').split('?')[0].replace(/\/$/, '');
-            var cleanTitle = (title || '').toLowerCase().trim();
+        // Extract Canonical Store / Source Link Identifier (Payhip, Gumroad, Ko-fi, etc.)
+        function extractCanonicalStoreKey(rawUrl) {
+            if (!rawUrl || typeof rawUrl !== 'string') return '';
+            var u = rawUrl.trim();
+            if (!u) return '';
+            var clean = u.split('?')[0].split('#')[0].replace(/\/+$/, '');
 
-            if (!existingProductsCache || existingProductsCache.length === 0) return null;
+            // 1. Payhip (payhip.com/b/code or payhip.com/creator/code)
+            var payhipMatch = clean.match(/payhip\.com\/(?:b\/)?([a-zA-Z0-9_-]+)/i);
+            if (payhipMatch) return 'payhip:' + payhipMatch[1].toLowerCase();
+
+            // 2. Gumroad (gumroad.com/l/slug or creator.gumroad.com/l/slug)
+            var gumroadMatch = clean.match(/gumroad\.com\/(?:l|d)\/([a-zA-Z0-9_-]+)/i);
+            if (gumroadMatch) return 'gumroad:' + gumroadMatch[1].toLowerCase();
+
+            // 3. Ko-fi (ko-fi.com/s/id)
+            var kofiMatch = clean.match(/ko-fi\.com\/s\/([a-zA-Z0-9_-]+)/i);
+            if (kofiMatch) return 'kofi:' + kofiMatch[1].toLowerCase();
+
+            // 4. Fallback normalized URL (protocol & www stripped, lowercase)
+            return clean.toLowerCase().replace(/^https?:\/\//i, '').replace(/^www\./i, '');
+        }
+
+        // Check Duplicates in Client strictly against store/source links
+        function checkClientDuplicate(productUrl) {
+            if (!productUrl || !existingProductsCache || existingProductsCache.length === 0) return null;
+            var targetKey = extractCanonicalStoreKey(productUrl);
+            if (!targetKey) return null;
 
             for (var i = 0; i < existingProductsCache.length; i++) {
                 var p = existingProductsCache[i];
-                var pProdUrl = (p.product_url || '').toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').split('?')[0].replace(/\/$/, '');
-                var pSrcUrl = (p.source_url || '').toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').split('?')[0].replace(/\/$/, '');
-                var pName = (p.name || '').toLowerCase().trim();
+                var pKey = extractCanonicalStoreKey(p.product_url);
+                var sKey = extractCanonicalStoreKey(p.source_url);
 
-                if ((cleanUrl && (cleanUrl === pProdUrl || cleanUrl === pSrcUrl)) || (cleanTitle && cleanTitle === pName)) {
+                if ((pKey && pKey === targetKey) || (sKey && sKey === targetKey)) {
                     return p;
                 }
             }
@@ -2461,8 +2482,8 @@
             if (!url || !url.trim().startsWith('http')) return;
             url = url.trim();
 
-            // 1. Duplicate check
-            var dup = checkClientDuplicate(url, '');
+            // 1. Duplicate check strictly against store/source links
+            var dup = checkClientDuplicate(url);
             var dupBox = document.getElementById('duplicateWarning');
             var submitBtn = document.getElementById('modalSubmitBtn');
 
@@ -2473,7 +2494,9 @@
                 return;
             } else {
                 dupBox.style.display = 'none';
-                submitBtn.disabled = false;
+                if (!_userAllowanceData || _userAllowanceData.is_admin || _userAllowanceData.remaining > 0) {
+                    submitBtn.disabled = false;
+                }
             }
 
             // 2. Fetch scrape preview from bot API
@@ -2510,14 +2533,6 @@
                         previewPrice.textContent = data.price || document.getElementById('modalPrice').value || 'Store Resource';
                         previewCreator.textContent = document.getElementById('modalCreatorName').value || data.creator_name || 'Creator Found';
                         previewPanel.style.display = 'flex';
-
-                        // Double check title against duplicates
-                        var dupByTitle = checkClientDuplicate('', title);
-                        if (dupByTitle) {
-                            dupBox.style.display = 'flex';
-                            document.getElementById('duplicateLink').href = `/resource?id=${dupByTitle.id}`;
-                            submitBtn.disabled = true;
-                        }
                     }
                 }
             } catch(e) {}
@@ -2571,13 +2586,14 @@
             var price = document.getElementById('modalPrice').value.trim();
             var thumbnail = document.getElementById('modalThumbnail').value.trim();
 
-            // Client duplicate check safeguard
-            if (type === 'preset' || type === 'project-file') {
-                var dup = checkClientDuplicate(productUrl, title);
+            // Client duplicate check safeguard strictly against store/source link
+            if (productUrl) {
+                var dup = checkClientDuplicate(productUrl);
                 if (dup) {
                     document.getElementById('duplicateWarning').style.display = 'flex';
                     document.getElementById('duplicateLink').href = `/resource?id=${dup.id}`;
                     btn.disabled = true;
+                    btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Already on Zyrex';
                     return;
                 }
             }
