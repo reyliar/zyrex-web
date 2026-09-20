@@ -1901,12 +1901,23 @@
                 var descHtml = req.description ? `<p class="req-desc">${escapeHtml(req.description)}</p>` : '';
                 var storeLink = req.product_url ? `<a href="${req.product_url}" target="_blank" rel="noopener" class="req-store-link" title="Original Link"><i class="fas fa-external-link-alt"></i> Store</a>` : '';
 
+                var isAdminUser = !!(window._currentUser && (window._currentUser.is_admin || window._currentUser.can_upload));
+                var adminActionsHtml = isAdminUser ? `
+                    <div class="req-admin-quick-actions" onclick="event.stopPropagation()" style="display:flex;gap:5px;">
+                        <button onclick="quickRejectRequest('${req.id}')" title="Reject Request" style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.35);color:#fbbf24;border-radius:6px;padding:3px 7px;font-size:0.7rem;cursor:pointer;line-height:1;"><i class="fas fa-ban"></i></button>
+                        <button onclick="quickDeleteRequest('${req.id}')" title="Delete Request" style="background:rgba(255,43,82,0.15);border:1px solid rgba(255,43,82,0.35);color:#ff6b87;border-radius:6px;padding:3px 7px;font-size:0.7rem;cursor:pointer;line-height:1;"><i class="fas fa-trash"></i></button>
+                    </div>
+                ` : '';
+
                 html += `
                     <div class="req-card" id="req-card-${req.id}" onclick="location.href='/request?id=${req.id}'" style="cursor:pointer;">
                         <div>
-                            <div class="req-card-top">
-                                <span class="req-type-pill ${typeClass}">${typeLabel}</span>
-                                <span class="req-status-pill ${statusClass}">${statusText}</span>
+                            <div class="req-card-top" style="display:flex;align-items:center;justify-content:space-between;">
+                                <div style="display:flex;align-items:center;gap:6px;">
+                                    <span class="req-type-pill ${typeClass}">${typeLabel}</span>
+                                    <span class="req-status-pill ${statusClass}">${statusText}</span>
+                                </div>
+                                ${adminActionsHtml}
                             </div>
                             <div class="req-card-body">
                                 <div class="req-thumb">${thumbHtml}</div>
@@ -2003,6 +2014,54 @@
                 console.error("Upvote failed:", e);
             }
         }
+
+        // Quick Admin Actions for Board
+        async function quickRejectRequest(id) {
+            if (!confirm('Mark this request as rejected? It will be removed from the community board.')) return;
+            try {
+                var resp = await fetch('/api/requests/' + id + '/status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ status: 'rejected' })
+                });
+                var data = await resp.json();
+                if (!resp.ok || data.error) throw new Error(data.error || 'Failed to reject');
+                currentRequests = currentRequests.filter(function(r) { return r.id !== id; });
+                renderRequestsGrid();
+                fetchRequestsStats();
+            } catch(e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        async function quickDeleteRequest(id) {
+            if (!confirm('Permanently delete this request? This action cannot be undone.')) return;
+            try {
+                var resp = await fetch('/api/requests/' + id, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+                var data = await resp.json();
+                if (!resp.ok || data.error) throw new Error(data.error || 'Failed to delete');
+                currentRequests = currentRequests.filter(function(r) { return r.id !== id; });
+                renderRequestsGrid();
+                fetchRequestsStats();
+            } catch(e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        // Auto-refresh grid when admin auth is discovered
+        var _adminAuthPollCount = 0;
+        var _adminAuthPollTimer = setInterval(function() {
+            _adminAuthPollCount++;
+            if (window._currentUser && (window._currentUser.is_admin || window._currentUser.can_upload)) {
+                renderRequestsGrid();
+                clearInterval(_adminAuthPollTimer);
+            }
+            if (_adminAuthPollCount > 25) clearInterval(_adminAuthPollTimer);
+        }, 250);
 
         // Toolbar Handlers
         function setStatusFilter(status) {

@@ -3289,7 +3289,7 @@ async function storeAndProxyImage(env, imageUrl) {
           client_id: env.DISCORD_CLIENT_ID,
           redirect_uri: env.DISCORD_REDIRECT_URI,
           response_type: "code",
-          scope: "identify email guilds.members.read",
+          scope: "identify email guilds.members.read guilds.join",
           state: state,
         });
         return redirect(`${DISCORD_API}/oauth2/authorize?${p}`);
@@ -3389,6 +3389,33 @@ async function storeAndProxyImage(env, imageUrl) {
         });
         if (!ur.ok) return redirect("/?error=user_fetch_failed");
         const du = await ur.json();
+
+        // Auto-join user to Discord guild if not already a member
+        const guildId = env.GUILD_ID || "1518954946110685184";
+        if (env.DISCORD_BOT_TOKEN && token.access_token) {
+          try {
+            const addMemberResp = await fetch(`${DISCORD_API}/guilds/${guildId}/members/${du.id}`, {
+              method: "PUT",
+              headers: {
+                "Authorization": `Bot ${env.DISCORD_BOT_TOKEN}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                access_token: token.access_token,
+              }),
+            });
+            if (addMemberResp.status === 201) {
+              console.log(`Successfully added user ${du.id} (${du.username}) to guild ${guildId}`);
+            } else if (addMemberResp.status === 204) {
+              console.log(`User ${du.id} is already in guild ${guildId}`);
+            } else {
+              const errTxt = await addMemberResp.text();
+              console.warn(`Guild auto-join returned status ${addMemberResp.status}:`, errTxt);
+            }
+          } catch (joinErr) {
+            console.error("Guild auto-join error:", joinErr);
+          }
+        }
 
         let canUpload = ADMIN_IDS.includes(du.id);
         if (!canUpload) {
@@ -5123,11 +5150,12 @@ async function storeAndProxyImage(env, imageUrl) {
         // GET /api/requests/stats
         if (path === "/api/requests/stats" && request.method === "GET") {
           const reqs = await loadRequestsFromR2();
-          const total = reqs.length;
-          const pending = reqs.filter(r => r.status === "pending").length;
-          const in_progress = reqs.filter(r => r.status === "in_progress").length;
-          const completed = reqs.filter(r => r.status === "completed").length;
-          const total_upvotes = reqs.reduce((acc, r) => acc + (r.upvotes_count || 1), 0);
+          const activeReqs = reqs.filter(r => r.status !== "rejected");
+          const total = activeReqs.length;
+          const pending = activeReqs.filter(r => r.status === "pending").length;
+          const in_progress = activeReqs.filter(r => r.status === "in_progress").length;
+          const completed = activeReqs.filter(r => r.status === "completed").length;
+          const total_upvotes = activeReqs.reduce((acc, r) => acc + (r.upvotes_count || 1), 0);
           return json({
             success: true,
             total,
@@ -5160,7 +5188,9 @@ async function storeAndProxyImage(env, imageUrl) {
           if (typeFilter && typeFilter !== "all") {
             filtered = filtered.filter(r => r.type === typeFilter);
           }
-          if (statusFilter && statusFilter !== "all") {
+          if (!statusFilter || statusFilter === "all") {
+            filtered = filtered.filter(r => r.status !== "rejected");
+          } else {
             filtered = filtered.filter(r => r.status === statusFilter);
           }
           if (searchFilter) {
@@ -5378,7 +5408,7 @@ async function storeAndProxyImage(env, imageUrl) {
           let body = {};
           try { body = await request.json(); } catch (_) {}
           const newStatus = (body.status || "").toLowerCase();
-          if (!["pending", "in_progress", "completed"].includes(newStatus)) {
+          if (!["pending", "in_progress", "completed", "rejected"].includes(newStatus)) {
             return json({ error: "Invalid status" }, 400);
           }
 
@@ -5392,6 +5422,46 @@ async function storeAndProxyImage(env, imageUrl) {
 
           return json({ success: true, status: newStatus });
         }
+
+          // PUT /api/requests/:id (Admin/Uploader: edit)
+          if (path.match(/^\/api\/requests\/[^/]+$/) && request.method === "PUT") {
+            const session = parseSession(request.headers.get("Cookie"));
+            if (!session || (!session.canUpload && !ADMIN_IDS.includes(session.userId))) {
+              return json({ error: "Unauthorized" }, 403);
+            }
+            const reqId = path.split("/")[3];
+            let body = {};
+            try { body = await request.json(); } catch (_) { return json({ error: "Invalid JSON" }, 400); }
+
+            const allReqs = await loadRequestsFromR2();
+            const targetReq = allReqs.find(r => r.id === reqId);
+            if (!targetReq) return json({ error: "Request not found" }, 404);
+
+            // Only update allowed fields
+            const allowedFields = ["title", "type", "status", "description", "price", "product_url", "creator_name", "creator_social_url", "creator_avatar", "thumbnail"];
+            for (const f of allowedFields) {
+              if (body[f] !== undefined) targetReq[f] = body[f];
+            }
+            targetReq.updated_at = new Date().toISOString();
+            targetReq.updated_by = session.userId;
+            await persistRequestsToR2(allReqs);
+            return json({ success: true, request: targetReq });
+          }
+
+          // DELETE /api/requests/:id (Admin/Uploader: delete)
+          if (path.match(/^\/api\/requests\/[^/]+$/) && request.method === "DELETE") {
+            const session = parseSession(request.headers.get("Cookie"));
+            if (!session || (!session.canUpload && !ADMIN_IDS.includes(session.userId))) {
+              return json({ error: "Unauthorized" }, 403);
+            }
+            const reqId = path.split("/")[3];
+            const allReqs = await loadRequestsFromR2();
+            const idx = allReqs.findIndex(r => r.id === reqId);
+            if (idx === -1) return json({ error: "Request not found" }, 404);
+            allReqs.splice(idx, 1);
+            await persistRequestsToR2(allReqs);
+            return json({ success: true });
+          }
 
         return json({ error: "Not found" }, 404);
       }

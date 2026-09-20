@@ -14,7 +14,7 @@
     <meta name="author" content="Zyrex">
     <title>Zyrex | Request</title>
     <link rel="icon" type="image/png" href="/assets/content.png">
-    <link rel="stylesheet" href="/css/style.css?v=45">
+    <link rel="stylesheet" href="/css/style.css?v=46">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
@@ -411,26 +411,27 @@
     </style>
 </head>
 <body>
-    <!-- NAVBAR included via style.css global nav -->
-    <nav class="navbar" id="mainNav">
-        <div class="nav-container">
-            <a href="/" class="nav-logo">
-                <img src="/assets/content.png" alt="Zyrex Logo" class="nav-logo-img">
-                <span class="nav-logo-text">Zyrex</span>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo">
+                <img src="/assets/content.png" alt="ZYREX" class="logo-img">
+                <span class="logo-text">yrex</span>
             </a>
-            <div class="nav-links" id="navLinks">
-                <a href="/resources" class="nav-link">Resources</a>
-                <a href="/requests" class="nav-link active">Requests</a>
-                <a href="/upload" class="nav-link">Upload</a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="/">Home</a></li>
+                <li><a href="/resources">Resources</a></li>
+                <li><a href="/plugins">Plugins</a></li>
+                <li><a href="/requests" class="active">Requests</a></li>
+                <li><a href="/more">More</a></li>
+                <li><a href="/#contact">Contact</a></li>
+            </ul>
+            <div class="nav-actions">
+                <div id="authBtn"></div>
+                <button class="hamburger" id="hamburger" aria-label="Menu">
+                    <span></span><span></span><span></span>
+                </button>
             </div>
-            <div class="nav-actions" id="navActions">
-                <div class="nav-auth-btns" id="navAuthArea">
-                    <div class="nav-skeleton"></div>
-                </div>
-            </div>
-            <button class="nav-burger" id="navBurger" onclick="toggleMobileNav()">
-                <span></span><span></span><span></span>
-            </button>
         </div>
     </nav>
 
@@ -631,6 +632,23 @@
                             </button>
                         </div>
 
+                        <!-- ADMIN ACTIONS PANEL (hidden until auth loads) -->
+                        <div id="adminActionsPanel" style="display:none;flex-wrap:wrap;gap:8px;padding:14px 16px;background:rgba(255,43,82,0.06);border:1px solid rgba(255,43,82,0.18);border-radius:14px;margin-top:4px;">
+                            <span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:rgba(255,43,82,0.7);width:100%;margin-bottom:4px;display:flex;align-items:center;gap:6px;"><i class="fas fa-shield-alt"></i> Admin Controls</span>
+                            <button onclick="openAdminEdit()" style="padding:8px 16px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:9px;color:#fff;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.12)'" onmouseout="this.style.background='rgba(255,255,255,0.07)'">
+                                <i class="fas fa-edit"></i> Edit
+                            </button>
+                            <button onclick="adminChangeStatus('completed')" style="padding:8px 16px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);border-radius:9px;color:#34d399;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:all 0.2s;" onmouseover="this.style.background='rgba(16,185,129,0.18)'" onmouseout="this.style.background='rgba(16,185,129,0.1)'">
+                                <i class="fas fa-check"></i> Mark Complete
+                            </button>
+                            <button onclick="adminRejectRequest()" style="padding:8px 16px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);border-radius:9px;color:#fbbf24;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:all 0.2s;" onmouseover="this.style.background='rgba(245,158,11,0.18)'" onmouseout="this.style.background='rgba(245,158,11,0.1)'">
+                                <i class="fas fa-ban"></i> Reject
+                            </button>
+                            <button onclick="adminDeleteRequest()" style="padding:8px 16px;background:rgba(255,43,82,0.1);border:1px solid rgba(255,43,82,0.25);border-radius:9px;color:#ff6b87;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,43,82,0.18)'" onmouseout="this.style.background='rgba(255,43,82,0.1)'">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+
                         <div class="req-submitter-card">
                             <img src="${escapeHtml(requesterAvatar)}" class="req-submitter-avatar" alt="${escapeHtml(requesterName)}" onerror="this.src='/assets/content.png'">
                             <div class="req-submitter-info">
@@ -646,6 +664,7 @@
             document.getElementById('contentView').innerHTML = html;
             document.getElementById('skeletonView').style.display = 'none';
             document.getElementById('contentView').style.display = 'block';
+            checkAndShowAdminPanel();
         }
 
         // ===== UPVOTE =====
@@ -711,7 +730,261 @@
         document.addEventListener('DOMContentLoaded', init);
     </script>
 
-    <!-- Global nav JS (auth state etc.) -->
-    <script src="/js/main.js?v=45" defer></script>
+    <!-- ADMIN EDIT MODAL -->
+    <div id="adminEditModal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px;">
+        <div style="background:#0e0812;border:1px solid rgba(255,43,82,0.3);border-radius:20px;padding:32px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,0.7);">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+                <h2 style="margin:0;font-size:1.2rem;font-weight:800;color:#fff;"><i class="fas fa-edit" style="color:#ff4d6d;margin-right:8px;"></i>Edit Request</h2>
+                <button onclick="closeAdminEdit()" style="background:none;border:none;color:rgba(255,255,255,0.5);font-size:1.5rem;cursor:pointer;line-height:1;">&times;</button>
+            </div>
+            <form id="adminEditForm" onsubmit="submitAdminEdit(event)">
+                <div style="display:flex;flex-direction:column;gap:14px;">
+                    <div>
+                        <label style="font-size:0.78rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block;">Title *</label>
+                        <input id="adminEditTitle" type="text" required style="width:100%;box-sizing:border-box;padding:10px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.9rem;font-family:inherit;outline:none;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.78rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block;">Type</label>
+                        <select id="adminEditType" style="width:100%;box-sizing:border-box;padding:10px 14px;background:#1a0e22;border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.9rem;font-family:inherit;outline:none;">
+                            <option value="preset">Preset</option>
+                            <option value="project_file">Project File</option>
+                            <option value="plugin">Plugin</option>
+                            <option value="software">Software</option>
+                            <option value="scenepack">Scenepack</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:0.78rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block;">Status</label>
+                        <select id="adminEditStatus" style="width:100%;box-sizing:border-box;padding:10px 14px;background:#1a0e22;border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.9rem;font-family:inherit;outline:none;">
+                            <option value="pending">Pending</option>
+                            <option value="in_progress">In Progress</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size:0.78rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block;">Description</label>
+                        <textarea id="adminEditDesc" rows="3" style="width:100%;box-sizing:border-box;padding:10px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.9rem;font-family:inherit;outline:none;resize:vertical;"></textarea>
+                    </div>
+                    <div>
+                        <label style="font-size:0.78rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block;">Price</label>
+                        <input id="adminEditPrice" type="text" placeholder="e.g. $7.50 or Free" style="width:100%;box-sizing:border-box;padding:10px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.9rem;font-family:inherit;outline:none;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.78rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block;">Product URL</label>
+                        <input id="adminEditProductUrl" type="url" placeholder="https://..." style="width:100%;box-sizing:border-box;padding:10px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.9rem;font-family:inherit;outline:none;">
+                    </div>
+                </div>
+                <div id="adminEditError" style="display:none;margin-top:14px;padding:10px 14px;background:rgba(255,43,82,0.12);border:1px solid rgba(255,43,82,0.3);border-radius:10px;color:#ff6b87;font-size:0.85rem;"></div>
+                <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end;">
+                    <button type="button" onclick="closeAdminEdit()" style="padding:10px 20px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:rgba(255,255,255,0.6);font-size:0.88rem;font-weight:600;cursor:pointer;font-family:inherit;">Cancel</button>
+                    <button type="submit" id="adminEditSaveBtn" style="padding:10px 24px;background:rgba(255,43,82,0.15);border:1px solid rgba(255,43,82,0.4);border-radius:10px;color:#ff6b87;font-size:0.88rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.2s;">
+                        <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <a href="/" class="hero-brand-lockup footer-brand-lockup">
+                        <img src="/assets/content.png" alt="Zyrex Logo" class="hero-brand-icon">
+                        <div class="hero-brand-text-col">
+                            <span class="hero-brand-title">Zyrex<sup>™</sup></span>
+                            <span class="hero-brand-sub">EDITING</span>
+                        </div>
+                    </a>
+                    <p>Premium editing community &amp; resources.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/resources">Resources</a></li>
+                        <li><a href="/plugins">Plugins</a></li>
+                        <li><a href="/requests">Requests</a></li>
+                        <li><a href="/more">More</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="/terms">Terms</a></li>
+                        <li><a href="/privacy">Privacy</a></li>
+                        <li><a href="/dmca">DMCA</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="https://discord.gg/fAydSzpafA">Discord</a></li>
+                        <li><a href="/#contact">Contact</a></li>
+                    </ul>
+                </div>
+                <div class="footer-newsletter">
+                    <h4>Newsletter</h4>
+                    <p>Stay updated with Zyrex Editing.</p>
+                    <div class="newsletter-form">
+                        <input type="email" placeholder="Your email">
+                        <button type="submit" aria-label="Subscribe"><i class="fas fa-arrow-right"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Zyrex Editing. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/js/auth.js?v=11"></script>
+    <script src="/js/script.js?v=45"></script>
+    <script>
+        // ===== ADMIN ACTIONS =====
+        var _adminUser = null;
+
+        // Called after auth.js loads the user
+        function onAuthLoaded(user) {
+            _adminUser = user;
+        }
+
+        // Check admin periodically
+        function checkAndShowAdminPanel() {
+            var user = window._currentUser || null;
+            if (user && (user.is_admin || user.can_upload) && currentReq) {
+                var panel = document.getElementById('adminActionsPanel');
+                if (panel) panel.style.display = 'flex';
+            }
+        }
+
+        function openAdminEdit() {
+            if (!currentReq) return;
+            document.getElementById('adminEditTitle').value = currentReq.title || '';
+            document.getElementById('adminEditType').value = currentReq.type || 'other';
+            document.getElementById('adminEditStatus').value = currentReq.status || 'pending';
+            document.getElementById('adminEditDesc').value = currentReq.description || '';
+            document.getElementById('adminEditPrice').value = currentReq.price || '';
+            document.getElementById('adminEditProductUrl').value = currentReq.product_url || '';
+            document.getElementById('adminEditError').style.display = 'none';
+            document.getElementById('adminEditModal').style.display = 'flex';
+        }
+
+        function closeAdminEdit() {
+            document.getElementById('adminEditModal').style.display = 'none';
+        }
+
+        document.getElementById('adminEditModal').addEventListener('click', function(e) {
+            if (e.target === this) closeAdminEdit();
+        });
+
+        async function submitAdminEdit(e) {
+            e.preventDefault();
+            if (!currentReq) return;
+            var btn = document.getElementById('adminEditSaveBtn');
+            var errEl = document.getElementById('adminEditError');
+            errEl.style.display = 'none';
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+            var body = {
+                title: document.getElementById('adminEditTitle').value.trim(),
+                type: document.getElementById('adminEditType').value,
+                status: document.getElementById('adminEditStatus').value,
+                description: document.getElementById('adminEditDesc').value.trim(),
+                price: document.getElementById('adminEditPrice').value.trim(),
+                product_url: document.getElementById('adminEditProductUrl').value.trim(),
+            };
+
+            try {
+                var resp = await fetch('/api/requests/' + currentReq.id, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(body)
+                });
+                var data = await resp.json();
+                if (!resp.ok || data.error) throw new Error(data.error || 'Save failed');
+                // Update local state and re-render
+                Object.assign(currentReq, body);
+                closeAdminEdit();
+                renderPage(currentReq);
+            } catch(err) {
+                errEl.textContent = err.message;
+                errEl.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+            }
+        }
+
+        async function adminDeleteRequest() {
+            if (!currentReq) return;
+            if (!confirm('Delete this request permanently? This cannot be undone.')) return;
+            try {
+                var resp = await fetch('/api/requests/' + currentReq.id, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+                var data = await resp.json();
+                if (!resp.ok || data.error) throw new Error(data.error || 'Delete failed');
+                location.href = '/requests';
+            } catch(err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function adminRejectRequest() {
+            if (!currentReq) return;
+            if (!confirm('Mark this request as rejected? It will be removed from the board.')) return;
+            try {
+                var resp = await fetch('/api/requests/' + currentReq.id + '/status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ status: 'rejected' })
+                });
+                var data = await resp.json();
+                if (!resp.ok || data.error) throw new Error(data.error || 'Reject failed');
+                location.href = '/requests';
+            } catch(err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        async function adminChangeStatus(newStatus) {
+            if (!currentReq) return;
+            try {
+                var resp = await fetch('/api/requests/' + currentReq.id + '/status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ status: newStatus })
+                });
+                var data = await resp.json();
+                if (!resp.ok || data.error) throw new Error(data.error || 'Status update failed');
+                currentReq.status = newStatus;
+                renderPage(currentReq);
+            } catch(err) {
+                alert('Error: ' + err.message);
+            }
+        }
+
+        // Poll for auth to show admin panel
+        var _adminPollCount = 0;
+        var _adminPollTimer = setInterval(function() {
+            _adminPollCount++;
+            var user = window._currentUser;
+            if (user && (user.is_admin || user.can_upload) && currentReq) {
+                var panel = document.getElementById('adminActionsPanel');
+                if (panel) panel.style.display = 'flex';
+                clearInterval(_adminPollTimer);
+            }
+            if (_adminPollCount > 20) clearInterval(_adminPollTimer);
+        }, 300);
+    </script>
 </body>
 </html>
+
