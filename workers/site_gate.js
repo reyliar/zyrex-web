@@ -329,12 +329,48 @@ function isApiRequest(pathname) {
   return pathname.startsWith("/api/");
 }
 
-function isAdminPublishPage(pathname) {
-  return pathname === "/admin-publish" || pathname === "/admin-publish.html";
+function normalizeRoutePath(pathname) {
+  let p = (pathname || "").toLowerCase().trim();
+  if (p.endsWith("/") && p.length > 1) {
+    p = p.slice(0, -1);
+  }
+  return p;
+}
+
+function isSessionRequiredPage(pathname) {
+  const p = normalizeRoutePath(pathname);
+  return (
+    p === "/settings" || p === "/settings.html" ||
+    p === "/bookmarks" || p === "/bookmarks.html"
+  );
+}
+
+function isUploaderRequiredPage(pathname) {
+  const p = normalizeRoutePath(pathname);
+  return (
+    p === "/upload" || p === "/upload.html" ||
+    p === "/upload-audio" || p === "/upload-audio.html" ||
+    p === "/upload-scenepack" || p === "/upload-scenepack.html"
+  );
+}
+
+function isAdminRequiredPage(pathname) {
+  const p = normalizeRoutePath(pathname);
+  return (
+    p === "/admin-publish" || p === "/admin-publish.html" ||
+    p === "/admin-upload" || p === "/admin-upload.html" ||
+    p === "/admin-vt-scan" || p === "/admin-vt-scan.html"
+  );
+}
+
+function redirectToLogin(requestUrl, redirectPath) {
+  const loginUrl = new URL("/api/login", requestUrl);
+  loginUrl.searchParams.set("redirect", redirectPath);
+  return Response.redirect(loginUrl.toString(), 302);
 }
 
 function adminForbiddenResponse() {
-  return new Response(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Admin access required · Zyrex</title><style>html,body{height:100%;margin:0}body{display:grid;place-items:center;padding:24px;background:#080506;color:#f8f5f6;font-family:system-ui,sans-serif;text-align:center}main{max-width:520px;padding:36px;border:1px solid #32252a;border-radius:20px;background:#120d0f}h1{margin:0 0 10px}p{margin:0;color:#aa9da2;line-height:1.6}a{display:inline-block;margin-top:22px;padding:10px 14px;border-radius:10px;background:#9f1d3a;color:white;text-decoration:none;font-weight:700}</style></head><body><main><h1>Admin access required</h1><p>This publishing page is only available to Zyrex administrators.</p><a href="/settings">Return to settings</a></main></body></html>`, {
+  return new Response(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Admin access required · Zyrex</title><style>html,body{height:100%;margin:0}body{display:grid;place-items:center;padding:24px;background:#080506;color:#f8f5f6;font-family:system-ui,sans-serif;text-align:center}main{max-width:520px;padding:36px;border:1px solid #32252a;border-radius:20px;background:#120d0f}h1{margin:0 0 10px}p{margin:0;color:#aa9da2;line-height:1.6}a{display:inline-block;margin-top:22px;padding:10px 14px;border-radius:10px;background:#9f1d3a;color:white;text-decoration:none;font-weight:700}</style></head><body><main><h1>Admin access required</h1><p>This page is only available to Zyrex administrators.</p><a href="/settings">Return to settings</a></main></body></html>`, {
     status: 403,
     headers: {
       "Content-Type": "text/html; charset=UTF-8",
@@ -344,30 +380,112 @@ function adminForbiddenResponse() {
   });
 }
 
-async function authorizeAdminPublish(request, env) {
-  if (!env.API) return new Response("Authentication service unavailable", { status: 503 });
+function uploaderForbiddenResponse() {
+  return new Response(`<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Uploader Access Required · Zyrex</title>
+  <link rel="icon" type="image/png" href="/assets/content.png">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <style>
+    html,body{height:100%;margin:0}
+    body{display:grid;place-items:center;padding:24px;background:#080205;color:#f8f5f6;font-family:system-ui,-apple-system,sans-serif;text-align:center}
+    main{max-width:520px;padding:40px 32px;border:1px solid rgba(255,43,82,0.22);border-radius:24px;background:rgba(18,10,15,0.95);box-shadow:0 24px 60px rgba(0,0,0,0.7)}
+    .lock-icon{font-size:2.6rem;color:#ff2b52;margin-bottom:16px}
+    h1{margin:0 0 12px;font-size:1.6rem;color:#ffffff;font-weight:700}
+    p{margin:0 0 24px;color:#a1a1aa;line-height:1.6;font-size:0.92rem}
+    .btn-wrap{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+    .btn-back{display:inline-flex;align-items:center;gap:8px;padding:11px 20px;border-radius:12px;background:linear-gradient(135deg,#ff2b52,#ff6b85);color:white;text-decoration:none;font-weight:600;font-size:0.88rem;transition:transform .15s ease}
+    .btn-back:hover{transform:translateY(-1px)}
+    .btn-discord{display:inline-flex;align-items:center;gap:8px;padding:11px 20px;border-radius:12px;background:rgba(88,101,242,0.15);border:1px solid rgba(88,101,242,0.35);color:#8ea1e1;text-decoration:none;font-weight:600;font-size:0.88rem}
+  </style>
+</head>
+<body>
+  <main>
+    <div class="lock-icon"><i class="fas fa-lock"></i></div>
+    <h1>Uploader Access Required</h1>
+    <p>Zyrex Creator Studio is currently restricted to verified community uploaders and staff. To become an uploader and share presets, join our Discord server.</p>
+    <div class="btn-wrap">
+      <a href="/resources" class="btn-back"><i class="fas fa-arrow-left"></i> Browse Resources</a>
+      <a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord"><i class="fab fa-discord"></i> Apply on Discord</a>
+    </div>
+  </main>
+</body>
+</html>`, {
+    status: 403,
+    headers: {
+      "Content-Type": "text/html; charset=UTF-8",
+      "Cache-Control": "no-store",
+      "X-Robots-Tag": "noindex, nofollow",
+    },
+  });
+}
 
-  const meUrl = new URL(request.url);
-  meUrl.pathname = "/api/me";
-  meUrl.search = "";
-  const authResponse = await env.API.fetch(new Request(meUrl.toString(), {
-    method: "GET",
-    headers: request.headers,
-  }));
+async function authorizeProtectedPage(request, env) {
+  const url = new URL(request.url);
+  const pathname = url.pathname;
+  const isSessionReq = isSessionRequiredPage(pathname);
+  const isUploaderReq = isUploaderRequiredPage(pathname);
+  const isAdminReq = isAdminRequiredPage(pathname);
+
+  if (!isSessionReq && !isUploaderReq && !isAdminReq) {
+    return null; // Public page, allow
+  }
+
+  const cookie = request.headers.get("Cookie") || "";
+  const fullRedirectPath = pathname + (url.search || "");
+
+  // Fast check: if no session cookie exists at all, redirect immediately
+  if (!cookie.includes("zyrex_session=")) {
+    return redirectToLogin(request.url, fullRedirectPath);
+  }
+
+  if (!env.API) {
+    return new Response("Authentication service unavailable", { status: 503 });
+  }
+
+  const meUrl = new URL("/api/me", request.url);
+  let authResponse;
+  try {
+    authResponse = await env.API.fetch(new Request(meUrl.toString(), {
+      method: "GET",
+      headers: request.headers,
+    }));
+  } catch (e) {
+    return new Response("Authentication service connection error", { status: 503 });
+  }
 
   if (authResponse.status === 401) {
-    const loginUrl = new URL("/api/login", request.url);
-    loginUrl.searchParams.set("redirect", "/admin-publish");
-    return Response.redirect(loginUrl.toString(), 302);
+    return redirectToLogin(request.url, fullRedirectPath);
   }
 
-  if (!authResponse.ok) return adminForbiddenResponse();
-  try {
-    const user = await authResponse.json();
-    return user?.is_admin ? null : adminForbiddenResponse();
-  } catch (_) {
-    return adminForbiddenResponse();
+  if (!authResponse.ok) {
+    return isSessionReq ? redirectToLogin(request.url, fullRedirectPath) : adminForbiddenResponse();
   }
+
+  let user = null;
+  try {
+    user = await authResponse.json();
+  } catch (_) {
+    return redirectToLogin(request.url, fullRedirectPath);
+  }
+
+  if (!user || !user.id) {
+    return redirectToLogin(request.url, fullRedirectPath);
+  }
+
+  if (isAdminReq) {
+    return user.is_admin ? null : adminForbiddenResponse();
+  }
+
+  if (isUploaderReq) {
+    return (user.can_upload || user.is_admin) ? null : uploaderForbiddenResponse();
+  }
+
+  return null; // Authorized
 }
 
 export default {
@@ -417,10 +535,8 @@ export default {
     }
 
     // ============ NORMAL TRAFFIC (VPS ONLINE) ============
-    if (isAdminPublishPage(pathname)) {
-      const denied = await authorizeAdminPublish(request, env);
-      if (denied) return denied;
-    }
+    const authDenied = await authorizeProtectedPage(request, env);
+    if (authDenied) return authDenied;
 
     if (url.hostname === "dl.zyrexediting.xyz") {
       if (isApiRequest(pathname) && env.API) {

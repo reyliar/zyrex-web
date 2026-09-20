@@ -119,7 +119,8 @@ function closeLoginModal() {
 
 function redirectToLogin(returnTo) {
     clearAuthCache();
-    openLoginModal();
+    var redirectPath = typeof returnTo === 'string' ? returnTo : (window.location.pathname + window.location.search);
+    window.location.href = '/api/login?redirect=' + encodeURIComponent(redirectPath);
 }
 
 // Render auth UI from user data (reusable for both cached & fresh)

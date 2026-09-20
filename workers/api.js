@@ -5007,9 +5007,390 @@ async function storeAndProxyImage(env, imageUrl) {
         }
       }
 
-      // ============ BOT PROXY (admin, comments, notifications, guild, cloud link/unlink, downloads, hlx, verify, products, requests) ============
+      // ============ COMMUNITY REQUESTS SYSTEM (CLOUDFLARE R2 BACKED) ============
+      if (path === "/api/requests" || path.startsWith("/api/requests/")) {
+        const REQUESTS_R2_KEY = "requests/data.json";
+        const REQUESTS_CHANNEL_ID = "1551118401508745367";
+
+        // Read all requests from R2
+        async function loadRequestsFromR2() {
+          if (!env.STORAGE) return [];
+          try {
+            const obj = await env.STORAGE.get(REQUESTS_R2_KEY);
+            if (!obj) return [];
+            const data = await obj.json();
+            return Array.isArray(data) ? data : (data.requests || []);
+          } catch (e) {
+            console.error("loadRequestsFromR2 error:", e);
+            return [];
+          }
+        }
+
+        // Save all requests to R2
+        async function persistRequestsToR2(requestsList) {
+          if (!env.STORAGE) return false;
+          try {
+            const payload = JSON.stringify({
+              requests: requestsList,
+              total: requestsList.length,
+              updated_at: new Date().toISOString()
+            });
+            await env.STORAGE.put(REQUESTS_R2_KEY, payload, {
+              httpMetadata: { contentType: "application/json" }
+            });
+            return true;
+          } catch (e) {
+            console.error("persistRequestsToR2 error:", e);
+            return false;
+          }
+        }
+
+        // Discord announcement helper
+        async function sendDiscordRequestAnnouncement(reqData) {
+          if (!env.DISCORD_BOT_TOKEN) return;
+          try {
+            const typeLabels = {
+              "preset": "Preset",
+              "project-file": "Project File",
+              "project_file": "Project File",
+              "plugin": "Plugin",
+              "software": "Software",
+              "scenepack": "Scenepack",
+              "other": "Other"
+            };
+            const typeLabel = typeLabels[reqData.type] || "Resource";
+            const requestedBy = reqData.is_anonymous ? "Anonymous Member" : (reqData.user_name || "Community Member");
+            const userMention = (reqData.user_id && !reqData.is_anonymous && /^\d{17,20}$/.test(reqData.user_id)) ? `<@${reqData.user_id}>` : requestedBy;
+
+            const fields = [
+              { name: "🏷️ Type", value: `\`${typeLabel}\``, inline: true },
+              { name: "👤 Requested By", value: userMention, inline: true }
+            ];
+
+            if (reqData.price) {
+              fields.push({ name: "💰 Price", value: `\`${reqData.price}\``, inline: true });
+            }
+
+            if (reqData.creator_name || reqData.creator_social_url) {
+              const crText = reqData.creator_social_url ? `[${reqData.creator_name || "Creator"}](${reqData.creator_social_url})` : reqData.creator_name;
+              fields.push({ name: "🎨 Creator", value: crText, inline: true });
+            }
+
+            if (reqData.product_url) {
+              fields.push({ name: "🔗 Store Link", value: `[View Store Page](${reqData.product_url})`, inline: false });
+            }
+
+            const embed = {
+              title: `📥 New Request: ${reqData.title}`,
+              description: reqData.description ? (reqData.description.length > 500 ? reqData.description.slice(0, 497) + "..." : reqData.description) : "*No additional description provided.*",
+              color: 0xFF2B52,
+              fields: fields,
+              footer: {
+                text: `Zyrex Community Requests • ID: ${reqData.id}`,
+                icon_url: "https://zyrexediting.xyz/assets/content.png"
+              },
+              timestamp: new Date().toISOString()
+            };
+
+            if (reqData.thumbnail && reqData.thumbnail.startsWith("http")) {
+              embed.thumbnail = { url: reqData.thumbnail };
+            }
+
+            const payload = {
+              content: `🔔 **New Community Request Submitted!** Vote and browse at https://zyrexediting.xyz/requests`,
+              embeds: [embed],
+              components: [
+                {
+                  type: 1,
+                  components: [
+                    {
+                      type: 2,
+                      style: 5,
+                      label: "View on Zyrex",
+                      url: "https://zyrexediting.xyz/requests"
+                    }
+                  ]
+                }
+              ]
+            };
+
+            await fetch(`https://discord.com/api/v10/channels/${REQUESTS_CHANNEL_ID}/messages`, {
+              method: "POST",
+              headers: {
+                Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`,
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify(payload)
+            });
+          } catch (e) {
+            console.error("sendDiscordRequestAnnouncement error:", e);
+          }
+        }
+
+        // GET /api/requests/stats
+        if (path === "/api/requests/stats" && request.method === "GET") {
+          const reqs = await loadRequestsFromR2();
+          const total = reqs.length;
+          const pending = reqs.filter(r => r.status === "pending").length;
+          const in_progress = reqs.filter(r => r.status === "in_progress").length;
+          const completed = reqs.filter(r => r.status === "completed").length;
+          const total_upvotes = reqs.reduce((acc, r) => acc + (r.upvotes_count || 1), 0);
+          return json({
+            success: true,
+            total,
+            pending,
+            in_progress,
+            completed,
+            upvotes: total_upvotes,
+            total_upvotes,
+            stats: { total, pending, in_progress, completed, total_upvotes, upvotes: total_upvotes }
+          });
+        }
+
+        // GET /api/requests
+        if (path === "/api/requests" && request.method === "GET") {
+          const reqs = await loadRequestsFromR2();
+          const session = parseSession(request.headers.get("Cookie"));
+          const clientIp = request.headers.get("cf-connecting-ip") || "unknown";
+          const voterKey = session ? session.userId : clientIp;
+
+          const typeFilter = url.searchParams.get("type");
+          const statusFilter = url.searchParams.get("status");
+          const searchFilter = (url.searchParams.get("search") || "").toLowerCase().trim();
+          const sort = url.searchParams.get("sort") || "upvotes";
+
+          let filtered = reqs.map(r => ({
+            ...r,
+            has_upvoted: Array.isArray(r.upvoters) && r.upvoters.includes(voterKey)
+          }));
+
+          if (typeFilter && typeFilter !== "all") {
+            filtered = filtered.filter(r => r.type === typeFilter);
+          }
+          if (statusFilter && statusFilter !== "all") {
+            filtered = filtered.filter(r => r.status === statusFilter);
+          }
+          if (searchFilter) {
+            filtered = filtered.filter(r =>
+              (r.title && r.title.toLowerCase().includes(searchFilter)) ||
+              (r.description && r.description.toLowerCase().includes(searchFilter)) ||
+              (r.creator_name && r.creator_name.toLowerCase().includes(searchFilter))
+            );
+          }
+
+          if (sort === "recent") {
+            filtered.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+          } else if (sort === "price_desc") {
+            filtered.sort((a, b) => (parseFloat((b.price || "").replace(/[^0-9.]/g, "")) || 0) - (parseFloat((a.price || "").replace(/[^0-9.]/g, "")) || 0));
+          } else {
+            // default upvotes
+            filtered.sort((a, b) => (b.upvotes_count || 1) - (a.upvotes_count || 1));
+          }
+
+          return json(filtered);
+        }
+
+        // POST /api/requests (Create)
+        if (path === "/api/requests" && request.method === "POST") {
+          let body = {};
+          try {
+            body = await request.json();
+          } catch (_) {
+            return json({ error: "Invalid JSON body" }, 400);
+          }
+
+          const type = (body.type || "other").toLowerCase();
+          const title = (body.title || "").trim();
+          const description = (body.description || "").trim();
+          const productUrl = (body.product_url || "").trim();
+          const creatorSocialUrl = (body.creator_social_url || "").trim();
+          const creatorName = (body.creator_name || "").trim();
+          const creatorAvatar = (body.creator_avatar || "").trim();
+          const creatorPlatform = (body.creator_platform || "").trim();
+          const price = (body.price || "").trim();
+          let thumbnail = (body.thumbnail || "").trim();
+          const isAnonymous = !!body.is_anonymous;
+
+          if (!title) {
+            return json({ error: "Title is required" }, 400);
+          }
+
+          function cleanUrlForCompare(u) {
+            if (!u) return "";
+            return u.toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").split("?")[0].replace(/\/$/, "").trim();
+          }
+
+          if (productUrl) {
+            const targetClean = cleanUrlForCompare(productUrl);
+            try {
+              const pResp = await fetch(`${BOT_API}/api/products`, {
+                headers: { "X-Zyrex-Key": "zyrex_app_sec_k982f81a7b54c29013e9a" }
+              });
+              if (pResp.ok) {
+                const products = await pResp.json();
+                if (Array.isArray(products)) {
+                  const dup = products.find(p => {
+                    const pUrl = cleanUrlForCompare(p.product_url);
+                    const sUrl = cleanUrlForCompare(p.source_url);
+                    return (targetClean && (targetClean === pUrl || targetClean === sUrl)) ||
+                           (title && p.name && title.toLowerCase() === p.name.toLowerCase().trim());
+                  });
+                  if (dup) {
+                    return json({
+                      error: "already_exists",
+                      message: "This resource is already available on Zyrex!",
+                      product: { id: dup.id, name: dup.name }
+                    }, 409);
+                  }
+                }
+              }
+            } catch (e) {
+              console.warn("Product duplicate check failed:", e.message);
+            }
+          }
+
+          // Cache thumbnail in R2 if external
+          if (thumbnail && !thumbnail.includes("thumbnail.zyrexediting.xyz") && thumbnail.startsWith("http")) {
+            try {
+              thumbnail = await storeAndProxyImage(env, thumbnail);
+            } catch (_) {}
+          }
+
+          // User session binding
+          const session = parseSession(request.headers.get("Cookie"));
+          const clientIp = request.headers.get("cf-connecting-ip") || "unknown";
+
+          let userId = "";
+          let userName = isAnonymous ? "Anonymous User" : "Community Member";
+          let userAvatar = isAnonymous ? "/assets/content.png" : "";
+
+          if (session && session.userId) {
+            userId = session.userId;
+            if (!isAnonymous) {
+              userName = session.displayName || session.username || "Zyrex Member";
+              if (session.avatar) {
+                const ext = session.avatar.startsWith("a_") ? "gif" : "png";
+                userAvatar = `https://cdn.discordapp.com/avatars/${session.userId}/${session.avatar}.${ext}?size=128`;
+              } else {
+                try {
+                  const defIdx = Number((BigInt(session.userId) >> 22n) % 6n);
+                  userAvatar = `https://cdn.discordapp.com/embed/avatars/${defIdx}.png`;
+                } catch (_) {
+                  userAvatar = "https://cdn.discordapp.com/embed/avatars/0.png";
+                }
+              }
+            }
+          } else {
+            userId = "anon_" + clientIp.replace(/[^a-zA-Z0-9]/g, "").slice(0, 14);
+            userName = isAnonymous ? "Anonymous User" : "Community Member";
+            userAvatar = "/assets/content.png";
+          }
+
+          const reqId = "req-" + Date.now().toString(36) + "-" + Math.random().toString(36).substring(2, 6);
+          const newRequest = {
+            id: reqId,
+            type: type,
+            title: title,
+            description: description,
+            product_url: productUrl,
+            creator_social_url: creatorSocialUrl,
+            creator_name: creatorName,
+            creator_avatar: creatorAvatar,
+            creator_platform: creatorPlatform,
+            price: price,
+            thumbnail: thumbnail,
+            user_id: userId,
+            user_name: userName,
+            user_avatar: userAvatar,
+            is_anonymous: isAnonymous,
+            status: "pending",
+            upvotes_count: 1,
+            upvoters: [userId],
+            created_at: new Date().toISOString()
+          };
+
+          const allReqs = await loadRequestsFromR2();
+          allReqs.unshift(newRequest);
+          await persistRequestsToR2(allReqs);
+
+          // Discord announcement
+          await sendDiscordRequestAnnouncement(env, newRequest);
+
+          return json({
+            success: true,
+            request: newRequest
+          });
+        }
+
+        // POST /api/requests/:id/upvote
+        if (path.match(/^\/api\/requests\/[^/]+\/upvote$/) && request.method === "POST") {
+          const reqId = path.split("/")[3];
+          const allReqs = await loadRequestsFromR2();
+          const targetReq = allReqs.find(r => r.id === reqId);
+
+          if (!targetReq) {
+            return json({ error: "Request not found" }, 404);
+          }
+
+          const session = parseSession(request.headers.get("Cookie"));
+          const clientIp = request.headers.get("cf-connecting-ip") || "unknown";
+          const voterKey = session ? session.userId : clientIp;
+
+          if (!Array.isArray(targetReq.upvoters)) targetReq.upvoters = [];
+
+          let upvoted = false;
+          const idx = targetReq.upvoters.indexOf(voterKey);
+          if (idx > -1) {
+            targetReq.upvoters.splice(idx, 1);
+            targetReq.upvotes_count = Math.max(1, (targetReq.upvotes_count || 1) - 1);
+            upvoted = false;
+          } else {
+            targetReq.upvoters.push(voterKey);
+            targetReq.upvotes_count = (targetReq.upvotes_count || 1) + 1;
+            upvoted = true;
+          }
+
+          await persistRequestsToR2(allReqs);
+
+          return json({
+            success: true,
+            upvotes: targetReq.upvotes_count,
+            upvoted: upvoted
+          });
+        }
+
+        // POST /api/requests/:id/status (Admin/Uploader)
+        if (path.match(/^\/api\/requests\/[^/]+\/status$/) && request.method === "POST") {
+          const session = parseSession(request.headers.get("Cookie"));
+          if (!session || (!session.canUpload && !ADMIN_IDS.includes(session.userId))) {
+            return json({ error: "Unauthorized" }, 403);
+          }
+
+          const reqId = path.split("/")[3];
+          let body = {};
+          try { body = await request.json(); } catch (_) {}
+          const newStatus = (body.status || "").toLowerCase();
+          if (!["pending", "in_progress", "completed"].includes(newStatus)) {
+            return json({ error: "Invalid status" }, 400);
+          }
+
+          const allReqs = await loadRequestsFromR2();
+          const targetReq = allReqs.find(r => r.id === reqId);
+          if (!targetReq) return json({ error: "Request not found" }, 404);
+
+          targetReq.status = newStatus;
+          targetReq.updated_at = new Date().toISOString();
+          await persistRequestsToR2(allReqs);
+
+          return json({ success: true, status: newStatus });
+        }
+
+        return json({ error: "Not found" }, 404);
+      }
+
+      // ============ BOT PROXY (admin, comments, notifications, guild, cloud link/unlink, downloads, hlx, verify, products) ============
       if (path.startsWith("/api/guild/") || path.startsWith("/api/notifications") || path.startsWith("/api/comments") || path.startsWith("/api/lookup/") ||
-                               path.startsWith("/api/requests") || path.startsWith("/api/products") || path.startsWith("/api/admin/") || path.startsWith("/api/cloud/") || path.startsWith("/api/downloads/") || path.startsWith("/api/hlx/") || path.startsWith("/api/verify") || path.startsWith("/api/sftpgo/") || path.startsWith("/api/search/") || path === "/api/resource-stats" || path === "/api/discord-user" || path === "/api/check-uploader" || path === "/api/team") {
+                               path.startsWith("/api/products") || path.startsWith("/api/admin/") || path.startsWith("/api/cloud/") || path.startsWith("/api/downloads/") || path.startsWith("/api/hlx/") || path.startsWith("/api/verify") || path.startsWith("/api/sftpgo/") || path.startsWith("/api/search/") || path === "/api/resource-stats" || path === "/api/discord-user" || path === "/api/check-uploader" || path === "/api/team") {
         const session = parseSession(request.headers.get("Cookie"));
         const proxyHeaders = {
           "Content-Type": "application/json",
