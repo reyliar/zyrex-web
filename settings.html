@@ -860,6 +860,59 @@
             color: #00e676;
             border: 1px solid rgba(0, 230, 118, 0.2);
         }
+
+        /* === SUBCAT PILLS === */
+        .subcat-pill-label {
+            cursor: pointer;
+            user-select: none;
+            display: inline-flex;
+        }
+        .subcat-pill-label input[type="checkbox"] {
+            display: none !important;
+        }
+        .subcat-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 9px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: rgba(255, 255, 255, 0.04);
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        .subcat-pill:hover {
+            border-color: rgba(255, 43, 82, 0.35);
+            background: rgba(255, 43, 82, 0.08);
+            color: #fff;
+        }
+        .subcat-pill-label input[type="checkbox"]:checked + .subcat-pill {
+            border-color: var(--cherry-light, #ff2b52);
+            background: rgba(255, 43, 82, 0.2);
+            color: #fff;
+            box-shadow: 0 0 14px rgba(255, 43, 82, 0.25);
+        }
+        .cat-svg-icon {
+            display: inline-block;
+            width: 1.15em;
+            height: 1.15em;
+            vertical-align: -0.22em;
+            background-color: currentColor;
+            -webkit-mask-size: contain;
+            mask-size: contain;
+            -webkit-mask-repeat: no-repeat;
+            mask-repeat: no-repeat;
+            -webkit-mask-position: center;
+            mask-position: center;
+            flex-shrink: 0;
+        }
+        .cat-icon-topaz {
+            -webkit-mask-image: url('/assets/brand-logos/topaz-badge.svg');
+            mask-image: url('/assets/brand-logos/topaz-badge.svg');
+        }
+
         .action-cell {
             display: flex;
             gap: 6px;
@@ -3449,12 +3502,31 @@
                             <option value="scenepack">Scenepack</option>
                         </select>
                     </div>
-                    <div class="form-group" id="groupResourceCategory">
-                        <label for="editResourceCategory"><i class="fas fa-shapes" style="margin-right:5px;opacity:0.7"></i>Sub-Category</label>
-                        <select id="editResourceCategory">
-                            <option value="preset">Preset</option>
-                            <option value="project-file">Project File</option>
+                    <div class="form-group" id="groupResourceCategory" style="grid-column: 1 / -1;">
+                        <label><i class="fas fa-shapes" style="margin-right:5px;opacity:0.7"></i>Resource Sub-Categories <small style="color:var(--text-muted);font-weight:400;">(Select one or more)</small></label>
+                        <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;">
+                            <label class="subcat-pill-label">
+                                <input type="checkbox" name="editSubcat" value="preset" id="editSubcatPreset" onchange="onEditSubcatChange()">
+                                <span class="subcat-pill"><i class="fas fa-sliders-h"></i> Preset</span>
+                            </label>
+                            <label class="subcat-pill-label">
+                                <input type="checkbox" name="editSubcat" value="project-file" id="editSubcatProjectFile" onchange="onEditSubcatChange()">
+                                <span class="subcat-pill"><i class="fas fa-folder-open"></i> Project File</span>
+                            </label>
+                            <label class="subcat-pill-label">
+                                <input type="checkbox" name="editSubcat" value="setting-preset" id="editSubcatSettingPreset" onchange="onEditSubcatChange()">
+                                <span class="subcat-pill"><i class="fas fa-gear"></i> Setting Preset</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="form-group" id="groupEditSettingPresetType" style="display:none;grid-column: 1 / -1;background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.22);border-radius:14px;padding:14px;">
+                        <label for="editSettingPresetType" style="color:#38bdf8;font-size:0.84rem;font-weight:700;"><span class="cat-svg-icon cat-icon-topaz" style="margin-right:6px"></span>Setting Preset Software / Tool</label>
+                        <select id="editSettingPresetType" onchange="onEditSettingPresetTypeChange()" style="margin-top:6px;">
+                            <option value="topaz-labs">Topaz Labs</option>
+                            <option value="others">Others</option>
                         </select>
+                        <small style="display:block;color:var(--text-muted);font-size:0.75rem;margin-top:5px;">Selecting Topaz Labs will auto-select the category to Topaz Labs and render the Topaz badge icon.</small>
                     </div>
                     <div class="form-group">
                         <label for="editProductCategory"><i class="fas fa-folder" style="margin-right:5px;opacity:0.7"></i>Category *</label>
@@ -4735,6 +4807,47 @@
             }
         }
 
+        function getProductSubcategories(item) {
+            if (!item) return ['preset'];
+            let sub = item.resource_subcategories || item.resource_categories || item.resource_category;
+            if (!sub) return ['preset'];
+            if (Array.isArray(sub)) {
+                return sub.map(s => String(s).toLowerCase().trim()).filter(Boolean);
+            }
+            if (typeof sub === 'string') {
+                return sub.split(',').map(s => s.toLowerCase().trim()).filter(Boolean);
+            }
+            return ['preset'];
+        }
+
+        function onEditSubcatChange() {
+            var cbs = document.querySelectorAll('input[name="editSubcat"]:checked');
+            if (cbs.length === 0) {
+                var defCb = document.getElementById('editSubcatPreset');
+                if (defCb) defCb.checked = true;
+            }
+            var isSetting = !!(document.getElementById('editSubcatSettingPreset') && document.getElementById('editSubcatSettingPreset').checked);
+            var spGroup = document.getElementById('groupEditSettingPresetType');
+            if (spGroup) {
+                spGroup.style.display = isSetting ? 'block' : 'none';
+                if (isSetting) {
+                    var spType = document.getElementById('editSettingPresetType');
+                    if (spType && spType.value === 'topaz-labs') {
+                        var catSelect = document.getElementById('editProductCategory');
+                        if (catSelect) catSelect.value = 'topaz-labs';
+                    }
+                }
+            }
+        }
+
+        function onEditSettingPresetTypeChange() {
+            var spType = document.getElementById('editSettingPresetType');
+            if (spType && spType.value === 'topaz-labs') {
+                var catSelect = document.getElementById('editProductCategory');
+                if (catSelect) catSelect.value = 'topaz-labs';
+            }
+        }
+
         function openEditModal(productId) {
             window._lastAppliedLookup = null;
             const product = allProducts.find(p => String(p.id) === String(productId));
@@ -4752,7 +4865,25 @@
             // Populate category select options & update fields for type
             populateModalCategories(prodType, product.category);
             updateModalFieldsForType(prodType);
-            setModalVal('editResourceCategory', product.resource_category || 'preset');
+
+            // Populate multi-select subcategories
+            const subcats = getProductSubcategories(product);
+            const cbPreset = document.getElementById('editSubcatPreset');
+            const cbProj = document.getElementById('editSubcatProjectFile');
+            const cbSetting = document.getElementById('editSubcatSettingPreset');
+            if (cbPreset) cbPreset.checked = subcats.includes('preset');
+            if (cbProj) cbProj.checked = subcats.includes('project-file');
+            if (cbSetting) cbSetting.checked = subcats.includes('setting-preset');
+
+            const isSetting = subcats.includes('setting-preset');
+            const spGroup = document.getElementById('groupEditSettingPresetType');
+            if (spGroup) {
+                spGroup.style.display = isSetting ? 'block' : 'none';
+                const spSelect = document.getElementById('editSettingPresetType');
+                if (spSelect) {
+                    spSelect.value = product.setting_preset_type || (product.category === 'topaz-labs' ? 'topaz-labs' : 'others');
+                }
+            }
 
             setModalVal('editProductDesc', product.description || product.desc || '');
             setModalVal('editProductFilePath', product.file_path || '');
@@ -4827,12 +4958,19 @@
             const type = document.getElementById('editProductType').value;
             const sourceUrl = document.getElementById('editProductSourceUrl').value;
 
+            const selectedSubcats = Array.from(document.querySelectorAll('input[name="editSubcat"]:checked')).map(cb => cb.value);
+            const finalSubcats = selectedSubcats.length ? selectedSubcats : ['preset'];
+            const isSettingPreset = finalSubcats.includes('setting-preset');
+            const settingPresetType = isSettingPreset ? ((document.getElementById('editSettingPresetType') || {}).value || 'topaz-labs') : '';
+
             const payload = {
                 id: id,
                 name: document.getElementById('editProductName').value,
                 type: type,
                 category: document.getElementById('editProductCategory').value,
-                resource_category: (document.getElementById('editResourceCategory') ? document.getElementById('editResourceCategory').value : 'preset'),
+                resource_category: finalSubcats.join(','),
+                resource_subcategories: finalSubcats,
+                setting_preset_type: settingPresetType,
                 description: document.getElementById('editProductDesc').value,
                 file_path: document.getElementById('editProductFilePath').value,
                 thumbnail: document.getElementById('editProductThumbnail').value,

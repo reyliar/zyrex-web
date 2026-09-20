@@ -500,6 +500,20 @@
             border-color: #ff2b52;
             box-shadow: 0 0 16px rgba(255, 43, 82, .25);
         }
+        .subcat-btn .cnt {
+            font-size: .65rem;
+            padding: 2px 7px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .08);
+            color: rgba(255, 255, 255, .5);
+            margin-left: 3px;
+            font-weight: 600;
+            transition: all .2s;
+        }
+        .subcat-btn.active .cnt {
+            background: rgba(255, 43, 82, .25);
+            color: #ff9ab0;
+        }
         .tag-project-file {
             background: rgba(168, 85, 247, .2);
             color: #c084fc;
@@ -509,6 +523,13 @@
             background: rgba(255, 43, 82, .15);
             color: #ff6b87;
             border: 1px solid rgba(255, 43, 82, .25);
+        }
+        .tag-setting-preset {
+            background: rgba(14, 165, 233, .18);
+            color: #38bdf8;
+            border: 1px solid rgba(14, 165, 233, .25);
+            display: inline-flex;
+            align-items: center;
         }
 
         /* iOS 26 RESOURCE CARDS */
@@ -1072,9 +1093,10 @@
     </div>
 
     <div class="subcat-tabs" id="subcatTabs" style="display:flex;gap:8px;max-width:1160px;margin:0 auto 14px;padding:0 20px;flex-wrap:wrap;">
-        <button class="active subcat-btn" data-subcat="all" onclick="filterBySubcat('all')"><i class="fas fa-layer-group"></i> All Resources</button>
-        <button class="subcat-btn" data-subcat="preset" onclick="filterBySubcat('preset')"><i class="fas fa-sliders-h"></i> Presets</button>
-        <button class="subcat-btn" data-subcat="project-file" onclick="filterBySubcat('project-file')"><i class="fas fa-folder-open"></i> Project Files</button>
+        <button class="active subcat-btn" data-subcat="all" onclick="filterBySubcat('all')"><i class="fas fa-layer-group"></i> All Resources <span class="cnt" id="subcatCntAll">0</span></button>
+        <button class="subcat-btn" data-subcat="preset" onclick="filterBySubcat('preset')"><i class="fas fa-sliders-h"></i> Presets <span class="cnt" id="subcatCntPreset">0</span></button>
+        <button class="subcat-btn" data-subcat="project-file" onclick="filterBySubcat('project-file')"><i class="fas fa-folder-open"></i> Project Files <span class="cnt" id="subcatCntProject">0</span></button>
+        <button class="subcat-btn" data-subcat="setting-preset" onclick="filterBySubcat('setting-preset')"><i class="fas fa-sliders"></i> Setting Presets <span class="cnt" id="subcatCntSetting">0</span></button>
     </div>
 
     <div class="cp" id="cp">
@@ -1157,78 +1179,14 @@
     <script src="js/presets.js?v=11"></script>
     <script>
         (function () {
-            var searchIndex = {};
-
-            // Try loading creator index from cache first (instant availability)
-            try {
-                var raw = localStorage.getItem('zyrex_creator_index');
-                if (raw) {
-                    var cached = JSON.parse(raw);
-                    if (cached.data && (Date.now() - cached.ts < 30 * 60 * 1000)) {
-                        searchIndex = cached.data;
-                    }
-                }
-            } catch (e) { }
-
-            // Load creator index from bot API (refresh in background)
-            fetch('/api/search/creator-index').then(function (r) { return r.json(); }).then(function (d) {
-                if (d && d.success && d.index) {
-                    searchIndex = d.index;
-                    try { localStorage.setItem('zyrex_creator_index', JSON.stringify({ ts: Date.now(), data: d.index })); } catch (e) { }
-                }
-            }).catch(function () { });
-
-            // Use event delegation on document (DOM might be rebuilt by presets.js)
+            // Forward search inputs cleanly to presets.js search handler
             document.addEventListener('input', function (e) {
                 var inp = e.target;
                 if (!inp || inp.id !== 's') return;
-
-                var s = inp.value.toLowerCase().trim();
-                var data = window.presetsData || [];
-                console.log('🔍 Search:', s, '| Data items:', data.length, '| Index keys:', Object.keys(searchIndex).length);
-
-                if (!s) {
-                    if (typeof renderPresets === 'function') renderPresets(data);
-                    return;
-                }
-
-                // Build matched IDs from creator index
-                var matchIds = null;
-                if (Object.keys(searchIndex).length > 0) {
-                    if (searchIndex[s]) {
-                        var raw = searchIndex[s];
-                        matchIds = {};
-                        (Array.isArray(raw) ? raw : String(raw).split(' ')).forEach(function (id) { matchIds[id] = true; });
-                    } else {
-                        matchIds = {};
-                        var found = false;
-                        for (var k in searchIndex) {
-                            if (k.indexOf(s) !== -1) {
-                                found = true;
-                                var raw2 = searchIndex[k];
-                                (Array.isArray(raw2) ? raw2 : String(raw2).split(' ')).forEach(function (id) { matchIds[id] = true; });
-                            }
-                        }
-                        if (!found) matchIds = null;
-                    }
-                }
-
-                // Filter
-                var filtered = data.filter(function (r) {
-                    if (matchIds && matchIds[r.id]) return true;
-                    var txt = [
-                        r.name, r.creator_nickname, r.author_name,
-                        r.creator_username, r.creator_social_url, r.tags,
-                        r.desc, r.description
-                    ].join(' ').toLowerCase();
-                    return txt.indexOf(s) !== -1;
-                });
-
-                if (typeof renderPresets === 'function') {
-                    console.log('📊 Filtered:', filtered.length, 'results. matchIds size:', matchIds ? Object.keys(matchIds).length : 'none');
-                    renderPresets(filtered);
-                } else {
-                    console.log('❌ renderPresets not available');
+                if (typeof gs === 'function') {
+                    gs();
+                } else if (typeof filterPresets === 'function') {
+                    filterPresets();
                 }
             });
 

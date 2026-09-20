@@ -1424,16 +1424,37 @@
         const root = document.getElementById('presetRoot');
         root.style.display = 'block';
 
+        const subcats = (function(prod) {
+            if (!prod) return ['preset'];
+            let list = [];
+            if (Array.isArray(prod.resource_subcategories) && prod.resource_subcategories.length > 0) {
+                list = prod.resource_subcategories.slice();
+            } else if (prod.resource_category) {
+                list = String(prod.resource_category).split(',').map(s => s.trim()).filter(Boolean);
+            }
+            if (list.length === 0) list = ['preset'];
+            return list;
+        })(p);
+
+        const subcatPillsHtml = subcats.map(function(sc) {
+            if (sc === 'project-file') {
+                return '<span class="stage-pill" style="background:rgba(168,85,247,0.22);color:#c084fc;border:1px solid rgba(168,85,247,0.35)"><i class="fas fa-folder-open"></i> Project File</span>';
+            } else if (sc === 'setting-preset') {
+                const isTopaz = (p.setting_preset_type === 'topaz-labs') || (p.category === 'topaz-labs');
+                const topazIcon = isTopaz ? '<span class="cat-svg-icon cat-icon-topaz" style="margin-right:4px"></span>' : '';
+                return '<span class="stage-pill" style="background:rgba(14,165,233,0.22);color:#38bdf8;border:1px solid rgba(14,165,233,0.35)">' + topazIcon + '<i class="fas fa-sliders" style="margin-right:2px"></i> Setting Preset</span>';
+            } else {
+                return '<span class="stage-pill" style="background:rgba(255,43,82,0.18);color:#ff6b87;border:1px solid rgba(255,43,82,0.35)"><i class="fas fa-sliders-h"></i> Preset</span>';
+            }
+        }).join('');
+
         root.innerHTML = `
             <!-- DUAL HERO SPLIT -->
             <div class="preset-hero-split">
                 <!-- LEFT: VISUAL STAGE -->
                 <div class="preset-stage-card">
                     <div class="stage-floating-pills">
-                        ${(p.resource_category === 'project-file') ? 
-                            `<span class="stage-pill" style="background:rgba(168,85,247,0.22);color:#c084fc;border:1px solid rgba(168,85,247,0.35)"><i class="fas fa-folder-open"></i> Project File</span>` :
-                            `<span class="stage-pill" style="background:rgba(255,43,82,0.18);color:#ff6b87;border:1px solid rgba(255,43,82,0.35)"><i class="fas fa-sliders-h"></i> Preset</span>`
-                        }
+                        ${subcatPillsHtml}
                         <span class="stage-pill">${catSvgIcon} ${cat}</span>
                         <span class="stage-pill stage-pill-free"><i class="fas fa-circle-check"></i> Free</span>
                     </div>

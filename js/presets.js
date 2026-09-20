@@ -1,5 +1,18 @@
 /* ===================== PRESETS GRID RENDERER ===================== */
 
+function getProductSubcategories(item) {
+    if (!item) return ['preset'];
+    let list = [];
+    if (Array.isArray(item.resource_subcategories) && item.resource_subcategories.length > 0) {
+        list = item.resource_subcategories.slice();
+    } else if (item.resource_category) {
+        list = String(item.resource_category).split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+    }
+    if (list.length === 0) list = ['preset'];
+    return list;
+}
+window.getProductSubcategories = getProductSubcategories;
+
 window.DEFAULT_AVATAR = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2EwYTBiMCI+PHBhdGggZD0iTTEyIDEyYzIuMjEgMCA0LTEuNzkgNC00cy0xLjc5LTQtNC00LTQgMS43OS00IDQgMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYyaDE2di0yYzAtMi42Ni01LjMzLTQtOC00eiIvPjwvc3ZnPg==";
 
 window.handleAvatarError = function(img) {
@@ -217,6 +230,25 @@ function updatePresetStats(data, apiCounts, statsData){
             else cnt.textContent = cats[c] || 0;
         }
     });
+
+    // Update subcategory pill counts
+    var subcatCounts = { 'all': allCount, 'preset': 0, 'project-file': 0, 'setting-preset': 0 };
+    (data || []).forEach(function(r) {
+        var scs = getProductSubcategories(r);
+        scs.forEach(function(sc) {
+            if (subcatCounts[sc] !== undefined) {
+                subcatCounts[sc]++;
+            }
+        });
+    });
+    var elAll = document.getElementById('subcatCntAll');
+    if (elAll) elAll.textContent = subcatCounts['all'] || 0;
+    var elPre = document.getElementById('subcatCntPreset');
+    if (elPre) elPre.textContent = subcatCounts['preset'] || 0;
+    var elProj = document.getElementById('subcatCntProject');
+    if (elProj) elProj.textContent = subcatCounts['project-file'] || 0;
+    var elSet = document.getElementById('subcatCntSetting');
+    if (elSet) elSet.textContent = subcatCounts['setting-preset'] || 0;
 }
 function animateRes(id,target){
     var el=document.getElementById(id);
@@ -322,7 +354,20 @@ function renderPresets(items) {
     // Apply admin edits
     try {
         const edits = JSON.parse(localStorage.getItem('zyrex_edited_products') || '{}');
-        items = items.map(p => edits[p.id] ? { ...p, name: edits[p.id].name || p.name, category: edits[p.id].category || p.category, platform: edits[p.id].platform || p.platform, description: edits[p.id].description || p.description, desc: edits[p.id].description || p.desc, password: edits[p.id].password !== undefined ? edits[p.id].password : p.password, links: edits[p.id].links || p.links, notes: edits[p.id].notes || p.notes } : p);
+        items = items.map(p => edits[p.id] ? { 
+            ...p, 
+            name: edits[p.id].name || p.name, 
+            category: edits[p.id].category || p.category, 
+            platform: edits[p.id].platform || p.platform, 
+            description: edits[p.id].description || p.description, 
+            desc: edits[p.id].description || p.desc, 
+            password: edits[p.id].password !== undefined ? edits[p.id].password : p.password, 
+            links: edits[p.id].links || p.links, 
+            notes: edits[p.id].notes || p.notes,
+            resource_category: edits[p.id].resource_category !== undefined ? edits[p.id].resource_category : p.resource_category,
+            resource_subcategories: edits[p.id].resource_subcategories !== undefined ? edits[p.id].resource_subcategories : p.resource_subcategories,
+            setting_preset_type: edits[p.id].setting_preset_type !== undefined ? edits[p.id].setting_preset_type : p.setting_preset_type
+        } : p);
     } catch(e) {}
     
     const grid = document.getElementById('pg') || document.getElementById('presetsGrid');
@@ -402,19 +447,29 @@ window.getCategorySvgClass = getCategorySvgClass;
         else if (itemType === 'audio') detailUrl = '/product-audio?id=' + encodeURIComponent(item.id);
         else if (itemType === 'plugin' || itemType === 'software') detailUrl = '/product?id=' + encodeURIComponent(item.id);
 
-        const isProj = (item.resource_category || '') === 'project-file';
-        const subcatBadge = '<span class="' + (isProj ? 'tag-project-file' : 'tag-preset') + '">' + (isProj ? 'Project File' : 'Preset') + '</span>';
+        const subcats = getProductSubcategories(item);
+        const subcatBadges = subcats.map(function(sc) {
+            if (sc === 'project-file') {
+                return '<span class="tag-project-file">Project File</span>';
+            } else if (sc === 'setting-preset') {
+                const isTopaz = (item.setting_preset_type === 'topaz-labs') || (item.category === 'topaz-labs');
+                const topazIcon = isTopaz ? '<span class="cat-svg-icon cat-icon-topaz" style="margin-right:4px"></span>' : '';
+                return '<span class="tag-setting-preset">' + topazIcon + 'Setting Preset</span>';
+            } else {
+                return '<span class="tag-preset">Preset</span>';
+            }
+        }).join('');
 
         return '<a href="' + detailUrl + '" class="rc">' +
             '<div class="rc-img">' +
             thumbHtml +
             '<div class="roverlay"></div>' +
-            '<div class="rbadge grid-badge">' + subcatBadge + '<span class="' + catClass + '">' + catSvgIcon + cat + '</span><span class="tag-free">Free</span></div>' +
+            '<div class="rbadge grid-badge">' + subcatBadges + '<span class="' + catClass + '">' + catSvgIcon + cat + '</span><span class="tag-free">Free</span></div>' +
             '</div>' +
             '<div class="rc-content">' +
             '<div class="rc-head">' +
             '<h3 class="rc-title" title="' + item.name + '">' + item.name + '</h3>' +
-            '<div class="rbadge list-badge">' + subcatBadge + '<span class="' + catClass + '">' + catSvgIcon + cat + '</span><span class="tag-free">Free</span></div>' +
+            '<div class="rbadge list-badge">' + subcatBadges + '<span class="' + catClass + '">' + catSvgIcon + cat + '</span><span class="tag-free">Free</span></div>' +
             '</div>' +
             (shortDesc ? '<p class="rc-desc">' + shortDesc + '</p>' : '') +
             '<div class="rc-footer">' +
@@ -523,10 +578,25 @@ function gs() {
     filterPresets();
 }
 
+let currentPresetSubcat = 'all';
+
+function filterBySubcat(subcat) {
+    currentPresetSubcat = subcat || 'all';
+    document.querySelectorAll('#subcatTabs .subcat-btn').forEach(btn => {
+        if (btn.dataset.subcat === currentPresetSubcat) {
+            btn.classList.add('active');
+        } else {
+            btn.classList.remove('active');
+        }
+    });
+    filterPresets();
+}
+window.filterBySubcat = filterBySubcat;
+
 function filterPresets() {
     try {
     const data = window.presetsData || [];
-    console.log('📦 Filtering', data.length, 'items, search:', currentSearch, 'index keys:', Object.keys(creatorIndex).length);
+    console.log('📦 Filtering', data.length, 'items, search:', currentSearch, 'subcat:', currentPresetSubcat, 'index keys:', Object.keys(creatorIndex).length);
     let filtered = data;
     if (currentPresetCategory !== 'all') {
         filtered = filtered.filter(r => {
@@ -534,6 +604,21 @@ function filterPresets() {
             return cat === currentPresetCategory;
         });
     }
+
+    // Filter by Subcategory
+    if (currentPresetSubcat && currentPresetSubcat !== 'all') {
+        filtered = filtered.filter(r => {
+            const subcats = getProductSubcategories(r);
+            return subcats.includes(currentPresetSubcat);
+        });
+    }
+
+    // Filter by Access
+    const accessEl = document.getElementById('accessFilter');
+    if (accessEl && accessEl.value === 'free') {
+        filtered = filtered.filter(r => !r.price || r.price === 0 || r.price === '0' || r.is_free);
+    }
+
     if (currentSearch) {
         var s = currentSearch.toLowerCase().trim();
         // Check creator index: exact match + partial match
@@ -628,6 +713,34 @@ document.addEventListener('DOMContentLoaded', () => {
             filterPresets();
         });
     });
+
+    // Subcategory buttons delegation
+    const subcatTabs = document.getElementById('subcatTabs');
+    if (subcatTabs) {
+        subcatTabs.addEventListener('click', (e) => {
+            const btn = e.target.closest('.subcat-btn');
+            if (btn && btn.dataset.subcat) {
+                filterBySubcat(btn.dataset.subcat);
+            }
+        });
+    }
+
+    // Access filter
+    const accessFilterEl = document.getElementById('accessFilter');
+    if (accessFilterEl) {
+        accessFilterEl.addEventListener('change', () => {
+            filterPresets();
+        });
+    }
+
+    // Search input
+    const searchInput = document.getElementById('s');
+    if (searchInput) {
+        searchInput.addEventListener('input', () => {
+            gs();
+        });
+    }
+
     // Sort tabs
     document.querySelectorAll('.st button').forEach(tab => {
         tab.addEventListener('click', () => {
