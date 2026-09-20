@@ -3,13 +3,22 @@
 function getProductSubcategories(item) {
     if (!item) return ['preset'];
     let list = [];
-    if (Array.isArray(item.resource_subcategories) && item.resource_subcategories.length > 0) {
-        list = item.resource_subcategories.slice();
-    } else if (item.resource_category) {
+    let sub = item.resource_subcategories;
+    if (typeof sub === 'string') {
+        try {
+            let parsed = JSON.parse(sub);
+            if (Array.isArray(parsed)) list = parsed;
+        } catch(e) {
+            list = sub.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+        }
+    } else if (Array.isArray(sub) && sub.length > 0) {
+        list = sub.slice();
+    }
+    if (list.length === 0 && item.resource_category) {
         list = String(item.resource_category).split(',').map(function(s) { return s.trim(); }).filter(Boolean);
     }
     if (list.length === 0) list = ['preset'];
-    return list;
+    return list.map(function(s) { return String(s).toLowerCase().trim(); }).filter(Boolean);
 }
 window.getProductSubcategories = getProductSubcategories;
 
@@ -145,7 +154,7 @@ async function initPresets() {
         var [rCounts, rStats, rProducts] = await Promise.all([
             fetch("/api/downloads/counts", {credentials: 'include'}).then(function(res){ return res.json(); }).catch(function(){ return null; }),
             fetch("/api/resource-stats", {credentials: 'include'}).then(function(res){ return res.json(); }).catch(function(){ return null; }),
-            fetch("/api/products").then(function(res){ return res.json(); }).catch(function(){ return null; })
+            fetch("/api/products?ts=" + Date.now()).then(function(res){ return res.json(); }).catch(function(){ return null; })
         ]);
 
         if (rCounts && rCounts.success && rCounts.counts) {

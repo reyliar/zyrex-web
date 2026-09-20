@@ -4525,7 +4525,7 @@
             body.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted)"><i class="fas fa-spinner fa-spin"></i> Loading catalog...</td></tr>';
             
             try {
-                const resp = await fetch('/api/products');
+                const resp = await fetch(`/api/products?ts=${Date.now()}`);
                 if (resp.ok) {
                     let fetched = await resp.json();
                     if (!Array.isArray(fetched) && fetched.data) fetched = fetched.data;
@@ -4983,7 +4983,7 @@
                 release_date: (document.getElementById('editProductReleaseDate') ? document.getElementById('editProductReleaseDate').value.trim() : '')
             };
 
-            if (type === 'resource') {
+            if (type === 'resource' || type === 'preset' || !type) {
                 payload.resource_category = finalSubcats.join(',');
                 payload.resource_subcategories = finalSubcats;
                 payload.setting_preset_type = settingPresetType;
@@ -5023,6 +5023,10 @@
                         const editedMap = JSON.parse(localStorage.getItem(editedKey) || '{}');
                         editedMap[id] = payload;
                         localStorage.setItem(editedKey, JSON.stringify(editedMap));
+                    } catch(e) {}
+
+                    try {
+                        localStorage.removeItem('zyrex_products_cache');
                     } catch(e) {}
 
                     closeEditModal();
