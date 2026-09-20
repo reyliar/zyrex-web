@@ -7,11 +7,11 @@
     'use strict';
 
     // Resolve Social & Open Creator Studio Wizard
-    window.resolveReqSocial = async function() {
+    window.execResolveReqSocial = async function() {
         var rawInput = (document.getElementById('modalCreatorUrl') || {}).value || '';
         rawInput = rawInput.trim();
         if (!rawInput) {
-            window.openCreatorWizard('');
+            window.execOpenCreatorWizard('');
             return;
         }
 
@@ -43,14 +43,15 @@
             if (badgeStatus) badgeStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scanning...';
         }
 
-        window.openCreatorWizard(url);
+        window.execOpenCreatorWizard(url);
     };
+    window.resolveReqSocial = window.execResolveReqSocial;
 
     window.triggerCreatorSocialLookup = function(ev) {
-        window.resolveReqSocial();
+        window.execResolveReqSocial();
     };
 
-    window.openCreatorWizard = function(initialUrl) {
+    window.execOpenCreatorWizard = function(initialUrl) {
         var modal = document.getElementById('creatorWizardModal');
         if (!modal) return;
 
@@ -685,6 +686,7 @@
             window.closeCreatorWizard();
         }, 900);
     };
+    window.openCreatorWizard = window.execOpenCreatorWizard;
 
     console.log('[ChunkStore] Wizard chunk loaded.');
 })(window);

@@ -6,7 +6,7 @@
 (function(window) {
     'use strict';
 
-    window.quickRejectRequest = async function(id) {
+    window.execQuickRejectRequest = async function(id) {
         if (!confirm('Mark this request as rejected? It will be removed from the community board.')) return;
         try {
             var resp = await fetch('/api/requests/' + id + '/status', {
@@ -26,8 +26,9 @@
             alert('Error: ' + e.message);
         }
     };
+    window.quickRejectRequest = window.execQuickRejectRequest;
 
-    window.quickDeleteRequest = async function(id) {
+    window.execQuickDeleteRequest = async function(id) {
         if (!confirm('Permanently delete this request? This action cannot be undone.')) return;
         try {
             var resp = await fetch('/api/requests/' + id, {
@@ -45,13 +46,14 @@
             alert('Error: ' + e.message);
         }
     };
+    window.quickDeleteRequest = window.execQuickDeleteRequest;
 
     // =========================================================================
     // SYSTEM-WIDE DAILY QUOTA & DETAILED AUDIT TRACKING MODAL (ADMIN / UPLOADER)
     // =========================================================================
     var _adminTrackingActiveTab = 'users';
 
-    window.openAdminQuotaTracking = async function(targetDate) {
+    window.execOpenAdminQuotaTracking = async function(targetDate) {
         var modalId = 'adminQuotaTrackingModal';
         var modalEl = document.getElementById(modalId);
         if (!modalEl) {
@@ -280,7 +282,8 @@
                 bAudit.style.color = tab === 'audit' ? '#ff758f' : 'rgba(255,255,255,0.6)';
             }
         };
-    }
+    };
+    window.openAdminQuotaTracking = window.execOpenAdminQuotaTracking;
 
     console.log('[ChunkStore] Admin actions chunk loaded.');
 })(window);

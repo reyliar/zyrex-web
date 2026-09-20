@@ -2290,23 +2290,30 @@
         }
 
         // Quick Admin Actions for Board (Dynamic Chunk)
-        async function quickRejectRequest(id) {
-            if (window.ZyrexChunkStore && !window._adminChunkLoaded) {
-                await window.ZyrexChunkStore.loadScriptChunk('/js/chunks/admin-actions.chunk.js');
-                window._adminChunkLoaded = true;
+        var _adminActionsChunkLoading = null;
+        async function ensureAdminChunk() {
+            if (typeof window.execQuickRejectRequest === 'function') return true;
+            if (!_adminActionsChunkLoading && window.ZyrexChunkStore) {
+                _adminActionsChunkLoading = window.ZyrexChunkStore.loadScriptChunk('/js/chunks/admin-actions.chunk.js').catch(function(err) {
+                    console.error('[AdminActions] Failed to load admin chunk:', err);
+                    return null;
+                });
             }
-            if (typeof window.quickRejectRequest === 'function') {
-                return window.quickRejectRequest(id);
+            if (_adminActionsChunkLoading) await _adminActionsChunkLoading;
+            return typeof window.execQuickRejectRequest === 'function';
+        }
+
+        async function quickRejectRequest(id) {
+            var ready = await ensureAdminChunk();
+            if (ready && typeof window.execQuickRejectRequest === 'function') {
+                return window.execQuickRejectRequest(id);
             }
         }
 
         async function quickDeleteRequest(id) {
-            if (window.ZyrexChunkStore && !window._adminChunkLoaded) {
-                await window.ZyrexChunkStore.loadScriptChunk('/js/chunks/admin-actions.chunk.js');
-                window._adminChunkLoaded = true;
-            }
-            if (typeof window.quickDeleteRequest === 'function') {
-                return window.quickDeleteRequest(id);
+            var ready = await ensureAdminChunk();
+            if (ready && typeof window.execQuickDeleteRequest === 'function') {
+                return window.execQuickDeleteRequest(id);
             }
         }
 
@@ -2317,26 +2324,18 @@
             if (window._currentUser && (window._currentUser.is_admin || window._currentUser.can_upload)) {
                 var adminTrackBtn = document.getElementById('heroAdminTrackingBtn');
                 if (adminTrackBtn) adminTrackBtn.style.display = 'inline-flex';
-                if (window.ZyrexChunkStore) {
-                    window.ZyrexChunkStore.loadScriptChunk('/js/chunks/admin-actions.chunk.js').then(function() {
-                        window._adminChunkLoaded = true;
-                        renderRequestsGrid();
-                    });
-                } else {
-                    renderRequestsGrid();
-                }
+                ensureAdminChunk().then(function(ready) {
+                    if (ready) renderRequestsGrid();
+                });
                 clearInterval(_adminAuthPollTimer);
             }
             if (_adminAuthPollCount > 25) clearInterval(_adminAuthPollTimer);
         }, 250);
 
         async function openQuotaTrackingModal() {
-            if (window.ZyrexChunkStore && !window._adminChunkLoaded) {
-                await window.ZyrexChunkStore.loadScriptChunk('/js/chunks/admin-actions.chunk.js');
-                window._adminChunkLoaded = true;
-            }
-            if (typeof window.openAdminQuotaTracking === 'function') {
-                window.openAdminQuotaTracking();
+            var ready = await ensureAdminChunk();
+            if (ready && typeof window.execOpenAdminQuotaTracking === 'function') {
+                window.execOpenAdminQuotaTracking();
             } else {
                 alert('Admin tracking tool is loading...');
             }
@@ -2514,16 +2513,23 @@
         }
 
         // Dynamic Chunk Proxy for Creator Studio Wizard
+        var _wizardChunkLoading = null;
         async function ensureWizardChunk() {
-            if (window.ZyrexChunkStore) {
-                await window.ZyrexChunkStore.loadScriptChunk('/js/chunks/wizard.chunk.js');
+            if (typeof window.execOpenCreatorWizard === 'function') return true;
+            if (!_wizardChunkLoading && window.ZyrexChunkStore) {
+                _wizardChunkLoading = window.ZyrexChunkStore.loadScriptChunk('/js/chunks/wizard.chunk.js').catch(function(err) {
+                    console.error('[Wizard] Failed to load wizard chunk:', err);
+                    return null;
+                });
             }
+            if (_wizardChunkLoading) await _wizardChunkLoading;
+            return typeof window.execOpenCreatorWizard === 'function';
         }
 
         async function resolveReqSocial() {
-            await ensureWizardChunk();
-            if (typeof window.resolveReqSocial === 'function') {
-                window.resolveReqSocial();
+            var ready = await ensureWizardChunk();
+            if (ready && typeof window.execResolveReqSocial === 'function') {
+                return window.execResolveReqSocial();
             }
         }
 
@@ -2532,16 +2538,15 @@
         }
 
         async function openCreatorWizard(initialUrl) {
-            await ensureWizardChunk();
-            if (typeof window.openCreatorWizard === 'function') {
-                window.openCreatorWizard(initialUrl);
+            var ready = await ensureWizardChunk();
+            if (ready && typeof window.execOpenCreatorWizard === 'function') {
+                return window.execOpenCreatorWizard(initialUrl);
             }
         }
 
         function closeCreatorWizard() {
-            if (typeof window.closeCreatorWizard === 'function') {
-                window.closeCreatorWizard();
-            }
+            var m = document.getElementById('creatorWizardModal');
+            if (m) m.style.display = 'none';
         }
 
         // Submit Handler

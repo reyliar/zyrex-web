@@ -232,6 +232,45 @@
             link.href = url;
             link.as = url.endsWith('.js') ? 'script' : 'fetch';
             document.head.appendChild(link);
+        },
+
+        /**
+         * Clear cached chunks for a storeKey from memory and localStorage
+         * @param {string} [storeKey] - If omitted, clears all zyrex_chk_ keys
+         */
+        clearStore: function(storeKey) {
+            if (storeKey) {
+                // Clear memory cache
+                for (var key of this.memoryCache.keys()) {
+                    if (key.indexOf(storeKey) === 0) {
+                        this.memoryCache.delete(key);
+                    }
+                }
+                // Clear localStorage chunks
+                try {
+                    localStorage.removeItem(CHUNK_PREFIX + storeKey + '_meta');
+                    var keysToRemove = [];
+                    for (var i = 0; i < localStorage.length; i++) {
+                        var k = localStorage.key(i);
+                        if (k && k.indexOf(CHUNK_PREFIX + storeKey) === 0) {
+                            keysToRemove.push(k);
+                        }
+                    }
+                    keysToRemove.forEach(function(k) { localStorage.removeItem(k); });
+                } catch(e) {}
+            } else {
+                this.memoryCache.clear();
+                try {
+                    var allKeys = [];
+                    for (var j = 0; j < localStorage.length; j++) {
+                        var lk = localStorage.key(j);
+                        if (lk && lk.indexOf(CHUNK_PREFIX) === 0) {
+                            allKeys.push(lk);
+                        }
+                    }
+                    allKeys.forEach(function(k) { localStorage.removeItem(k); });
+                } catch(e) {}
+            }
         }
     };
 
