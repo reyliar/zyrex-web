@@ -23,6 +23,12 @@
             --req-surface: rgba(14, 10, 18, 0.72);
             --req-card-border: rgba(255, 255, 255, 0.08);
             --req-card-hover: rgba(255, 43, 82, 0.28);
+            --cherry: #e61536;
+            --cherry-light: #ff4d6d;
+            --cherry-dark: #b80d27;
+            --muted: rgba(255, 255, 255, 0.45);
+            --border: rgba(255, 255, 255, 0.08);
+            --border-hover: rgba(255, 43, 82, 0.35);
         }
 
         body {
@@ -886,6 +892,444 @@
         input:checked + .slider:before {
             transform: translateX(20px);
         }
+
+        /* ================================================================ */
+        /* === CREATOR STUDIO AUTO-FILL WIZARD v2 — PREMIUM REDESIGN === */
+        /* ================================================================ */
+        .scanner-modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(3, 1, 2, 0.92); backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 100005; align-items: center; justify-content: center; padding: 20px;
+        }
+        .scanner-modal-overlay.open { display: flex; }
+        
+        .scanner-modal {
+            background: rgba(12, 8, 18, 0.97);
+            border: 1px solid rgba(255,255,255,0.13);
+            border-radius: 28px;
+            width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto;
+            padding: 0;
+            box-shadow: 0 36px 100px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.1), 0 0 60px rgba(255,43,82,0.06);
+            position: relative;
+            backdrop-filter: blur(40px);
+            animation: wizardPopIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .scanner-modal::-webkit-scrollbar { width: 4px; }
+        .scanner-modal::-webkit-scrollbar-thumb { background: rgba(255,43,82,0.2); border-radius: 2px; }
+        .wiz-top-glow {
+            position: absolute; top: 0; left: 10%; right: 10%; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--cherry), rgba(168,85,247,0.8), transparent);
+            pointer-events: none;
+        }
+
+        @keyframes wizardPopIn {
+            from { opacity: 0; transform: scale(0.92) translateY(20px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        @keyframes wizardSlideUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes wizardPulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(230,21,54,0.4); }
+            50% { box-shadow: 0 0 0 12px rgba(230,21,54,0); }
+        }
+        @keyframes wizardShimmer {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+        @keyframes wizardCheckPop {
+            0% { transform: scale(0); opacity: 0; }
+            60% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        @keyframes wizardCheckSlideUp {
+            0% { transform: translateY(80px); opacity: 0; }
+            100% { transform: translateY(0); opacity: 1; }
+        }
+        @keyframes wizardContentLift {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-60px); opacity: 0.15; }
+        }
+        @keyframes wizardLineFill {
+            from { width: 0%; }
+            to { width: 100%; }
+        }
+
+        /* --- Wizard Inner Padding Wrapper --- */
+        .wiz-inner { padding: 28px 28px 24px; }
+
+        /* --- Wizard Header --- */
+        .wiz-header {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            padding: 24px 28px 0 28px;
+        }
+        .wiz-header-brand {
+            display: flex; align-items: center; gap: 14px;
+        }
+        .wiz-header-icon {
+            width: 44px; height: 44px; border-radius: 14px;
+            background: linear-gradient(135deg, rgba(230,21,54,0.2), rgba(230,21,54,0.05));
+            border: 1px solid rgba(230,21,54,0.2);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--cherry-light); font-size: 1.15rem;
+            flex-shrink: 0;
+        }
+        .wiz-header-text h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.15rem; font-weight: 800; color: #fff; margin: 0; letter-spacing: -0.3px;
+        }
+        .wiz-header-text span {
+            font-size: 0.72rem; color: var(--muted); font-weight: 500;
+        }
+        .wiz-close-btn {
+            width: 34px; height: 34px; border-radius: 50%;
+            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+            color: var(--muted); cursor: pointer; display: flex; align-items: center;
+            justify-content: center; transition: all 0.25s ease; font-size: 0.85rem;
+            flex-shrink: 0;
+        }
+        .wiz-close-btn:hover { color: #fff; background: rgba(230,21,54,0.2); border-color: rgba(230,21,54,0.3); }
+
+        /* --- New Animated Step Indicator --- */
+        .wiz-stepper {
+            display: flex; align-items: center; justify-content: center;
+            padding: 8px 28px 20px 28px; gap: 0;
+        }
+        .wiz-step-node {
+            display: flex; flex-direction: column; align-items: center; gap: 6px;
+            position: relative; z-index: 1;
+        }
+        .wiz-step-circle {
+            width: 36px; height: 36px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.8rem; font-weight: 800;
+            background: rgba(255,255,255,0.04);
+            border: 2px solid rgba(255,255,255,0.08);
+            color: rgba(255,255,255,0.3);
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+        }
+        .wiz-step-circle.active {
+            background: linear-gradient(135deg, var(--cherry), var(--cherry-dark));
+            border-color: var(--cherry-light);
+            color: #fff;
+            box-shadow: 0 0 20px rgba(230,21,54,0.4), 0 4px 12px rgba(230,21,54,0.3);
+            animation: wizardPulse 2s infinite;
+        }
+        .wiz-step-circle.done {
+            background: linear-gradient(135deg, #00c853, #009624);
+            border-color: #00e676;
+            color: #fff;
+            box-shadow: 0 0 14px rgba(0,200,83,0.3);
+        }
+        .wiz-step-label {
+            font-size: 0.68rem; font-weight: 700; color: rgba(255,255,255,0.3);
+            text-transform: uppercase; letter-spacing: 0.5px;
+            transition: color 0.4s ease;
+            white-space: nowrap;
+        }
+        .wiz-step-label.active { color: var(--cherry-light); }
+        .wiz-step-label.done { color: #00e676; }
+
+        .wiz-step-line {
+            flex: 1; height: 2px; min-width: 32px; position: relative;
+            background: rgba(255,255,255,0.06); border-radius: 1px;
+            overflow: hidden; margin: 0 8px; margin-bottom: 20px;
+        }
+        .wiz-step-line-fill {
+            position: absolute; inset: 0; background: linear-gradient(90deg, #00e676, var(--cherry-light));
+            border-radius: 1px; width: 0%; transition: width 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .wiz-step-line-fill.full { width: 100%; }
+        .wiz-step-line-fill.half { width: 50%; }
+
+        /* --- Platform Selector Cards --- */
+        .wiz-platform-grid {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 8px 0 4px;
+        }
+        .wiz-platform-card {
+            padding: 16px 14px; border-radius: 16px;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.06);
+            cursor: pointer; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex; align-items: center; gap: 12px;
+            position: relative; overflow: hidden;
+        }
+        .wiz-platform-card::before {
+            content: ''; position: absolute; inset: 0; border-radius: 16px;
+            opacity: 0; transition: opacity 0.3s ease;
+        }
+        .wiz-platform-card:hover {
+            border-color: rgba(230,21,54,0.25);
+            background: rgba(230,21,54,0.04);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+        }
+        .wiz-platform-card:active { transform: translateY(0); }
+
+        .wiz-plat-icon {
+            width: 42px; height: 42px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.3rem; flex-shrink: 0;
+            background: rgba(255,255,255,0.06);
+        }
+        .wiz-plat-icon.tt { background: rgba(255,0,80,0.15); color: #ff0050; }
+        .wiz-plat-icon.ig { background: rgba(225,48,108,0.15); color: #e1306c; }
+        .wiz-plat-icon.yt { background: rgba(255,0,0,0.15); color: #ff0000; }
+        .wiz-plat-icon.x { background: rgba(255,255,255,0.1); color: #fff; }
+        .wiz-plat-info { text-align: left; min-width: 0; }
+        .wiz-plat-info strong { display: block; font-size: 0.84rem; font-weight: 800; color: #fff; }
+        .wiz-plat-info span { font-size: 0.68rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+
+        /* --- Status Banner --- */
+        .wiz-status {
+            padding: 14px 16px; border-radius: 14px; margin: 0 0 14px 0;
+            display: flex; align-items: flex-start; gap: 12px;
+            font-size: 0.8rem; line-height: 1.5;
+            animation: wizardSlideUp 0.35s ease;
+        }
+        .wiz-status.scanning {
+            background: rgba(230,21,54,0.04); border: 1px solid rgba(230,21,54,0.12);
+            color: var(--muted);
+        }
+        .wiz-status.success {
+            background: rgba(0,200,83,0.06); border: 1px solid rgba(0,200,83,0.18);
+            color: #00e676;
+        }
+        .wiz-status.warning {
+            background: rgba(255,152,0,0.06); border: 1px solid rgba(255,152,0,0.18);
+            color: #ffb74d;
+        }
+        .wiz-status.error {
+            background: rgba(230,21,54,0.06); border: 1px solid rgba(230,21,54,0.18);
+            color: var(--cherry-light);
+        }
+        .wiz-status i { font-size: 1rem; margin-top: 1px; flex-shrink: 0; }
+        .wiz-status h4 { font-size: 0.82rem; font-weight: 700; color: #fff; margin: 0 0 2px 0; }
+        .wiz-status p { margin: 0; font-size: 0.74rem; opacity: 0.85; }
+        .wiz-status strong { color: #fff; }
+
+        /* --- Creator Profile Card (Resolved) --- */
+        .wiz-creator-card {
+            display: flex; align-items: center; gap: 14px;
+            padding: 16px; border-radius: 16px;
+            background: linear-gradient(135deg, rgba(230,21,54,0.04), rgba(15,3,6,0.6));
+            border: 1px solid rgba(230,21,54,0.12);
+            animation: wizardSlideUp 0.4s ease;
+        }
+        .wiz-creator-card img {
+            width: 52px; height: 52px; border-radius: 50%; object-fit: cover;
+            border: 2px solid var(--cherry);
+            box-shadow: 0 0 16px rgba(230,21,54,0.2);
+            flex-shrink: 0;
+        }
+        .wiz-creator-card .wiz-cc-avatar-placeholder {
+            width: 52px; height: 52px; border-radius: 50%;
+            background: rgba(230,21,54,0.1); border: 2px solid rgba(230,21,54,0.2);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--cherry-light); font-size: 1.3rem; flex-shrink: 0;
+        }
+        .wiz-cc-info { flex: 1; min-width: 0; }
+        .wiz-cc-name { font-size: 0.95rem; font-weight: 800; color: #fff; }
+        .wiz-cc-url { font-size: 0.72rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .wiz-cc-badge {
+            padding: 6px 12px; border-radius: 20px; font-size: 0.68rem; font-weight: 700;
+            display: flex; align-items: center; gap: 5px; flex-shrink: 0;
+        }
+        .wiz-cc-badge.ok { background: rgba(0,200,83,0.1); border: 1px solid rgba(0,200,83,0.2); color: #00e676; }
+        .wiz-cc-badge.scanning { background: rgba(255,152,0,0.1); border: 1px solid rgba(255,152,0,0.2); color: #ffb74d; }
+
+        /* --- Store Found Card --- */
+        .wiz-store-card {
+            padding: 16px; border-radius: 16px;
+            background: linear-gradient(135deg, rgba(0,200,83,0.04), rgba(0,0,0,0.3));
+            border: 1px solid rgba(0,200,83,0.2);
+            display: flex; align-items: center; gap: 14px;
+            animation: wizardSlideUp 0.4s ease;
+        }
+        .wiz-store-icon {
+            width: 44px; height: 44px; border-radius: 12px;
+            background: rgba(0,200,83,0.12); border: 1px solid rgba(0,200,83,0.2);
+            display: flex; align-items: center; justify-content: center;
+            color: #00e676; font-size: 1.1rem; flex-shrink: 0;
+        }
+
+        /* --- Product Selection Grid v2 --- */
+        .wiz-product-grid {
+            display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+            margin-top: 12px; max-height: 380px; overflow-y: auto; padding-right: 4px;
+        }
+        .wiz-product-grid::-webkit-scrollbar { width: 3px; }
+        .wiz-product-grid::-webkit-scrollbar-thumb { background: rgba(230,21,54,0.15); border-radius: 2px; }
+
+        .wiz-product-card {
+            background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 14px; overflow: hidden; cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+        }
+        .wiz-product-card:hover {
+            border-color: rgba(230,21,54,0.35);
+            background: rgba(230,21,54,0.04);
+            transform: translateY(-3px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.5), 0 0 20px rgba(230,21,54,0.08);
+        }
+        .wiz-product-card:active { transform: translateY(-1px); }
+        .wiz-product-img-wrap {
+            aspect-ratio: 16/10; background: #0a0305;
+            position: relative; overflow: hidden;
+        }
+        .wiz-product-img-wrap img {
+            width: 100%; height: 100%; object-fit: cover;
+            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .wiz-product-card:hover .wiz-product-img-wrap img { transform: scale(1.06); }
+        .wiz-product-img-placeholder {
+            width: 100%; height: 100%; display: flex; align-items: center;
+            justify-content: center; color: rgba(255,255,255,0.08); font-size: 1.8rem;
+        }
+        .wiz-product-body { padding: 10px 12px 12px; }
+        .wiz-product-title {
+            font-size: 0.76rem; font-weight: 700; color: #fff; line-height: 1.3;
+            display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical;
+            overflow: hidden; margin-bottom: 6px;
+        }
+        .wiz-product-price {
+            font-size: 0.72rem; font-weight: 800;
+            background: linear-gradient(135deg, var(--cherry-light), var(--cherry));
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .wiz-product-select-bar {
+            margin-top: 8px; padding: 6px 0 0 0;
+            border-top: 1px solid rgba(255,255,255,0.03);
+            font-size: 0.66rem; font-weight: 700; color: var(--muted);
+            display: flex; align-items: center; gap: 4px;
+            transition: color 0.2s ease;
+        }
+        .wiz-product-card:hover .wiz-product-select-bar { color: var(--cherry-light); }
+
+        /* --- Search Bar (in wizard) --- */
+        .wiz-search-wrap {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 14px; border-radius: 12px;
+            background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.06);
+            transition: border-color 0.3s ease;
+        }
+        .wiz-search-wrap:focus-within { border-color: rgba(230,21,54,0.25); }
+        .wiz-search-wrap input {
+            flex: 1; background: transparent; border: none; color: #fff;
+            font-size: 0.82rem; font-family: inherit; outline: none;
+        }
+        .wiz-search-wrap input::placeholder { color: var(--muted); }
+        .wiz-search-clear {
+            background: none; border: none; color: var(--muted); cursor: pointer;
+            font-size: 0.85rem; padding: 2px; display: none;
+        }
+
+        /* --- Pagination --- */
+        .wiz-pagination {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-top: 14px; padding-top: 12px;
+            border-top: 1px solid rgba(255,255,255,0.04);
+        }
+        .wiz-page-btn {
+            padding: 8px 14px; border-radius: 10px; font-size: 0.74rem; font-weight: 700;
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+            color: var(--muted); cursor: pointer; transition: all 0.2s ease;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .wiz-page-btn:hover:not(:disabled) {
+            border-color: rgba(230,21,54,0.3); color: #fff; background: rgba(230,21,54,0.06);
+        }
+        .wiz-page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+        .wiz-page-info { font-size: 0.74rem; font-weight: 600; color: var(--muted); }
+
+        /* --- Input with action button --- */
+        .wiz-input-row {
+            display: flex; gap: 8px; align-items: center;
+        }
+        .wiz-input-row input {
+            flex: 1; padding: 12px 16px; border-radius: 12px;
+            background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08);
+            color: #fff; font-size: 0.84rem; font-family: inherit; outline: none;
+            transition: border-color 0.3s ease;
+        }
+        .wiz-input-row input:focus { border-color: rgba(230,21,54,0.3); }
+        .wiz-input-row input::placeholder { color: var(--muted); }
+
+        .wiz-btn {
+            padding: 12px 20px; border-radius: 12px; font-size: 0.8rem; font-weight: 700;
+            border: none; cursor: pointer; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            font-family: inherit; display: flex; align-items: center; gap: 6px; white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .wiz-btn-primary {
+            background: linear-gradient(135deg, var(--cherry), var(--cherry-dark));
+            color: #fff; border: 1px solid rgba(255,77,109,0.2);
+            box-shadow: 0 4px 18px rgba(230,21,54,0.25);
+        }
+        .wiz-btn-primary:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 28px rgba(230,21,54,0.4);
+        }
+        .wiz-btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
+        .wiz-btn-ghost {
+            background: rgba(255,255,255,0.04); color: var(--muted);
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+        .wiz-btn-ghost:hover { border-color: rgba(230,21,54,0.25); color: #fff; }
+        .wiz-btn-sm { padding: 8px 14px; font-size: 0.74rem; border-radius: 8px; }
+
+        /* --- Manual input section --- */
+        .wiz-manual-section {
+            padding: 16px; border-radius: 14px;
+            background: rgba(255,255,255,0.015); border: 1px dashed rgba(255,255,255,0.08);
+            margin-top: 12px;
+        }
+        .wiz-manual-section label {
+            font-size: 0.76rem; font-weight: 700; color: var(--muted);
+            display: flex; align-items: center; gap: 6px; margin-bottom: 10px;
+        }
+
+        /* --- Checkmark Overlay (product selected — slides from bottom) --- */
+        .wiz-check-overlay {
+            position: absolute; bottom: 0; left: 0; right: 0;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 10px;
+            padding: 32px 20px 40px;
+            background: linear-gradient(180deg, transparent 0%, rgba(4, 1, 2, 0.95) 30%);
+            border-radius: 0 0 24px 24px;
+            z-index: 10; pointer-events: none;
+            animation: wizardCheckSlideUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+        .wiz-check-circle {
+            width: 68px; height: 68px; border-radius: 50%;
+            background: linear-gradient(135deg, #00e676, #00b0ff);
+            display: grid; place-items: center;
+            box-shadow: 0 12px 35px rgba(0,230,118,0.45);
+            color: #000; font-size: 2rem;
+            animation: wizardCheckPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.1s both;
+        }
+        .wiz-content-lift {
+            animation: wizardContentLift 0.45s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        /* --- Product Count Badge --- */
+        .wiz-count-badge {
+            font-size: 0.72rem; font-weight: 700; color: var(--muted);
+            background: rgba(255,255,255,0.03); padding: 4px 10px;
+            border-radius: 20px; border: 1px solid rgba(255,255,255,0.06);
+        }
+
+        /* --- Section heading --- */
+        .wiz-section-title {
+            font-size: 0.8rem; font-weight: 800; color: #fff;
+            display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+        }
+        .wiz-section-title i { color: var(--cherry-light); }
     </style>
 </head>
 
@@ -1025,19 +1469,49 @@
 
                 <!-- PRESET & PROJECT FILE FIELDS -->
                 <div id="presetFields">
-                    <div class="form-group">
-                        <label class="form-label"><i class="fas fa-store"></i> Product / Store Link *</label>
-                        <input type="url" id="modalProductUrl" class="form-input" placeholder="https://payhip.com/b/xxxxx or Gumroad / Ko-fi / Patreon" onblur="handleProductUrlBlur(this.value)">
+                    <!-- CREATOR SOCIAL LOOKUP -->
+                    <div class="creator-studio-panel" style="background:linear-gradient(135deg,rgba(230,21,54,0.06),rgba(15,3,6,0.8));border:1px solid rgba(255,43,82,0.25);border-radius:18px;padding:18px;margin-bottom:18px;box-shadow:0 10px 30px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.08);">
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+                            <div style="width:34px;height:34px;border-radius:10px;background:rgba(230,21,54,0.15);border:1px solid rgba(255,43,82,0.25);display:flex;align-items:center;justify-content:center;color:#ff4d6d;font-size:0.95rem;flex-shrink:0;">
+                                <i class="fas fa-wand-magic-sparkles"></i>
+                            </div>
+                            <div>
+                                <h4 style="font-size:0.88rem;font-weight:800;color:#fff;margin:0;">
+                                    Creator Social Lookup
+                                </h4>
+                                <p style="font-size:0.7rem;color:rgba(255,255,255,0.5);margin:2px 0 0 0;">Enter a social media profile — store &amp; products are scanned automatically</p>
+                            </div>
+                        </div>
+
+                        <div class="form-group" style="margin-bottom:0">
+                            <label class="form-label"><i class="fas fa-link"></i> Creator Social URL / Handle</label>
+                            <div style="display:flex;gap:8px">
+                                <input type="text" id="modalCreatorUrl" class="form-input"
+                                    placeholder="@username or https://tiktok.com/@creator"
+                                    onblur="resolveReqSocial()"
+                                    onkeydown="if(event.key==='Enter'){event.preventDefault();resolveReqSocial();}"
+                                    onpaste="setTimeout(resolveReqSocial,150)">
+                                <button type="button" id="btnSocialLookup" onclick="resolveReqSocial()" title="Scan profile &amp; find store"
+                                    style="display:flex;align-items:center;gap:6px;padding:0 16px;width:auto;border-radius:12px;font-size:0.78rem;font-weight:800;background:var(--req-accent);color:#fff;border:none;cursor:pointer;white-space:nowrap;transition:opacity 0.2s;">
+                                    <i class="fas fa-bolt"></i> Scan
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Resolved Creator Live Badge -->
+                        <div id="creatorLiveBadge" style="display:none;margin-top:12px;padding:10px 14px;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.08);border-radius:12px;align-items:center;gap:12px;">
+                            <img id="badgeAvatar" src="" alt="" referrerpolicy="no-referrer" style="width:34px;height:34px;border-radius:50%;object-fit:cover;border:2px solid var(--req-accent);">
+                            <div style="flex:1;min-width:0;">
+                                <div id="badgeTitle" style="font-size:0.82rem;font-weight:800;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">Creator</div>
+                                <div id="badgeUrl" style="font-size:0.68rem;color:rgba(255,255,255,0.45);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">URL</div>
+                            </div>
+                            <span id="badgeStatus" style="font-size:0.68rem;font-weight:700;color:#ffb74d;background:rgba(255,183,77,0.1);border:1px solid rgba(255,183,77,0.2);padding:4px 10px;border-radius:12px;white-space:nowrap;"><i class="fas fa-spinner fa-spin"></i> Scanning...</span>
+                        </div>
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label"><i class="fas fa-hashtag"></i> Creator Social Link (TikTok, IG, YouTube, X)</label>
-                        <div style="display:flex;gap:8px">
-                            <input type="url" id="modalCreatorUrl" class="form-input" placeholder="https://tiktok.com/@creator or @username">
-                            <button type="button" id="btnSocialLookup" class="btn-discord-req" style="padding:0 16px;border-radius:12px;white-space:nowrap;font-size:0.8rem;" onclick="triggerCreatorSocialLookup(event)">
-                                <i class="fas fa-magic"></i> Lookup
-                            </button>
-                        </div>
+                        <label class="form-label"><i class="fas fa-store"></i> Product / Store Link *</label>
+                        <input type="url" id="modalProductUrl" class="form-input" placeholder="https://payhip.com/b/xxxxx or Gumroad / Ko-fi / Patreon" onblur="handleProductUrlBlur(this.value)">
                     </div>
 
                     <!-- AUTO-FETCHED PREVIEW -->
@@ -1094,6 +1568,69 @@
                     <i class="fas fa-paper-plane"></i> Post Request
                 </button>
             </form>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- CREATOR STUDIO AUTO-FILL WIZARD v2 — PREMIUM REDESIGN      -->
+    <!-- ============================================================ -->
+    <div id="creatorWizardModal" class="scanner-modal-overlay" onclick="if(event.target===this)closeCreatorWizard()">
+        <div class="scanner-modal" id="wizModalContainer">
+            <div class="wiz-top-glow"></div>
+            <!-- Header -->
+            <div class="wiz-header">
+                <div class="wiz-header-brand">
+                    <div class="wiz-header-icon">
+                        <i class="fas fa-wand-magic-sparkles"></i>
+                    </div>
+                    <div class="wiz-header-text">
+                        <h3>Creator Studio Auto-Fill</h3>
+                        <span>Smart profile lookup &amp; store scanner</span>
+                    </div>
+                </div>
+                <button type="button" class="wiz-close-btn" onclick="closeCreatorWizard()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Animated Step Indicator -->
+            <div class="wiz-stepper">
+                <div class="wiz-step-node" id="wzNode1">
+                    <div class="wiz-step-circle active" id="wzCircle1">1</div>
+                    <span class="wiz-step-label active" id="wzLabel1">Profile</span>
+                </div>
+                <div class="wiz-step-line" id="wzLineA_wrap">
+                    <div class="wiz-step-line-fill" id="wzLineA_fill"></div>
+                </div>
+                <div class="wiz-step-node" id="wzNode2">
+                    <div class="wiz-step-circle" id="wzCircle2">2</div>
+                    <span class="wiz-step-label" id="wzLabel2">Store Scan</span>
+                </div>
+                <div class="wiz-step-line" id="wzLineB_wrap">
+                    <div class="wiz-step-line-fill" id="wzLineB_fill"></div>
+                </div>
+                <div class="wiz-step-node" id="wzNode3">
+                    <div class="wiz-step-circle" id="wzCircle3">3</div>
+                    <span class="wiz-step-label" id="wzLabel3">Products</span>
+                </div>
+            </div>
+
+            <!-- Content Area -->
+            <div class="wiz-inner">
+                <!-- Input Bar -->
+                <div class="wiz-input-row" style="margin-bottom:14px;">
+                    <input type="text" id="wizUrlInput"
+                        placeholder="@username or https://tiktok.com/@creator"
+                        onkeydown="if(event.key==='Enter')startCreatorWizard()">
+                    <button type="button" class="wiz-btn wiz-btn-primary" id="btnWizStart" onclick="startCreatorWizard()">
+                        <i class="fas fa-search"></i> Scan
+                    </button>
+                </div>
+
+                <!-- Dynamic Status & Body -->
+                <div id="wizStatus" style="display:none;"></div>
+                <div id="wizBody"></div>
+            </div>
         </div>
     </div>
 
@@ -1519,6 +2056,7 @@
             document.getElementById('requestModal').classList.remove('active');
             document.getElementById('duplicateWarning').style.display = 'none';
             document.getElementById('modalSubmitBtn').disabled = false;
+            closeCreatorWizard();
         }
 
         function updateModalFormFields(type) {
@@ -1579,12 +2117,20 @@
                     var data = await resp.json();
                     if (data && (data.title || data.name)) {
                         var title = data.title || data.name;
-                        document.getElementById('modalTitle').value = title;
-                        document.getElementById('modalPrice').value = data.price || '';
-                        document.getElementById('modalThumbnail').value = data.thumbnail || data.image || '';
+                        if (!document.getElementById('modalTitle').value || document.getElementById('modalTitle').value === 'Product') {
+                            document.getElementById('modalTitle').value = title;
+                        }
+                        if (data.price) document.getElementById('modalPrice').value = data.price;
+                        if (data.thumbnail || data.image) {
+                            document.getElementById('modalThumbnail').value = data.thumbnail || data.image;
+                        }
                         
-                        if (data.creator_name) document.getElementById('modalCreatorName').value = data.creator_name;
-                        if (data.creator_avatar) document.getElementById('modalCreatorAvatar').value = data.creator_avatar;
+                        if (data.creator_name && !document.getElementById('modalCreatorName').value) {
+                            document.getElementById('modalCreatorName').value = data.creator_name;
+                        }
+                        if (data.creator_avatar && !document.getElementById('modalCreatorAvatar').value) {
+                            document.getElementById('modalCreatorAvatar').value = data.creator_avatar;
+                        }
 
                         // Show preview panel
                         var previewPanel = document.getElementById('lookupPreview');
@@ -1593,10 +2139,10 @@
                         var previewPrice = document.getElementById('previewPrice');
                         var previewCreator = document.getElementById('previewCreator');
 
-                        previewThumb.src = data.thumbnail || data.image || '/assets/content.png';
+                        previewThumb.src = data.thumbnail || data.image || document.getElementById('modalThumbnail').value || '/assets/content.png';
                         previewTitle.textContent = title;
-                        previewPrice.textContent = data.price || 'Store Resource';
-                        previewCreator.textContent = data.creator_name || 'Creator Found';
+                        previewPrice.textContent = data.price || document.getElementById('modalPrice').value || 'Store Resource';
+                        previewCreator.textContent = document.getElementById('modalCreatorName').value || data.creator_name || 'Creator Found';
                         previewPanel.style.display = 'flex';
 
                         // Double check title against duplicates
@@ -1611,43 +2157,634 @@
             } catch(e) {}
         }
 
-        // Creator Social Lookup in Modal
-        async function triggerCreatorSocialLookup(ev) {
-            var socialUrl = document.getElementById('modalCreatorUrl').value.trim();
-            if (!socialUrl) {
-                alert("Please enter a social profile URL or username (@handle)");
+        // Resolve Social & Open Creator Studio Wizard
+        async function resolveReqSocial() {
+            var rawInput = document.getElementById('modalCreatorUrl').value.trim();
+            if (!rawInput) {
+                openCreatorWizard('');
                 return;
             }
 
-            var btn = (ev && ev.currentTarget) || document.getElementById('btnSocialLookup');
-            var origHtml = btn ? btn.innerHTML : '';
-            if (btn) {
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Looking up...';
-                btn.disabled = true;
+            var url = rawInput;
+            if (!url.startsWith('http://') && !url.startsWith('https://')) {
+                if (/^(payhip|boosty|patreon|linktr|guns|beacons)\./i.test(url)) {
+                    url = 'https://' + url;
+                }
             }
 
+            var rawUser = '';
             try {
-                var resp = await fetch('/api/scan-creator-links?url=' + encodeURIComponent(socialUrl));
-                if (resp.ok) {
-                    var data = await resp.json();
-                    if (data && data.success && data.found) {
-                        if (data.storeUrl) {
-                            document.getElementById('modalProductUrl').value = data.storeUrl;
-                            handleProductUrlBlur(data.storeUrl);
+                rawUser = url.split('?')[0].replace(/\/$/, '').split('/').pop().replace('@', '');
+            } catch(e) {}
+
+            if (rawUser) {
+                document.getElementById('modalCreatorName').value = rawUser;
+            }
+
+            var badge = document.getElementById('creatorLiveBadge');
+            var badgeStatus = document.getElementById('badgeStatus');
+            if (badge) {
+                badge.style.display = 'flex';
+                var bt = document.getElementById('badgeTitle');
+                if (bt) bt.textContent = rawUser || 'Creator';
+                var bu = document.getElementById('badgeUrl');
+                if (bu) bu.textContent = url;
+                if (badgeStatus) badgeStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Scanning...';
+            }
+
+            openCreatorWizard(url);
+        }
+
+        // Backward compatibility
+        function triggerCreatorSocialLookup(ev) {
+            resolveReqSocial();
+        }
+
+        // ============================================================
+        // === CREATOR STUDIO AUTO-FILL WIZARD CONTROLLER           ===
+        // ============================================================
+        function openCreatorWizard(initialUrl) {
+            var modal = document.getElementById('creatorWizardModal');
+            if (!modal) return;
+
+            var ov = document.getElementById('wizCheckOverlay');
+            if (ov && ov.parentNode) ov.parentNode.removeChild(ov);
+            var modalContainer = document.getElementById('wizModalContainer');
+            if (modalContainer) {
+                var children = modalContainer.children;
+                for (var i = 0; i < children.length; i++) {
+                    children[i].classList.remove('wiz-content-lift');
+                }
+            }
+
+            modal.classList.add('open');
+
+            var val = (initialUrl !== undefined && initialUrl !== null) ? initialUrl : ((document.getElementById('modalCreatorUrl') || {}).value || '');
+            var inp = document.getElementById('wizUrlInput');
+            if (inp) {
+                if (val) inp.value = val;
+                inp.focus();
+            }
+            if (val) {
+                startCreatorWizard();
+            }
+        }
+
+        function closeCreatorWizard() {
+            var modal = document.getElementById('creatorWizardModal');
+            if (modal) modal.classList.remove('open');
+            var ov = document.getElementById('wizCheckOverlay');
+            if (ov && ov.parentNode) ov.parentNode.removeChild(ov);
+            var modalContainer = document.getElementById('wizModalContainer');
+            if (modalContainer) {
+                var children = modalContainer.children;
+                for (var i = 0; i < children.length; i++) {
+                    children[i].classList.remove('wiz-content-lift');
+                }
+            }
+        }
+
+        function setWizStep(stepNum) {
+            for (var i = 1; i <= 3; i++) {
+                var circle = document.getElementById('wzCircle' + i);
+                var label = document.getElementById('wzLabel' + i);
+                if (!circle || !label) continue;
+
+                circle.className = 'wiz-step-circle';
+                label.className = 'wiz-step-label';
+
+                if (i < stepNum) {
+                    circle.classList.add('done');
+                    circle.innerHTML = '<i class="fas fa-check"></i>';
+                    label.classList.add('done');
+                } else if (i === stepNum) {
+                    circle.classList.add('active');
+                    circle.textContent = i;
+                    label.classList.add('active');
+                } else {
+                    circle.textContent = i;
+                }
+            }
+
+            var fillA = document.getElementById('wzLineA_fill');
+            var fillB = document.getElementById('wzLineB_fill');
+            if (fillA) {
+                fillA.className = 'wiz-step-line-fill';
+                if (stepNum > 1) fillA.classList.add('full');
+                else if (stepNum === 1) fillA.classList.add('half');
+            }
+            if (fillB) {
+                fillB.className = 'wiz-step-line-fill';
+                if (stepNum > 2) fillB.classList.add('full');
+                else if (stepNum === 2) fillB.classList.add('half');
+            }
+        }
+
+        async function startCreatorWizard(overridePlat) {
+            var rawInput = document.getElementById('wizUrlInput').value.trim();
+            if (!rawInput) {
+                alert('Please enter a social media URL or @username');
+                return;
+            }
+
+            var statusEl = document.getElementById('wizStatus');
+            var bodyEl = document.getElementById('wizBody');
+            var btn = document.getElementById('btnWizStart');
+
+            var isFullUrl = rawInput.startsWith('http://') || rawInput.startsWith('https://') || /^(payhip|boosty|patreon|linktr|guns|beacons|tiktok|instagram|youtube|twitter|x)\./i.test(rawInput);
+
+            if (!isFullUrl && !overridePlat) {
+                var cleanHandle = rawInput.replace(/^@/, '');
+                statusEl.style.display = 'block';
+                statusEl.className = 'wiz-status scanning';
+                statusEl.innerHTML = '<i class="fas fa-layer-group"></i> <div><h4>Select Platform</h4><p>Where can we find <strong>@' + cleanHandle + '</strong>?</p></div>';
+
+                var platPickerHtml = '<div class="wiz-platform-grid">' +
+                    '<div class="wiz-platform-card" onclick="startCreatorWizard(\'tiktok\')">' +
+                    '<div class="wiz-plat-icon tt"><i class="fab fa-tiktok"></i></div>' +
+                    '<div class="wiz-plat-info"><strong>TikTok</strong><span>tiktok.com/@' + cleanHandle + '</span></div>' +
+                    '</div>' +
+                    '<div class="wiz-platform-card" onclick="startCreatorWizard(\'instagram\')">' +
+                    '<div class="wiz-plat-icon ig"><i class="fab fa-instagram"></i></div>' +
+                    '<div class="wiz-plat-info"><strong>Instagram</strong><span>instagram.com/' + cleanHandle + '</span></div>' +
+                    '</div>' +
+                    '<div class="wiz-platform-card" onclick="startCreatorWizard(\'youtube\')">' +
+                    '<div class="wiz-plat-icon yt"><i class="fab fa-youtube"></i></div>' +
+                    '<div class="wiz-plat-info"><strong>YouTube</strong><span>youtube.com/@' + cleanHandle + '</span></div>' +
+                    '</div>' +
+                    '<div class="wiz-platform-card" onclick="startCreatorWizard(\'twitter\')">' +
+                    '<div class="wiz-plat-icon x"><i class="fab fa-x-twitter"></i></div>' +
+                    '<div class="wiz-plat-info"><strong>X / Twitter</strong><span>x.com/' + cleanHandle + '</span></div>' +
+                    '</div>' +
+                    '</div>';
+
+                bodyEl.innerHTML = platPickerHtml;
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-bolt"></i> Scan Profile';
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+            statusEl.style.display = 'block';
+            bodyEl.innerHTML = '';
+
+            var socialUrl = rawInput;
+            if (!isFullUrl) {
+                var handle = rawInput.replace(/^@/, '');
+                var selectedPlat = overridePlat || window.selectedPlatform || 'tiktok';
+                if (selectedPlat === 'instagram') socialUrl = 'https://www.instagram.com/' + handle;
+                else if (selectedPlat === 'youtube') socialUrl = 'https://www.youtube.com/@' + handle;
+                else if (selectedPlat === 'twitter' || selectedPlat === 'x') socialUrl = 'https://x.com/' + handle;
+                else socialUrl = 'https://www.tiktok.com/@' + handle;
+            }   
+
+            // Direct Payhip / Boosty Product Link
+            if (socialUrl.includes('payhip.com/b/') || socialUrl.includes('boosty.to/p/')) {
+                setWizStep(1);
+                statusEl.style.display = 'block';
+                statusEl.className = 'wiz-status scanning';
+                statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <div><h4>Scraping Product Page</h4><p>Fetching title, price, description &amp; images...</p></div>';
+
+                document.getElementById('modalProductUrl').value = socialUrl;
+                await handleProductUrlBlur(socialUrl);
+
+                bodyEl.innerHTML = '<div class="wiz-status success"><i class="fas fa-check-circle"></i> <div><h4>Product Auto-Filled!</h4><p>Title, price &amp; thumbnail have been populated in the request form.</p></div></div>';
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-rotate"></i> Re-Scan';
+                setTimeout(closeCreatorWizard, 1200);
+                return;
+            }
+
+            // Step 1: Resolve avatar & name
+            setWizStep(1);
+            statusEl.style.display = 'block';
+            statusEl.className = 'wiz-status scanning';
+            statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <div><h4>Step 1: Resolving Profile</h4><p>Fetching creator name &amp; avatar...</p></div>';
+
+            let profileData = null;
+            try {
+                var r1 = await fetch('/api/hlx/resolve?url=' + encodeURIComponent(socialUrl), { credentials: 'include' });
+                profileData = await r1.json();
+            } catch(e) {}
+
+            var cleanUserFallback = rawInput.replace(/^@/, '').split('?')[0].replace(/\/$/, '').split('/').pop();
+            var creatorName = (profileData && profileData.nickname) || cleanUserFallback;
+            if (!creatorName || creatorName.toLowerCase() === 'instagram' || creatorName.toLowerCase().includes('instagram') || creatorName.toLowerCase() === 'tiktok' || creatorName.toLowerCase() === 'youtube') {
+                creatorName = cleanUserFallback;
+            }
+            var creatorAv = (profileData && profileData.avatar) || '';
+            var creatorPlat = (profileData && profileData.platform) || '';
+
+            // Fill form fields
+            document.getElementById('modalCreatorUrl').value = socialUrl;
+            document.getElementById('modalCreatorName').value = creatorName;
+            if (creatorAv) document.getElementById('modalCreatorAvatar').value = creatorAv;
+            if (creatorPlat) document.getElementById('modalCreatorPlatform').value = creatorPlat;
+
+            // Update live badge in modal
+            var badge = document.getElementById('creatorLiveBadge');
+            if (badge) badge.style.display = 'flex';
+            var badgeAv = document.getElementById('badgeAvatar');
+            if (badgeAv && creatorAv) badgeAv.src = creatorAv;
+            var badgeTitle = document.getElementById('badgeTitle');
+            if (badgeTitle) badgeTitle.textContent = creatorName;
+            var badgeUrl = document.getElementById('badgeUrl');
+            if (badgeUrl) badgeUrl.textContent = socialUrl;
+            var badgeStatus = document.getElementById('badgeStatus');
+            if (badgeStatus) {
+                badgeStatus.innerHTML = '<i class="fas fa-check-circle"></i> Profile Set';
+                badgeStatus.style.color = '#00e676';
+                badgeStatus.style.background = 'rgba(0,200,100,0.1)';
+                badgeStatus.style.borderColor = 'rgba(0,200,100,0.2)';
+            }
+
+            // Render creator card in wizard
+            var cardHtml = '<div class="wiz-creator-card">';
+            if (creatorAv) {
+                cardHtml += '<img src="' + creatorAv + '" alt="" referrerpolicy="no-referrer">';
+            } else {
+                cardHtml += '<div class="wiz-cc-avatar-placeholder"><i class="fas fa-user"></i></div>';
+            }
+            cardHtml += '<div class="wiz-cc-info">';
+            cardHtml += '<div class="wiz-cc-name">' + creatorName + '</div>';
+            cardHtml += '<div class="wiz-cc-url">' + socialUrl + '</div>';
+            cardHtml += '</div>';
+            cardHtml += '<div class="wiz-cc-badge ok"><i class="fas fa-check-circle"></i> Profile Set</div>';
+            cardHtml += '</div>';
+            bodyEl.innerHTML = cardHtml;
+
+            // Step 2: Scan links (bio + aggregators)
+            setWizStep(2);
+            statusEl.className = 'wiz-status scanning';
+            statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <div><h4>Step 2: Scanning Profile Links</h4><p>Checking bio, Linktree, Guns.lol &amp; more for stores...</p></div>';
+
+            let scanData = null;
+            try {
+                var r2 = await fetch('/api/scan-creator-links?url=' + encodeURIComponent(socialUrl));
+                scanData = await r2.json();
+            } catch(e) {}
+
+            if (scanData && scanData.success && scanData.found && scanData.storeUrl) {
+                var storeUrl = scanData.storeUrl;
+                var platformName = scanData.platform === 'boosty' ? 'Boosty' : scanData.platform === 'patreon' ? 'Patreon' : 'Payhip';
+
+                statusEl.className = 'wiz-status success';
+                statusEl.innerHTML = '<i class="fas fa-store"></i> <div><h4>' + platformName + ' Store Found!</h4><p><strong>' + storeUrl + '</strong></p></div>';
+
+                var storeCardHtml = '<div class="wiz-store-card">';
+                storeCardHtml += '<div class="wiz-store-icon"><i class="fas fa-store"></i></div>';
+                storeCardHtml += '<div style="flex:1;min-width:0;">';
+                storeCardHtml += '<div style="font-size:0.88rem;font-weight:800;color:#fff;">' + platformName + ' Store</div>';
+                storeCardHtml += '<div style="font-size:0.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">' + storeUrl + '</div>';
+                storeCardHtml += '</div>';
+                storeCardHtml += '<span class="wiz-cc-badge ok"><i class="fas fa-check-circle"></i> Connected</span>';
+                storeCardHtml += '</div>';
+                bodyEl.innerHTML += storeCardHtml;
+
+                var prods = scanData.products || [];
+                if (prods.length === 0 && storeUrl) {
+                    try {
+                        var storeScanResp = await fetch('/api/scan-creator-links?url=' + encodeURIComponent(storeUrl));
+                        var storeScanData = await storeScanResp.json();
+                        if (storeScanData && storeScanData.products && storeScanData.products.length > 0) {
+                            prods = storeScanData.products;
                         }
-                        if (data.creator) {
-                            document.getElementById('modalCreatorName').value = data.creator.nickname || data.creator.username || '';
-                            document.getElementById('modalCreatorAvatar').value = data.creator.avatar || '';
-                            document.getElementById('modalCreatorPlatform').value = data.creator.platform || '';
-                        }
-                    }
+                    } catch(e) {}
+                }
+
+                if (prods.length > 0) {
+                    setWizStep(3);
+                    initWizProductPagination(prods);
+                } else {
+                    bodyEl.innerHTML += '<div class="wiz-status warning" style="margin-top:10px;">' +
+                        '<i class="fas fa-info-circle"></i> <div><h4>Store Detected — No Products Listed</h4><p>Found <strong>' + storeUrl + '</strong> but could not list products. Paste a direct product link:</p></div>' +
+                        '</div>' +
+                        '<div class="wiz-input-row" style="margin-top:8px;">' +
+                        '<input type="url" id="directProdLinkInput" placeholder="https://payhip.com/b/xxxxx">' +
+                        '<button type="button" class="wiz-btn wiz-btn-primary wiz-btn-sm" onclick="confirmDirectProductLink()"><i class="fas fa-check"></i> Set</button>' +
+                        '</div>';
+                }
+            } else {
+                statusEl.className = 'wiz-status warning';
+                statusEl.innerHTML = '<i class="fas fa-search"></i> <div><h4>No Store Found in Bio</h4><p>No Payhip / Boosty / Patreon link was detected automatically.</p></div>';
+
+                var manualHtml = '<div class="wiz-manual-section">' +
+                    '<label><i class="fas fa-link"></i> Enter Store or Product URL</label>' +
+                    '<div class="wiz-input-row">' +
+                    '<input type="url" id="manualStoreInput" placeholder="https://payhip.com/yourname or /b/xxxxx">' +
+                    '<button type="button" class="wiz-btn wiz-btn-primary wiz-btn-sm" onclick="scanManualStore()"><i class="fas fa-magic"></i> Load</button>' +
+                    '</div>' +
+                    '</div>';
+                bodyEl.innerHTML = (bodyEl.innerHTML || '') + manualHtml;
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-rotate"></i> Re-Scan';
+        }
+
+        async function scanManualStore() {
+            var urlInput = document.getElementById('manualStoreInput');
+            if (!urlInput || !urlInput.value.trim()) {
+                alert('Please enter a Payhip / Store URL');
+                return;
+            }
+            var storeUrl = urlInput.value.trim();
+
+            var statusEl = document.getElementById('wizStatus');
+            var bodyEl = document.getElementById('wizBody');
+
+            if (storeUrl.includes('/b/')) {
+                document.getElementById('modalProductUrl').value = storeUrl;
+                await handleProductUrlBlur(storeUrl);
+                closeCreatorWizard();
+                return;
+            }
+
+            statusEl.className = 'wiz-status scanning';
+            statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <div><h4>Scanning Store Products</h4><p>Fetching catalog from ' + storeUrl + '</p></div>';
+
+            try {
+                var r = await fetch('/api/scan-creator-links?url=' + encodeURIComponent(storeUrl));
+                var scanData = await r.json();
+                if (scanData && scanData.products && scanData.products.length > 0) {
+                    setWizStep(3);
+                    initWizProductPagination(scanData.products);
+
+                    statusEl.className = 'wiz-status success';
+                    statusEl.innerHTML = '<i class="fas fa-check-circle"></i> <div><h4>Products Loaded!</h4><p>Click any product below to auto-fill the request form.</p></div>';
+                } else {
+                    statusEl.className = 'wiz-status warning';
+                    statusEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> <div><h4>No Products Found</h4><p>Could not load products. Paste a direct product link:</p></div>';
+                    bodyEl.innerHTML = '<div class="wiz-input-row" style="margin-top:10px;">' +
+                        '<input type="url" id="directProdLinkInput" placeholder="https://payhip.com/b/xxxxx">' +
+                        '<button type="button" class="wiz-btn wiz-btn-primary wiz-btn-sm" onclick="confirmDirectProductLink()"><i class="fas fa-check"></i> Set</button>' +
+                        '</div>';
                 }
             } catch(e) {
-                console.error("Creator lookup error:", e);
-            } finally {
-                btn.innerHTML = origHtml;
-                btn.disabled = false;
+                alert('Failed to scan store');
             }
+        }
+
+        async function confirmDirectProductLink() {
+            var inp = document.getElementById('directProdLinkInput');
+            if (!inp || !inp.value.trim()) {
+                alert('Please enter a valid product link');
+                return;
+            }
+            var prodUrl = inp.value.trim();
+            document.getElementById('modalProductUrl').value = prodUrl;
+            await handleProductUrlBlur(prodUrl);
+            closeCreatorWizard();
+        }
+
+        function initWizProductPagination(prods, preservePage) {
+            window.scannedProducts = prods || [];
+            if (!preservePage && typeof window.wizProdPage !== 'number') {
+                window.wizProdPage = 1;
+                window.wizSearchQuery = '';
+            }
+            renderWizProductsContainer();
+        }
+
+        function filterWizProducts(query) {
+            var newQuery = (query || '').trim().toLowerCase();
+            if (newQuery === (window.wizSearchQuery || '')) return;
+            window.wizSearchQuery = newQuery;
+            window.wizProdPage = 1;
+            var clearBtn = document.getElementById('wizClearSearchBtn');
+            if (clearBtn) clearBtn.style.display = window.wizSearchQuery ? 'inline-flex' : 'none';
+            renderWizProductsGrid();
+        }
+
+        function clearWizSearch() {
+            var inp = document.getElementById('wizSearchInput');
+            if (inp) inp.value = '';
+            window.wizSearchQuery = '';
+            window.wizProdPage = 1;
+            var clearBtn = document.getElementById('wizClearSearchBtn');
+            if (clearBtn) clearBtn.style.display = 'none';
+            renderWizProductsGrid();
+        }
+
+        function changeWizPage(delta) {
+            if (window.event) {
+                try {
+                    window.event.preventDefault();
+                    window.event.stopPropagation();
+                } catch(e) {}
+            }
+            var curr = parseInt(window.wizProdPage, 10) || 1;
+            var targetPage = curr + delta;
+            if (targetPage < 1) targetPage = 1;
+            window.wizProdPage = targetPage;
+            renderWizProductsGrid();
+            var gridEl = document.getElementById('wizProductGridSelect');
+            if (gridEl) gridEl.scrollTop = 0;
+        }
+
+        function renderWizProductsContainer() {
+            var bodyEl = document.getElementById('wizBody');
+            if (!bodyEl) return;
+
+            if (document.getElementById('wizProductGridSelect')) {
+                renderWizProductsGrid();
+                return;
+            }
+
+            var sectionHtml = '<div style="margin-top:6px;">' +
+                '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">' +
+                '<div class="wiz-section-title"><i class="fas fa-store"></i> Select Store Product</div>' +
+                '<span id="wizProdCountBadge" class="wiz-count-badge"></span>' +
+                '</div>' +
+                '<div class="wiz-search-wrap">' +
+                '<i class="fas fa-search" style="color:var(--muted);font-size:0.85rem;flex-shrink:0;"></i>' +
+                '<input type="text" id="wizSearchInput" placeholder="Search products..." oninput="filterWizProducts(this.value)">' +
+                '<button type="button" id="wizClearSearchBtn" onclick="clearWizSearch()" class="wiz-search-clear"><i class="fas fa-times-circle"></i></button>' +
+                '</div>' +
+                '</div>' +
+                '<div id="wizProductGridSelect" class="wiz-product-grid"></div>' +
+                '<div id="wizPaginationBar" class="wiz-pagination"></div>';
+
+            bodyEl.innerHTML += sectionHtml;
+            renderWizProductsGrid();
+        }
+
+        function renderWizProductsGrid() {
+            var gridEl = document.getElementById('wizProductGridSelect');
+            var pagEl = document.getElementById('wizPaginationBar');
+            var badgeEl = document.getElementById('wizProdCountBadge');
+            if (!gridEl) return;
+
+            var all = window.scannedProducts || [];
+            var q = window.wizSearchQuery || '';
+
+            var filtered = all.filter(function(p, origIdx) {
+                p._origIdx = origIdx;
+                if (!q) return true;
+                var t = (p.title || '').toLowerCase();
+                var u = (p.url || '').toLowerCase();
+                return t.includes(q) || u.includes(q);
+            });
+
+            var total = filtered.length;
+            var pageSize = 6;
+            var totalPages = Math.ceil(total / pageSize) || 1;
+
+            var reqPage = parseInt(window.wizProdPage, 10);
+            if (isNaN(reqPage) || reqPage < 1) reqPage = 1;
+            if (reqPage > totalPages) reqPage = totalPages;
+            window.wizProdPage = reqPage;
+
+            var currentPage = window.wizProdPage;
+            var startIdx = (currentPage - 1) * pageSize;
+            var endIdx = Math.min(startIdx + pageSize, total);
+            var pageItems = filtered.slice(startIdx, endIdx);
+
+            if (badgeEl) {
+                if (total === 0) badgeEl.textContent = 'No products found';
+                else badgeEl.textContent = 'Showing ' + (startIdx + 1) + '-' + endIdx + ' of ' + total + (q ? ' (filtered)' : '');
+            }
+
+            if (pageItems.length === 0) {
+                gridEl.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:32px 16px;color:var(--muted);font-size:0.82rem;">' +
+                    '<i class="fas fa-search" style="font-size:2rem;margin-bottom:10px;display:block;opacity:0.3;"></i>' +
+                    'No products matching &quot;' + q + '&quot;</div>';
+            } else {
+                var cardHtml = '';
+                pageItems.forEach(function(prod) {
+                    var idx = prod._origIdx;
+                    var cardTitle = (prod.title && prod.title !== 'Product') ? prod.title : ('Product #' + (idx + 1) + (prod.url ? ' (' + prod.url.split('/').pop() + ')' : ''));
+                    cardHtml += '<div class="wiz-product-card" data-orig-idx="' + idx + '" onclick="selectWizProduct(' + idx + ')">';
+                    cardHtml += '<div class="wiz-product-img-wrap">';
+                    if (prod.image) {
+                        cardHtml += '<img src="' + prod.image + '" referrerpolicy="no-referrer" loading="lazy" alt="">';
+                    } else {
+                        cardHtml += '<div class="wiz-product-img-placeholder"><i class="fas fa-box"></i></div>';
+                    }
+                    cardHtml += '</div>';
+                    cardHtml += '<div class="wiz-product-body">';
+                    cardHtml += '<div class="wiz-product-title">' + cardTitle + '</div>';
+                    if (prod.price) cardHtml += '<div class="wiz-product-price">' + prod.price + '</div>';
+                    cardHtml += '<div class="wiz-product-select-bar"><i class="fas fa-check-circle"></i> Select Product</div>';
+                    cardHtml += '</div>';
+                    cardHtml += '</div>';
+                });
+                gridEl.innerHTML = cardHtml;
+            }
+
+            if (pagEl) {
+                if (totalPages <= 1) {
+                    pagEl.style.display = 'none';
+                } else {
+                    pagEl.style.display = 'flex';
+                    var pagHtml = '<button type="button" class="wiz-page-btn" onclick="changeWizPage(-1)" ' + (currentPage <= 1 ? 'disabled' : '') + '><i class="fas fa-chevron-left"></i> Prev</button>';
+                    pagHtml += '<span class="wiz-page-info">Page <strong style="color:#fff">' + currentPage + '</strong> of ' + totalPages + '</span>';
+                    pagHtml += '<button type="button" class="wiz-page-btn" onclick="changeWizPage(1)" ' + (currentPage >= totalPages ? 'disabled' : '') + '>Next <i class="fas fa-chevron-right"></i></button>';
+                    pagEl.innerHTML = pagHtml;
+                }
+            }
+
+            enrichWizardProductCards();
+        }
+
+        async function enrichWizardProductCards() {
+            if (!window.scannedProducts || !window.scannedProducts.length) return;
+            var prods = window.scannedProducts;
+            for (var idx = 0; idx < prods.length; idx++) {
+                var prod = prods[idx];
+                if (!prod.title || prod.title === 'Product' || prod.title === 'Patreon Post' || prod.title.indexOf('Post #') === 0 || !prod.image) {
+                    try {
+                        var r = await fetch('/api/scrape?url=' + encodeURIComponent(prod.url));
+                        var data = await r.json();
+                        if (data && data.success) {
+                            if (data.title) prod.title = data.title;
+                            if (data.image || (data.thumbnails && data.thumbnails[0])) prod.image = data.image || data.thumbnails[0];
+                            if (data.price) prod.price = data.price;
+                            
+                            var cardEl = document.querySelector('#wizProductGridSelect .wiz-product-card[data-orig-idx="' + idx + '"]');
+                            if (cardEl) {
+                                var titleEl = cardEl.querySelector('.wiz-product-title');
+                                if (titleEl && data.title) titleEl.textContent = data.title;
+                                var priceEl = cardEl.querySelector('.wiz-product-price');
+                                if (priceEl && data.price) {
+                                    priceEl.textContent = data.price;
+                                } else if (!priceEl && data.price) {
+                                    var newPrice = document.createElement('div');
+                                    newPrice.className = 'wiz-product-price';
+                                    newPrice.textContent = data.price;
+                                    var bodyEl = cardEl.querySelector('.wiz-product-body');
+                                    if (bodyEl) {
+                                        var selectBar = bodyEl.querySelector('.wiz-product-select-bar');
+                                        if (selectBar) bodyEl.insertBefore(newPrice, selectBar);
+                                        else bodyEl.appendChild(newPrice);
+                                    }
+                                }
+                                var imgWrap = cardEl.querySelector('.wiz-product-img-wrap');
+                                if (imgWrap && (data.image || (data.thumbnails && data.thumbnails[0]))) {
+                                    var imgUrl = data.image || data.thumbnails[0];
+                                    var existingImg = imgWrap.querySelector('img');
+                                    if (existingImg) {
+                                        existingImg.setAttribute('referrerpolicy', 'no-referrer');
+                                        existingImg.src = imgUrl;
+                                    } else {
+                                        imgWrap.innerHTML = '<img src="' + imgUrl + '" referrerpolicy="no-referrer" alt="">';
+                                    }
+                                }
+                            }
+                        }
+                    } catch(e) {}
+                }
+            }
+        }
+
+        async function selectWizProduct(idx) {
+            if (!window.scannedProducts || !window.scannedProducts[idx]) return;
+            var prod = window.scannedProducts[idx];
+            
+            if (prod.url) document.getElementById('modalProductUrl').value = prod.url;
+            if (prod.title && prod.title !== 'Product') document.getElementById('modalTitle').value = prod.title;
+            if (prod.price) document.getElementById('modalPrice').value = prod.price;
+            if (prod.image) document.getElementById('modalThumbnail').value = prod.image;
+
+            var prev = document.getElementById('lookupPreview');
+            if (prev) {
+                prev.style.display = 'flex';
+                var pt = document.getElementById('previewThumb');
+                if (pt && prod.image) pt.src = prod.image;
+                var ptitle = document.getElementById('previewTitle');
+                if (ptitle && prod.title) ptitle.textContent = prod.title;
+                var pc = document.getElementById('previewCreator');
+                if (pc) pc.textContent = document.getElementById('modalCreatorName').value || 'Creator';
+                var pp = document.getElementById('previewPrice');
+                if (pp) pp.textContent = prod.price || 'Free';
+            }
+
+            var modalContainer = document.getElementById('wizModalContainer');
+            if (modalContainer) {
+                var children = modalContainer.children;
+                for (var i = 0; i < children.length; i++) {
+                    if (children[i].id !== 'wizCheckOverlay') {
+                        children[i].classList.add('wiz-content-lift');
+                    }
+                }
+
+                var overlay = document.createElement('div');
+                overlay.className = 'wiz-check-overlay';
+                overlay.id = 'wizCheckOverlay';
+                overlay.innerHTML = '<div class="wiz-check-circle"><i class="fas fa-check"></i></div>' +
+                    '<div style="font-size:1.1rem;font-weight:800;color:#fff;text-align:center;">Product Selected!</div>' +
+                    '<div style="font-size:0.78rem;color:rgba(255,255,255,0.6);max-width:280px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (prod.title || 'Auto-filling details...') + '</div>';
+                modalContainer.appendChild(overlay);
+            }
+
+            if (prod.url) {
+                handleProductUrlBlur(prod.url);
+            }
+            
+            setTimeout(function() {
+                closeCreatorWizard();
+            }, 900);
         }
 
         // Submit Handler
@@ -1730,6 +2867,8 @@
                     closeRequestModal();
                     document.getElementById('requestForm').reset();
                     document.getElementById('lookupPreview').style.display = 'none';
+                    var badge = document.getElementById('creatorLiveBadge');
+                    if (badge) badge.style.display = 'none';
                     alert("Request submitted successfully! It has also been announced to the Zyrex Discord community.");
                 } else {
                     alert("Submission failed: " + (resData.error || resData.message || 'Unknown error'));
