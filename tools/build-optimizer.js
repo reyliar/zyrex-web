@@ -109,3 +109,4 @@ console.log('\x1b[32m%s\x1b[0m', `✔ Build Optimization Complete!`);
 console.log(`  Processed: ${processedFiles} files`);
 console.log(`  Size Reduction: ${origKb} KB → ${miniKb} KB (${savedPercent}% saved)`);
 console.log(`  All production files are now single-line, minified, and preload-optimized!`);
+

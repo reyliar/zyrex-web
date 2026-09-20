@@ -1527,12 +1527,12 @@
             <button class="btn-submit-req" onclick="openRequestModal()">
                 <i class="fas fa-plus"></i> Submit Request
             </button>
-            <div id="heroAllowanceBadge" class="req-hero-allowance-pill" style="display:none;" title="Günlük İstek Kotası">
+            <div id="heroAllowanceBadge" class="req-hero-allowance-pill" style="display:none;" title="Daily Request Quota">
                 <span class="allowance-dot"></span>
-                <span id="heroAllowanceText"><i class="fas fa-bolt"></i> Günlük Hak: 3/3</span>
+                <span id="heroAllowanceText"><i class="fas fa-bolt"></i> Daily Quota: 3/3</span>
             </div>
-            <button id="heroAdminTrackingBtn" class="btn-admin-tracking" onclick="openQuotaTrackingModal()" style="display:none;" title="İstek Limitleri & Detaylı Takip Sistemi">
-                <i class="fas fa-chart-pie"></i> Limit Takip
+            <button id="heroAdminTrackingBtn" class="btn-admin-tracking" onclick="openQuotaTrackingModal()" style="display:none;" title="Request Quotas & Audit Tracking">
+                <i class="fas fa-chart-pie"></i> Quota Audit
             </button>
         </div>
     </header>
@@ -1618,7 +1618,7 @@
                 <div class="quota-card-header">
                     <div class="quota-card-title">
                         <i class="fas fa-bolt"></i>
-                        <span>Günlük İstek Hakkı</span>
+                        <span>Daily Request Allowance</span>
                     </div>
                     <div class="quota-pills" id="modalQuotaPills">
                         <span class="quota-pip active"></span>
@@ -1627,14 +1627,14 @@
                     </div>
                 </div>
                 <div class="quota-card-body">
-                    <div id="modalQuotaStatusText">Günlük kota kontrol ediliyor...</div>
-                    <div id="modalQuotaResetTimer" class="quota-reset-hint"><i class="far fa-clock"></i> 00:00 UTC'de yenilenir</div>
+                    <div id="modalQuotaStatusText">Checking daily quota...</div>
+                    <div id="modalQuotaResetTimer" class="quota-reset-hint"><i class="far fa-clock"></i> Resets daily at 00:00 UTC</div>
                 </div>
                 <div id="modalQuotaExceededAlert" class="quota-alert-box" style="display:none;">
                     <i class="fas fa-circle-exclamation"></i>
                     <div>
-                        <strong>Günlük İstek Limitine Ulaştınız (3/3)</strong>
-                        <p>Bugün için azami 3 istek hakkınızı kullandınız. Lütfen yeni günün başlamasını (00:00 UTC) bekleyin.</p>
+                        <strong>Daily Request Limit Reached (3/3)</strong>
+                        <p>You have reached your limit of 3 requests today. Please wait for the daily reset at 00:00 UTC.</p>
                     </div>
                 </div>
             </div>
@@ -1954,52 +1954,50 @@
 
             // 1. Update Hero Pill
             if (heroBadge && heroText) {
-                heroBadge.style.display = 'inline-flex';
                 if (isAdmin) {
-                    heroBadge.className = 'req-hero-allowance-pill admin-badge';
-                    heroText.innerHTML = '<i class="fas fa-shield-halved"></i> Admin: Sınırsız İstek';
+                    heroBadge.style.display = 'none';
                 } else if (remaining === 0) {
+                    heroBadge.style.display = 'inline-flex';
                     heroBadge.className = 'req-hero-allowance-pill limit-exhausted';
-                    heroText.innerHTML = '<i class="fas fa-ban"></i> Günlük Limit Doldu (0/3)';
+                    heroText.innerHTML = '<i class="fas fa-ban"></i> Daily Limit Reached (0/3)';
                 } else {
+                    heroBadge.style.display = 'inline-flex';
                     heroBadge.className = 'req-hero-allowance-pill';
-                    heroText.innerHTML = `<i class="fas fa-bolt"></i> Günlük Hak: ${remaining}/${limit} Kalan`;
+                    heroText.innerHTML = `<i class="fas fa-bolt"></i> Daily Quota: ${remaining}/${limit} Left`;
                 }
             }
 
             // 2. Update Modal Quota Card
             if (modalQuotaCard) {
                 if (isAdmin) {
-                    modalQuotaCard.className = 'modal-quota-card';
-                    if (modalPills) modalPills.innerHTML = '<span class="quota-pip admin" title="Admin"></span><span class="quota-pip admin" title="Admin"></span><span class="quota-pip admin" title="Admin"></span>';
-                    if (modalText) modalText.innerHTML = '<span>Yetki: <strong style="color:#c084fc;">Yönetici (Sınırsız İstek Hakkı)</strong></span>';
-                    if (modalExceeded) modalExceeded.style.display = 'none';
+                    modalQuotaCard.style.display = 'none';
                     if (modalSubmitBtn && (!document.getElementById('duplicateWarning') || document.getElementById('duplicateWarning').style.display !== 'flex')) {
                         modalSubmitBtn.disabled = false;
                         modalSubmitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Post Request';
                     }
                 } else {
+                    modalQuotaCard.style.display = 'block';
                     if (remaining === 0) {
                         modalQuotaCard.className = 'modal-quota-card limit-exhausted';
                         if (modalPills) {
                             modalPills.innerHTML = '<span class="quota-pip"></span><span class="quota-pip"></span><span class="quota-pip"></span>';
                         }
-                        if (modalText) modalText.innerHTML = `<span>Bugünkü Kullanım: <strong style="color:#ef4444;">${used}/${limit} (Tükendi)</strong></span>`;
+                        if (modalText) modalText.innerHTML = `<span>Today's Usage: <strong style="color:#ef4444;">${used}/${limit} (Limit Reached)</strong></span>`;
                         if (modalExceeded) modalExceeded.style.display = 'flex';
                         if (modalSubmitBtn) {
                             modalSubmitBtn.disabled = true;
-                            modalSubmitBtn.innerHTML = '<i class="fas fa-ban"></i> Günlük Limit Doldu (3/3)';
+                            modalSubmitBtn.innerHTML = '<i class="fas fa-ban"></i> Daily Limit Reached (3/3)';
                         }
                     } else {
                         modalQuotaCard.className = 'modal-quota-card';
                         if (modalPills) {
                             var pipsHtml = '';
                             for (var i = 0; i < limit; i++) {
-                                pipsHtml += `<span class="quota-pip ${i < remaining ? 'active' : ''}" title="${i < remaining ? 'Kalan Hak' : 'Kullanıldı'}"></span>`;
+                                pipsHtml += `<span class="quota-pip ${i < remaining ? 'active' : ''}" title="${i < remaining ? 'Remaining' : 'Used'}"></span>`;
                             }
                             modalPills.innerHTML = pipsHtml;
                         }
-                        if (modalText) modalText.innerHTML = `<span>Kalan Hak: <strong style="color:#34d399;">${remaining}/${limit}</strong> istek</span>`;
+                        if (modalText) modalText.innerHTML = `<span>Daily Allowance: <strong style="color:#34d399;">${remaining}/${limit}</strong> requests left</span>`;
                         if (modalExceeded) modalExceeded.style.display = 'none';
                         if (modalSubmitBtn && (!document.getElementById('duplicateWarning') || document.getElementById('duplicateWarning').style.display !== 'flex')) {
                             modalSubmitBtn.disabled = false;
@@ -2619,9 +2617,9 @@
                     } else {
                         fetchUserAllowance();
                     }
-                    alert(resData.message || 'Günlük istek limitinize ulaştınız (Maksimum 3 istek/gün). Lütfen yarın tekrar deneyin.');
+                    alert(resData.message || 'You have reached your daily request limit (Maximum 3 requests/day). Please try again tomorrow.');
                     btn.disabled = true;
-                    btn.innerHTML = '<i class="fas fa-ban"></i> Günlük Limit Doldu (3/3)';
+                    btn.innerHTML = '<i class="fas fa-ban"></i> Daily Limit Reached (3/3)';
                     return;
                 }
 
@@ -2649,7 +2647,7 @@
                     document.getElementById('lookupPreview').style.display = 'none';
                     var badge = document.getElementById('creatorLiveBadge');
                     if (badge) badge.style.display = 'none';
-                    alert("İstek başarıyla gönderildi! Zyrex Discord topluluğunda da duyuruldu.");
+                    alert("Request submitted successfully! It has also been announced to the Zyrex Discord community.");
                 } else {
                     alert("Submission failed: " + (resData.error || resData.message || 'Unknown error'));
                 }

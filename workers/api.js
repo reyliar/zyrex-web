@@ -3914,7 +3914,7 @@ async function storeAndProxyImage(env, imageUrl) {
           const remainingSec = Math.ceil((15000 - (nowMs - lastGenTime)) / 1000);
           return json({
             success: false,
-            error: `Aynı preset için tekrar indirme linki oluşturmadan önce lütfen ${remainingSec} saniye bekleyin.`,
+            error: `Please wait ${remainingSec} seconds before generating another download link for this preset.`,
             cooldown: remainingSec
           }, 429);
         }
@@ -5446,7 +5446,7 @@ async function storeAndProxyImage(env, imageUrl) {
             return json({
               success: false,
               error: "rate_limit_exceeded",
-              message: "Günlük istek limitinize ulaştınız (Maksimum 3 istek/gün). Lütfen yarın tekrar deneyin.",
+              message: "You have reached your daily request limit (Maximum 3 requests/day). Please try again tomorrow.",
               daily_limit: DAILY_REQUEST_LIMIT,
               used_today: currentAllowance.used_today,
               remaining: 0,

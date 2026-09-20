@@ -9,7 +9,7 @@
     var currentCommentsPresetId = null;
     var currentUserData = null;
     var activeCommentInputId = 'mainCommentText';
-    var MEDIA_SERVICE_ERROR_MSG = "Medya servisi şu anda kullanılamıyor.";
+    var MEDIA_SERVICE_ERROR_MSG = "Media service is currently unavailable.";
     var GIPHY_API_KEY = "dc6zaTOxFJmzC";
 
     function escapeHtml(str) {
