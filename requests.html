@@ -617,6 +617,12 @@
             border: 1px solid rgba(16, 185, 129, 0.3);
         }
 
+        .status-in-progress {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
         .req-card-body {
             display: flex;
             gap: 14px;
@@ -1879,7 +1885,7 @@
         var currentRequests = [];
         var activeStatus = 'all';
         var activeType = 'all';
-        var activeSort = 'upvotes';
+        var activeSort = 'recent';
         var searchQuery = '';
         var existingProductsCache = [];
 
@@ -2133,6 +2139,17 @@
                 return true;
             });
 
+            // Apply active sort to the filtered list
+            if (activeSort === 'recent') {
+                filtered.sort(function(a, b) { return new Date(b.created_at || 0) - new Date(a.created_at || 0); });
+            } else if (activeSort === 'upvotes') {
+                filtered.sort(function(a, b) { return (b.upvotes_count || 1) - (a.upvotes_count || 1); });
+            } else if (activeSort === 'price_desc') {
+                filtered.sort(function(a, b) { return parsePrice(b.price) - parsePrice(a.price); });
+            } else if (activeSort === 'price_asc') {
+                filtered.sort(function(a, b) { return parsePrice(a.price) - parsePrice(b.price); });
+            }
+
             if (filtered.length === 0) {
                 grid.innerHTML = `
                     <div class="req-empty">
@@ -2152,9 +2169,10 @@
                 var isUpvoted = req.has_upvoted || localUpvotes.includes(req.id);
                 var typeLabel = (req.type || 'other').replace('_', ' ').replace('-', ' ');
                 var typeClass = 'type-' + (req.type || 'other').replace('_', '-');
-                var statusClass = req.status === 'completed' ? 'status-completed' : 'status-pending';
-                var statusText = req.status === 'completed' ? '<i class="fas fa-check-circle"></i> Completed' : '<i class="fas fa-clock"></i> Pending';
-                
+                var statusClass = req.status === 'completed' ? 'status-completed' : (req.status === 'in_progress' ? 'status-in-progress' : 'status-pending');
+                var statusText = req.status === 'completed' ? '<i class="fas fa-check-circle"></i> Completed'
+                    : (req.status === 'in_progress' ? '<i class="fas fa-spinner"></i> In Progress' : '<i class="fas fa-clock"></i> Pending');
+
                 var requesterName = req.is_anonymous ? 'Anonymous' : (req.user_name || 'Zyrex Member');
                 var requesterAvatar = (req.is_anonymous || !req.user_avatar) ? '/assets/content.png' : req.user_avatar;
 
@@ -2177,7 +2195,9 @@
 
                 var isAdminUser = !!(window._currentUser && (window._currentUser.is_admin || window._currentUser.can_upload));
                 var adminActionsHtml = isAdminUser ? `
-                    <div class="req-admin-quick-actions" onclick="event.stopPropagation()" style="display:flex;gap:5px;">
+                    <div class="req-admin-quick-actions" onclick="event.stopPropagation()" style="display:flex;gap:5px;flex-wrap:wrap;">
+                        <button onclick="quickCompleteRequest('${req.id}')" title="Mark as Completed" style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.35);color:#34d399;border-radius:6px;padding:3px 7px;font-size:0.7rem;cursor:pointer;line-height:1;"><i class="fas fa-check"></i></button>
+                        <button onclick="quickEditRequest('${req.id}')" title="Edit Request" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);color:#fff;border-radius:6px;padding:3px 7px;font-size:0.7rem;cursor:pointer;line-height:1;"><i class="fas fa-edit"></i></button>
                         <button onclick="quickRejectRequest('${req.id}')" title="Reject Request" style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.35);color:#fbbf24;border-radius:6px;padding:3px 7px;font-size:0.7rem;cursor:pointer;line-height:1;"><i class="fas fa-ban"></i></button>
                         <button onclick="quickDeleteRequest('${req.id}')" title="Delete Request" style="background:rgba(255,43,82,0.15);border:1px solid rgba(255,43,82,0.35);color:#ff6b87;border-radius:6px;padding:3px 7px;font-size:0.7rem;cursor:pointer;line-height:1;"><i class="fas fa-trash"></i></button>
                     </div>
@@ -2314,6 +2334,20 @@
             var ready = await ensureAdminChunk();
             if (ready && typeof window.execQuickDeleteRequest === 'function') {
                 return window.execQuickDeleteRequest(id);
+            }
+        }
+
+        async function quickCompleteRequest(id) {
+            var ready = await ensureAdminChunk();
+            if (ready && typeof window.execQuickCompleteRequest === 'function') {
+                return window.execQuickCompleteRequest(id);
+            }
+        }
+
+        async function quickEditRequest(id) {
+            var ready = await ensureAdminChunk();
+            if (ready && typeof window.execQuickEditRequest === 'function') {
+                return window.execQuickEditRequest(id);
             }
         }
 

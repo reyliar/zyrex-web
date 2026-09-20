@@ -48,6 +48,183 @@
     };
     window.quickDeleteRequest = window.execQuickDeleteRequest;
 
+    // Mark a request as completed, with optional resource URL input
+    window.execQuickCompleteRequest = async function(id) {
+        var req = Array.isArray(window.currentRequests) ? window.currentRequests.find(function(r) { return r.id === id; }) : null;
+
+        // Build modal
+        var modalId = 'adminCompleteModal_' + id;
+        var existing = document.getElementById(modalId);
+        if (existing) existing.remove();
+
+        var overlay = document.createElement('div');
+        overlay.id = modalId;
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.8);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px;';
+        overlay.innerHTML = `
+            <div style="background:#0e0812;border:1px solid rgba(16,185,129,0.35);border-radius:20px;padding:28px;max-width:480px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,0.7);">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+                    <h3 style="margin:0;font-size:1.1rem;font-weight:800;color:#fff;display:flex;align-items:center;gap:8px;"><i class="fas fa-circle-check" style="color:#34d399;"></i> Mark as Completed</h3>
+                    <button onclick="document.getElementById('${modalId}').remove()" style="background:none;border:none;color:rgba(255,255,255,0.5);font-size:1.4rem;cursor:pointer;">&times;</button>
+                </div>
+                <p style="margin:0 0 16px;font-size:0.85rem;color:rgba(255,255,255,0.6);">Optionally enter the resource URL to link this request to a published resource.</p>
+                <div style="display:flex;flex-direction:column;gap:12px;">
+                    <div>
+                        <label style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;color:rgba(255,255,255,0.45);margin-bottom:5px;display:block;">Resource URL (optional)</label>
+                        <input id="${modalId}_resourceUrl" type="text" placeholder="/resource?id=preset-abc123  or  https://..." value="${req && req.resource_url ? req.resource_url : ''}" style="width:100%;box-sizing:border-box;padding:9px 13px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.88rem;font-family:inherit;outline:none;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;color:rgba(255,255,255,0.45);margin-bottom:5px;display:block;">Resource ID (optional)</label>
+                        <input id="${modalId}_resourceId" type="text" placeholder="preset-abc123" value="${req && req.resource_id ? req.resource_id : ''}" style="width:100%;box-sizing:border-box;padding:9px 13px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.88rem;font-family:inherit;outline:none;">
+                    </div>
+                </div>
+                <div id="${modalId}_err" style="display:none;margin-top:12px;padding:9px 13px;background:rgba(255,43,82,0.1);border:1px solid rgba(255,43,82,0.3);border-radius:9px;color:#ff6b87;font-size:0.83rem;"></div>
+                <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end;">
+                    <button onclick="document.getElementById('${modalId}').remove()" style="padding:9px 18px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:rgba(255,255,255,0.6);font-size:0.86rem;font-weight:600;cursor:pointer;font-family:inherit;">Cancel</button>
+                    <button id="${modalId}_btn" onclick="window._doCompleteRequest('${id}','${modalId}')" style="padding:9px 22px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.4);border-radius:10px;color:#34d399;font-size:0.86rem;font-weight:700;cursor:pointer;font-family:inherit;"><i class="fas fa-check"></i> Confirm Complete</button>
+                </div>
+            </div>
+        `;
+        overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+        document.body.appendChild(overlay);
+        document.getElementById(modalId + '_resourceUrl').focus();
+    };
+    window.quickCompleteRequest = window.execQuickCompleteRequest;
+
+    window._doCompleteRequest = async function(id, modalId) {
+        var resourceUrl = (document.getElementById(modalId + '_resourceUrl') || {}).value || '';
+        var resourceId = (document.getElementById(modalId + '_resourceId') || {}).value || '';
+        var btn = document.getElementById(modalId + '_btn');
+        var errEl = document.getElementById(modalId + '_err');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...'; }
+        if (errEl) errEl.style.display = 'none';
+        try {
+            var body = { status: 'completed' };
+            if (resourceUrl.trim()) body.resource_url = resourceUrl.trim();
+            if (resourceId.trim()) body.resource_id = resourceId.trim();
+            var resp = await fetch('/api/requests/' + id + '/status', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(body)
+            });
+            var data = await resp.json();
+            if (!resp.ok || data.error) throw new Error(data.error || 'Failed to complete');
+            var overlay = document.getElementById(modalId);
+            if (overlay) overlay.remove();
+            // Update local state
+            if (Array.isArray(window.currentRequests)) {
+                var req = window.currentRequests.find(function(r) { return r.id === id; });
+                if (req) {
+                    req.status = 'completed';
+                    if (data.request) Object.assign(req, data.request);
+                    else {
+                        if (body.resource_url) req.resource_url = body.resource_url;
+                        if (body.resource_id) req.resource_id = body.resource_id;
+                    }
+                }
+            }
+            if (typeof window.renderRequestsGrid === 'function') window.renderRequestsGrid();
+            if (typeof window.fetchRequestsStats === 'function') window.fetchRequestsStats();
+        } catch(e) {
+            if (errEl) { errEl.textContent = e.message; errEl.style.display = 'block'; }
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-check"></i> Confirm Complete'; }
+        }
+    };
+
+    // Edit request from board (opens inline edit modal)
+    window.execQuickEditRequest = async function(id) {
+        var req = Array.isArray(window.currentRequests) ? window.currentRequests.find(function(r) { return r.id === id; }) : null;
+        if (!req) { alert('Request not found in current list.'); return; }
+
+        var modalId = 'adminEditBoardModal_' + id;
+        var existing = document.getElementById(modalId);
+        if (existing) existing.remove();
+
+        var typeOptions = ['preset','project-file','plugin','software','scenepack','other'].map(function(t) {
+            return '<option value="' + t + '"' + (req.type === t || (t === 'project-file' && req.type === 'project_file') ? ' selected' : '') + '>' + t.replace('-',' ').replace(/\b\w/g, function(c){return c.toUpperCase();}) + '</option>';
+        }).join('');
+        var statusOptions = ['pending','in_progress','completed','rejected'].map(function(s) {
+            return '<option value="' + s + '"' + (req.status === s ? ' selected' : '') + '>' + s.replace('_',' ').replace(/\b\w/g,function(c){return c.toUpperCase();}) + '</option>';
+        }).join('');
+
+        var overlay = document.createElement('div');
+        overlay.id = modalId;
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.8);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:20px;';
+        overlay.innerHTML = `
+            <div style="background:#0e0812;border:1px solid rgba(255,43,82,0.3);border-radius:20px;padding:28px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,0.7);">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+                    <h3 style="margin:0;font-size:1.1rem;font-weight:800;color:#fff;display:flex;align-items:center;gap:8px;"><i class="fas fa-edit" style="color:#ff4d6d;"></i> Edit Request</h3>
+                    <button onclick="document.getElementById('${modalId}').remove()" style="background:none;border:none;color:rgba(255,255,255,0.5);font-size:1.4rem;cursor:pointer;">&times;</button>
+                </div>
+                <div style="display:flex;flex-direction:column;gap:12px;">
+                    <div><label style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;color:rgba(255,255,255,0.45);margin-bottom:5px;display:block;">Title *</label>
+                        <input id="${modalId}_title" type="text" value="${(req.title||'').replace(/"/g,'&quot;')}" style="width:100%;box-sizing:border-box;padding:9px 13px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.88rem;font-family:inherit;outline:none;"></div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                        <div><label style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;color:rgba(255,255,255,0.45);margin-bottom:5px;display:block;">Type</label>
+                            <select id="${modalId}_type" style="width:100%;box-sizing:border-box;padding:9px 13px;background:#1a0e22;border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.88rem;font-family:inherit;outline:none;">${typeOptions}</select></div>
+                        <div><label style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;color:rgba(255,255,255,0.45);margin-bottom:5px;display:block;">Status</label>
+                            <select id="${modalId}_status" style="width:100%;box-sizing:border-box;padding:9px 13px;background:#1a0e22;border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.88rem;font-family:inherit;outline:none;">${statusOptions}</select></div>
+                    </div>
+                    <div><label style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;color:rgba(255,255,255,0.45);margin-bottom:5px;display:block;">Description</label>
+                        <textarea id="${modalId}_desc" rows="3" style="width:100%;box-sizing:border-box;padding:9px 13px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.88rem;font-family:inherit;outline:none;resize:vertical;">${(req.description||'').replace(/</g,'&lt;')}</textarea></div>
+                    <div><label style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;color:rgba(255,255,255,0.45);margin-bottom:5px;display:block;">Price</label>
+                        <input id="${modalId}_price" type="text" placeholder="e.g. $7.50 or Free" value="${(req.price||'').replace(/"/g,'&quot;')}" style="width:100%;box-sizing:border-box;padding:9px 13px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.88rem;font-family:inherit;outline:none;"></div>
+                    <div><label style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;color:rgba(255,255,255,0.45);margin-bottom:5px;display:block;">Store URL</label>
+                        <input id="${modalId}_productUrl" type="url" placeholder="https://..." value="${(req.product_url||'').replace(/"/g,'&quot;')}" style="width:100%;box-sizing:border-box;padding:9px 13px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.88rem;font-family:inherit;outline:none;"></div>
+                    <div><label style="font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;color:rgba(255,255,255,0.45);margin-bottom:5px;display:block;">Resource URL (for completed)</label>
+                        <input id="${modalId}_resourceUrl" type="text" placeholder="/resource?id=preset-abc123" value="${(req.resource_url||'').replace(/"/g,'&quot;')}" style="width:100%;box-sizing:border-box;padding:9px 13px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.88rem;font-family:inherit;outline:none;"></div>
+                </div>
+                <div id="${modalId}_err" style="display:none;margin-top:12px;padding:9px 13px;background:rgba(255,43,82,0.1);border:1px solid rgba(255,43,82,0.3);border-radius:9px;color:#ff6b87;font-size:0.83rem;"></div>
+                <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end;">
+                    <button onclick="document.getElementById('${modalId}').remove()" style="padding:9px 18px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:rgba(255,255,255,0.6);font-size:0.86rem;font-weight:600;cursor:pointer;font-family:inherit;">Cancel</button>
+                    <button id="${modalId}_btn" onclick="window._doEditRequest('${id}','${modalId}')" style="padding:9px 22px;background:rgba(255,43,82,0.15);border:1px solid rgba(255,43,82,0.4);border-radius:10px;color:#ff6b87;font-size:0.86rem;font-weight:700;cursor:pointer;font-family:inherit;"><i class="fas fa-save"></i> Save Changes</button>
+                </div>
+            </div>
+        `;
+        overlay.addEventListener('click', function(e) { if (e.target === overlay) overlay.remove(); });
+        document.body.appendChild(overlay);
+    };
+    window.quickEditRequest = window.execQuickEditRequest;
+
+    window._doEditRequest = async function(id, modalId) {
+        var btn = document.getElementById(modalId + '_btn');
+        var errEl = document.getElementById(modalId + '_err');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...'; }
+        if (errEl) errEl.style.display = 'none';
+        try {
+            var body = {
+                title: (document.getElementById(modalId + '_title') || {}).value || '',
+                type: (document.getElementById(modalId + '_type') || {}).value || 'other',
+                status: (document.getElementById(modalId + '_status') || {}).value || 'pending',
+                description: (document.getElementById(modalId + '_desc') || {}).value || '',
+                price: (document.getElementById(modalId + '_price') || {}).value || '',
+                product_url: (document.getElementById(modalId + '_productUrl') || {}).value || '',
+                resource_url: (document.getElementById(modalId + '_resourceUrl') || {}).value || ''
+            };
+            if (!body.title.trim()) throw new Error('Title is required');
+            var resp = await fetch('/api/requests/' + id, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(body)
+            });
+            var data = await resp.json();
+            if (!resp.ok || data.error) throw new Error(data.error || 'Save failed');
+            var overlay = document.getElementById(modalId);
+            if (overlay) overlay.remove();
+            // Update local cache
+            if (Array.isArray(window.currentRequests)) {
+                var req = window.currentRequests.find(function(r) { return r.id === id; });
+                if (req) Object.assign(req, body);
+            }
+            if (typeof window.renderRequestsGrid === 'function') window.renderRequestsGrid();
+        } catch(e) {
+            if (errEl) { errEl.textContent = e.message; errEl.style.display = 'block'; }
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Save Changes'; }
+        }
+    };
+
+
     // =========================================================================
     // SYSTEM-WIDE DAILY QUOTA & DETAILED AUDIT TRACKING MODAL (ADMIN / UPLOADER)
     // =========================================================================

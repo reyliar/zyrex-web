@@ -5699,7 +5699,7 @@ async function storeAndProxyImage(env, imageUrl) {
             if (!targetReq) return json({ error: "Request not found" }, 404);
 
             // Only update allowed fields
-            const allowedFields = ["title", "type", "status", "description", "price", "product_url", "creator_name", "creator_social_url", "creator_avatar", "thumbnail"];
+            const allowedFields = ["title", "type", "status", "description", "price", "product_url", "creator_name", "creator_social_url", "creator_avatar", "thumbnail", "resource_url", "resource_id"];
             for (const f of allowedFields) {
               if (body[f] !== undefined) targetReq[f] = body[f];
             }
