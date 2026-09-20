@@ -3815,28 +3815,21 @@ async function storeAndProxyImage(env, imageUrl) {
         };
 
         try {
-          // Attempt 1: PUT to Bot API
-          let targetUrl = `${BOT_API}/api/products/${encodeURIComponent(productId)}`;
-          let botResp = await fetch(targetUrl, {
-            method: "PUT",
+          // Attempt 1: POST to /api/products/edit/:id (or request.method)
+          const reqMethod = request.method === "PUT" ? "PUT" : "POST";
+          let botResp = await fetch(`${BOT_API}/api/products/edit/${encodeURIComponent(productId)}`, {
+            method: reqMethod,
             headers: proxyHeaders,
             body: JSON.stringify(payload)
           });
 
-          // Attempt 2: If 405, fallback to POST
-          if (botResp.status === 405) {
-            botResp = await fetch(`${BOT_API}/api/products/edit/${encodeURIComponent(productId)}`, {
-              method: "POST",
+          // Attempt 2: If 404, 405, or server error (500/502/503), fallback to /api/products/:id
+          if (!botResp.ok && (botResp.status === 404 || botResp.status === 405 || botResp.status >= 500)) {
+            botResp = await fetch(`${BOT_API}/api/products/${encodeURIComponent(productId)}`, {
+              method: reqMethod,
               headers: proxyHeaders,
               body: JSON.stringify(payload)
             });
-            if (botResp.status === 405) {
-              botResp = await fetch(`${BOT_API}/api/products/${encodeURIComponent(productId)}`, {
-                method: "POST",
-                headers: proxyHeaders,
-                body: JSON.stringify(payload)
-              });
-            }
           }
 
           const rawText = await botResp.text();
