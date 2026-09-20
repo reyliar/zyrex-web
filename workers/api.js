@@ -5157,15 +5157,15 @@ async function storeAndProxyImage(env, imageUrl) {
                     {
                       type: 2,
                       style: 5,
-                      label: "View on Zyrex",
-                      url: "https://zyrexediting.xyz/requests"
+                      label: "View Request",
+                      url: `https://zyrexediting.xyz/request?id=${reqData.id}`
                     }
                   ]
                 }
               ]
             };
 
-            await fetch(`https://discord.com/api/v10/channels/${REQUESTS_CHANNEL_ID}/messages`, {
+            const discordResp = await fetch(`https://discord.com/api/v10/channels/${REQUESTS_CHANNEL_ID}/messages`, {
               method: "POST",
               headers: {
                 Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`,
@@ -5173,10 +5173,32 @@ async function storeAndProxyImage(env, imageUrl) {
               },
               body: JSON.stringify(payload)
             });
+
+            // Persist discord_message_id and discord_channel_id back to R2 so we can link to the Discord post
+            if (discordResp.ok) {
+              try {
+                const msg = await discordResp.json();
+                if (msg && msg.id) {
+                  const allReqs = await loadRequestsFromR2();
+                  const target = allReqs.find(r => r.id === reqData.id);
+                  if (target) {
+                    target.discord_message_id = msg.id;
+                    target.discord_channel_id = msg.channel_id || REQUESTS_CHANNEL_ID;
+                    await persistRequestsToR2(allReqs);
+                  }
+                }
+              } catch (persistErr) {
+                console.error("Failed to persist discord_message_id:", persistErr);
+              }
+            } else {
+              const errText = await discordResp.text().catch(() => "");
+              console.error("Discord announcement failed:", discordResp.status, errText);
+            }
           } catch (e) {
             console.error("sendDiscordRequestAnnouncement error:", e);
           }
         }
+
 
         // GET /api/requests/allowance (User Daily Limit Status)
         if (path === "/api/requests/allowance" && request.method === "GET") {
@@ -5617,7 +5639,7 @@ async function storeAndProxyImage(env, imageUrl) {
           let body = {};
           try { body = await request.json(); } catch (_) {}
           const newStatus = (body.status || "").toLowerCase();
-          if (!["pending", "in_progress", "completed"].includes(newStatus)) {
+          if (!["pending", "in_progress", "completed", "rejected"].includes(newStatus)) {
             return json({ error: "Invalid status" }, 400);
           }
 
@@ -5627,10 +5649,40 @@ async function storeAndProxyImage(env, imageUrl) {
 
           targetReq.status = newStatus;
           targetReq.updated_at = new Date().toISOString();
-          await persistRequestsToR2(allReqs);
 
-          return json({ success: true, status: newStatus });
+          // On completion: record timestamp + optional resource link
+          if (newStatus === "completed") {
+            targetReq.completed_at = new Date().toISOString();
+            if (body.resource_id) targetReq.resource_id = body.resource_id;
+            if (body.resource_url) targetReq.resource_url = body.resource_url;
+
+            // Edit the Discord announcement message to show completed status
+            if (env.DISCORD_BOT_TOKEN && targetReq.discord_message_id) {
+              try {
+                const channelId = targetReq.discord_channel_id || REQUESTS_CHANNEL_ID;
+                const resourceLink = targetReq.resource_url
+                  ? `\n✅ **Fulfilled!** → [View Resource](https://zyrexediting.xyz${targetReq.resource_url})`
+                  : "\n✅ **This request has been fulfilled!**";
+                await fetch(`https://discord.com/api/v10/channels/${channelId}/messages/${targetReq.discord_message_id}`, {
+                  method: "PATCH",
+                  headers: {
+                    Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`,
+                    "Content-Type": "application/json"
+                  },
+                  body: JSON.stringify({
+                    content: `✅ **Request Fulfilled!** ${resourceLink}\nhttps://zyrexediting.xyz/request?id=${reqId}`
+                  })
+                });
+              } catch (discordEditErr) {
+                console.error("Discord message edit failed:", discordEditErr);
+              }
+            }
+          }
+
+          await persistRequestsToR2(allReqs);
+          return json({ success: true, status: newStatus, request: targetReq });
         }
+
 
           // PUT /api/requests/:id (Admin/Uploader: edit)
           if (path.match(/^\/api\/requests\/[^/]+$/) && request.method === "PUT") {

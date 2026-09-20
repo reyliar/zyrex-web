@@ -597,7 +597,10 @@
             if (metaDesc) metaDesc.setAttribute('content', req.description ? req.description.substring(0,160) : 'Community request on Zyrex.');
 
             var fulfilledCardHtml = '';
-            if (req.status === 'completed' && req.resource_url) {
+            if (req.status === 'completed') {
+                var resourceBtn = req.resource_url
+                    ? `<a href="${escapeHtml(req.resource_url)}" style="padding:10px 22px;border-radius:10px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;text-decoration:none;font-size:0.88rem;font-weight:700;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(16,185,129,0.3);"><i class="fas fa-download"></i> View Resource</a>`
+                    : '';
                 fulfilledCardHtml = `
                     <div style="margin-top:16px;padding:16px 20px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:16px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
                         <div style="display:flex;align-items:center;gap:12px;">
@@ -607,12 +610,21 @@
                                 <div style="font-size:0.78rem;color:rgba(255,255,255,0.6);">This resource is published and ready for download.</div>
                             </div>
                         </div>
-                        <a href="${escapeHtml(req.resource_url)}" style="padding:10px 22px;border-radius:10px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;text-decoration:none;font-size:0.88rem;font-weight:700;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(16,185,129,0.3);">
-                            <i class="fas fa-download"></i> View Resource
-                        </a>
+                        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                            ${resourceBtn}
+                        </div>
                     </div>
                 `;
             }
+
+            var discordLinkHtml = '';
+            if (req.discord_message_id) {
+                var discordChannelId = req.discord_channel_id || '1551118401508745367';
+                var guildId = '1518954946110685184';
+                var discordUrl = `https://discord.com/channels/${guildId}/${discordChannelId}/${req.discord_message_id}`;
+                discordLinkHtml = `<a href="${discordUrl}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;background:rgba(88,101,242,0.15);border:1px solid rgba(88,101,242,0.3);color:#7289da;font-size:0.8rem;font-weight:600;text-decoration:none;margin-top:8px;"><i class="fab fa-discord"></i> View on Discord</a>`;
+            }
+
 
             var html = `
                 <div class="breadcrumb-bar">
@@ -647,6 +659,7 @@
                                 <i class="fas fa-arrow-up"></i>
                                 <span id="detailUpvoteCount">${req.upvotes_count || 1}</span> Upvotes
                             </button>
+                            ${discordLinkHtml}
                         </div>
 
                         <!-- ADMIN ACTIONS PANEL (hidden until auth loads) -->
@@ -981,12 +994,18 @@
                 });
                 var data = await resp.json();
                 if (!resp.ok || data.error) throw new Error(data.error || 'Status update failed');
-                currentReq.status = newStatus;
+                // Merge full returned request (includes resource_url, completed_at, etc.)
+                if (data.request) {
+                    Object.assign(currentReq, data.request);
+                } else {
+                    currentReq.status = newStatus;
+                }
                 renderPage(currentReq);
             } catch(err) {
                 alert('Error: ' + err.message);
             }
         }
+
 
         // Poll for auth to show admin panel
         var _adminPollCount = 0;
