@@ -127,6 +127,9 @@ function setCachedProducts(data) {
     try {
         localStorage.setItem(PRODUCTS_CACHE_KEY, JSON.stringify({ ts: Date.now(), data: data }));
     } catch(e) {}
+    if (window.ZyrexChunkStore && Array.isArray(data)) {
+        window.ZyrexChunkStore.storeCatalogChunks('products', data, PRESETS_PAGE_SIZE);
+    }
 }
 
 async function initPresets() {
@@ -429,6 +432,14 @@ function getCategorySvgClass(cat) {
     return 'cat-icon-others';
 }
 window.getCategorySvgClass = getCategorySvgClass;
+
+    if (typeof window.renderPresetGridChunked === 'function') {
+        window.renderPresetGridChunked(grid, pageItems, {
+            downloadCounts: downloadCounts,
+            likeCounts: likeCounts
+        });
+        return;
+    }
 
     grid.innerHTML = pageItems.map(item => {
         const cat = getCategoryLabel(item.category);

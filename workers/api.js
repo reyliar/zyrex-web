@@ -6,12 +6,6 @@ const FILE_API = "https://storage.zyrexediting.xyz";  // Python file server via 
 const SFTPGO_API = "https://storage.zyrexediting.xyz/api/v2";  // SFTPGo via Cloudflare Tunnel (local)
 const ADMIN_IDS = ["1421177012814614548"];
 
-function getBotToken(env) {
-  const t = (env && env.DISCORD_BOT_TOKEN ? env.DISCORD_BOT_TOKEN : "").trim();
-  if (t && !t.endsWith("RtJY")) return t;
-  return atob("TVRVeE9UUTFOakV6TURJNU1EUXhOemMzTmcuR1p6N09JLmw1MEs1ZkNHTG9ITl85eFZtVTNfWnVscmRpQWY4LUVkWE5MQUp3");
-}
-
 // Category display names & emojis
 const CATEGORY_INFO = {
   "after-effects": { label: "After Effects", emoji: "🎬" },
@@ -3295,7 +3289,7 @@ async function storeAndProxyImage(env, imageUrl) {
           client_id: env.DISCORD_CLIENT_ID,
           redirect_uri: env.DISCORD_REDIRECT_URI,
           response_type: "code",
-          scope: "identify email guilds.members.read guilds.join",
+          scope: "identify email guilds.members.read",
           state: state,
         });
         return redirect(`${DISCORD_API}/oauth2/authorize?${p}`);
@@ -3395,34 +3389,6 @@ async function storeAndProxyImage(env, imageUrl) {
         });
         if (!ur.ok) return redirect("/?error=user_fetch_failed");
         const du = await ur.json();
-
-        // Auto-join user to Discord guild if not already a member
-        const guildId = env.GUILD_ID || "1518954946110685184";
-        const botAuthToken = getBotToken(env);
-        if (botAuthToken && token.access_token) {
-          try {
-            const addMemberResp = await fetch(`${DISCORD_API}/guilds/${guildId}/members/${du.id}`, {
-              method: "PUT",
-              headers: {
-                "Authorization": `Bot ${botAuthToken}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                access_token: token.access_token,
-              }),
-            });
-            if (addMemberResp.status === 201) {
-              console.log(`Successfully added user ${du.id} (${du.username}) to guild ${guildId}`);
-            } else if (addMemberResp.status === 204) {
-              console.log(`User ${du.id} is already in guild ${guildId}`);
-            } else {
-              const errTxt = await addMemberResp.text();
-              console.warn(`Guild auto-join returned status ${addMemberResp.status}:`, errTxt);
-            }
-          } catch (joinErr) {
-            console.error("Guild auto-join error:", joinErr);
-          }
-        }
 
         let canUpload = ADMIN_IDS.includes(du.id);
         if (!canUpload) {
@@ -5034,395 +5000,134 @@ async function storeAndProxyImage(env, imageUrl) {
         }
       }
 
-      // ============ COMMUNITY REQUESTS HELPERS ============
-      const REQUESTS_R2_KEY = "requests/data.json";
-      const REQUESTS_CHANNEL_ID = "1551118401508745367";
+      // ============ COMMUNITY REQUESTS SYSTEM (CLOUDFLARE R2 BACKED) ============
+      if (path === "/api/requests" || path.startsWith("/api/requests/")) {
+        const REQUESTS_R2_KEY = "requests/data.json";
+        const REQUESTS_CHANNEL_ID = "1551118401508745367";
 
-      async function loadRequestsFromR2(targetEnv) {
-        const e = targetEnv || env;
-        if (!e.STORAGE) return [];
-        try {
-          const obj = await e.STORAGE.get(REQUESTS_R2_KEY);
-          if (!obj) return [];
-          const data = await obj.json();
-          return Array.isArray(data) ? data : (data.requests || []);
-        } catch (err) {
-          console.error("loadRequestsFromR2 error:", err);
-          return [];
-        }
-      }
-
-      async function persistRequestsToR2(targetEnv, requestsList) {
-        const e = targetEnv || env;
-        if (!e.STORAGE) return false;
-        try {
-          const payload = JSON.stringify({
-            requests: requestsList,
-            total: requestsList.length,
-            updated_at: new Date().toISOString()
-          });
-          await e.STORAGE.put(REQUESTS_R2_KEY, payload, {
-            httpMetadata: { contentType: "application/json" }
-          });
-          return true;
-        } catch (err) {
-          console.error("persistRequestsToR2 error:", err);
-          return false;
-        }
-      }
-
-      function cleanUrlForCompare(urlStr) {
-        if (!urlStr) return "";
-        try {
-          return urlStr.toLowerCase()
-            .replace(/^https?:\/\//, "")
-            .replace(/^www\./, "")
-            .split("?")[0]
-            .split("#")[0]
-            .replace(/\/$/, "");
-        } catch (_) {
-          return "";
-        }
-      }
-
-      function cleanTitleForCompare(str) {
-        if (!str) return "";
-        return str.toLowerCase()
-          .replace(/[^\w\s]/g, "")
-          .replace(/\s+/g, " ")
-          .trim();
-      }
-
-      function buildDiscordRequestEmbed(reqData) {
-        const typeLabels = {
-          "preset": "Preset",
-          "project-file": "Project File",
-          "project_file": "Project File",
-          "plugin": "Plugin",
-          "software": "Software",
-          "scenepack": "Scenepack",
-          "other": "Other"
-        };
-        const typeLabel = typeLabels[reqData.type] || (reqData.type ? reqData.type.replace(/_/g, ' ') : "Resource");
-        const requestedBy = reqData.is_anonymous ? "Anonymous Member" : (reqData.user_name || "Community Member");
-        const userMention = (reqData.user_id && !reqData.is_anonymous && /^\d{17,20}$/.test(reqData.user_id)) ? `<@${reqData.user_id}>` : requestedBy;
-
-        const status = (reqData.status || "pending").toLowerCase();
-        let statusText = "🟡 Pending";
-        let embedColor = 0xFF2B52; // Zyrex cherry
-        let titlePrefix = "📥 Community Request";
-
-        if (status === "completed") {
-          statusText = "🟢 Completed";
-          embedColor = 0x10B981; // Emerald green
-          titlePrefix = "✅ Request Completed";
-        } else if (status === "in_progress") {
-          statusText = "🔵 In Progress";
-          embedColor = 0x3B82F6; // Blue
-          titlePrefix = "⏳ Request In Progress";
-        } else if (status === "rejected") {
-          statusText = "🔴 Rejected";
-          embedColor = 0xEF4444; // Red
-          titlePrefix = "❌ Request Rejected";
-        }
-
-        const fields = [
-          { name: "📊 Status", value: `**${statusText}**`, inline: true },
-          { name: "🏷️ Type", value: `\`${typeLabel}\``, inline: true },
-          { name: "👤 Requested By", value: userMention, inline: true }
-        ];
-
-        if (reqData.price) {
-          fields.push({ name: "💰 Price", value: `\`${reqData.price}\``, inline: true });
-        }
-
-        if (reqData.upvotes_count !== undefined) {
-          fields.push({ name: "🔺 Upvotes", value: `**${reqData.upvotes_count}**`, inline: true });
-        }
-
-        if (reqData.creator_name || reqData.creator_social_url) {
-          const crText = reqData.creator_social_url ? `[${reqData.creator_name || "Creator"}](${reqData.creator_social_url})` : (reqData.creator_name || "Creator");
-          fields.push({ name: "🎨 Creator", value: crText, inline: true });
-        }
-
-        if (reqData.product_url) {
-          fields.push({ name: "🔗 Store Link", value: `[View Store Page](${reqData.product_url})`, inline: false });
-        }
-
-        if (status === "completed" && reqData.resource_url) {
-          const fullResourceUrl = reqData.resource_url.startsWith("http") ? reqData.resource_url : `https://zyrexediting.xyz${reqData.resource_url}`;
-          fields.push({ name: "🎁 Fulfilled Resource", value: `[Download on Zyrex](${fullResourceUrl})`, inline: false });
-        }
-
-        const embed = {
-          title: `${titlePrefix}: ${reqData.title || "Untitled"}`,
-          description: reqData.description ? (reqData.description.length > 500 ? reqData.description.slice(0, 497) + "..." : reqData.description) : "*No additional description provided.*",
-          color: embedColor,
-          fields: fields,
-          footer: {
-            text: `Zyrex Community Requests • ID: ${reqData.id}`,
-            icon_url: "https://zyrexediting.xyz/assets/content.png"
-          },
-          timestamp: reqData.updated_at || reqData.created_at || new Date().toISOString()
-        };
-
-        if (reqData.thumbnail && reqData.thumbnail.startsWith("http")) {
-          embed.thumbnail = { url: reqData.thumbnail };
-        }
-
-        const buttons = [
-          {
-            type: 2,
-            style: 5,
-            label: "View Request on Zyrex",
-            url: `https://zyrexediting.xyz/request?id=${encodeURIComponent(reqData.id)}`
+        // Read all requests from R2
+        async function loadRequestsFromR2() {
+          if (!env.STORAGE) return [];
+          try {
+            const obj = await env.STORAGE.get(REQUESTS_R2_KEY);
+            if (!obj) return [];
+            const data = await obj.json();
+            return Array.isArray(data) ? data : (data.requests || []);
+          } catch (e) {
+            console.error("loadRequestsFromR2 error:", e);
+            return [];
           }
-        ];
-
-        if (status === "completed" && reqData.resource_url) {
-          const fullResourceUrl = reqData.resource_url.startsWith("http") ? reqData.resource_url : `https://zyrexediting.xyz${reqData.resource_url}`;
-          buttons.unshift({
-            type: 2,
-            style: 5,
-            label: "Get Fulfilled Resource",
-            url: fullResourceUrl
-          });
         }
 
-        return {
-          content: status === "completed" ? `🎉 **A community request has been fulfilled on Zyrex!**` : `🔔 **New Community Request Submitted!**`,
-          embeds: [embed],
-          components: [
-            {
-              type: 1,
-              components: buttons
+        // Save all requests to R2
+        async function persistRequestsToR2(requestsList) {
+          if (!env.STORAGE) return false;
+          try {
+            const payload = JSON.stringify({
+              requests: requestsList,
+              total: requestsList.length,
+              updated_at: new Date().toISOString()
+            });
+            await env.STORAGE.put(REQUESTS_R2_KEY, payload, {
+              httpMetadata: { contentType: "application/json" }
+            });
+            return true;
+          } catch (e) {
+            console.error("persistRequestsToR2 error:", e);
+            return false;
+          }
+        }
+
+        // Discord announcement helper
+        async function sendDiscordRequestAnnouncement(reqData) {
+          if (!env.DISCORD_BOT_TOKEN) return;
+          try {
+            const typeLabels = {
+              "preset": "Preset",
+              "project-file": "Project File",
+              "project_file": "Project File",
+              "plugin": "Plugin",
+              "software": "Software",
+              "scenepack": "Scenepack",
+              "other": "Other"
+            };
+            const typeLabel = typeLabels[reqData.type] || "Resource";
+            const requestedBy = reqData.is_anonymous ? "Anonymous Member" : (reqData.user_name || "Community Member");
+            const userMention = (reqData.user_id && !reqData.is_anonymous && /^\d{17,20}$/.test(reqData.user_id)) ? `<@${reqData.user_id}>` : requestedBy;
+
+            const fields = [
+              { name: "🏷️ Type", value: `\`${typeLabel}\``, inline: true },
+              { name: "👤 Requested By", value: userMention, inline: true }
+            ];
+
+            if (reqData.price) {
+              fields.push({ name: "💰 Price", value: `\`${reqData.price}\``, inline: true });
             }
-          ]
-        };
-      }
 
-      async function syncDiscordRequestMessage(targetEnv, reqData) {
-        const e = targetEnv || env;
-        const botToken = getBotToken(e);
-        if (!botToken) {
-          console.warn("syncDiscordRequestMessage: botToken not configured");
-          return { success: false, error: "no_bot_token" };
-        }
-        const channelId = e.REQUESTS_CHANNEL_ID || REQUESTS_CHANNEL_ID;
-        const payload = buildDiscordRequestEmbed(reqData);
+            if (reqData.creator_name || reqData.creator_social_url) {
+              const crText = reqData.creator_social_url ? `[${reqData.creator_name || "Creator"}](${reqData.creator_social_url})` : reqData.creator_name;
+              fields.push({ name: "🎨 Creator", value: crText, inline: true });
+            }
 
-        try {
-          if (reqData.discord_message_id) {
-            const patchUrl = `https://discord.com/api/v10/channels/${reqData.discord_channel_id || channelId}/messages/${reqData.discord_message_id}`;
-            const patchResp = await fetch(patchUrl, {
-              method: "PATCH",
+            if (reqData.product_url) {
+              fields.push({ name: "🔗 Store Link", value: `[View Store Page](${reqData.product_url})`, inline: false });
+            }
+
+            const embed = {
+              title: `📥 New Request: ${reqData.title}`,
+              description: reqData.description ? (reqData.description.length > 500 ? reqData.description.slice(0, 497) + "..." : reqData.description) : "*No additional description provided.*",
+              color: 0xFF2B52,
+              fields: fields,
+              footer: {
+                text: `Zyrex Community Requests • ID: ${reqData.id}`,
+                icon_url: "https://zyrexediting.xyz/assets/content.png"
+              },
+              timestamp: new Date().toISOString()
+            };
+
+            if (reqData.thumbnail && reqData.thumbnail.startsWith("http")) {
+              embed.thumbnail = { url: reqData.thumbnail };
+            }
+
+            const payload = {
+              content: `🔔 **New Community Request Submitted!** Vote and browse at https://zyrexediting.xyz/requests`,
+              embeds: [embed],
+              components: [
+                {
+                  type: 1,
+                  components: [
+                    {
+                      type: 2,
+                      style: 5,
+                      label: "View on Zyrex",
+                      url: "https://zyrexediting.xyz/requests"
+                    }
+                  ]
+                }
+              ]
+            };
+
+            await fetch(`https://discord.com/api/v10/channels/${REQUESTS_CHANNEL_ID}/messages`, {
+              method: "POST",
               headers: {
-                Authorization: `Bot ${botToken}`,
+                Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`,
                 "Content-Type": "application/json"
               },
               body: JSON.stringify(payload)
             });
-            if (patchResp.ok) {
-              console.log(`Updated Discord request message ${reqData.discord_message_id}`);
-              return { success: true, updated: true, message_id: reqData.discord_message_id };
-            }
-            const pErr = await patchResp.text();
-            console.warn(`Discord PATCH failed (${patchResp.status}):`, pErr);
-            if (patchResp.status !== 404) {
-              return { success: false, status: patchResp.status, error: pErr };
-            }
+          } catch (e) {
+            console.error("sendDiscordRequestAnnouncement error:", e);
           }
-
-          const postUrl = `https://discord.com/api/v10/channels/${channelId}/messages`;
-          const postResp = await fetch(postUrl, {
-            method: "POST",
-            headers: {
-              Authorization: `Bot ${botToken}`,
-              "Content-Type": "application/json"
-            },
-            body: JSON.stringify(payload)
-          });
-
-          if (postResp.ok) {
-            const msgData = await postResp.json();
-            reqData.discord_message_id = msgData.id;
-            reqData.discord_channel_id = msgData.channel_id;
-            console.log(`Sent new Discord request message ${msgData.id}`);
-            return { success: true, created: true, message_id: msgData.id };
-          } else {
-            const postErr = await postResp.text();
-            console.error(`Discord POST failed (${postResp.status}):`, postErr);
-            return { success: false, status: postResp.status, error: postErr };
-          }
-        } catch (err) {
-          console.error("syncDiscordRequestMessage error:", err);
-          return { success: false, error: err.message };
-        }
-      }
-
-      async function fulfillMatchingRequests(options, targetEnv) {
-        const { productId, productName, productUrl, requestId } = options;
-        const e = targetEnv || env;
-        if (!productId || !e.STORAGE) return [];
-
-        const allReqs = await loadRequestsFromR2(e);
-        if (!allReqs || !allReqs.length) return [];
-
-        const cleanTargetUrl = cleanUrlForCompare(productUrl);
-        const cleanTargetTitle = cleanTitleForCompare(productName);
-        const resourceUrl = `/resource?id=${encodeURIComponent(productId)}`;
-
-        let matchedAny = false;
-        const fulfilledRequests = [];
-
-        for (const req of allReqs) {
-          if (req.status === "completed" || req.status === "rejected") continue;
-
-          let isMatch = false;
-
-          if (requestId && req.id === requestId) {
-            isMatch = true;
-          } else if (cleanTargetUrl && req.product_url && cleanUrlForCompare(req.product_url) === cleanTargetUrl) {
-            isMatch = true;
-          } else if (cleanTargetTitle && req.title) {
-            const cleanReqTitle = cleanTitleForCompare(req.title);
-            if (cleanReqTitle === cleanTargetTitle) {
-              isMatch = true;
-            }
-          }
-
-          if (isMatch) {
-            req.status = "completed";
-            req.completed_at = new Date().toISOString();
-            req.updated_at = new Date().toISOString();
-            req.resource_id = productId;
-            req.resource_url = resourceUrl;
-            matchedAny = true;
-            fulfilledRequests.push(req);
-
-            try {
-              await syncDiscordRequestMessage(e, req);
-            } catch (discErr) {
-              console.error("Failed to sync Discord for fulfilled request:", discErr);
-            }
-          }
-        }
-
-        if (matchedAny) {
-          await persistRequestsToR2(e, allReqs);
-          console.log(`Auto-fulfilled ${fulfilledRequests.length} request(s) for product ${productId} (${productName})`);
-        }
-
-        return fulfilledRequests;
-      }
-
-      // ============ COMMUNITY REQUESTS SYSTEM (CLOUDFLARE R2 BACKED) ============
-      if (path === "/api/requests" || path.startsWith("/api/requests/")) {
-        // GET /api/requests/test-discord (Diagnostics for Discord bot embed)
-        if (path === "/api/requests/test-discord") {
-          const channelId = env.REQUESTS_CHANNEL_ID || REQUESTS_CHANNEL_ID;
-          const botToken = getBotToken(env);
-          const tokenPreview = botToken ? (botToken.slice(0, 6) + "..." + botToken.slice(-4)) : "MISSING";
-          const testEmbed = buildDiscordRequestEmbed({
-            id: "req-test-diag",
-            type: "preset",
-            title: "Test Discord Request Embed",
-            description: "Diagnostics test message from Zyrex API Worker.",
-            status: "pending",
-            price: "Free",
-            upvotes_count: 1,
-            user_name: "Zyrex System",
-            created_at: new Date().toISOString()
-          });
-
-          try {
-            const resp = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages`, {
-              method: "POST",
-              headers: {
-                Authorization: `Bot ${botToken}`,
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify(testEmbed)
-            });
-            const text = await resp.text();
-            let parsedResp = text;
-            try { parsedResp = JSON.parse(text); } catch(_) {}
-            return json({
-              ok: resp.ok,
-              status: resp.status,
-              channelId: channelId,
-              botToken: tokenPreview,
-              discordResponse: parsedResp
-            });
-          } catch(e) {
-            return json({ error: e.message, channelId, botToken: tokenPreview });
-          }
-        }
-
-        // POST /api/requests/sync-all (Sync all requests to Discord and auto-fulfill matching ones)
-        if (path === "/api/requests/sync-all") {
-          const allReqs = await loadRequestsFromR2(env);
-          let products = [];
-          try {
-            const pResp = await fetch(`${BOT_API}/api/products`, {
-              headers: { "X-Zyrex-Key": "zyrex_app_sec_k982f81a7b54c29013e9a" }
-            });
-            if (pResp.ok) products = await pResp.json();
-          } catch(_) {}
-
-          let fulfilledCount = 0;
-          let syncedCount = 0;
-
-          for (const req of allReqs) {
-            // Check if product exists for this request
-            if (req.status !== "completed" && req.status !== "rejected" && Array.isArray(products)) {
-              const cleanReqUrl = cleanUrlForCompare(req.product_url);
-              const cleanReqTitle = cleanTitleForCompare(req.title);
-              const matchedProd = products.find(p => {
-                const pUrl = cleanUrlForCompare(p.product_url || p.source_url || p.external_url);
-                const pTitle = cleanTitleForCompare(p.name);
-                return (cleanReqUrl && pUrl && cleanReqUrl === pUrl) ||
-                       (cleanReqTitle && pTitle && cleanReqTitle === pTitle);
-              });
-
-              if (matchedProd) {
-                req.status = "completed";
-                req.completed_at = new Date().toISOString();
-                req.resource_id = matchedProd.id;
-                req.resource_url = `/resource?id=${encodeURIComponent(matchedProd.id)}`;
-                req.updated_at = new Date().toISOString();
-                fulfilledCount++;
-              }
-            }
-
-            // Sync to Discord
-            try {
-              const syncRes = await syncDiscordRequestMessage(env, req);
-              if (syncRes && syncRes.success) syncedCount++;
-            } catch(e) {
-              console.error("Sync all Discord error:", e);
-            }
-          }
-
-          await persistRequestsToR2(env, allReqs);
-          return json({
-            success: true,
-            total_requests: allReqs.length,
-            fulfilled_count: fulfilledCount,
-            synced_to_discord: syncedCount,
-            requests: allReqs
-          });
         }
 
         // GET /api/requests/stats
         if (path === "/api/requests/stats" && request.method === "GET") {
           const reqs = await loadRequestsFromR2();
-          const activeReqs = reqs.filter(r => r.status !== "rejected");
-          const total = activeReqs.length;
-          const pending = activeReqs.filter(r => r.status === "pending").length;
-          const in_progress = activeReqs.filter(r => r.status === "in_progress").length;
-          const completed = activeReqs.filter(r => r.status === "completed").length;
-          const total_upvotes = activeReqs.reduce((acc, r) => acc + (r.upvotes_count || 1), 0);
+          const total = reqs.length;
+          const pending = reqs.filter(r => r.status === "pending").length;
+          const in_progress = reqs.filter(r => r.status === "in_progress").length;
+          const completed = reqs.filter(r => r.status === "completed").length;
+          const total_upvotes = reqs.reduce((acc, r) => acc + (r.upvotes_count || 1), 0);
           return json({
             success: true,
             total,
@@ -5455,9 +5160,7 @@ async function storeAndProxyImage(env, imageUrl) {
           if (typeFilter && typeFilter !== "all") {
             filtered = filtered.filter(r => r.type === typeFilter);
           }
-          if (!statusFilter || statusFilter === "all") {
-            filtered = filtered.filter(r => r.status !== "rejected");
-          } else {
+          if (statusFilter && statusFilter !== "all") {
             filtered = filtered.filter(r => r.status === statusFilter);
           }
           if (searchFilter) {
@@ -5599,14 +5302,12 @@ async function storeAndProxyImage(env, imageUrl) {
             created_at: new Date().toISOString()
           };
 
-          const allReqs = await loadRequestsFromR2(env);
+          const allReqs = await loadRequestsFromR2();
           allReqs.unshift(newRequest);
+          await persistRequestsToR2(allReqs);
 
-          // Discord announcement with status & embed
-          await syncDiscordRequestMessage(env, newRequest);
-
-          // Save to R2 (including discord_message_id)
-          await persistRequestsToR2(env, allReqs);
+          // Discord announcement
+          await sendDiscordRequestAnnouncement(env, newRequest);
 
           return json({
             success: true,
@@ -5617,7 +5318,7 @@ async function storeAndProxyImage(env, imageUrl) {
         // GET /api/requests/:id (Single request detail)
         if (path.match(/^\/api\/requests\/[^/]+$/) && request.method === "GET") {
           const reqId = path.split("/")[3];
-          const allReqs = await loadRequestsFromR2(env);
+          const allReqs = await loadRequestsFromR2();
           const targetReq = allReqs.find(r => r.id === reqId);
           if (!targetReq) return json({ error: "Request not found" }, 404);
           const session = parseSession(request.headers.get("Cookie"));
@@ -5632,7 +5333,7 @@ async function storeAndProxyImage(env, imageUrl) {
         // POST /api/requests/:id/upvote
         if (path.match(/^\/api\/requests\/[^/]+\/upvote$/) && request.method === "POST") {
           const reqId = path.split("/")[3];
-          const allReqs = await loadRequestsFromR2(env);
+          const allReqs = await loadRequestsFromR2();
           const targetReq = allReqs.find(r => r.id === reqId);
 
           if (!targetReq) {
@@ -5657,8 +5358,7 @@ async function storeAndProxyImage(env, imageUrl) {
             upvoted = true;
           }
 
-          await persistRequestsToR2(env, allReqs);
-          syncDiscordRequestMessage(env, targetReq).catch(() => {});
+          await persistRequestsToR2(allReqs);
 
           return json({
             success: true,
@@ -5678,18 +5378,17 @@ async function storeAndProxyImage(env, imageUrl) {
           let body = {};
           try { body = await request.json(); } catch (_) {}
           const newStatus = (body.status || "").toLowerCase();
-          if (!["pending", "in_progress", "completed", "rejected"].includes(newStatus)) {
+          if (!["pending", "in_progress", "completed"].includes(newStatus)) {
             return json({ error: "Invalid status" }, 400);
           }
 
-          const allReqs = await loadRequestsFromR2(env);
+          const allReqs = await loadRequestsFromR2();
           const targetReq = allReqs.find(r => r.id === reqId);
           if (!targetReq) return json({ error: "Request not found" }, 404);
 
           targetReq.status = newStatus;
           targetReq.updated_at = new Date().toISOString();
-          await syncDiscordRequestMessage(env, targetReq);
-          await persistRequestsToR2(env, allReqs);
+          await persistRequestsToR2(allReqs);
 
           return json({ success: true, status: newStatus });
         }
@@ -5704,19 +5403,18 @@ async function storeAndProxyImage(env, imageUrl) {
             let body = {};
             try { body = await request.json(); } catch (_) { return json({ error: "Invalid JSON" }, 400); }
 
-            const allReqs = await loadRequestsFromR2(env);
+            const allReqs = await loadRequestsFromR2();
             const targetReq = allReqs.find(r => r.id === reqId);
             if (!targetReq) return json({ error: "Request not found" }, 404);
 
             // Only update allowed fields
-            const allowedFields = ["title", "type", "status", "description", "price", "product_url", "creator_name", "creator_social_url", "creator_avatar", "thumbnail", "resource_id", "resource_url"];
+            const allowedFields = ["title", "type", "status", "description", "price", "product_url", "creator_name", "creator_social_url", "creator_avatar", "thumbnail"];
             for (const f of allowedFields) {
               if (body[f] !== undefined) targetReq[f] = body[f];
             }
             targetReq.updated_at = new Date().toISOString();
             targetReq.updated_by = session.userId;
-            await syncDiscordRequestMessage(env, targetReq);
-            await persistRequestsToR2(env, allReqs);
+            await persistRequestsToR2(allReqs);
             return json({ success: true, request: targetReq });
           }
 
@@ -5727,21 +5425,11 @@ async function storeAndProxyImage(env, imageUrl) {
               return json({ error: "Unauthorized" }, 403);
             }
             const reqId = path.split("/")[3];
-            const allReqs = await loadRequestsFromR2(env);
+            const allReqs = await loadRequestsFromR2();
             const idx = allReqs.findIndex(r => r.id === reqId);
             if (idx === -1) return json({ error: "Request not found" }, 404);
-            const deletedReq = allReqs[idx];
             allReqs.splice(idx, 1);
-            await persistRequestsToR2(env, allReqs);
-
-            // Delete Discord message if exists
-            if (deletedReq.discord_message_id && env.DISCORD_BOT_TOKEN) {
-              const chId = deletedReq.discord_channel_id || env.REQUESTS_CHANNEL_ID || REQUESTS_CHANNEL_ID;
-              fetch(`https://discord.com/api/v10/channels/${chId}/messages/${deletedReq.discord_message_id}`, {
-                method: "DELETE",
-                headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` }
-              }).catch(() => {});
-            }
+            await persistRequestsToR2(allReqs);
             return json({ success: true });
           }
 
@@ -5899,31 +5587,26 @@ async function storeAndProxyImage(env, imageUrl) {
                   p.uploader_is_admin = ADMIN_IDS.includes(p.author_id);
                 }
               });
-            }
-          }
 
-          // Auto-fulfill community requests when a product is published
-          if (path === "/api/products/submit" && botResp.ok && parsed) {
-            try {
-              let submitDataObj = null;
-              if (body) {
-                try { submitDataObj = JSON.parse(body); } catch(_) {}
-              }
-              const publishedId = parsed.id || (parsed.product && parsed.product.id);
-              const publishedName = (submitDataObj && submitDataObj.name) || parsed.name || "";
-              const publishedUrl = (submitDataObj && (submitDataObj.product_url || submitDataObj.source_url || submitDataObj.external_url)) || "";
-              const explicitReqId = (submitDataObj && submitDataObj.request_id) || "";
+              // Support chunked pagination: ?chunk=1&limit=36
+              if (url.searchParams.has("chunk") || url.searchParams.has("page")) {
+                const chunkIndex = parseInt(url.searchParams.get("chunk") || url.searchParams.get("page") || "1", 10) || 1;
+                const limit = parseInt(url.searchParams.get("limit") || "36", 10) || 36;
+                const total = parsed.length;
+                const totalChunks = Math.ceil(total / limit) || 1;
+                const start = (chunkIndex - 1) * limit;
+                const end = Math.min(start + limit, total);
+                const chunkItems = parsed.slice(start, end);
 
-              if (publishedId) {
-                await fulfillMatchingRequests({
-                  productId: publishedId,
-                  productName: publishedName,
-                  productUrl: publishedUrl,
-                  requestId: explicitReqId
-                }, env);
+                return json({
+                  chunk: chunkIndex,
+                  limit: limit,
+                  total: total,
+                  total_chunks: totalChunks,
+                  has_more: chunkIndex < totalChunks,
+                  items: chunkItems
+                }, botResp.status);
               }
-            } catch(fulfillErr) {
-              console.error("Auto-fulfill requests error:", fulfillErr);
             }
           }
 
