@@ -402,6 +402,8 @@
                 if (resp.ok && result.success) {
                     const newId = result.id || makeId(n);
                     try {
+                        localStorage.removeItem('zyrex_products_cache');
+                        localStorage.removeItem('zyrex_resources_cache');
                         const key = 'zyrex_new_products';
                         const items = JSON.parse(localStorage.getItem(key) || '[]');
                         items.push({ id: newId, name: n, type: 'plugin', category: c, platform: p, desc: d, password: pw||null, notes: nt||null, links: [{url:u,label:l}] });

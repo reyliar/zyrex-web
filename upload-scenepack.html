@@ -1594,6 +1594,8 @@
                     var finalId = data.id || data.product_id || (data.product && data.product.id) || generatedId;
                     payload.id = finalId;
                     try {
+                        localStorage.removeItem('zyrex_products_cache');
+                        localStorage.removeItem('zyrex_resources_cache');
                         var editedMap = JSON.parse(localStorage.getItem('zyrex_edited_products') || '{}');
                         editedMap[finalId] = payload;
                         localStorage.setItem('zyrex_edited_products', JSON.stringify(editedMap));

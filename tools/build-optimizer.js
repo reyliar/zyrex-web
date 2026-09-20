@@ -69,7 +69,7 @@ if (fs.existsSync(cssDir)) {
 // Process HTML files in .site-assets
 const htmlFiles = fs.readdirSync(ASSETS_DIR).filter(f => f.endsWith('.html'));
 
-// Ensure html-minifier-terser is used for full single-line HTML + Inline CSS + Inline JS minification
+// Fast and safe in-process HTML minification
 for (const file of htmlFiles) {
     const fullPath = path.join(ASSETS_DIR, file);
     let content = fs.readFileSync(fullPath, 'utf8');
@@ -77,27 +77,17 @@ for (const file of htmlFiles) {
 
     // Inject critical connection hints
     content = injectPreloads(content);
-    fs.writeFileSync(fullPath, content, 'utf8');
 
-    try {
-        // Run html-minifier-terser on the file
-        execSync(`npx html-minifier-terser "${fullPath}" --collapse-whitespace --remove-comments --remove-redundant-attributes --remove-script-type-attributes --remove-style-link-type-attributes --use-short-doctype --minify-css true --minify-js true -o "${fullPath}"`, {
-            stdio: 'pipe'
-        });
-        const minified = fs.readFileSync(fullPath, 'utf8');
-        totalMinifiedBytes += minified.length;
-        processedFiles++;
-    } catch (e) {
-        // Fallback lightweight regex minifier if html-minifier-terser encounters non-standard markup
-        const fallback = content
-            .replace(/<!--(?!\[if)[\s\S]*?-->/g, '')
-            .replace(/>\s+</g, '><')
-            .replace(/\s+/g, ' ')
-            .trim();
-        fs.writeFileSync(fullPath, fallback, 'utf8');
-        totalMinifiedBytes += fallback.length;
-        processedFiles++;
-    }
+    // Single-line compact HTML minification
+    const minified = content
+        .replace(/<!--(?!\[if)[\s\S]*?-->/g, '')
+        .replace(/>\s+</g, '><')
+        .replace(/\s+/g, ' ')
+        .trim();
+
+    fs.writeFileSync(fullPath, minified, 'utf8');
+    totalMinifiedBytes += minified.length;
+    processedFiles++;
 }
 
 const savedBytes = totalOriginalBytes - totalMinifiedBytes;

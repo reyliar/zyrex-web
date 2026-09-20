@@ -1382,6 +1382,10 @@
                 });
                 var subData = await subResp.json();
                 if (subResp.ok && subData.success) {
+                    try {
+                        localStorage.removeItem('zyrex_products_cache');
+                        localStorage.removeItem('zyrex_resources_cache');
+                    } catch(e) {}
                     alertMsg('Published! Redirecting to audio page...', false);
                     setTimeout(function(){ window.location.href = '/product-audio?id='+subData.id; }, 1500);
                 } else {

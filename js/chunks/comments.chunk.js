@@ -445,7 +445,7 @@
         }
     };
 
-    window.initPresetComments = async function(productId) {
+    window.initCommentsComponent = async function(productId) {
         currentCommentsPresetId = productId;
         
         try {
@@ -471,6 +471,7 @@
             }
         } catch(e) {}
     };
+    window.initPresetComments = window.initCommentsComponent;
 
     function renderCommentInputBox() {
         var box = document.getElementById('commentInputContainer');

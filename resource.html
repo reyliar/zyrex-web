@@ -1174,6 +1174,7 @@
         }
 
         let item = null;
+        let renderedFromCache = false;
         // 1. Instant Stale-While-Revalidate render from local storage
         try {
             const raw = localStorage.getItem('zyrex_products_cache');
@@ -1182,7 +1183,10 @@
                 const list = parsed.data || parsed;
                 if (Array.isArray(list)) {
                     item = list.find(x => x.id === id);
-                    if (item) renderPresetPage(item);
+                    if (item) {
+                        renderPresetPage(item);
+                        renderedFromCache = true;
+                    }
                 }
             }
         } catch(e) {}
@@ -1194,7 +1198,6 @@
                 const j = await r.json();
                 if (j && j.id) {
                     item = j;
-                    renderPresetPage(item);
                 }
             }
         } catch(e) {}
@@ -1203,7 +1206,7 @@
         if (!item && window.pluginsData) item = window.pluginsData.find(x => x.id === id);
 
         if (!item) {
-            showError("The specified resource could not be found.");
+            if (!renderedFromCache) showError("The specified resource could not be found.");
             return;
         }
 
@@ -2045,14 +2048,25 @@
     window.togglePresetFolderCollapse = togglePresetFolderCollapse;
 
     // Dynamic Chunk Proxy for Discord Comments & Discussion Feed
+    var _commentsChunkLoading = null;
     async function initPresetComments(productId) {
-        if (window.ZyrexChunkStore) {
-            await window.ZyrexChunkStore.loadScriptChunk('/js/chunks/comments.chunk.js');
+        if (typeof window.initCommentsComponent === 'function') {
+            return window.initCommentsComponent(productId);
         }
-        if (typeof window.initPresetComments === 'function') {
-            window.initPresetComments(productId);
+        if (!_commentsChunkLoading && window.ZyrexChunkStore) {
+            _commentsChunkLoading = window.ZyrexChunkStore.loadScriptChunk('/js/chunks/comments.chunk.js').catch(function(err) {
+                console.error('[Comments] Failed to load comments chunk:', err);
+                return null;
+            });
+        }
+        if (_commentsChunkLoading) {
+            await _commentsChunkLoading;
+        }
+        if (typeof window.initCommentsComponent === 'function') {
+            return window.initCommentsComponent(productId);
         }
     }
+    window.initPresetComments = initPresetComments;
 
     function formatTimeAgo(isoDate) {
         if (!isoDate) return 'Just now';

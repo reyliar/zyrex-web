@@ -9,6 +9,7 @@
     var CHUNK_PREFIX = 'zyrex_chk_';
     var DEFAULT_CHUNK_SIZE = 36;
     var loadedScripts = new Set();
+    var loadingScripts = new Map();
 
     var ChunkStore = {
         chunkSize: DEFAULT_CHUNK_SIZE,
@@ -24,11 +25,25 @@
             if (loadedScripts.has(src)) {
                 return Promise.resolve();
             }
-            return new Promise(function(resolve, reject) {
+            if (loadingScripts.has(src)) {
+                return loadingScripts.get(src);
+            }
+            var promise = new Promise(function(resolve, reject) {
                 var existing = id ? document.getElementById(id) : document.querySelector('script[src="' + src + '"]');
-                if (existing) {
-                    loadedScripts.add(src);
+                if (existing && loadedScripts.has(src)) {
                     resolve();
+                    return;
+                }
+                if (existing) {
+                    existing.addEventListener('load', function() {
+                        loadedScripts.add(src);
+                        loadingScripts.delete(src);
+                        resolve();
+                    });
+                    existing.addEventListener('error', function(err) {
+                        loadingScripts.delete(src);
+                        reject(err);
+                    });
                     return;
                 }
                 var script = document.createElement('script');
@@ -38,14 +53,18 @@
                 if (id) script.id = id;
                 script.onload = function() {
                     loadedScripts.add(src);
+                    loadingScripts.delete(src);
                     resolve();
                 };
                 script.onerror = function(err) {
+                    loadingScripts.delete(src);
                     console.error('[ChunkStore] Failed to load chunk:', src, err);
                     reject(err);
                 };
                 (document.head || document.documentElement).appendChild(script);
             });
+            loadingScripts.set(src, promise);
+            return promise;
         },
 
         /**
