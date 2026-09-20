@@ -154,6 +154,162 @@
             transform: translateY(-2px);
         }
 
+        /* DAILY REQUEST ALLOWANCE & QUOTA STYLES */
+        .req-hero-allowance-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 18px;
+            border-radius: 999px;
+            background: rgba(255, 43, 82, 0.08);
+            border: 1px solid rgba(255, 43, 82, 0.25);
+            color: #ff758f;
+            font-size: 0.88rem;
+            font-weight: 700;
+            backdrop-filter: blur(12px);
+            transition: all 0.3s ease;
+        }
+        .req-hero-allowance-pill.limit-exhausted {
+            background: rgba(239, 68, 68, 0.12);
+            border-color: rgba(239, 68, 68, 0.4);
+            color: #f87171;
+        }
+        .req-hero-allowance-pill.admin-badge {
+            background: rgba(168, 85, 247, 0.12);
+            border-color: rgba(168, 85, 247, 0.35);
+            color: #c084fc;
+        }
+        .req-hero-allowance-pill .allowance-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ff2b52;
+            box-shadow: 0 0 8px #ff2b52;
+            display: inline-block;
+        }
+        .req-hero-allowance-pill.limit-exhausted .allowance-dot {
+            background: #ef4444;
+            box-shadow: 0 0 8px #ef4444;
+        }
+        .req-hero-allowance-pill.admin-badge .allowance-dot {
+            background: #a855f7;
+            box-shadow: 0 0 8px #a855f7;
+        }
+
+        .btn-admin-tracking {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border-radius: 999px;
+            background: rgba(168, 85, 247, 0.12);
+            border: 1px solid rgba(168, 85, 247, 0.35);
+            color: #c084fc;
+            font-size: 0.86rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.25s ease;
+        }
+        .btn-admin-tracking:hover {
+            background: rgba(168, 85, 247, 0.22);
+            border-color: #c084fc;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(168, 85, 247, 0.25);
+        }
+
+        .modal-quota-card {
+            background: linear-gradient(135deg, rgba(255, 43, 82, 0.07) 0%, rgba(20, 10, 20, 0.6) 100%);
+            border: 1px solid rgba(255, 43, 82, 0.22);
+            border-radius: 14px;
+            padding: 14px 18px;
+            margin-bottom: 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .modal-quota-card.limit-exhausted {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(25, 10, 12, 0.7) 100%);
+            border-color: rgba(239, 68, 68, 0.4);
+        }
+        .quota-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .quota-card-title {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.82rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: #ff758f;
+        }
+        .quota-pills {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .quota-pip {
+            width: 14px;
+            height: 14px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.12);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .quota-pip.active {
+            background: #ff2b52;
+            border-color: #ff758f;
+            box-shadow: 0 0 8px rgba(255, 43, 82, 0.7);
+        }
+        .quota-pip.admin {
+            background: #a855f7;
+            border-color: #c084fc;
+            box-shadow: 0 0 8px rgba(168, 85, 247, 0.7);
+        }
+        .quota-card-body {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.85);
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .quota-reset-hint {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.45);
+        }
+        .quota-alert-box {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 10px;
+            padding: 10px 12px;
+            margin-top: 6px;
+            color: #fca5a5;
+            font-size: 0.82rem;
+            line-height: 1.4;
+        }
+        .quota-alert-box i {
+            color: #ef4444;
+            font-size: 1.1rem;
+            margin-top: 2px;
+            flex-shrink: 0;
+        }
+        .quota-alert-box strong {
+            display: block;
+            color: #ffffff;
+            margin-bottom: 2px;
+        }
+        .quota-alert-box p {
+            margin: 0;
+        }
+
         /* STATS BAR */
         .req-stats-bar {
             display: grid;
@@ -1389,6 +1545,13 @@
             <button class="btn-submit-req" onclick="openRequestModal()">
                 <i class="fas fa-plus"></i> Submit Request
             </button>
+            <div id="heroAllowanceBadge" class="req-hero-allowance-pill" style="display:none;" title="Günlük İstek Kotası">
+                <span class="allowance-dot"></span>
+                <span id="heroAllowanceText"><i class="fas fa-bolt"></i> Günlük Hak: 3/3</span>
+            </div>
+            <button id="heroAdminTrackingBtn" class="btn-admin-tracking" onclick="openQuotaTrackingModal()" style="display:none;" title="İstek Limitleri & Detaylı Takip Sistemi">
+                <i class="fas fa-chart-pie"></i> Limit Takip
+            </button>
         </div>
     </header>
 
@@ -1466,6 +1629,32 @@
                     <i class="fas fa-paper-plane" style="color:var(--req-accent)"></i> Submit Request
                 </div>
                 <button class="modal-close-btn" onclick="closeRequestModal()">&times;</button>
+            </div>
+
+            <!-- DAILY QUOTA STATUS BANNER -->
+            <div id="modalQuotaCard" class="modal-quota-card">
+                <div class="quota-card-header">
+                    <div class="quota-card-title">
+                        <i class="fas fa-bolt"></i>
+                        <span>Günlük İstek Hakkı</span>
+                    </div>
+                    <div class="quota-pills" id="modalQuotaPills">
+                        <span class="quota-pip active"></span>
+                        <span class="quota-pip active"></span>
+                        <span class="quota-pip active"></span>
+                    </div>
+                </div>
+                <div class="quota-card-body">
+                    <div id="modalQuotaStatusText">Günlük kota kontrol ediliyor...</div>
+                    <div id="modalQuotaResetTimer" class="quota-reset-hint"><i class="far fa-clock"></i> 00:00 UTC'de yenilenir</div>
+                </div>
+                <div id="modalQuotaExceededAlert" class="quota-alert-box" style="display:none;">
+                    <i class="fas fa-circle-exclamation"></i>
+                    <div>
+                        <strong>Günlük İstek Limitine Ulaştınız (3/3)</strong>
+                        <p>Bugün için azami 3 istek hakkınızı kullandınız. Lütfen yeni günün başlamasını (00:00 UTC) bekleyin.</p>
+                    </div>
+                </div>
             </div>
 
             <form id="requestForm" onsubmit="handleRequestSubmit(event)">
@@ -1750,6 +1939,100 @@
             return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         }
 
+        // ==========================================
+        // DAILY REQUEST ALLOWANCE & QUOTA ENGINE
+        // ==========================================
+        var _userAllowanceData = null;
+
+        async function fetchUserAllowance() {
+            try {
+                var resp = await fetch('/api/requests/allowance', { credentials: 'include' });
+                if (resp.ok) {
+                    var data = await resp.json();
+                    if (data && data.success) {
+                        _userAllowanceData = data;
+                        renderAllowanceUI(data);
+                    }
+                }
+            } catch(e) {
+                console.warn('Allowance fetch failed:', e);
+            }
+        }
+
+        function renderAllowanceUI(data) {
+            if (!data) return;
+            var heroBadge = document.getElementById('heroAllowanceBadge');
+            var heroText = document.getElementById('heroAllowanceText');
+            var modalPills = document.getElementById('modalQuotaPills');
+            var modalText = document.getElementById('modalQuotaStatusText');
+            var modalReset = document.getElementById('modalQuotaResetTimer');
+            var modalExceeded = document.getElementById('modalQuotaExceededAlert');
+            var modalSubmitBtn = document.getElementById('modalSubmitBtn');
+            var modalQuotaCard = document.getElementById('modalQuotaCard');
+
+            var isAdmin = !!data.is_admin;
+            var limit = data.daily_limit || 3;
+            var remaining = typeof data.remaining === 'number' ? data.remaining : 3;
+            var used = typeof data.used_today === 'number' ? data.used_today : Math.max(0, limit - remaining);
+
+            // 1. Update Hero Pill
+            if (heroBadge && heroText) {
+                heroBadge.style.display = 'inline-flex';
+                if (isAdmin) {
+                    heroBadge.className = 'req-hero-allowance-pill admin-badge';
+                    heroText.innerHTML = '<i class="fas fa-shield-halved"></i> Admin: Sınırsız İstek';
+                } else if (remaining === 0) {
+                    heroBadge.className = 'req-hero-allowance-pill limit-exhausted';
+                    heroText.innerHTML = '<i class="fas fa-ban"></i> Günlük Limit Doldu (0/3)';
+                } else {
+                    heroBadge.className = 'req-hero-allowance-pill';
+                    heroText.innerHTML = `<i class="fas fa-bolt"></i> Günlük Hak: ${remaining}/${limit} Kalan`;
+                }
+            }
+
+            // 2. Update Modal Quota Card
+            if (modalQuotaCard) {
+                if (isAdmin) {
+                    modalQuotaCard.className = 'modal-quota-card';
+                    if (modalPills) modalPills.innerHTML = '<span class="quota-pip admin" title="Admin"></span><span class="quota-pip admin" title="Admin"></span><span class="quota-pip admin" title="Admin"></span>';
+                    if (modalText) modalText.innerHTML = '<span>Yetki: <strong style="color:#c084fc;">Yönetici (Sınırsız İstek Hakkı)</strong></span>';
+                    if (modalExceeded) modalExceeded.style.display = 'none';
+                    if (modalSubmitBtn && (!document.getElementById('duplicateWarning') || document.getElementById('duplicateWarning').style.display !== 'flex')) {
+                        modalSubmitBtn.disabled = false;
+                        modalSubmitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Post Request';
+                    }
+                } else {
+                    if (remaining === 0) {
+                        modalQuotaCard.className = 'modal-quota-card limit-exhausted';
+                        if (modalPills) {
+                            modalPills.innerHTML = '<span class="quota-pip"></span><span class="quota-pip"></span><span class="quota-pip"></span>';
+                        }
+                        if (modalText) modalText.innerHTML = `<span>Bugünkü Kullanım: <strong style="color:#ef4444;">${used}/${limit} (Tükendi)</strong></span>`;
+                        if (modalExceeded) modalExceeded.style.display = 'flex';
+                        if (modalSubmitBtn) {
+                            modalSubmitBtn.disabled = true;
+                            modalSubmitBtn.innerHTML = '<i class="fas fa-ban"></i> Günlük Limit Doldu (3/3)';
+                        }
+                    } else {
+                        modalQuotaCard.className = 'modal-quota-card';
+                        if (modalPills) {
+                            var pipsHtml = '';
+                            for (var i = 0; i < limit; i++) {
+                                pipsHtml += `<span class="quota-pip ${i < remaining ? 'active' : ''}" title="${i < remaining ? 'Kalan Hak' : 'Kullanıldı'}"></span>`;
+                            }
+                            modalPills.innerHTML = pipsHtml;
+                        }
+                        if (modalText) modalText.innerHTML = `<span>Kalan Hak: <strong style="color:#34d399;">${remaining}/${limit}</strong> istek</span>`;
+                        if (modalExceeded) modalExceeded.style.display = 'none';
+                        if (modalSubmitBtn && (!document.getElementById('duplicateWarning') || document.getElementById('duplicateWarning').style.display !== 'flex')) {
+                            modalSubmitBtn.disabled = false;
+                            modalSubmitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Post Request';
+                        }
+                    }
+                }
+            }
+        }
+
         // Initialize Data & Caches
         async function initRequests() {
             // Load pre-cached requests from localStorage instantly (Stale-While-Revalidate)
@@ -1772,6 +2055,7 @@
             // Background fresh fetch
             fetchFreshRequests();
             fetchRequestsStats();
+            fetchUserAllowance();
         }
 
         async function loadProductsCache() {
@@ -2056,6 +2340,8 @@
         var _adminAuthPollTimer = setInterval(function() {
             _adminAuthPollCount++;
             if (window._currentUser && (window._currentUser.is_admin || window._currentUser.can_upload)) {
+                var adminTrackBtn = document.getElementById('heroAdminTrackingBtn');
+                if (adminTrackBtn) adminTrackBtn.style.display = 'inline-flex';
                 if (window.ZyrexChunkStore) {
                     window.ZyrexChunkStore.loadScriptChunk('/js/chunks/admin-actions.chunk.js').then(function() {
                         window._adminChunkLoaded = true;
@@ -2068,6 +2354,18 @@
             }
             if (_adminAuthPollCount > 25) clearInterval(_adminAuthPollTimer);
         }, 250);
+
+        async function openQuotaTrackingModal() {
+            if (window.ZyrexChunkStore && !window._adminChunkLoaded) {
+                await window.ZyrexChunkStore.loadScriptChunk('/js/chunks/admin-actions.chunk.js');
+                window._adminChunkLoaded = true;
+            }
+            if (typeof window.openAdminQuotaTracking === 'function') {
+                window.openAdminQuotaTracking();
+            } else {
+                alert('Admin tracking tool is loading...');
+            }
+        }
 
         // Toolbar Handlers
         function setStatusFilter(status) {
@@ -2115,12 +2413,15 @@
         function openRequestModal() {
             document.getElementById('requestModal').classList.add('active');
             updateModalFormFields(document.getElementById('modalType').value);
+            fetchUserAllowance();
         }
 
         function closeRequestModal() {
             document.getElementById('requestModal').classList.remove('active');
             document.getElementById('duplicateWarning').style.display = 'none';
-            document.getElementById('modalSubmitBtn').disabled = false;
+            if (!_userAllowanceData || _userAllowanceData.is_admin || _userAllowanceData.remaining > 0) {
+                document.getElementById('modalSubmitBtn').disabled = false;
+            }
             closeCreatorWizard();
         }
 
@@ -2318,6 +2619,19 @@
                     return;
                 }
 
+                if (resp.status === 429 || resData.error === 'rate_limit_exceeded') {
+                    if (resData.allowance) {
+                        _userAllowanceData = resData.allowance;
+                        renderAllowanceUI(resData.allowance);
+                    } else {
+                        fetchUserAllowance();
+                    }
+                    alert(resData.message || 'Günlük istek limitinize ulaştınız (Maksimum 3 istek/gün). Lütfen yarın tekrar deneyin.');
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fas fa-ban"></i> Günlük Limit Doldu (3/3)';
+                    return;
+                }
+
                 if (resp.ok && resData.success) {
                     // Success! Prepend optimistically
                     if (resData.request) {
@@ -2330,12 +2644,19 @@
                         updateStats(currentRequests);
                     }
 
+                    if (resData.allowance) {
+                        _userAllowanceData = resData.allowance;
+                        renderAllowanceUI(resData.allowance);
+                    } else {
+                        fetchUserAllowance();
+                    }
+
                     closeRequestModal();
                     document.getElementById('requestForm').reset();
                     document.getElementById('lookupPreview').style.display = 'none';
                     var badge = document.getElementById('creatorLiveBadge');
                     if (badge) badge.style.display = 'none';
-                    alert("Request submitted successfully! It has also been announced to the Zyrex Discord community.");
+                    alert("İstek başarıyla gönderildi! Zyrex Discord topluluğunda da duyuruldu.");
                 } else {
                     alert("Submission failed: " + (resData.error || resData.message || 'Unknown error'));
                 }

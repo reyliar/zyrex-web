@@ -5003,7 +5003,21 @@ async function storeAndProxyImage(env, imageUrl) {
       // ============ COMMUNITY REQUESTS SYSTEM (CLOUDFLARE R2 BACKED) ============
       if (path === "/api/requests" || path.startsWith("/api/requests/")) {
         const REQUESTS_R2_KEY = "requests/data.json";
+        const REQUESTS_QUOTA_KEY = "requests/quota_tracking.json";
         const REQUESTS_CHANNEL_ID = "1551118401508745367";
+        const DAILY_REQUEST_LIMIT = 3;
+
+        // UTC date key helper (YYYY-MM-DD)
+        function getUtcDateKey(date = new Date()) {
+          return date.toISOString().slice(0, 10);
+        }
+
+        // Next UTC midnight timestamp ISO
+        function getNextUtcMidnightIso() {
+          const now = new Date();
+          const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0, 0));
+          return next.toISOString();
+        }
 
         // Read all requests from R2
         async function loadRequestsFromR2() {
@@ -5038,8 +5052,93 @@ async function storeAndProxyImage(env, imageUrl) {
           }
         }
 
+        // Load Quota & Audit Tracking from R2
+        async function loadQuotaTrackingFromR2() {
+          if (!env.STORAGE) return { updated_at: new Date().toISOString(), daily_records: {}, audit_log: [] };
+          try {
+            const obj = await env.STORAGE.get(REQUESTS_QUOTA_KEY);
+            if (!obj) return { updated_at: new Date().toISOString(), daily_records: {}, audit_log: [] };
+            const data = await obj.json();
+            return {
+              updated_at: data.updated_at || new Date().toISOString(),
+              daily_records: data.daily_records || {},
+              audit_log: Array.isArray(data.audit_log) ? data.audit_log : []
+            };
+          } catch (e) {
+            console.error("loadQuotaTrackingFromR2 error:", e);
+            return { updated_at: new Date().toISOString(), daily_records: {}, audit_log: [] };
+          }
+        }
+
+        // Persist Quota & Audit Tracking to R2
+        async function persistQuotaTrackingToR2(trackingData) {
+          if (!env.STORAGE) return false;
+          try {
+            trackingData.updated_at = new Date().toISOString();
+            if (Array.isArray(trackingData.audit_log) && trackingData.audit_log.length > 500) {
+              trackingData.audit_log = trackingData.audit_log.slice(0, 500);
+            }
+            await env.STORAGE.put(REQUESTS_QUOTA_KEY, JSON.stringify(trackingData), {
+              httpMetadata: { contentType: "application/json" }
+            });
+            return true;
+          } catch (e) {
+            console.error("persistQuotaTrackingToR2 error:", e);
+            return false;
+          }
+        }
+
+        // Compute current user daily allowance
+        async function getUserAllowance(userId, clientIp, isAdmin) {
+          const todayUtc = getUtcDateKey();
+          const quotaData = await loadQuotaTrackingFromR2();
+          const dayRecord = (quotaData.daily_records && quotaData.daily_records[todayUtc]) || { user_records: {} };
+          const userRecords = dayRecord.user_records || {};
+
+          const userRec = (userId && userRecords[userId]) ? userRecords[userId] : null;
+          const ipKey = clientIp && clientIp !== "unknown" ? `ip_${clientIp.replace(/[^a-zA-Z0-9_]/g, "_")}` : null;
+          const ipRec = (ipKey && userRecords[ipKey]) ? userRecords[ipKey] : null;
+
+          let trackedCount = 0;
+          if (userRec && typeof userRec.count === "number") trackedCount = Math.max(trackedCount, userRec.count);
+          if (ipRec && typeof ipRec.count === "number") trackedCount = Math.max(trackedCount, ipRec.count);
+
+          // Cross-verify with requests/data.json for complete resilience
+          let requestsToday = [];
+          try {
+            const allReqs = await loadRequestsFromR2();
+            requestsToday = allReqs.filter(r => {
+              if (!r.created_at || !r.created_at.startsWith(todayUtc)) return false;
+              if (userId && r.user_id === userId) return true;
+              if (clientIp && clientIp !== "unknown" && (r.client_ip === clientIp || r.user_id === "anon_" + clientIp.replace(/[^a-zA-Z0-9]/g, "").slice(0, 14))) return true;
+              return false;
+            });
+          } catch (_) {}
+
+          const effectiveCount = Math.max(trackedCount, requestsToday.length);
+          const limit = isAdmin ? 999 : DAILY_REQUEST_LIMIT;
+          const remaining = Math.max(0, limit - effectiveCount);
+
+          return {
+            today_date: todayUtc,
+            daily_limit: limit,
+            used_today: effectiveCount,
+            remaining: remaining,
+            is_admin: !!isAdmin,
+            resets_at: getNextUtcMidnightIso(),
+            requests_today: requestsToday.map(r => ({
+              id: r.id,
+              title: r.title,
+              type: r.type,
+              created_at: r.created_at,
+              status: r.status
+            }))
+          };
+        }
+
         // Discord announcement helper
-        async function sendDiscordRequestAnnouncement(reqData) {
+        async function sendDiscordRequestAnnouncement(arg1, arg2) {
+          const reqData = arg2 || arg1;
           if (!env.DISCORD_BOT_TOKEN) return;
           try {
             const typeLabels = {
@@ -5120,6 +5219,67 @@ async function storeAndProxyImage(env, imageUrl) {
           }
         }
 
+        // GET /api/requests/allowance (User Daily Limit Status)
+        if (path === "/api/requests/allowance" && request.method === "GET") {
+          const session = parseSession(request.headers.get("Cookie"));
+          const clientIp = request.headers.get("cf-connecting-ip") || "unknown";
+          const isAdmin = !!(session && ADMIN_IDS.includes(session.userId));
+          const userId = session ? session.userId : ("anon_" + clientIp.replace(/[^a-zA-Z0-9]/g, "").slice(0, 14));
+
+          const allowance = await getUserAllowance(userId, clientIp, isAdmin);
+          return json({
+            success: true,
+            user_id: userId,
+            user_name: session ? (session.displayName || session.username) : "Anonymous User",
+            ...allowance
+          });
+        }
+
+        // GET /api/requests/quota-tracking (Detailed Admin Tracking System)
+        if (path === "/api/requests/quota-tracking" && request.method === "GET") {
+          const session = parseSession(request.headers.get("Cookie"));
+          if (!session || (!session.canUpload && !ADMIN_IDS.includes(session.userId))) {
+            return json({ error: "Unauthorized. Admin or uploader privileges required." }, 403);
+          }
+
+          const quotaData = await loadQuotaTrackingFromR2();
+          const targetDate = url.searchParams.get("date") || getUtcDateKey();
+          const dayRecord = (quotaData.daily_records && quotaData.daily_records[targetDate]) || { user_records: {} };
+          const userRecs = dayRecord.user_records || {};
+
+          const usersList = Object.values(userRecs).map(u => ({
+            user_id: u.user_id,
+            user_name: u.user_name || "Community Member",
+            client_ip: u.client_ip || "unknown",
+            is_admin: !!u.is_admin,
+            count: u.count || 0,
+            limit: u.limit || DAILY_REQUEST_LIMIT,
+            remaining: typeof u.remaining === "number" ? u.remaining : Math.max(0, DAILY_REQUEST_LIMIT - (u.count || 0)),
+            last_activity: u.last_activity || u.updated_at || null,
+            requests: u.requests || []
+          }));
+
+          // Sort by highest count used, then last activity
+          usersList.sort((a, b) => (b.count - a.count) || (new Date(b.last_activity || 0) - new Date(a.last_activity || 0)));
+
+          const totalRequestsToday = usersList.reduce((acc, u) => acc + (u.count || 0), 0);
+          const limitReachedCount = usersList.filter(u => !u.is_admin && u.remaining === 0).length;
+
+          return json({
+            success: true,
+            date: targetDate,
+            daily_limit: DAILY_REQUEST_LIMIT,
+            summary: {
+              total_requests: totalRequestsToday,
+              unique_users: usersList.length,
+              users_at_limit: limitReachedCount
+            },
+            users: usersList,
+            audit_log: (quotaData.audit_log || []).slice(0, 150),
+            available_dates: Object.keys(quotaData.daily_records || {}).sort().reverse()
+          });
+        }
+
         // GET /api/requests/stats
         if (path === "/api/requests/stats" && request.method === "GET") {
           const reqs = await loadRequestsFromR2();
@@ -5152,10 +5312,13 @@ async function storeAndProxyImage(env, imageUrl) {
           const searchFilter = (url.searchParams.get("search") || "").toLowerCase().trim();
           const sort = url.searchParams.get("sort") || "upvotes";
 
-          let filtered = reqs.map(r => ({
-            ...r,
-            has_upvoted: Array.isArray(r.upvoters) && r.upvoters.includes(voterKey)
-          }));
+          let filtered = reqs.map(r => {
+            const item = { ...r };
+            // Sanitize internal IP from public listing
+            delete item.client_ip;
+            item.has_upvoted = Array.isArray(r.upvoters) && r.upvoters.includes(voterKey);
+            return item;
+          });
 
           if (typeFilter && typeFilter !== "all") {
             filtered = filtered.filter(r => r.type === typeFilter);
@@ -5252,6 +5415,7 @@ async function storeAndProxyImage(env, imageUrl) {
           // User session binding
           const session = parseSession(request.headers.get("Cookie"));
           const clientIp = request.headers.get("cf-connecting-ip") || "unknown";
+          const isAdmin = !!(session && ADMIN_IDS.includes(session.userId));
 
           let userId = "";
           let userName = isAnonymous ? "Anonymous User" : "Community Member";
@@ -5279,6 +5443,41 @@ async function storeAndProxyImage(env, imageUrl) {
             userAvatar = "/assets/content.png";
           }
 
+          // === ENFORCE DAILY 3-REQUEST LIMIT & DETAILED AUDIT TRACKING ===
+          const currentAllowance = await getUserAllowance(userId, clientIp, isAdmin);
+          if (!isAdmin && currentAllowance.used_today >= DAILY_REQUEST_LIMIT) {
+            // Record blocked submission in audit log
+            try {
+              const quotaData = await loadQuotaTrackingFromR2();
+              if (!Array.isArray(quotaData.audit_log)) quotaData.audit_log = [];
+              quotaData.audit_log.unshift({
+                timestamp: new Date().toISOString(),
+                event_type: "submit_blocked_limit",
+                user_id: userId,
+                user_name: userName,
+                client_ip: clientIp,
+                request_title: title,
+                request_type: type,
+                count_today: currentAllowance.used_today,
+                limit: DAILY_REQUEST_LIMIT,
+                note: "Rejected: Daily limit of 3 requests exceeded"
+              });
+              await persistQuotaTrackingToR2(quotaData);
+            } catch (auditErr) {
+              console.error("Audit log error on blocked request:", auditErr);
+            }
+
+            return json({
+              success: false,
+              error: "rate_limit_exceeded",
+              message: "Günlük istek limitinize ulaştınız (Maksimum 3 istek/gün). Lütfen yarın tekrar deneyin.",
+              daily_limit: DAILY_REQUEST_LIMIT,
+              used_today: currentAllowance.used_today,
+              remaining: 0,
+              resets_at: currentAllowance.resets_at
+            }, 429);
+          }
+
           const reqId = "req-" + Date.now().toString(36) + "-" + Math.random().toString(36).substring(2, 6);
           const newRequest = {
             id: reqId,
@@ -5295,6 +5494,7 @@ async function storeAndProxyImage(env, imageUrl) {
             user_id: userId,
             user_name: userName,
             user_avatar: userAvatar,
+            client_ip: clientIp,
             is_anonymous: isAnonymous,
             status: "pending",
             upvotes_count: 1,
@@ -5306,12 +5506,75 @@ async function storeAndProxyImage(env, imageUrl) {
           allReqs.unshift(newRequest);
           await persistRequestsToR2(allReqs);
 
+          // Record accepted request into quota tracking & audit log
+          try {
+            const todayUtc = getUtcDateKey();
+            const quotaData = await loadQuotaTrackingFromR2();
+            if (!quotaData.daily_records) quotaData.daily_records = {};
+            if (!quotaData.daily_records[todayUtc]) quotaData.daily_records[todayUtc] = { user_records: {} };
+            const dayRecord = quotaData.daily_records[todayUtc];
+            if (!dayRecord.user_records) dayRecord.user_records = {};
+
+            const trackingKey = userId || `ip_${clientIp.replace(/[^a-zA-Z0-9_]/g, "_")}`;
+            const existingRec = dayRecord.user_records[trackingKey] || {
+              user_id: userId,
+              user_name: userName,
+              client_ip: clientIp,
+              is_admin: isAdmin,
+              count: 0,
+              requests: []
+            };
+
+            const newCount = (existingRec.count || currentAllowance.used_today || 0) + 1;
+            existingRec.user_name = userName;
+            existingRec.client_ip = clientIp;
+            existingRec.is_admin = isAdmin;
+            existingRec.count = newCount;
+            existingRec.limit = isAdmin ? 999 : DAILY_REQUEST_LIMIT;
+            existingRec.remaining = isAdmin ? 999 : Math.max(0, DAILY_REQUEST_LIMIT - newCount);
+            existingRec.last_activity = newRequest.created_at;
+            if (!Array.isArray(existingRec.requests)) existingRec.requests = [];
+            existingRec.requests.unshift({
+              id: reqId,
+              title: title,
+              type: type,
+              created_at: newRequest.created_at,
+              ip: clientIp
+            });
+
+            dayRecord.user_records[trackingKey] = existingRec;
+
+            if (!Array.isArray(quotaData.audit_log)) quotaData.audit_log = [];
+            quotaData.audit_log.unshift({
+              timestamp: newRequest.created_at,
+              event_type: "submit_accepted",
+              user_id: userId,
+              user_name: userName,
+              client_ip: clientIp,
+              request_id: reqId,
+              request_title: title,
+              request_type: type,
+              count_today: newCount,
+              remaining_today: existingRec.remaining
+            });
+
+            await persistQuotaTrackingToR2(quotaData);
+          } catch (trackErr) {
+            console.error("Quota tracking update error:", trackErr);
+          }
+
           // Discord announcement
           await sendDiscordRequestAnnouncement(env, newRequest);
 
           return json({
             success: true,
-            request: newRequest
+            request: newRequest,
+            allowance: {
+              daily_limit: isAdmin ? 999 : DAILY_REQUEST_LIMIT,
+              used_today: currentAllowance.used_today + 1,
+              remaining: isAdmin ? 999 : Math.max(0, DAILY_REQUEST_LIMIT - (currentAllowance.used_today + 1)),
+              resets_at: currentAllowance.resets_at
+            }
           });
         }
 
