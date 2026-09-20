@@ -129,9 +129,10 @@ async function initPresets() {
         try {
             var localCounts = JSON.parse(localStorage.getItem("zyrex_downloads") || "{}");
             var initialPresets = cachedProducts.filter(function(p) { return !p.type || p.type === 'preset'; });
+            initialPresets.forEach(function(p, idx) { if (p._origIdx === undefined) p._origIdx = idx; });
             window.presetsData = initialPresets;
             updatePresetStats(initialPresets, localCounts, {});
-            renderPresets(initialPresets);
+            filterPresets();
             hideResourcesLoader();
         } catch(e) {}
     }
@@ -167,20 +168,22 @@ async function initPresets() {
             if (!merged.some(function(p) { return p.id === sp.id; })) merged.push(sp);
         });
         var presetsOnly = merged.filter(function(p) { return !p.type || p.type === 'preset'; });
+        presetsOnly.forEach(function(p, idx) { p._origIdx = idx; });
 
         window.presetsData = presetsOnly;
 
         // 1. Update numerical data table / stats bar FIRST while loading screen is active
         updatePresetStats(presetsOnly, apiCounts, statsData);
 
-        // 2. Render preset cards grid
-        renderPresets(presetsOnly);
+        // 2. Render preset cards grid with consistent filtering and sorting
+        filterPresets();
 
     } catch(e) {
         console.error("Error in initPresets:", e);
         var fallbackPresets = (window.presetsData || []).filter(function(p) { return !p.type || p.type === 'preset'; });
+        fallbackPresets.forEach(function(p, idx) { if (p._origIdx === undefined) p._origIdx = idx; });
         updatePresetStats(fallbackPresets, {}, {});
-        renderPresets(fallbackPresets);
+        filterPresets();
     } finally {
         // 3. ALWAYS hide loader once data table is processed or on error
         hideResourcesLoader();
@@ -571,9 +574,31 @@ async function loadCreatorIndex() {
     } catch(e) { console.error('Creator index load failed:', e); }
 }
 
+function getProductTimestamp(p) {
+    if (!p) return 0;
+    if (p.created_at) {
+        var str = String(p.created_at).trim();
+        if (str.indexOf('T') === -1 && str.indexOf(' ') !== -1) {
+            str = str.replace(' ', 'T') + 'Z';
+        }
+        var t = Date.parse(str);
+        if (!isNaN(t) && t > 0) return t;
+    }
+    if (p.date) {
+        var t2 = Date.parse(p.date);
+        if (!isNaN(t2) && t2 > 0) return t2;
+    }
+    if (p.timestamp) {
+        var t3 = Number(p.timestamp);
+        if (!isNaN(t3) && t3 > 0) return t3;
+    }
+    return 0;
+}
+
 function gs() {
     const input = document.getElementById('s');
     currentSearch = input ? input.value : '';
+    currentPresetPage = 1;
     console.log('🔍 Search:', currentSearch);
     filterPresets();
 }
@@ -582,6 +607,7 @@ let currentPresetSubcat = 'all';
 
 function filterBySubcat(subcat) {
     currentPresetSubcat = subcat || 'all';
+    currentPresetPage = 1;
     document.querySelectorAll('#subcatTabs .subcat-btn').forEach(btn => {
         if (btn.dataset.subcat === currentPresetSubcat) {
             btn.classList.add('active');
@@ -658,17 +684,31 @@ function filterPresets() {
     // Sort (shallow copy first to avoid mutating window.presetsData array)
     filtered = [...filtered];
     if (currentSort === 'recent') {
-        filtered.sort((a, b) => (b.id || '').localeCompare(a.id || ''));
+        filtered.sort(function(a, b) {
+            var timeA = getProductTimestamp(a);
+            var timeB = getProductTimestamp(b);
+            if (timeA !== timeB && timeA > 0 && timeB > 0) {
+                return timeB - timeA;
+            }
+            if (timeA > 0 && timeB === 0) return -1;
+            if (timeB > 0 && timeA === 0) return 1;
+            return ((a._origIdx !== undefined ? a._origIdx : 0) - (b._origIdx !== undefined ? b._origIdx : 0));
+        });
     } else if (currentSort === 'downloads') {
         var dcounts = {};
         try { dcounts = JSON.parse(localStorage.getItem('zyrex_downloads') || '{}'); } catch(e) {}
-        filtered.sort((a, b) => {
-            const dlA = dcounts[a.id] || a.downloads || 0;
-            const dlB = dcounts[b.id] || b.downloads || 0;
-            return dlB - dlA;
+        filtered.sort(function(a, b) {
+            var dlA = dcounts[a.id] !== undefined ? dcounts[a.id] : (a.downloads || 0);
+            var dlB = dcounts[b.id] !== undefined ? dcounts[b.id] : (b.downloads || 0);
+            if (dlB !== dlA) return dlB - dlA;
+            return ((a._origIdx !== undefined ? a._origIdx : 0) - (b._origIdx !== undefined ? b._origIdx : 0));
         });
     } else if (currentSort === 'name') {
-        filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+        filtered.sort(function(a, b) {
+            var cmp = (a.name || '').localeCompare(b.name || '', undefined, { sensitivity: 'base' });
+            if (cmp !== 0) return cmp;
+            return ((a._origIdx !== undefined ? a._origIdx : 0) - (b._origIdx !== undefined ? b._origIdx : 0));
+        });
     }
     
     renderPresets(filtered);
@@ -710,6 +750,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.cp button').forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
             currentPresetCategory = tab.dataset.c;
+            currentPresetPage = 1;
             filterPresets();
         });
     });
@@ -729,6 +770,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const accessFilterEl = document.getElementById('accessFilter');
     if (accessFilterEl) {
         accessFilterEl.addEventListener('change', () => {
+            currentPresetPage = 1;
             filterPresets();
         });
     }
@@ -747,6 +789,7 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.st button').forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
             currentSort = tab.dataset.sort;
+            currentPresetPage = 1;
             filterPresets();
         });
     });
