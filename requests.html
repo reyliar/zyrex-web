@@ -101,6 +101,7 @@
         .btn-submit-req {
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 9px;
             padding: 12px 28px;
             border-radius: 999px;
@@ -112,12 +113,24 @@
             cursor: pointer;
             box-shadow: 0 8px 24px rgba(255, 43, 82, 0.35);
             transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            line-height: 1.2;
+            font-family: inherit;
         }
 
         .btn-submit-req:hover {
             transform: translateY(-2px);
             box-shadow: 0 12px 32px rgba(255, 43, 82, 0.5);
             border-color: #ffffff;
+        }
+
+        .btn-submit-req i {
+            font-size: 0.95rem !important;
+            color: #ffffff !important;
+            margin: 0 !important;
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            line-height: 1 !important;
         }
 
         .btn-discord-req {
@@ -625,10 +638,11 @@
             border-radius: 24px;
         }
 
-        .req-empty i {
+        .req-empty > i {
             font-size: 3rem;
             color: rgba(255, 43, 82, 0.35);
             margin-bottom: 16px;
+            display: inline-block;
         }
 
         .req-empty h3 {
@@ -1347,8 +1361,6 @@
                 <img src="assets/content.png" alt="ZYREX" class="logo-img">
                 <span class="logo-text">yrex</span>
             </a>
-            <a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span
-                    class="logo-text">yrex</span></a>
             <ul class="nav-links" id="navLinks">
                 <li><a href="/">Home</a></li>
                 <li><a href="/resources">Resources</a></li>
@@ -1362,8 +1374,6 @@
                 <button class="hamburger" id="hamburger" aria-label="Menu">
                     <span></span><span></span><span></span>
                 </button>
-
-                <button class="hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
             </div>
         </div>
     </nav>
@@ -1516,16 +1526,6 @@
                     <div class="form-group">
                         <label class="form-label"><i class="fas fa-store"></i> Product / Store Link *</label>
                         <input type="url" id="modalProductUrl" class="form-input" placeholder="https://payhip.com/b/xxxxx or Gumroad / Ko-fi / Patreon" onblur="handleProductUrlBlur(this.value)">
-                    </div>
-
-                    <div class="form-group">
-                        <label class="form-label"><i class="fas fa-hashtag"></i> Creator Social Link (TikTok, IG, YouTube, X)</label>
-                        <div style="display:flex;gap:8px">
-                            <input type="url" id="modalCreatorUrl" class="form-input" placeholder="https://tiktok.com/@creator or @username">
-                            <button type="button" id="btnSocialLookup" class="btn-discord-req" style="padding:0 16px;border-radius:12px;white-space:nowrap;font-size:0.8rem;" onclick="triggerCreatorSocialLookup(event)">
-                                <i class="fas fa-magic"></i> Lookup
-                            </button>
-                        </div>
                     </div>
 
                     <!-- AUTO-FETCHED PREVIEW -->
@@ -1913,11 +1913,11 @@
 
                 var priceHtml = req.price ? `<span class="req-price-badge"><i class="fas fa-tag"></i> ${req.price}</span>` : '';
                 var descHtml = req.description ? `<p class="req-desc">${escapeHtml(req.description)}</p>` : '';
-                var resourceLink = (req.status === 'completed' && req.resource_url) ? `<a href="${req.resource_url}" class="req-store-link" style="color:#34d399;font-weight:700;" title="View Fulfilled Resource"><i class="fas fa-check-circle"></i> Resource</a>` : '';
+                var storeLink = req.product_url ? `<a href="${req.product_url}" target="_blank" rel="noopener" class="req-store-link" title="Original Link"><i class="fas fa-external-link-alt"></i> Store</a>` : '';
+
                 var isAdminUser = !!(window._currentUser && (window._currentUser.is_admin || window._currentUser.can_upload));
                 var adminActionsHtml = isAdminUser ? `
-                    <div class="req-admin-quick-actions" onclick="event.stopPropagation()" style="display:flex;gap:4px;">
-                        <a href="/upload?request_id=${encodeURIComponent(req.id)}&title=${encodeURIComponent(req.title)}&url=${encodeURIComponent(req.product_url || '')}&creator=${encodeURIComponent(req.creator_name || '')}" title="Upload & Fulfill on Studio" style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.35);color:#34d399;border-radius:6px;padding:3px 7px;font-size:0.7rem;text-decoration:none;line-height:1;"><i class="fas fa-upload"></i></a>
+                    <div class="req-admin-quick-actions" onclick="event.stopPropagation()" style="display:flex;gap:5px;">
                         <button onclick="quickRejectRequest('${req.id}')" title="Reject Request" style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.35);color:#fbbf24;border-radius:6px;padding:3px 7px;font-size:0.7rem;cursor:pointer;line-height:1;"><i class="fas fa-ban"></i></button>
                         <button onclick="quickDeleteRequest('${req.id}')" title="Delete Request" style="background:rgba(255,43,82,0.15);border:1px solid rgba(255,43,82,0.35);color:#ff6b87;border-radius:6px;padding:3px 7px;font-size:0.7rem;cursor:pointer;line-height:1;"><i class="fas fa-trash"></i></button>
                     </div>
@@ -1948,8 +1948,7 @@
                                 <img src="${requesterAvatar}" class="req-requester-avatar" alt="${requesterName}" onerror="this.src='/assets/content.png'">
                                 <span>${escapeHtml(requesterName)} &bull; ${formatRelativeTime(req.created_at)}</span>
                             </div>
-                            <div style="display:flex;align-items:center;gap:8px;" onclick="event.stopPropagation()">
-                                ${resourceLink}
+                            <div style="display:flex;align-items:center;gap:10px;" onclick="event.stopPropagation()">
                                 ${storeLink}
                                 <button class="req-upvote-btn ${isUpvoted ? 'upvoted' : ''}" onclick="toggleUpvote('${req.id}')" title="Upvote this request">
                                     <i class="fas fa-arrow-up"></i> <span id="upvotes-count-${req.id}">${req.upvotes_count || 1}</span>
@@ -2029,6 +2028,54 @@
                 console.error("Upvote failed:", e);
             }
         }
+
+        // Quick Admin Actions for Board
+        async function quickRejectRequest(id) {
+            if (!confirm('Mark this request as rejected? It will be removed from the community board.')) return;
+            try {
+                var resp = await fetch('/api/requests/' + id + '/status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ status: 'rejected' })
+                });
+                var data = await resp.json();
+                if (!resp.ok || data.error) throw new Error(data.error || 'Failed to reject');
+                currentRequests = currentRequests.filter(function(r) { return r.id !== id; });
+                renderRequestsGrid();
+                fetchRequestsStats();
+            } catch(e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        async function quickDeleteRequest(id) {
+            if (!confirm('Permanently delete this request? This action cannot be undone.')) return;
+            try {
+                var resp = await fetch('/api/requests/' + id, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+                var data = await resp.json();
+                if (!resp.ok || data.error) throw new Error(data.error || 'Failed to delete');
+                currentRequests = currentRequests.filter(function(r) { return r.id !== id; });
+                renderRequestsGrid();
+                fetchRequestsStats();
+            } catch(e) {
+                alert('Error: ' + e.message);
+            }
+        }
+
+        // Auto-refresh grid when admin auth is discovered
+        var _adminAuthPollCount = 0;
+        var _adminAuthPollTimer = setInterval(function() {
+            _adminAuthPollCount++;
+            if (window._currentUser && (window._currentUser.is_admin || window._currentUser.can_upload)) {
+                renderRequestsGrid();
+                clearInterval(_adminAuthPollTimer);
+            }
+            if (_adminAuthPollCount > 25) clearInterval(_adminAuthPollTimer);
+        }, 250);
 
         // Toolbar Handlers
         function setStatusFilter(status) {
@@ -2150,9 +2197,6 @@
                         if (data.thumbnail || data.image) {
                             document.getElementById('modalThumbnail').value = data.thumbnail || data.image;
                         }
-                        document.getElementById('modalTitle').value = title;
-                        document.getElementById('modalPrice').value = data.price || '';
-                        document.getElementById('modalThumbnail').value = data.thumbnail || data.image || '';
                         
                         if (data.creator_name && !document.getElementById('modalCreatorName').value) {
                             document.getElementById('modalCreatorName').value = data.creator_name;
@@ -2160,8 +2204,6 @@
                         if (data.creator_avatar && !document.getElementById('modalCreatorAvatar').value) {
                             document.getElementById('modalCreatorAvatar').value = data.creator_avatar;
                         }
-                        if (data.creator_name) document.getElementById('modalCreatorName').value = data.creator_name;
-                        if (data.creator_avatar) document.getElementById('modalCreatorAvatar').value = data.creator_avatar;
 
                         // Show preview panel
                         var previewPanel = document.getElementById('lookupPreview');
@@ -2171,12 +2213,9 @@
                         var previewCreator = document.getElementById('previewCreator');
 
                         previewThumb.src = data.thumbnail || data.image || document.getElementById('modalThumbnail').value || '/assets/content.png';
-                        previewThumb.src = data.thumbnail || data.image || '/assets/content.png';
                         previewTitle.textContent = title;
                         previewPrice.textContent = data.price || document.getElementById('modalPrice').value || 'Store Resource';
                         previewCreator.textContent = document.getElementById('modalCreatorName').value || data.creator_name || 'Creator Found';
-                        previewPrice.textContent = data.price || 'Store Resource';
-                        previewCreator.textContent = data.creator_name || 'Creator Found';
                         previewPanel.style.display = 'flex';
 
                         // Double check title against duplicates
@@ -2196,11 +2235,6 @@
             var rawInput = document.getElementById('modalCreatorUrl').value.trim();
             if (!rawInput) {
                 openCreatorWizard('');
-        // Creator Social Lookup in Modal
-        async function triggerCreatorSocialLookup(ev) {
-            var socialUrl = document.getElementById('modalCreatorUrl').value.trim();
-            if (!socialUrl) {
-                alert("Please enter a social profile URL or username (@handle)");
                 return;
             }
 
@@ -2209,11 +2243,6 @@
                 if (/^(payhip|boosty|patreon|linktr|guns|beacons)\./i.test(url)) {
                     url = 'https://' + url;
                 }
-            var btn = (ev && ev.currentTarget) || document.getElementById('btnSocialLookup');
-            var origHtml = btn ? btn.innerHTML : '';
-            if (btn) {
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Looking up...';
-                btn.disabled = true;
             }
 
             var rawUser = '';
@@ -2493,13 +2522,6 @@
                         var storeScanData = await storeScanResp.json();
                         if (storeScanData && storeScanData.products && storeScanData.products.length > 0) {
                             prods = storeScanData.products;
-                var resp = await fetch('/api/scan-creator-links?url=' + encodeURIComponent(socialUrl));
-                if (resp.ok) {
-                    var data = await resp.json();
-                    if (data && data.success && data.found) {
-                        if (data.storeUrl) {
-                            document.getElementById('modalProductUrl').value = data.storeUrl;
-                            handleProductUrlBlur(data.storeUrl);
                         }
                     } catch(e) {}
                 }
@@ -2783,10 +2805,6 @@
                                     }
                                 }
                             }
-                        if (data.creator) {
-                            document.getElementById('modalCreatorName').value = data.creator.nickname || data.creator.username || '';
-                            document.getElementById('modalCreatorAvatar').value = data.creator.avatar || '';
-                            document.getElementById('modalCreatorPlatform').value = data.creator.platform || '';
                         }
                     } catch(e) {}
                 }
@@ -2831,11 +2849,6 @@
                     '<div style="font-size:1.1rem;font-weight:800;color:#fff;text-align:center;">Product Selected!</div>' +
                     '<div style="font-size:0.78rem;color:rgba(255,255,255,0.6);max-width:280px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (prod.title || 'Auto-filling details...') + '</div>';
                 modalContainer.appendChild(overlay);
-            } catch(e) {
-                console.error("Creator lookup error:", e);
-            } finally {
-                btn.innerHTML = origHtml;
-                btn.disabled = false;
             }
 
             if (prod.url) {
