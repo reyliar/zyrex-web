@@ -51,7 +51,7 @@
             '<div class="rc-img">' +
             thumbHtml +
             '<div class="roverlay"></div>' +
-            '<div class="rbadge grid-badge">' + subcatBadges + '<span class="' + catClass + '">' + catSvgIcon + cat + '</span><span class="tag-free">Free</span></div>' +
+            '<div class="rbadge grid-badge"><span class="' + catClass + '">' + catSvgIcon + cat + '</span><span class="tag-free">Free</span></div>' +
             '</div>' +
             '<div class="rc-content">' +
             '<div class="rc-head">' +
