@@ -1,0 +1,1709 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zyrex | Community Requests</title>
+    <meta name="description" content="Request presets, project files, plugins, software, and editing assets from the Zyrex community.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://zyrexediting.xyz/requests">
+    <meta property="og:title" content="Zyrex | Community Requests">
+    <meta property="og:description" content="Request editing resources and upvote top community requests.">
+    <meta property="og:image" content="https://zyrexediting.xyz/assets/banner.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <link rel="icon" type="image/png" href="/assets/content.png">
+    <link rel="stylesheet" href="css/style.css?v=46">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --req-accent: #ff2b52;
+            --req-accent-glow: rgba(255, 43, 82, 0.35);
+            --req-surface: rgba(14, 10, 18, 0.72);
+            --req-card-border: rgba(255, 255, 255, 0.08);
+            --req-card-hover: rgba(255, 43, 82, 0.28);
+        }
+
+        body {
+            background-color: #080306;
+            background-image: 
+                radial-gradient(circle at 50% -20%, rgba(255, 43, 82, 0.15) 0%, transparent 60%),
+                radial-gradient(circle at 100% 40%, rgba(139, 0, 40, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 0% 80%, rgba(255, 43, 82, 0.06) 0%, transparent 50%);
+            min-height: 100vh;
+            color: #ffffff;
+            font-family: 'Poppins', sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* HERO HEADER */
+        .req-hero {
+            padding: 130px 20px 30px;
+            text-align: center;
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .req-hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            border-radius: 999px;
+            background: rgba(255, 43, 82, 0.1);
+            border: 1px solid rgba(255, 43, 82, 0.3);
+            color: #ff4d6d;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 18px;
+            box-shadow: 0 0 20px rgba(255, 43, 82, 0.15);
+        }
+
+        .req-hero h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(2.4rem, 5vw, 3.8rem);
+            font-weight: 900;
+            letter-spacing: -0.02em;
+            line-height: 1.15;
+            margin: 0 0 14px;
+            background: linear-gradient(135deg, #ffffff 30%, #ff8da1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .req-hero p {
+            font-size: 1rem;
+            color: rgba(255, 255, 255, 0.6);
+            max-width: 640px;
+            margin: 0 auto 26px;
+            line-height: 1.6;
+        }
+
+        .req-hero-actions {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .btn-submit-req {
+            display: inline-flex;
+            align-items: center;
+            gap: 9px;
+            padding: 12px 28px;
+            border-radius: 999px;
+            background: linear-gradient(135deg, #ff2b52 0%, #b81432 100%);
+            border: 1px solid rgba(255, 117, 143, 0.4);
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            box-shadow: 0 8px 24px rgba(255, 43, 82, 0.35);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .btn-submit-req:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 32px rgba(255, 43, 82, 0.5);
+            border-color: #ffffff;
+        }
+
+        .btn-discord-req {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 22px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            color: #ffffff;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: all 0.25s;
+        }
+
+        .btn-discord-req:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+
+        /* STATS BAR */
+        .req-stats-bar {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 14px;
+            max-width: 1160px;
+            margin: 10px auto 30px;
+            padding: 0 20px;
+        }
+
+        .req-stat-card {
+            background: var(--req-surface);
+            border: 1px solid var(--req-card-border);
+            border-radius: 18px;
+            padding: 20px 16px;
+            text-align: center;
+            backdrop-filter: blur(20px);
+            transition: all 0.3s ease;
+        }
+
+        .req-stat-card:hover {
+            border-color: var(--req-card-hover);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .req-stat-num {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.1rem;
+            font-weight: 900;
+            color: #ffffff;
+            display: block;
+            line-height: 1;
+            margin-bottom: 6px;
+        }
+
+        .req-stat-label {
+            font-size: 0.72rem;
+            color: rgba(255, 255, 255, 0.45);
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 700;
+        }
+
+        @media (max-width: 768px) {
+            .req-stats-bar {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+            }
+        }
+
+        /* FILTER TOOLBAR */
+        .req-toolbar {
+            max-width: 1160px;
+            margin: 0 auto 16px;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .req-search-wrap {
+            position: relative;
+            flex: 1;
+            min-width: 260px;
+        }
+
+        .req-search-wrap i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.35);
+            font-size: 0.85rem;
+            pointer-events: none;
+        }
+
+        .req-search-input {
+            width: 100%;
+            padding: 12px 18px 12px 42px;
+            background: rgba(16, 12, 20, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 999px;
+            color: #fff;
+            font-size: 0.88rem;
+            font-family: inherit;
+            outline: none;
+            transition: all 0.25s;
+        }
+
+        .req-search-input:focus {
+            border-color: var(--req-accent);
+            box-shadow: 0 0 16px rgba(255, 43, 82, 0.2);
+        }
+
+        .req-status-tabs {
+            display: inline-flex;
+            background: rgba(16, 12, 20, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 999px;
+            padding: 4px;
+            gap: 4px;
+        }
+
+        .req-status-btn {
+            padding: 7px 16px;
+            border-radius: 999px;
+            border: none;
+            background: transparent;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 0.8rem;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .req-status-btn.active {
+            background: rgba(255, 43, 82, 0.2);
+            color: #ffffff;
+            border: 1px solid rgba(255, 43, 82, 0.35);
+        }
+
+        .req-sort-select {
+            padding: 11px 16px;
+            background: rgba(16, 12, 20, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 999px;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.82rem;
+            font-family: inherit;
+            outline: none;
+            cursor: pointer;
+        }
+
+        /* CATEGORY PILLS */
+        .req-pills {
+            max-width: 1160px;
+            margin: 0 auto 24px;
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+
+        .req-pills::-webkit-scrollbar {
+            display: none;
+        }
+
+        .req-pill-btn {
+            padding: 8px 18px;
+            border-radius: 999px;
+            background: rgba(14, 10, 18, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+        }
+
+        .req-pill-btn:hover {
+            color: #ffffff;
+            border-color: rgba(255, 43, 82, 0.3);
+            background: rgba(255, 43, 82, 0.06);
+        }
+
+        .req-pill-btn.active {
+            color: #ffffff;
+            background: rgba(255, 43, 82, 0.18);
+            border-color: rgba(255, 43, 82, 0.45);
+            box-shadow: 0 0 14px rgba(255, 43, 82, 0.2);
+        }
+
+        .req-pill-badge {
+            font-size: 0.65rem;
+            padding: 2px 7px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        /* REQUESTS GRID */
+        .req-grid {
+            max-width: 1160px;
+            margin: 0 auto 60px;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 20px;
+        }
+
+        @media (max-width: 480px) {
+            .req-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* REQUEST CARD */
+        .req-card {
+            background: var(--req-surface);
+            border: 1px solid var(--req-card-border);
+            border-radius: 20px;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+            backdrop-filter: blur(20px);
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .req-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--req-card-hover);
+            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 25px rgba(255, 43, 82, 0.12);
+        }
+
+        .req-card-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 14px;
+        }
+
+        .req-type-pill {
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .type-preset {
+            background: rgba(255, 43, 82, 0.15);
+            color: #ff6b87;
+            border: 1px solid rgba(255, 43, 82, 0.3);
+        }
+
+        .type-project_file, .type-project-file {
+            background: rgba(168, 85, 247, 0.15);
+            color: #c084fc;
+            border: 1px solid rgba(168, 85, 247, 0.3);
+        }
+
+        .type-plugin {
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .type-software {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .type-scenepack {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .type-other {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e2e8f0;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .req-status-pill {
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 0.68rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .status-pending {
+            background: rgba(245, 158, 11, 0.12);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.25);
+        }
+
+        .status-completed {
+            background: rgba(16, 185, 129, 0.15);
+            color: #34d399;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .req-card-body {
+            display: flex;
+            gap: 14px;
+            margin-bottom: 16px;
+        }
+
+        .req-thumb {
+            width: 76px;
+            height: 76px;
+            border-radius: 12px;
+            overflow: hidden;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            flex-shrink: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .req-thumb img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .req-thumb-placeholder {
+            color: rgba(255, 255, 255, 0.25);
+            font-size: 1.8rem;
+        }
+
+        .req-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .req-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin: 0 0 6px;
+            line-height: 1.35;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .req-creator-row {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin-bottom: 8px;
+            font-size: 0.78rem;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .req-creator-avatar {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .req-creator-name {
+            color: #ff6b87;
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .req-creator-name:hover {
+            text-decoration: underline;
+        }
+
+        .req-desc {
+            font-size: 0.82rem;
+            color: rgba(255, 255, 255, 0.55);
+            line-height: 1.5;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            margin: 0;
+        }
+
+        .req-price-badge {
+            display: inline-block;
+            margin-top: 6px;
+            padding: 2px 8px;
+            background: rgba(255, 255, 255, 0.06);
+            border-radius: 6px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            color: #a7f3d0;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* CARD FOOTER */
+        .req-card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding-top: 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .req-requester {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.45);
+        }
+
+        .req-requester-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .req-upvote-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 6px 14px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.82rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .req-upvote-btn:hover {
+            background: rgba(255, 43, 82, 0.15);
+            border-color: rgba(255, 43, 82, 0.4);
+            color: #ff4d6d;
+            transform: scale(1.04);
+        }
+
+        .req-upvote-btn.upvoted {
+            background: rgba(255, 43, 82, 0.22);
+            border-color: var(--req-accent);
+            color: #ffffff;
+            box-shadow: 0 0 14px rgba(255, 43, 82, 0.25);
+        }
+
+        .req-store-link {
+            font-size: 0.78rem;
+            color: rgba(255, 255, 255, 0.5);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            transition: color 0.2s;
+        }
+
+        .req-store-link:hover {
+            color: #ffffff;
+        }
+
+        /* EMPTY STATE */
+        .req-empty {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 80px 20px;
+            background: var(--req-surface);
+            border: 1px dashed rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+        }
+
+        .req-empty i {
+            font-size: 3rem;
+            color: rgba(255, 43, 82, 0.35);
+            margin-bottom: 16px;
+        }
+
+        .req-empty h3 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin: 0 0 8px;
+        }
+
+        .req-empty p {
+            font-size: 0.88rem;
+            color: rgba(255, 255, 255, 0.45);
+            margin: 0 0 20px;
+        }
+
+        /* MODAL STYLES */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(5, 2, 6, 0.85);
+            backdrop-filter: blur(12px);
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-box {
+            background: #110d14;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 22px;
+            width: min(580px, 100%);
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 30px;
+            position: relative;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(255, 43, 82, 0.15);
+            transform: scale(0.95);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .modal-overlay.active .modal-box {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 22px;
+        }
+
+        .modal-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-close-btn {
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.6);
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+
+        .modal-close-btn:hover {
+            color: #ffffff;
+            background: rgba(255, 43, 82, 0.2);
+            border-color: var(--req-accent);
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 7px;
+        }
+
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: rgba(20, 14, 25, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 12px;
+            color: #ffffff;
+            font-size: 0.88rem;
+            font-family: inherit;
+            outline: none;
+            box-sizing: border-box;
+            transition: border-color 0.25s, box-shadow 0.25s;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            border-color: var(--req-accent);
+            box-shadow: 0 0 15px rgba(255, 43, 82, 0.25);
+        }
+
+        .form-textarea {
+            min-height: 90px;
+            resize: vertical;
+        }
+
+        /* AUTO-FETCH / CREATOR LOOKUP PANEL */
+        .lookup-preview-panel {
+            background: rgba(255, 43, 82, 0.05);
+            border: 1px solid rgba(255, 43, 82, 0.2);
+            border-radius: 14px;
+            padding: 14px;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .lookup-preview-img {
+            width: 54px;
+            height: 54px;
+            border-radius: 10px;
+            object-fit: cover;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .lookup-preview-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .lookup-preview-title {
+            font-size: 0.88rem;
+            font-weight: 700;
+            color: #ffffff;
+            margin: 0 0 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .lookup-preview-meta {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.5);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* DUPLICATE WARNING BOX */
+        .dup-warning-box {
+            background: rgba(239, 68, 68, 0.12);
+            border: 1px solid rgba(239, 68, 68, 0.4);
+            border-radius: 14px;
+            padding: 14px 16px;
+            margin-bottom: 18px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .dup-warning-box i {
+            color: #f87171;
+            font-size: 1.3rem;
+        }
+
+        .dup-warning-text {
+            font-size: 0.84rem;
+            color: #fca5a5;
+            line-height: 1.4;
+        }
+
+        .dup-warning-link {
+            color: #ffffff;
+            font-weight: 700;
+            text-decoration: underline;
+            margin-left: 5px;
+        }
+
+        .toggle-anon-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 22px;
+            padding: 12px 14px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+        }
+
+        .toggle-anon-label {
+            font-size: 0.84rem;
+            font-weight: 600;
+            color: rgba(255, 255, 255, 0.8);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* SWITCH TOGGLE */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background-color: rgba(255, 255, 255, 0.15);
+            transition: .3s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--req-accent);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- NAVIGATION -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo">
+                <img src="assets/content.png" alt="ZYREX" class="logo-img">
+                <span class="logo-text">yrex</span>
+            </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="/">Home</a></li>
+                <li><a href="/resources">Resources</a></li>
+                <li><a href="/plugins">Plugins</a></li>
+                <li><a href="/requests" class="active">Requests</a></li>
+                <li><a href="/more">More</a></li>
+                <li><a href="/#contact">Contact</a></li>
+            </ul>
+            <div class="nav-actions">
+                <div id="authBtn"></div>
+                <button class="hamburger" id="hamburger" aria-label="Menu">
+                    <span></span><span></span><span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- HERO -->
+    <header class="req-hero">
+        <div class="req-hero-badge">
+            <i class="fas fa-sparkles"></i> COMMUNITY REQUEST BOARD
+        </div>
+        <h1>Community Requests</h1>
+        <p>Request presets, project files, plugins, software, or scenepacks. Browse what creators are looking for and upvote resources you want published on Zyrex.</p>
+        <div class="req-hero-actions">
+            <button class="btn-submit-req" onclick="openRequestModal()">
+                <i class="fas fa-plus"></i> Submit Request
+            </button>
+            <a href="https://discord.gg/zyrex" target="_blank" rel="noopener" class="btn-discord-req">
+                <i class="fab fa-discord"></i> Discord Channel
+            </a>
+        </div>
+    </header>
+
+    <!-- LIVE STATS BAR -->
+    <section class="req-stats-bar" id="statsBar">
+        <div class="req-stat-card">
+            <span class="req-stat-num" id="statTotal">0</span>
+            <span class="req-stat-label">Total Requests</span>
+        </div>
+        <div class="req-stat-card">
+            <span class="req-stat-num" id="statPending" style="color:#fbbf24">0</span>
+            <span class="req-stat-label">Pending</span>
+        </div>
+        <div class="req-stat-card">
+            <span class="req-stat-num" id="statCompleted" style="color:#34d399">0</span>
+            <span class="req-stat-label">Completed</span>
+        </div>
+        <div class="req-stat-card">
+            <span class="req-stat-num" id="statUpvotes" style="color:#ff4d6d">0</span>
+            <span class="req-stat-label">Total Upvotes</span>
+        </div>
+    </section>
+
+    <!-- TOOLBAR & FILTERS -->
+    <div class="req-toolbar">
+        <div class="req-search-wrap">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" class="req-search-input" placeholder="Search requests, creators, tools..." oninput="handleSearch(this.value)">
+        </div>
+        <div class="req-status-tabs" id="statusTabs">
+            <button class="req-status-btn active" data-status="all" onclick="setStatusFilter('all')">All</button>
+            <button class="req-status-btn" data-status="pending" onclick="setStatusFilter('pending')">Pending</button>
+            <button class="req-status-btn" data-status="completed" onclick="setStatusFilter('completed')">Completed</button>
+        </div>
+        <select id="sortSelect" class="req-sort-select" onchange="handleSort(this.value)">
+            <option value="upvotes">Most Upvoted</option>
+            <option value="recent">Newest First</option>
+            <option value="price_desc">Price: High to Low</option>
+            <option value="price_asc">Price: Low to High</option>
+        </select>
+    </div>
+
+    <!-- CATEGORY PILLS -->
+    <div class="req-pills" id="categoryPills">
+        <button class="req-pill-btn active" data-type="all" onclick="setTypeFilter('all')">
+            <i class="fas fa-layer-group"></i> All <span class="req-pill-badge" id="badgeAll">0</span>
+        </button>
+        <button class="req-pill-btn" data-type="preset" onclick="setTypeFilter('preset')">
+            <i class="fas fa-sliders-h"></i> Presets &amp; Project Files <span class="req-pill-badge" id="badgePresets">0</span>
+        </button>
+        <button class="req-pill-btn" data-type="plugin" onclick="setTypeFilter('plugin')">
+            <i class="fas fa-puzzle-piece"></i> Plugins <span class="req-pill-badge" id="badgePlugins">0</span>
+        </button>
+        <button class="req-pill-btn" data-type="software" onclick="setTypeFilter('software')">
+            <i class="fas fa-laptop-code"></i> Software <span class="req-pill-badge" id="badgeSoftware">0</span>
+        </button>
+        <button class="req-pill-btn" data-type="scenepack" onclick="setTypeFilter('scenepack')">
+            <i class="fas fa-film"></i> Scenepacks <span class="req-pill-badge" id="badgeScenepacks">0</span>
+        </button>
+        <button class="req-pill-btn" data-type="other" onclick="setTypeFilter('other')">
+            <i class="fas fa-cube"></i> Other <span class="req-pill-badge" id="badgeOther">0</span>
+        </button>
+    </div>
+
+    <!-- REQUESTS GRID CONTAINER -->
+    <main class="req-grid" id="requestsGrid">
+        <!-- Rendered via JS -->
+    </main>
+
+    <!-- SUBMIT REQUEST MODAL -->
+    <div class="modal-overlay" id="requestModal">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="modal-title">
+                    <i class="fas fa-paper-plane" style="color:var(--req-accent)"></i> Submit Request
+                </div>
+                <button class="modal-close-btn" onclick="closeRequestModal()">&times;</button>
+            </div>
+
+            <form id="requestForm" onsubmit="handleRequestSubmit(event)">
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-shapes"></i> Resource Type *</label>
+                    <select id="modalType" class="form-select" onchange="updateModalFormFields(this.value)" required>
+                        <option value="preset">Preset</option>
+                        <option value="project-file">Project File</option>
+                        <option value="plugin">Plugin</option>
+                        <option value="software">Software</option>
+                        <option value="scenepack">Scenepack</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+
+                <!-- PRESET & PROJECT FILE FIELDS -->
+                <div id="presetFields">
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-store"></i> Product / Store Link *</label>
+                        <input type="url" id="modalProductUrl" class="form-input" placeholder="https://payhip.com/b/xxxxx or Gumroad / Ko-fi / Patreon" onblur="handleProductUrlBlur(this.value)">
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-hashtag"></i> Creator Social Link (TikTok, IG, YouTube, X)</label>
+                        <div style="display:flex;gap:8px">
+                            <input type="url" id="modalCreatorUrl" class="form-input" placeholder="https://tiktok.com/@creator or @username">
+                            <button type="button" id="btnSocialLookup" class="btn-discord-req" style="padding:0 16px;border-radius:12px;white-space:nowrap;font-size:0.8rem;" onclick="triggerCreatorSocialLookup(event)">
+                                <i class="fas fa-magic"></i> Lookup
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- AUTO-FETCHED PREVIEW -->
+                    <div id="lookupPreview" class="lookup-preview-panel" style="display:none">
+                        <img src="" id="previewThumb" class="lookup-preview-img" alt="Product thumbnail" onerror="this.src='/assets/content.png'">
+                        <div class="lookup-preview-info">
+                            <div class="lookup-preview-title" id="previewTitle">Product Title</div>
+                            <div class="lookup-preview-meta">
+                                <span id="previewCreator">Creator</span> &bull; <span id="previewPrice" style="color:#34d399">$0.00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- DUPLICATE WARNING (BLOCKS SUBMIT) -->
+                    <div id="duplicateWarning" class="dup-warning-box" style="display:none">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <div class="dup-warning-text">
+                            <strong>Already Available!</strong> This resource has already been shared on Zyrex.
+                            <a href="#" id="duplicateLink" class="dup-warning-link" target="_blank">View Resource &rarr;</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- TITLE FIELD (Auto-filled for presets, manual for plugins/software/other) -->
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-heading"></i> Request Title *</label>
+                    <input type="text" id="modalTitle" class="form-input" placeholder="e.g. Sapphire Plugins 2026, Vamffx CC Pack..." required>
+                </div>
+
+                <!-- DESCRIPTION / INFO BOX -->
+                <div class="form-group">
+                    <label class="form-label"><i class="fas fa-align-left"></i> Additional Information / Details</label>
+                    <textarea id="modalDesc" class="form-textarea" placeholder="Describe the item, version, compatibility, or why it should be uploaded..."></textarea>
+                </div>
+
+                <!-- ANONYMOUS TOGGLE -->
+                <div class="toggle-anon-row">
+                    <span class="toggle-anon-label">
+                        <i class="fas fa-user-secret" style="color:var(--req-accent)"></i> Submit Anonymously
+                    </span>
+                    <label class="switch">
+                        <input type="checkbox" id="modalAnonymous">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+
+                <input type="hidden" id="modalCreatorName">
+                <input type="hidden" id="modalCreatorAvatar">
+                <input type="hidden" id="modalCreatorPlatform">
+                <input type="hidden" id="modalPrice">
+                <input type="hidden" id="modalThumbnail">
+
+                <button type="submit" id="modalSubmitBtn" class="btn-submit-req" style="width:100%;justify-content:center;">
+                    <i class="fas fa-paper-plane"></i> Post Request
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="footer" style="border-top:1px solid rgba(255,255,255,0.08);padding:40px 20px;text-align:center;color:rgba(255,255,255,0.45);font-size:0.82rem;margin-top:60px;">
+        <div style="max-width:1160px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:15px;">
+            <div style="display:flex;align-items:center;gap:10px;">
+                <img src="/assets/content.png" alt="Zyrex" style="width:28px;height:28px;">
+                <span style="font-weight:700;color:#fff;">Zyrex<sup>™</sup></span>
+            </div>
+            <div>&copy; 2026 Zyrex Editing &bull; Community Driven Resources</div>
+            <div style="display:flex;gap:18px;">
+                <a href="/resources" style="color:rgba(255,255,255,0.6);text-decoration:none;">Resources</a>
+                <a href="/plugins" style="color:rgba(255,255,255,0.6);text-decoration:none;">Plugins</a>
+                <a href="/requests" style="color:#ff4d6d;text-decoration:none;font-weight:600;">Requests</a>
+                <a href="/status" style="color:rgba(255,255,255,0.6);text-decoration:none;">Status</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- SCRIPTS -->
+    <script src="js/script.js?v=46"></script>
+    <script>
+        // ===================== REQUESTS CONTROLLER =====================
+        var currentRequests = [];
+        var activeStatus = 'all';
+        var activeType = 'all';
+        var activeSort = 'upvotes';
+        var searchQuery = '';
+        var existingProductsCache = [];
+
+        // Upvoted requests cache (local storage fallback for anonymous/instant sync)
+        var LOCAL_UPVOTES_KEY = 'zyrex_user_req_upvotes';
+        function getLocalUpvotes() {
+            try {
+                return JSON.parse(localStorage.getItem(LOCAL_UPVOTES_KEY) || '[]');
+            } catch(e) { return []; }
+        }
+        function toggleLocalUpvote(id) {
+            var arr = getLocalUpvotes();
+            var idx = arr.indexOf(id);
+            if (idx > -1) {
+                arr.splice(idx, 1);
+            } else {
+                arr.push(id);
+            }
+            try { localStorage.setItem(LOCAL_UPVOTES_KEY, JSON.stringify(arr)); } catch(e) {}
+            return idx === -1;
+        }
+
+        // Relative time helper
+        function formatRelativeTime(dateStr) {
+            if (!dateStr) return 'Recently';
+            var date = new Date(dateStr.endsWith('Z') ? dateStr : dateStr + 'Z');
+            var now = new Date();
+            var diffSec = Math.floor((now - date) / 1000);
+            if (diffSec < 60) return 'Just now';
+            var diffMin = Math.floor(diffSec / 60);
+            if (diffMin < 60) return diffMin + 'm ago';
+            var diffHr = Math.floor(diffMin / 60);
+            if (diffHr < 24) return diffHr + 'h ago';
+            var diffDay = Math.floor(diffHr / 24);
+            if (diffDay < 30) return diffDay + 'd ago';
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        // Initialize Data & Caches
+        async function initRequests() {
+            // Load pre-cached requests from localStorage instantly (Stale-While-Revalidate)
+            var cachedReqs = null;
+            try {
+                var raw = localStorage.getItem('zyrex_cache_requests');
+                if (raw) {
+                    cachedReqs = JSON.parse(raw);
+                    if (Array.isArray(cachedReqs)) {
+                        currentRequests = cachedReqs;
+                        updateStats(currentRequests);
+                        renderRequestsGrid();
+                    }
+                }
+            } catch(e) {}
+
+            // Pre-load products list for instant duplicate checks
+            loadProductsCache();
+
+            // Background fresh fetch
+            fetchFreshRequests();
+            fetchRequestsStats();
+        }
+
+        async function loadProductsCache() {
+            try {
+                var cached = localStorage.getItem('zyrex_products_cache');
+                if (cached) {
+                    var parsed = JSON.parse(cached);
+                    existingProductsCache = parsed.data || [];
+                }
+                if (!existingProductsCache.length) {
+                    var r = await fetch('/api/products');
+                    if (r.ok) {
+                        existingProductsCache = await r.json();
+                        localStorage.setItem('zyrex_products_cache', JSON.stringify({ ts: Date.now(), data: existingProductsCache }));
+                    }
+                }
+            } catch(e) {}
+        }
+
+        async function fetchFreshRequests() {
+            try {
+                var url = '/api/requests?sort=' + activeSort;
+                if (activeStatus !== 'all') url += '&status=' + activeStatus;
+                if (activeType !== 'all') url += '&type=' + activeType;
+                if (searchQuery) url += '&search=' + encodeURIComponent(searchQuery);
+
+                var resp = await fetch(url, { credentials: 'include' });
+                if (resp.ok) {
+                    var data = await resp.json();
+                    if (Array.isArray(data)) {
+                        currentRequests = data;
+                        try {
+                            localStorage.setItem('zyrex_cache_requests', JSON.stringify(data));
+                        } catch(e) {}
+                        renderRequestsGrid();
+                        updateStats(currentRequests);
+                    }
+                }
+            } catch(e) {
+                console.warn('Requests background fetch notice:', e);
+            }
+        }
+
+        async function fetchRequestsStats() {
+            try {
+                var resp = await fetch('/api/requests/stats', { credentials: 'include' });
+                if (resp.ok) {
+                    var s = await resp.json();
+                    document.getElementById('statTotal').textContent = s.total || 0;
+                    document.getElementById('statPending').textContent = s.pending || 0;
+                    document.getElementById('statCompleted').textContent = s.completed || 0;
+                    document.getElementById('statUpvotes').textContent = s.upvotes || 0;
+                }
+            } catch(e) {}
+        }
+
+        function updateStats(items) {
+            if (!items) return;
+            var total = items.length;
+            var pending = items.filter(x => x.status === 'pending').length;
+            var completed = items.filter(x => x.status === 'completed').length;
+            var upvotes = items.reduce((acc, x) => acc + (x.upvotes_count || 1), 0);
+
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statPending').textContent = pending;
+            document.getElementById('statCompleted').textContent = completed;
+            document.getElementById('statUpvotes').textContent = upvotes;
+
+            // Badges
+            document.getElementById('badgeAll').textContent = total;
+            document.getElementById('badgePresets').textContent = items.filter(x => x.type === 'preset' || x.type === 'project_file' || x.type === 'project-file').length;
+            document.getElementById('badgePlugins').textContent = items.filter(x => x.type === 'plugin').length;
+            document.getElementById('badgeSoftware').textContent = items.filter(x => x.type === 'software').length;
+            document.getElementById('badgeScenepacks').textContent = items.filter(x => x.type === 'scenepack').length;
+            document.getElementById('badgeOther').textContent = items.filter(x => x.type === 'other').length;
+        }
+
+        // Render Grid
+        function renderRequestsGrid() {
+            var grid = document.getElementById('requestsGrid');
+            if (!grid) return;
+
+            var localUpvotes = getLocalUpvotes();
+
+            var filtered = currentRequests.filter(function(r) {
+                if (activeStatus !== 'all' && r.status !== activeStatus) return false;
+                if (activeType !== 'all') {
+                    if (activeType === 'preset' && !(r.type === 'preset' || r.type === 'project_file' || r.type === 'project-file')) return false;
+                    else if (activeType !== 'preset' && r.type !== activeType) return false;
+                }
+                if (searchQuery) {
+                    var s = searchQuery.toLowerCase();
+                    var title = (r.title || '').toLowerCase();
+                    var desc = (r.description || '').toLowerCase();
+                    var cname = (r.creator_name || '').toLowerCase();
+                    if (!title.includes(s) && !desc.includes(s) && !cname.includes(s)) return false;
+                }
+                return true;
+            });
+
+            if (filtered.length === 0) {
+                grid.innerHTML = `
+                    <div class="req-empty">
+                        <i class="fas fa-inbox"></i>
+                        <h3>No Requests Found</h3>
+                        <p>Be the first to request this item! Our community and uploaders check requests regularly.</p>
+                        <button class="btn-submit-req" onclick="openRequestModal()">
+                            <i class="fas fa-plus"></i> Submit Request
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            var html = '';
+            filtered.forEach(function(req) {
+                var isUpvoted = req.has_upvoted || localUpvotes.includes(req.id);
+                var typeLabel = (req.type || 'other').replace('_', ' ').replace('-', ' ');
+                var typeClass = 'type-' + (req.type || 'other').replace('_', '-');
+                var statusClass = req.status === 'completed' ? 'status-completed' : 'status-pending';
+                var statusText = req.status === 'completed' ? '<i class="fas fa-check-circle"></i> Completed' : '<i class="fas fa-clock"></i> Pending';
+                
+                var requesterName = req.is_anonymous ? 'Anonymous' : (req.user_name || 'Zyrex Member');
+                var requesterAvatar = (req.is_anonymous || !req.user_avatar) ? '/assets/content.png' : req.user_avatar;
+
+                var thumbHtml = req.thumbnail ? 
+                    `<img src="${req.thumbnail}" alt="${req.title}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                     <div class="req-thumb-placeholder" style="display:none"><i class="fas fa-file-lines"></i></div>` :
+                    `<div class="req-thumb-placeholder"><i class="fas fa-${getTypeIcon(req.type)}"></i></div>`;
+
+                var creatorHtml = '';
+                if (req.creator_name || req.creator_social_url) {
+                    var crName = req.creator_name || 'Creator';
+                    var crAvatar = req.creator_avatar ? `<img src="${req.creator_avatar}" class="req-creator-avatar" alt="${crName}">` : '';
+                    var crLink = req.creator_social_url ? `<a href="${req.creator_social_url}" target="_blank" rel="noopener" class="req-creator-name">${crName}</a>` : `<span class="req-creator-name">${crName}</span>`;
+                    creatorHtml = `<div class="req-creator-row">${crAvatar} <span>by ${crLink}</span></div>`;
+                }
+
+                var priceHtml = req.price ? `<span class="req-price-badge"><i class="fas fa-tag"></i> ${req.price}</span>` : '';
+                var descHtml = req.description ? `<p class="req-desc">${escapeHtml(req.description)}</p>` : '';
+                var storeLink = req.product_url ? `<a href="${req.product_url}" target="_blank" rel="noopener" class="req-store-link" title="Original Link"><i class="fas fa-external-link-alt"></i> Store</a>` : '';
+
+                html += `
+                    <div class="req-card" id="req-card-${req.id}">
+                        <div>
+                            <div class="req-card-top">
+                                <span class="req-type-pill ${typeClass}">${typeLabel}</span>
+                                <span class="req-status-pill ${statusClass}">${statusText}</span>
+                            </div>
+                            <div class="req-card-body">
+                                <div class="req-thumb">${thumbHtml}</div>
+                                <div class="req-info">
+                                    <h3 class="req-title" title="${escapeHtml(req.title)}">${escapeHtml(req.title)}</h3>
+                                    ${creatorHtml}
+                                    ${descHtml}
+                                    ${priceHtml}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="req-card-footer">
+                            <div class="req-requester">
+                                <img src="${requesterAvatar}" class="req-requester-avatar" alt="${requesterName}" onerror="this.src='/assets/content.png'">
+                                <span>${escapeHtml(requesterName)} &bull; ${formatRelativeTime(req.created_at)}</span>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                ${storeLink}
+                                <button class="req-upvote-btn ${isUpvoted ? 'upvoted' : ''}" onclick="toggleUpvote('${req.id}')" title="Upvote this request">
+                                    <i class="fas fa-arrow-up"></i> <span id="upvotes-count-${req.id}">${req.upvotes_count || 1}</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+
+            grid.innerHTML = html;
+        }
+
+        function getTypeIcon(t) {
+            switch(t) {
+                case 'preset': return 'sliders-h';
+                case 'project_file':
+                case 'project-file': return 'folder-open';
+                case 'plugin': return 'puzzle-piece';
+                case 'software': return 'laptop-code';
+                case 'scenepack': return 'film';
+                default: return 'cube';
+            }
+        }
+
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>'"]/g, function(tag) {
+                return ({
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    "'": '&#39;',
+                    '"': '&quot;'
+                }[tag] || tag);
+            });
+        }
+
+        // Upvote Action (Optimistic Update)
+        async function toggleUpvote(id) {
+            var btn = document.querySelector(`#req-card-${id} .req-upvote-btn`);
+            var countEl = document.getElementById(`upvotes-count-${id}`);
+            if (!btn || !countEl) return;
+
+            var reqItem = currentRequests.find(x => x.id === id);
+            var wasUpvoted = btn.classList.contains('upvoted');
+            var curCount = parseInt(countEl.textContent, 10) || 1;
+
+            // Optimistic update
+            var newCount = wasUpvoted ? Math.max(1, curCount - 1) : curCount + 1;
+            btn.classList.toggle('upvoted', !wasUpvoted);
+            countEl.textContent = newCount;
+            if (reqItem) {
+                reqItem.upvotes_count = newCount;
+                reqItem.has_upvoted = !wasUpvoted;
+            }
+            toggleLocalUpvote(id);
+
+            try {
+                var resp = await fetch(`/api/requests/${id}/upvote`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include'
+                });
+                if (resp.ok) {
+                    var resData = await resp.json();
+                    if (resData.success) {
+                        countEl.textContent = resData.upvotes;
+                        btn.classList.toggle('upvoted', !!resData.upvoted);
+                        if (reqItem) {
+                            reqItem.upvotes_count = resData.upvotes;
+                            reqItem.has_upvoted = !!resData.upvoted;
+                        }
+                    }
+                }
+            } catch(e) {
+                console.error("Upvote failed:", e);
+            }
+        }
+
+        // Toolbar Handlers
+        function setStatusFilter(status) {
+            activeStatus = status;
+            document.querySelectorAll('#statusTabs .req-status-btn').forEach(b => {
+                b.classList.toggle('active', b.getAttribute('data-status') === status);
+            });
+            renderRequestsGrid();
+        }
+
+        function setTypeFilter(type) {
+            activeType = type;
+            document.querySelectorAll('#categoryPills .req-pill-btn').forEach(b => {
+                b.classList.toggle('active', b.getAttribute('data-type') === type);
+            });
+            renderRequestsGrid();
+        }
+
+        function handleSearch(val) {
+            searchQuery = val.trim();
+            renderRequestsGrid();
+        }
+
+        function handleSort(val) {
+            activeSort = val;
+            if (val === 'upvotes') {
+                currentRequests.sort((a, b) => (b.upvotes_count || 1) - (a.upvotes_count || 1));
+            } else if (val === 'recent') {
+                currentRequests.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+            } else if (val === 'price_desc') {
+                currentRequests.sort((a, b) => parsePrice(b.price) - parsePrice(a.price));
+            } else if (val === 'price_asc') {
+                currentRequests.sort((a, b) => parsePrice(a.price) - parsePrice(b.price));
+            }
+            renderRequestsGrid();
+        }
+
+        function parsePrice(p) {
+            if (!p) return 0;
+            var clean = p.replace(/[^0-9.]/g, '');
+            return parseFloat(clean) || 0;
+        }
+
+        // Modal Controls
+        function openRequestModal() {
+            document.getElementById('requestModal').classList.add('active');
+            updateModalFormFields(document.getElementById('modalType').value);
+        }
+
+        function closeRequestModal() {
+            document.getElementById('requestModal').classList.remove('active');
+            document.getElementById('duplicateWarning').style.display = 'none';
+            document.getElementById('modalSubmitBtn').disabled = false;
+        }
+
+        function updateModalFormFields(type) {
+            var presetFields = document.getElementById('presetFields');
+            var isPresetType = (type === 'preset' || type === 'project-file');
+            presetFields.style.display = isPresetType ? 'block' : 'none';
+
+            var productUrlInput = document.getElementById('modalProductUrl');
+            if (productUrlInput) {
+                productUrlInput.required = isPresetType;
+            }
+        }
+
+        // Check Duplicates in Client against cached products
+        function checkClientDuplicate(productUrl, title) {
+            var cleanUrl = (productUrl || '').toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').split('?')[0].replace(/\/$/, '');
+            var cleanTitle = (title || '').toLowerCase().trim();
+
+            if (!existingProductsCache || existingProductsCache.length === 0) return null;
+
+            for (var i = 0; i < existingProductsCache.length; i++) {
+                var p = existingProductsCache[i];
+                var pProdUrl = (p.product_url || '').toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').split('?')[0].replace(/\/$/, '');
+                var pSrcUrl = (p.source_url || '').toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').split('?')[0].replace(/\/$/, '');
+                var pName = (p.name || '').toLowerCase().trim();
+
+                if ((cleanUrl && (cleanUrl === pProdUrl || cleanUrl === pSrcUrl)) || (cleanTitle && cleanTitle === pName)) {
+                    return p;
+                }
+            }
+            return null;
+        }
+
+        // Auto Fetch / Scrape Handler on blur
+        async function handleProductUrlBlur(url) {
+            if (!url || !url.trim().startsWith('http')) return;
+            url = url.trim();
+
+            // 1. Duplicate check
+            var dup = checkClientDuplicate(url, '');
+            var dupBox = document.getElementById('duplicateWarning');
+            var submitBtn = document.getElementById('modalSubmitBtn');
+
+            if (dup) {
+                dupBox.style.display = 'flex';
+                document.getElementById('duplicateLink').href = `/resource?id=${dup.id}`;
+                submitBtn.disabled = true;
+                return;
+            } else {
+                dupBox.style.display = 'none';
+                submitBtn.disabled = false;
+            }
+
+            // 2. Fetch scrape preview from bot API
+            try {
+                var resp = await fetch('/api/scrape?url=' + encodeURIComponent(url));
+                if (resp.ok) {
+                    var data = await resp.json();
+                    if (data && (data.title || data.name)) {
+                        var title = data.title || data.name;
+                        document.getElementById('modalTitle').value = title;
+                        document.getElementById('modalPrice').value = data.price || '';
+                        document.getElementById('modalThumbnail').value = data.thumbnail || data.image || '';
+                        
+                        if (data.creator_name) document.getElementById('modalCreatorName').value = data.creator_name;
+                        if (data.creator_avatar) document.getElementById('modalCreatorAvatar').value = data.creator_avatar;
+
+                        // Show preview panel
+                        var previewPanel = document.getElementById('lookupPreview');
+                        var previewThumb = document.getElementById('previewThumb');
+                        var previewTitle = document.getElementById('previewTitle');
+                        var previewPrice = document.getElementById('previewPrice');
+                        var previewCreator = document.getElementById('previewCreator');
+
+                        previewThumb.src = data.thumbnail || data.image || '/assets/content.png';
+                        previewTitle.textContent = title;
+                        previewPrice.textContent = data.price || 'Store Resource';
+                        previewCreator.textContent = data.creator_name || 'Creator Found';
+                        previewPanel.style.display = 'flex';
+
+                        // Double check title against duplicates
+                        var dupByTitle = checkClientDuplicate('', title);
+                        if (dupByTitle) {
+                            dupBox.style.display = 'flex';
+                            document.getElementById('duplicateLink').href = `/resource?id=${dupByTitle.id}`;
+                            submitBtn.disabled = true;
+                        }
+                    }
+                }
+            } catch(e) {}
+        }
+
+        // Creator Social Lookup in Modal
+        async function triggerCreatorSocialLookup(ev) {
+            var socialUrl = document.getElementById('modalCreatorUrl').value.trim();
+            if (!socialUrl) {
+                alert("Please enter a social profile URL or username (@handle)");
+                return;
+            }
+
+            var btn = (ev && ev.currentTarget) || document.getElementById('btnSocialLookup');
+            var origHtml = btn ? btn.innerHTML : '';
+            if (btn) {
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Looking up...';
+                btn.disabled = true;
+            }
+
+            try {
+                var resp = await fetch('/api/scan-creator-links?url=' + encodeURIComponent(socialUrl));
+                if (resp.ok) {
+                    var data = await resp.json();
+                    if (data && data.success && data.found) {
+                        if (data.storeUrl) {
+                            document.getElementById('modalProductUrl').value = data.storeUrl;
+                            handleProductUrlBlur(data.storeUrl);
+                        }
+                        if (data.creator) {
+                            document.getElementById('modalCreatorName').value = data.creator.nickname || data.creator.username || '';
+                            document.getElementById('modalCreatorAvatar').value = data.creator.avatar || '';
+                            document.getElementById('modalCreatorPlatform').value = data.creator.platform || '';
+                        }
+                    }
+                }
+            } catch(e) {
+                console.error("Creator lookup error:", e);
+            } finally {
+                btn.innerHTML = origHtml;
+                btn.disabled = false;
+            }
+        }
+
+        // Submit Handler
+        async function handleRequestSubmit(e) {
+            e.preventDefault();
+            var btn = document.getElementById('modalSubmitBtn');
+            var type = document.getElementById('modalType').value;
+            var title = document.getElementById('modalTitle').value.trim();
+            var desc = document.getElementById('modalDesc').value.trim();
+            var productUrl = document.getElementById('modalProductUrl').value.trim();
+            var creatorUrl = document.getElementById('modalCreatorUrl').value.trim();
+            var isAnon = document.getElementById('modalAnonymous').checked;
+
+            var creatorName = document.getElementById('modalCreatorName').value.trim();
+            var creatorAvatar = document.getElementById('modalCreatorAvatar').value.trim();
+            var creatorPlatform = document.getElementById('modalCreatorPlatform').value.trim();
+            var price = document.getElementById('modalPrice').value.trim();
+            var thumbnail = document.getElementById('modalThumbnail').value.trim();
+
+            // Client duplicate check safeguard
+            if (type === 'preset' || type === 'project-file') {
+                var dup = checkClientDuplicate(productUrl, title);
+                if (dup) {
+                    document.getElementById('duplicateWarning').style.display = 'flex';
+                    document.getElementById('duplicateLink').href = `/resource?id=${dup.id}`;
+                    btn.disabled = true;
+                    return;
+                }
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+
+            var payload = {
+                type: type,
+                title: title,
+                description: desc,
+                product_url: productUrl,
+                creator_social_url: creatorUrl,
+                creator_name: creatorName,
+                creator_avatar: creatorAvatar,
+                creator_platform: creatorPlatform,
+                price: price,
+                thumbnail: thumbnail,
+                is_anonymous: isAnon
+            };
+
+            try {
+                var resp = await fetch('/api/requests', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(payload)
+                });
+
+                var resData = await resp.json();
+
+                if (resp.status === 409 || resData.error === 'already_exists') {
+                    document.getElementById('duplicateWarning').style.display = 'flex';
+                    if (resData.product && resData.product.id) {
+                        document.getElementById('duplicateLink').href = `/resource?id=${resData.product.id}`;
+                    }
+                    btn.disabled = true;
+                    btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Already on Zyrex';
+                    return;
+                }
+
+                if (resp.ok && resData.success) {
+                    // Success! Prepend optimistically
+                    if (resData.request) {
+                        currentRequests.unshift(resData.request);
+                        toggleLocalUpvote(resData.request.id);
+                        try {
+                            localStorage.setItem('zyrex_cache_requests', JSON.stringify(currentRequests));
+                        } catch(e) {}
+                        renderRequestsGrid();
+                        updateStats(currentRequests);
+                    }
+
+                    closeRequestModal();
+                    document.getElementById('requestForm').reset();
+                    document.getElementById('lookupPreview').style.display = 'none';
+                    alert("Request submitted successfully! It has also been announced to the Zyrex Discord community.");
+                } else {
+                    alert("Submission failed: " + (resData.error || resData.message || 'Unknown error'));
+                }
+            } catch(err) {
+                alert("Server connection error: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-paper-plane"></i> Post Request';
+            }
+        }
+
+        // Close on backdrop click
+        document.getElementById('requestModal').addEventListener('click', function(e) {
+            if (e.target === this) closeRequestModal();
+        });
+
+        // Initialize on DOM ready
+        document.addEventListener('DOMContentLoaded', initRequests);
+    </script>
+</body>
+
+</html>

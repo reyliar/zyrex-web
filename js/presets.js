@@ -97,7 +97,7 @@ function getCachedProducts() {
         var raw = localStorage.getItem(PRODUCTS_CACHE_KEY);
         if (!raw) return null;
         var cached = JSON.parse(raw);
-        if (Date.now() - cached.ts < PRODUCTS_CACHE_TTL) return cached.data;
+        return cached.data || cached;
     } catch(e) {}
     return null;
 }
@@ -110,6 +110,18 @@ function setCachedProducts(data) {
 async function initPresets() {
     var apiCounts = {}, statsData = {};
     var cachedProducts = getCachedProducts();
+
+    // Stale-While-Revalidate: Render immediately from cache on frame 0
+    if (cachedProducts && cachedProducts.length > 0) {
+        try {
+            var localCounts = JSON.parse(localStorage.getItem("zyrex_downloads") || "{}");
+            var initialPresets = cachedProducts.filter(function(p) { return !p.type || p.type === 'preset'; });
+            window.presetsData = initialPresets;
+            updatePresetStats(initialPresets, localCounts, {});
+            renderPresets(initialPresets);
+            hideResourcesLoader();
+        } catch(e) {}
+    }
 
     try {
         // Load creator username index for search
@@ -385,21 +397,24 @@ window.getCategorySvgClass = getCategorySvgClass;
             `<div class="rimg-fallback"><span class="cat-svg-icon ${catSvgClass}" style="font-size:2.8rem"></span></div>`;
 
         const itemType = (item.type || '').toLowerCase();
-        let detailUrl = '/preset?id=' + encodeURIComponent(item.id);
+        let detailUrl = '/resource?id=' + encodeURIComponent(item.id);
         if (itemType === 'scenepack') detailUrl = '/product-scenepack?id=' + encodeURIComponent(item.id);
         else if (itemType === 'audio') detailUrl = '/product-audio?id=' + encodeURIComponent(item.id);
         else if (itemType === 'plugin' || itemType === 'software') detailUrl = '/product?id=' + encodeURIComponent(item.id);
+
+        const isProj = (item.resource_category || '') === 'project-file';
+        const subcatBadge = '<span class="' + (isProj ? 'tag-project-file' : 'tag-preset') + '">' + (isProj ? 'Project File' : 'Preset') + '</span>';
 
         return '<a href="' + detailUrl + '" class="rc">' +
             '<div class="rc-img">' +
             thumbHtml +
             '<div class="roverlay"></div>' +
-            '<div class="rbadge grid-badge"><span class="' + catClass + '">' + catSvgIcon + cat + '</span><span class="tag-free">Free</span></div>' +
+            '<div class="rbadge grid-badge">' + subcatBadge + '<span class="' + catClass + '">' + catSvgIcon + cat + '</span><span class="tag-free">Free</span></div>' +
             '</div>' +
             '<div class="rc-content">' +
             '<div class="rc-head">' +
             '<h3 class="rc-title" title="' + item.name + '">' + item.name + '</h3>' +
-            '<div class="rbadge list-badge"><span class="' + catClass + '">' + catSvgIcon + cat + '</span><span class="tag-free">Free</span></div>' +
+            '<div class="rbadge list-badge">' + subcatBadge + '<span class="' + catClass + '">' + catSvgIcon + cat + '</span><span class="tag-free">Free</span></div>' +
             '</div>' +
             (shortDesc ? '<p class="rc-desc">' + shortDesc + '</p>' : '') +
             '<div class="rc-footer">' +

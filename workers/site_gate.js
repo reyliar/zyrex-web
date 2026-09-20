@@ -1,6 +1,6 @@
 const DEFAULT_HEALTH_URL = "https://storage.zyrexediting.xyz/health";
-const DEFAULT_TIMEOUT_MS = 5000;
-const DEFAULT_ONLINE_CACHE_MS = 15000;
+const DEFAULT_TIMEOUT_MS = 6000;
+const DEFAULT_ONLINE_CACHE_MS = 20000;
 const DEFAULT_OFFLINE_CACHE_MS = 5000;
 
 let healthState = {
@@ -8,6 +8,8 @@ let healthState = {
   checkedAt: 0,
   initialized: false,
 };
+let consecutiveFailures = 0;
+const FAILURE_THRESHOLD = 3; // Require at least 3 consecutive probe failures before declaring offline
 let activeProbe = null;
 let lastHealthReason = "not-checked";
 
@@ -41,6 +43,10 @@ async function probeServer(env) {
 
     if (!response.ok) {
       lastHealthReason = `http-${response.status}`;
+      consecutiveFailures++;
+      if (consecutiveFailures < FAILURE_THRESHOLD && healthState.initialized) {
+        return true; // Soft tolerance for single blip
+      }
       return false;
     }
 
@@ -49,14 +55,25 @@ async function probeServer(env) {
       const status = String(payload?.status || "").toLowerCase();
       const available = !status || status === "ok" || status === "healthy" || status === "online" || response.status === 200;
       lastHealthReason = available ? "online" : `invalid-status-${status || "missing"}`;
-      return available;
+      if (available) {
+        consecutiveFailures = 0;
+        return true;
+      } else {
+        consecutiveFailures++;
+        return consecutiveFailures < FAILURE_THRESHOLD && healthState.initialized;
+      }
     } catch (_) {
+      consecutiveFailures = 0;
       lastHealthReason = "online";
       return true;
     }
   } catch (error) {
     lastHealthReason = "request-error";
     console.warn("Server health probe failed", error?.message || String(error));
+    consecutiveFailures++;
+    if (consecutiveFailures < FAILURE_THRESHOLD && healthState.initialized) {
+      return true; // Keep site available during transient network fluctuation
+    }
     return false;
   } finally {
     clearTimeout(timeout);
@@ -357,6 +374,14 @@ export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     const pathname = url.pathname;
+
+    // Permanent 301 redirects for rebranded resources routes
+    if (pathname === "/presets" || pathname === "/presets.html") {
+      return Response.redirect(`${url.origin}/resources${url.search}`, 301);
+    }
+    if (pathname === "/preset" || pathname === "/preset.html") {
+      return Response.redirect(`${url.origin}/resource${url.search}`, 301);
+    }
 
     // 1. Status page, Status API, and static assets needed to render them
     const isStatusPage = pathname === "/status" || pathname === "/status.html";

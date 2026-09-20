@@ -1263,7 +1263,7 @@
                 <ul class="sidebar-menu">
                     <span class="menu-title">Publish Portals</span>
                     <li class="menu-item active">
-                        <a href="/upload"><i class="fas fa-sliders"></i> <span>Preset Uploader</span></a>
+                        <a href="/upload"><i class="fas fa-layer-group"></i> <span>Resource Uploader</span></a>
                     </li>
                     <li class="menu-item" id="sidebarAudio">
                         <a href="/upload-audio"><i class="fas fa-music"></i> <span>Audio Uploader</span></a>
@@ -1295,8 +1295,8 @@
             <div class="studio-header">
                 <div>
                     <button class="mobile-trigger" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
-                    <h1>Preset Upload</h1>
-                    <p>Share your professional presets with the Zyrex library</p>
+                    <h1>Resource Upload</h1>
+                    <p>Share your professional presets and project files with the Zyrex library</p>
                 </div>
                 <!-- STEPPER -->
                 <div class="wizard-stepper" id="stepper">
@@ -1322,6 +1322,14 @@
                             <div class="field">
                                 <label><i class="fas fa-tag"></i> Product Name *</label>
                                 <input type="text" id="productName" placeholder="EDITING PACK" oninput="updateLivePreview()">
+                            </div>
+
+                            <div class="field">
+                                <label><i class="fas fa-shapes"></i> Resource Sub-Category *</label>
+                                <select id="resourceCategory" onchange="updateLivePreview()">
+                                    <option value="preset" selected>Preset</option>
+                                    <option value="project-file">Project File</option>
+                                </select>
                             </div>
                             
                             <div class="field">
@@ -2768,6 +2776,7 @@
                 source_url:payhipVal,
                 file_path:transferred||'',
                 type:'preset',
+                resource_category: (document.getElementById('resourceCategory') || {}).value || 'preset',
                 credited_uploader_id: creditedId || undefined,
                 credited_uploader_name: creditedName || undefined,
                 credited_uploader_avatar: creditedAvatar || undefined,
@@ -2780,18 +2789,18 @@
             if(!payload.name||!payload.category){
                 alertMsg('Fill required fields',true);
                 btn.disabled=false;
-                btn.innerHTML='<i class="fas fa-paper-plane"></i> Publish Preset';
+                btn.innerHTML='<i class="fas fa-paper-plane"></i> Publish Resource';
                 return;
             }
             try{
                 const r=await fetch('/api/products/submit',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),credentials:'include'});
                 const d=await r.json();
                 if(r.ok&&d.success){
-                    document.getElementById('mainPanel').innerHTML='<div class="review-card"><div class="check"><i class="fas fa-check"></i></div><h2>Published!</h2><p style="color:var(--muted);margin-bottom:8px">Your preset is now live on the resources page.</p><p style="font-size:0.75rem;color:var(--muted)"><i class="fas fa-info-circle"></i> Presets are published instantly without administrative delay.</p><div style="display:flex;gap:12px;justify-content:center;margin-top:24px"><a href="/preset?id='+(d.id||prod.id)+'" class="btn btn-primary">View Preset</a> <a href="/presets" class="btn btn-ghost">Browse Resources</a> <button onclick="window.location.reload()" class="btn btn-ghost"><i class="fas fa-redo"></i> Upload Another</button></div></div>'
+                    document.getElementById('mainPanel').innerHTML='<div class="review-card"><div class="check"><i class="fas fa-check"></i></div><h2>Published!</h2><p style="color:var(--muted);margin-bottom:8px">Your resource is now live on the resources page.</p><p style="font-size:0.75rem;color:var(--muted)"><i class="fas fa-info-circle"></i> Resources are published instantly without administrative delay.</p><div style="display:flex;gap:12px;justify-content:center;margin-top:24px"><a href="/resource?id='+(d.id||prod.id)+'" class="btn btn-primary">View Resource</a> <a href="/resources" class="btn btn-ghost">Browse Resources</a> <button onclick="window.location.reload()" class="btn btn-ghost"><i class="fas fa-redo"></i> Upload Another</button></div></div>'
                 }else alertMsg(d.error||'Submit failed',true)
             }catch(e){alertMsg('Network error',true)}
             btn.disabled=false;
-            btn.innerHTML='<i class="fas fa-paper-plane"></i> Publish Preset';
+            btn.innerHTML='<i class="fas fa-paper-plane"></i> Publish Resource';
         }
         
         updateLivePreview();

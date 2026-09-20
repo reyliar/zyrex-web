@@ -265,18 +265,26 @@ function syncNavbarActiveState() {
     let activeHref = null;
     if (path === '/' || path === '') {
         activeHref = (hash === '#contact') ? '/#contact' : '/';
-    } else if (path === '/presets' || path === '/presets.html' || path === '/resources' || path === '/resources.html') {
-        activeHref = '/presets';
+    } else if (path === '/presets' || path === '/presets.html' || path === '/resources' || path === '/resources.html' || path === '/preset' || path === '/resource') {
+        activeHref = '/resources';
     } else if (path === '/plugins' || path === '/plugins.html') {
         activeHref = '/plugins';
+    } else if (path === '/requests' || path === '/requests.html') {
+        activeHref = '/requests';
     } else if (path === '/more' || path === '/more.html') {
         activeHref = '/more';
     }
-    // Any other page (/audio, /scenepack, /preset, /product, /bookmarks, /settings, etc.) -> activeHref remains null!
+    // Any other page (/audio, /scenepack, /product, /bookmarks, /settings, etc.) -> activeHref remains null!
 
     navLinks.forEach(link => {
-        const href = link.getAttribute('href');
-        if (activeHref && (href === activeHref || (activeHref === '/' && (href === '#hero' || href === '/')) || (activeHref === '/#contact' && (href === '#contact' || href === '/#contact')))) {
+        const href = (link.getAttribute('href') || '').toLowerCase();
+        const isMatch = (activeHref && (
+            href === activeHref || 
+            (activeHref === '/resources' && (href === '/resources' || href === '/presets' || href === 'presets' || href === 'resources')) ||
+            (activeHref === '/' && (href === '#hero' || href === '/')) || 
+            (activeHref === '/#contact' && (href === '#contact' || href === '/#contact'))
+        ));
+        if (isMatch) {
             link.classList.add('active');
         } else {
             link.classList.remove('active');
@@ -582,8 +590,60 @@ function applyGuildStats(data) {
     });
 }
 
+/* ===================== UNIVERSAL STALE-WHILE-REVALIDATE LOCALSTORAGE HELPER ===================== */
+window.zyrexCacheFetch = async function(url, options) {
+    options = options || {};
+    var cacheKey = 'zyrex_cache_' + url.replace(/[^a-zA-Z0-9_-]/g, '_');
+    var onData = options.onData || null;
+
+    // 1. Instantly return stale data from localStorage if available
+    var staleData = null;
+    try {
+        var raw = localStorage.getItem(cacheKey);
+        if (raw) {
+            var parsed = JSON.parse(raw);
+            staleData = (parsed && parsed.data !== undefined) ? parsed.data : parsed;
+            if (onData && staleData) {
+                try { onData(staleData, true); } catch(e) {}
+            }
+        }
+    } catch(e) {}
+
+    // 2. Fetch fresh data in background
+    try {
+        var fetchOpts = Object.assign({ credentials: 'include' }, options.fetchOptions || {});
+        var resp = await fetch(url, fetchOpts);
+        if (resp.ok) {
+            var freshData = await resp.json();
+            try {
+                localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now(), data: freshData }));
+            } catch(e) {}
+            if (onData) {
+                try { onData(freshData, false); } catch(e) {}
+            }
+            return freshData;
+        }
+    } catch(err) {
+        console.warn('Background cache fetch failed for', url, err);
+    }
+
+    return staleData;
+};
+window.fetchWithCache = window.zyrexCacheFetch;
+
 /* ===================== HERO REAL RESOURCE COUNTERS ===================== */
 function fetchResourceStatsForHero() {
+    // 0. Render immediately from local storage cache
+    try {
+        var cached = JSON.parse(localStorage.getItem('zyrex_cache_hero_stats') || 'null');
+        if (cached) {
+            animateHeroNum('heroStatPresets', cached.presetsCount || 0);
+            animateHeroNum('heroStatPlugins', cached.pluginsCount || 0);
+            animateHeroNum('heroStatScenepacks', cached.scenepacksCount || 0);
+            animateHeroNum('heroStatAudios', cached.audiosCount || 0);
+        }
+    } catch(e) {}
+
     var p1 = fetch('/api/resource-stats', {credentials: 'include'}).then(function(r){ return r.json(); }).catch(function(){ return null; });
     var p2 = fetch('/api/products', {credentials: 'include'}).then(function(r){ return r.json(); }).catch(function(){ return null; });
 
@@ -638,6 +698,15 @@ function fetchResourceStatsForHero() {
             if (rStats.category_counts.scenepacks) scenepacksCount = rStats.category_counts.scenepacks;
             if (rStats.category_counts.audios) audiosCount = rStats.category_counts.audios;
         }
+
+        try {
+            localStorage.setItem('zyrex_cache_hero_stats', JSON.stringify({
+                presetsCount: presetsCount,
+                pluginsCount: pluginsCount,
+                scenepacksCount: scenepacksCount,
+                audiosCount: audiosCount
+            }));
+        } catch(e) {}
 
         animateHeroNum('heroStatPresets', presetsCount);
         animateHeroNum('heroStatPlugins', pluginsCount);

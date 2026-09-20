@@ -3449,6 +3449,13 @@
                             <option value="scenepack">Scenepack</option>
                         </select>
                     </div>
+                    <div class="form-group" id="groupResourceCategory">
+                        <label for="editResourceCategory"><i class="fas fa-shapes" style="margin-right:5px;opacity:0.7"></i>Sub-Category</label>
+                        <select id="editResourceCategory">
+                            <option value="preset">Preset</option>
+                            <option value="project-file">Project File</option>
+                        </select>
+                    </div>
                     <div class="form-group">
                         <label for="editProductCategory"><i class="fas fa-folder" style="margin-right:5px;opacity:0.7"></i>Category *</label>
                         <select id="editProductCategory" required>
@@ -4745,6 +4752,7 @@
             // Populate category select options & update fields for type
             populateModalCategories(prodType, product.category);
             updateModalFieldsForType(prodType);
+            setModalVal('editResourceCategory', product.resource_category || 'preset');
 
             setModalVal('editProductDesc', product.description || product.desc || '');
             setModalVal('editProductFilePath', product.file_path || '');
@@ -4824,6 +4832,7 @@
                 name: document.getElementById('editProductName').value,
                 type: type,
                 category: document.getElementById('editProductCategory').value,
+                resource_category: (document.getElementById('editResourceCategory') ? document.getElementById('editResourceCategory').value : 'preset'),
                 description: document.getElementById('editProductDesc').value,
                 file_path: document.getElementById('editProductFilePath').value,
                 thumbnail: document.getElementById('editProductThumbnail').value,

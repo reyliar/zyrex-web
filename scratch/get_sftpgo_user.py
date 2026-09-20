@@ -19,7 +19,7 @@ try:
         token = token_data["access_token"]
         
     # Get user details
-    req2 = urllib.request.Request(f"{SFTPGO_API}/users/dvmonaep")
+    req2 = urllib.request.Request(f"{SFTPGO_API}/users/reyliar")
     req2.add_header("Authorization", f"Bearer {token}")
     req2.add_header("User-Agent", "Mozilla/5.0")
     
