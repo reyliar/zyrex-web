@@ -588,12 +588,12 @@
 
         <!-- ACTIVE INCIDENTS SECTION -->
         <div class="incidents-block">
-            <h2 class="status-sec-title">No active incidents</h2>
-            <p class="status-sec-sub">Incident updates will appear here when there is something you should know.</p>
+            <h2 class="status-sec-title" id="incidentsSecTitle">No active incidents</h2>
+            <p class="status-sec-sub" id="incidentsSecSub">Incident updates will appear here when there is something you should know.</p>
 
             <div class="incident-active-card" id="incidentActiveCard">
-                <h4><i class="fas fa-triangle-exclamation"></i> <span id="incidentTitle">Upstream Service Provider Issue</span></h4>
-                <p id="incidentDesc">We are currently experiencing an issue related to our upstream service provider affecting the core VPS API gateway. Our provider is actively resolving the disruption, and services are expected to be restored shortly.</p>
+                <h4><i class="fas fa-triangle-exclamation"></i> <span id="incidentTitle">Remote Server Disruption</span></h4>
+                <p id="incidentDesc">We are currently observing intermittent upstream connectivity with our dedicated remote backend server. Cloudflare edge networks and storage downloads remain fully operational while connection stability is being restored.</p>
             </div>
         </div>
 
@@ -917,26 +917,36 @@
 
             if (heroDot && heroHeadline && heroSub) {
                 heroDot.className = 'status-hero-dot ' + globalStatus;
+                var incTitle = document.getElementById('incidentsSecTitle');
+                var incSub = document.getElementById('incidentsSecSub');
+
                 if (globalStatus === 'operational') {
                     heroHeadline.innerText = 'All systems operational';
                     heroSub.innerText = 'All services are running normally.';
                     if (incidentCard) incidentCard.classList.remove('visible');
+                    if (incTitle) incTitle.innerText = 'No active incidents';
+                    if (incSub) incSub.innerText = 'Incident updates will appear here when there is something you should know.';
                 } else if (globalStatus === 'degraded') {
                     heroHeadline.innerText = 'Partial service disruption';
-                    heroSub.innerText = 'Some services are experiencing temporary degraded response.';
-                    if (incidentCard) {
-                        incidentCard.classList.add('visible');
-                        document.getElementById('incidentTitle').innerText = 'Partial Service Disruption';
-                        document.getElementById('incidentDesc').innerText = 'Elevated latency detected on secondary subsystems. Core downloads remain active.';
-                    }
-                } else {
-                    heroHeadline.innerText = 'Service disruption';
-                    heroSub.innerText = 'Core gateway is temporarily unavailable.';
+                    heroSub.innerText = 'Some secondary services are experiencing degraded performance. Storage downloads remain operational.';
+                    if (incTitle) incTitle.innerText = 'Active Incidents';
+                    if (incSub) incSub.innerText = '1 active incident currently impacting secondary services.';
                     if (incidentCard) {
                         incidentCard.classList.add('visible');
                         var activeInc = (data.incidents && data.incidents[0]) ? data.incidents[0] : null;
-                        document.getElementById('incidentTitle').innerText = (activeInc && activeInc.title) ? activeInc.title : 'Upstream Service Provider Issue';
-                        document.getElementById('incidentDesc').innerText = (activeInc && activeInc.message) ? activeInc.message : 'We are currently experiencing an issue related to our upstream service provider affecting the core VPS API gateway. Our provider is actively resolving the disruption, and services are expected to be restored shortly.';
+                        document.getElementById('incidentTitle').innerText = (activeInc && activeInc.title) ? activeInc.title : 'Remote Server Connectivity Degraded';
+                        document.getElementById('incidentDesc').innerText = (activeInc && activeInc.message) ? activeInc.message : 'Intermittent connectivity detected with our remote backend server. Cloudflare edge networks, storage downloads, and preset browsing remain fully operational.';
+                    }
+                } else {
+                    heroHeadline.innerText = 'Service disruption';
+                    heroSub.innerText = 'Remote server gateway is temporarily unavailable. Edge delivery remains active.';
+                    if (incTitle) incTitle.innerText = 'Active Incidents';
+                    if (incSub) incSub.innerText = '1 active incident currently being investigated.';
+                    if (incidentCard) {
+                        incidentCard.classList.add('visible');
+                        var activeInc = (data.incidents && data.incidents[0]) ? data.incidents[0] : null;
+                        document.getElementById('incidentTitle').innerText = (activeInc && activeInc.title) ? activeInc.title : 'Remote Server Disruption';
+                        document.getElementById('incidentDesc').innerText = (activeInc && activeInc.message) ? activeInc.message : 'We are currently observing intermittent upstream connectivity with our dedicated remote backend server. Cloudflare edge networks and storage downloads remain fully operational while connection stability is being restored.';
                     }
                 }
             }
@@ -964,17 +974,22 @@
             var heroHeadline = document.getElementById('heroHeadlineText');
             var heroSub = document.getElementById('heroSubText');
             var incidentCard = document.getElementById('incidentActiveCard');
+            var incTitle = document.getElementById('incidentsSecTitle');
+            var incSub = document.getElementById('incidentsSecSub');
+
             if (heroDot && heroHeadline && heroSub) {
-                heroDot.className = 'status-hero-dot outage';
-                heroHeadline.innerText = 'Service disruption';
-                heroSub.innerText = 'Core gateway is temporarily unavailable.';
+                heroDot.className = 'status-hero-dot degraded';
+                heroHeadline.innerText = 'Partial service disruption';
+                heroSub.innerText = 'Remote server gateway is temporarily unavailable.';
             }
+            if (incTitle) incTitle.innerText = 'Active Incidents';
+            if (incSub) incSub.innerText = '1 active incident currently impacting services.';
             if (incidentCard) {
                 incidentCard.classList.add('visible');
                 var t = document.getElementById('incidentTitle');
                 var d = document.getElementById('incidentDesc');
-                if (t) t.innerText = 'Upstream Service Provider Issue';
-                if (d) d.innerText = 'We are currently experiencing an issue related to our upstream service provider affecting the core VPS API gateway. Our provider is actively resolving the disruption, and services are expected to be restored shortly.';
+                if (t) t.innerText = 'Remote Server Disruption';
+                if (d) d.innerText = 'We are currently observing intermittent upstream connectivity with our dedicated remote backend server. Cloudflare edge networks and storage downloads remain fully operational while connection stability is being restored.';
             }
             renderSubsystems();
         }

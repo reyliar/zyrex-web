@@ -1,6 +1,6 @@
 const DEFAULT_HEALTH_URL = "https://storage.zyrexediting.xyz/health";
-const DEFAULT_TIMEOUT_MS = 6000;
-const DEFAULT_ONLINE_CACHE_MS = 20000;
+const DEFAULT_TIMEOUT_MS = 10000;
+const DEFAULT_ONLINE_CACHE_MS = 30000;
 const DEFAULT_OFFLINE_CACHE_MS = 5000;
 
 let healthState = {
@@ -9,7 +9,7 @@ let healthState = {
   initialized: false,
 };
 let consecutiveFailures = 0;
-const FAILURE_THRESHOLD = 3; // Require at least 3 consecutive probe failures before declaring offline
+const FAILURE_THRESHOLD = 5; // Require at least 5 consecutive probe failures before declaring offline
 let activeProbe = null;
 let lastHealthReason = "not-checked";
 
@@ -44,8 +44,8 @@ async function probeServer(env) {
     if (!response.ok) {
       lastHealthReason = `http-${response.status}`;
       consecutiveFailures++;
-      if (consecutiveFailures < FAILURE_THRESHOLD && healthState.initialized) {
-        return true; // Soft tolerance for single blip
+      if (consecutiveFailures < FAILURE_THRESHOLD) {
+        return true; // Soft tolerance for blips, maintaining public uptime
       }
       return false;
     }
@@ -53,14 +53,14 @@ async function probeServer(env) {
     try {
       const payload = await response.json();
       const status = String(payload?.status || "").toLowerCase();
-      const available = !status || status === "ok" || status === "healthy" || status === "online" || response.status === 200;
+      const available = !status || status === "ok" || status === "healthy" || status === "online" || status === "degraded" || response.status === 200;
       lastHealthReason = available ? "online" : `invalid-status-${status || "missing"}`;
       if (available) {
         consecutiveFailures = 0;
         return true;
       } else {
         consecutiveFailures++;
-        return consecutiveFailures < FAILURE_THRESHOLD && healthState.initialized;
+        return consecutiveFailures < FAILURE_THRESHOLD;
       }
     } catch (_) {
       consecutiveFailures = 0;
@@ -71,7 +71,7 @@ async function probeServer(env) {
     lastHealthReason = "request-error";
     console.warn("Server health probe failed", error?.message || String(error));
     consecutiveFailures++;
-    if (consecutiveFailures < FAILURE_THRESHOLD && healthState.initialized) {
+    if (consecutiveFailures < FAILURE_THRESHOLD) {
       return true; // Keep site available during transient network fluctuation
     }
     return false;
@@ -313,7 +313,7 @@ function offlineResponse(request) {
     headers["Content-Type"] = "application/json; charset=UTF-8";
     return new Response(JSON.stringify({
       error: "service_unavailable",
-      message: "Zyrex VPS / Bot server is offline. Please check /status for real-time telemetry.",
+      message: "Remote server node is temporarily unreachable. Cloudflare edge networks are maintaining platform availability. Please check /status for real-time telemetry.",
       status_page: "https://zyrexediting.xyz/status"
     }), { status: 503, headers });
   }
@@ -516,21 +516,27 @@ export default {
                           pathname.endsWith(".css") ||
                           pathname.endsWith(".js");
 
-    // Real-time VPS health check at Cloudflare Edge
+    // Real-time remote server health check at Cloudflare Edge
     const serverAvailable = await isServerAvailable(env);
+    const forceEdgeLock = env.FORCE_EDGE_LOCK === "true" || env.MAINTENANCE_MODE === "true";
 
-    if (!serverAvailable) {
-      if (isStatusPage) {
+    // If manual edge lock or emergency maintenance is explicitly activated, lock public access
+    if (forceEdgeLock) {
+      if (isStatusPage || isStaticAsset) {
         return env.ASSETS.fetch(request);
       }
       if (isStatusApi && env.API) {
         return env.API.fetch(request);
       }
-      if (isStaticAsset) {
-        return env.ASSETS.fetch(request);
-      }
-      // Deny access to all other pages and return high-security 503 Maintenance Screen
       return offlineResponse(request);
+    }
+
+    // When remote server is degraded/offline, keep public browsing and downloads 100% ONLINE!
+    // Only protect pages that strictly require direct remote upload/write operations.
+    if (!serverAvailable) {
+      if (isUploaderRequiredPage(pathname) || isAdminRequiredPage(pathname)) {
+        return offlineResponse(request);
+      }
     }
 
     const authDenied = await authorizeProtectedPage(request, env);

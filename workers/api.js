@@ -2933,7 +2933,7 @@ async function storeAndProxyImage(env, imageUrl) {
         const isSummary = path === "/api/status/summary";
         const t0 = Date.now();
 
-        // Subsystem 1: VPS Bot Gateway & Core API
+        // Subsystem 1: Remote Server Bot Gateway & Core API
         let vpsHealth = { status: "outage", latency: -1, bot: null, guild: null, error: null };
         const vpsStart = Date.now();
         try {
@@ -2993,7 +2993,7 @@ async function storeAndProxyImage(env, imageUrl) {
         if (vpsHealth.status === "outage") {
           uploadHealth.status = "outage";
           uploadHealth.latency = -1;
-          uploadHealth.error = "VPS core offline";
+          uploadHealth.error = "Remote server offline";
         } else {
           try {
             if (env.STORAGE_PROD) {
@@ -3014,7 +3014,7 @@ async function storeAndProxyImage(env, imageUrl) {
         if (vpsHealth.status === "outage") {
           commentsHealth.status = "outage";
           commentsHealth.latency = -1;
-          commentsHealth.error = "VPS core offline";
+          commentsHealth.error = "Remote server offline";
         } else {
           try {
             const controller = new AbortController();
@@ -3051,11 +3051,11 @@ async function storeAndProxyImage(env, imageUrl) {
         let statusHeadline = "All systems operational";
         let statusLead = "All Zyrex Editing public services and infrastructure are running normally.";
 
-        if (vpsHealth.status === "outage") {
-          overallStatus = "outage";
-          statusHeadline = "Service Disruption - Upstream Provider Issue";
-          statusLead = "We are currently experiencing an issue related to our upstream service provider affecting the core VPS API gateway. Services are expected to be restored shortly.";
-        } else if (vpsHealth.status === "degraded" || commentsHealth.status === "degraded" || uploadHealth.status === "degraded" || r2Health.status === "degraded") {
+        if (vpsHealth.status === "outage" || vpsHealth.status === "degraded") {
+          overallStatus = "degraded";
+          statusHeadline = "Partial service disruption";
+          statusLead = "Intermittent connectivity detected with our remote server backend. Public browsing, downloads, and storage remain operational.";
+        } else if (commentsHealth.status === "degraded" || uploadHealth.status === "degraded" || r2Health.status === "degraded") {
           overallStatus = "degraded";
           statusHeadline = "Partial service disruption";
           statusLead = "Some Zyrex services are experiencing higher response times or temporary degraded performance.";
@@ -3067,6 +3067,7 @@ async function storeAndProxyImage(env, imageUrl) {
             status: overallStatus,
             label: statusHeadline,
             uptime_90d: "99.98%",
+            server_online: vpsHealth.status !== "outage",
             vps_online: vpsHealth.status !== "outage",
             checked_at: new Date().toISOString()
           }, 200, {
@@ -3229,20 +3230,20 @@ async function storeAndProxyImage(env, imageUrl) {
         ];
 
         let incidents = [];
-        if (vpsHealth.status === "outage") {
+        if (vpsHealth.status === "outage" || vpsHealth.status === "degraded") {
           const currentOutage = {
-            id: "inc-vps-outage",
-            title: "Upstream Service Provider Issue",
+            id: "inc-remote-disruption",
+            title: vpsHealth.status === "outage" ? "Remote Server Disruption" : "Remote Server Connectivity Degraded",
             subsystem: "api_gateway",
             subsystem_name: "Api Gateway",
-            severity: "critical",
+            severity: vpsHealth.status === "outage" ? "degraded" : "low",
             outages_count: 1,
             status: "Investigating",
-            impact: "Core API gateway and VPS services are temporarily affected.",
+            impact: "Remote server API and bot services are experiencing temporary connectivity degradation. Edge delivery and storage downloads remain active.",
             created_at: new Date(Date.now() - 120000).toISOString(),
             date: new Date().toISOString().split("T")[0],
             updated_at: new Date().toISOString(),
-            message: "We are currently experiencing an issue related to our upstream service provider affecting the core VPS API gateway. Our provider is actively resolving the disruption, and services are expected to be restored shortly."
+            message: "We are currently observing intermittent upstream connectivity with our dedicated remote backend server. Cloudflare edge networks and storage downloads remain fully operational while connection stability is being restored."
           };
           incidents.push(currentOutage);
           incidentsHistory.unshift(currentOutage);
@@ -4918,7 +4919,7 @@ async function storeAndProxyImage(env, imageUrl) {
           catch { return new Response(text, { status: proxyResp.status, headers: corsHeaders }); }
         } catch (e) {
           console.error("SFTPGo admin proxy error:", e.message);
-          return json({ success: false, error: "Bot VPS unreachable" }, 502);
+          return json({ success: false, error: "Remote server unreachable" }, 502);
         }
       }
 
