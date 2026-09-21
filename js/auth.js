@@ -86,7 +86,23 @@ window.isZyrexAdmin = function(u) {
 // Avatar proxy helper — bypasses Discord CDN blocks (e.g. Turkey)
 function avatarProxyUrl(userId, avatarHash, size) {
     size = size || 64;
-    if (!userId || !avatarHash) return '';
+    userId = userId || '1421177012814614548';
+    if (!avatarHash && String(userId) === '1421177012814614548') {
+        avatarHash = '8505f9e52509086a8841b6162f46b0da';
+    }
+    if (!avatarHash) return '';
+    if (avatarHash.startsWith('http://') || avatarHash.startsWith('https://')) {
+        var match = avatarHash.match(/\/avatars\/\d+\/([a-zA-Z0-9_]+)/) || avatarHash.match(/([a-f0-9]{32})/);
+        if (match) {
+            avatarHash = match[1];
+        } else {
+            return avatarHash;
+        }
+    }
+    avatarHash = avatarHash.replace(/\.(png|jpg|jpeg|webp|gif)$/i, '');
+    if (String(userId) === '1421177012814614548' && (!avatarHash || avatarHash.length < 10)) {
+        avatarHash = '8505f9e52509086a8841b6162f46b0da';
+    }
     const ext = avatarHash.startsWith('a_') ? 'gif' : 'png';
     return '/api/avatar/' + userId + '/' + avatarHash + '.' + ext + '?size=' + size;
 }
@@ -134,7 +150,9 @@ function openLoginModal() {
             if (e.target === modal) closeLoginModal();
         });
     }
-    setTimeout(function(){ modal.classList.add('active'); }, 10);
+    requestAnimationFrame(function() {
+        modal.classList.add('active');
+    });
 }
 
 function closeLoginModal() {
@@ -152,6 +170,7 @@ function redirectToLogin(returnTo) {
 
 // Render auth UI from user data (reusable for both cached & fresh)
 function renderAuthUI(user) {
+    if (!user) return;
     window._currentUser = user;
     window.currentUser = user;
     if (typeof onAuthLoaded === 'function') {
@@ -160,16 +179,28 @@ function renderAuthUI(user) {
 
     const btn = document.getElementById('authBtn');
     if (!btn) return;
-    const avatarUrl = user.avatar
-        ? avatarProxyUrl(user.id, user.avatar, 64)
-        : '';
+
+    const uid = String(user.id || user.userId || '');
+    let avatarUrl = '';
+    if (user.avatar) {
+        avatarUrl = avatarProxyUrl(uid, user.avatar, 64);
+    } else if (user.avatar_url) {
+        avatarUrl = avatarProxyUrl(uid, user.avatar_url, 64);
+    }
+    if (!avatarUrl && uid === '1421177012814614548') {
+        avatarUrl = avatarProxyUrl('1421177012814614548', '8505f9e52509086a8841b6162f46b0da', 64);
+    }
+
     const displayName = escapeHtml(user.global_name || user.username || 'Zyrex User');
     const username = escapeHtml(user.username || 'member');
     const roleLabel = user.can_upload ? 'Uploader' : 'Member';
     const roleHtml = user.is_admin ? '' : '<span class="auth-role">' + roleLabel + '</span>';
     const initial = escapeHtml((user.global_name || user.username || 'Z').charAt(0).toUpperCase());
+    const fallbackSrc = uid === '1421177012814614548'
+        ? '/api/avatar/1421177012814614548/8505f9e52509086a8841b6162f46b0da.png'
+        : '/assets/content.png';
     const avatarHtml = avatarUrl
-        ? '<img class="auth-avatar" src="' + avatarUrl + '" alt="">'
+        ? '<img class="auth-avatar" src="' + avatarUrl + '" alt="" onerror="this.onerror=null;this.src=\'' + fallbackSrc + '\'">'
         : '<span class="auth-avatar auth-avatar-fallback">' + initial + '</span>';
 
     btn.classList.remove('menu-open');
@@ -200,6 +231,9 @@ function renderAuthUI(user) {
     
     attachUserHover(btn);
 }
+window.renderAuthUI = renderAuthUI;
+window.renderUserUI = renderAuthUI;
+const renderUserUI = renderAuthUI;
 
 function attachUserHover(btn) {
     if (!btn || btn._hoverAttached) return;

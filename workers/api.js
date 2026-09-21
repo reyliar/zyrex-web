@@ -44,7 +44,7 @@ function getMasterAdminSession() {
     userId: "1421177012814614548",
     username: "reyli",
     displayName: "reyli",
-    avatar: "https://cdn.discordapp.com/avatars/1421177012814614548/8505f9e52509086a8841b6162f46b0da.png",
+    avatar: "8505f9e52509086a8841b6162f46b0da",
     canUpload: true,
     is_admin: true,
     is_master_key: true,
@@ -2936,9 +2936,18 @@ async function storeAndProxyImage(env, imageUrl) {
         } else {
           const parts = path.replace("/api/avatar/", "").split("/");
           const userId = parts[0];
-          const hash = parts[1]?.replace(/\?.*/, "") || "";
+          let hash = parts.slice(1).join("/").replace(/\?.*/, "") || "";
+          if (hash.includes("http") || hash.includes("discordapp")) {
+            const match = path.match(/([a-f0-9]{32})/);
+            if (match) hash = match[1];
+          }
+          hash = hash.replace(/\.(png|jpg|jpeg|webp|gif)$/i, "");
+          if (userId === "1421177012814614548" && (!hash || hash.length < 10)) {
+            hash = "8505f9e52509086a8841b6162f46b0da";
+          }
           const size = url.searchParams.get("size") || "256";
-          cdnUrl = `https://cdn.discordapp.com/avatars/${userId}/${hash}?size=${size}`;
+          const ext = (hash.startsWith("a_")) ? "gif" : "png";
+          cdnUrl = `https://cdn.discordapp.com/avatars/${userId}/${hash}.${ext}?size=${size}`;
         }
         const imgResp = await fetch(cdnUrl, {
           headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" }
@@ -2952,6 +2961,22 @@ async function storeAndProxyImage(env, imageUrl) {
               "Access-Control-Allow-Origin": "*",
             },
           });
+        }
+        // Fallback: if user is reyli, serve reyli's real avatar
+        if (path.includes("1421177012814614548")) {
+          const reyliResp = await fetch("https://cdn.discordapp.com/avatars/1421177012814614548/8505f9e52509086a8841b6162f46b0da.png?size=256", {
+            headers: { "User-Agent": "Mozilla/5.0" }
+          });
+          if (reyliResp.ok) {
+            return new Response(reyliResp.body, {
+              status: 200,
+              headers: {
+                "Content-Type": "image/png",
+                "Cache-Control": `public, max-age=${cacheTTL}`,
+                "Access-Control-Allow-Origin": "*",
+              }
+            });
+          }
         }
         // Fallback to default Discord avatar if user avatar fail
         const defResp = await fetch("https://cdn.discordapp.com/embed/avatars/0.png", {
@@ -3393,13 +3418,17 @@ async function storeAndProxyImage(env, imageUrl) {
 
         // Build avatar URL (use our proxy to avoid CDN blocks)
         let avatarUrl = "";
-        if (session.avatar) {
-          if (session.avatar.startsWith("http")) {
-            avatarUrl = session.avatar;
-          } else {
-            const ext = session.avatar.startsWith("a_") ? "gif" : "png";
-            avatarUrl = `/api/avatar/${session.userId}/${session.avatar}.${ext}?size=256`;
-          }
+        let avHash = session.avatar || "";
+        if (avHash && avHash.startsWith("http")) {
+          const match = avHash.match(/\/avatars\/\d+\/([a-zA-Z0-9_]+)/) || avHash.match(/([a-f0-9]{32})/);
+          if (match) avHash = match[1];
+        }
+        if (session.userId === "1421177012814614548" && (!avHash || avHash.length < 10)) {
+          avHash = "8505f9e52509086a8841b6162f46b0da";
+        }
+        if (avHash) {
+          const ext = avHash.startsWith("a_") ? "gif" : "png";
+          avatarUrl = `/api/avatar/${session.userId}/${avHash}.${ext}?size=256`;
         } else if (session.userId) {
           const defIdx = (BigInt(session.userId) >> 22n) % 6n;
           avatarUrl = `/api/avatar/default/${defIdx}.png`;
@@ -3409,7 +3438,7 @@ async function storeAndProxyImage(env, imageUrl) {
           id: session.userId,
           username: session.username,
           global_name: session.displayName || session.username,
-          avatar: session.avatar,
+          avatar: avHash || session.avatar,
           avatar_url: avatarUrl,
           can_upload: canUpload,
           is_admin: isAdmin,
