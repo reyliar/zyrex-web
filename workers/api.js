@@ -5336,7 +5336,21 @@ async function storeAndProxyImage(env, imageUrl) {
                 });
                 if (thResp.ok) {
                   const thData = await thResp.json();
-                  if (thData && thData.id) threadId = thData.id;
+                  if (thData && thData.id) {
+                    threadId = thData.id;
+                    try {
+                      await fetch(`https://discord.com/api/v10/channels/${threadId}/messages`, {
+                        method: "POST",
+                        headers: {
+                          Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`,
+                          "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify({
+                          content: `💬 **Thread discussion opened for ${reqData.title || "this request"}.** Discuss, share resources, or vote at https://zyrexediting.xyz/request?id=${reqData.id}`
+                        })
+                      });
+                    } catch (_) {}
+                  }
                 } else {
                   threadId = messageId;
                 }
