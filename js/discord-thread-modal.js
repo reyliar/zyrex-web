@@ -26,7 +26,7 @@
                 background: rgba(0, 0, 0, 0.72);
                 backdrop-filter: blur(6px);
                 -webkit-backdrop-filter: blur(6px);
-                z-index: 100050;
+                z-index: 200000;
                 opacity: 0;
                 pointer-events: none;
                 transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1);
@@ -45,7 +45,7 @@
                 height: 100vh;
                 background: #313338;
                 box-shadow: -10px 0 40px rgba(0, 0, 0, 0.6);
-                z-index: 100051;
+                z-index: 200001;
                 display: flex;
                 flex-direction: column;
                 transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
@@ -55,6 +55,15 @@
             }
             .zdc-drawer.active {
                 transform: translateX(-520px);
+            }
+
+            /* Hide floating notification bell & scroll-to-top buttons while drawer is open */
+            body.zdc-drawer-open .global-floating-hub,
+            body.zdc-drawer-open #globalFloatingHub {
+                z-index: 9000 !important;
+                opacity: 0 !important;
+                visibility: hidden !important;
+                pointer-events: none !important;
             }
             @media (max-width: 600px) {
                 .zdc-drawer {
@@ -705,6 +714,7 @@
 
         renderFooter();
 
+        document.body.classList.add('zdc-drawer-open');
         overlay.classList.add('active');
         drawer.classList.add('active');
 
@@ -723,6 +733,7 @@
         const overlay = document.getElementById('zyrex-discord-overlay');
         const drawer = document.getElementById('zyrex-discord-drawer');
 
+        document.body.classList.remove('zdc-drawer-open');
         if (overlay) overlay.classList.remove('active');
         if (drawer) drawer.classList.remove('active');
 
