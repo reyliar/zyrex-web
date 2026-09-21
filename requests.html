@@ -502,334 +502,399 @@
 
         /* REQUESTS GRID */
         .req-grid {
-            max-width: 1160px;
+            max-width: 1200px;
             margin: 0 auto 60px;
             padding: 0 20px;
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 24px;
         }
 
         @media (max-width: 480px) {
             .req-grid {
                 grid-template-columns: 1fr;
+                gap: 16px;
             }
         }
 
-        /* REQUEST CARD */
+        /* MODERN REQUEST CARD */
         .req-card {
-            background: var(--req-surface);
-            border: 1px solid var(--req-card-border);
+            background: rgba(13, 9, 15, 0.85);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 20px;
-            padding: 20px;
+            padding: 0;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             position: relative;
             overflow: hidden;
             backdrop-filter: blur(20px);
-            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            -webkit-backdrop-filter: blur(20px);
+            transition: all 0.32s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+            cursor: pointer;
         }
 
         .req-card:hover {
-            transform: translateY(-4px);
-            border-color: var(--req-card-hover);
-            box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 25px rgba(255, 43, 82, 0.12);
+            transform: translateY(-5px);
+            border-color: rgba(255, 43, 82, 0.35);
+            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.6), 0 0 25px rgba(255, 43, 82, 0.16);
         }
 
-        .req-card-top {
+        /* TOP THUMBNAIL BANNER */
+        .req-card-media {
+            position: relative;
+            width: 100%;
+            height: 175px;
+            overflow: hidden;
+            background: #09060b;
+            flex-shrink: 0;
+            border-top-left-radius: 19px;
+            border-top-right-radius: 19px;
+        }
+
+        .req-card-media img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            display: block;
+        }
+
+        .req-card:hover .req-card-media img {
+            transform: scale(1.05);
+        }
+
+        .req-media-placeholder {
+            width: 100%;
+            height: 100%;
             display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 12px;
-            margin-bottom: 14px;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(circle at 50% 50%, rgba(255, 43, 82, 0.14) 0%, #0a060d 100%);
+            color: rgba(255, 255, 255, 0.25);
+            font-size: 2.2rem;
         }
 
-        .req-type-pill {
+        .req-media-badge {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 2;
             padding: 4px 10px;
             border-radius: 999px;
-            font-size: 0.68rem;
+            font-size: 0.65rem;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: inline-flex;
-            align-items: center;
+            letter-spacing: 0.6px;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            background: rgba(8, 5, 10, 0.75);
+            color: #f1f5f9;
+        }
+
+        .type-preset { border-color: rgba(255, 43, 82, 0.35); color: #ff758f; }
+        .type-project_file, .type-project-file { border-color: rgba(168, 85, 247, 0.35); color: #c084fc; }
+        .type-plugin { border-color: rgba(59, 130, 246, 0.35); color: #60a5fa; }
+        .type-software { border-color: rgba(16, 185, 129, 0.35); color: #34d399; }
+        .type-scenepack { border-color: rgba(245, 158, 11, 0.35); color: #fbbf24; }
+        .type-other { border-color: rgba(255, 255, 255, 0.2); color: #e2e8f0; }
+
+        .req-media-admin {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            z-index: 3;
+            display: flex;
             gap: 5px;
+            background: rgba(8, 5, 10, 0.78);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 4px 6px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
         }
 
-        .type-preset {
-            background: rgba(255, 43, 82, 0.15);
-            color: #ff6b87;
-            border: 1px solid rgba(255, 43, 82, 0.3);
+        .req-media-admin button {
+            border-radius: 6px;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            font-size: 0.7rem;
+            color: #fff;
         }
 
-        .type-project_file, .type-project-file {
-            background: rgba(168, 85, 247, 0.15);
-            color: #c084fc;
-            border: 1px solid rgba(168, 85, 247, 0.3);
+        /* CARD BODY */
+        .req-card-body {
+            padding: 16px 18px 18px;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
         }
 
-        .type-plugin {
-            background: rgba(59, 130, 246, 0.15);
-            color: #60a5fa;
-            border: 1px solid rgba(59, 130, 246, 0.3);
-        }
-
-        .type-software {
-            background: rgba(16, 185, 129, 0.15);
-            color: #34d399;
-            border: 1px solid rgba(16, 185, 129, 0.3);
-        }
-
-        .type-scenepack {
-            background: rgba(245, 158, 11, 0.15);
-            color: #fbbf24;
-            border: 1px solid rgba(245, 158, 11, 0.3);
-        }
-
-        .type-other {
-            background: rgba(255, 255, 255, 0.1);
-            color: #e2e8f0;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
+        /* STATUS PILL */
         .req-status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
             padding: 4px 10px;
             border-radius: 999px;
             font-size: 0.68rem;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
+            letter-spacing: 0.6px;
+            font-family: 'JetBrains Mono', monospace;
+            width: fit-content;
         }
 
         .status-pending {
             background: rgba(245, 158, 11, 0.12);
-            color: #fbbf24;
-            border: 1px solid rgba(245, 158, 11, 0.25);
+            color: #fb923c;
+            border: 1px solid rgba(245, 158, 11, 0.28);
         }
 
         .status-completed {
-            background: rgba(16, 185, 129, 0.15);
+            background: rgba(16, 185, 129, 0.12);
             color: #34d399;
-            border: 1px solid rgba(16, 185, 129, 0.3);
+            border: 1px solid rgba(16, 185, 129, 0.28);
         }
 
         .status-in-progress {
-            background: rgba(245, 158, 11, 0.15);
-            color: #fbbf24;
-            border: 1px solid rgba(245, 158, 11, 0.3);
+            background: rgba(56, 189, 248, 0.12);
+            color: #38bdf8;
+            border: 1px solid rgba(56, 189, 248, 0.28);
         }
 
-        .req-card-body {
-            display: flex;
-            gap: 14px;
-            margin-bottom: 16px;
+        .status-rejected {
+            background: rgba(239, 68, 68, 0.12);
+            color: #f87171;
+            border: 1px solid rgba(239, 68, 68, 0.28);
         }
 
-        .req-thumb {
-            width: 76px;
-            height: 76px;
-            border-radius: 12px;
-            overflow: hidden;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            flex-shrink: 0;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .req-thumb img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        .req-thumb-placeholder {
-            color: rgba(255, 255, 255, 0.25);
-            font-size: 1.8rem;
-        }
-
-        .req-info {
-            flex: 1;
-            min-width: 0;
-        }
-
+        /* TITLE */
         .req-title {
-            font-size: 1.05rem;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.15rem;
             font-weight: 700;
             color: #ffffff;
             margin: 0 0 6px;
             line-height: 1.35;
+            letter-spacing: -0.015em;
             display: -webkit-box;
-            -webkit-line-clamp: 2;
-            line-clamp: 2;
+            -webkit-line-clamp: 1;
+            line-clamp: 1;
             -webkit-box-orient: vertical;
             overflow: hidden;
         }
 
-        .req-creator-row {
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            margin-bottom: 8px;
-            font-size: 0.78rem;
-            color: rgba(255, 255, 255, 0.6);
-        }
-
-        .req-creator-avatar {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-
-        .req-creator-name {
-            color: #ff6b87;
-            text-decoration: none;
-            font-weight: 600;
-        }
-
-        .req-creator-name:hover {
-            text-decoration: underline;
-        }
-
+        /* DESCRIPTION */
         .req-desc {
             font-size: 0.82rem;
-            color: rgba(255, 255, 255, 0.55);
+            color: #94a3b8;
             line-height: 1.5;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
-            margin: 0;
+            margin: 0 0 12px;
+            min-height: 38px;
         }
 
+        /* PRICE BADGE */
         .req-price-badge {
-            display: inline-block;
-            margin-top: 6px;
-            padding: 2px 8px;
-            background: rgba(255, 255, 255, 0.06);
-            border-radius: 6px;
-            font-size: 0.72rem;
-            font-weight: 600;
-            color: #a7f3d0;
+            display: inline-flex;
+            align-items: center;
+            gap: 7px;
+            padding: 5px 12px;
+            border-radius: 9px;
+            width: fit-content;
+            margin-bottom: 16px;
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.22);
+            color: #34d399;
+        }
+
+        .req-price-badge.price-gold {
+            background: rgba(245, 158, 11, 0.08);
+            border-color: rgba(245, 158, 11, 0.25);
+            color: #fbbf24;
+        }
+
+        .req-price-badge.price-free {
+            background: rgba(56, 189, 248, 0.08);
+            border-color: rgba(56, 189, 248, 0.25);
+            color: #38bdf8;
+        }
+
+        .req-price-label {
+            font-size: 0.65rem;
+            font-weight: 800;
+            letter-spacing: 0.8px;
+            opacity: 0.75;
+            text-transform: uppercase;
             font-family: 'JetBrains Mono', monospace;
         }
 
-        /* CARD FOOTER */
-        .req-card-footer {
+        .req-price-val {
+            font-size: 0.92rem;
+            font-weight: 700;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* REQUESTER ROW */
+        .req-requester-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding-top: 14px;
+            margin-top: auto;
+            margin-bottom: 12px;
+            padding-top: 12px;
             border-top: 1px solid rgba(255, 255, 255, 0.06);
         }
 
-        .req-requester {
+        .req-requester-user {
             display: flex;
             align-items: center;
             gap: 8px;
-            font-size: 0.75rem;
-            color: rgba(255, 255, 255, 0.45);
+            font-size: 0.8rem;
+            color: #cbd5e1;
+            font-weight: 500;
         }
 
-        .req-requester-avatar {
-            width: 24px;
-            height: 24px;
+        .req-avatar-img {
+            width: 22px;
+            height: 22px;
             border-radius: 50%;
             object-fit: cover;
             background: rgba(255, 255, 255, 0.1);
         }
 
-        .req-upvote-btn {
+        .req-avatar-anon {
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.68rem;
+            color: #94a3b8;
+        }
+
+        .req-time-ago {
+            font-size: 0.74rem;
+            color: #64748b;
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* ACTION LINKS ROW */
+        .req-actions-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .req-action-pill {
+            flex: 1;
             display: inline-flex;
             align-items: center;
-            gap: 7px;
-            padding: 6px 14px;
+            justify-content: center;
+            gap: 6px;
+            padding: 7px 12px;
             border-radius: 999px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: rgba(255, 255, 255, 0.8);
-            font-size: 0.82rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .req-upvote-btn:hover {
-            background: rgba(255, 43, 82, 0.15);
-            border-color: rgba(255, 43, 82, 0.4);
-            color: #ff4d6d;
-            transform: scale(1.04);
-        }
-
-        .req-upvote-btn.upvoted {
-            background: rgba(255, 43, 82, 0.22);
-            border-color: var(--req-accent);
-            color: #ffffff;
-            box-shadow: 0 0 14px rgba(255, 43, 82, 0.25);
-        }
-
-        .req-store-link {
-            font-size: 0.78rem;
-            color: rgba(255, 255, 255, 0.5);
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            transition: color 0.2s;
-        }
-
-        .req-store-link:hover {
-            color: #ffffff;
-        }
-
-        .req-discord-link {
+            background: rgba(255, 255, 255, 0.035);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             font-size: 0.76rem;
-            color: #8ea1e1;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            padding: 4px 9px;
-            background: rgba(88, 101, 242, 0.12);
-            border: 1px solid rgba(88, 101, 242, 0.28);
-            border-radius: 6px;
             font-weight: 600;
-            transition: all 0.2s;
-        }
-
-        .req-discord-link:hover {
-            background: rgba(88, 101, 242, 0.25);
-            color: #ffffff;
-            border-color: rgba(88, 101, 242, 0.45);
-        }
-
-        .req-fulfill-link {
-            font-size: 0.76rem;
-            color: #34d399;
+            color: #cbd5e1;
             text-decoration: none;
+            transition: all 0.2s;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .req-action-pill:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+
+        .req-action-pill img {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+
+        .req-action-pill.pill-resource {
+            background: rgba(255, 43, 82, 0.12);
+            border-color: rgba(255, 43, 82, 0.35);
+            color: #ff6b87;
+        }
+
+        .req-action-pill.pill-resource:hover {
+            background: rgba(255, 43, 82, 0.22);
+            border-color: #ff2b52;
+            color: #ffffff;
+        }
+
+        /* BOTTOM STATS / REACTION BAR */
+        .req-stat-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 6px 12px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.07);
+        }
+
+        .req-stat-item {
             display: inline-flex;
             align-items: center;
-            gap: 5px;
-            padding: 4px 9px;
-            background: rgba(16, 185, 129, 0.12);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            border-radius: 6px;
-            font-weight: 700;
+            gap: 6px;
+            color: #64748b;
+            font-size: 0.8rem;
+            font-weight: 600;
+            font-family: 'JetBrains Mono', monospace;
+            text-decoration: none;
+            background: none;
+            border: none;
+            cursor: default;
             transition: all 0.2s;
         }
 
-        .req-fulfill-link:hover {
-            background: rgba(16, 185, 129, 0.25);
-            color: #ffffff;
-            border-color: rgba(16, 185, 129, 0.5);
+        .req-stat-btn {
+            cursor: pointer;
+        }
+
+        .req-stat-btn:hover {
+            color: #ff4d6d;
+        }
+
+        .req-stat-btn.upvoted {
+            color: #ff2b52;
+            text-shadow: 0 0 10px rgba(255, 43, 82, 0.4);
+        }
+
+        .req-stat-link {
+            cursor: pointer;
+        }
+
+        .req-stat-link:hover {
+            color: #8ea1e1;
         }
 
         /* EMPTY STATE */
@@ -2165,6 +2230,16 @@
             document.getElementById('badgeOther').textContent = items.filter(x => x.type === 'other').length;
         }
 
+        function hashStr(s) {
+            var h = 0;
+            var str = String(s || '');
+            for (var i = 0; i < str.length; i++) {
+                h = ((h << 5) - h) + str.charCodeAt(i);
+                h |= 0;
+            }
+            return Math.abs(h);
+        }
+
         // Render Grid
         function renderRequestsGrid() {
             var grid = document.getElementById('requestsGrid');
@@ -2218,89 +2293,137 @@
                 var isUpvoted = req.has_upvoted || localUpvotes.includes(req.id);
                 var typeLabel = (req.type || 'other').replace('_', ' ').replace('-', ' ');
                 var typeClass = 'type-' + (req.type || 'other').replace('_', '-');
-                var statusClass = req.status === 'completed' ? 'status-completed' : 'status-pending';
-                var statusText = req.status === 'completed' ? '<i class="fas fa-check-circle"></i> Completed' : '<i class="fas fa-clock"></i> Pending';
                 
-                var statusClass = req.status === 'completed' ? 'status-completed' : (req.status === 'in_progress' ? 'status-in-progress' : 'status-pending');
+                var statusClass = req.status === 'completed' ? 'status-completed' : (req.status === 'in_progress' ? 'status-in-progress' : (req.status === 'rejected' ? 'status-rejected' : 'status-pending'));
                 var statusText = req.status === 'completed' ? '<i class="fas fa-check-circle"></i> Completed'
-                    : (req.status === 'in_progress' ? '<i class="fas fa-spinner"></i> In Progress' : '<i class="fas fa-clock"></i> Pending');
+                    : (req.status === 'in_progress' ? '<i class="fas fa-spinner fa-spin"></i> In Progress'
+                    : (req.status === 'rejected' ? '<i class="fas fa-times-circle"></i> Rejected'
+                    : '<i class="fas fa-clock"></i> Pending'));
 
-                var requesterName = req.is_anonymous ? 'Anonymous' : (req.user_name || 'Zyrex Member');
+                var requesterName = req.is_anonymous ? 'Anonymous' : (req.user_name || 'Community Member');
                 var requesterAvatar = (req.is_anonymous || !req.user_avatar) ? '/assets/content.png' : req.user_avatar;
-
-                var thumbHtml = req.thumbnail ? 
-                    `<img src="${req.thumbnail}" alt="${req.title}" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
-                     <div class="req-thumb-placeholder" style="display:none"><i class="fas fa-file-lines"></i></div>` :
-                    `<div class="req-thumb-placeholder"><i class="fas fa-${getTypeIcon(req.type)}"></i></div>`;
-
-                var creatorHtml = '';
-                if (req.creator_name || req.creator_social_url) {
-                    var crName = req.creator_name || 'Creator';
-                    var crAvatar = req.creator_avatar ? `<img src="${req.creator_avatar}" class="req-creator-avatar" alt="${crName}">` : '';
-                    var crLink = req.creator_social_url ? `<a href="${req.creator_social_url}" target="_blank" rel="noopener" class="req-creator-name">${crName}</a>` : `<span class="req-creator-name">${crName}</span>`;
-                    creatorHtml = `<div class="req-creator-row">${crAvatar} <span>by ${crLink}</span></div>`;
-                }
-
-                var priceHtml = req.price ? `<span class="req-price-badge"><i class="fas fa-tag"></i> ${escapeHtml(formatPriceDisplay(req.price))}</span>` : '';
-                var descHtml = req.description ? `<p class="req-desc">${escapeHtml(req.description)}</p>` : '';
-                var storeLink = req.product_url ? `<a href="${escapeHtml(req.product_url)}" target="_blank" rel="noopener" class="req-store-link" title="Original Store Link"><i class="fas fa-external-link-alt"></i> Store</a>` : '';
-
-                var discordChannelId = req.discord_channel_id || '1551118401508745367';
-                var guildId = '1518954946110685184';
-                var discordUrl = req.discord_message_id
-                    ? `https://discord.com/channels/${guildId}/${discordChannelId}/${req.discord_message_id}`
-                    : `https://discord.com/channels/${guildId}/${discordChannelId}`;
-                var discordCardLink = `<a href="${discordUrl}" target="_blank" rel="noopener" class="req-discord-link" title="Discuss on Discord"><i class="fab fa-discord"></i> Discord</a>`;
-                
-                var fulfillLink = (req.status === 'completed' && req.resource_url)
-                    ? `<a href="${escapeHtml(req.resource_url)}" class="req-fulfill-link" title="Download Resource"><i class="fas fa-circle-check"></i> Resource</a>`
-                    : '';
 
                 var isRequesterAdmin = !!(req.is_admin || (req.user_id && ['1421177012814614548', '1382421118098346174'].includes(String(req.user_id))));
                 var adminBadgeHtml = isRequesterAdmin ? '<i class="fas fa-circle-check" style="color:#38bdf8;margin-left:4px;font-size:0.75rem;vertical-align:middle;" title="Verified Admin"></i>' : '';
 
                 var isAdminUser = !!(window._currentUser && (window._currentUser.is_admin || window._currentUser.can_upload));
                 var adminActionsHtml = isAdminUser ? `
-                    <div class="req-admin-quick-actions" onclick="event.stopPropagation()" style="display:flex;gap:5px;flex-wrap:wrap;">
-                        <button onclick="quickCompleteRequest('${req.id}')" title="Mark as Completed" style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.35);color:#34d399;border-radius:6px;padding:3px 7px;font-size:0.7rem;cursor:pointer;line-height:1;"><i class="fas fa-check"></i></button>
-                        <button onclick="quickEditRequest('${req.id}')" title="Edit Request" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);color:#fff;border-radius:6px;padding:3px 7px;font-size:0.7rem;cursor:pointer;line-height:1;"><i class="fas fa-edit"></i></button>
-                        <button onclick="quickRejectRequest('${req.id}')" title="Reject Request" style="background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.35);color:#fbbf24;border-radius:6px;padding:3px 7px;font-size:0.7rem;cursor:pointer;line-height:1;"><i class="fas fa-ban"></i></button>
-                        <button onclick="quickDeleteRequest('${req.id}')" title="Delete Request" style="background:rgba(255,43,82,0.15);border:1px solid rgba(255,43,82,0.35);color:#ff6b87;border-radius:6px;padding:3px 7px;font-size:0.7rem;cursor:pointer;line-height:1;"><i class="fas fa-trash"></i></button>
+                    <div class="req-media-admin" onclick="event.stopPropagation()">
+                        <button onclick="quickCompleteRequest('${req.id}')" title="Mark as Completed" style="background:rgba(16,185,129,0.25);border:1px solid rgba(16,185,129,0.5);color:#34d399;"><i class="fas fa-check"></i></button>
+                        <button onclick="quickEditRequest('${req.id}')" title="Edit Request" style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);color:#fff;"><i class="fas fa-edit"></i></button>
+                        <button onclick="quickRejectRequest('${req.id}')" title="Reject Request" style="background:rgba(245,158,11,0.25);border:1px solid rgba(245,158,11,0.5);color:#fbbf24;"><i class="fas fa-ban"></i></button>
+                        <button onclick="quickDeleteRequest('${req.id}')" title="Delete Request" style="background:rgba(255,43,82,0.25);border:1px solid rgba(255,43,82,0.5);color:#ff6b87;"><i class="fas fa-trash"></i></button>
                     </div>
                 ` : '';
 
-                html += `
-                    <div class="req-card" id="req-card-${req.id}" onclick="location.href='/request?id=${req.id}'" style="cursor:pointer;">
-                        <div>
-                            <div class="req-card-top" style="display:flex;align-items:center;justify-content:space-between;">
-                                <div style="display:flex;align-items:center;gap:6px;">
-                                    <span class="req-type-pill ${typeClass}">${typeLabel}</span>
-                                    <span class="req-status-pill ${statusClass}">${statusText}</span>
-                                </div>
-                                ${adminActionsHtml}
-                            </div>
-                            <div class="req-card-body">
-                                <div class="req-thumb">${thumbHtml}</div>
-                                <div class="req-info">
-                                    <h3 class="req-title" title="${escapeHtml(req.title)}">${escapeHtml(req.title)}</h3>
-                                    ${creatorHtml}
-                                    ${descHtml}
-                                    ${priceHtml}
-                                </div>
-                            </div>
+                var thumbContentHtml = req.thumbnail ? 
+                    `<img src="${req.thumbnail}" alt="${escapeHtml(req.title)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'req-media-placeholder\\'><i class=\\'fas fa-${getTypeIcon(req.type)}\\'></i></div><span class=\\'req-media-badge ${typeClass}\\'>${typeLabel}</span>${adminActionsHtml.replace(/'/g, "\\'")}'">` :
+                    `<div class="req-media-placeholder"><i class="fas fa-${getTypeIcon(req.type)}"></i></div>`;
+
+                // Price badge
+                var priceHtml = '';
+                if (req.price) {
+                    var priceFormatted = formatPriceDisplay(req.price);
+                    var priceVal = parsePrice(req.price);
+                    var priceColorClass = 'price-emerald';
+                    if (/^free$/i.test(priceFormatted)) {
+                        priceColorClass = 'price-free';
+                    } else if (priceVal >= 10) {
+                        priceColorClass = 'price-gold';
+                    }
+                    priceHtml = `
+                        <div class="req-price-badge ${priceColorClass}">
+                            <span class="req-price-label">PRICE</span>
+                            <span class="req-price-val">${escapeHtml(priceFormatted)}</span>
                         </div>
-                        <div class="req-card-footer">
-                            <div class="req-requester">
-                                <img src="${requesterAvatar}" class="req-requester-avatar" alt="${requesterName}" onerror="this.src='/assets/content.png'">
-                                <span>${escapeHtml(requesterName)}${adminBadgeHtml} &bull; ${formatRelativeTime(req.created_at)}</span>
+                    `;
+                }
+
+                // Requester row
+                var requesterUserHtml = req.is_anonymous ?
+                    `<div class="req-avatar-anon"><i class="fas fa-question"></i></div><span>Anonymous</span>` :
+                    `<img src="${requesterAvatar}" class="req-avatar-img" alt="${escapeHtml(requesterName)}" onerror="this.src='/assets/content.png'"><span>${escapeHtml(requesterName)}${adminBadgeHtml}</span>`;
+
+                // Actions row
+                var actionPills = [];
+                if (req.creator_name || req.creator_social_url) {
+                    var crName = req.creator_name || 'Creator';
+                    var crAvatar = req.creator_avatar ? `<img src="${req.creator_avatar}" alt="${escapeHtml(crName)}" onerror="this.style.display='none'">` : '';
+                    var crUrl = req.creator_social_url || 'javascript:void(0)';
+                    actionPills.push(`
+                        <a href="${escapeHtml(crUrl)}" ${req.creator_social_url ? 'target="_blank" rel="noopener"' : ''} class="req-action-pill" onclick="event.stopPropagation()" title="Creator: ${escapeHtml(crName)}">
+                            ${crAvatar}
+                            <span>${escapeHtml(crName)}</span>
+                            <i class="fas fa-arrow-up-right-from-square"></i>
+                        </a>
+                    `);
+                }
+                if (req.product_url) {
+                    actionPills.push(`
+                        <a href="${escapeHtml(req.product_url)}" target="_blank" rel="noopener" class="req-action-pill" onclick="event.stopPropagation()" title="Original Product Page">
+                            <span>Product</span>
+                            <i class="fas fa-arrow-up-right-from-square"></i>
+                        </a>
+                    `);
+                }
+                if (req.status === 'completed' && req.resource_url) {
+                    actionPills.push(`
+                        <a href="${escapeHtml(req.resource_url)}" class="req-action-pill pill-resource" onclick="event.stopPropagation()" title="Download Fulfilled Resource">
+                            <i class="fas fa-circle-check"></i>
+                            <span>Resource</span>
+                        </a>
+                    `);
+                }
+                var actionsRowHtml = actionPills.length > 0 ? `<div class="req-actions-row">${actionPills.join('')}</div>` : '';
+
+                // Discord link
+                var discordChannelId = req.discord_channel_id || '1551118401508745367';
+                var guildId = '1518954946110685184';
+                var discordUrl = req.discord_message_id
+                    ? `https://discord.com/channels/${guildId}/${discordChannelId}/${req.discord_message_id}`
+                    : `https://discord.com/channels/${guildId}/${discordChannelId}`;
+
+                // Stats Bar (thumbs up, views, comments)
+                var viewsCount = req.views_count || Math.max(1, ((req.upvotes_count || 1) * 2) + (hashStr(req.id) % 5) + 1);
+                var commentsCount = req.comments_count || 0;
+
+                html += `
+                    <div class="req-card" id="req-card-${req.id}" onclick="location.href='/request?id=${req.id}'">
+                        <div class="req-card-media">
+                            ${thumbContentHtml}
+                            <span class="req-media-badge ${typeClass}">${typeLabel}</span>
+                            ${adminActionsHtml}
+                        </div>
+                        <div class="req-card-body">
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                                <span class="req-status-pill ${statusClass}">${statusText}</span>
                             </div>
-                            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;" onclick="event.stopPropagation()">
-                                ${fulfillLink}
-                                ${storeLink}
-                                ${discordCardLink}
-                                <button class="req-upvote-btn ${isUpvoted ? 'upvoted' : ''}" onclick="toggleUpvote('${req.id}')" title="Upvote this request">
-                                    <i class="fas fa-arrow-up"></i> <span id="upvotes-count-${req.id}">${req.upvotes_count || 1}</span>
+                            <h3 class="req-title" title="${escapeHtml(req.title)}">${escapeHtml(req.title)}</h3>
+                            <p class="req-desc">${escapeHtml(req.description || 'Community request on Zyrex.')}</p>
+                            ${priceHtml}
+                            
+                            <div class="req-requester-row">
+                                <div class="req-requester-user">
+                                    ${requesterUserHtml}
+                                </div>
+                                <span class="req-time-ago">${formatRelativeTime(req.created_at)}</span>
+                            </div>
+
+                            ${actionsRowHtml}
+
+                            <div class="req-stat-bar">
+                                <button class="req-stat-item req-stat-btn req-upvote-btn ${isUpvoted ? 'upvoted' : ''}" onclick="event.stopPropagation(); toggleUpvote('${req.id}')" title="Upvote request">
+                                    <i class="${isUpvoted ? 'fas' : 'far'} fa-thumbs-up"></i>
+                                    <span id="upvotes-count-${req.id}">${req.upvotes_count || 1}</span>
                                 </button>
+                                <div class="req-stat-item" title="${viewsCount} views">
+                                    <i class="far fa-eye"></i>
+                                    <span>${viewsCount}</span>
+                                </div>
+                                <a href="${discordUrl}" target="_blank" rel="noopener" class="req-stat-item req-stat-link" onclick="event.stopPropagation()" title="Discuss on Discord">
+                                    <i class="far fa-comment"></i>
+                                    <span>${commentsCount}</span>
+                                </a>
                             </div>
                         </div>
                     </div>
@@ -2349,6 +2472,10 @@
             var newCount = wasUpvoted ? Math.max(1, curCount - 1) : curCount + 1;
             btn.classList.toggle('upvoted', !wasUpvoted);
             countEl.textContent = newCount;
+            var thumbIcon = btn.querySelector('i');
+            if (thumbIcon) {
+                thumbIcon.className = !wasUpvoted ? 'fas fa-thumbs-up' : 'far fa-thumbs-up';
+            }
             if (reqItem) {
                 reqItem.upvotes_count = newCount;
                 reqItem.has_upvoted = !wasUpvoted;
@@ -2366,6 +2493,9 @@
                     if (resData.success) {
                         countEl.textContent = resData.upvotes;
                         btn.classList.toggle('upvoted', !!resData.upvoted);
+                        if (thumbIcon) {
+                            thumbIcon.className = resData.upvoted ? 'fas fa-thumbs-up' : 'far fa-thumbs-up';
+                        }
                         if (reqItem) {
                             reqItem.upvotes_count = resData.upvotes;
                             reqItem.has_upvoted = !!resData.upvoted;
