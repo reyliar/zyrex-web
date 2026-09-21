@@ -1023,15 +1023,26 @@ async function scrapePayhip(url) {
     // Description
     let description = (html.match(/<meta\s+name="description"\s+content="([^"]+)"/i) || [])[1] || "";
 
-    // Price
+    // Price (Supports $, £, €, ¥, ₺, etc.)
     let price = "";
-    const priceMatches = [
-      html.match(/"price":\s*"?\$?([\d.]+)/i),
-      html.match(/data-price="([^"]+)"/i),
-      html.match(/<span[^>]*class="[^"]*price[^"]*"[^>]*>\s*\$?([\d.]+)\s*<\/span>/i),
-    ];
-    for (const m of priceMatches) {
-      if (m?.[1]) { price = "$" + m[1]; break; }
+    // Detect currency symbol from HTML or meta
+    let currencySymbol = "$";
+    if (/£|&pound;|"currency":\s*"GBP"/i.test(html)) currencySymbol = "£";
+    else if (/€|&euro;|"currency":\s*"EUR"/i.test(html)) currencySymbol = "€";
+    else if (/¥|&yen;|"currency":\s*"JPY"/i.test(html)) currencySymbol = "¥";
+    else if (/₺|"currency":\s*"TRY"/i.test(html)) currencySymbol = "₺";
+
+    const explicitPriceMatch = html.match(/(?:[\$£€¥₺]|&pound;|&euro;|&yen;)\s*(\d+(?:\.\d{2})?)/i) ||
+                               html.match(/class="[^"]*price[^"]*"[^>]*>[\s\r\n]*([^<]+)/i) ||
+                               html.match(/data-price="([^"]+)"/i) ||
+                               html.match(/"price":\s*"?([\d.]+)/i);
+    if (explicitPriceMatch) {
+      let rawVal = (explicitPriceMatch[1] || explicitPriceMatch[0] || "").replace(/&pound;/g, "£").replace(/&euro;/g, "€").replace(/&yen;/g, "¥").trim();
+      if (/^[\d.]+$/.test(rawVal)) {
+        price = currencySymbol + rawVal;
+      } else {
+        price = rawVal;
+      }
     }
 
     let primaryImage = "";
@@ -5095,108 +5106,138 @@ async function storeAndProxyImage(env, imageUrl) {
           };
         }
 
-        // Discord announcement helper
+        // Discord announcement helper (Dual-channel: Discord REST + BOT_API)
         async function sendDiscordRequestAnnouncement(arg1, arg2) {
           const reqData = arg2 || arg1;
-          if (!env.DISCORD_BOT_TOKEN) return;
-          try {
-            const typeLabels = {
-              "preset": "Preset",
-              "project-file": "Project File",
-              "project_file": "Project File",
-              "plugin": "Plugin",
-              "software": "Software",
-              "scenepack": "Scenepack",
-              "other": "Other"
-            };
-            const typeLabel = typeLabels[reqData.type] || "Resource";
-            const requestedBy = reqData.is_anonymous ? "Anonymous Member" : (reqData.user_name || "Community Member");
-            const userMention = (reqData.user_id && !reqData.is_anonymous && /^\d{17,20}$/.test(reqData.user_id)) ? `<@${reqData.user_id}>` : requestedBy;
+          let messageId = null;
+          let channelId = REQUESTS_CHANNEL_ID;
 
-            const fields = [
-              { name: "🏷️ Type", value: `\`${typeLabel}\``, inline: true },
-              { name: "👤 Requested By", value: userMention, inline: true }
-            ];
+          const typeLabels = {
+            "preset": "Preset",
+            "project-file": "Project File",
+            "project_file": "Project File",
+            "plugin": "Plugin",
+            "software": "Software",
+            "scenepack": "Scenepack",
+            "other": "Other"
+          };
+          const typeLabel = typeLabels[reqData.type] || "Resource";
+          const requestedBy = reqData.is_anonymous ? "Anonymous Member" : (reqData.user_name || "Community Member");
+          const userMention = (reqData.user_id && !reqData.is_anonymous && /^\d{17,20}$/.test(reqData.user_id)) ? `<@${reqData.user_id}>` : requestedBy;
 
-            if (reqData.price) {
-              fields.push({ name: "💰 Price", value: `\`${reqData.price}\``, inline: true });
-            }
+          // 1. Try Discord REST directly if token is configured in Worker
+          if (env.DISCORD_BOT_TOKEN) {
+            try {
+              const fields = [
+                { name: "🏷️ Type", value: `\`${typeLabel}\``, inline: true },
+                { name: "👤 Requested By", value: userMention, inline: true }
+              ];
 
-            if (reqData.creator_name || reqData.creator_social_url) {
-              const crText = reqData.creator_social_url ? `[${reqData.creator_name || "Creator"}](${reqData.creator_social_url})` : reqData.creator_name;
-              fields.push({ name: "🎨 Creator", value: crText, inline: true });
-            }
+              if (reqData.price) {
+                fields.push({ name: "💰 Price", value: `\`${reqData.price}\``, inline: true });
+              }
 
-            if (reqData.product_url) {
-              fields.push({ name: "🔗 Store Link", value: `[View Store Page](${reqData.product_url})`, inline: false });
-            }
+              if (reqData.creator_name || reqData.creator_social_url) {
+                const crText = reqData.creator_social_url ? `[${reqData.creator_name || "Creator"}](${reqData.creator_social_url})` : reqData.creator_name;
+                fields.push({ name: "🎨 Creator", value: crText, inline: true });
+              }
 
-            const embed = {
-              title: `📥 New Request: ${reqData.title}`,
-              description: reqData.description ? (reqData.description.length > 500 ? reqData.description.slice(0, 497) + "..." : reqData.description) : "*No additional description provided.*",
-              color: 0xFF2B52,
-              fields: fields,
-              footer: {
-                text: `Zyrex Community Requests • ID: ${reqData.id}`,
-                icon_url: "https://zyrexediting.xyz/assets/content.png"
-              },
-              timestamp: new Date().toISOString()
-            };
+              if (reqData.product_url) {
+                fields.push({ name: "🔗 Store Link", value: `[View Store Page](${reqData.product_url})`, inline: false });
+              }
 
-            if (reqData.thumbnail && reqData.thumbnail.startsWith("http")) {
-              embed.thumbnail = { url: reqData.thumbnail };
-            }
+              const embed = {
+                title: `📥 New Request: ${reqData.title}`,
+                description: reqData.description ? (reqData.description.length > 500 ? reqData.description.slice(0, 497) + "..." : reqData.description) : "*No additional description provided.*",
+                color: 0xFF2B52,
+                fields: fields,
+                footer: {
+                  text: `Zyrex Community Requests • ID: ${reqData.id}`,
+                  icon_url: "https://zyrexediting.xyz/assets/content.png"
+                },
+                timestamp: new Date().toISOString()
+              };
 
-            const payload = {
-              content: `🔔 **New Community Request Submitted!** Vote and browse at https://zyrexediting.xyz/requests`,
-              embeds: [embed],
-              components: [
-                {
-                  type: 1,
-                  components: [
-                    {
-                      type: 2,
-                      style: 5,
-                      label: "View Request",
-                      url: `https://zyrexediting.xyz/request?id=${reqData.id}`
-                    }
-                  ]
-                }
-              ]
-            };
+              if (reqData.thumbnail && reqData.thumbnail.startsWith("http")) {
+                embed.thumbnail = { url: reqData.thumbnail };
+              }
 
-            const discordResp = await fetch(`https://discord.com/api/v10/channels/${REQUESTS_CHANNEL_ID}/messages`, {
-              method: "POST",
-              headers: {
-                Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`,
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify(payload)
-            });
+              const payload = {
+                content: `🔔 **New Community Request Submitted!** Vote and browse at https://zyrexediting.xyz/requests`,
+                embeds: [embed],
+                components: [
+                  {
+                    type: 1,
+                    components: [
+                      {
+                        type: 2,
+                        style: 5,
+                        label: "View Request",
+                        url: `https://zyrexediting.xyz/request?id=${reqData.id}`
+                      }
+                    ]
+                  }
+                ]
+              };
 
-            // Persist discord_message_id and discord_channel_id back to R2 so we can link to the Discord post
-            if (discordResp.ok) {
-              try {
+              const discordResp = await fetch(`https://discord.com/api/v10/channels/${REQUESTS_CHANNEL_ID}/messages`, {
+                method: "POST",
+                headers: {
+                  Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`,
+                  "Content-Type": "application/json"
+                },
+                body: JSON.stringify(payload)
+              });
+
+              if (discordResp.ok) {
                 const msg = await discordResp.json();
                 if (msg && msg.id) {
-                  const allReqs = await loadRequestsFromR2();
-                  const target = allReqs.find(r => r.id === reqData.id);
-                  if (target) {
-                    target.discord_message_id = msg.id;
-                    target.discord_channel_id = msg.channel_id || REQUESTS_CHANNEL_ID;
-                    await persistRequestsToR2(allReqs);
-                  }
+                  messageId = msg.id;
+                  channelId = msg.channel_id || REQUESTS_CHANNEL_ID;
                 }
-              } catch (persistErr) {
-                console.error("Failed to persist discord_message_id:", persistErr);
               }
-            } else {
-              const errText = await discordResp.text().catch(() => "");
-              console.error("Discord announcement failed:", discordResp.status, errText);
+            } catch (restErr) {
+              console.warn("Direct Discord REST request announcement failed:", restErr);
             }
-          } catch (e) {
-            console.error("sendDiscordRequestAnnouncement error:", e);
           }
+
+          // 2. If direct REST didn't succeed, call BOT_API backend
+          if (!messageId) {
+            try {
+              const botResp = await fetch(`${BOT_API}/api/requests/announce`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(reqData)
+              });
+              if (botResp.ok) {
+                const botData = await botResp.json();
+                if (botData && botData.message_id) {
+                  messageId = botData.message_id;
+                  channelId = botData.channel_id || REQUESTS_CHANNEL_ID;
+                }
+              }
+            } catch (botErr) {
+              console.error("BOT_API announce error:", botErr);
+            }
+          }
+
+          // 3. Persist discord message id back to R2
+          if (messageId) {
+            try {
+              const allReqs = await loadRequestsFromR2();
+              const target = allReqs.find(r => r.id === reqData.id);
+              if (target) {
+                target.discord_message_id = messageId;
+                target.discord_channel_id = channelId;
+                await persistRequestsToR2(allReqs);
+              }
+              reqData.discord_message_id = messageId;
+              reqData.discord_channel_id = channelId;
+            } catch (persistErr) {
+              console.error("Failed to persist discord_message_id:", persistErr);
+            }
+          }
+          return messageId;
         }
 
 
@@ -5291,13 +5332,14 @@ async function storeAndProxyImage(env, imageUrl) {
           const typeFilter = url.searchParams.get("type");
           const statusFilter = url.searchParams.get("status");
           const searchFilter = (url.searchParams.get("search") || "").toLowerCase().trim();
-          const sort = url.searchParams.get("sort") || "upvotes";
+          const sort = url.searchParams.get("sort") || "recent";
 
           let filtered = reqs.map(r => {
             const item = { ...r };
             // Sanitize internal IP from public listing
             delete item.client_ip;
             item.has_upvoted = Array.isArray(r.upvoters) && r.upvoters.includes(voterKey);
+            item.is_admin = !!(r.is_admin || (r.user_id && ADMIN_IDS.includes(r.user_id)));
             return item;
           });
 
@@ -5587,6 +5629,7 @@ async function storeAndProxyImage(env, imageUrl) {
           const voterKey = session ? session.userId : clientIp;
           return json({
             ...targetReq,
+            is_admin: !!(targetReq.is_admin || (targetReq.user_id && ADMIN_IDS.includes(targetReq.user_id))),
             has_upvoted: Array.isArray(targetReq.upvoters) && targetReq.upvoters.includes(voterKey)
           });
         }
@@ -5657,24 +5700,46 @@ async function storeAndProxyImage(env, imageUrl) {
             if (body.resource_url) targetReq.resource_url = body.resource_url;
 
             // Edit the Discord announcement message to show completed status
-            if (env.DISCORD_BOT_TOKEN && targetReq.discord_message_id) {
-              try {
-                const channelId = targetReq.discord_channel_id || REQUESTS_CHANNEL_ID;
-                const resourceLink = targetReq.resource_url
-                  ? `\n✅ **Fulfilled!** → [View Resource](https://zyrexediting.xyz${targetReq.resource_url})`
-                  : "\n✅ **This request has been fulfilled!**";
-                await fetch(`https://discord.com/api/v10/channels/${channelId}/messages/${targetReq.discord_message_id}`, {
-                  method: "PATCH",
-                  headers: {
-                    Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`,
-                    "Content-Type": "application/json"
-                  },
-                  body: JSON.stringify({
-                    content: `✅ **Request Fulfilled!** ${resourceLink}\nhttps://zyrexediting.xyz/request?id=${reqId}`
-                  })
-                });
-              } catch (discordEditErr) {
-                console.error("Discord message edit failed:", discordEditErr);
+            if (targetReq.discord_message_id) {
+              const channelId = targetReq.discord_channel_id || REQUESTS_CHANNEL_ID;
+              const resourceLink = targetReq.resource_url
+                ? `\n✅ **Fulfilled!** → [View Resource](https://zyrexediting.xyz${targetReq.resource_url})`
+                : "\n✅ **This request has been fulfilled!**";
+              let edited = false;
+
+              if (env.DISCORD_BOT_TOKEN) {
+                try {
+                  const dResp = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages/${targetReq.discord_message_id}`, {
+                    method: "PATCH",
+                    headers: {
+                      Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`,
+                      "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                      content: `✅ **Request Fulfilled!** ${resourceLink}\nhttps://zyrexediting.xyz/request?id=${reqId}`
+                    })
+                  });
+                  if (dResp.ok) edited = true;
+                } catch (discordEditErr) {
+                  console.warn("Direct Discord REST edit failed:", discordEditErr);
+                }
+              }
+
+              if (!edited) {
+                try {
+                  await fetch(`${BOT_API}/api/requests/announce-completed`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      message_id: targetReq.discord_message_id,
+                      channel_id: channelId,
+                      title: targetReq.title,
+                      resource_url: targetReq.resource_url || ""
+                    })
+                  });
+                } catch (botEditErr) {
+                  console.error("BOT_API announce-completed error:", botEditErr);
+                }
               }
             }
           }
@@ -5865,6 +5930,65 @@ async function storeAndProxyImage(env, imageUrl) {
         const data = await botResp.text();
         try {
           let parsed = JSON.parse(data);
+
+          // If product submit fulfilled a community request, auto-mark request completed in R2
+          if (path === "/api/products/submit" && botResp.ok && body) {
+            try {
+              const submitPayload = JSON.parse(body);
+              const linkedReqId = submitPayload.request_id;
+              if (linkedReqId) {
+                const prodId = parsed.id || submitPayload.id || "";
+                const allReqs = await loadRequestsFromR2();
+                const targetReq = allReqs.find(r => r.id === linkedReqId);
+                if (targetReq) {
+                  targetReq.status = "completed";
+                  targetReq.completed_at = new Date().toISOString();
+                  targetReq.updated_at = new Date().toISOString();
+                  if (prodId) {
+                    targetReq.resource_id = prodId;
+                    targetReq.resource_url = `/resource?id=${encodeURIComponent(prodId)}`;
+                  }
+                  await persistRequestsToR2(allReqs);
+
+                  // Update Discord announcement if message id exists
+                  if (targetReq.discord_message_id) {
+                    const channelId = targetReq.discord_channel_id || REQUESTS_CHANNEL_ID;
+                    const resLink = targetReq.resource_url
+                      ? `\n✅ **Fulfilled!** → [View Resource](https://zyrexediting.xyz${targetReq.resource_url})`
+                      : "\n✅ **This request has been fulfilled!**";
+                    try {
+                      if (env.DISCORD_BOT_TOKEN) {
+                        await fetch(`https://discord.com/api/v10/channels/${channelId}/messages/${targetReq.discord_message_id}`, {
+                          method: "PATCH",
+                          headers: {
+                            Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`,
+                            "Content-Type": "application/json"
+                          },
+                          body: JSON.stringify({
+                            content: `✅ **Request Fulfilled!** ${resLink}\nhttps://zyrexediting.xyz/request?id=${linkedReqId}`
+                          })
+                        });
+                      } else {
+                        await fetch(`${BOT_API}/api/requests/announce-completed`, {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            message_id: targetReq.discord_message_id,
+                            channel_id: channelId,
+                            title: targetReq.title,
+                            resource_url: targetReq.resource_url || ""
+                          })
+                        });
+                      }
+                    } catch (_) {}
+                  }
+                }
+              }
+            } catch (autoErr) {
+              console.error("Failed to auto-complete request from product submission:", autoErr);
+            }
+          }
+
           // Enrich product data with uploader_is_admin badge flag
           if (path === "/api/products" && botResp.ok) {
             if (url.searchParams.has("id")) {

@@ -790,6 +790,48 @@
             color: #ffffff;
         }
 
+        .req-discord-link {
+            font-size: 0.76rem;
+            color: #8ea1e1;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 9px;
+            background: rgba(88, 101, 242, 0.12);
+            border: 1px solid rgba(88, 101, 242, 0.28);
+            border-radius: 6px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .req-discord-link:hover {
+            background: rgba(88, 101, 242, 0.25);
+            color: #ffffff;
+            border-color: rgba(88, 101, 242, 0.45);
+        }
+
+        .req-fulfill-link {
+            font-size: 0.76rem;
+            color: #34d399;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 9px;
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            border-radius: 6px;
+            font-weight: 700;
+            transition: all 0.2s;
+        }
+
+        .req-fulfill-link:hover {
+            background: rgba(16, 185, 129, 0.25);
+            color: #ffffff;
+            border-color: rgba(16, 185, 129, 0.5);
+        }
+
         /* EMPTY STATE */
         .req-empty {
             grid-column: 1 / -1;
@@ -1738,6 +1780,12 @@
                     <textarea id="modalDesc" class="form-textarea" placeholder="Describe the item, version, compatibility, or why it should be uploaded..."></textarea>
                 </div>
 
+                <!-- PRICE FIELD -->
+                <div class="form-group" id="priceFieldGroup">
+                    <label class="form-label"><i class="fas fa-tag"></i> Original Price (optional)</label>
+                    <input type="text" id="modalPriceInput" class="form-input" placeholder="e.g. $7.50, £5.00, €6.99 or Free">
+                </div>
+
                 <!-- ANONYMOUS TOGGLE -->
                 <div class="toggle-anon-row">
                     <span class="toggle-anon-label">
@@ -1885,6 +1933,7 @@
         var currentRequests = [];
         var activeStatus = 'all';
         var activeType = 'all';
+        var activeSort = 'upvotes';
         var activeSort = 'recent';
         var searchQuery = '';
         var existingProductsCache = [];
@@ -2169,6 +2218,9 @@
                 var isUpvoted = req.has_upvoted || localUpvotes.includes(req.id);
                 var typeLabel = (req.type || 'other').replace('_', ' ').replace('-', ' ');
                 var typeClass = 'type-' + (req.type || 'other').replace('_', '-');
+                var statusClass = req.status === 'completed' ? 'status-completed' : 'status-pending';
+                var statusText = req.status === 'completed' ? '<i class="fas fa-check-circle"></i> Completed' : '<i class="fas fa-clock"></i> Pending';
+                
                 var statusClass = req.status === 'completed' ? 'status-completed' : (req.status === 'in_progress' ? 'status-in-progress' : 'status-pending');
                 var statusText = req.status === 'completed' ? '<i class="fas fa-check-circle"></i> Completed'
                     : (req.status === 'in_progress' ? '<i class="fas fa-spinner"></i> In Progress' : '<i class="fas fa-clock"></i> Pending');
@@ -2189,9 +2241,23 @@
                     creatorHtml = `<div class="req-creator-row">${crAvatar} <span>by ${crLink}</span></div>`;
                 }
 
-                var priceHtml = req.price ? `<span class="req-price-badge"><i class="fas fa-tag"></i> ${req.price}</span>` : '';
+                var priceHtml = req.price ? `<span class="req-price-badge"><i class="fas fa-tag"></i> ${escapeHtml(formatPriceDisplay(req.price))}</span>` : '';
                 var descHtml = req.description ? `<p class="req-desc">${escapeHtml(req.description)}</p>` : '';
-                var storeLink = req.product_url ? `<a href="${req.product_url}" target="_blank" rel="noopener" class="req-store-link" title="Original Link"><i class="fas fa-external-link-alt"></i> Store</a>` : '';
+                var storeLink = req.product_url ? `<a href="${escapeHtml(req.product_url)}" target="_blank" rel="noopener" class="req-store-link" title="Original Store Link"><i class="fas fa-external-link-alt"></i> Store</a>` : '';
+
+                var discordChannelId = req.discord_channel_id || '1551118401508745367';
+                var guildId = '1518954946110685184';
+                var discordUrl = req.discord_message_id
+                    ? `https://discord.com/channels/${guildId}/${discordChannelId}/${req.discord_message_id}`
+                    : `https://discord.com/channels/${guildId}/${discordChannelId}`;
+                var discordCardLink = `<a href="${discordUrl}" target="_blank" rel="noopener" class="req-discord-link" title="Discuss on Discord"><i class="fab fa-discord"></i> Discord</a>`;
+                
+                var fulfillLink = (req.status === 'completed' && req.resource_url)
+                    ? `<a href="${escapeHtml(req.resource_url)}" class="req-fulfill-link" title="Download Resource"><i class="fas fa-circle-check"></i> Resource</a>`
+                    : '';
+
+                var isRequesterAdmin = !!(req.is_admin || (req.user_id && ['1421177012814614548', '1382421118098346174'].includes(String(req.user_id))));
+                var adminBadgeHtml = isRequesterAdmin ? '<i class="fas fa-circle-check" style="color:#38bdf8;margin-left:4px;font-size:0.75rem;vertical-align:middle;" title="Verified Admin"></i>' : '';
 
                 var isAdminUser = !!(window._currentUser && (window._currentUser.is_admin || window._currentUser.can_upload));
                 var adminActionsHtml = isAdminUser ? `
@@ -2226,10 +2292,12 @@
                         <div class="req-card-footer">
                             <div class="req-requester">
                                 <img src="${requesterAvatar}" class="req-requester-avatar" alt="${requesterName}" onerror="this.src='/assets/content.png'">
-                                <span>${escapeHtml(requesterName)} &bull; ${formatRelativeTime(req.created_at)}</span>
+                                <span>${escapeHtml(requesterName)}${adminBadgeHtml} &bull; ${formatRelativeTime(req.created_at)}</span>
                             </div>
-                            <div style="display:flex;align-items:center;gap:10px;" onclick="event.stopPropagation()">
+                            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;" onclick="event.stopPropagation()">
+                                ${fulfillLink}
                                 ${storeLink}
+                                ${discordCardLink}
                                 <button class="req-upvote-btn ${isUpvoted ? 'upvoted' : ''}" onclick="toggleUpvote('${req.id}')" title="Upvote this request">
                                     <i class="fas fa-arrow-up"></i> <span id="upvotes-count-${req.id}">${req.upvotes_count || 1}</span>
                                 </button>
@@ -2411,9 +2479,21 @@
             renderRequestsGrid();
         }
 
+        function formatPriceDisplay(p) {
+            if (!p) return '';
+            var trimmed = String(p).trim();
+            if (!trimmed) return '';
+            if (/^free$/i.test(trimmed)) return 'Free';
+            if (/[\$£€¥₺]|\b(USD|EUR|GBP|TRY|JPY|CAD|AUD)\b/i.test(trimmed)) return trimmed;
+            var num = parseFloat(trimmed);
+            if (!isNaN(num)) return '$' + num.toFixed(2);
+            return trimmed;
+        }
+
         function parsePrice(p) {
             if (!p) return 0;
-            var clean = p.replace(/[^0-9.]/g, '');
+            if (/^free$/i.test(String(p).trim())) return 0;
+            var clean = String(p).replace(/[^0-9.]/g, '');
             return parseFloat(clean) || 0;
         }
 
@@ -2427,6 +2507,8 @@
         function closeRequestModal() {
             document.getElementById('requestModal').classList.remove('active');
             document.getElementById('duplicateWarning').style.display = 'none';
+            var pInp = document.getElementById('modalPriceInput');
+            if (pInp) pInp.value = '';
             if (!_userAllowanceData || _userAllowanceData.is_admin || _userAllowanceData.remaining > 0) {
                 document.getElementById('modalSubmitBtn').disabled = false;
             }
@@ -2517,7 +2599,11 @@
                         if (!document.getElementById('modalTitle').value || document.getElementById('modalTitle').value === 'Product') {
                             document.getElementById('modalTitle').value = title;
                         }
-                        if (data.price) document.getElementById('modalPrice').value = data.price;
+                        if (data.price) {
+                            document.getElementById('modalPrice').value = data.price;
+                            var pInp = document.getElementById('modalPriceInput');
+                            if (pInp) pInp.value = formatPriceDisplay(data.price);
+                        }
                         if (data.thumbnail || data.image) {
                             document.getElementById('modalThumbnail').value = data.thumbnail || data.image;
                         }
@@ -2538,7 +2624,7 @@
 
                         previewThumb.src = data.thumbnail || data.image || document.getElementById('modalThumbnail').value || '/assets/content.png';
                         previewTitle.textContent = title;
-                        previewPrice.textContent = data.price || document.getElementById('modalPrice').value || 'Store Resource';
+                        previewPrice.textContent = formatPriceDisplay(data.price || document.getElementById('modalPrice').value) || 'Store Resource';
                         previewCreator.textContent = document.getElementById('modalCreatorName').value || data.creator_name || 'Creator Found';
                         previewPanel.style.display = 'flex';
                     }
@@ -2596,8 +2682,8 @@
 
             var creatorName = document.getElementById('modalCreatorName').value.trim();
             var creatorAvatar = document.getElementById('modalCreatorAvatar').value.trim();
-            var creatorPlatform = document.getElementById('modalCreatorPlatform').value.trim();
-            var price = document.getElementById('modalPrice').value.trim();
+            var pInp = document.getElementById('modalPriceInput');
+            var price = (pInp && pInp.value.trim()) || document.getElementById('modalPrice').value.trim();
             var thumbnail = document.getElementById('modalThumbnail').value.trim();
 
             // Client duplicate check safeguard strictly against store/source link

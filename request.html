@@ -570,9 +570,20 @@
                 `;
             }
 
+            function formatPriceDisplay(p) {
+                if (!p) return '';
+                var trimmed = String(p).trim();
+                if (!trimmed) return '';
+                if (/^free$/i.test(trimmed)) return 'Free';
+                if (/[\$£€¥₺]|\b(USD|EUR|GBP|TRY|JPY|CAD|AUD)\b/i.test(trimmed)) return trimmed;
+                var num = parseFloat(trimmed);
+                if (!isNaN(num)) return '$' + num.toFixed(2);
+                return trimmed;
+            }
+
             // Price
             var priceHtml = req.price
-                ? `<div class="req-price-block"><i class="fas fa-tag"></i> ${escapeHtml(req.price)}</div>`
+                ? `<div class="req-price-block"><i class="fas fa-tag"></i> ${escapeHtml(formatPriceDisplay(req.price))}</div>`
                 : '';
 
             // Description
@@ -588,11 +599,13 @@
                 : '';
 
             // Submitter
-            var requesterName = req.is_anonymous ? 'Anonymous' : (req.user_name || 'Zyrex Member');
+            var requesterName = req.is_anonymous ? 'Anonymous Member' : (req.user_name || 'Zyrex Member');
             var requesterAvatar = (req.is_anonymous || !req.user_avatar) ? '/assets/content.png' : req.user_avatar;
+            var isRequesterAdmin = !!(req.is_admin || (req.user_id && ['1421177012814614548', '1382421118098346174'].includes(String(req.user_id))));
+            var adminBadgeHtml = isRequesterAdmin ? '<i class="fas fa-circle-check" style="color:#38bdf8;margin-left:6px;font-size:0.95rem;vertical-align:middle;" title="Verified Admin"></i>' : '';
 
-            // Update page title/meta
-            document.title = `Zyrex | ${req.title || 'Request'}`;
+            // Update page title & meta
+            document.title = `${req.title} — Requests • Zyrex Editing`;
             var metaDesc = document.querySelector('meta[name="description"]');
             if (metaDesc) metaDesc.setAttribute('content', req.description ? req.description.substring(0,160) : 'Community request on Zyrex.');
 
@@ -617,20 +630,20 @@
                 `;
             }
 
-            var discordLinkHtml = '';
-            if (req.discord_message_id) {
-                var discordChannelId = req.discord_channel_id || '1551118401508745367';
-                var guildId = '1518954946110685184';
-                var discordUrl = `https://discord.com/channels/${guildId}/${discordChannelId}/${req.discord_message_id}`;
-                discordLinkHtml = `<a href="${discordUrl}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:6px;padding:6px 14px;border-radius:8px;background:rgba(88,101,242,0.15);border:1px solid rgba(88,101,242,0.3);color:#7289da;font-size:0.8rem;font-weight:600;text-decoration:none;margin-top:8px;"><i class="fab fa-discord"></i> View on Discord</a>`;
-            }
+            var discordChannelId = req.discord_channel_id || '1551118401508745367';
+            var guildId = '1518954946110685184';
+            var discordUrl = req.discord_message_id
+                ? `https://discord.com/channels/${guildId}/${discordChannelId}/${req.discord_message_id}`
+                : `https://discord.com/channels/${guildId}/${discordChannelId}`;
+            var discordLabel = req.discord_message_id ? 'View on Discord' : 'Discord Thread';
+            var discordLinkHtml = `<a href="${discordUrl}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:10px;background:rgba(88,101,242,0.15);border:1px solid rgba(88,101,242,0.32);color:#8ea1e1;font-size:0.84rem;font-weight:700;text-decoration:none;transition:all 0.2s;" onmouseover="this.style.background='rgba(88,101,242,0.25)';this.style.color='#fff';" onmouseout="this.style.background='rgba(88,101,242,0.15)';this.style.color='#8ea1e1';"><i class="fab fa-discord"></i> ${discordLabel}</a>`;
 
 
             var html = `
                 <div class="breadcrumb-bar">
                     <a href="/requests"><i class="fas fa-arrow-left"></i> Requests</a>
                     <span class="sep">/</span>
-                    <span class="current">${escapeHtml(req.title)}</span>
+                    <span>${escapeHtml(req.title)}</span>
                 </div>
 
                 <div class="req-hero-split">
@@ -669,7 +682,7 @@
                                 <i class="fas fa-edit"></i> Edit
                             </button>
                             <a href="/upload?request_id=${encodeURIComponent(req.id)}&title=${encodeURIComponent(req.title)}&url=${encodeURIComponent(req.product_url || '')}&creator=${encodeURIComponent(req.creator_name || '')}" style="padding:8px 16px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);border-radius:9px;color:#34d399;font-size:0.82rem;font-weight:600;text-decoration:none;display:flex;align-items:center;gap:6px;"><i class="fas fa-upload"></i> Fulfill on Studio</a>
-                            <button onclick="adminChangeStatus('completed')" style="padding:8px 16px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);border-radius:9px;color:#34d399;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:all 0.2s;" onmouseover="this.style.background='rgba(16,185,129,0.18)'" onmouseout="this.style.background='rgba(16,185,129,0.1)'">
+                            <button onclick="openAdminCompleteModal()" style="padding:8px 16px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);border-radius:9px;color:#34d399;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:all 0.2s;" onmouseover="this.style.background='rgba(16,185,129,0.18)'" onmouseout="this.style.background='rgba(16,185,129,0.1)'">
                                 <i class="fas fa-check"></i> Mark Complete
                             </button>
                             <button onclick="adminRejectRequest()" style="padding:8px 16px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);border-radius:9px;color:#fbbf24;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:all 0.2s;" onmouseover="this.style.background='rgba(245,158,11,0.18)'" onmouseout="this.style.background='rgba(245,158,11,0.1)'">
@@ -684,7 +697,7 @@
                             <img src="${escapeHtml(requesterAvatar)}" class="req-submitter-avatar" alt="${escapeHtml(requesterName)}" onerror="this.src='/assets/content.png'">
                             <div class="req-submitter-info">
                                 <div class="req-submitter-label"><i class="fas fa-paper-plane"></i> Requested by</div>
-                                <div class="req-submitter-name">${escapeHtml(requesterName)}</div>
+                                <div class="req-submitter-name" style="display:flex;align-items:center;flex-wrap:wrap;">${escapeHtml(requesterName)}${adminBadgeHtml}</div>
                                 <div class="req-submitter-time">${formatRelativeTime(req.created_at)}</div>
                             </div>
                         </div>
@@ -797,11 +810,15 @@
                     </div>
                     <div>
                         <label style="font-size:0.78rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block;">Price</label>
-                        <input id="adminEditPrice" type="text" placeholder="e.g. $7.50 or Free" style="width:100%;box-sizing:border-box;padding:10px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.9rem;font-family:inherit;outline:none;">
+                        <input id="adminEditPrice" type="text" placeholder="e.g. $7.50, £5.00, €6.99 or Free" style="width:100%;box-sizing:border-box;padding:10px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.9rem;font-family:inherit;outline:none;">
                     </div>
                     <div>
                         <label style="font-size:0.78rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block;">Product URL</label>
                         <input id="adminEditProductUrl" type="url" placeholder="https://..." style="width:100%;box-sizing:border-box;padding:10px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.9rem;font-family:inherit;outline:none;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.78rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block;">Resource URL (for completed)</label>
+                        <input id="adminEditResourceUrl" type="text" placeholder="/resource?id=preset-abc123" style="width:100%;box-sizing:border-box;padding:10px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.9rem;font-family:inherit;outline:none;">
                     </div>
                 </div>
                 <div id="adminEditError" style="display:none;margin-top:14px;padding:10px 14px;background:rgba(255,43,82,0.12);border:1px solid rgba(255,43,82,0.3);border-radius:10px;color:#ff6b87;font-size:0.85rem;"></div>
@@ -809,6 +826,40 @@
                     <button type="button" onclick="closeAdminEdit()" style="padding:10px 20px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:rgba(255,255,255,0.6);font-size:0.88rem;font-weight:600;cursor:pointer;font-family:inherit;">Cancel</button>
                     <button type="submit" id="adminEditSaveBtn" style="padding:10px 24px;background:rgba(255,43,82,0.15);border:1px solid rgba(255,43,82,0.4);border-radius:10px;color:#ff6b87;font-size:0.88rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.2s;">
                         <i class="fas fa-save"></i> Save Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ADMIN COMPLETE MODAL -->
+    <div id="adminCompleteModal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:20px;">
+        <div style="background:#0e0812;border:1px solid rgba(16,185,129,0.35);border-radius:20px;padding:32px;max-width:500px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,0.7);">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+                <h2 style="margin:0;font-size:1.2rem;font-weight:800;color:#fff;display:flex;align-items:center;gap:8px;">
+                    <i class="fas fa-circle-check" style="color:#34d399;"></i> Mark Request as Complete
+                </h2>
+                <button onclick="closeAdminCompleteModal()" style="background:none;border:none;color:rgba(255,255,255,0.5);font-size:1.5rem;cursor:pointer;line-height:1;">&times;</button>
+            </div>
+            <p style="margin:0 0 18px;font-size:0.85rem;color:rgba(255,255,255,0.6);line-height:1.5;">
+                Optionally enter the published resource link so members can click directly through to download the resource.
+            </p>
+            <form id="adminCompleteForm" onsubmit="submitAdminComplete(event)">
+                <div style="display:flex;flex-direction:column;gap:14px;">
+                    <div>
+                        <label style="font-size:0.78rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block;">Resource URL (optional)</label>
+                        <input id="adminCompleteResourceUrl" type="text" placeholder="/resource?id=preset-abc123  or  https://..." style="width:100%;box-sizing:border-box;padding:10px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.9rem;font-family:inherit;outline:none;">
+                    </div>
+                    <div>
+                        <label style="font-size:0.78rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block;">Resource ID (optional)</label>
+                        <input id="adminCompleteResourceId" type="text" placeholder="preset-abc123" style="width:100%;box-sizing:border-box;padding:10px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.9rem;font-family:inherit;outline:none;">
+                    </div>
+                </div>
+                <div id="adminCompleteError" style="display:none;margin-top:14px;padding:10px 14px;background:rgba(255,43,82,0.12);border:1px solid rgba(255,43,82,0.3);border-radius:10px;color:#ff6b87;font-size:0.85rem;"></div>
+                <div style="display:flex;gap:10px;margin-top:24px;justify-content:flex-end;">
+                    <button type="button" onclick="closeAdminCompleteModal()" style="padding:10px 20px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:rgba(255,255,255,0.6);font-size:0.88rem;font-weight:600;cursor:pointer;font-family:inherit;">Cancel</button>
+                    <button type="submit" id="adminCompleteSaveBtn" style="padding:10px 24px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.4);border-radius:10px;color:#34d399;font-size:0.88rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.2s;">
+                        <i class="fas fa-check"></i> Confirm Complete
                     </button>
                 </div>
             </form>
@@ -897,6 +948,7 @@
             document.getElementById('adminEditDesc').value = currentReq.description || '';
             document.getElementById('adminEditPrice').value = currentReq.price || '';
             document.getElementById('adminEditProductUrl').value = currentReq.product_url || '';
+            document.getElementById('adminEditResourceUrl').value = currentReq.resource_url || '';
             document.getElementById('adminEditError').style.display = 'none';
             document.getElementById('adminEditModal').style.display = 'flex';
         }
@@ -925,6 +977,7 @@
                 description: document.getElementById('adminEditDesc').value.trim(),
                 price: document.getElementById('adminEditPrice').value.trim(),
                 product_url: document.getElementById('adminEditProductUrl').value.trim(),
+                resource_url: document.getElementById('adminEditResourceUrl').value.trim()
             };
 
             try {
@@ -938,6 +991,7 @@
                 if (!resp.ok || data.error) throw new Error(data.error || 'Save failed');
                 // Update local state and re-render
                 Object.assign(currentReq, body);
+                if (data.request) Object.assign(currentReq, data.request);
                 closeAdminEdit();
                 renderPage(currentReq);
             } catch(err) {
@@ -946,6 +1000,67 @@
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-save"></i> Save Changes';
+            }
+        }
+
+        function openAdminCompleteModal() {
+            if (!currentReq) return;
+            document.getElementById('adminCompleteResourceUrl').value = currentReq.resource_url || '';
+            document.getElementById('adminCompleteResourceId').value = currentReq.resource_id || '';
+            document.getElementById('adminCompleteError').style.display = 'none';
+            document.getElementById('adminCompleteModal').style.display = 'flex';
+            setTimeout(function() {
+                document.getElementById('adminCompleteResourceUrl').focus();
+            }, 50);
+        }
+
+        function closeAdminCompleteModal() {
+            document.getElementById('adminCompleteModal').style.display = 'none';
+        }
+
+        document.getElementById('adminCompleteModal').addEventListener('click', function(e) {
+            if (e.target === this) closeAdminCompleteModal();
+        });
+
+        async function submitAdminComplete(e) {
+            e.preventDefault();
+            if (!currentReq) return;
+            var btn = document.getElementById('adminCompleteSaveBtn');
+            var errEl = document.getElementById('adminCompleteError');
+            errEl.style.display = 'none';
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Completing...';
+
+            var resUrl = document.getElementById('adminCompleteResourceUrl').value.trim();
+            var resId = document.getElementById('adminCompleteResourceId').value.trim();
+            var body = { status: 'completed' };
+            if (resUrl) body.resource_url = resUrl;
+            if (resId) body.resource_id = resId;
+
+            try {
+                var resp = await fetch('/api/requests/' + currentReq.id + '/status', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify(body)
+                });
+                var data = await resp.json();
+                if (!resp.ok || data.error) throw new Error(data.error || 'Completion failed');
+                closeAdminCompleteModal();
+                if (data.request) {
+                    Object.assign(currentReq, data.request);
+                } else {
+                    currentReq.status = 'completed';
+                    if (resUrl) currentReq.resource_url = resUrl;
+                    if (resId) currentReq.resource_id = resId;
+                }
+                renderPage(currentReq);
+            } catch(err) {
+                errEl.textContent = err.message;
+                errEl.style.display = 'block';
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-check"></i> Confirm Complete';
             }
         }
 
