@@ -5923,7 +5923,21 @@ async function storeAndProxyImage(env, imageUrl) {
               const botResp = await fetch(`${BOT_API}/api/requests/thread/${threadId}/messages`);
               if (botResp.ok) {
                 const botData = await botResp.json();
-                if (Array.isArray(botData.messages)) messages = botData.messages;
+                if (Array.isArray(botData.messages)) {
+                  messages = botData.messages.map(bm => {
+                    const bAuthor = bm.author || {};
+                    const bName = (bAuthor.name || bAuthor.username || "").trim();
+                    const isSys = !bm.webhook_id && !bAuthor.is_webhook && !!bAuthor.bot &&
+                      (String(bAuthor.id) === "1519456130290417776" || bName === "Zyrex Bot" || bName === "Zyrex™ Web");
+                    return {
+                      ...bm,
+                      author: {
+                        ...bAuthor,
+                        bot: isSys
+                      }
+                    };
+                  });
+                }
               }
             } catch (bErr) {
               console.warn("BOT_API fetch thread messages error:", bErr);
