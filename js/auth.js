@@ -55,6 +55,34 @@
 var AUTH_USER_CACHE_KEY = 'zyrex_auth_user';
 var AUTH_USER_CACHE_TTL = 10 * 60 * 1000;
 
+// Immediately hydrate currentUser from localStorage synchronously
+try {
+    var _cachedAuthRaw = localStorage.getItem(AUTH_USER_CACHE_KEY);
+    if (_cachedAuthRaw) {
+        var _parsedAuth = JSON.parse(_cachedAuthRaw);
+        if (_parsedAuth && _parsedAuth.data) {
+            window._currentUser = _parsedAuth.data;
+            window.currentUser = _parsedAuth.data;
+        }
+    }
+} catch(e) {}
+
+window.isZyrexAdmin = function(u) {
+    u = u || window._currentUser || window.currentUser;
+    if (!u) {
+        try {
+            var raw = localStorage.getItem(AUTH_USER_CACHE_KEY);
+            if (raw) {
+                var c = JSON.parse(raw);
+                if (c && c.data) u = c.data;
+            }
+        } catch(e) {}
+    }
+    if (!u) return false;
+    var uid = String(u.id || u.userId || '');
+    return !!(u.is_admin || u.can_upload || uid === '1421177012814614548' || uid === '1382421118098346174');
+};
+
 // Avatar proxy helper — bypasses Discord CDN blocks (e.g. Turkey)
 function avatarProxyUrl(userId, avatarHash, size) {
     size = size || 64;
@@ -124,6 +152,12 @@ function redirectToLogin(returnTo) {
 
 // Render auth UI from user data (reusable for both cached & fresh)
 function renderAuthUI(user) {
+    window._currentUser = user;
+    window.currentUser = user;
+    if (typeof onAuthLoaded === 'function') {
+        try { onAuthLoaded(user); } catch(e) {}
+    }
+
     const btn = document.getElementById('authBtn');
     if (!btn) return;
     const avatarUrl = user.avatar
@@ -206,7 +240,10 @@ async function checkAuth() {
         if (raw) {
             var cached = JSON.parse(raw);
             if (cached.data && (Date.now() - cached.ts < AUTH_USER_CACHE_TTL)) {
+                window._currentUser = cached.data;
+                window.currentUser = cached.data;
                 renderAuthUI(cached.data);
+                window.dispatchEvent(new CustomEvent('zyrex:auth', { detail: cached.data }));
             }
         }
     } catch(e) {}
@@ -215,14 +252,20 @@ async function checkAuth() {
         const resp = await fetch('/api/me', { credentials: 'include' });
         if (resp.ok) {
             const user = await resp.json();
+            window._currentUser = user;
+            window.currentUser = user;
             // Cache the auth user
             try { localStorage.setItem(AUTH_USER_CACHE_KEY, JSON.stringify({ ts: Date.now(), data: user })); } catch(e) {}
             renderAuthUI(user);
+            window.dispatchEvent(new CustomEvent('zyrex:auth', { detail: user }));
             return;
         }
         if (resp.status === 401 || resp.status === 403) {
+            window._currentUser = null;
+            window.currentUser = null;
             clearAuthCache();
             renderLoginUI(btn);
+            window.dispatchEvent(new CustomEvent('zyrex:auth', { detail: null }));
             return;
         }
     } catch(e) {
@@ -231,8 +274,11 @@ async function checkAuth() {
     
     // Fallback: show Discord Login button (only if no cached user shown)
     if (!btn.querySelector('.auth-user')) {
+        window._currentUser = null;
+        window.currentUser = null;
         clearAuthCache();
         renderLoginUI(btn);
+        window.dispatchEvent(new CustomEvent('zyrex:auth', { detail: null }));
     }
 }
 

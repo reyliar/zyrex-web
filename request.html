@@ -675,22 +675,41 @@
                             ${discordLinkHtml}
                         </div>
 
-                        <!-- ADMIN ACTIONS PANEL (hidden until auth loads) -->
-                        <div id="adminActionsPanel" style="display:none;flex-wrap:wrap;gap:8px;padding:14px 16px;background:rgba(255,43,82,0.06);border:1px solid rgba(255,43,82,0.18);border-radius:14px;margin-top:4px;">
-                            <span style="font-size:0.72rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:rgba(255,43,82,0.7);width:100%;margin-bottom:4px;display:flex;align-items:center;gap:6px;"><i class="fas fa-shield-alt"></i> Admin Controls</span>
-                            <button onclick="openAdminEdit()" style="padding:8px 16px;background:rgba(255,255,255,0.07);border:1px solid rgba(255,255,255,0.15);border-radius:9px;color:#fff;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.12)'" onmouseout="this.style.background='rgba(255,255,255,0.07)'">
-                                <i class="fas fa-edit"></i> Edit
-                            </button>
-                            <a href="/upload?request_id=${encodeURIComponent(req.id)}&title=${encodeURIComponent(req.title)}&url=${encodeURIComponent(req.product_url || '')}&creator=${encodeURIComponent(req.creator_name || '')}" style="padding:8px 16px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);border-radius:9px;color:#34d399;font-size:0.82rem;font-weight:600;text-decoration:none;display:flex;align-items:center;gap:6px;"><i class="fas fa-upload"></i> Fulfill on Studio</a>
-                            <button onclick="openAdminCompleteModal()" style="padding:8px 16px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.25);border-radius:9px;color:#34d399;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:all 0.2s;" onmouseover="this.style.background='rgba(16,185,129,0.18)'" onmouseout="this.style.background='rgba(16,185,129,0.1)'">
-                                <i class="fas fa-check"></i> Mark Complete
-                            </button>
-                            <button onclick="adminRejectRequest()" style="padding:8px 16px;background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);border-radius:9px;color:#fbbf24;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:all 0.2s;" onmouseover="this.style.background='rgba(245,158,11,0.18)'" onmouseout="this.style.background='rgba(245,158,11,0.1)'">
-                                <i class="fas fa-ban"></i> Reject
-                            </button>
-                            <button onclick="adminDeleteRequest()" style="padding:8px 16px;background:rgba(255,43,82,0.1);border:1px solid rgba(255,43,82,0.25);border-radius:9px;color:#ff6b87;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:6px;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,43,82,0.18)'" onmouseout="this.style.background='rgba(255,43,82,0.1)'">
-                                <i class="fas fa-trash"></i> Delete
-                            </button>
+                        <!-- ADMIN ACTIONS PANEL -->
+                        <div id="adminActionsPanel" style="display:none;flex-direction:column;gap:10px;padding:16px 18px;background:linear-gradient(135deg, rgba(255,43,82,0.12) 0%, rgba(18,12,20,0.88) 100%);border:1px solid rgba(255,43,82,0.35);border-radius:16px;margin:16px 0;box-shadow:0 8px 25px rgba(255,43,82,0.14);">
+                            <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
+                                <span style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#ff6b87;display:flex;align-items:center;gap:7px;font-family:'JetBrains Mono',monospace;">
+                                    <i class="fas fa-shield-halved" style="color:#ff2b52;"></i> Admin Management Panel
+                                </span>
+                                <span style="font-size:0.7rem;color:rgba(255,255,255,0.45);font-family:'JetBrains Mono',monospace;">Staff Privilege Active</span>
+                            </div>
+                            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                                <button onclick="openAdminEdit()" style="padding:9px 16px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);border-radius:10px;color:#fff;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'">
+                                    <i class="fas fa-edit"></i> Edit
+                                </button>
+                                <a href="/upload?request_id=${encodeURIComponent(req.id)}&title=${encodeURIComponent(req.title)}&url=${encodeURIComponent(req.product_url || '')}&creator=${encodeURIComponent(req.creator_name || '')}" style="padding:9px 16px;background:rgba(16,185,129,0.14);border:1px solid rgba(16,185,129,0.35);border-radius:10px;color:#34d399;font-size:0.82rem;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s;" onmouseover="this.style.background='rgba(16,185,129,0.22)'" onmouseout="this.style.background='rgba(16,185,129,0.14)'">
+                                    <i class="fas fa-upload"></i> Fulfill on Studio
+                                </a>
+                                <button onclick="openAdminCompleteModal()" style="padding:9px 16px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);border-radius:10px;color:#34d399;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s;" onmouseover="this.style.background='rgba(16,185,129,0.2)'" onmouseout="this.style.background='rgba(16,185,129,0.12)'">
+                                    <i class="fas fa-check"></i> Mark Complete
+                                </button>
+                                ${req.status !== 'in_progress' ? `
+                                <button onclick="adminChangeStatus('in_progress')" style="padding:9px 16px;background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.3);border-radius:10px;color:#38bdf8;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s;" onmouseover="this.style.background='rgba(56,189,248,0.22)'" onmouseout="this.style.background='rgba(56,189,248,0.12)'">
+                                    <i class="fas fa-spinner"></i> In Progress
+                                </button>
+                                ` : ''}
+                                ${req.status !== 'pending' ? `
+                                <button onclick="adminChangeStatus('pending')" style="padding:9px 16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:10px;color:rgba(255,255,255,0.7);font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.12)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">
+                                    <i class="fas fa-clock"></i> Mark Pending
+                                </button>
+                                ` : ''}
+                                <button onclick="adminRejectRequest()" style="padding:9px 16px;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.3);border-radius:10px;color:#fbbf24;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s;" onmouseover="this.style.background='rgba(245,158,11,0.2)'" onmouseout="this.style.background='rgba(245,158,11,0.12)'">
+                                    <i class="fas fa-ban"></i> Reject
+                                </button>
+                                <button onclick="adminDeleteRequest()" style="padding:9px 16px;background:rgba(255,43,82,0.12);border:1px solid rgba(255,43,82,0.3);border-radius:10px;color:#ff6b87;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,43,82,0.22)'" onmouseout="this.style.background='rgba(255,43,82,0.12)'">
+                                    <i class="fas fa-trash"></i> Delete
+                                </button>
+                            </div>
                         </div>
 
                         <div class="req-submitter-card">
@@ -926,19 +945,37 @@
     <script>
         var _adminUser = null;
 
-        // Called after auth.js loads the user
-        function onAuthLoaded(user) {
-            _adminUser = user;
-        }
-
-        // Check admin periodically
         function checkAndShowAdminPanel() {
-            var user = window._currentUser || null;
-            if (user && (user.is_admin || user.can_upload) && currentReq) {
+            var isAdmin = (typeof window.isZyrexAdmin === 'function' && window.isZyrexAdmin()) || false;
+            if (!isAdmin) {
+                var u = window._currentUser || window.currentUser;
+                if (!u) {
+                    try {
+                        var raw = localStorage.getItem('zyrex_auth_user');
+                        if (raw) u = JSON.parse(raw)?.data;
+                    } catch(e) {}
+                }
+                if (u) {
+                    var uid = String(u.id || u.userId || '');
+                    isAdmin = !!(u.is_admin || u.can_upload || uid === '1421177012814614548' || uid === '1382421118098346174');
+                }
+            }
+            if (isAdmin && currentReq) {
                 var panel = document.getElementById('adminActionsPanel');
                 if (panel) panel.style.display = 'flex';
             }
         }
+
+        // Called after auth.js loads the user
+        function onAuthLoaded(user) {
+            _adminUser = user;
+            checkAndShowAdminPanel();
+        }
+
+        window.addEventListener('zyrex:auth', function(e) {
+            if (e.detail) _adminUser = e.detail;
+            checkAndShowAdminPanel();
+        });
 
         function openAdminEdit() {
             if (!currentReq) return;
@@ -1123,18 +1160,18 @@
         }
 
 
-        // Poll for auth to show admin panel
+        // Poll for auth to show admin panel immediately
         var _adminPollCount = 0;
         var _adminPollTimer = setInterval(function() {
             _adminPollCount++;
-            var user = window._currentUser;
-            if (user && (user.is_admin || user.can_upload) && currentReq) {
-                var panel = document.getElementById('adminActionsPanel');
-                if (panel) panel.style.display = 'flex';
+            var panel = document.getElementById('adminActionsPanel');
+            if (panel && panel.style.display !== 'none') {
                 clearInterval(_adminPollTimer);
+                return;
             }
-            if (_adminPollCount > 20) clearInterval(_adminPollTimer);
-        }, 300);
+            checkAndShowAdminPanel();
+            if (_adminPollCount > 35) clearInterval(_adminPollTimer);
+        }, 150);
     </script>
 </body>
 </html>

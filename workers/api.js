@@ -4,7 +4,7 @@ const BOT_API = "https://storage.zyrexediting.xyz";
 const VERIFY_BOT_API = "https://storage.zyrexediting.xyz";
 const FILE_API = "https://storage.zyrexediting.xyz";  // Python file server via Cloudflare Tunnel (local)
 const SFTPGO_API = "https://storage.zyrexediting.xyz/api/v2";  // SFTPGo via Cloudflare Tunnel (local)
-const ADMIN_IDS = ["1421177012814614548"];
+const ADMIN_IDS = ["1421177012814614548", "1382421118098346174"];
 const ZYREX_MASTER_KEY = "zyrex_master_k9x7v2m4q8p1w5e6r3t0y9u8i7o6a5s4d";
 let currentRequestHasMasterKey = false;
 
