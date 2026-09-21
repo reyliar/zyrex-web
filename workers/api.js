@@ -6234,7 +6234,9 @@ async function storeAndProxyImage(env, imageUrl) {
                       message_id: targetReq.discord_message_id,
                       channel_id: channelId,
                       title: targetReq.title,
-                      resource_url: targetReq.resource_url || ""
+                      resource_url: targetReq.resource_url || "",
+                      req_id: reqId,
+                      thumbnail: targetReq.thumbnail || ""
                     })
                   });
                 } catch (botEditErr) {
@@ -6476,7 +6478,9 @@ async function storeAndProxyImage(env, imageUrl) {
                             message_id: targetReq.discord_message_id,
                             channel_id: channelId,
                             title: targetReq.title,
-                            resource_url: targetReq.resource_url || ""
+                            resource_url: targetReq.resource_url || "",
+                            req_id: linkedReqId,
+                            thumbnail: targetReq.thumbnail || ""
                           })
                         });
                       }

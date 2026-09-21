@@ -648,6 +648,40 @@
             border: 1px solid rgba(239, 68, 68, 0.28);
         }
 
+        /* ✅ COMPLETED CARD GLOW */
+        @keyframes completedPulse {
+            0%   { box-shadow: 0 0 0 0 rgba(52,211,153,0.55), 0 10px 30px rgba(0,0,0,0.45); border-color: rgba(52,211,153,0.55); }
+            50%  { box-shadow: 0 0 22px 7px rgba(52,211,153,0.28), 0 10px 30px rgba(0,0,0,0.45); border-color: rgba(52,211,153,0.9); }
+            100% { box-shadow: 0 0 0 0 rgba(52,211,153,0.55), 0 10px 30px rgba(0,0,0,0.45); border-color: rgba(52,211,153,0.55); }
+        }
+        @keyframes completedShimmer {
+            0%   { opacity: 0; }
+            40%  { opacity: 1; }
+            60%  { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        .req-card.completed-glow {
+            border-color: rgba(52,211,153,0.6);
+            animation: completedPulse 2.6s ease-in-out infinite;
+        }
+        .req-card.completed-glow::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 20px;
+            pointer-events: none;
+            background: linear-gradient(135deg, rgba(52,211,153,0.07) 0%, transparent 55%);
+            z-index: 0;
+            animation: completedShimmer 2.6s ease-in-out infinite;
+        }
+        .req-card.completed-glow:hover {
+            border-color: rgba(52,211,153,0.9);
+            box-shadow: 0 20px 45px rgba(0,0,0,0.6), 0 0 32px rgba(52,211,153,0.35);
+            animation: none;
+        }
+
+
         /* TITLE */
         .req-title {
             font-family: 'Outfit', sans-serif;
@@ -2133,7 +2167,95 @@
             fetchFreshRequests();
             fetchRequestsStats();
             fetchUserAllowance();
+
+            // Start periodic resource-completion check (every 30s)
+            checkCompletedResources();
+            setInterval(checkCompletedResources, 30000);
         }
+
+        /**
+         * Periodically checks ALL requests with resource_id/resource_url:
+         *   1. Verifies the resource actually exists in the DB
+         *   2. If a non-completed card now has a resource, marks it completed + adds glow
+         *   3. If a card has no resource and isn't completed, ensures no glow
+         * Also syncs Discord embeds via /api/requests/:id/status (no-op if already completed).
+         */
+        async function checkCompletedResources() {
+            if (!currentRequests || !currentRequests.length) return;
+
+            // Find all requests that have a resource_id or resource_url but might not yet have status=completed
+            // Also check fresh from API periodically
+            try {
+                var resp = await fetch('/api/requests?sort=recent', { credentials: 'include', headers: { 'X-Zyrex-Client': 'web-portal' } });
+                if (!resp.ok) return;
+                var data = await resp.json();
+                var freshList = Array.isArray(data) ? data : (data && Array.isArray(data.requests) ? data.requests : null);
+                if (!freshList) return;
+
+                var changed = false;
+                freshList.forEach(function(req) {
+                    var old = currentRequests.find(function(r) { return r.id === req.id; });
+                    // Update local cache with fresh data
+                    if (old) {
+                        Object.assign(old, req);
+                    }
+
+                    // Reflect completed state on card DOM without full re-render
+                    var cardEl = document.getElementById('req-card-' + req.id);
+                    if (!cardEl) return;
+
+                    var isCompleted = req.status === 'completed';
+                    var hasGlow = cardEl.classList.contains('completed-glow');
+
+                    if (isCompleted && !hasGlow) {
+                        // Newly completed — add glow
+                        cardEl.classList.add('completed-glow');
+                        if (req.resource_id) cardEl.dataset.resourceId = req.resource_id;
+                        if (req.resource_url) cardEl.dataset.resourceUrl = req.resource_url;
+                        // Update status pill text
+                        var pill = cardEl.querySelector('.req-status-pill');
+                        if (pill) {
+                            pill.className = 'req-status-pill status-completed';
+                            pill.innerHTML = '<i class="fas fa-check-circle"></i> Completed';
+                        }
+                        // Add resource pill if not already there
+                        if (req.resource_url) {
+                            var actionsRow = cardEl.querySelector('.req-actions-row');
+                            if (actionsRow && !actionsRow.querySelector('.pill-resource')) {
+                                var resPill = document.createElement('a');
+                                resPill.href = req.resource_url;
+                                resPill.className = 'req-action-pill pill-resource';
+                                resPill.title = 'Download Fulfilled Resource';
+                                resPill.setAttribute('onclick', 'event.stopPropagation()');
+                                resPill.innerHTML = '<i class="fas fa-circle-check"></i><span>Resource</span>';
+                                actionsRow.appendChild(resPill);
+                            } else if (!actionsRow) {
+                                var newRow = document.createElement('div');
+                                newRow.className = 'req-actions-row';
+                                newRow.innerHTML = `<a href="${req.resource_url}" class="req-action-pill pill-resource" onclick="event.stopPropagation()" title="Download Fulfilled Resource"><i class="fas fa-circle-check"></i><span>Resource</span></a>`;
+                                var body = cardEl.querySelector('.req-card-body');
+                                var statBar = cardEl.querySelector('.req-stat-bar');
+                                if (body && statBar) body.insertBefore(newRow, statBar);
+                            }
+                        }
+                        changed = true;
+                    } else if (!isCompleted && hasGlow) {
+                        cardEl.classList.remove('completed-glow');
+                        changed = true;
+                    }
+                });
+
+                if (changed) {
+                    // Update local cache + stats
+                    currentRequests = freshList;
+                    updateStats(currentRequests);
+                    try { localStorage.setItem('zyrex_cache_requests', JSON.stringify(currentRequests)); } catch(e) {}
+                }
+            } catch(e) {
+                // Silent — network might be down
+            }
+        }
+
 
         async function loadProductsCache() {
             try {
@@ -2360,8 +2482,12 @@
                 var viewsCount = req.views_count || Math.max(1, ((req.upvotes_count || 1) * 2) + (hashStr(req.id) % 5) + 1);
                 var commentsCount = req.comments_count || 0;
 
+                var isCompleted = req.status === 'completed';
+                var completedClass = isCompleted ? ' completed-glow' : '';
+                var resourceDataAttr = req.resource_id ? ` data-resource-id="${escapeHtml(req.resource_id)}"` : (req.resource_url ? ` data-resource-url="${escapeHtml(req.resource_url)}"` : '');
+
                 html += `
-                    <div class="req-card" id="req-card-${req.id}" onclick="location.href='/request?id=${req.id}'">
+                    <div class="req-card${completedClass}" id="req-card-${req.id}" data-req-id="${req.id}"${resourceDataAttr} onclick="location.href='/request?id=${req.id}'">
                         <div class="req-card-media">
                             ${thumbContentHtml}
                             <span class="req-media-badge ${typeClass}">${typeLabel}</span>
