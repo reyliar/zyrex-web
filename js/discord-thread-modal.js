@@ -844,8 +844,11 @@
 
         messages.forEach((msg) => {
             const author = msg.author || {};
-            const isBot = !!author.bot;
-            const authorName = escapeHtml(author.name || author.username || 'Discord User');
+            const rawName = (author.name || author.username || 'Discord User').trim();
+            const authorName = escapeHtml(rawName);
+            // Never show BOT badge on human users. Only show on the official system bot.
+            const isBot = !author.is_webhook && !msg.webhook_id && !!author.bot && 
+                (String(author.id) === '1519456130290417776' || rawName === 'Zyrex™ Web' || rawName === 'Zyrex Bot');
             const avatarUrl = author.avatar || '/assets/content.png';
             const timeFormatted = formatDiscordTime(msg.created_at || msg.timestamp);
             const parsedContent = parseDiscordMarkdown(msg.content || '');

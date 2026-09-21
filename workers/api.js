@@ -5893,6 +5893,8 @@ async function storeAndProxyImage(env, imageUrl) {
                       const ext = m.author.avatar.startsWith("a_") ? "gif" : "png";
                       avatarUrl = `/api/avatar/${m.author.id}/${m.author.avatar}.${ext}?size=64`;
                     }
+                    const isSysBot = !m.webhook_id && !!(m.author && m.author.bot) &&
+                      (String(m.author.id) === "1519456130290417776" || (m.author.username === "Zyrex Bot") || (m.author.username === "Zyrex™ Web"));
                     return {
                       id: m.id,
                       content: m.content || "",
@@ -5902,7 +5904,8 @@ async function storeAndProxyImage(env, imageUrl) {
                         name: m.author.global_name || m.author.username,
                         username: m.author.username,
                         avatar: avatarUrl || "/assets/content.png",
-                        bot: !!m.author.bot
+                        bot: isSysBot,
+                        is_webhook: !!m.webhook_id
                       },
                       attachments: (m.attachments || []).map(a => ({ url: a.url, filename: a.filename })),
                       reactions: (m.reactions || []).map(r => ({ emoji: r.emoji.name, count: r.count }))
