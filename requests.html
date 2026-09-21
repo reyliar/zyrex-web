@@ -601,35 +601,6 @@
         .type-scenepack { border-color: rgba(245, 158, 11, 0.35); color: #fbbf24; }
         .type-other { border-color: rgba(255, 255, 255, 0.2); color: #e2e8f0; }
 
-        .req-media-admin {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            z-index: 3;
-            display: flex;
-            gap: 5px;
-            background: rgba(8, 5, 10, 0.78);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            padding: 4px 6px;
-            border-radius: 10px;
-            border: 1px solid rgba(255, 255, 255, 0.14);
-        }
-
-        .req-media-admin button {
-            border-radius: 6px;
-            width: 24px;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: none;
-            font-size: 0.7rem;
-            color: #fff;
-        }
-
         /* CARD BODY */
         .req-card-body {
             padding: 16px 18px 18px;
@@ -2306,32 +2277,8 @@
                 var isRequesterAdmin = !!(req.is_admin || (req.user_id && ['1421177012814614548', '1382421118098346174'].includes(String(req.user_id))));
                 var adminBadgeHtml = isRequesterAdmin ? '<i class="fas fa-circle-check" style="color:#38bdf8;margin-left:4px;font-size:0.75rem;vertical-align:middle;" title="Verified Admin"></i>' : '';
 
-                var isAdminUser = (typeof window.isZyrexAdmin === 'function' && window.isZyrexAdmin()) || false;
-                if (!isAdminUser) {
-                    var u = window._currentUser || window.currentUser;
-                    if (!u) {
-                        try {
-                            var raw = localStorage.getItem('zyrex_auth_user');
-                            if (raw) u = JSON.parse(raw)?.data;
-                        } catch(e) {}
-                    }
-                    if (u) {
-                        var uid = String(u.id || u.userId || '');
-                        isAdminUser = !!(u.is_admin || u.can_upload || uid === '1421177012814614548' || uid === '1382421118098346174');
-                    }
-                }
-                var adminActionsHtml = isAdminUser ? `
-                    <div class="req-media-admin" onclick="event.stopPropagation()">
-                        <button onclick="quickCompleteRequest('${req.id}')" title="Mark as Completed" style="background:rgba(16,185,129,0.25);border:1px solid rgba(16,185,129,0.5);color:#34d399;"><i class="fas fa-check"></i></button>
-                        <button onclick="quickEditRequest('${req.id}')" title="Edit Request" style="background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.25);color:#fff;"><i class="fas fa-edit"></i></button>
-                        <a href="/upload?request_id=${encodeURIComponent(req.id)}&title=${encodeURIComponent(req.title)}&url=${encodeURIComponent(req.product_url || '')}&creator=${encodeURIComponent(req.creator_name || '')}" title="Fulfill on Studio" style="background:rgba(56,189,248,0.25);border:1px solid rgba(56,189,248,0.5);color:#38bdf8;border-radius:6px;width:24px;height:24px;display:flex;align-items:center;justify-content:center;font-size:0.7rem;text-decoration:none;"><i class="fas fa-upload"></i></a>
-                        <button onclick="quickRejectRequest('${req.id}')" title="Reject Request" style="background:rgba(245,158,11,0.25);border:1px solid rgba(245,158,11,0.5);color:#fbbf24;"><i class="fas fa-ban"></i></button>
-                        <button onclick="quickDeleteRequest('${req.id}')" title="Delete Request" style="background:rgba(255,43,82,0.25);border:1px solid rgba(255,43,82,0.5);color:#ff6b87;"><i class="fas fa-trash"></i></button>
-                    </div>
-                ` : '';
-
                 var thumbContentHtml = req.thumbnail ? 
-                    `<img src="${req.thumbnail}" alt="${escapeHtml(req.title)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'req-media-placeholder\\'><i class=\\'fas fa-${getTypeIcon(req.type)}\\'></i></div><span class=\\'req-media-badge ${typeClass}\\'>${typeLabel}</span>${adminActionsHtml.replace(/'/g, "\\'")}'">` :
+                    `<img src="${escapeHtml(req.thumbnail)}" alt="${escapeHtml(req.title)}" loading="lazy" onerror="this.style.display='none';if(this.nextElementSibling)this.nextElementSibling.style.display='flex';"><div class="req-media-placeholder" style="display:none;"><i class="fas fa-${getTypeIcon(req.type)}"></i></div>` :
                     `<div class="req-media-placeholder"><i class="fas fa-${getTypeIcon(req.type)}"></i></div>`;
 
                 // Price badge
@@ -2406,7 +2353,6 @@
                         <div class="req-card-media">
                             ${thumbContentHtml}
                             <span class="req-media-badge ${typeClass}">${typeLabel}</span>
-                            ${adminActionsHtml}
                         </div>
                         <div class="req-card-body">
                             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
@@ -2584,9 +2530,7 @@
                 _adminAuthInitialized = true;
                 var adminTrackBtn = document.getElementById('heroAdminTrackingBtn');
                 if (adminTrackBtn) adminTrackBtn.style.display = 'inline-flex';
-                ensureAdminChunk().then(function(ready) {
-                    if (typeof renderRequestsGrid === 'function') renderRequestsGrid();
-                });
+                ensureAdminChunk();
                 return true;
             }
             return false;
