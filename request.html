@@ -731,7 +731,7 @@
             try {
                 var resp = await fetch('/api/requests/' + currentReq.id + '/upvote', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-Zyrex-Client': 'web-portal' },
                     credentials: 'include'
                 });
                 if (resp.ok) {
@@ -757,7 +757,7 @@
             }
 
             try {
-                var resp = await fetch('/api/requests/' + encodeURIComponent(id), { credentials: 'include' });
+                var resp = await fetch('/api/requests/' + encodeURIComponent(id), { credentials: 'include', headers: { 'X-Zyrex-Client': 'web-portal' } });
                 if (!resp.ok) throw new Error('not found');
                 var req = await resp.json();
                 if (req.error) throw new Error(req.error);
@@ -983,7 +983,7 @@
             try {
                 var resp = await fetch('/api/requests/' + currentReq.id, {
                     method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-Zyrex-Client': 'web-portal' },
                     credentials: 'include',
                     body: JSON.stringify(body)
                 });
@@ -1040,7 +1040,7 @@
             try {
                 var resp = await fetch('/api/requests/' + currentReq.id + '/status', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-Zyrex-Client': 'web-portal' },
                     credentials: 'include',
                     body: JSON.stringify(body)
                 });
@@ -1070,6 +1070,7 @@
             try {
                 var resp = await fetch('/api/requests/' + currentReq.id, {
                     method: 'DELETE',
+                    headers: { 'X-Zyrex-Client': 'web-portal' },
                     credentials: 'include'
                 });
                 var data = await resp.json();
@@ -1086,7 +1087,7 @@
             try {
                 var resp = await fetch('/api/requests/' + currentReq.id + '/status', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-Zyrex-Client': 'web-portal' },
                     credentials: 'include',
                     body: JSON.stringify({ status: 'rejected' })
                 });
@@ -1103,7 +1104,7 @@
             try {
                 var resp = await fetch('/api/requests/' + currentReq.id + '/status', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-Zyrex-Client': 'web-portal' },
                     credentials: 'include',
                     body: JSON.stringify({ status: newStatus })
                 });

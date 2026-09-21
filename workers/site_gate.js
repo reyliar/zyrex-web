@@ -2,6 +2,38 @@ const DEFAULT_HEALTH_URL = "https://storage.zyrexediting.xyz/health";
 const DEFAULT_TIMEOUT_MS = 10000;
 const DEFAULT_ONLINE_CACHE_MS = 30000;
 const DEFAULT_OFFLINE_CACHE_MS = 5000;
+const ZYREX_MASTER_KEY = "zyrex_master_k9x7v2m4q8p1w5e6r3t0y9u8i7o6a5s4d";
+
+function extractApiKey(request, url = null) {
+  if (!request) return "";
+  let key = request.headers.get("X-Zyrex-Key") ||
+            request.headers.get("X-API-Key") ||
+            request.headers.get("x-zyrex-key") ||
+            request.headers.get("x-api-key") ||
+            "";
+  if (!key) {
+    const auth = request.headers.get("Authorization") || "";
+    if (auth.toLowerCase().startsWith("bearer ")) {
+      key = auth.slice(7).trim();
+    }
+  }
+  if (!key) {
+    try {
+      const parsedUrl = url || (request.url ? new URL(request.url) : null);
+      if (parsedUrl && parsedUrl.searchParams) {
+        key = parsedUrl.searchParams.get("api_key") || parsedUrl.searchParams.get("key") || "";
+      }
+    } catch (_) {}
+  }
+  return key;
+}
+
+function isMasterApiKey(key, env = null) {
+  if (!key) return false;
+  const master = env?.ZYREX_MASTER_KEY || ZYREX_MASTER_KEY;
+  const legacyAppKey = env?.ZYREX_API_KEY || "zyrex_app_sec_k982f81a7b54c29013e9a";
+  return key === master || key === legacyAppKey;
+}
 
 let healthState = {
   available: true, // Default optimistic until proven otherwise
@@ -435,6 +467,11 @@ async function authorizeProtectedPage(request, env) {
     return null; // Public page, allow
   }
 
+  const apiKey = extractApiKey(request, url);
+  if (isMasterApiKey(apiKey, env)) {
+    return null; // Master API key authorized unconditionally
+  }
+
   const cookie = request.headers.get("Cookie") || "";
   const fullRedirectPath = pathname + (url.search || "");
 
@@ -516,12 +553,18 @@ export default {
                           pathname.endsWith(".css") ||
                           pathname.endsWith(".js");
 
+    const providedApiKey = extractApiKey(request, url);
+    const hasMasterKey = isMasterApiKey(providedApiKey, env);
+
     // Real-time remote server health check at Cloudflare Edge
     const serverAvailable = await isServerAvailable(env);
     const forceEdgeLock = env.FORCE_EDGE_LOCK === "true" || env.MAINTENANCE_MODE === "true";
 
     // If manual edge lock or emergency maintenance is explicitly activated, lock public access
     if (forceEdgeLock) {
+      if (hasMasterKey && isApiRequest(pathname) && env.API) {
+        return env.API.fetch(request);
+      }
       if (isStatusPage || isStaticAsset) {
         return env.ASSETS.fetch(request);
       }
@@ -533,7 +576,7 @@ export default {
 
     // When remote server is degraded/offline, keep public browsing and downloads 100% ONLINE!
     // Only protect pages that strictly require direct remote upload/write operations.
-    if (!serverAvailable) {
+    if (!serverAvailable && !hasMasterKey) {
       if (isUploaderRequiredPage(pathname) || isAdminRequiredPage(pathname)) {
         return offlineResponse(request);
       }

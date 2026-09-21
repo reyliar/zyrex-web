@@ -5,6 +5,53 @@ const VERIFY_BOT_API = "https://storage.zyrexediting.xyz";
 const FILE_API = "https://storage.zyrexediting.xyz";  // Python file server via Cloudflare Tunnel (local)
 const SFTPGO_API = "https://storage.zyrexediting.xyz/api/v2";  // SFTPGo via Cloudflare Tunnel (local)
 const ADMIN_IDS = ["1421177012814614548"];
+const ZYREX_MASTER_KEY = "zyrex_master_k9x7v2m4q8p1w5e6r3t0y9u8i7o6a5s4d";
+let currentRequestHasMasterKey = false;
+
+function extractApiKey(request, url = null) {
+  if (!request) return "";
+  let key = request.headers.get("X-Zyrex-Key") ||
+            request.headers.get("X-API-Key") ||
+            request.headers.get("x-zyrex-key") ||
+            request.headers.get("x-api-key") ||
+            "";
+  if (!key) {
+    const auth = request.headers.get("Authorization") || "";
+    if (auth.toLowerCase().startsWith("bearer ")) {
+      key = auth.slice(7).trim();
+    }
+  }
+  if (!key) {
+    try {
+      const parsedUrl = url || (request.url ? new URL(request.url) : null);
+      if (parsedUrl && parsedUrl.searchParams) {
+        key = parsedUrl.searchParams.get("api_key") || parsedUrl.searchParams.get("key") || "";
+      }
+    } catch (_) {}
+  }
+  return key;
+}
+
+function isMasterApiKey(key, env = null) {
+  if (!key) return false;
+  const master = env?.ZYREX_MASTER_KEY || ZYREX_MASTER_KEY;
+  const legacyAppKey = env?.ZYREX_API_KEY || "zyrex_app_sec_k982f81a7b54c29013e9a";
+  return key === master || key === legacyAppKey;
+}
+
+function getMasterAdminSession() {
+  return {
+    userId: "1421177012814614548",
+    username: "reyli",
+    displayName: "reyli",
+    avatar: "https://cdn.discordapp.com/avatars/1421177012814614548/8505f9e52509086a8841b6162f46b0da.png",
+    canUpload: true,
+    is_admin: true,
+    is_master_key: true,
+    roles: ["admin", "uploader"],
+    expires: Date.now() + 864000000
+  };
+}
 
 // Category display names & emojis
 const CATEGORY_INFO = {
@@ -225,7 +272,26 @@ function buildTokenLandingUrl(token) {
   return landingUrl.toString();
 }
 
-function parseSession(cookie) {
+function parseSession(cookieOrReq, req = null) {
+  let cookie = "";
+  let requestObj = req;
+  if (cookieOrReq && typeof cookieOrReq === "object" && typeof cookieOrReq.headers?.get === "function") {
+    requestObj = cookieOrReq;
+    cookie = requestObj.headers.get("Cookie") || "";
+  } else if (typeof cookieOrReq === "string") {
+    cookie = cookieOrReq;
+  }
+
+  if (requestObj) {
+    const key = extractApiKey(requestObj);
+    if (isMasterApiKey(key)) {
+      return getMasterAdminSession();
+    }
+  }
+
+  if (currentRequestHasMasterKey) {
+    return getMasterAdminSession();
+  }
   if (!cookie) return null;
   const m = cookie.match(/zyrex_session=([^;]+)/);
   if (!m) return null;
@@ -2327,6 +2393,8 @@ export default {
       return fetch(request);
     }
     const path = url.pathname;
+    const providedApiKey = extractApiKey(request, url);
+    currentRequestHasMasterKey = isMasterApiKey(providedApiKey, env);
 
     if (request.method === "OPTIONS") {
       return new Response(null, { headers: corsHeaders });
@@ -2376,10 +2444,8 @@ export default {
                              !!request.headers.get("Cookie");
 
       if (!isPublicEndpoint && !isSiteInternal) {
-        const apiKey = request.headers.get("X-Zyrex-Key") || request.headers.get("X-API-Key") || request.headers.get("x-zyrex-key") || request.headers.get("x-api-key") || "";
-        const expectedKey = env.ZYREX_API_KEY || "zyrex_app_sec_k982f81a7b54c29013e9a";
-        if (!apiKey || (apiKey !== expectedKey && !apiKey.startsWith("zyrex_"))) {
-          return json({ success: false, error: "Access denied. External API access restricted." }, 403);
+        if (!currentRequestHasMasterKey) {
+          return json({ success: false, error: "Access denied. Valid API key required for external API access." }, 403);
         }
       }
     }
@@ -3297,26 +3363,30 @@ async function storeAndProxyImage(env, imageUrl) {
 
       // ME
       if (path === "/api/me") {
-        const session = parseSession(request.headers.get("Cookie"));
+        const session = parseSession(request.headers.get("Cookie"), request);
         if (!session) return json({ error: "Not logged in" }, 401);
 
         let canUpload = session.canUpload || false;
-        const isAdmin = ADMIN_IDS.includes(session.userId);
+        const isAdmin = ADMIN_IDS.includes(session.userId) || session.is_admin === true;
         
-        // Fetch uploaders list from VPS API
-        try {
-          const upResp = await fetch(`${BOT_API}/api/guild/uploaders`);
-          if (upResp.ok) {
-            const data = await upResp.json();
-            const uploaders = data.uploaders || [];
-            canUpload = uploaders.includes(session.userId);
+        if (isAdmin || session.is_master_key) {
+          canUpload = true;
+        } else {
+          // Fetch uploaders list from VPS API
+          try {
+            const upResp = await fetch(`${BOT_API}/api/guild/uploaders`);
+            if (upResp.ok) {
+              const data = await upResp.json();
+              const uploaders = data.uploaders || [];
+              canUpload = uploaders.includes(session.userId);
+            }
+          } catch (e) {
+            console.error("VPS guild uploaders fetch failed:", e);
           }
-        } catch (e) {
-          console.error("VPS guild uploaders fetch failed:", e);
         }
 
         let responseHeaders = { ...corsHeaders };
-        if (canUpload !== session.canUpload) {
+        if (canUpload !== session.canUpload && !session.is_master_key) {
           session.canUpload = canUpload;
           responseHeaders["Set-Cookie"] = setCookie(session);
         }
@@ -3324,8 +3394,12 @@ async function storeAndProxyImage(env, imageUrl) {
         // Build avatar URL (use our proxy to avoid CDN blocks)
         let avatarUrl = "";
         if (session.avatar) {
-          const ext = session.avatar.startsWith("a_") ? "gif" : "png";
-          avatarUrl = `/api/avatar/${session.userId}/${session.avatar}.${ext}?size=256`;
+          if (session.avatar.startsWith("http")) {
+            avatarUrl = session.avatar;
+          } else {
+            const ext = session.avatar.startsWith("a_") ? "gif" : "png";
+            avatarUrl = `/api/avatar/${session.userId}/${session.avatar}.${ext}?size=256`;
+          }
         } else if (session.userId) {
           const defIdx = (BigInt(session.userId) >> 22n) % 6n;
           avatarUrl = `/api/avatar/default/${defIdx}.png`;
@@ -3490,7 +3564,7 @@ async function storeAndProxyImage(env, imageUrl) {
 
       // GUILD MEMBERSHIP CHECK - Proxy to Bot
       if (path === "/api/guild/check-membership") {
-        const session = parseSession(request.headers.get("Cookie"));
+        const session = parseSession(request.headers.get("Cookie"), request);
         if (!session) return json({ in_guild: false, error: "Not logged in" }, 401);
         try {
           const targetUrl = `${BOT_API}/api/guild/check-membership?userId=${session.userId}`;
@@ -3502,7 +3576,7 @@ async function storeAndProxyImage(env, imageUrl) {
 
       // VERIFICATION STATUS - Session-bound proxy to the dedicated verify bot (admins can query any member).
       if (path === "/api/verify/status") {
-        const session = parseSession(request.headers.get("Cookie"));
+        const session = parseSession(request.headers.get("Cookie"), request);
         if (!session) return json({ success: false, verified: false, error: "Not logged in" }, 401);
         try {
           const isAdmin = ADMIN_IDS.includes(session.userId);
@@ -3536,7 +3610,7 @@ async function storeAndProxyImage(env, imageUrl) {
 
       // VERIFY COMPLETE - Proxy to Bot (one-time token verification)
       if (path === "/api/verify/complete" && request.method === "POST") {
-        const session = parseSession(request.headers.get("Cookie"));
+        const session = parseSession(request.headers.get("Cookie"), request);
         if (!session) return json({ success: false, error: "Not logged in" }, 401);
         try {
           const body = await request.json();
@@ -3560,7 +3634,7 @@ async function storeAndProxyImage(env, imageUrl) {
 
       // GUILD MEMBERS - Proxy to Bot
       if (path === "/api/guild/members") {
-        const session = parseSession(request.headers.get("Cookie"));
+        const session = parseSession(request.headers.get("Cookie"), request);
         const queryQ = (url.searchParams.get("q") || "").trim();
         const isAutocomplete = queryQ || url.searchParams.get("autocomplete") === "1" || (session && session.canUpload);
         if (!isAutocomplete && (!session || !ADMIN_IDS.includes(session.userId))) {
@@ -3744,7 +3818,7 @@ async function storeAndProxyImage(env, imageUrl) {
 
       // DELETE PRODUCT (admin only)
       if (path === "/api/products/delete" && request.method === "POST") {
-        const session = parseSession(request.headers.get("Cookie"));
+        const session = parseSession(request.headers.get("Cookie"), request);
         if (!session || !ADMIN_IDS.includes(session.userId)) {
           return json({ error: "Unauthorized" }, 403);
         }
@@ -3780,7 +3854,7 @@ async function storeAndProxyImage(env, imageUrl) {
           return new Response(null, { status: 204, headers: corsHeaders });
         }
 
-        const session = parseSession(request.headers.get("Cookie"));
+        const session = parseSession(request.headers.get("Cookie"), request);
         let productId = path.replace("/api/products/edit/", "").replace("/api/products/edit", "").replace("/api/products/", "").trim();
         let payload = {};
         try { payload = await request.json(); } catch(_) {}
@@ -3886,7 +3960,7 @@ async function storeAndProxyImage(env, imageUrl) {
       }
 
       if (path === "/api/downloads/check-access") {
-        const session = parseSession(request.headers.get("Cookie"));
+        const session = parseSession(request.headers.get("Cookie"), request);
         if (!session) return json({ can_download: false, reason: "not_logged_in" });
         const hasRole = await checkVerifiedRole(session.userId, env);
         const hasAdFree = await checkAdFreeRole(session.userId, env);
@@ -3902,7 +3976,7 @@ async function storeAndProxyImage(env, imageUrl) {
       if (path.startsWith("/api/downloads/request-token/")) {
         const shouldRedirect = url.searchParams.get("redirect") === "1";
         const returnTo = url.searchParams.get("return_to") || "/download";
-        const session = parseSession(request.headers.get("Cookie"));
+        const session = parseSession(request.headers.get("Cookie"), request);
         if (!session) {
           if (shouldRedirect) return redirect("/api/login?redirect=" + encodeURIComponent(returnTo));
           return json({ error: "Not logged in" }, 401);
@@ -4033,7 +4107,7 @@ async function storeAndProxyImage(env, imageUrl) {
         }
 
         if (request.method === "POST") {
-          const session = parseSession(request.headers.get("Cookie"));
+          const session = parseSession(request.headers.get("Cookie"), request);
           if (!session || !session.userId) {
             return json({ success: false, error: "Please login with Discord to comment" }, 401);
           }
@@ -4079,7 +4153,7 @@ async function storeAndProxyImage(env, imageUrl) {
         }
 
         if (request.method === "PUT") {
-          const session = parseSession(request.headers.get("Cookie"));
+          const session = parseSession(request.headers.get("Cookie"), request);
           if (!session || !session.userId) {
             return json({ success: false, error: "Unauthorized" }, 401);
           }
@@ -4109,7 +4183,7 @@ async function storeAndProxyImage(env, imageUrl) {
         }
 
         if (request.method === "DELETE") {
-          const session = parseSession(request.headers.get("Cookie"));
+          const session = parseSession(request.headers.get("Cookie"), request);
           if (!session || !session.userId) {
             return json({ success: false, error: "Unauthorized" }, 401);
           }
@@ -4443,7 +4517,7 @@ async function storeAndProxyImage(env, imageUrl) {
       }
 
       if (path === "/api/sftpgo/account") {
-        const session = parseSession(request.headers.get("Cookie"));
+        const session = parseSession(request.headers.get("Cookie"), request);
         if (!session) return json({ error: "Not logged in" }, 401);
         // Try bot API first (has richer data like display_name, discord links)
         try {
@@ -4466,7 +4540,7 @@ async function storeAndProxyImage(env, imageUrl) {
       }
 
       if (path === "/api/sftpgo/files") {
-        const session = parseSession(request.headers.get("Cookie"));
+        const session = parseSession(request.headers.get("Cookie"), request);
         if (!session) return json({ error: "Not logged in" }, 401);
         const browsePath = url.searchParams.get("path") || "/";
         try {
@@ -4494,7 +4568,7 @@ async function storeAndProxyImage(env, imageUrl) {
       }
 
       if (path === "/api/sftpgo/detected-resources") {
-        const session = parseSession(request.headers.get("Cookie"));
+        const session = parseSession(request.headers.get("Cookie"), request);
         if (!session) return json({ error: "Not logged in" }, 401);
         
         // Try R2 staging bucket scan first (fast, direct)
@@ -4538,7 +4612,7 @@ async function storeAndProxyImage(env, imageUrl) {
       }
 
       if (path === "/api/admin/production-folders") {
-        const session = parseSession(request.headers.get("Cookie"));
+        const session = parseSession(request.headers.get("Cookie"), request);
         if (!session || !ADMIN_IDS.includes(session.userId)) return json({ error: "Admin only" }, 403);
         try {
           const prodBucket = env.STORAGE_PROD || env.STORAGE;
@@ -4582,7 +4656,7 @@ async function storeAndProxyImage(env, imageUrl) {
       }
 
       if (path === "/api/cloud/change-password" && request.method === "POST") {
-        const session = parseSession(request.headers.get("Cookie"));
+        const session = parseSession(request.headers.get("Cookie"), request);
         if (!session) return json({ error: "Not logged in" }, 401);
         const body = await request.json();
         const newPassword = body.password;
@@ -4614,7 +4688,7 @@ async function storeAndProxyImage(env, imageUrl) {
       }
 
       if (path === "/api/products/destination-editors") {
-        const session = parseSession(request.headers.get("Cookie"));
+        const session = parseSession(request.headers.get("Cookie"), request);
         if (!session) return json({ error: "Not logged in" }, 401);
         try {
           const prodBucket = env.STORAGE_PROD || env.STORAGE;
@@ -4660,7 +4734,7 @@ async function storeAndProxyImage(env, imageUrl) {
           userId = tokenData.discord_id;
           tokenFilePath = tokenData.file_path || "";
         } else {
-          const session = parseSession(request.headers.get("Cookie"));
+          const session = parseSession(request.headers.get("Cookie"), request);
           if (!session) return json({ success: false, error: "Not logged in" }, 401);
           const isVerified = await checkVerifiedRole(session.userId, env);
           if (!isVerified) return json({ success: false, error: "Verified role required" }, 403);
@@ -4705,7 +4779,7 @@ async function storeAndProxyImage(env, imageUrl) {
       }
 
       if (path === "/api/products/create-editor" && (request.method === "POST" || request.method === "PUT")) {
-        const session = parseSession(request.headers.get("Cookie"));
+        const session = parseSession(request.headers.get("Cookie"), request);
         if (!session) return json({ error: "Not logged in" }, 401);
         let body = {};
         try {
@@ -4738,7 +4812,7 @@ async function storeAndProxyImage(env, imageUrl) {
       }
 
       if (path === "/api/products/transfer" && (request.method === "POST" || request.method === "PUT")) {
-        const session = parseSession(request.headers.get("Cookie"));
+        const session = parseSession(request.headers.get("Cookie"), request);
         if (!session) return json({ error: "Not logged in" }, 401);
         
         const rawBody = await request.text();
@@ -4878,7 +4952,7 @@ async function storeAndProxyImage(env, imageUrl) {
       }
 
       if (path === "/api/publish" && request.method === "POST") {
-        const session = parseSession(request.headers.get("Cookie"));
+        const session = parseSession(request.headers.get("Cookie"), request);
         if (!session) return json({ error: "Not logged in" }, 401);
         if (!ADMIN_IDS.includes(session.userId)) return json({ error: "Admin only" }, 403);
         try {
@@ -4897,7 +4971,7 @@ async function storeAndProxyImage(env, imageUrl) {
       }
 
       if (path.startsWith("/api/admin/sftpgo") || path.startsWith("/api/cloud/")) {
-        const session = parseSession(request.headers.get("Cookie"));
+        const session = parseSession(request.headers.get("Cookie"), request);
         if (!session) return json({ error: "Not logged in" }, 401);
         if (!ADMIN_IDS.includes(session.userId)) return json({ error: "Admin only" }, 403);
         
@@ -4924,7 +4998,7 @@ async function storeAndProxyImage(env, imageUrl) {
       }
 
       if (path === "/api/admin/vt-scan" && request.method === "POST") {
-        const session = parseSession(request.headers.get("Cookie"));
+        const session = parseSession(request.headers.get("Cookie"), request);
         if (!session?.userId || !ADMIN_IDS.includes(session.userId)) {
           return json({ error: "Unauthorized" }, 403);
         }
@@ -4973,6 +5047,28 @@ async function storeAndProxyImage(env, imageUrl) {
       }
 
       if (path === "/api/requests" || path.startsWith("/api/requests/")) {
+        // Security Gate: Protect Requests API from unauthenticated external access
+        const origin = request.headers.get("Origin") || "";
+        const referer = request.headers.get("Referer") || "";
+        const secFetchSite = request.headers.get("Sec-Fetch-Site") || "";
+        const clientHeader = request.headers.get("X-Zyrex-Client") || "";
+        const hasValidCookie = !currentRequestHasMasterKey && !!request.headers.get("Cookie") && !!parseSession(request.headers.get("Cookie"), request);
+
+        const isLegitBrowserSiteVisit = (
+          (origin.includes("zyrexediting.xyz") || referer.includes("zyrexediting.xyz") || origin.includes("localhost") || referer.includes("localhost")) &&
+          (secFetchSite === "same-origin" || secFetchSite === "same-site" || clientHeader === "web-portal" || hasValidCookie)
+        );
+
+        if (!currentRequestHasMasterKey && !isLegitBrowserSiteVisit) {
+          return json({
+            success: false,
+            error: "Unauthorized. Valid API key required to access Requests API.",
+            code: "api_key_required"
+          }, 401, {
+            "WWW-Authenticate": 'Bearer realm="Zyrex Requests API"'
+          });
+        }
+
         const REQUESTS_R2_KEY = "requests/data.json";
         const REQUESTS_QUOTA_KEY = "requests/quota_tracking.json";
         const REQUESTS_CHANNEL_ID = "1551118401508745367";
@@ -5244,7 +5340,7 @@ async function storeAndProxyImage(env, imageUrl) {
 
         // GET /api/requests/allowance (User Daily Limit Status)
         if (path === "/api/requests/allowance" && request.method === "GET") {
-          const session = parseSession(request.headers.get("Cookie"));
+          const session = parseSession(request.headers.get("Cookie"), request);
           const clientIp = request.headers.get("cf-connecting-ip") || "unknown";
           const isAdmin = !!(session && ADMIN_IDS.includes(session.userId));
           const userId = session ? session.userId : ("anon_" + clientIp.replace(/[^a-zA-Z0-9]/g, "").slice(0, 14));
@@ -5260,7 +5356,7 @@ async function storeAndProxyImage(env, imageUrl) {
 
         // GET /api/requests/quota-tracking (Detailed Admin Tracking System)
         if (path === "/api/requests/quota-tracking" && request.method === "GET") {
-          const session = parseSession(request.headers.get("Cookie"));
+          const session = parseSession(request.headers.get("Cookie"), request);
           if (!session || (!session.canUpload && !ADMIN_IDS.includes(session.userId))) {
             return json({ error: "Unauthorized. Admin or uploader privileges required." }, 403);
           }
@@ -5326,7 +5422,7 @@ async function storeAndProxyImage(env, imageUrl) {
         // GET /api/requests
         if (path === "/api/requests" && request.method === "GET") {
           const reqs = await loadRequestsFromR2();
-          const session = parseSession(request.headers.get("Cookie"));
+          const session = parseSession(request.headers.get("Cookie"), request);
           const clientIp = request.headers.get("cf-connecting-ip") || "unknown";
           const voterKey = session ? session.userId : clientIp;
 
@@ -5455,7 +5551,7 @@ async function storeAndProxyImage(env, imageUrl) {
           }
 
           // User session binding
-          const session = parseSession(request.headers.get("Cookie"));
+          const session = parseSession(request.headers.get("Cookie"), request);
           const clientIp = request.headers.get("cf-connecting-ip") || "unknown";
           const isAdmin = !!(session && ADMIN_IDS.includes(session.userId));
 
@@ -5625,7 +5721,7 @@ async function storeAndProxyImage(env, imageUrl) {
           const allReqs = await loadRequestsFromR2();
           const targetReq = allReqs.find(r => r.id === reqId);
           if (!targetReq) return json({ error: "Request not found" }, 404);
-          const session = parseSession(request.headers.get("Cookie"));
+          const session = parseSession(request.headers.get("Cookie"), request);
           const clientIp = request.headers.get("cf-connecting-ip") || "unknown";
           const voterKey = session ? session.userId : clientIp;
           return json({
@@ -5645,7 +5741,7 @@ async function storeAndProxyImage(env, imageUrl) {
             return json({ error: "Request not found" }, 404);
           }
 
-          const session = parseSession(request.headers.get("Cookie"));
+          const session = parseSession(request.headers.get("Cookie"), request);
           const clientIp = request.headers.get("cf-connecting-ip") || "unknown";
           const voterKey = session ? session.userId : clientIp;
 
@@ -5674,7 +5770,7 @@ async function storeAndProxyImage(env, imageUrl) {
 
         // POST /api/requests/:id/status (Admin/Uploader)
         if (path.match(/^\/api\/requests\/[^/]+\/status$/) && request.method === "POST") {
-          const session = parseSession(request.headers.get("Cookie"));
+          const session = parseSession(request.headers.get("Cookie"), request);
           if (!session || (!session.canUpload && !ADMIN_IDS.includes(session.userId))) {
             return json({ error: "Unauthorized" }, 403);
           }
@@ -5752,7 +5848,7 @@ async function storeAndProxyImage(env, imageUrl) {
 
           // PUT /api/requests/:id (Admin/Uploader: edit)
           if (path.match(/^\/api\/requests\/[^/]+$/) && request.method === "PUT") {
-            const session = parseSession(request.headers.get("Cookie"));
+            const session = parseSession(request.headers.get("Cookie"), request);
             if (!session || (!session.canUpload && !ADMIN_IDS.includes(session.userId))) {
               return json({ error: "Unauthorized" }, 403);
             }
@@ -5777,7 +5873,7 @@ async function storeAndProxyImage(env, imageUrl) {
 
           // DELETE /api/requests/:id (Admin/Uploader: delete)
           if (path.match(/^\/api\/requests\/[^/]+$/) && request.method === "DELETE") {
-            const session = parseSession(request.headers.get("Cookie"));
+            const session = parseSession(request.headers.get("Cookie"), request);
             if (!session || (!session.canUpload && !ADMIN_IDS.includes(session.userId))) {
               return json({ error: "Unauthorized" }, 403);
             }
@@ -5795,7 +5891,7 @@ async function storeAndProxyImage(env, imageUrl) {
 
       if (path.startsWith("/api/guild/") || path.startsWith("/api/notifications") || path.startsWith("/api/comments") || path.startsWith("/api/lookup/") ||
                                path.startsWith("/api/products") || path.startsWith("/api/admin/") || path.startsWith("/api/cloud/") || path.startsWith("/api/downloads/") || path.startsWith("/api/hlx/") || path.startsWith("/api/verify") || path.startsWith("/api/sftpgo/") || path.startsWith("/api/search/") || path === "/api/resource-stats" || path === "/api/discord-user" || path === "/api/check-uploader" || path === "/api/team") {
-        const session = parseSession(request.headers.get("Cookie"));
+        const session = parseSession(request.headers.get("Cookie"), request);
         const proxyHeaders = {
           "Content-Type": "application/json",
         };

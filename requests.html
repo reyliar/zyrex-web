@@ -1978,7 +1978,7 @@
 
         async function fetchUserAllowance() {
             try {
-                var resp = await fetch('/api/requests/allowance', { credentials: 'include' });
+                var resp = await fetch('/api/requests/allowance', { credentials: 'include', headers: { 'X-Zyrex-Client': 'web-portal' } });
                 if (resp.ok) {
                     var data = await resp.json();
                     if (data && data.success) {
@@ -2112,7 +2112,7 @@
                 if (activeType !== 'all') url += '&type=' + activeType;
                 if (searchQuery) url += '&search=' + encodeURIComponent(searchQuery);
 
-                var resp = await fetch(url, { credentials: 'include' });
+                var resp = await fetch(url, { credentials: 'include', headers: { 'X-Zyrex-Client': 'web-portal' } });
                 if (resp.ok) {
                     var data = await resp.json();
                     var list = Array.isArray(data) ? data : (data && Array.isArray(data.requests) ? data.requests : null);
@@ -2132,7 +2132,7 @@
 
         async function fetchRequestsStats() {
             try {
-                var resp = await fetch('/api/requests/stats', { credentials: 'include' });
+                var resp = await fetch('/api/requests/stats', { credentials: 'include', headers: { 'X-Zyrex-Client': 'web-portal' } });
                 if (resp.ok) {
                     var s = await resp.json();
                     var stats = s.stats || s;
@@ -2358,7 +2358,7 @@
             try {
                 var resp = await fetch(`/api/requests/${id}/upvote`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-Zyrex-Client': 'web-portal' },
                     credentials: 'include'
                 });
                 if (resp.ok) {
@@ -2718,7 +2718,7 @@
             try {
                 var resp = await fetch('/api/requests', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 'Content-Type': 'application/json', 'X-Zyrex-Client': 'web-portal' },
                     credentials: 'include',
                     body: JSON.stringify(payload)
                 });
