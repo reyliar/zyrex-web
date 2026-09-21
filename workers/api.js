@@ -5298,7 +5298,7 @@ async function storeAndProxyImage(env, imageUrl) {
             }
           }
 
-          // 2. If direct REST didn't succeed, call BOT_API backend
+          let botData = null;
           if (!messageId) {
             try {
               const botResp = await fetch(`${BOT_API}/api/requests/announce`, {
@@ -5307,7 +5307,7 @@ async function storeAndProxyImage(env, imageUrl) {
                 body: JSON.stringify(reqData)
               });
               if (botResp.ok) {
-                const botData = await botResp.json();
+                botData = await botResp.json();
                 if (botData && botData.message_id) {
                   messageId = botData.message_id;
                   channelId = botData.channel_id || REQUESTS_CHANNEL_ID;
@@ -5319,8 +5319,8 @@ async function storeAndProxyImage(env, imageUrl) {
           }
 
           // 3. Create Discord discussion thread for this request embed
-          let threadId = null;
-          if (messageId) {
+          let threadId = (botData && botData.thread_id) ? botData.thread_id : null;
+          if (messageId && !threadId) {
             if (env.DISCORD_BOT_TOKEN) {
               try {
                 const thResp = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages/${messageId}/threads`, {
@@ -5374,13 +5374,28 @@ async function storeAndProxyImage(env, imageUrl) {
         async function ensureRequestThread(targetReq, allReqs) {
           if (targetReq.discord_thread_id) return targetReq.discord_thread_id;
 
+          // Special check for req-mub9sx48-kayt if already announced on bot
+          if (targetReq.id === "req-mub9sx48-kayt" && !targetReq.discord_message_id) {
+            targetReq.discord_message_id = "1551631598175260774";
+            targetReq.discord_thread_id = "1551631598175260774";
+            targetReq.discord_channel_id = REQUESTS_CHANNEL_ID;
+            await persistRequestsToR2(allReqs);
+            return targetReq.discord_thread_id;
+          }
+
           const channelId = targetReq.discord_channel_id || REQUESTS_CHANNEL_ID;
           let messageId = targetReq.discord_message_id;
 
           if (!messageId) {
             const res = await sendDiscordRequestAnnouncement(targetReq);
             if (res && res.messageId) messageId = res.messageId;
-            if (res && res.threadId) return res.threadId;
+            if (res && res.threadId) {
+              targetReq.discord_message_id = res.messageId;
+              targetReq.discord_thread_id = res.threadId;
+              targetReq.discord_channel_id = channelId;
+              await persistRequestsToR2(allReqs);
+              return res.threadId;
+            }
           }
 
           if (!messageId) return null;
