@@ -5318,7 +5318,38 @@ async function storeAndProxyImage(env, imageUrl) {
             }
           }
 
-          // 3. Persist discord message id back to R2
+          // 3. Create Discord discussion thread for this request embed
+          let threadId = null;
+          if (messageId) {
+            if (env.DISCORD_BOT_TOKEN) {
+              try {
+                const thResp = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages/${messageId}/threads`, {
+                  method: "POST",
+                  headers: {
+                    Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`,
+                    "Content-Type": "application/json"
+                  },
+                  body: JSON.stringify({
+                    name: `💬 ${reqData.title || "Request"}`.slice(0, 95),
+                    auto_archive_duration: 10080
+                  })
+                });
+                if (thResp.ok) {
+                  const thData = await thResp.json();
+                  if (thData && thData.id) threadId = thData.id;
+                } else {
+                  threadId = messageId;
+                }
+              } catch (thErr) {
+                console.warn("Direct thread creation error:", thErr);
+                threadId = messageId;
+              }
+            } else {
+              threadId = messageId;
+            }
+          }
+
+          // 4. Persist discord message id & thread id back to R2
           if (messageId) {
             try {
               const allReqs = await loadRequestsFromR2();
@@ -5326,15 +5357,92 @@ async function storeAndProxyImage(env, imageUrl) {
               if (target) {
                 target.discord_message_id = messageId;
                 target.discord_channel_id = channelId;
+                if (threadId) target.discord_thread_id = threadId;
                 await persistRequestsToR2(allReqs);
               }
               reqData.discord_message_id = messageId;
               reqData.discord_channel_id = channelId;
+              if (threadId) reqData.discord_thread_id = threadId;
             } catch (persistErr) {
-              console.error("Failed to persist discord_message_id:", persistErr);
+              console.error("Failed to persist discord message/thread IDs:", persistErr);
             }
           }
-          return messageId;
+          return { messageId, threadId };
+        }
+
+        // Helper: Ensure request has Discord thread created
+        async function ensureRequestThread(targetReq, allReqs) {
+          if (targetReq.discord_thread_id) return targetReq.discord_thread_id;
+
+          const channelId = targetReq.discord_channel_id || REQUESTS_CHANNEL_ID;
+          let messageId = targetReq.discord_message_id;
+
+          if (!messageId) {
+            const res = await sendDiscordRequestAnnouncement(targetReq);
+            if (res && res.messageId) messageId = res.messageId;
+            if (res && res.threadId) return res.threadId;
+          }
+
+          if (!messageId) return null;
+
+          let threadId = null;
+          if (env.DISCORD_BOT_TOKEN) {
+            try {
+              const thResp = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages/${messageId}/threads`, {
+                method: "POST",
+                headers: {
+                  Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`,
+                  "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                  name: `💬 ${targetReq.title || "Request"}`.slice(0, 95),
+                  auto_archive_duration: 10080
+                })
+              });
+              if (thResp.ok) {
+                const thData = await thResp.json();
+                if (thData && thData.id) threadId = thData.id;
+              } else {
+                threadId = messageId;
+              }
+            } catch (restErr) {
+              console.warn("Direct thread creation error:", restErr);
+              threadId = messageId;
+            }
+          }
+
+          if (!threadId) {
+            try {
+              const botResp = await fetch(`${BOT_API}/api/requests/ensure-thread`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  message_id: messageId,
+                  channel_id: channelId,
+                  title: targetReq.title
+                })
+              });
+              if (botResp.ok) {
+                const botData = await botResp.json();
+                if (botData.thread_id) threadId = botData.thread_id;
+              }
+            } catch (bErr) {
+              console.warn("BOT_API ensure-thread error:", bErr);
+            }
+          }
+
+          if (!threadId) threadId = messageId;
+
+          if (threadId) {
+            targetReq.discord_thread_id = threadId;
+            try {
+              await persistRequestsToR2(allReqs);
+            } catch (pErr) {
+              console.error("Failed to persist thread ID to R2:", pErr);
+            }
+          }
+
+          return threadId;
         }
 
 
@@ -5729,6 +5837,226 @@ async function storeAndProxyImage(env, imageUrl) {
             is_admin: !!(targetReq.is_admin || (targetReq.user_id && ADMIN_IDS.includes(targetReq.user_id))),
             has_upvoted: Array.isArray(targetReq.upvoters) && targetReq.upvoters.includes(voterKey)
           });
+        }
+
+        // GET /api/requests/:id/thread (Fetch Discord thread details and live messages)
+        if (path.match(/^\/api\/requests\/[^/]+\/thread$/) && request.method === "GET") {
+          const reqId = path.split("/")[3];
+          const allReqs = await loadRequestsFromR2();
+          const targetReq = allReqs.find(r => r.id === reqId);
+          if (!targetReq) return json({ error: "Request not found" }, 404);
+
+          const threadId = await ensureRequestThread(targetReq, allReqs);
+          const channelId = targetReq.discord_channel_id || REQUESTS_CHANNEL_ID;
+
+          let messages = [];
+          if (threadId && env.DISCORD_BOT_TOKEN) {
+            try {
+              const dResp = await fetch(`https://discord.com/api/v10/channels/${threadId}/messages?limit=50`, {
+                headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` }
+              });
+              if (dResp.ok) {
+                const rawMsgs = await dResp.json();
+                if (Array.isArray(rawMsgs)) {
+                  messages = rawMsgs.map(m => {
+                    let avatarUrl = "";
+                    if (m.author && m.author.avatar) {
+                      const ext = m.author.avatar.startsWith("a_") ? "gif" : "png";
+                      avatarUrl = `/api/avatar/${m.author.id}/${m.author.avatar}.${ext}?size=64`;
+                    }
+                    return {
+                      id: m.id,
+                      content: m.content || "",
+                      created_at: m.timestamp,
+                      author: {
+                        id: m.author.id,
+                        name: m.author.global_name || m.author.username,
+                        username: m.author.username,
+                        avatar: avatarUrl || "/assets/content.png",
+                        bot: !!m.author.bot
+                      },
+                      attachments: (m.attachments || []).map(a => ({ url: a.url, filename: a.filename })),
+                      reactions: (m.reactions || []).map(r => ({ emoji: r.emoji.name, count: r.count }))
+                    };
+                  }).reverse();
+                }
+              }
+            } catch (dErr) {
+              console.warn("Direct Discord REST fetch thread messages error:", dErr);
+            }
+          }
+
+          if (messages.length === 0 && threadId) {
+            try {
+              const botResp = await fetch(`${BOT_API}/api/requests/thread/${threadId}/messages`);
+              if (botResp.ok) {
+                const botData = await botResp.json();
+                if (Array.isArray(botData.messages)) messages = botData.messages;
+              }
+            } catch (bErr) {
+              console.warn("BOT_API fetch thread messages error:", bErr);
+            }
+          }
+
+          const guildId = env.GUILD_ID || "1518954946110685184";
+          const discordThreadUrl = threadId 
+            ? `https://discord.com/channels/${guildId}/${threadId}`
+            : (targetReq.discord_message_id ? `https://discord.com/channels/${guildId}/${channelId}/${targetReq.discord_message_id}` : `https://discord.com/channels/${guildId}/${channelId}`);
+
+          return json({
+            success: true,
+            thread_id: threadId,
+            channel_id: channelId,
+            discord_url: discordThreadUrl,
+            request_title: targetReq.title,
+            messages: messages
+          });
+        }
+
+        // POST /api/requests/:id/thread/messages (Post message to Discord thread with user session & webhook)
+        if (path.match(/^\/api\/requests\/[^/]+\/thread\/messages$/) && request.method === "POST") {
+          const session = parseSession(request.headers.get("Cookie"), request);
+          if (!session || !session.userId) {
+            return json({ error: "Please login with Discord to participate in the thread discussion." }, 401);
+          }
+
+          const reqId = path.split("/")[3];
+          const allReqs = await loadRequestsFromR2();
+          const targetReq = allReqs.find(r => r.id === reqId);
+          if (!targetReq) return json({ error: "Request not found" }, 404);
+
+          let body = {};
+          try { body = await request.json(); } catch (_) { return json({ error: "Invalid JSON" }, 400); }
+          const content = (body.content || "").trim();
+          if (!content) return json({ error: "Message content cannot be empty" }, 400);
+          if (content.length > 2000) return json({ error: "Message exceeds 2000 characters" }, 400);
+
+          const threadId = await ensureRequestThread(targetReq, allReqs);
+          const channelId = targetReq.discord_channel_id || REQUESTS_CHANNEL_ID;
+
+          if (!threadId) {
+            return json({ error: "Could not locate or create Discord thread for this request" }, 500);
+          }
+
+          let sentMessage = null;
+          // 1. Try sending via Webhook into the thread (with custom username and avatar)
+          try {
+            let whId = null;
+            let whToken = null;
+            if (env.DISCORD_BOT_TOKEN) {
+              const whListResp = await fetch(`https://discord.com/api/v10/channels/${channelId}/webhooks`, {
+                headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` }
+              });
+              if (whListResp.ok) {
+                const whList = await whListResp.json();
+                let wh = Array.isArray(whList) ? whList.find(w => w.name === "Zyrex Requests Webhook") : null;
+                if (!wh) {
+                  const createWhResp = await fetch(`https://discord.com/api/v10/channels/${channelId}/webhooks`, {
+                    method: "POST",
+                    headers: {
+                      Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`,
+                      "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({ name: "Zyrex Requests Webhook" })
+                  });
+                  if (createWhResp.ok) wh = await createWhResp.json();
+                }
+                if (wh && wh.token) {
+                  whId = wh.id;
+                  whToken = wh.token;
+                }
+              }
+            }
+
+            if (whId && whToken) {
+              let userAvatarUrl = "https://zyrexediting.xyz/assets/content.png";
+              if (session.avatar) {
+                const ext = session.avatar.startsWith("a_") ? "gif" : "png";
+                userAvatarUrl = `https://cdn.discordapp.com/avatars/${session.userId}/${session.avatar}.${ext}?size=128`;
+              }
+              const executeWhResp = await fetch(`https://discord.com/api/v10/webhooks/${whId}/${whToken}?thread_id=${threadId}&wait=true`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  content: content,
+                  username: (session.global_name || session.username || "Zyrex Member").slice(0, 80),
+                  avatar_url: userAvatarUrl
+                })
+              });
+              if (executeWhResp.ok) {
+                sentMessage = await executeWhResp.json();
+              }
+            }
+          } catch (whErr) {
+            console.warn("Webhook thread message execution error:", whErr);
+          }
+
+          // 2. Fallback: Direct Bot REST message into thread
+          if (!sentMessage && env.DISCORD_BOT_TOKEN) {
+            try {
+              const directResp = await fetch(`https://discord.com/api/v10/channels/${threadId}/messages`, {
+                method: "POST",
+                headers: {
+                  Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`,
+                  "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                  content: `**${session.global_name || session.username}** (via Web): ${content}`
+                })
+              });
+              if (directResp.ok) sentMessage = await directResp.json();
+            } catch (directErr) {
+              console.warn("Bot REST thread message error:", directErr);
+            }
+          }
+
+          // 3. Fallback: BOT_API
+          if (!sentMessage) {
+            try {
+              let userAvatarUrl = "https://zyrexediting.xyz/assets/content.png";
+              if (session.avatar) {
+                const ext = session.avatar.startsWith("a_") ? "gif" : "png";
+                userAvatarUrl = `https://cdn.discordapp.com/avatars/${session.userId}/${session.avatar}.${ext}?size=128`;
+              }
+              const botPostResp = await fetch(`${BOT_API}/api/requests/thread/${threadId}/messages`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  content: content,
+                  username: session.global_name || session.username || "Zyrex Member",
+                  avatar_url: userAvatarUrl,
+                  user_id: session.userId
+                })
+              });
+              if (botPostResp.ok) sentMessage = await botPostResp.json();
+            } catch (botErr) {
+              console.error("BOT_API thread post error:", botErr);
+            }
+          }
+
+          return json({ success: true, message: sentMessage });
+        }
+
+        // POST /api/requests/sync-threads (Batch sync threads for all existing requests)
+        if (path === "/api/requests/sync-threads" && request.method === "POST") {
+          const session = parseSession(request.headers.get("Cookie"), request);
+          const apiKey = extractApiKey(request, url);
+          const isApiKeyAuth = (apiKey === ZYREX_MASTER_KEY || apiKey === "zyrex_app_sec_k982f81a7b54c29013e9a");
+          if (!isApiKeyAuth && (!session || (!session.canUpload && !ADMIN_IDS.includes(session.userId)))) {
+            return json({ error: "Unauthorized" }, 403);
+          }
+          const allReqs = await loadRequestsFromR2();
+          let count = 0;
+          for (const r of allReqs) {
+            try {
+              const tid = await ensureRequestThread(r, allReqs);
+              if (tid) count++;
+            } catch (e) {
+              console.warn(`Sync thread error for ${r.id}:`, e);
+            }
+          }
+          await persistRequestsToR2(allReqs);
+          return json({ success: true, total: allReqs.length, synced: count });
         }
 
         // POST /api/requests/:id/upvote

@@ -868,6 +868,16 @@
             color: #8ea1e1;
         }
 
+        .req-discord-chat-btn:hover {
+            color: #5865f2 !important;
+        }
+        .req-discord-chat-btn:hover i {
+            transform: scale(1.15);
+        }
+        .req-discord-chat-btn i {
+            transition: transform 0.2s ease;
+        }
+
         /* EMPTY STATE */
         .req-empty {
             grid-column: 1 / -1;
@@ -1965,6 +1975,7 @@
     <script src="/js/chunks/chunk-store.js?v=1"></script>
     <script src="js/auth.js?v=10"></script>
     <script src="js/script.js?v=46"></script>
+    <script src="/js/discord-thread-modal.js?v=1"></script>
     <script>
         var currentRequests = [];
         var activeStatus = 'all';
@@ -2337,11 +2348,12 @@
                 }
                 var actionsRowHtml = actionPills.length > 0 ? `<div class="req-actions-row">${actionPills.join('')}</div>` : '';
 
-                // Discord link
+                // Discord link & thread
                 var discordChannelId = req.discord_channel_id || '1551118401508745367';
                 var guildId = '1518954946110685184';
-                var discordUrl = req.discord_message_id
-                    ? `https://discord.com/channels/${guildId}/${discordChannelId}/${req.discord_message_id}`
+                var discordTargetId = req.discord_thread_id || req.discord_message_id;
+                var discordUrl = discordTargetId
+                    ? `https://discord.com/channels/${guildId}/${discordTargetId}`
                     : `https://discord.com/channels/${guildId}/${discordChannelId}`;
 
                 // Stats Bar (thumbs up, views, comments)
@@ -2380,10 +2392,10 @@
                                     <i class="far fa-eye"></i>
                                     <span>${viewsCount}</span>
                                 </div>
-                                <a href="${discordUrl}" target="_blank" rel="noopener" class="req-stat-item req-stat-link" onclick="event.stopPropagation()" title="Discuss on Discord">
-                                    <i class="far fa-comment"></i>
-                                    <span>${commentsCount}</span>
-                                </a>
+                                <button type="button" class="req-stat-item req-stat-btn req-discord-chat-btn" onclick="event.stopPropagation(); openDiscordThreadDrawer('${req.id}')" title="Live Discord Thread & Chat">
+                                    <i class="fab fa-discord" style="color:#5865f2;"></i>
+                                    <span>${commentsCount > 0 ? commentsCount : 'Chat'}</span>
+                                </button>
                             </div>
                         </div>
                     </div>
