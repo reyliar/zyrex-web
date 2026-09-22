@@ -625,14 +625,26 @@ img { max-width: 100%; display: block; }
 }
 
 .auth-name {
-    max-width: 110px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    max-width: 140px;
     font-size: 0.82rem;
     font-weight: 700;
     line-height: 1.1;
     color: #ffffff;
+}
+
+.auth-name-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.auth-admin-tick {
+    color: #0095F6 !important;
+    font-size: 0.82rem;
+    flex-shrink: 0;
 }
 
 .auth-role {
@@ -2356,7 +2368,22 @@ img { max-width: 100%; display: block; }
     .hero-buttons .btn { width: 100%; justify-content: center; padding: 11px 18px; font-size: 0.82rem; }
     .brand-item { width: 56px; height: 56px; padding: 5px; border-radius: 9px; }
     .brand-wide { width: 90px; padding: 7px 5px; }
-    .btn { width: 100%; justify-content: center; }
+    .hero-buttons .btn,
+    .cta-buttons .btn,
+    .form-submit-btn,
+    .btn-block-mobile {
+        width: 100%;
+        justify-content: center;
+    }
+    .btn-inline,
+    .btn-sm,
+    .btn-home,
+    .btn-discord,
+    .nav-actions .btn,
+    .auth-login-btn,
+    .auth-user {
+        width: auto !important;
+    }
     .stats-card { padding: 26px 12px; }
     .stats-title { font-size: 1.25rem; }
     .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 9px; }
@@ -2365,7 +2392,9 @@ img { max-width: 100%; display: block; }
     .logo-img { height: 36px; }
     .navbar .container { padding: 0 10px; }
     .auth-dropdown {
-        right: -40px;
+        right: 0 !important;
+        left: auto !important;
+        max-width: calc(100vw - 20px) !important;
     }
     .nav-actions .btn-discord { padding: 6px 11px; font-size: 0.68rem; }
     .about-intro-card { padding: 20px 14px; }
@@ -3435,7 +3464,22 @@ img { max-width: 100%; display: block; }
 html, body {
     overflow-x: hidden !important;
     width: 100%;
+    max-width: 100vw;
     -webkit-tap-highlight-color: transparent;
+}
+
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+img, video, iframe {
+    max-width: 100%;
+}
+
+pre, code {
+    max-width: 100%;
+    overflow-x: auto;
+    word-break: break-word;
 }
 
 /* Hamburger Toggle Button */

@@ -205,23 +205,24 @@ function renderAuthUI(user) {
         ? '<img class="auth-avatar" src="' + avatarUrl + '" alt="" onerror="this.onerror=null;this.src=\'' + fallbackSrc + '\'">'
         : '<span class="auth-avatar auth-avatar-fallback">' + initial + '</span>';
 
+    const adminTickHtml = user.is_admin ? '<i class="fas fa-circle-check auth-admin-tick" style="color:#0095F6;font-size:0.82rem;flex-shrink:0" title="Verified Admin"></i>' : '';
+
     btn.classList.remove('menu-open');
     btn.classList.add('auth-ready');
     btn.innerHTML =
         '<button type="button" class="auth-user" onclick="toggleUserMenu()" aria-expanded="false" aria-controls="userMenu">' +
             avatarHtml +
             '<span class="auth-copy">' +
-                '<span class="auth-name">' + displayName + '</span>' +
+                '<span class="auth-name"><span class="auth-name-text">' + displayName + '</span>' + adminTickHtml + '</span>' +
                 roleHtml +
             '</span>' +
-            (user.is_admin ? '<span class="auth-admin-badge" title="Admin"><i class="fas fa-shield-halved"></i><span>Admin</span></span>' : '') +
             '<i class="fas fa-chevron-down auth-chevron" aria-hidden="true"></i>' +
         '</button>' +
         '<div id="userMenu" class="auth-dropdown" hidden>' +
             '<div class="auth-menu-head">' +
                 avatarHtml +
                 '<div class="auth-menu-copy">' +
-                    '<strong>' + displayName + '</strong>' +
+                    '<div style="display:flex;align-items:center;gap:5px"><strong style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + displayName + '</strong>' + adminTickHtml + '</div>' +
                     '<span>@' + username + '</span>' +
                 '</div>' +
             '</div>' +
