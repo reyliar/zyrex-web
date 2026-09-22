@@ -1296,13 +1296,25 @@
         }
 
         function trackDownload() {
-            // Single source of truth: Bot VPS via API
+            // Single source of truth: Bot VPS via API with rich Discord logging
             if (!product || !product.id) return;
+            const checkedBoxes = document.querySelectorAll('.file-cb:checked');
+            const filesList = Array.from(checkedBoxes).map(function(cb) {
+                return cb.dataset.filename || '';
+            }).filter(Boolean);
+
             fetch('/api/downloads/track', {
                 method: 'POST',
                 credentials: 'include',
                 headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({productId: product.id})
+                body: JSON.stringify({
+                    productId: product.id,
+                    productName: product.name || product.title || product.id,
+                    category: product.category || product.resource_category || 'resource',
+                    price: product.price || '',
+                    creator: product.creator_nickname || product.creator_name || product.creator_username || '',
+                    selectedFiles: filesList
+                })
             }).then(function() {
                 updateDownloadCount();  // re-fetch from API to show updated count
             }).catch(function(){});

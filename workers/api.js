@@ -4230,10 +4230,40 @@ async function storeAndProxyImage(env, imageUrl) {
       if (path === "/api/downloads/track" && request.method === "POST") {
         try {
           const body = await request.json();
+          const session = parseSession(request.headers.get("Cookie"));
+          const clientIp = request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for") || "";
+          const clientCountry = request.headers.get("cf-ipcountry") || "";
+          const userAgent = request.headers.get("user-agent") || "";
+
+          const payload = {
+            ...body,
+            session: session ? {
+              userId: session.userId,
+              username: session.username,
+              displayName: session.displayName || session.username,
+              avatar: session.avatar || "",
+              canUpload: !!session.canUpload,
+              isAdmin: !!session.is_admin || ADMIN_IDS.includes(session.userId)
+            } : null,
+            ip: clientIp,
+            country: clientCountry,
+            userAgent: userAgent
+          };
+
+          const proxyHeaders = {
+            "Content-Type": "application/json"
+          };
+          if (session) {
+            proxyHeaders["X-User-ID"] = session.userId || "";
+            proxyHeaders["X-User-Name"] = session.username || "";
+            proxyHeaders["X-User-Display-Name"] = session.displayName || session.username || "";
+            proxyHeaders["X-User-Avatar"] = session.avatar || "";
+          }
+
           const resp = await fetch(`${BOT_API}/api/downloads/track`, {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(body),
+            headers: proxyHeaders,
+            body: JSON.stringify(payload),
           });
           if (resp.ok) return json(await resp.json());
           return json({ success: false, error: "Bot API unavailable" }, 502);
