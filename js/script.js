@@ -295,27 +295,44 @@ window.addEventListener('popstate', syncNavbarActiveState);
 window.addEventListener('hashchange', syncNavbarActiveState);
 
 let lastScrollY = 0;
+let studioSidebar = document.querySelector('.studio-sidebar');
 
-if (navbar) {
+if (navbar || studioSidebar) {
     window.addEventListener('scroll', () => {
         const currentScrollY = window.scrollY;
+        if (!studioSidebar) studioSidebar = document.querySelector('.studio-sidebar');
         
         // Scrolled class (compact style when not at top)
-        if (currentScrollY > 50) {
-            navbar.classList.add('scrolled');
-        } else {
-            navbar.classList.remove('scrolled');
-            navbar.classList.remove('nav-hidden');
-        }
-        
-        // Hide on scroll down, show on scroll up (only when past 100px)
-        if (currentScrollY > 100) {
-            if (currentScrollY > lastScrollY) {
-                // Scrolling down → hide
-                navbar.classList.add('nav-hidden');
+        if (navbar) {
+            if (currentScrollY > 50) {
+                navbar.classList.add('scrolled');
             } else {
-                // Scrolling up → show
+                navbar.classList.remove('scrolled');
                 navbar.classList.remove('nav-hidden');
+            }
+            
+            // Hide on scroll down, show on scroll up (only when past 100px)
+            if (currentScrollY > 100) {
+                if (currentScrollY > lastScrollY) {
+                    // Scrolling down → hide
+                    navbar.classList.add('nav-hidden');
+                } else {
+                    // Scrolling up → show
+                    navbar.classList.remove('nav-hidden');
+                }
+            }
+        }
+
+        // Studio sidebar: slide left and hide on scroll down, return on scroll up
+        if (studioSidebar && !studioSidebar.classList.contains('open')) {
+            if (currentScrollY > 100) {
+                if (currentScrollY > lastScrollY) {
+                    studioSidebar.classList.add('sidebar-hidden');
+                } else {
+                    studioSidebar.classList.remove('sidebar-hidden');
+                }
+            } else {
+                studioSidebar.classList.remove('sidebar-hidden');
             }
         }
         

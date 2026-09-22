@@ -76,22 +76,31 @@
             background: rgba(9, 4, 12, 0.94);
             backdrop-filter: blur(28px) saturate(190%);
             -webkit-backdrop-filter: blur(28px) saturate(190%);
-            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            border-right: 1px solid rgba(255, 255, 255, 0.09);
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 0 32px 32px 0;
             padding: 24px 18px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             position: fixed;
-            height: calc(100vh - 85px);
+            height: calc(100vh - 104px);
             left: 0;
-            top: 85px;
+            top: 92px;
             z-index: 100;
             box-shadow: 10px 0 40px rgba(0, 0, 0, 0.4);
-            transition: var(--transition);
+            transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
             overflow-y: auto;
             scrollbar-width: none;
         }
         .studio-sidebar::-webkit-scrollbar { display: none; }
+
+        .studio-sidebar.sidebar-hidden {
+            transform: translateX(-115%) !important;
+            opacity: 0 !important;
+            pointer-events: none !important;
+        }
 
         .sidebar-brand {
             display: flex;
@@ -510,7 +519,12 @@
                 background: #0e0306;
                 border-right: 1px solid rgba(230, 21, 54, 0.2);
             }
-            .studio-sidebar.open { left: 0; }
+            .studio-sidebar.open {
+                left: 0;
+                transform: none !important;
+                opacity: 1 !important;
+                pointer-events: auto !important;
+            }
             .sidebar-overlay { z-index: 9998; }
             .sidebar-mobile-close { display: flex !important; }
             .studio-main { margin-left: 0; padding: 24px 16px; width: 100%; }
@@ -1089,7 +1103,10 @@
         function toggleSidebar() {
             var sb = document.getElementById('sidebar');
             var ov = document.getElementById('sidebarOverlay');
-            if (sb) sb.classList.toggle('open');
+            if (sb) {
+                sb.classList.remove('sidebar-hidden');
+                sb.classList.toggle('open');
+            }
             if (ov) ov.classList.toggle('show');
         }
 
@@ -1839,6 +1856,6 @@
             <div id="prodResultsList" class="lookup-results-list" style="display:none"></div>
         </div>
     </div>
-    <script src="js/script.js?v=46"></script>
+    <script src="js/script.js?v=47"></script>
 </body>
 </html>
