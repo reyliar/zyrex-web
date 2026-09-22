@@ -1,11 +1,11 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Zyrex | Settings</title>
     <link rel="icon" type="image/png" href="/assets/content.png">
-    <link rel="stylesheet" href="css/style.css?v=42">
+    <link rel="stylesheet" href="css/style.css?v=46">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
@@ -126,15 +126,83 @@
             box-shadow: 0 8px 24px rgba(255, 43, 82, 0.35);
         }
 
+        /* Mobile Dashboard Navigation & Overlays */
+        .mobile-dash-nav-bar {
+            display: none;
+            margin-bottom: 20px;
+        }
+        .btn-mobile-sidebar-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            padding: 13px 20px;
+            background: rgba(22, 8, 14, 0.75);
+            border: 1px solid rgba(255, 43, 82, 0.28);
+            border-radius: 16px;
+            color: #fff;
+            font-family: inherit;
+            font-size: 0.9rem;
+            font-weight: 700;
+            cursor: pointer;
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+            transition: var(--transition);
+        }
+        .btn-mobile-sidebar-toggle i.fa-sliders {
+            color: var(--cherry-light, #ff3b60);
+            font-size: 1.05rem;
+        }
+        .btn-mobile-sidebar-toggle:hover {
+            background: rgba(255, 43, 82, 0.15);
+            border-color: rgba(255, 43, 82, 0.45);
+        }
+        .dash-sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.72);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            z-index: 9998;
+        }
+        .dash-sidebar-overlay.show {
+            display: block;
+        }
+        .sidebar-mobile-close {
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .sidebar-mobile-close span {
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: var(--cherry-light, #ff3b60);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .sidebar-mobile-close button {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+
         .dash-wrapper {
             display: flex;
             flex: 1;
             width: 100%;
             max-width: 1500px;
-            margin: 24px auto 0;
+            margin: 0 auto;
             position: relative;
             gap: 24px;
-            padding: 0 20px;
+            padding: 95px 20px 40px;
         }
         .dash-sidebar {
             width: 290px;
@@ -150,8 +218,8 @@
             -webkit-backdrop-filter: blur(32px) saturate(210%);
             box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
             position: sticky;
-            top: 94px;
-            height: calc(100vh - 120px);
+            top: 92px;
+            height: calc(100vh - 110px);
             overflow-y: auto;
         }
         .dash-content {
@@ -1309,27 +1377,31 @@
         }
 
         @media(max-width: 960px) {
-            .dash-header {
-                padding: 14px 20px;
+            .dash-wrapper {
+                padding: 85px 14px 30px;
+                gap: 0;
             }
             .dash-sidebar {
                 position: fixed;
                 top: 0;
-                left: -280px;
-                width: 280px;
+                left: -310px;
+                width: 290px;
                 height: 100vh;
-                z-index: 200;
+                z-index: 9999;
                 transition: left 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-                box-shadow: 10px 0 40px rgba(0, 0, 0, 0.8);
-                padding-top: 90px;
+                box-shadow: 10px 0 40px rgba(0, 0, 0, 0.85);
+                padding-top: 85px;
                 background: #0e0306;
                 border-right: 1px solid rgba(230, 21, 54, 0.2);
             }
             .dash-sidebar.open {
                 left: 0;
             }
+            .sidebar-mobile-close {
+                display: flex !important;
+            }
             .dash-content {
-                padding: 24px 20px;
+                padding: 12px 6px 30px;
             }
             .grid-cards {
                 grid-template-columns: 1fr;
@@ -1337,8 +1409,8 @@
             .form-row {
                 grid-template-columns: 1fr;
             }
-            .hamburger-dash {
-                display: inline-flex;
+            .mobile-dash-nav-bar {
+                display: block;
             }
         }
         @media(max-width: 640px) {
@@ -2791,23 +2863,42 @@
         <div class="orb orb-3"></div>
     </div>
     
-    <div class="dash-header">
-        <div style="display:flex;align-items:center;gap:12px">
-            <button class="hamburger-dash" onclick="toggleSidebar()" aria-label="Toggle Sidebar"><i class="fas fa-bars"></i></button>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="container">
             <a href="/" class="logo">
-                <img src="assets/content.png" alt="ZYREX">
-                <span>Settings</span>
+                <img src="assets/content.png" alt="ZYREX" class="logo-img">
+                <span class="logo-text">yrex</span>
             </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="/">Home</a></li>
+                <li><a href="/resources">Resources</a></li>
+                <li><a href="/plugins">Plugins</a></li>
+                <li><a href="/requests">Requests</a></li>
+                <li><a href="/more">More</a></li>
+                <li><a href="/#contact">Contact</a></li>
+            </ul>
+            <div class="nav-actions">
+                <div id="authBtn"></div>
+                <button class="hamburger" id="hamburger" aria-label="Toggle Menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
         </div>
-        <div class="header-actions">
-            <a href="/" class="logout-btn" style="background:rgba(230,21,54,0.08);border-color:rgba(230,21,54,0.25);margin-right:8px"><i class="fas fa-arrow-left"></i> Back to Site</a>
-            <a href="/api/logout" class="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>
-        </div>
-    </div>
+    </nav>
+
+    <!-- Mobile Sidebar Backdrop Overlay -->
+    <div class="dash-sidebar-overlay" id="dashSidebarOverlay" onclick="toggleSidebar()"></div>
 
     <div class="dash-wrapper">
         <!-- Sidebar Navigation -->
         <div class="dash-sidebar">
+            <div class="sidebar-mobile-close">
+                <span>Dashboard Menu</span>
+                <button type="button" onclick="toggleSidebar()" aria-label="Close menu"><i class="fas fa-times"></i></button>
+            </div>
 
             <ul class="sidebar-menu">
                 <li class="menu-item active" data-tab="overview">
@@ -2868,6 +2959,14 @@
 
         <!-- Content Area -->
         <div class="dash-content">
+            <!-- Mobile Menu Opener -->
+            <div class="mobile-dash-nav-bar">
+                <button type="button" class="btn-mobile-sidebar-toggle" onclick="toggleSidebar()">
+                    <i class="fas fa-sliders"></i>
+                    <span>Dashboard Menu</span>
+                    <i class="fas fa-chevron-right" style="font-size:0.75rem;margin-left:auto;opacity:0.6"></i>
+                </button>
+            </div>
             <!-- Global Profile Header Banner -->
             <div class="profile-header-banner" id="globalProfileBanner" style="display:none">
                 <div class="profile-banner-avatar" id="globalProfileAvatar"></div>
@@ -4125,6 +4224,7 @@
 
             // Close sidebar on mobile after choosing a tab
             document.querySelector('.dash-sidebar')?.classList.remove('open');
+            document.getElementById('dashSidebarOverlay')?.classList.remove('show');
 
             // Trigger fetch queries on tab activation
             if (tabName === 'files') {
@@ -4147,7 +4247,10 @@
         }
 
         function toggleSidebar() {
-            document.querySelector('.dash-sidebar')?.classList.toggle('open');
+            const sb = document.querySelector('.dash-sidebar');
+            const ov = document.getElementById('dashSidebarOverlay');
+            if (sb) sb.classList.toggle('open');
+            if (ov) ov.classList.toggle('show');
         }
 
         function renderThemeCards() {
@@ -7260,7 +7363,7 @@
             return JSON.stringify(String(value ?? ''));
         }
     </script>
-    <script src="js/script.js?v=42"></script>
+    <script src="js/script.js?v=46"></script>
 
     <!-- SETTINGS IMDB / IGDB SEARCH MODAL -->
     <div id="settingsProdLookupModal" class="modal">

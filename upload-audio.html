@@ -1,11 +1,11 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Creator Studio — Zyrex</title>
     <link rel="icon" type="image/png" href="/assets/content.png">
-    <link rel="stylesheet" href="css/style.css?v=24">
+    <link rel="stylesheet" href="css/style.css?v=46">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
@@ -68,6 +68,7 @@
             min-height: 100vh;
             position: relative;
             z-index: 1;
+            padding-top: 85px;
         }
 
         .studio-sidebar {
@@ -76,13 +77,13 @@
             backdrop-filter: blur(32px) saturate(200%);
             -webkit-backdrop-filter: blur(32px) saturate(200%);
             border-right: 1px solid rgba(255,255,255,0.08);
-            padding: 28px 20px;
+            padding: 24px 20px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             position: fixed;
-            height: 100vh;
-            left: 0; top: 0;
+            height: calc(100vh - 85px);
+            left: 0; top: 85px;
             z-index: 100;
             transition: var(--transition);
         }
@@ -571,16 +572,60 @@
         .studio-alert.error { background: rgba(230, 21, 54, 0.15); border: 1px solid rgba(230, 21, 54, 0.25); color: var(--cherry-light); }
         .studio-alert.success { background: rgba(0, 200, 100, 0.15); border: 1px solid rgba(0, 200, 100, 0.25); color: #00e676; }
 
+        .sidebar-overlay {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(5px);
+            -webkit-backdrop-filter: blur(5px);
+            z-index: 99;
+        }
+        .sidebar-overlay.show { display: block; }
+
+        .sidebar-mobile-close {
+            display: none;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .sidebar-mobile-close span {
+            font-size: 0.78rem;
+            font-weight: 800;
+            color: var(--cherry-light, #ff3b60);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .sidebar-mobile-close button {
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-size: 1.1rem;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+
         .mobile-trigger {
             display: none;
             background: transparent; border: none; color: #fff; font-size: 1.4rem; cursor: pointer; z-index: 1000;
         }
 
         @media(max-width: 900px) {
-            .studio-sidebar { left: -280px; }
+            .studio-container { padding-top: 75px; }
+            .studio-sidebar {
+                top: 0;
+                height: 100vh;
+                left: -290px;
+                padding-top: 85px;
+                z-index: 9999;
+                box-shadow: 10px 0 40px rgba(0,0,0,0.85);
+            }
             .studio-sidebar.open { left: 0; }
-            .studio-main { margin-left: 0; padding: 32px 20px; }
-            .mobile-trigger { display: block; }
+            .sidebar-overlay { z-index: 9998; }
+            .sidebar-mobile-close { display: flex !important; }
+            .studio-main { margin-left: 0; padding: 24px 16px; width: 100%; }
+            .mobile-trigger { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 10px; background: rgba(230,21,54,0.1); border: 1px solid var(--border); margin-right: 12px; }
         }
 
         .social-modal-backdrop {
@@ -729,13 +774,43 @@
 </head>
 <body>
     <div class="bg-aura"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
-    <div class="grid-bg"></div>
+    <!-- NAVBAR -->
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo">
+                <img src="assets/content.png" alt="ZYREX" class="logo-img">
+                <span class="logo-text">yrex</span>
+            </a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="/">Home</a></li>
+                <li><a href="/resources">Resources</a></li>
+                <li><a href="/plugins">Plugins</a></li>
+                <li><a href="/requests">Requests</a></li>
+                <li><a href="/more">More</a></li>
+                <li><a href="/#contact">Contact</a></li>
+            </ul>
+            <div class="nav-actions">
+                <div id="authBtn"></div>
+                <button class="hamburger" id="hamburger" aria-label="Toggle Menu">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
     <div class="studio-alert" id="alertBox"></div>
 
     <div class="studio-container">
         <!-- SIDEBAR -->
         <div class="studio-sidebar" id="sidebar">
+            <div class="sidebar-mobile-close">
+                <span>Creator Studio</span>
+                <button type="button" onclick="toggleSidebar()" aria-label="Close sidebar"><i class="fas fa-times"></i></button>
+            </div>
             <div>
                 <a href="/" class="sidebar-brand">
                     <img src="assets/content.png" alt="Zyrex Logo">
@@ -936,7 +1011,10 @@
         var hlxPlatform = 'tiktok';
 
         function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('open');
+            var sb = document.getElementById('sidebar');
+            var ov = document.getElementById('sidebarOverlay');
+            if (sb) sb.classList.toggle('open');
+            if (ov) ov.classList.toggle('show');
         }
 
         (async function checkAuth(){
@@ -1406,5 +1484,6 @@
             setTimeout(function(){ b.classList.remove('show'); }, 5000);
         }
     </script>
+    <script src="js/script.js?v=46"></script>
 </body>
 </html>
