@@ -72,22 +72,21 @@
         }
 
         .studio-sidebar {
-            width: 280px;
-            background: rgba(14, 10, 18, 0.76);
-            backdrop-filter: blur(36px) saturate(210%);
-            -webkit-backdrop-filter: blur(36px) saturate(210%);
-            border: 1px solid rgba(255, 255, 255, 0.10);
-            border-radius: 26px;
-            padding: 20px 16px;
+            width: 272px;
+            background: rgba(9, 4, 12, 0.94);
+            backdrop-filter: blur(28px) saturate(190%);
+            -webkit-backdrop-filter: blur(28px) saturate(190%);
+            border-right: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 24px 18px;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
             position: fixed;
-            height: calc(100vh - 114px);
-            left: 22px;
-            top: 92px;
+            height: calc(100vh - 85px);
+            left: 0;
+            top: 85px;
             z-index: 100;
-            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+            box-shadow: 10px 0 40px rgba(0, 0, 0, 0.4);
             transition: var(--transition);
             overflow-y: auto;
             scrollbar-width: none;
@@ -99,72 +98,33 @@
             align-items: center;
             gap: 12px;
             text-decoration: none;
-            padding: 4px 6px 16px;
+            padding: 4px 6px 20px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-            margin-bottom: 14px;
+            margin-bottom: 20px;
             transition: var(--transition);
         }
-        .sidebar-brand:hover .sidebar-brand-icon {
-            transform: scale(1.05);
-            box-shadow: 0 0 20px rgba(255, 43, 82, 0.45);
-        }
-        .sidebar-brand-icon {
-            width: 38px;
-            height: 38px;
-            border-radius: 12px;
-            background: linear-gradient(135deg, rgba(255, 43, 82, 0.22), rgba(255, 43, 82, 0.05));
-            border: 1px solid rgba(255, 43, 82, 0.35);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-            box-shadow: 0 4px 14px rgba(255, 43, 82, 0.2);
-            transition: var(--transition);
-        }
-        .sidebar-brand-icon img {
-            height: 20px;
+        .sidebar-brand img {
+            height: 30px;
             width: auto;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+            filter: drop-shadow(0 0 10px rgba(255, 43, 82, 0.35));
+            transition: transform 0.25s ease;
         }
-        .sidebar-brand-text {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
-            min-width: 0;
+        .sidebar-brand:hover img {
+            transform: scale(1.06);
         }
-        .sidebar-brand-text .brand-title {
+        .sidebar-brand span {
             font-family: 'Outfit', sans-serif;
             font-weight: 800;
-            font-size: 1.05rem;
+            font-size: 1.15rem;
             letter-spacing: -0.2px;
-            background: linear-gradient(90deg, #ffffff 40%, #ff6b85);
+            color: #ffffff;
+        }
+        .sidebar-brand span b {
+            background: linear-gradient(135deg, #ff2b52, #ff6b85);
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
-            line-height: 1.2;
-        }
-        .sidebar-brand-text .brand-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.62rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            color: rgba(255, 255, 255, 0.45);
-        }
-        .sidebar-brand-text .pulse-dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: #00e676;
-            box-shadow: 0 0 8px #00e676;
-            display: inline-block;
-            animation: studioPulse 2s infinite ease-in-out;
-        }
-        @keyframes studioPulse {
-            0%, 100% { transform: scale(1); opacity: 1; }
-            50% { transform: scale(1.3); opacity: 0.6; }
+            font-weight: 800;
         }
 
         .sidebar-menu {
@@ -177,97 +137,61 @@
             flex: 1;
         }
         .menu-title {
-            font-size: 0.64rem;
+            font-size: 0.66rem;
             font-weight: 800;
             text-transform: uppercase;
-            letter-spacing: 1.5px;
-            color: rgba(255, 255, 255, 0.35);
-            padding: 6px 10px 4px;
-            margin: 4px 0 2px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .menu-title::after {
-            content: '';
-            flex: 1;
-            height: 1px;
-            background: rgba(255, 255, 255, 0.06);
+            letter-spacing: 1.4px;
+            color: rgba(255, 255, 255, 0.32);
+            padding: 4px 14px 8px;
+            margin-top: 4px;
         }
         .menu-item a, .menu-item .locked-item {
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 10px 12px;
-            border-radius: 16px;
+            padding: 11px 16px;
+            border-radius: 999px;
             font-size: 0.86rem;
             font-weight: 600;
-            color: rgba(255, 255, 255, 0.65);
+            color: rgba(255, 255, 255, 0.55);
             text-decoration: none;
-            transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+            transition: all 0.22s ease;
             background: transparent;
             border: 1px solid transparent;
-            position: relative;
+        }
+        .menu-item a i, .menu-item .locked-item i {
+            font-size: 0.92rem;
+            width: 20px;
+            text-align: center;
+            flex-shrink: 0;
+            color: rgba(255, 255, 255, 0.45);
+            transition: color 0.2s ease;
         }
         .menu-item a:hover {
-            color: #fff;
+            color: #ffffff;
             background: rgba(255, 255, 255, 0.05);
             border-color: rgba(255, 255, 255, 0.08);
-            transform: translateX(3px);
+        }
+        .menu-item a:hover i {
+            color: #ffffff;
         }
         .menu-item.active a {
-            color: #fff;
-            font-weight: 700;
-            background: linear-gradient(135deg, rgba(255, 43, 82, 0.20), rgba(255, 43, 82, 0.08));
-            border-color: rgba(255, 43, 82, 0.38);
-            box-shadow: 0 6px 20px rgba(255, 43, 82, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.14);
-        }
-        .menu-item .menu-icon, .menu-item a > i, .menu-item .locked-item > i {
-            width: 34px;
-            height: 34px;
-            border-radius: 11px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.88rem;
-            color: rgba(255, 255, 255, 0.7);
-            transition: all 0.22s ease;
-            flex-shrink: 0;
-        }
-        .menu-item a:hover .menu-icon, .menu-item a:hover > i {
-            background: rgba(255, 43, 82, 0.15);
-            border-color: rgba(255, 43, 82, 0.3);
-            color: #fff;
-        }
-        .menu-item.active a .menu-icon, .menu-item.active a > i {
-            background: linear-gradient(135deg, #ff2b52, #c81337);
-            border-color: rgba(255, 43, 82, 0.6);
             color: #ffffff;
-            box-shadow: 0 0 16px rgba(255, 43, 82, 0.55);
+            font-weight: 700;
+            background: linear-gradient(135deg, rgba(255, 43, 82, 0.18), rgba(255, 43, 82, 0.08));
+            border-color: rgba(255, 43, 82, 0.32);
+            box-shadow: 0 4px 18px rgba(255, 43, 82, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.12);
         }
-        .menu-item .menu-text {
-            flex: 1;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .menu-item.active .active-indicator {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: var(--cherry-light, #ff3b60);
-            box-shadow: 0 0 10px var(--cherry-light, #ff3b60);
-            margin-left: auto;
-            flex-shrink: 0;
+        .menu-item.active a i {
+            color: var(--cherry-light, #ff3b60);
+            text-shadow: 0 0 10px rgba(255, 43, 82, 0.5);
         }
         .menu-item .locked-item {
-            opacity: 0.45;
+            opacity: 0.4;
             cursor: not-allowed;
+            justify-content: space-between;
         }
         .menu-item .locked-item:hover {
-            transform: none;
             background: transparent;
             border-color: transparent;
         }
@@ -278,11 +202,10 @@
             letter-spacing: 0.5px;
             background: rgba(255, 43, 82, 0.12);
             color: var(--cherry-light, #ff3b60);
-            padding: 3px 8px;
+            padding: 2px 7px;
             border-radius: 999px;
             border: 1px solid rgba(255, 43, 82, 0.25);
             margin-left: auto;
-            flex-shrink: 0;
         }
 
         .sidebar-footer {
@@ -298,119 +221,85 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            padding: 10px 12px;
+            padding: 10px 14px;
             border-radius: 16px;
             background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.07);
             transition: var(--transition);
         }
         .user-profile:hover {
             background: rgba(255, 255, 255, 0.06);
-            border-color: rgba(255, 255, 255, 0.12);
+            border-color: rgba(255, 255, 255, 0.11);
         }
-        .user-avatar-wrap {
-            position: relative;
-            width: 36px;
-            height: 36px;
-            flex-shrink: 0;
-        }
-        .user-profile img, .user-avatar-wrap img {
+        .user-profile img {
             width: 36px;
             height: 36px;
             border-radius: 50%;
-            border: 2px solid rgba(255, 43, 82, 0.6);
-            box-shadow: 0 0 14px rgba(255, 43, 82, 0.35);
+            border: 2px solid rgba(255, 43, 82, 0.55);
+            box-shadow: 0 0 12px rgba(255, 43, 82, 0.25);
             object-fit: cover;
             display: block;
-        }
-        .user-avatar-wrap .user-status-dot {
-            position: absolute;
-            bottom: -1px;
-            right: -1px;
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #00e676;
-            border: 2px solid #0e0a12;
-            box-shadow: 0 0 6px #00e676;
+            flex-shrink: 0;
         }
         .user-info {
             display: flex;
             flex-direction: column;
             min-width: 0;
             flex: 1;
-            gap: 2px;
         }
         .user-info .name {
-            font-size: 0.84rem;
+            font-size: 0.86rem;
             font-weight: 700;
-            color: #fff;
+            color: #ffffff;
             text-overflow: ellipsis;
             overflow: hidden;
             white-space: nowrap;
             font-family: 'Outfit', sans-serif;
         }
-        .user-info .role {
-            font-size: 0.65rem;
-            font-weight: 600;
-            color: rgba(255, 255, 255, 0.45);
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .user-info .role i {
-            color: var(--cherry-light, #ff3b60);
-            font-size: 0.6rem;
-        }
 
         .footer-nav {
             display: flex;
             flex-direction: column;
-            gap: 4px;
+            gap: 3px;
         }
         .footer-nav a, .footer-nav-link {
             font-size: 0.80rem;
             font-weight: 600;
-            color: rgba(255, 255, 255, 0.5);
+            color: rgba(255, 255, 255, 0.45);
             text-decoration: none;
             display: flex;
             align-items: center;
             gap: 10px;
             padding: 8px 12px;
-            border-radius: 12px;
+            border-radius: 10px;
             transition: all 0.2s ease;
-            border: 1px solid transparent;
         }
         .footer-nav a i, .footer-nav-link i {
             width: 18px;
             text-align: center;
             font-size: 0.82rem;
-            color: rgba(255, 255, 255, 0.45);
+            color: rgba(255, 255, 255, 0.4);
             transition: color 0.2s ease;
         }
         .footer-nav a:hover, .footer-nav-link:hover {
-            color: #fff;
+            color: #ffffff;
             background: rgba(255, 255, 255, 0.05);
-            border-color: rgba(255, 255, 255, 0.08);
-            transform: translateX(3px);
         }
         .footer-nav a:hover i, .footer-nav-link:hover i {
             color: var(--cherry-light, #ff3b60);
         }
         .footer-nav a.link-logout:hover {
-            color: #ff6b6b;
+            color: #ff5c75;
             background: rgba(255, 68, 68, 0.08);
-            border-color: rgba(255, 68, 68, 0.2);
         }
         .footer-nav a.link-logout:hover i {
-            color: #ff6b6b;
+            color: #ff5c75;
         }
 
         .studio-main {
             flex: 1;
-            margin-left: 316px;
-            padding: 24px 36px 48px;
+            margin-left: 272px;
+            padding: 32px 44px 48px;
             transition: var(--transition);
             min-width: 0;
         }
@@ -612,17 +501,14 @@
             .studio-sidebar {
                 top: 0;
                 height: 100vh;
-                left: -320px;
-                width: 290px;
-                border-radius: 0 26px 26px 0;
+                left: -290px;
+                width: 272px;
+                border-radius: 0 24px 24px 0;
                 padding-top: 85px;
                 z-index: 9999;
                 box-shadow: 10px 0 40px rgba(0,0,0,0.85);
                 background: #0e0306;
                 border-right: 1px solid rgba(230, 21, 54, 0.2);
-                border-left: none;
-                border-top: none;
-                border-bottom: none;
             }
             .studio-sidebar.open { left: 0; }
             .sidebar-overlay { z-index: 9998; }
@@ -953,47 +839,28 @@
             </div>
             <div>
                 <a href="/" class="sidebar-brand">
-                    <div class="sidebar-brand-icon">
-                        <img src="assets/content.png" alt="Zyrex Logo">
-                    </div>
-                    <div class="sidebar-brand-text">
-                        <span class="brand-title">Creator Studio</span>
-                        <span class="brand-badge"><span class="pulse-dot"></span> Publishing Hub</span>
-                    </div>
+                    <img src="assets/content.png" alt="Zyrex Logo">
+                    <span>Creator <b>Studio</b></span>
                 </a>
                 <ul class="sidebar-menu">
                     <div class="menu-title">Publish Portals</div>
                     <li class="menu-item" id="sidebarPreset">
-                        <a href="/upload">
-                            <span class="menu-icon"><i class="fas fa-layer-group"></i></span>
-                            <span class="menu-text">Resource Uploader</span>
-                        </a>
+                        <a href="/upload"><i class="fas fa-layer-group"></i> <span>Resource Uploader</span></a>
                     </li>
                     <li class="menu-item" id="sidebarAudio">
-                        <a href="/upload-audio">
-                            <span class="menu-icon"><i class="fas fa-music"></i></span>
-                            <span class="menu-text">Audio Uploader</span>
-                        </a>
+                        <a href="/upload-audio"><i class="fas fa-music"></i> <span>Audio Uploader</span></a>
                     </li>
                     <li class="menu-item active">
-                        <a href="/upload-scenepack">
-                            <span class="menu-icon"><i class="fas fa-film"></i></span>
-                            <span class="menu-text">Scenepack Uploader</span>
-                            <span class="active-indicator"></span>
-                        </a>
+                        <a href="/upload-scenepack"><i class="fas fa-film"></i> <span>Scenepack Uploader</span></a>
                     </li>
                 </ul>
             </div>
             
             <div class="sidebar-footer">
                 <div class="user-profile" id="userProfile" style="display:none">
-                    <div class="user-avatar-wrap">
-                        <img src="" id="userAvatar" alt="Avatar">
-                        <span class="user-status-dot"></span>
-                    </div>
+                    <img src="" id="userAvatar" alt="Avatar">
                     <div class="user-info">
                         <span class="name" id="userName">Creator</span>
-                        <span class="role"><i class="fas fa-shield-halved"></i> Verified Creator</span>
                     </div>
                 </div>
                 <div class="footer-nav">
@@ -1258,10 +1125,10 @@
                 }
                 
                 if(!checks[0]){
-                    document.getElementById('sidebarPreset').innerHTML = '<span class="locked-item"><span class="menu-icon"><i class="fas fa-lock"></i></span> <span class="menu-text">Resource Uploader</span> <span class="lock-badge">Locked</span></span>';
+                    document.getElementById('sidebarPreset').innerHTML = '<span class="locked-item"><i class="fas fa-lock"></i> <span>Resource Uploader</span> <span class="lock-badge">Locked</span></span>';
                 }
                 if(!checks[1]){
-                    document.getElementById('sidebarAudio').innerHTML = '<span class="locked-item"><span class="menu-icon"><i class="fas fa-lock"></i></span> <span class="menu-text">Audio Uploader</span> <span class="lock-badge">Locked</span></span>';
+                    document.getElementById('sidebarAudio').innerHTML = '<span class="locked-item"><i class="fas fa-lock"></i> <span>Audio Uploader</span> <span class="lock-badge">Locked</span></span>';
                 }
                 if (!checks[2]) {
                     showLockScreen('No Scenepack Uploader Access', 'You do not have the <strong>Scenepack Uploader</strong> role on Discord yet. Claim it to unlock scenepack uploads.');
