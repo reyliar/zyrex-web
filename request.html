@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -674,6 +674,10 @@
                                 <i class="fas fa-arrow-up"></i>
                                 <span id="detailUpvoteCount">${req.upvotes_count || 1}</span> Upvotes
                             </button>
+                            <div style="display:inline-flex;align-items:center;gap:7px;padding:10px 16px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);color:#94a3b8;font-size:0.88rem;font-weight:600;font-family:'Outfit',sans-serif;">
+                                <i class="far fa-eye" style="color:#64748b;"></i>
+                                <span><strong id="detailViewsCount" style="color:#fff;">${typeof req.views_count === 'number' ? req.views_count : (parseInt(req.views_count, 10) || 0)}</strong> Views</span>
+                            </div>
                             ${liveChatBtnHtml}
                             ${discordLinkHtml}
                         </div>
@@ -784,6 +788,18 @@
                 var req = await resp.json();
                 if (req.error) throw new Error(req.error);
                 renderPage(req);
+
+                // Ping view count and update display
+                fetch('/api/requests/' + encodeURIComponent(id) + '/view', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'X-Zyrex-Client': 'web-portal' }
+                }).then(function(r) { return r.json(); }).then(function(d) {
+                    if (d && d.views) {
+                        var el = document.getElementById('detailViewsCount');
+                        if (el) el.textContent = d.views;
+                    }
+                }).catch(function() {});
             } catch(e) {
                 console.warn('Failed to load request:', e);
                 document.getElementById('skeletonView').style.display = 'none';
@@ -943,7 +959,7 @@
     </footer>
 
     <script src="/js/chunks/chunk-store.js?v=1"></script>
-    <script src="/js/auth.js?v=12"></script>
+    <script src="/js/auth.js?v=13"></script>
     <script src="/js/script.js?v=45"></script>
     <script src="/js/discord-thread-modal.js?v=3"></script>
     <script>

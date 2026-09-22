@@ -86,7 +86,7 @@ window.isZyrexAdmin = function(u) {
 // Avatar proxy helper — bypasses Discord CDN blocks (e.g. Turkey)
 function avatarProxyUrl(userId, avatarHash, size) {
     size = size || 64;
-    userId = userId || '1421177012814614548';
+    if (!userId) return '';
     if (!avatarHash && String(userId) === '1421177012814614548') {
         avatarHash = '8505f9e52509086a8841b6162f46b0da';
     }
@@ -120,6 +120,8 @@ function escapeHtml(value) {
 }
 
 function clearAuthCache() {
+    window._currentUser = null;
+    window.currentUser = null;
     try { localStorage.removeItem(AUTH_USER_CACHE_KEY); } catch(e) {}
 }
 
@@ -330,7 +332,7 @@ function toggleUserMenu() {
 
 // Close menu when clicking outside
 document.addEventListener('click', (e) => {
-    const logoutLink = e.target.closest && e.target.closest('a[href="/api/logout"]');
+    const logoutLink = e.target.closest && (e.target.closest('a[href="/api/logout"]') || e.target.closest('a[href="/api/auth/logout"]'));
     if (logoutLink) clearAuthCache();
 
     const menu = document.getElementById('userMenu');

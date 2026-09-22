@@ -31,8 +31,7 @@ function extractApiKey(request, url = null) {
 function isMasterApiKey(key, env = null) {
   if (!key) return false;
   const master = env?.ZYREX_MASTER_KEY || ZYREX_MASTER_KEY;
-  const legacyAppKey = env?.ZYREX_API_KEY || "zyrex_app_sec_k982f81a7b54c29013e9a";
-  return key === master || key === legacyAppKey;
+  return key === master;
 }
 
 let healthState = {

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -2007,7 +2007,7 @@
 
     <!-- SCRIPTS -->
     <script src="/js/chunks/chunk-store.js?v=1"></script>
-    <script src="js/auth.js?v=12"></script>
+    <script src="js/auth.js?v=13"></script>
     <script src="js/script.js?v=46"></script>
     <script src="/js/discord-thread-modal.js?v=3"></script>
     <script>
@@ -2479,7 +2479,7 @@
                     : `https://discord.com/channels/${guildId}/${discordChannelId}`;
 
                 // Stats Bar (thumbs up, views, comments)
-                var viewsCount = req.views_count || Math.max(1, ((req.upvotes_count || 1) * 2) + (hashStr(req.id) % 5) + 1);
+                var viewsCount = typeof req.views_count === 'number' ? req.views_count : (parseInt(req.views_count, 10) || 0);
                 var commentsCount = req.comments_count || 0;
 
                 var isCompleted = req.status === 'completed';
@@ -2487,7 +2487,7 @@
                 var resourceDataAttr = req.resource_id ? ` data-resource-id="${escapeHtml(req.resource_id)}"` : (req.resource_url ? ` data-resource-url="${escapeHtml(req.resource_url)}"` : '');
 
                 html += `
-                    <div class="req-card${completedClass}" id="req-card-${req.id}" data-req-id="${req.id}"${resourceDataAttr} onclick="location.href='/request?id=${req.id}'">
+                    <div class="req-card${completedClass}" id="req-card-${req.id}" data-req-id="${req.id}"${resourceDataAttr} onclick="openRequestDetailPage('${req.id}')">
                         <div class="req-card-media">
                             ${thumbContentHtml}
                             <span class="req-media-badge ${typeClass}">${typeLabel}</span>
@@ -2529,6 +2529,18 @@
             });
 
             grid.innerHTML = html;
+        }
+
+        function openRequestDetailPage(id) {
+            if (!id) return;
+            try {
+                fetch('/api/requests/' + encodeURIComponent(id) + '/view', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'X-Zyrex-Client': 'web-portal' }
+                }).catch(function() {});
+            } catch(e) {}
+            location.href = '/request?id=' + encodeURIComponent(id);
         }
 
         function getTypeIcon(t) {

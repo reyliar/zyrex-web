@@ -6,7 +6,6 @@ const FILE_API = "https://storage.zyrexediting.xyz";  // Python file server via 
 const SFTPGO_API = "https://storage.zyrexediting.xyz/api/v2";  // SFTPGo via Cloudflare Tunnel (local)
 const ADMIN_IDS = ["1421177012814614548", "1382421118098346174"];
 const ZYREX_MASTER_KEY = "zyrex_master_k9x7v2m4q8p1w5e6r3t0y9u8i7o6a5s4d";
-let currentRequestHasMasterKey = false;
 
 function extractApiKey(request, url = null) {
   if (!request) return "";
@@ -35,22 +34,14 @@ function extractApiKey(request, url = null) {
 function isMasterApiKey(key, env = null) {
   if (!key) return false;
   const master = env?.ZYREX_MASTER_KEY || ZYREX_MASTER_KEY;
-  const legacyAppKey = env?.ZYREX_API_KEY || "zyrex_app_sec_k982f81a7b54c29013e9a";
-  return key === master || key === legacyAppKey;
+  return key === master;
 }
 
-function getMasterAdminSession() {
-  return {
-    userId: "1421177012814614548",
-    username: "reyli",
-    displayName: "reyli",
-    avatar: "8505f9e52509086a8841b6162f46b0da",
-    canUpload: true,
-    is_admin: true,
-    is_master_key: true,
-    roles: ["admin", "uploader"],
-    expires: Date.now() + 864000000
-  };
+function isValidAppApiKey(key, env = null) {
+  if (!key) return false;
+  const master = env?.ZYREX_MASTER_KEY || ZYREX_MASTER_KEY;
+  const legacyAppKey = env?.ZYREX_API_KEY || "zyrex_app_sec_k982f81a7b54c29013e9a";
+  return key === master || key === legacyAppKey;
 }
 
 // Category display names & emojis
@@ -274,31 +265,24 @@ function buildTokenLandingUrl(token) {
 
 function parseSession(cookieOrReq, req = null) {
   let cookie = "";
-  let requestObj = req;
   if (cookieOrReq && typeof cookieOrReq === "object" && typeof cookieOrReq.headers?.get === "function") {
-    requestObj = cookieOrReq;
-    cookie = requestObj.headers.get("Cookie") || "";
+    cookie = cookieOrReq.headers.get("Cookie") || "";
   } else if (typeof cookieOrReq === "string") {
     cookie = cookieOrReq;
+  } else if (req && typeof req === "object" && typeof req.headers?.get === "function") {
+    cookie = req.headers.get("Cookie") || "";
   }
 
-  if (requestObj) {
-    const key = extractApiKey(requestObj);
-    if (isMasterApiKey(key)) {
-      return getMasterAdminSession();
-    }
-  }
-
-  if (currentRequestHasMasterKey) {
-    return getMasterAdminSession();
-  }
   if (!cookie) return null;
   const m = cookie.match(/zyrex_session=([^;]+)/);
   if (!m) return null;
   try {
     const decoded = atob(m[1]);
     const bytes = Uint8Array.from(decoded, c => c.charCodeAt(0));
-    return JSON.parse(new TextDecoder().decode(bytes));
+    const session = JSON.parse(new TextDecoder().decode(bytes));
+    if (!session || !session.userId) return null;
+    if (session.expires && session.expires < Date.now()) return null;
+    return session;
   } catch { return null; }
 }
 
@@ -311,7 +295,7 @@ function setCookie(data, maxAge = 86400) {
 }
 
 function clearCookie() {
-  return "zyrex_session=; Domain=.zyrexediting.xyz; Path=/; HttpOnly; SameSite=Lax; Max-Age=0; Secure";
+  return "zyrex_session=; Domain=.zyrexediting.xyz; Path=/; HttpOnly; SameSite=Lax; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Secure";
 }
 
 async function r2List(env, prefix, useProd = false) {
@@ -2394,7 +2378,8 @@ export default {
     }
     const path = url.pathname;
     const providedApiKey = extractApiKey(request, url);
-    currentRequestHasMasterKey = isMasterApiKey(providedApiKey, env);
+    const hasMasterKey = isMasterApiKey(providedApiKey, env);
+    const hasAppKey = isValidAppApiKey(providedApiKey, env);
 
     if (request.method === "OPTIONS") {
       return new Response(null, { headers: corsHeaders });
@@ -2404,6 +2389,7 @@ export default {
       const isPublicEndpoint = path === "/api/login" || 
                                path === "/api/auth/callback" || 
                                path === "/api/auth/logout" || 
+                               path === "/api/logout" || 
                                path === "/api/me" ||
                                path === "/api/health" ||
                                path.startsWith("/api/status") ||
@@ -2444,7 +2430,7 @@ export default {
                              !!request.headers.get("Cookie");
 
       if (!isPublicEndpoint && !isSiteInternal) {
-        if (!currentRequestHasMasterKey) {
+        if (!hasMasterKey && !hasAppKey) {
           return json({ success: false, error: "Access denied. Valid API key required for external API access." }, 403);
         }
       }
@@ -3379,22 +3365,28 @@ async function storeAndProxyImage(env, imageUrl) {
       }
 
       // LOGOUT
-      if (path === "/api/logout") {
+      if (path === "/api/logout" || path === "/api/auth/logout") {
+        const headers = new Headers({
+          Location: "/",
+        });
+        headers.append("Set-Cookie", "zyrex_session=; Domain=.zyrexediting.xyz; Path=/; HttpOnly; SameSite=Lax; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Secure");
+        headers.append("Set-Cookie", "zyrex_session=; Domain=zyrexediting.xyz; Path=/; HttpOnly; SameSite=Lax; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Secure");
+        headers.append("Set-Cookie", "zyrex_session=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Secure");
         return new Response(null, {
           status: 302,
-          headers: { Location: "/", "Set-Cookie": clearCookie() },
+          headers: headers,
         });
       }
 
       // ME
       if (path === "/api/me") {
-        const session = parseSession(request.headers.get("Cookie"), request);
+        const session = parseSession(request.headers.get("Cookie"));
         if (!session) return json({ error: "Not logged in" }, 401);
 
         let canUpload = session.canUpload || false;
         const isAdmin = ADMIN_IDS.includes(session.userId) || session.is_admin === true;
         
-        if (isAdmin || session.is_master_key) {
+        if (isAdmin) {
           canUpload = true;
         } else {
           // Fetch uploaders list from VPS API
@@ -5081,14 +5073,14 @@ async function storeAndProxyImage(env, imageUrl) {
         const referer = request.headers.get("Referer") || "";
         const secFetchSite = request.headers.get("Sec-Fetch-Site") || "";
         const clientHeader = request.headers.get("X-Zyrex-Client") || "";
-        const hasValidCookie = !currentRequestHasMasterKey && !!request.headers.get("Cookie") && !!parseSession(request.headers.get("Cookie"), request);
+        const hasValidCookie = !!request.headers.get("Cookie") && !!parseSession(request.headers.get("Cookie"));
 
         const isLegitBrowserSiteVisit = (
           (origin.includes("zyrexediting.xyz") || referer.includes("zyrexediting.xyz") || origin.includes("localhost") || referer.includes("localhost")) &&
-          (secFetchSite === "same-origin" || secFetchSite === "same-site" || clientHeader === "web-portal" || hasValidCookie)
+          (secFetchSite === "same-origin" || secFetchSite === "same-site" || clientHeader === "web-portal" || hasValidCookie || hasAppKey)
         );
 
-        if (!currentRequestHasMasterKey && !isLegitBrowserSiteVisit) {
+        if (!hasMasterKey && !isLegitBrowserSiteVisit) {
           return json({
             success: false,
             error: "Unauthorized. Valid API key required to access Requests API.",
@@ -5599,8 +5591,11 @@ async function storeAndProxyImage(env, imageUrl) {
 
           let filtered = reqs.map(r => {
             const item = { ...r };
-            // Sanitize internal IP from public listing
+            // Sanitize internal IP and voter arrays from public listing
             delete item.client_ip;
+            delete item.viewers;
+            delete item.upvoters;
+            item.views_count = typeof r.views_count === "number" ? r.views_count : (parseInt(r.views_count, 10) || 0);
             item.has_upvoted = Array.isArray(r.upvoters) && r.upvoters.includes(voterKey);
             item.is_admin = !!(r.is_admin || (r.user_id && ADMIN_IDS.includes(r.user_id)));
             return item;
@@ -6169,6 +6164,28 @@ async function storeAndProxyImage(env, imageUrl) {
             upvotes: targetReq.upvotes_count,
             upvoted: upvoted
           });
+        }
+
+        // POST /api/requests/:id/view (Real viewer count tracking)
+        if (path.match(/^\/api\/requests\/[^/]+\/view$/) && request.method === "POST") {
+          const reqId = path.split("/")[3];
+          const allReqs = await loadRequestsFromR2();
+          const targetReq = allReqs.find(r => r.id === reqId);
+          if (!targetReq) return json({ error: "Request not found" }, 404);
+
+          const session = parseSession(request.headers.get("Cookie"));
+          const clientIp = request.headers.get("cf-connecting-ip") || "unknown";
+          const viewerKey = session ? session.userId : clientIp;
+
+          if (!Array.isArray(targetReq.viewers)) targetReq.viewers = [];
+          if (!targetReq.viewers.includes(viewerKey)) {
+            if (targetReq.viewers.length >= 1000) targetReq.viewers.shift();
+            targetReq.viewers.push(viewerKey);
+            targetReq.views_count = (targetReq.views_count || 0) + 1;
+            await persistRequestsToR2(allReqs);
+          }
+
+          return json({ success: true, views: targetReq.views_count || 1 });
         }
 
         // POST /api/requests/:id/status (Admin/Uploader)
