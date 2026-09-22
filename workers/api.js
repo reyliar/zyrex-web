@@ -1391,12 +1391,14 @@ async function scrapePayhipStoreProducts(storeUrl, maxPages = 25, env = null) {
   }
 
   // If storefront navigation exposed collections, fetch ONLY those.
-  // Otherwise fall back to standard collection slugs.
+  // If products were already found on root and no collections discovered, return immediately.
   let targetCols;
   if (allDiscoveredCols.size > 0) {
     targetCols = Array.from(allDiscoveredCols);
+  } else if (productMap.size === 0) {
+    targetCols = ['all', 'packs'];
   } else {
-    targetCols = ['packs', 'colorings', 'effects-pjfs', 'twixtor', 'presets', 'plugins', 'project-files', 'shakes', 'bundles', 'cc', 'editing-packs', 'free', 'templates', 'luts', 'assets'];
+    targetCols = [];
   }
 
   // Fetch collections in batches of 4

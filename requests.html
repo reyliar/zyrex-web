@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 
 <head>
@@ -2007,6 +2007,7 @@
 
     <!-- SCRIPTS -->
     <script src="/js/chunks/chunk-store.js?v=1"></script>
+    <script src="/js/chunks/wizard.chunk.js?v=2"></script>
     <script src="js/auth.js?v=13"></script>
     <script src="js/script.js?v=46"></script>
     <script src="/js/discord-thread-modal.js?v=3"></script>
@@ -2914,6 +2915,9 @@
         }
 
         async function resolveReqSocial() {
+            if (typeof window.execResolveReqSocial === 'function') {
+                return window.execResolveReqSocial();
+            }
             var ready = await ensureWizardChunk();
             if (ready && typeof window.execResolveReqSocial === 'function') {
                 return window.execResolveReqSocial();
@@ -2925,6 +2929,14 @@
         }
 
         async function openCreatorWizard(initialUrl) {
+            var m = document.getElementById('creatorWizardModal');
+            if (m) {
+                m.style.display = 'flex';
+                m.classList.add('open');
+            }
+            if (typeof window.execOpenCreatorWizard === 'function') {
+                return window.execOpenCreatorWizard(initialUrl);
+            }
             var ready = await ensureWizardChunk();
             if (ready && typeof window.execOpenCreatorWizard === 'function') {
                 return window.execOpenCreatorWizard(initialUrl);
@@ -2933,7 +2945,13 @@
 
         function closeCreatorWizard() {
             var m = document.getElementById('creatorWizardModal');
-            if (m) m.style.display = 'none';
+            if (m) {
+                m.classList.remove('open');
+                m.style.display = 'none';
+            }
+            if (typeof window.execCloseCreatorWizard === 'function') {
+                window.execCloseCreatorWizard();
+            }
         }
 
         // Submit Handler
@@ -2949,6 +2967,7 @@
 
             var creatorName = document.getElementById('modalCreatorName').value.trim();
             var creatorAvatar = document.getElementById('modalCreatorAvatar').value.trim();
+            var creatorPlatform = (document.getElementById('modalCreatorPlatform') && document.getElementById('modalCreatorPlatform').value.trim()) || '';
             var pInp = document.getElementById('modalPriceInput');
             var price = (pInp && pInp.value.trim()) || document.getElementById('modalPrice').value.trim();
             var thumbnail = document.getElementById('modalThumbnail').value.trim();

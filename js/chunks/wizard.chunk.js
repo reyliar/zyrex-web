@@ -65,6 +65,7 @@
             }
         }
 
+        modal.style.display = 'flex';
         modal.classList.add('open');
 
         var val = (initialUrl !== undefined && initialUrl !== null) ? initialUrl : ((document.getElementById('modalCreatorUrl') || {}).value || '');
@@ -80,7 +81,10 @@
 
     window.closeCreatorWizard = function() {
         var modal = document.getElementById('creatorWizardModal');
-        if (modal) modal.classList.remove('open');
+        if (modal) {
+            modal.classList.remove('open');
+            modal.style.display = 'none';
+        }
         var ov = document.getElementById('wizCheckOverlay');
         if (ov && ov.parentNode) ov.parentNode.removeChild(ov);
         var modalContainer = document.getElementById('wizModalContainer');
@@ -91,6 +95,7 @@
             }
         }
     };
+    window.execCloseCreatorWizard = window.closeCreatorWizard;
 
     window.setWizStep = function(stepNum) {
         for (var i = 1; i <= 3; i++) {
@@ -638,14 +643,40 @@
         if (!window.scannedProducts || !window.scannedProducts[idx]) return;
         var prod = window.scannedProducts[idx];
         
-        var elPu = document.getElementById('modalProductUrl');
+        var elPu = document.getElementById('modalProductUrl') || document.getElementById('payhipLink');
         if (elPu && prod.url) elPu.value = prod.url;
-        var elT = document.getElementById('modalTitle');
+        var elT = document.getElementById('modalTitle') || document.getElementById('productName');
         if (elT && prod.title && prod.title !== 'Product') elT.value = prod.title;
         var elPr = document.getElementById('modalPrice');
         if (elPr && prod.price) elPr.value = prod.price;
-        var elTh = document.getElementById('modalThumbnail');
+        var elPInp = document.getElementById('modalPriceInput');
+        if (elPInp && prod.price) {
+            elPInp.value = typeof formatPriceDisplay === 'function' ? formatPriceDisplay(prod.price) : prod.price;
+        }
+        var elTh = document.getElementById('modalThumbnail') || document.getElementById('thumbUrl');
         if (elTh && prod.image) elTh.value = prod.image;
+
+        // Duplicate checking for request modal
+        if (typeof checkClientDuplicate === 'function' && prod.url) {
+            var dup = checkClientDuplicate(prod.url);
+            var dupBox = document.getElementById('duplicateWarning');
+            var submitBtn = document.getElementById('modalSubmitBtn');
+            if (dup) {
+                if (dupBox) dupBox.style.display = 'flex';
+                var dupLink = document.getElementById('duplicateLink');
+                if (dupLink) dupLink.href = '/resource?id=' + dup.id;
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Already on Zyrex';
+                }
+            } else {
+                if (dupBox) dupBox.style.display = 'none';
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Post Request';
+                }
+            }
+        }
 
         var prev = document.getElementById('lookupPreview');
         if (prev) {
@@ -657,7 +688,10 @@
             var pc = document.getElementById('previewCreator');
             if (pc) pc.textContent = (document.getElementById('modalCreatorName') || {}).value || 'Creator';
             var pp = document.getElementById('previewPrice');
-            if (pp) pp.textContent = prod.price || 'Free';
+            if (pp) {
+                var dispPrice = typeof formatPriceDisplay === 'function' ? formatPriceDisplay(prod.price) : prod.price;
+                pp.textContent = dispPrice || 'Free';
+            }
         }
 
         var modalContainer = document.getElementById('wizModalContainer');
