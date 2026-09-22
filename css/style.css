@@ -4334,6 +4334,201 @@ pre, code {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    justify-content: space-between;
+    margin-bottom: 2px;
+}
+
+.notif-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.notif-time {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.4);
+    flex-shrink: 0;
+}
+
+.notif-desc {
+    font-size: 0.75rem;
+    color: var(--text-sub);
+    line-height: 1.35;
+}
+
+.notif-item {
+    position: relative;
+}
+
+.notif-item-del-btn {
+    position: absolute;
+    top: 10px;
+    right: 8px;
+    background: rgba(0, 0, 0, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-sub);
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.68rem;
+    cursor: pointer;
+    opacity: 0;
+    transition: all 0.2s ease;
+    z-index: 5;
+}
+
+.notif-item:hover .notif-item-del-btn {
+    opacity: 1;
+}
+
+.notif-item-del-btn:hover {
+    background: #ff2b52;
+    color: #fff;
+    border-color: #ff2b52;
+    transform: scale(1.1);
+}
+
+.notif-panel-footer {
+    padding: 9px 16px;
+    background: rgba(255, 255, 255, 0.025);
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.76rem;
+}
+
+.notif-footer-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-sub);
+    font-size: 0.75rem;
+    cursor: pointer;
+    padding: 3px 8px;
+    border-radius: 5px;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.notif-footer-btn:hover {
+    color: #ff6b8b;
+    background: rgba(255, 43, 82, 0.12);
+}
+
+.notif-empty-state {
+    padding: 32px 16px;
+    text-align: center;
+    color: var(--text-sub);
+}
+
+@media (max-width: 600px) {
+    .global-floating-hub {
+        bottom: 18px;
+        right: 18px;
+        gap: 10px;
+    }
+    .floating-hub-btn {
+        width: 44px;
+        height: 44px;
+        font-size: 1rem;
+    }
+    .global-notif-panel {
+        bottom: 74px;
+        right: 16px;
+        width: calc(100vw - 32px);
+    }
+}
+
+.mention-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    background: rgba(255, 43, 82, 0.14);
+    color: #ff6b8b;
+    border: 1px solid rgba(255, 43, 82, 0.32);
+    padding: 1px 7px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.88em;
+    vertical-align: baseline;
+    transition: all 0.2s ease;
+}
+
+.mention-tag:hover {
+    background: rgba(255, 43, 82, 0.25);
+    color: #fff;
+    border-color: rgba(255, 43, 82, 0.6);
+    box-shadow: 0 0 10px rgba(255, 43, 82, 0.3);
+}
+
+.mention-autocomplete-popup {
+    position: absolute;
+    background: rgba(14, 7, 18, 0.98);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(255, 43, 82, 0.35);
+    border-radius: 14px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.85), 0 0 25px rgba(255, 43, 82, 0.2);
+    width: 290px;
+    max-width: 90vw;
+    max-height: 240px;
+    overflow-y: auto;
+    z-index: 100000;
+    display: none;
+    flex-direction: column;
+    padding: 6px;
+}
+
+.mention-autocomplete-popup.active {
+    display: flex;
+}
+
+.mention-user-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s, transform 0.15s;
+    user-select: none;
+}
+
+.mention-user-item:hover, .mention-user-item.selected {
+    background: rgba(255, 43, 82, 0.16);
+}
+
+.mention-user-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    flex-shrink: 0;
+}
+
+.mention-user-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    flex: 1;
+}
+
+.mention-user-name {
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     display: flex;
     align-items: center;
     gap: 5px;
@@ -4347,5 +4542,121 @@ pre, code {
     text-overflow: ellipsis;
 }
 
+/* ==========================================================================
+   PREMIUM CREATOR SOCIAL SCAN BUTTON (GLOBAL COMPONENT)
+   ========================================================================== */
+.social-scan-btn,
+.social-lookup-btn,
+.wiz-btn-scan {
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    padding: 0 18px !important;
+    height: 40px !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(255, 255, 255, 0.22) !important;
+    background: linear-gradient(135deg, #ff244d 0%, #ff5277 50%, #c41035 100%) !important;
+    color: #ffffff !important;
+    font-family: 'Outfit', 'Poppins', sans-serif !important;
+    font-size: 0.8rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.6px !important;
+    text-transform: uppercase !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+    position: relative !important;
+    overflow: hidden !important;
+    box-shadow: 0 4px 18px rgba(255, 36, 77, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.35) !important;
+    transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, background 0.25s ease !important;
+    user-select: none !important;
+}
 
+.social-scan-btn::before,
+.social-lookup-btn::before,
+.wiz-btn-scan::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.32), transparent);
+    transform: translateX(-120%) skewX(-20deg);
+    transition: transform 0.65s ease;
+    pointer-events: none;
+}
 
+.social-scan-btn:hover,
+.social-lookup-btn:hover,
+.wiz-btn-scan:hover {
+    transform: translateY(-1.5px) scale(1.02) !important;
+    border-color: rgba(255, 255, 255, 0.45) !important;
+    background: linear-gradient(135deg, #ff3b60 0%, #ff6685 50%, #d4143a 100%) !important;
+    box-shadow: 0 8px 26px rgba(255, 43, 82, 0.62), 0 0 20px rgba(255, 77, 109, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.5) !important;
+    color: #ffffff !important;
+}
+
+.social-scan-btn:hover::before,
+.social-lookup-btn:hover::before,
+.wiz-btn-scan:hover::before {
+    transform: translateX(140%) skewX(-20deg);
+}
+
+.social-scan-btn:active,
+.social-lookup-btn:active,
+.wiz-btn-scan:active {
+    transform: translateY(0) scale(0.97) !important;
+    box-shadow: 0 2px 10px rgba(255, 43, 82, 0.35) !important;
+}
+
+.social-scan-btn:disabled,
+.social-lookup-btn:disabled,
+.wiz-btn-scan:disabled {
+    opacity: 0.5 !important;
+    cursor: not-allowed !important;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.social-scan-btn i,
+.social-lookup-btn i,
+.wiz-btn-scan i {
+    font-size: 0.88rem !important;
+    color: #ffffff !important;
+    filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.6)) !important;
+    transition: transform 0.25s ease !important;
+}
+
+.social-scan-btn:hover i,
+.social-lookup-btn:hover i,
+.wiz-btn-scan:hover i {
+    transform: rotate(15deg) scale(1.2) !important;
+}
+
+.social-input-wrap {
+    display: flex !important;
+    align-items: center !important;
+    border: 1px solid var(--border, rgba(255, 255, 255, 0.12)) !important;
+    border-radius: 16px !important;
+    background: rgba(0, 0, 0, 0.45) !important;
+    padding: 4px 5px 4px 14px !important;
+    gap: 8px !important;
+    transition: all 0.25s ease !important;
+}
+
+.social-input-wrap:focus-within {
+    border-color: rgba(255, 43, 82, 0.45) !important;
+    box-shadow: 0 0 22px rgba(255, 43, 82, 0.18) !important;
+}
+
+.social-input-wrap input {
+    border: none !important;
+    background: transparent !important;
+    flex: 1 !important;
+    padding: 8px 0 !important;
+    color: #fff !important;
+    outline: none !important;
+    font-family: inherit !important;
+    font-size: 0.88rem !important;
+}
