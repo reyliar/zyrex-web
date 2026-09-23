@@ -1364,6 +1364,10 @@
     <script src="/js/script.js?v=45"></script>
     <script src="/js/presets-data.js?v=5"></script>
     <script>
+    var currentCommentsPresetId = null;
+    var currentUserData = null;
+    var currentGuildStickers = null;
+
     (async () => {
         const p = new URLSearchParams(location.search);
         const id = p.get("id");
@@ -1780,9 +1784,6 @@
         loadPresetFilesPreview(p);
     }
 
-    let currentCommentsPresetId = null;
-    let currentUserData = null;
-    let currentGuildStickers = null;
     const GIPHY_API_KEY = 'hF2tiiF3deZinjO4V7X75pc1q1CwLTkp';
 
     function autoResizeCommentTextarea(el) {
@@ -1993,7 +1994,7 @@
         let notVerified = false;
 
         // Check if user session exists in cache or memory
-        let user = currentUserData;
+        let user = (typeof currentUserData !== 'undefined' && currentUserData) ? currentUserData : (window.currentUser || window._currentUser || null);
         if (!user) {
             try {
                 const raw = localStorage.getItem('zyrex_auth_user');
@@ -2294,11 +2295,13 @@
             const res = await fetch(`/api/comments?preset_id=${encodeURIComponent(productId)}`);
             if (res.ok) {
                 const data = await res.json();
-                if (data.success) {
-                    const comments = data.comments || [];
+                if (data.success || Array.isArray(data) || Array.isArray(data.comments)) {
+                    const comments = Array.isArray(data) ? data : (data.comments || []);
                     const badge = document.getElementById('commentsCountBadge');
-                    if (badge) badge.textContent = data.total || comments.length;
+                    if (badge) badge.textContent = (data.total !== undefined ? data.total : comments.length);
                     renderCommentsTree(comments);
+                } else {
+                    tree.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-sub)">No comments yet. Be the first to start the discussion!</div>`;
                 }
             } else {
                 tree.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-sub)">No comments yet. Be the first to start the discussion!</div>`;

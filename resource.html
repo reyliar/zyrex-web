@@ -1364,6 +1364,10 @@
     <script src="/js/script.js?v=45"></script>
     <script src="/js/presets-data.js?v=5"></script>
     <script>
+    var currentCommentsPresetId = null;
+    var currentUserData = null;
+    var currentGuildStickers = null;
+
     (async () => {
         const p = new URLSearchParams(location.search);
         const id = p.get("id");
@@ -1825,9 +1829,6 @@
         loadPresetFilesPreview(p);
     }
 
-    let currentCommentsPresetId = null;
-    let currentUserData = null;
-    let currentGuildStickers = null;
     const GIPHY_API_KEY = 'hF2tiiF3deZinjO4V7X75pc1q1CwLTkp';
 
     function autoResizeCommentTextarea(el) {
@@ -2038,7 +2039,7 @@
         let notVerified = false;
 
         // Check if user session exists in cache or memory
-        let user = currentUserData;
+        let user = (typeof currentUserData !== 'undefined' && currentUserData) ? currentUserData : (window.currentUser || window._currentUser || null);
         if (!user) {
             try {
                 const raw = localStorage.getItem('zyrex_auth_user');

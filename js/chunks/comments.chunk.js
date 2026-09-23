@@ -155,11 +155,13 @@
             var res = await fetch('/api/comments?preset_id=' + encodeURIComponent(productId));
             if (res.ok) {
                 var data = await res.json();
-                if (data.success) {
-                    var comments = data.comments || [];
+                if (data.success || Array.isArray(data) || Array.isArray(data.comments)) {
+                    var comments = Array.isArray(data) ? data : (data.comments || []);
                     var badge = document.getElementById('commentsCountBadge');
-                    if (badge) badge.textContent = data.total || comments.length;
+                    if (badge) badge.textContent = (data.total !== undefined ? data.total : comments.length);
                     renderCommentsTree(comments);
+                } else {
+                    tree.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-sub)">No comments yet. Be the first to start the discussion!</div>';
                 }
             } else {
                 tree.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-sub)">No comments yet. Be the first to start the discussion!</div>';
@@ -456,6 +458,9 @@
                 else if (parsed && (parsed.id || parsed.username)) currentUserData = parsed;
             }
         } catch(e) {}
+        if (!currentUserData && (window.currentUser || window._currentUser)) {
+            currentUserData = window.currentUser || window._currentUser;
+        }
 
         renderCommentInputBox();
         loadCommentsData(productId);
