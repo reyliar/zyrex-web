@@ -256,10 +256,10 @@ async function createShrinkEarnLink(env, destinationUrl) {
   return shortUrl;
 }
 
-function buildTokenLandingUrl(token) {
+function buildTokenLandingUrl(token, source = "shrinkearn") {
   const landingUrl = new URL("https://dl.zyrexediting.xyz/");
   landingUrl.searchParams.set("token", token);
-  landingUrl.searchParams.set("src", "shrinkearn");
+  landingUrl.searchParams.set("src", source);
   return landingUrl.toString();
 }
 
@@ -4060,10 +4060,15 @@ async function storeAndProxyImage(env, imageUrl) {
         });
 
         let adUrl = "";
-        const destinationUrl = buildTokenLandingUrl(token);
         const isAdFree = await checkAdFreeRole(session.userId, env);
+        const country = String(request.cf?.country || "").toUpperCase();
+        const bypassAdsForCountry = country === "BG";
+        const destinationUrl = buildTokenLandingUrl(
+          token,
+          isAdFree ? "ad-free" : bypassAdsForCountry ? "geo-bypass" : "shrinkearn"
+        );
 
-        if (isAdFree) {
+        if (isAdFree || bypassAdsForCountry) {
           adUrl = destinationUrl;
         } else {
           try {
@@ -4083,7 +4088,7 @@ async function storeAndProxyImage(env, imageUrl) {
           ad_url: adUrl,
           short_url: adUrl,
           url: adUrl,
-          provider: isAdFree ? "direct" : "shrinkearn",
+          provider: (isAdFree || bypassAdsForCountry) ? "direct" : "shrinkearn",
           ad_free: isAdFree,
           expires_in: TOKEN_EXPIRY,
           file_path: r2Prefix,
