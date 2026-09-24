@@ -3511,8 +3511,8 @@ async function storeAndProxyImage(env, imageUrl) {
               "";
             const vResp = await fetch(`${VERIFY_BOT_API}/api/verify/token`, {
               method: "POST",
-              headers: { "Content-Type": "application/json", "X-Verify-Service-Key": env.DISCORD_BOT_TOKEN || env.ZYREX_API_KEY || "" },
-              body: JSON.stringify({ userId: du.id, ip: userIp, country: userCountry }),
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ userId: du.id, accessToken: token.access_token, ip: userIp, country: userCountry }),
             });
             const vData = await vResp.json();
             if (vResp.ok && vData.success && vData.token) {
@@ -3619,23 +3619,6 @@ async function storeAndProxyImage(env, imageUrl) {
         } catch(e) {
           console.error("Verification status error:", e.message);
           return json({ success: false, verified: false, error: "Status unavailable" }, 503);
-        }
-      }
-
-      if (path === "/api/verify/token" && request.method === "POST") {
-        const session = parseSession(request.headers.get("Cookie"), request);
-        if (!session) return json({ success: false, error: "Not logged in" }, 401);
-        try {
-          const details = await request.json().catch(() => ({}));
-          const botResp = await fetch(`${VERIFY_BOT_API}/api/verify/token`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json", "X-Verify-Service-Key": env.DISCORD_BOT_TOKEN || env.ZYREX_API_KEY || "" },
-            body: JSON.stringify({ userId: session.userId, ip: details.ip || "", country: details.country || "" }),
-          });
-          const payload = await botResp.text();
-          return new Response(payload, { status: botResp.status, headers: { ...corsHeaders, "Content-Type": "application/json", "Cache-Control": "no-store" } });
-        } catch (e) {
-          return json({ success: false, error: "Verification service unavailable" }, 503);
         }
       }
 
