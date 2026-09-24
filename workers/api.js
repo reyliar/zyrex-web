@@ -3511,7 +3511,7 @@ async function storeAndProxyImage(env, imageUrl) {
               "";
             const vResp = await fetch(`${VERIFY_BOT_API}/api/verify/token`, {
               method: "POST",
-              headers: { "Content-Type": "application/json", "X-Verify-Service-Key": env.ZYREX_API_KEY || env.DISCORD_BOT_TOKEN || "" },
+              headers: { "Content-Type": "application/json", "X-Verify-Service-Key": env.DISCORD_BOT_TOKEN || env.ZYREX_API_KEY || "" },
               body: JSON.stringify({ userId: du.id, ip: userIp, country: userCountry }),
             });
             const vData = await vResp.json();
@@ -3629,7 +3629,7 @@ async function storeAndProxyImage(env, imageUrl) {
           const details = await request.json().catch(() => ({}));
           const botResp = await fetch(`${VERIFY_BOT_API}/api/verify/token`, {
             method: "POST",
-            headers: { "Content-Type": "application/json", "X-Verify-Service-Key": env.ZYREX_API_KEY || env.DISCORD_BOT_TOKEN || "" },
+            headers: { "Content-Type": "application/json", "X-Verify-Service-Key": env.DISCORD_BOT_TOKEN || env.ZYREX_API_KEY || "" },
             body: JSON.stringify({ userId: session.userId, ip: details.ip || "", country: details.country || "" }),
           });
           const payload = await botResp.text();
