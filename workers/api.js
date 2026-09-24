@@ -6601,6 +6601,14 @@ async function storeAndProxyImage(env, imageUrl) {
                 const normalizeTitle = value => String(value || "")
                   .normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
                   .toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+                const titleSimilarity = (left, right) => {
+                  const a = new Set(normalizeTitle(left).split(/\s+/).filter(Boolean));
+                  const b = new Set(normalizeTitle(right).split(/\s+/).filter(Boolean));
+                  if (!a.size || !b.size) return 0;
+                  let overlap = 0;
+                  for (const token of a) if (b.has(token)) overlap++;
+                  return overlap / (a.size + b.size - overlap);
+                };
                 const normalizeSourceUrl = value => {
                   try {
                     const source = new URL(String(value || "").trim());
@@ -6610,13 +6618,18 @@ async function storeAndProxyImage(env, imageUrl) {
                 const submittedTitle = normalizeTitle(submitPayload.name);
                 const submittedUrls = new Set([submitPayload.product_url, submitPayload.source_url].map(normalizeSourceUrl).filter(Boolean));
                 const openRequests = await loadRequestsFromR2();
-                const matches = openRequests.filter(req => {
+                const matches = openRequests.map(req => {
                   if (["completed", "rejected"].includes(String(req.status || "pending").toLowerCase())) return false;
                   const titleMatch = submittedTitle && normalizeTitle(req.title) === submittedTitle;
-                  const requestUrl = normalizeSourceUrl(req.product_url);
-                  return titleMatch || (requestUrl && submittedUrls.has(requestUrl));
-                });
-                if (matches.length === 1) linkedReqId = matches[0].id;
+                  const requestUrls = [req.product_url, req.source_url].map(normalizeSourceUrl).filter(Boolean);
+                  const urlMatch = requestUrls.some(value => submittedUrls.has(value));
+                  if (titleMatch || urlMatch) return { req, score: 1 };
+                  return { req, score: titleSimilarity(submitPayload.name, req.title) };
+                }).filter(Boolean).sort((a, b) => b.score - a.score);
+                // Allow an unambiguous close title match when source links differ
+                // (for example, a Payhip product URL versus a request store URL).
+                if (matches.length === 1 && matches[0].score >= 0.72) linkedReqId = matches[0].req.id;
+                else if (matches.length > 1 && matches[0].score >= 0.72 && matches[0].score - matches[1].score >= 0.2) linkedReqId = matches[0].req.id;
               }
               if (linkedReqId) {
                 const prodId = parsed.id || submitPayload.id || "";
@@ -6632,24 +6645,7 @@ async function storeAndProxyImage(env, imageUrl) {
                   }
                   await persistRequestsToR2(allReqs);
 
-                  // Update Discord announcement if message id exists
-                  if (targetReq.discord_message_id) {
-                    const channelId = targetReq.discord_channel_id || REQUESTS_CHANNEL_ID;
-                    try {
-                      await fetch(`${BOT_API}/api/requests/announce-completed`, {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          message_id: targetReq.discord_message_id,
-                          channel_id: channelId,
-                          title: targetReq.title,
-                          resource_url: targetReq.resource_url || "",
-                          req_id: linkedReqId,
-                          thumbnail: targetReq.thumbnail || ""
-                        })
-                      });
-                    } catch (_) {}
-                  }
+                  await syncDiscordRequestAnnouncement(targetReq);
                 }
               }
             } catch (autoErr) {
