@@ -5354,6 +5354,8 @@ async function storeAndProxyImage(env, imageUrl) {
                   messageId = msg.id;
                   channelId = msg.channel_id || REQUESTS_CHANNEL_ID;
                 }
+              } else {
+                console.error("Direct Discord request announcement failed:", discordResp.status, (await discordResp.text()).slice(0, 240));
               }
             } catch (restErr) {
               console.warn("Direct Discord REST request announcement failed:", restErr);
@@ -5363,10 +5365,17 @@ async function storeAndProxyImage(env, imageUrl) {
           let botData = null;
           if (!messageId) {
             try {
+              const fallbackRequest = { ...reqData };
+              try {
+                const avatarUrl = new URL(String(fallbackRequest.user_avatar || ""));
+                if (!/^https?:$/.test(avatarUrl.protocol)) throw new Error("invalid avatar URL protocol");
+              } catch (_) {
+                fallbackRequest.user_avatar = "https://zyrexediting.xyz/assets/content.png";
+              }
               const botResp = await fetch(`${BOT_API}/api/requests/announce`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(reqData)
+                body: JSON.stringify(fallbackRequest)
               });
               if (botResp.ok) {
                 botData = await botResp.json();
@@ -5374,6 +5383,8 @@ async function storeAndProxyImage(env, imageUrl) {
                   messageId = botData.message_id;
                   channelId = botData.channel_id || REQUESTS_CHANNEL_ID;
                 }
+              } else {
+                console.error("BOT_API request announcement failed:", botResp.status, (await botResp.text()).slice(0, 240));
               }
             } catch (botErr) {
               console.error("BOT_API announce error:", botErr);
@@ -5444,6 +5455,93 @@ async function storeAndProxyImage(env, imageUrl) {
             }
           }
           return { messageId, threadId };
+        }
+
+        async function syncDiscordRequestAnnouncement(reqData) {
+          if (!reqData.discord_message_id) {
+            const created = await sendDiscordRequestAnnouncement(reqData);
+            return !!(created && created.messageId);
+          }
+          const channelId = reqData.discord_channel_id || REQUESTS_CHANNEL_ID;
+          if (env.DISCORD_BOT_TOKEN && reqData.discord_message_id) {
+            try {
+              const messageUrl = `https://discord.com/api/v10/channels/${channelId}/messages/${reqData.discord_message_id}`;
+              const currentResp = await fetch(messageUrl, {
+                headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` }
+              });
+              if (currentResp.ok) {
+                const current = await currentResp.json();
+                const existingFields = current.embeds?.[0]?.fields || [];
+                const oldRequester = existingFields.find(f => /requested by/i.test(f.name || ""));
+                const typeLabels = {
+                  "preset": "Preset", "project-file": "Project File", "project_file": "Project File",
+                  "plugin": "Plugin", "software": "Software", "scenepack": "Scenepack", "other": "Other"
+                };
+                const status = String(reqData.status || "pending").toLowerCase();
+                const statusLabels = { pending: "Pending", in_progress: "In Progress", completed: "Completed", rejected: "Rejected" };
+                const color = status === "completed" ? 0x34d399 : status === "in_progress" ? 0xf59e0b : status === "rejected" ? 0x64748b : 0xff2b52;
+                const fields = [
+                  { name: "Type", value: `\`${typeLabels[reqData.type] || "Resource"}\``, inline: true },
+                  oldRequester || { name: "Requested By", value: reqData.is_anonymous ? "Anonymous Member" : (reqData.user_name || "Community Member"), inline: true }
+                ];
+                if (reqData.price) fields.push({ name: "Price", value: `\`${reqData.price}\``, inline: true });
+                if (reqData.creator_name || reqData.creator_social_url) {
+                  const creator = reqData.creator_social_url ? `[${reqData.creator_name || "Creator"}](${reqData.creator_social_url})` : reqData.creator_name;
+                  fields.push({ name: "Creator", value: creator, inline: true });
+                }
+                if (reqData.product_url) fields.push({ name: "Original Store", value: `[Open Store Page](${reqData.product_url})`, inline: false });
+                if (status !== "pending") fields.push({ name: "Status", value: `**${statusLabels[status] || statusLabels.pending}**`, inline: true });
+                if (status === "completed" && reqData.resource_url) {
+                  fields.push({ name: "Resource", value: `[View Resource](https://zyrexediting.xyz${reqData.resource_url})`, inline: true });
+                }
+                const embed = {
+                  title: `${status === "completed" ? "✅ Fulfilled Request" : "📥 Community Request"}: ${reqData.title || "Untitled Request"}`.slice(0, 256),
+                  url: `https://zyrexediting.xyz/request?id=${encodeURIComponent(reqData.id || "")}`,
+                  description: (reqData.description || "No details provided.").slice(0, 4000),
+                  color,
+                  fields,
+                  footer: { text: "Zyrex Community Requests" },
+                  timestamp: reqData.updated_at || reqData.created_at || new Date().toISOString()
+                };
+                if (reqData.thumbnail && /^https?:\/\//i.test(reqData.thumbnail)) embed.thumbnail = { url: reqData.thumbnail };
+                const editResp = await fetch(messageUrl, {
+                  method: "PATCH",
+                  headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`, "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    embeds: [embed],
+                    components: [{
+                      type: 1,
+                      components: [{
+                        type: 2,
+                        style: 5,
+                        label: "View Request",
+                        url: `https://zyrexediting.xyz/request?id=${encodeURIComponent(reqData.id || "")}`
+                      }]
+                    }]
+                  })
+                });
+                if (editResp.ok) return true;
+                console.error("Discord request embed update failed:", editResp.status, (await editResp.text()).slice(0, 240));
+              } else {
+                console.error("Discord request message lookup failed:", currentResp.status, (await currentResp.text()).slice(0, 240));
+              }
+            } catch (e) {
+              console.error("Discord request embed sync failed:", e.message);
+            }
+          }
+
+          try {
+            const botResp = await fetch(`${BOT_API}/api/requests/announce`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(reqData)
+            });
+            if (!botResp.ok) console.error("BOT_API request embed sync failed:", botResp.status, (await botResp.text()).slice(0, 240));
+            return botResp.ok;
+          } catch (e) {
+            console.error("BOT_API request embed sync error:", e.message);
+            return false;
+          }
         }
 
         // Helper: Ensure request has Discord thread created
@@ -6305,6 +6403,7 @@ async function storeAndProxyImage(env, imageUrl) {
           }
 
           await persistRequestsToR2(allReqs);
+          await syncDiscordRequestAnnouncement(targetReq);
           return json({ success: true, status: newStatus, request: targetReq });
         }
 
@@ -6331,6 +6430,7 @@ async function storeAndProxyImage(env, imageUrl) {
             targetReq.updated_at = new Date().toISOString();
             targetReq.updated_by = session.userId;
             await persistRequestsToR2(allReqs);
+            await syncDiscordRequestAnnouncement(targetReq);
             return json({ success: true, request: targetReq });
           }
 
