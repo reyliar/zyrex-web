@@ -2379,9 +2379,10 @@ export default {
       return fetch(request);
     }
     const path = url.pathname;
-    const providedApiKey = extractApiKey(request, url);
-    const hasMasterKey = isMasterApiKey(providedApiKey, env);
-    const hasAppKey = isValidAppApiKey(providedApiKey, env);
+      const providedApiKey = extractApiKey(request, url);
+      const hasMasterKey = isMasterApiKey(providedApiKey, env);
+      const hasAppKey = isValidAppApiKey(providedApiKey, env);
+      const hasReconcileKey = !!env.ZYREX_RECONCILE_KEY && providedApiKey === env.ZYREX_RECONCILE_KEY;
 
     if (request.method === "OPTIONS") {
       return new Response(null, { headers: corsHeaders });
@@ -5121,7 +5122,7 @@ async function storeAndProxyImage(env, imageUrl) {
           (secFetchSite === "same-origin" || secFetchSite === "same-site" || clientHeader === "web-portal" || hasValidCookie || hasAppKey)
         );
 
-        if (!hasMasterKey && !isLegitBrowserSiteVisit) {
+        if (!hasMasterKey && !hasReconcileKey && !isLegitBrowserSiteVisit) {
           return json({
             success: false,
             error: "Unauthorized. Valid API key required to access Requests API.",
@@ -5455,6 +5456,65 @@ async function storeAndProxyImage(env, imageUrl) {
             }
           }
           return { messageId, threadId };
+        }
+
+        // One-time/admin reconciliation endpoint: link existing published resources
+        // to a single unambiguous open request, then synchronize its Discord embed.
+        if (path === "/api/requests/reconcile-resources" && request.method === "POST") {
+          if (!env.ZYREX_RECONCILE_KEY || providedApiKey !== env.ZYREX_RECONCILE_KEY) {
+            return json({ success: false, error: "Unauthorized" }, 401);
+          }
+          const productsResp = await fetch(`${BOT_API}/api/products`);
+          if (!productsResp.ok) return json({ success: false, error: "Could not load published resources" }, 502);
+          const products = await productsResp.json();
+          if (!Array.isArray(products)) return json({ success: false, error: "Unexpected resource list" }, 502);
+          const allReqs = await loadRequestsFromR2();
+          const normalizeTitle = value => String(value || "")
+            .normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
+            .toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+          const titleSimilarity = (left, right) => {
+            const a = new Set(normalizeTitle(left).split(/\s+/).filter(Boolean));
+            const b = new Set(normalizeTitle(right).split(/\s+/).filter(Boolean));
+            if (!a.size || !b.size) return 0;
+            let overlap = 0;
+            for (const token of a) if (b.has(token)) overlap++;
+            return overlap / (a.size + b.size - overlap);
+          };
+          const normalizeSourceUrl = value => {
+            try {
+              const source = new URL(String(value || "").trim());
+              return (source.hostname || "").toLowerCase().replace(/^www\./, "") + source.pathname.replace(/\/+$/, "").toLowerCase();
+            } catch (_) { return ""; }
+          };
+          const updated = [];
+          const claimed = new Set(allReqs.filter(r => r.resource_id).map(r => r.resource_id));
+          for (const product of products) {
+            if (!product?.id || claimed.has(product.id)) continue;
+            const productUrls = new Set([product.product_url, product.source_url].map(normalizeSourceUrl).filter(Boolean));
+            const candidates = allReqs.filter(r => !["completed", "rejected"].includes(String(r.status || "pending").toLowerCase()))
+              .map(req => {
+                const reqUrls = [req.product_url, req.source_url].map(normalizeSourceUrl).filter(Boolean);
+                const exactTitle = normalizeTitle(req.title) && normalizeTitle(req.title) === normalizeTitle(product.name);
+                const exactUrl = reqUrls.some(value => productUrls.has(value));
+                return { req, score: exactTitle || exactUrl ? 1 : titleSimilarity(product.name, req.title) };
+              }).sort((a, b) => b.score - a.score);
+            const best = candidates[0];
+            if (!best || best.score < 0.72 || (candidates[1] && best.score - candidates[1].score < 0.2)) continue;
+            const target = best.req;
+            target.status = "completed";
+            target.completed_at = target.completed_at || new Date().toISOString();
+            target.updated_at = new Date().toISOString();
+            target.resource_id = product.id;
+            target.resource_url = `/resource?id=${encodeURIComponent(product.id)}`;
+            claimed.add(product.id);
+            updated.push({ request_id: target.id, title: target.title, resource_id: product.id, resource_name: product.name });
+          }
+          if (updated.length) await persistRequestsToR2(allReqs);
+          const discordSynced = [];
+          for (const requestItem of allReqs.filter(r => String(r.status || "").toLowerCase() === "completed" && r.resource_id && r.discord_message_id)) {
+            if (await syncDiscordRequestAnnouncement(requestItem)) discordSynced.push(requestItem.id);
+          }
+          return json({ success: true, resources_checked: products.length, requests_completed: updated, discord_synced: discordSynced });
         }
 
         async function syncDiscordRequestAnnouncement(reqData) {
