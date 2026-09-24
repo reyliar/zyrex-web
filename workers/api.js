@@ -5469,6 +5469,26 @@ async function storeAndProxyImage(env, imageUrl) {
           const products = await productsResp.json();
           if (!Array.isArray(products)) return json({ success: false, error: "Unexpected resource list" }, 502);
           const allReqs = await loadRequestsFromR2();
+          const productsById = new Map(products.filter(p => p?.id).map(p => [String(p.id), p]));
+          const repairedLinks = [];
+          for (const reqItem of allReqs.filter(r => String(r.status || "").toLowerCase() === "completed")) {
+            let resourceId = reqItem.resource_id ? String(reqItem.resource_id) : "";
+            if (!resourceId && reqItem.resource_url) {
+              try {
+                const link = new URL(String(reqItem.resource_url), "https://zyrexediting.xyz");
+                resourceId = link.searchParams.get("id") || "";
+              } catch (_) {}
+              if (!resourceId && !String(reqItem.resource_url).includes("/")) resourceId = String(reqItem.resource_url);
+            }
+            if (!resourceId || !productsById.has(resourceId)) continue;
+            const canonicalUrl = `/resource?id=${encodeURIComponent(resourceId)}`;
+            if (reqItem.resource_id !== resourceId || reqItem.resource_url !== canonicalUrl) {
+              reqItem.resource_id = resourceId;
+              reqItem.resource_url = canonicalUrl;
+              reqItem.updated_at = new Date().toISOString();
+              repairedLinks.push({ request_id: reqItem.id, title: reqItem.title, resource_id: resourceId, resource_name: productsById.get(resourceId).name });
+            }
+          }
           const normalizeTitle = value => String(value || "")
             .normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
             .toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
@@ -5509,12 +5529,12 @@ async function storeAndProxyImage(env, imageUrl) {
             claimed.add(product.id);
             updated.push({ request_id: target.id, title: target.title, resource_id: product.id, resource_name: product.name });
           }
-          if (updated.length) await persistRequestsToR2(allReqs);
+          if (updated.length || repairedLinks.length) await persistRequestsToR2(allReqs);
           const discordSynced = [];
-          for (const requestItem of allReqs.filter(r => String(r.status || "").toLowerCase() === "completed" && r.resource_id && r.discord_message_id)) {
+          for (const requestItem of allReqs.filter(r => String(r.status || "").toLowerCase() === "completed" && r.resource_id && productsById.has(String(r.resource_id)) && r.discord_message_id)) {
             if (await syncDiscordRequestAnnouncement(requestItem)) discordSynced.push(requestItem.id);
           }
-          return json({ success: true, resources_checked: products.length, requests_completed: updated, discord_synced: discordSynced });
+          return json({ success: true, resources_checked: products.length, requests_completed: updated, links_repaired: repairedLinks, discord_synced: discordSynced });
         }
 
         async function syncDiscordRequestAnnouncement(reqData) {
