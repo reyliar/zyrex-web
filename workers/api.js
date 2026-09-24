@@ -3493,7 +3493,7 @@ async function storeAndProxyImage(env, imageUrl) {
           }
         }
 
-        // If this is a verify flow, call the verify bot API to auto-verify
+        // Verification uses a short-lived, one-time token bound to this Discord account.
         if (redirectTo === "/verify" && extraState) {
           try {
             // Get real user IP from multiple sources (works globally)
@@ -3509,10 +3509,14 @@ async function storeAndProxyImage(env, imageUrl) {
               request.headers.get("CF-IPCountry") ||
               request.headers.get("X-Country") ||
               "";
-            const vResp = await fetch(`${VERIFY_BOT_API}/api/verify?userId=${du.id}&ip=${encodeURIComponent(userIp)}&country=${encodeURIComponent(userCountry)}`);
+            const vResp = await fetch(`${VERIFY_BOT_API}/api/verify/token`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "X-Verify-Service-Key": env.ZYREX_API_KEY || env.DISCORD_BOT_TOKEN || "" },
+              body: JSON.stringify({ userId: du.id, ip: userIp, country: userCountry }),
+            });
             const vData = await vResp.json();
-            if (vData.success) {
-              redirectTo = "/verify?result=success&name=" + encodeURIComponent(vData.display_name || du.global_name || du.username);
+            if (vResp.ok && vData.success && vData.token) {
+              redirectTo = "/verify?token=" + encodeURIComponent(vData.token);
             } else {
               redirectTo = "/verify?result=error&msg=" + encodeURIComponent(vData.error || "Verification failed");
             }
@@ -3615,6 +3619,23 @@ async function storeAndProxyImage(env, imageUrl) {
         } catch(e) {
           console.error("Verification status error:", e.message);
           return json({ success: false, verified: false, error: "Status unavailable" }, 503);
+        }
+      }
+
+      if (path === "/api/verify/token" && request.method === "POST") {
+        const session = parseSession(request.headers.get("Cookie"), request);
+        if (!session) return json({ success: false, error: "Not logged in" }, 401);
+        try {
+          const details = await request.json().catch(() => ({}));
+          const botResp = await fetch(`${VERIFY_BOT_API}/api/verify/token`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "X-Verify-Service-Key": env.ZYREX_API_KEY || env.DISCORD_BOT_TOKEN || "" },
+            body: JSON.stringify({ userId: session.userId, ip: details.ip || "", country: details.country || "" }),
+          });
+          const payload = await botResp.text();
+          return new Response(payload, { status: botResp.status, headers: { ...corsHeaders, "Content-Type": "application/json", "Cache-Control": "no-store" } });
+        } catch (e) {
+          return json({ success: false, error: "Verification service unavailable" }, 503);
         }
       }
 
@@ -6482,11 +6503,33 @@ async function storeAndProxyImage(env, imageUrl) {
         try {
           let parsed = JSON.parse(data);
 
-          // If product submit fulfilled a community request, auto-mark request completed in R2
+          // Complete an explicitly linked request, or infer a unique match for
+          // ordinary uploads by exact normalized title/source URL.
           if (path === "/api/products/submit" && botResp.ok && body) {
             try {
               const submitPayload = JSON.parse(body);
-              const linkedReqId = submitPayload.request_id;
+              let linkedReqId = submitPayload.request_id || "";
+              if (!linkedReqId) {
+                const normalizeTitle = value => String(value || "")
+                  .normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
+                  .toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+                const normalizeSourceUrl = value => {
+                  try {
+                    const source = new URL(String(value || "").trim());
+                    return (source.hostname || "").toLowerCase().replace(/^www\./, "") + source.pathname.replace(/\/+$/, "").toLowerCase();
+                  } catch (_) { return ""; }
+                };
+                const submittedTitle = normalizeTitle(submitPayload.name);
+                const submittedUrls = new Set([submitPayload.product_url, submitPayload.source_url].map(normalizeSourceUrl).filter(Boolean));
+                const openRequests = await loadRequestsFromR2();
+                const matches = openRequests.filter(req => {
+                  if (["completed", "rejected"].includes(String(req.status || "pending").toLowerCase())) return false;
+                  const titleMatch = submittedTitle && normalizeTitle(req.title) === submittedTitle;
+                  const requestUrl = normalizeSourceUrl(req.product_url);
+                  return titleMatch || (requestUrl && submittedUrls.has(requestUrl));
+                });
+                if (matches.length === 1) linkedReqId = matches[0].id;
+              }
               if (linkedReqId) {
                 const prodId = parsed.id || submitPayload.id || "";
                 const allReqs = await loadRequestsFromR2();
@@ -6504,35 +6547,19 @@ async function storeAndProxyImage(env, imageUrl) {
                   // Update Discord announcement if message id exists
                   if (targetReq.discord_message_id) {
                     const channelId = targetReq.discord_channel_id || REQUESTS_CHANNEL_ID;
-                    const resLink = targetReq.resource_url
-                      ? `\n✅ **Fulfilled!** → [View Resource](https://zyrexediting.xyz${targetReq.resource_url})`
-                      : "\n✅ **This request has been fulfilled!**";
                     try {
-                      if (env.DISCORD_BOT_TOKEN) {
-                        await fetch(`https://discord.com/api/v10/channels/${channelId}/messages/${targetReq.discord_message_id}`, {
-                          method: "PATCH",
-                          headers: {
-                            Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`,
-                            "Content-Type": "application/json"
-                          },
-                          body: JSON.stringify({
-                            content: `✅ **Request Fulfilled!** ${resLink}\nhttps://zyrexediting.xyz/request?id=${linkedReqId}`
-                          })
-                        });
-                      } else {
-                        await fetch(`${BOT_API}/api/requests/announce-completed`, {
-                          method: "POST",
-                          headers: { "Content-Type": "application/json" },
-                          body: JSON.stringify({
-                            message_id: targetReq.discord_message_id,
-                            channel_id: channelId,
-                            title: targetReq.title,
-                            resource_url: targetReq.resource_url || "",
-                            req_id: linkedReqId,
-                            thumbnail: targetReq.thumbnail || ""
-                          })
-                        });
-                      }
+                      await fetch(`${BOT_API}/api/requests/announce-completed`, {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          message_id: targetReq.discord_message_id,
+                          channel_id: channelId,
+                          title: targetReq.title,
+                          resource_url: targetReq.resource_url || "",
+                          req_id: linkedReqId,
+                          thumbnail: targetReq.thumbnail || ""
+                        })
+                      });
                     } catch (_) {}
                   }
                 }
