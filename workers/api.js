@@ -4153,11 +4153,10 @@ async function storeAndProxyImage(env, imageUrl) {
         if (!data) return json({ success: false, error: "Invalid or expired token" }, 404);
         // Check if token was already used (skip R2 on peek for speed — download endpoint enforces)
         const fingerprint = hashToken(token);
-        const isPeek = url.searchParams.get("peek") === "1";
-        if (!isPeek && await checkTokenUsed(env, fingerprint)) return json({ success: false, error: "This token has already been used.", code: "TOKEN_USED" }, 403);
-        if (isPeek && usedTokens.has(fingerprint)) return json({ success: false, error: "This token has already been used.", code: "TOKEN_USED" }, 403);
+        if (await checkTokenUsed(env, fingerprint)) return json({ success: false, error: "This token has already been used. Generate a new download token.", code: "TOKEN_USED" }, 403);
         return json({
           success: true,
+          token_id: fingerprint,
           product_id: data.product_id,
           file_path: data.file_path,
           discord_id: data.discord_id,
@@ -4192,7 +4191,7 @@ async function storeAndProxyImage(env, imageUrl) {
         // Verified role gate
         const isVerified = await checkVerifiedRole(session.userId, env);
         if (!isVerified) {
-          if (shouldRedirect) return redirect("/download?id=" + encodeURIComponent(path.split("/api/downloads/request-token/")[1] || ""));
+          if (shouldRedirect) return redirect("/resource?id=" + encodeURIComponent(path.split("/api/downloads/request-token/")[1] || ""));
           return json({ error: "Verification required. You need the Verified role in our Discord server to download.", code: "NOT_VERIFIED" }, 403);
         }
         
@@ -4428,6 +4427,7 @@ async function storeAndProxyImage(env, imageUrl) {
 
           const payload = {
             ...body,
+            token_id: /^[A-Za-z0-9_-]{1,64}$/.test(String(body.token_id || "")) ? String(body.token_id) : "",
             session: session ? {
               userId: session.userId,
               username: session.username,
@@ -6683,50 +6683,46 @@ async function storeAndProxyImage(env, imageUrl) {
             if (body.resource_id) targetReq.resource_id = body.resource_id;
             if (body.resource_url) targetReq.resource_url = body.resource_url;
 
-            // Edit the Discord announcement message to show completed status
-            if (targetReq.discord_message_id) {
-              const channelId = targetReq.discord_channel_id || REQUESTS_CHANNEL_ID;
+            // Update Discord message and notify requester via DM and site notifications
+            const channelId = targetReq.discord_channel_id || REQUESTS_CHANNEL_ID;
+            if (targetReq.discord_message_id && env.DISCORD_BOT_TOKEN) {
               const resourceLink = targetReq.resource_url
                 ? `\n✅ **Fulfilled!** → [View Resource](https://zyrexediting.xyz${targetReq.resource_url})`
                 : "\n✅ **This request has been fulfilled!**";
-              let edited = false;
-
-              if (env.DISCORD_BOT_TOKEN) {
-                try {
-                  const dResp = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages/${targetReq.discord_message_id}`, {
-                    method: "PATCH",
-                    headers: {
-                      Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`,
-                      "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify({
-                      content: `✅ **Request Fulfilled!** ${resourceLink}\nhttps://zyrexediting.xyz/request?id=${reqId}`
-                    })
-                  });
-                  if (dResp.ok) edited = true;
-                } catch (discordEditErr) {
-                  console.warn("Direct Discord REST edit failed:", discordEditErr);
-                }
+              try {
+                await fetch(`https://discord.com/api/v10/channels/${channelId}/messages/${targetReq.discord_message_id}`, {
+                  method: "PATCH",
+                  headers: {
+                    Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`,
+                    "Content-Type": "application/json"
+                  },
+                  body: JSON.stringify({
+                    content: `✅ **Request Fulfilled!** ${resourceLink}\nhttps://zyrexediting.xyz/request?id=${reqId}`
+                  })
+                });
+              } catch (discordEditErr) {
+                console.warn("Direct Discord REST edit failed:", discordEditErr);
               }
+            }
 
-              if (!edited) {
-                try {
-                  await fetch(`${BOT_API}/api/requests/announce-completed`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      message_id: targetReq.discord_message_id,
-                      channel_id: channelId,
-                      title: targetReq.title,
-                      resource_url: targetReq.resource_url || "",
-                      req_id: reqId,
-                      thumbnail: targetReq.thumbnail || ""
-                    })
-                  });
-                } catch (botEditErr) {
-                  console.error("BOT_API announce-completed error:", botEditErr);
-                }
-              }
+            // Always trigger bot notification for DM and site user notification
+            try {
+              await fetch(`${BOT_API}/api/requests/announce-completed`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  message_id: targetReq.discord_message_id || "",
+                  channel_id: channelId,
+                  title: targetReq.title,
+                  resource_url: targetReq.resource_url || "",
+                  req_id: reqId,
+                  thumbnail: targetReq.thumbnail || "",
+                  user_id: targetReq.user_id || "",
+                  user_name: targetReq.user_name || ""
+                })
+              });
+            } catch (botEditErr) {
+              console.error("BOT_API announce-completed error:", botEditErr);
             }
           }
 

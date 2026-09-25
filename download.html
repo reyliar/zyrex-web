@@ -553,6 +553,7 @@
         const token = params.get('token');
         const productId = params.get('id');
         let downloadToken = null;
+        let downloadTokenId = null;
         let product = null;
         let resolvedFilePath = '';
         let initialSelectedFiles = [];
@@ -646,73 +647,50 @@
                 return;
             }
 
-            // If has a valid pre-generated token, validate and show directly (skip role check)
-            if (token) {
-                try {
-                    var controller = new AbortController();
-                    var timeoutId = setTimeout(function() { controller.abort(); }, 8000);
-                    var validateResp = await fetch('/api/downloads/validate?token=' + encodeURIComponent(token) + '&peek=1', { signal: controller.signal });
-                    clearTimeout(timeoutId);
-                    var validateData = await validateResp.json();
-                    if (validateData.success) {
-                        downloadToken = token;
-                        resolvedFilePath = validateData.file_path || '';
-                        initialSelectedFiles = Array.isArray(validateData.selected_files) ? validateData.selected_files : [];
-                        var expiresIn = validateData.expires_in || 0;
-                        if (await loadProduct(validateData.product_id) === false) return;
-                        if (!product) {
-                            // Construct synthetic product from token metadata so page renders
-                            product = {
-                                id: validateData.product_id || 'product',
-                                name: (validateData.product_id || 'Editing Resource').toUpperCase(),
-                                category: 'others',
-                                file_path: resolvedFilePath,
-                                description: 'Download package generated for your account.'
-                            };
-                        }
-                        if (resolvedFilePath && !product.file_path) product.file_path = resolvedFilePath;
-                        await render(); 
-                        if (expiresIn > 0) startCountdown(expiresIn); 
-                        return;
-                    } else if (validateData.error) {
-                        showError(validateData.error);
-                        return;
-                    }
-                    // Token invalid/expired — fall through to auth check
-                } catch (e) { console.error("Validation error:", e); }
-            }
-
-            if (!productId) {
+            // Every private download page requires a newly generated, unused token.
+            if (!token) {
+                if (productId) {
+                    window.location.replace('/resource?id=' + encodeURIComponent(productId));
+                    return;
+                }
                 showState('st-404');
                 return;
             }
 
-            // Check auth + verified role
             try {
-                // Step 1: Check if logged in
-                var meResp = await fetch('/api/me', { credentials: 'include' });
-                if (!meResp.ok) {
-                    showState('st-login');
+                var controller = new AbortController();
+                var timeoutId = setTimeout(function() { controller.abort(); }, 8000);
+                var validateResp = await fetch('/api/downloads/validate?token=' + encodeURIComponent(token) + '&peek=1', { signal: controller.signal });
+                clearTimeout(timeoutId);
+                var validateData = await validateResp.json();
+                if (!validateData.success) {
+                    showError(validateData.error || 'This download token is invalid, expired, or already used. Generate a new token from the resource page.');
                     return;
                 }
 
-                // Step 2: Check verified role
-                var accessResp = await fetch('/api/downloads/check-access', { credentials: 'include' });
-                var accessData = await accessResp.json();
-                if (accessData.can_download) {
-                    window.isAdFreeUser = !!accessData.ad_free;
-                    // Verified — proceed to load product
-                    if (await loadProduct(productId) === false) return;
-                    if (!product) { showError("Product not found."); return; }
-                    await render();
-                } else {
-                    // Not verified — show verification guide
-                    showState('st-verify');
+                downloadToken = token;
+                downloadTokenId = validateData.token_id || null;
+                resolvedFilePath = validateData.file_path || '';
+                initialSelectedFiles = Array.isArray(validateData.selected_files) ? validateData.selected_files : [];
+                var expiresIn = validateData.expires_in || 0;
+                if (await loadProduct(validateData.product_id) === false) return;
+                if (!product) {
+                    product = {
+                        id: validateData.product_id || 'product',
+                        name: (validateData.product_id || 'Editing Resource').toUpperCase(),
+                        category: 'others',
+                        file_path: resolvedFilePath,
+                        description: 'Download package generated for your account.'
+                    };
                 }
+                if (resolvedFilePath && !product.file_path) product.file_path = resolvedFilePath;
+                await render();
+                if (expiresIn > 0) startCountdown(expiresIn);
             } catch (e) {
-                showState('st-login');
-            }
-        })();
+                console.error('Validation error:', e);
+                showError('Could not validate this download token. Please return to the resource page and generate a new one.');
+                return;
+            }        })();
 
         async function recheckAccess() {
             var btn = document.getElementById('recheckBtn');
@@ -1319,6 +1297,7 @@
                 headers: {'Content-Type': 'application/json'},
                 body: JSON.stringify({
                     productId: product.id,
+                    token_id: downloadTokenId || (downloadToken ? downloadToken.slice(0, 16) : ''),
                     productName: product.name || product.title || product.id,
                     category: product.category || product.resource_category || 'resource',
                     price: product.price || '',

@@ -584,16 +584,33 @@ export default {
     const authDenied = await authorizeProtectedPage(request, env);
     if (authDenied) return authDenied;
 
-    if (url.hostname === "dl.zyrexediting.xyz") {
-      if (isApiRequest(pathname) && env.API) {
-        return env.API.fetch(request);
-      }
-      if (pathname === "/" || pathname === "/download" || pathname === "/download.html") {
-        return env.ASSETS.fetch("https://zyrexediting.xyz/download.html" + url.search);
-      }
-      return env.ASSETS.fetch(request);
+    const isDlDomain = url.hostname === "dl.zyrexediting.xyz";
+
+    // Allow API requests through dl domain
+    if (isDlDomain && isApiRequest(pathname) && env.API) {
+      return env.API.fetch(request);
     }
 
+    // Strict Edge Token Gate for Download Pages:
+    // Download pages must NEVER be accessed without a valid token parameter.
+    const isDlPath = pathname === "/download" || pathname === "/download.html" || (isDlDomain && (pathname === "/" || pathname === "/download" || pathname === "/download.html"));
+    if (isDlPath) {
+      const token = url.searchParams.get("token");
+      if (!token) {
+        const prodId = url.searchParams.get("id");
+        if (prodId) {
+          return Response.redirect("https://zyrexediting.xyz/resource?id=" + encodeURIComponent(prodId), 302);
+        }
+        return Response.redirect("https://zyrexediting.xyz/presets", 302);
+      }
+      if (isDlDomain) {
+        return env.ASSETS.fetch("https://zyrexediting.xyz/download.html" + url.search);
+      }
+    }
+
+    if (isDlDomain) {
+      return env.ASSETS.fetch(request);
+    }
 
     if (isApiRequest(pathname) && env.API) {
       return env.API.fetch(request);
