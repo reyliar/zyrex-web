@@ -601,7 +601,7 @@ export default {
         if (prodId) {
           return Response.redirect("https://zyrexediting.xyz/resource?id=" + encodeURIComponent(prodId), 302);
         }
-        return Response.redirect("https://zyrexediting.xyz/presets", 302);
+        return Response.redirect("https://zyrexediting.xyz/resources", 302);
       }
       if (isDlDomain) {
         return env.ASSETS.fetch("https://zyrexediting.xyz/download.html" + url.search);
