@@ -735,6 +735,7 @@
     <script src="js/script.js?v=5"></script>
     <script src="js/plugins-data.js?v=4"></script>
     <script src="js/presets-data.js?v=4"></script>
+    <script src="js/resources-data.js?v=6"></script>
     <script>
     function hideLoader() {
         var loader = document.getElementById('pageLoader');
@@ -798,15 +799,18 @@
 
         if (!product) {
             product = window.pluginsData ? window.pluginsData.find(p => p.id === productId) : null;
-            if (!product) {
-                product = window.presetsData ? window.presetsData.find(p => p.id === productId) : null;
-            }
-            if (!product) {
-                try {
-                    const newProducts = JSON.parse(localStorage.getItem('zyrex_new_products') || '[]');
-                    product = newProducts.find(p => p.id === productId);
-                } catch(e) {}
-            }
+        }
+        if (!product) {
+            product = window.resourcesData ? window.resourcesData.find(p => p.id === productId) : null;
+        }
+        if (!product) {
+            product = window.presetsData ? window.presetsData.find(p => p.id === productId) : null;
+        }
+        if (!product) {
+            try {
+                const newProducts = JSON.parse(localStorage.getItem('zyrex_new_products') || '[]');
+                product = newProducts.find(p => p.id === productId);
+            } catch(e) {}
         }
 
         if (!product) {

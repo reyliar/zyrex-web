@@ -527,8 +527,7 @@
         <div class="prog-detail" id="progDetail"></div>
     </div>
 
-    <script src="/js/presets-data.js?v=5"></script>
-    <script src="/js/plugins-data.js?v=5"></script>
+    <script src="/js/resources-data.js?v=6"></script>
     <script>
         window.DEFAULT_AVATAR = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2EwYTBiMCI+PHBhdGggZD0iTTEyIDEyYzIuMjEgMCA0LTEuNzkgNC00cy0xLjc5LTQtNC00LTQgMS43OS00IDQgMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYyaDE2di0yYzAtMi42Ni01LjMzLTQtOC00eiIvPjwvc3ZnPg==";
 
@@ -640,6 +639,13 @@
                 loginBtn.href = '/api/login?redirect=' + encodeURIComponent(location.pathname + location.search);
             }
 
+            // Public mirror resources belong to the Resources catalog, not the
+            // private R2 ZIP package download screen.
+            if (!token && productId && (window.resourcesData || []).some(function(item) { return item.id === productId; })) {
+                window.location.replace('/product?id=' + encodeURIComponent(productId));
+                return;
+            }
+
             // If has a valid pre-generated token, validate and show directly (skip role check)
             if (token) {
                 try {
@@ -653,7 +659,7 @@
                         resolvedFilePath = validateData.file_path || '';
                         initialSelectedFiles = Array.isArray(validateData.selected_files) ? validateData.selected_files : [];
                         var expiresIn = validateData.expires_in || 0;
-                        await loadProduct(validateData.product_id);
+                        if (await loadProduct(validateData.product_id) === false) return;
                         if (!product) {
                             // Construct synthetic product from token metadata so page renders
                             product = {
@@ -696,7 +702,7 @@
                 if (accessData.can_download) {
                     window.isAdFreeUser = !!accessData.ad_free;
                     // Verified — proceed to load product
-                    await loadProduct(productId);
+                    if (await loadProduct(productId) === false) return;
                     if (!product) { showError("Product not found."); return; }
                     await render();
                 } else {
@@ -733,13 +739,17 @@
 
         async function loadProduct(pid) {
             try {
-                const r = await fetch('/api/products?id=' + pid);
+                const r = await fetch('/api/products?id=' + encodeURIComponent(pid));
                 if (r.ok) { const j = await r.json(); if (j && j.id) product = j; }
             } catch(e) {}
             if (!product) {
-                const all = [...(window.presetsData || []), ...(window.pluginsData || [])];
-                product = all.find(p => p.id === pid);
+                const resource = (window.resourcesData || []).find(p => p.id === pid);
+                if (resource) {
+                    window.location.replace('/product?id=' + encodeURIComponent(pid));
+                    return false;
+                }
             }
+            return true;
         }
 
         async function render() {
