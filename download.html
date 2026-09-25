@@ -1340,49 +1340,71 @@
             return (bytes/1048576).toFixed(1) + ' MB';
         }
 
-        async function downloadWithProgress(url, filename) {
+        function zipDownloadFilename(name) {
+            var safe = String(name || 'download').replace(/[\\/:*?"<>|\r\n]+/g, '_').trim().replace(/[. ]+$/, '').slice(0, 140);
+            return (safe || 'download') + '.zip';
+        }
+
+        async function downloadWithProgress(url, filename, fileHandle) {
             showProgress('Connecting...', '');
+            var writable = null;
             try {
-                const resp = await fetch(url);
-                if (!resp.ok) throw new Error('Download failed: ' + resp.status);
+                const resp = await fetch(url, {credentials: 'include'});
+                if (!resp.ok) {
+                    var errorText = await resp.text().catch(function() { return ''; });
+                    throw new Error(errorText || ('Download failed: ' + resp.status));
+                }
                 
                 const contentLength = resp.headers.get('Content-Length');
                 const total = contentLength ? parseInt(contentLength) : 0;
                 let received = 0;
                 const reader = resp.body.getReader();
-                const chunks = [];
+                const chunks = fileHandle ? null : [];
+                if (fileHandle) writable = await fileHandle.createWritable();
                 
                 updateProgress(0, total ? '0 / ' + formatSize(total) : 'Downloading...');
                 
                 while (true) {
                     const result = await reader.read();
                     if (result.done) break;
-                    chunks.push(result.value);
+                    if (writable) await writable.write(result.value);
+                    else chunks.push(result.value);
                     received += result.value.length;
                     if (total > 0) {
                         updateProgress(Math.round((received / total) * 100), formatSize(received) + ' / ' + formatSize(total));
+                    } else {
+                        updateProgress(0, formatSize(received) + ' received');
                     }
                     document.getElementById('progText').textContent = 'Downloading...';
                 }
                 
                 updateProgress(100, 'Saving...');
                 document.getElementById('progText').textContent = 'Saving to your computer...';
-                
-                const blob = new Blob(chunks);
-                const blobUrl = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = blobUrl;
-                a.download = filename || 'download.zip';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(blobUrl);
+                if (writable) {
+                    await writable.close();
+                    writable = null;
+                } else {
+                    const blob = new Blob(chunks, {type: 'application/zip'});
+                    const blobUrl = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = blobUrl;
+                    a.download = filename || 'download.zip';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    setTimeout(function() { URL.revokeObjectURL(blobUrl); }, 60000);
+                }
                 
                 hideProgress();
                 trackDownload();
+                return true;
             } catch(e) {
+                if (writable) {
+                    try { await writable.abort(e); } catch (_) {}
+                }
                 hideProgress();
-                alert('Download failed: ' + e.message);
+                if (e && e.name === 'AbortError') return false;
+                throw e;
             }
         }
 
@@ -1446,14 +1468,45 @@
                 ? selectedFiles.map(function(name) { return '&file=' + encodeURIComponent(name); }).join('')
                 : '';
             const titleParam = product ? '&title=' + encodeURIComponent(product.name) : '';
+            const filename = zipDownloadFilename(product ? product.name : 'download');
+            let fileHandle = null;
+
+            // The picker must be opened directly from the user's click. Stream
+            // chunks into the chosen file so large ZIPs never accumulate in RAM.
+            if (downloadToken && typeof window.showSaveFilePicker === 'function') {
+                try {
+                    fileHandle = await window.showSaveFilePicker({
+                        suggestedName: filename,
+                        types: [{description: 'ZIP archive', accept: {'application/zip': ['.zip']}}]
+                    });
+                } catch (pickerError) {
+                    if (pickerError && pickerError.name === 'AbortError') return;
+                    console.warn('Save location picker unavailable:', pickerError);
+                }
+            }
             
             if (downloadToken) {
                 btn.disabled = true;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing...';
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Downloading...';
-                await downloadWithProgress('/api/downloads/download?token=' + downloadToken + fileParam + titleParam, (product ? product.name : 'download') + '.zip');
-                btn.innerHTML = '<i class="fas fa-arrow-rotate-right"></i> Link Used';
-                btn.disabled = true;
+                try {
+                    const complete = await downloadWithProgress('/api/downloads/download?token=' + encodeURIComponent(downloadToken) + fileParam + titleParam, filename, fileHandle);
+                    if (complete) {
+                        btn.innerHTML = '<i class="fas fa-check"></i> Download Complete';
+                        btn.disabled = true;
+                    } else {
+                        btn.disabled = false;
+                    }
+                } catch (downloadError) {
+                    console.error('Download failed:', downloadError);
+                    btn.disabled = false;
+                    updateButtonText();
+                    var retryMessage = 'Download failed: ' + downloadError.message + '. The one-time link may have expired.';
+                    if (product && product.id && confirm(retryMessage + ' Return to the resource page to generate a fresh link?')) {
+                        window.location.href = '/resource?id=' + encodeURIComponent(product.id);
+                    } else if (!product || !product.id) {
+                        alert(retryMessage + ' Reopen the resource download page to get a new link.');
+                    }
+                }
                 return;
             }
 

@@ -646,35 +646,46 @@ for (let n = 0; n < 256; n++) {
   for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
   crcTable[n] = c;
 }
-function crc32(data) {
-  let crc = 0xFFFFFFFF;
+function crc32Update(crc, data) {
   for (let i = 0; i < data.length; i++) crc = crcTable[(crc ^ data[i]) & 0xFF] ^ (crc >>> 8);
-  return (crc ^ 0xFFFFFFFF) >>> 0;
+  return crc >>> 0;
 }
-function makeLocalHeader(nameBytes, size, crc) {
+function crc32(data) {
+  return (crc32Update(0xFFFFFFFF, data) ^ 0xFFFFFFFF) >>> 0;
+}
+function makeLocalHeader(nameBytes, size, crc, dataDescriptor = false) {
   const buf = new Uint8Array(30 + nameBytes.length);
   const v = new DataView(buf.buffer);
   v.setUint32(0, 0x04034b50, true); // signature
   v.setUint16(4, 20, true);         // version
-  v.setUint16(6, 0, true);          // flags
+  v.setUint16(6, 0x0800 | (dataDescriptor ? 0x0008 : 0), true); // UTF-8 names; bit 3: sizes follow file data
   v.setUint16(8, 0, true);          // compression (store)
   v.setUint16(10, 0, true);         // mod time
   v.setUint16(12, 0, true);         // mod date
-  v.setUint32(14, crc, true);
-  v.setUint32(18, size, true);      // compressed size
-  v.setUint32(22, size, true);      // uncompressed size
+  v.setUint32(14, dataDescriptor ? 0 : crc, true);
+  v.setUint32(18, dataDescriptor ? 0 : size, true); // compressed size
+  v.setUint32(22, dataDescriptor ? 0 : size, true); // uncompressed size
   v.setUint16(26, nameBytes.length, true);
   v.setUint16(28, 0, true);         // extra field length
   buf.set(nameBytes, 30);
   return buf;
 }
-function makeCentralDirEntry(nameBytes, size, crc, offset) {
+function makeDataDescriptor(size, crc) {
+  const buf = new Uint8Array(16);
+  const v = new DataView(buf.buffer);
+  v.setUint32(0, 0x08074b50, true);
+  v.setUint32(4, crc, true);
+  v.setUint32(8, size, true);
+  v.setUint32(12, size, true);
+  return buf;
+}
+function makeCentralDirEntry(nameBytes, size, crc, offset, dataDescriptor = false) {
   const buf = new Uint8Array(46 + nameBytes.length);
   const v = new DataView(buf.buffer);
   v.setUint32(0, 0x02014b50, true);
   v.setUint16(4, 20, true);
   v.setUint16(6, 20, true);
-  v.setUint16(8, 0, true);
+  v.setUint16(8, 0x0800 | (dataDescriptor ? 0x0008 : 0), true);
   v.setUint16(10, 0, true);
   v.setUint16(12, 0, true);
   v.setUint16(14, 0, true);
@@ -4637,11 +4648,36 @@ async function storeAndProxyImage(env, imageUrl) {
           if (selectedObjects.length === 0) {
             return json({ success: false, error: "Selected files were not found in storage" }, 404);
           }
+
+          const encoder = new TextEncoder();
+          const folderName = safeZipFilename(title || r2Prefix.split("/").filter(Boolean).pop() || "download");
+          let expectedZipSize = 22; // end-of-central-directory record
+          let zipEntryCount = selectedObjects.length;
+          for (const obj of selectedObjects) {
+            const fname = relativeR2Name(obj.key, r2Prefix);
+            const size = Number(obj.size);
+            if (!fname || !Number.isSafeInteger(size) || size < 0 || size > 0xFFFFFFFF) {
+              return json({ success: false, error: "A selected file cannot be represented in this ZIP package" }, 413);
+            }
+            const nameLength = encoder.encode(folderName + "/" + fname).byteLength;
+            expectedZipSize += 30 + nameLength + size + 16 + 46 + nameLength;
+          }
+          const watermarkEntries = Object.entries(WATERMARKS).map(([name, content]) => ({
+            name: folderName + "/" + name,
+            size: encoder.encode(content).byteLength,
+          }));
+          zipEntryCount += watermarkEntries.length;
+          for (const item of watermarkEntries) {
+            const nameLength = encoder.encode(item.name).byteLength;
+            expectedZipSize += 30 + nameLength + item.size + 46 + nameLength;
+          }
+          if (expectedZipSize > 0xFFFFFFFF || zipEntryCount > 0xFFFF) {
+            return json({ success: false, error: "This package exceeds the current ZIP size limit" }, 413);
+          }
           
           // Stream ZIP response
           const { readable, writable } = new TransformStream();
           const writer = writable.getWriter();
-          const encoder = new TextEncoder();
           
           // Note: download tracking is done client-side (download.html calls /api/downloads/track after save)
           // This avoids double-counting from Worker fire-and-forget
@@ -4650,7 +4686,6 @@ async function storeAndProxyImage(env, imageUrl) {
           (async () => {
             let aborted = false;
             try {
-              const folderName = safeZipFilename(title || r2Prefix.split("/").filter(Boolean).pop() || "download");
               const centralDir = [];
               let offset = 0;
               let filesWritten = 0;
@@ -4660,26 +4695,36 @@ async function storeAndProxyImage(env, imageUrl) {
                 if (!fname) continue;
                 
                 const fileData = await r2Get(env, obj.key, isProdBucket);
-                if (!fileData) continue;
-                
-                let fileBytes;
-                try {
-                  const bytes = await fileData.arrayBuffer();
-                  fileBytes = new Uint8Array(bytes);
-                } catch (e) {
-                  console.error("R2 read failed:", obj.key, e.message);
-                  continue;  // skip this file, don't crash the whole ZIP
-                }
+                if (!fileData || !fileData.body) throw new Error("A selected resource file could not be read");
                 
                 const nameBytes = encoder.encode(folderName + "/" + fname);
-                const crcVal = crc32(fileBytes);
-                
-                const localHeader = makeLocalHeader(nameBytes, fileBytes.byteLength, crcVal);
+                const localHeader = makeLocalHeader(nameBytes, 0, 0, true);
                 await writer.write(localHeader);
-                await writer.write(fileBytes);
-                
-                centralDir.push(makeCentralDirEntry(nameBytes, fileBytes.byteLength, crcVal, offset));
-                offset += localHeader.byteLength + fileBytes.byteLength;
+                const fileOffset = offset;
+                offset += localHeader.byteLength;
+                let crc = 0xFFFFFFFF;
+                let fileSize = 0;
+                const fileReader = fileData.body.getReader();
+                try {
+                  while (true) {
+                    const part = await fileReader.read();
+                    if (part.done) break;
+                    crc = crc32Update(crc, part.value);
+                    fileSize += part.value.byteLength;
+                    if (fileSize > 0xFFFFFFFF) throw new Error("A resource file exceeds the ZIP format size limit");
+                    await writer.write(part.value);
+                    offset += part.value.byteLength;
+                  }
+                } catch (e) {
+                  try { await fileReader.cancel(e); } catch (_) {}
+                  throw e;
+                }
+                if (fileSize !== Number(obj.size)) throw new Error("A selected resource file was incomplete");
+                const crcVal = (crc ^ 0xFFFFFFFF) >>> 0;
+                const descriptor = makeDataDescriptor(fileSize, crcVal);
+                await writer.write(descriptor);
+                offset += descriptor.byteLength;
+                centralDir.push(makeCentralDirEntry(nameBytes, fileSize, crcVal, fileOffset, true));
                 filesWritten++;
               }
               
@@ -4734,10 +4779,13 @@ async function storeAndProxyImage(env, imageUrl) {
           })();
           
           const zipFilename = safeZipFilename(title || "download") + ".zip";
+          const asciiFilename = zipFilename.replace(/[^\x20-\x7E]/g, "_").replace(/["\\]/g, "_");
           return new Response(readable, {
             headers: {
               "Content-Type": "application/zip",
-              "Content-Disposition": `attachment; filename="${zipFilename}"`,
+              "Content-Disposition": `attachment; filename="${asciiFilename}"; filename*=UTF-8''${encodeURIComponent(zipFilename)}`,
+              "Content-Length": String(expectedZipSize),
+              "Cache-Control": "private, no-store, no-transform",
               ...corsHeaders,
             },
           });
