@@ -997,23 +997,25 @@ window.showToast = function(title, message, type = 'success') {
                 </button>
                 <div id="globalNotifPanel" class="global-notif-panel">
                     <div class="notif-panel-header">
-                        <h4>
-                            <i class="fas fa-bell" style="color:var(--cherry-neon)"></i> Notifications 
+                        <div class="notif-panel-title-group">
+                            <span class="notif-panel-pill-icon"><i class="fas fa-bell"></i></span>
+                            <span class="notif-panel-heading">Notifications</span>
                             <span class="notif-bubble-badge" id="panelNotifBadge" style="position:static;display:none;margin-left:4px">0</span>
-                        </h4>
+                        </div>
                         <div class="notif-panel-actions">
-                            <button class="notif-header-act-btn" onclick="window.toggleDNDQuick()" title="Toggle Do Not Disturb" id="btnQuickDND"><i class="fas fa-moon"></i></button>
+                            <button type="button" class="notif-header-act-btn" onclick="window.toggleDNDQuick()" title="Do Not Disturb" id="btnQuickDND"><i class="fas fa-moon"></i></button>
                             <a href="/settings?tab=general" class="notif-header-act-btn" title="Notification Settings"><i class="fas fa-cog"></i></a>
-                            <button class="notif-header-act-btn" onclick="window.clearAllNotifs()" title="Clear all notifications"><i class="fas fa-trash-can"></i></button>
-                            <button class="notif-header-act-btn" onclick="window.markAllNotifsRead()" title="Mark all as read"><i class="fas fa-check-double"></i></button>
-                            <button class="notif-header-act-btn" onclick="window.toggleGlobalNotifPanel(event)" title="Close"><i class="fas fa-times"></i></button>
+                            <button type="button" class="notif-header-act-btn" onclick="window.markAllNotifsRead()" title="Mark all as read"><i class="fas fa-check-double"></i></button>
+                            <button type="button" class="notif-header-act-btn" onclick="window.clearAllNotifs()" title="Clear all"><i class="fas fa-trash-can"></i></button>
+                            <button type="button" class="notif-header-act-btn close-btn" onclick="window.toggleGlobalNotifPanel(event)" title="Close"><i class="fas fa-times"></i></button>
                         </div>
                     </div>
                     <div class="notif-panel-body" id="globalNotifList"></div>
                     <div class="notif-panel-footer" id="globalNotifFooter" style="display:none">
-                        <span id="notifFooterSummary" style="color:var(--text-sub)"></span>
-                        <div style="display:flex;gap:8px">
-                            <button class="notif-footer-btn" onclick="window.clearAllNotifs()"><i class="fas fa-trash-can"></i> Clear All</button>
+                        <span id="notifFooterSummary" class="notif-footer-summary"></span>
+                        <div class="notif-footer-actions">
+                            <button type="button" class="notif-footer-btn" onclick="window.markAllNotifsRead()"><i class="fas fa-check-double"></i> Mark read</button>
+                            <button type="button" class="notif-footer-btn clear" onclick="window.clearAllNotifs()"><i class="fas fa-trash-can"></i> Clear all</button>
                         </div>
                     </div>
                 </div>
@@ -1095,24 +1097,85 @@ window.showToast = function(title, message, type = 'success') {
     function parseNotifMarkdown(str) {
         if (!str) return '';
         let text = escapeHtmlNotif(str);
-        // headings # Title, ## Title
-        text = text.replace(/^#\s+(.*?)$/gm, '<strong style="font-size:1.02em;color:#fff;display:inline-block;margin-bottom:2px">$1</strong>');
-        text = text.replace(/^##\s+(.*?)$/gm, '<strong style="font-size:0.96em;color:#fff;display:inline-block">$1</strong>');
-        text = text.replace(/^###\s+(.*?)$/gm, '<strong style="font-size:0.90em;color:#fff;display:inline-block">$1</strong>');
-        // bold **text** or __text__
-        text = text.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-        text = text.replace(/__(.*?)__/g, '<strong>$1</strong>');
-        // italic *text* or _text_
-        text = text.replace(/\*([^\*]+)\*/g, '<em>$1</em>');
-        text = text.replace(/_([^_]+)_/g, '<em>$1</em>');
-        // strikethrough ~~text~~
-        text = text.replace(/~~(.*?)~~/g, '<del>$1</del>');
-        // inline code `code`
-        text = text.replace(/`([^`]+)`/g, '<code style="background:rgba(255,255,255,0.09);padding:1px 5px;border-radius:4px;font-size:0.8em;color:#ff8da1">$1</code>');
-        // markdown links [text](url)
-        text = text.replace(/\[([^\]]+)\]\((https?:\/\/[^\s\)]+|\/[^\s\)]+)\)/g, '<a href="$2" target="_blank" rel="noopener" style="color:var(--cherry-light);text-decoration:underline">$1</a>');
-        // newlines
+
+        // Multiline code blocks ```lang ... ```
+        const codeBlocks = [];
+        text = text.replace(/```(?:[a-zA-Z0-9_-]+)?\n?([\s\S]*?)```/g, (match, code) => {
+            const idx = codeBlocks.length;
+            codeBlocks.push(`<pre class="notif-code-block"><code>${code.trim()}</code></pre>`);
+            return `__CODEBLOCK_${idx}__`;
+        });
+
+        // Inline code `...`
+        const inlineCodes = [];
+        text = text.replace(/`([^`]+)`/g, (match, code) => {
+            const idx = inlineCodes.length;
+            inlineCodes.push(`<code class="notif-inline-code">${code}</code>`);
+            return `__INLINECODE_${idx}__`;
+        });
+
+        // Markdown links [label](url)
+        const links = [];
+        text = text.replace(/\[([^\]]+)\]\(((?:https?:\/\/|\/)[^\s\)]+)\)/g, (match, label, url) => {
+            const cleanUrl = url.replace(/&amp;/g, '&');
+            const isExternal = cleanUrl.startsWith('http');
+            const target = isExternal ? ' target="_blank" rel="noopener noreferrer"' : '';
+            const idx = links.length;
+            links.push(`<a href="${cleanUrl}"${target} class="notif-inline-link" onclick="event.stopPropagation()">${label}</a>`);
+            return `__NOTIFLINK_${idx}__`;
+        });
+
+        // Auto-link raw URLs (https://... or http://...)
+        text = text.replace(/(https?:\/\/[^\s<]+)/g, (match, url) => {
+            const cleanUrl = url.replace(/&amp;/g, '&');
+            const idx = links.length;
+            links.push(`<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" class="notif-inline-link" onclick="event.stopPropagation()">${cleanUrl}</a>`);
+            return `__NOTIFLINK_${idx}__`;
+        });
+
+        // Headings #, ##, ###
+        text = text.replace(/^###\s+(.*?)$/gm, '<h6 class="notif-md-h3">$1</h6>');
+        text = text.replace(/^##\s+(.*?)$/gm, '<h5 class="notif-md-h2">$1</h5>');
+        text = text.replace(/^#\s+(.*?)$/gm, '<h4 class="notif-md-h1">$1</h4>');
+
+        // Spoilers ||hidden text||
+        text = text.replace(/\|\|(.*?)\|\|/g, '<span class="notif-spoiler" onclick="this.classList.toggle(\'revealed\');event.stopPropagation()" title="Click to reveal">$1</span>');
+
+        // Bold **text** or __text__
+        text = text.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+        text = text.replace(/__(.+?)__/g, '<strong>$1</strong>');
+
+        // Italic *text* or _text_
+        text = text.replace(/(^|[^\*])\*([^\*]+)\*([^\*]|$)/g, '$1<em>$2</em>$3');
+        text = text.replace(/(^|[^_])_([^_]+)_([^_]|$)/g, '$1<em>$2</em>$3');
+
+        // Strikethrough ~~text~~
+        text = text.replace(/~~(.+?)~~/g, '<del>$1</del>');
+
+        // Blockquotes > quote
+        text = text.replace(/^>\s+(.*?)$/gm, '<blockquote class="notif-blockquote">$1</blockquote>');
+
+        // Mentions &lt;@id&gt; or &lt;@username&gt;
+        text = text.replace(/&lt;@([a-zA-Z0-9_-]+)&gt;/g, '<span class="notif-mention">@$1</span>');
+
+        // Restore links
+        links.forEach((l, i) => {
+            text = text.replace(`__NOTIFLINK_${i}__`, l);
+        });
+
+        // Restore inline code
+        inlineCodes.forEach((c, i) => {
+            text = text.replace(`__INLINECODE_${i}__`, c);
+        });
+
+        // Restore code blocks
+        codeBlocks.forEach((cb, i) => {
+            text = text.replace(`__CODEBLOCK_${i}__`, cb);
+        });
+
+        // Newlines to <br>
         text = text.replace(/\n/g, '<br>');
+
         return text;
     }
 
@@ -1127,7 +1190,7 @@ window.showToast = function(title, message, type = 'success') {
 
         const prefs = getNotifPrefs();
         if (dndBtn) {
-            dndBtn.style.color = prefs.dnd ? 'var(--cherry-neon)' : 'var(--text-sub)';
+            dndBtn.style.color = prefs.dnd ? 'var(--cherry-neon)' : 'rgba(255,255,255,0.65)';
             dndBtn.title = prefs.dnd ? 'Do Not Disturb is ON (Click to turn off)' : 'Enable Do Not Disturb';
         }
 
@@ -1137,11 +1200,13 @@ window.showToast = function(title, message, type = 'success') {
             if (badge2) badge2.style.display = 'none';
             if (footer) footer.style.display = 'none';
             list.innerHTML = `
-                <div style="text-align:center;padding:32px 16px;color:var(--text-sub);font-size:0.84rem">
-                    <i class="fas fa-moon" style="font-size:2rem;margin-bottom:10px;display:block;color:var(--cherry-neon);opacity:0.85"></i>
-                    <div style="font-weight:700;color:#fff;margin-bottom:4px">Do Not Disturb is Active</div>
-                    <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:14px">Live notifications and badges are muted.</div>
-                    <button class="notif-header-act-btn" onclick="window.toggleDNDQuick()" style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,43,82,0.15);color:#fff;border:1px solid rgba(255,43,82,0.35);padding:6px 14px;border-radius:8px">
+                <div class="notif-empty-state">
+                    <div class="notif-empty-icon-wrap" style="color:var(--cherry-neon)">
+                        <i class="fas fa-moon"></i>
+                    </div>
+                    <div class="notif-empty-title">Do Not Disturb is Active</div>
+                    <div class="notif-empty-desc">Live notifications and badges are temporarily muted.</div>
+                    <button type="button" class="notif-footer-btn" onclick="window.toggleDNDQuick()" style="margin-top:14px">
                         <i class="fas fa-bell"></i> Turn Off DND
                     </button>
                 </div>
@@ -1178,9 +1243,12 @@ window.showToast = function(title, message, type = 'success') {
         if (filteredNotifs.length === 0) {
             if (footer) footer.style.display = 'none';
             list.innerHTML = `
-                <div style="text-align:center;padding:36px 16px;color:rgba(255,255,255,0.45);font-size:0.84rem">
-                    <i class="fas fa-bell-slash" style="font-size:1.8rem;margin-bottom:10px;opacity:0.35;display:block;color:var(--cherry-neon)"></i>
-                    <div>No new notifications</div>
+                <div class="notif-empty-state">
+                    <div class="notif-empty-icon-wrap">
+                        <i class="fas fa-bell-slash"></i>
+                    </div>
+                    <div class="notif-empty-title">No New Notifications</div>
+                    <div class="notif-empty-desc">You are completely up to date!</div>
                 </div>
             `;
             return;
@@ -1197,23 +1265,37 @@ window.showToast = function(title, message, type = 'success') {
             const isUnread = !readIds.includes(n.id);
             const iconClass = n.icon_brand ? `fab ${n.icon}` : `fas ${n.icon}`;
             const timeAgo = formatNotifTime(n.created_at);
+            const itemLink = n.link || '';
+            const hasLink = itemLink && itemLink !== '#' && itemLink !== 'javascript:void(0)';
             return `
-                <div class="notif-item ${isUnread ? 'unread' : ''}" style="position:relative">
-                    <a href="${n.link}" style="display:flex;align-items:flex-start;gap:12px;text-decoration:none;color:inherit;flex:1;min-width:0" onclick="window.markNotifRead('${n.id}')">
-                        <div class="notif-icon-circle" style="background:${n.bg};color:${n.color}">
-                            <i class="${iconClass}"></i>
+                <div class="notif-item ${isUnread ? 'unread' : 'read'} ${hasLink ? 'has-link' : ''}" 
+                     data-id="${n.id}" 
+                     onclick="window.handleNotifCardClick(event, '${escapeHtmlNotif(itemLink)}', '${n.id}')">
+                    ${isUnread ? '<span class="notif-unread-dot" title="Unread / Okunmadı"></span>' : ''}
+                    <div class="notif-icon-circle" style="background:${n.bg || 'rgba(255,43,82,0.14)'};color:${n.color || 'var(--cherry-neon)'}">
+                        <i class="${iconClass}"></i>
+                    </div>
+                    <div class="notif-content-wrap">
+                        <div class="notif-title-row">
+                            <span class="notif-title">${parseNotifMarkdown(n.title)}</span>
+                            <span class="notif-time">${timeAgo}</span>
                         </div>
-                        <div class="notif-content-wrap">
-                            <div class="notif-title-row" style="padding-right:24px">
-                                <span class="notif-title">${parseNotifMarkdown(n.title)}</span>
-                                <span class="notif-time">${timeAgo}</span>
-                            </div>
-                            <div class="notif-desc">${parseNotifMarkdown(n.desc)}</div>
-                        </div>
-                    </a>
-                    <button class="notif-item-del-btn" onclick="window.clearSingleNotif(event, '${n.id}')" title="Dismiss">
-                        <i class="fas fa-times"></i>
-                    </button>
+                        <div class="notif-desc">${parseNotifMarkdown(n.desc)}</div>
+                    </div>
+                    <div class="notif-item-actions">
+                        ${isUnread ? `
+                            <button type="button" class="notif-item-act-btn mark-read" onclick="window.markSingleNotifRead(event, '${n.id}')" title="Görüldü olarak işaretle">
+                                <i class="fas fa-check"></i>
+                            </button>
+                        ` : `
+                            <button type="button" class="notif-item-act-btn is-read" onclick="window.toggleSingleNotifRead(event, '${n.id}')" title="Görüldü (Okunmadı olarak değiştir)">
+                                <i class="fas fa-check-double"></i>
+                            </button>
+                        `}
+                        <button type="button" class="notif-item-act-btn dismiss" onclick="window.clearSingleNotif(event, '${n.id}')" title="Bildirimi Kaldır">
+                            <i class="fas fa-trash-can"></i>
+                        </button>
+                    </div>
                 </div>
             `;
         }).join('');
@@ -1240,6 +1322,22 @@ window.showToast = function(title, message, type = 'success') {
         if (!str) return '';
         return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
     }
+
+    window.handleNotifCardClick = function(e, link, id) {
+        if (!e) return;
+        // Don't trigger card navigation if clicked inside an interactive element
+        if (e.target.closest('a, button, input, select, textarea, .notif-item-act-btn, .notif-spoiler, .notif-inline-link')) {
+            return;
+        }
+        window.markNotifRead(id);
+        if (link && link !== '#' && !link.startsWith('javascript:')) {
+            if (link.startsWith('http://') || link.startsWith('https://')) {
+                window.open(link, '_blank', 'noopener,noreferrer');
+            } else {
+                window.location.href = link;
+            }
+        }
+    };
 
     window.toggleGlobalNotifPanel = function(e) {
         if (e) e.stopPropagation();
@@ -1277,6 +1375,34 @@ window.showToast = function(title, message, type = 'success') {
             localStorage.setItem('zyrex_read_notifs', JSON.stringify(readIds));
             renderGlobalNotifications();
         }
+    };
+
+    window.markSingleNotifRead = function(e, id) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        const readIds = getReadIds();
+        if (!readIds.includes(id)) {
+            readIds.push(id);
+            localStorage.setItem('zyrex_read_notifs', JSON.stringify(readIds));
+            renderGlobalNotifications();
+        }
+    };
+
+    window.toggleSingleNotifRead = function(e, id) {
+        if (e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        let readIds = getReadIds();
+        if (readIds.includes(id)) {
+            readIds = readIds.filter(x => x !== id);
+        } else {
+            readIds.push(id);
+        }
+        localStorage.setItem('zyrex_read_notifs', JSON.stringify(readIds));
+        renderGlobalNotifications();
     };
 
     window.markAllNotifsRead = function() {
