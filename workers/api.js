@@ -6038,6 +6038,7 @@ async function storeAndProxyImage(env, imageUrl) {
             target.resource_url = `/resource?id=${encodeURIComponent(product.id)}`;
             claimed.add(String(product.id));
             updated.push({ request_id: target.id, title: target.title, resource_id: product.id, resource_name: product.name });
+            await notifyRequesterOnCompletion(target);
           }
           if (updated.length || repairedLinks.length) await persistRequestsToR2(allReqs);
           const discordSynced = [];
@@ -6045,6 +6046,29 @@ async function storeAndProxyImage(env, imageUrl) {
             if (await syncDiscordRequestAnnouncement(requestItem)) discordSynced.push(requestItem.id);
           }
           return json({ success: true, resources_checked: products.length, requests_completed: updated, links_repaired: repairedLinks, discord_synced: discordSynced });
+        }
+
+        async function notifyRequesterOnCompletion(targetReq) {
+          if (!targetReq) return;
+          const channelId = targetReq.discord_channel_id || REQUESTS_CHANNEL_ID;
+          try {
+            await fetch(`${BOT_API}/api/requests/announce-completed`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                message_id: targetReq.discord_message_id || "",
+                channel_id: channelId,
+                title: targetReq.title || "Request",
+                resource_url: targetReq.resource_url || "",
+                req_id: targetReq.id,
+                thumbnail: targetReq.thumbnail || "",
+                user_id: targetReq.user_id || "",
+                user_name: targetReq.user_name || ""
+              })
+            });
+          } catch (botEditErr) {
+            console.error("notifyRequesterOnCompletion error:", botEditErr);
+          }
         }
 
         async function syncDiscordRequestAnnouncement(reqData) {
@@ -6968,24 +6992,7 @@ async function storeAndProxyImage(env, imageUrl) {
             }
 
             // Always trigger bot notification for DM and site user notification
-            try {
-              await fetch(`${BOT_API}/api/requests/announce-completed`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  message_id: targetReq.discord_message_id || "",
-                  channel_id: channelId,
-                  title: targetReq.title,
-                  resource_url: targetReq.resource_url || "",
-                  req_id: reqId,
-                  thumbnail: targetReq.thumbnail || "",
-                  user_id: targetReq.user_id || "",
-                  user_name: targetReq.user_name || ""
-                })
-              });
-            } catch (botEditErr) {
-              console.error("BOT_API announce-completed error:", botEditErr);
-            }
+            await notifyRequesterOnCompletion(targetReq);
           }
 
           await persistRequestsToR2(allReqs);
@@ -7203,6 +7210,7 @@ async function storeAndProxyImage(env, imageUrl) {
                   await persistRequestsToR2(allReqs);
 
                   await syncDiscordRequestAnnouncement(targetReq);
+                  await notifyRequesterOnCompletion(targetReq);
                 }
               }
             } catch (autoErr) {

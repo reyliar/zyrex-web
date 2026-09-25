@@ -1887,7 +1887,7 @@
                 </span>
                 <button type="button" onclick="closePickerPopover()" style="background:none;border:none;color:var(--text-sub);cursor:pointer;font-size:1rem">&times;</button>
             </div>
-            <input type="text" class="popover-search-input" id="${targetPopId}_giphySearchInput" placeholder="Search GIFs..." oninput="onGiphySearchInput(this.value, '${targetPopId}')" onkeydown="handleGiphySearchKeydown(event, this.value, '${targetPopId}')">
+            <input type="text" class="popover-search-input" id="${targetPopId}_giphySearchInput" placeholder="Search GIFs..." oninput="onGiphySearchInput(this.value, '${targetPopId}')">
             <div class="popover-grid" id="${targetPopId}_gifsGrid">
                 <div style="grid-column:1/-1;text-align:center;padding:25px 0;color:var(--text-sub)">
                     <i class="fas fa-spinner fa-spin" style="color:#00d2ff;margin-bottom:6px"></i>
@@ -1902,28 +1902,6 @@
         fetchGiphyGifs('', targetPopId);
     }
     window.toggleGifPicker = toggleGifPicker;
-
-    function handleGiphySearchKeydown(e, val, popoverId) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            e.stopPropagation();
-            clearTimeout(giphySearchTimeout);
-            fetchGiphyGifs((val || '').trim(), popoverId || activeCommentPopoverId);
-            return false;
-        }
-        if (e.key === 'Escape') {
-            e.preventDefault();
-            e.stopPropagation();
-            closePickerPopover();
-            return false;
-        }
-    }
-    window.handleGiphySearchKeydown = handleGiphySearchKeydown;
-
-    window.isPickerPopoverOpen = function() {
-        const pop = document.querySelector('.popover-card[style*="display: block"]');
-        return !!pop;
-    };
 
     function onGiphySearchInput(val, popoverId) {
         clearTimeout(giphySearchTimeout);
@@ -2580,7 +2558,6 @@
 
     window.handleEditKeydown = function(e, commentId) {
         if (window.isMentionPopupActive && window.isMentionPopupActive()) return;
-        if (window.isPickerPopoverOpen && window.isPickerPopoverOpen()) return;
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             const form = e.target.closest('form');
@@ -2592,14 +2569,7 @@
     };
 
     window.handleEditSubmit = async function(e, commentId) {
-        if (e) {
-            if (document.activeElement && (document.activeElement.classList.contains('popover-search-input') || document.activeElement.closest('.popover-card'))) {
-                e.preventDefault();
-                e.stopPropagation();
-                return;
-            }
-            e.preventDefault();
-        }
+        e.preventDefault();
         const ta = document.getElementById('editText-' + commentId);
         const btn = document.getElementById('btnSaveEdit-' + commentId);
         if (!ta || !ta.value.trim() || !commentId) return;
@@ -2649,7 +2619,6 @@
 
     window.handleCommentKeydown = function(e, textarea) {
         if (window.isMentionPopupActive && window.isMentionPopupActive()) return;
-        if (window.isPickerPopoverOpen && window.isPickerPopoverOpen()) return;
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             const form = textarea.closest('form');
@@ -2662,7 +2631,6 @@
 
     window.handleReplyKeydown = function(e, parentId) {
         if (window.isMentionPopupActive && window.isMentionPopupActive()) return;
-        if (window.isPickerPopoverOpen && window.isPickerPopoverOpen()) return;
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             const form = e.target.closest('form');
@@ -2693,14 +2661,7 @@
     };
 
     window.handleCommentSubmit = async function(e) {
-        if (e) {
-            if (document.activeElement && (document.activeElement.classList.contains('popover-search-input') || document.activeElement.closest('.popover-card'))) {
-                e.preventDefault();
-                e.stopPropagation();
-                return;
-            }
-            e.preventDefault();
-        }
+        e.preventDefault();
         const ta = document.getElementById('mainCommentText');
         const btn = document.getElementById('btnSubmitComment');
         if (!ta || !ta.value.trim() || !currentCommentsPresetId) return;
@@ -2741,14 +2702,7 @@
     };
 
     window.handleReplySubmit = async function(e, parentId) {
-        if (e) {
-            if (document.activeElement && (document.activeElement.classList.contains('popover-search-input') || document.activeElement.closest('.popover-card'))) {
-                e.preventDefault();
-                e.stopPropagation();
-                return;
-            }
-            e.preventDefault();
-        }
+        e.preventDefault();
         const ta = document.getElementById('replyText-' + parentId);
         if (!ta || !ta.value.trim() || !currentCommentsPresetId) return;
 

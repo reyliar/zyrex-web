@@ -1077,11 +1077,26 @@ window.showToast = function(title, message, type = 'success') {
         try {
             let userId = '';
             try {
-                const sessRaw = sessionStorage.getItem('zyrex_session_user');
-                if (sessRaw) userId = JSON.parse(sessRaw).id || '';
+                if (window.currentUser && window.currentUser.id) {
+                    userId = String(window.currentUser.id);
+                } else if (window._currentUser && window._currentUser.id) {
+                    userId = String(window._currentUser.id);
+                } else {
+                    const rawAuth = localStorage.getItem('zyrex_auth_user');
+                    if (rawAuth) {
+                        const parsed = JSON.parse(rawAuth);
+                        userId = String((parsed && parsed.data && parsed.data.id) || parsed.id || '');
+                    }
+                }
+                if (!userId) {
+                    const sessRaw = sessionStorage.getItem('zyrex_session_user');
+                    if (sessRaw) userId = String(JSON.parse(sessRaw).id || '');
+                }
             } catch(e) {}
 
-            const res = await fetch('/api/notifications' + (userId ? '?user_id=' + encodeURIComponent(userId) : ''));
+            const res = await fetch('/api/notifications' + (userId ? '?user_id=' + encodeURIComponent(userId) : ''), {
+                credentials: 'include'
+            });
             if (res.ok) {
                 const data = await res.json();
                 if (data.success && Array.isArray(data.notifications)) {

@@ -269,14 +269,8 @@
         }
     };
 
-    window.isPickerPopoverOpen = function() {
-        var openPopover = document.querySelector('.popover-card[style*="display: block"]');
-        return !!openPopover;
-    };
-
     window.handleEditKeydown = function(e, commentId) {
         if (window.isMentionPopupActive && window.isMentionPopupActive()) return;
-        if (window.isPickerPopoverOpen && window.isPickerPopoverOpen()) return;
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             var form = e.target.closest('form');
@@ -288,14 +282,7 @@
     };
 
     window.handleEditSubmit = async function(e, commentId) {
-        if (e) {
-            if (document.activeElement && (document.activeElement.classList.contains('popover-search-input') || document.activeElement.closest('.popover-card'))) {
-                e.preventDefault();
-                e.stopPropagation();
-                return;
-            }
-            e.preventDefault();
-        }
+        e.preventDefault();
         var ta = document.getElementById('editText-' + commentId);
         var btn = document.getElementById('btnSaveEdit-' + commentId);
         if (!ta || !ta.value.trim() || !commentId) return;
@@ -332,7 +319,6 @@
 
     window.handleCommentKeydown = function(e, textarea) {
         if (window.isMentionPopupActive && window.isMentionPopupActive()) return;
-        if (window.isPickerPopoverOpen && window.isPickerPopoverOpen()) return;
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             var form = textarea.closest('form');
@@ -345,7 +331,6 @@
 
     window.handleReplyKeydown = function(e, parentId) {
         if (window.isMentionPopupActive && window.isMentionPopupActive()) return;
-        if (window.isPickerPopoverOpen && window.isPickerPopoverOpen()) return;
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             var form = e.target.closest('form');
@@ -376,14 +361,7 @@
     };
 
     window.handleCommentSubmit = async function(e) {
-        if (e) {
-            if (document.activeElement && (document.activeElement.classList.contains('popover-search-input') || document.activeElement.closest('.popover-card'))) {
-                e.preventDefault();
-                e.stopPropagation();
-                return;
-            }
-            e.preventDefault();
-        }
+        e.preventDefault();
         var ta = document.getElementById('mainCommentText');
         var btn = document.getElementById('btnSubmitComment');
         if (!ta || !ta.value.trim() || !currentCommentsPresetId) return;
@@ -421,14 +399,7 @@
     };
 
     window.handleReplySubmit = async function(e, parentId) {
-        if (e) {
-            if (document.activeElement && (document.activeElement.classList.contains('popover-search-input') || document.activeElement.closest('.popover-card'))) {
-                e.preventDefault();
-                e.stopPropagation();
-                return;
-            }
-            e.preventDefault();
-        }
+        e.preventDefault();
         var ta = document.getElementById('replyText-' + parentId);
         if (!ta || !ta.value.trim() || !currentCommentsPresetId) return;
 
