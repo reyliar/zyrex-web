@@ -5634,6 +5634,29 @@ async function storeAndProxyImage(env, imageUrl) {
           }
           if (path === "/api/requests/refresh-payhip-prices") {
             const requestsToPrice = await loadRequestsFromR2();
+            const submitted = await request.json().catch(() => ({}));
+            if (Array.isArray(submitted.prices)) {
+              const applied = [];
+              for (const item of submitted.prices) {
+                const target = requestsToPrice.find(r => r.id === item.request_id);
+                if (!target || !target.product_url || !normalizeRequestMatchUrl(target.product_url)) continue;
+                if (item.url && normalizeRequestMatchUrl(item.url) !== normalizeRequestMatchUrl(target.product_url)) continue;
+                const value = String(item.price || "").trim();
+                if (!/^(?:Free|(?:CA\$|A\$|USD|GBP|EUR|JPY|TRY|CHF|[$£€¥₺])\s*\d[\d,]*(?:\.\d{1,2})?)$/i.test(value)) continue;
+                if (target.price === value) continue;
+                const oldPrice = target.price || "";
+                target.price = value;
+                target.price_scraped_at = new Date().toISOString();
+                target.updated_at = new Date().toISOString();
+                applied.push({ request_id: target.id, title: target.title, old_price: oldPrice, price: value });
+              }
+              if (applied.length) await persistRequestsToR2(requestsToPrice);
+              const discordSynced = [];
+              for (const target of requestsToPrice.filter(r => applied.some(a => a.request_id === r.id) && r.discord_message_id)) {
+                if (await syncDiscordRequestAnnouncement(target)) discordSynced.push(target.id);
+              }
+              return json({ success: true, prices_updated: applied, discord_synced: discordSynced });
+            }
             const targets = requestsToPrice.filter(r => {
               if (String(r.status || "").toLowerCase() === "rejected" || !r.product_url) return false;
               try { return new URL(r.product_url).hostname.toLowerCase().endsWith("payhip.com"); } catch (_) { return false; }
