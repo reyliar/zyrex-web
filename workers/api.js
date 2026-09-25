@@ -100,6 +100,68 @@ function findBestRequestForResource(product, requests) {
   return candidates[0].req;
 }
 
+function formatPayhipPrice(amount, currency = "") {
+  const raw = String(amount ?? "").trim();
+  if (!raw) return "";
+  if (/^free$/i.test(raw)) return "Free";
+  const numeric = raw.replace(/,/g, "");
+  if (!/^\d+(?:\.\d{1,4})?$/.test(numeric)) return "";
+  const symbols = { USD: "$", GBP: "£", EUR: "€", JPY: "¥", CAD: "CA$", AUD: "A$", TRY: "₺", CHF: "CHF " };
+  const code = String(currency || "").toUpperCase();
+  const symbol = symbols[code] || (code ? `${code} ` : "$");
+  const value = Number(numeric);
+  return value === 0 ? "Free" : `${symbol}${value.toFixed(2)}`;
+}
+
+function extractPayhipPrice(html) {
+  const scripts = [...String(html || "").matchAll(/<script[^>]*type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi)];
+  const offers = [];
+  const visit = value => {
+    if (Array.isArray(value)) return value.forEach(visit);
+    if (!value || typeof value !== "object") return;
+    if (value["@graph"]) visit(value["@graph"]);
+    const type = Array.isArray(value["@type"]) ? value["@type"].join(" ") : String(value["@type"] || "");
+    const offerValue = value.offers || (/(?:^|\s)(?:Offer|AggregateOffer)(?:\s|$)/i.test(type) ? value : null);
+    if (offerValue) {
+      for (const offer of (Array.isArray(offerValue) ? offerValue : [offerValue])) {
+        const spec = offer?.priceSpecification || {};
+        const amount = offer?.price ?? offer?.lowPrice ?? spec.price ?? spec.minPrice;
+        if (amount !== undefined && amount !== null) offers.push(formatPayhipPrice(amount, offer.priceCurrency || spec.priceCurrency));
+      }
+    }
+    for (const [key, child] of Object.entries(value)) if (key !== "offers" && key !== "@graph" && child && typeof child === "object") visit(child);
+  };
+  for (const script of scripts) {
+    try { visit(JSON.parse(script[1])); } catch (_) {}
+  }
+  const structuredPrice = offers.find(Boolean);
+  if (structuredPrice) return structuredPrice;
+
+  const meta = String(html || "").match(/<meta\b(?=[^>]*(?:property|name)=["'](?:product:price:amount|og:price:amount|price)["'])(?=[^>]*content=["']([^"']+)["'])[^>]*>/i);
+  if (meta?.[1]) {
+    const currency = (String(html).match(/<meta\b(?=[^>]*(?:property|name)=["'](?:product:price:currency|og:price:currency)["'])(?=[^>]*content=["']([^"']+)["'])[^>]*>/i) || [])[1];
+    const formatted = formatPayhipPrice(meta[1].replace(/[^\d.,]/g, "").replace(/,(?=\d{3}\b)/g, ""), currency);
+    if (formatted) return formatted;
+  }
+  const itemprop = String(html || "").match(/<[^>]*itemprop=["']price["'][^>]*content=["']([^"']+)["'][^>]*>/i);
+  if (itemprop?.[1]) {
+    const currency = (String(html).match(/itemprop=["']priceCurrency["'][^>]*content=["']([^"']+)["']/i) || [])[1];
+    const formatted = formatPayhipPrice(itemprop[1], currency);
+    if (formatted) return formatted;
+  }
+  const priceElement = String(html || "").match(/<([a-z0-9]+)\b[^>]*class=["'][^"']*(?:product-)?price[^"']*["'][^>]*>([\s\S]{0,180}?)<\/\1>/i);
+  if (priceElement?.[2]) {
+    const text = priceElement[2].replace(/<[^>]*>/g, " ").replace(/&nbsp;|&#160;/gi, " ").trim();
+    if (/\bfree\b/i.test(text)) return "Free";
+    const match = text.match(/(CA\$|A\$|USD|GBP|EUR|JPY|TRY|CHF|[$£€¥₺])\s*(\d[\d,]*(?:\.\d{1,4})?)/i);
+    if (match) {
+      const code = /^(?:CA\$|A\$|USD|GBP|EUR|JPY|TRY|CHF)$/i.test(match[1]) ? match[1].replace("$", "") : ({ "£": "GBP", "€": "EUR", "¥": "JPY", "₺": "TRY", "$": "USD" }[match[1]] || "USD");
+      return formatPayhipPrice(match[2].replace(/,/g, ""), code);
+    }
+  }
+  return "";
+}
+
 function extractApiKey(request, url = null) {
   if (!request) return "";
   let key = request.headers.get("X-Zyrex-Key") ||
@@ -1094,13 +1156,14 @@ async function scanDetectedResources(discordId, env) {
   }
 }
 
-async function scrapePayhip(url) {
+async function scrapePayhip(url, env = null) {
   try {
     let html = "";
     let isMarkdown = false;
     try {
       const resp = await fetch(url, {
         headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36" },
+        signal: AbortSignal.timeout(12000),
       });
       if (resp.ok) {
         const t = await resp.text();
@@ -1115,7 +1178,7 @@ async function scrapePayhip(url) {
       try {
         const cleanUrl = url.replace(/^https?:\/\//, "");
         const jHeaders = { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36" };
-        if (typeof env !== "undefined" && env?.JINA_API_KEY) {
+        if (env?.JINA_API_KEY) {
           jHeaders["Authorization"] = `Bearer ${env.JINA_API_KEY}`;
         }
         const jinaResp = await fetch(`https://r.jina.ai/https://${cleanUrl}`, { headers: jHeaders });
@@ -1136,6 +1199,8 @@ async function scrapePayhip(url) {
       let price = "";
       const pMatch = html.match(/(?:[A-Z]{1,3}\$|\$|€|£)\s*(\d+(?:\.\d{2})?)/);
       if (pMatch) price = pMatch[0].trim();
+      const labeledPrice = html.match(/(?:price|amount)\s*[:\-]\s*((?:[A-Z]{1,3}\$|[$£€¥₺])\s*\d+(?:\.\d{1,2})?|Free)/i);
+      price = labeledPrice?.[1]?.trim() || "";
 
       const thumbnails = new Set();
       let primaryImage = "";
@@ -1292,6 +1357,7 @@ async function scrapePayhip(url) {
       primaryImage = [...thumbnails][0];
     }
 
+    price = extractPayhipPrice(html);
     return {
       success: true,
       title,
@@ -2854,15 +2920,24 @@ export default {
         const body = await request.json().catch(() => ({}));
         payUrl = body.url || payUrl;
       }
+      let isPayhipUrl = false;
+      try { isPayhipUrl = new URL(payUrl).hostname.toLowerCase().endsWith("payhip.com"); } catch (_) {}
+      if (isPayhipUrl) {
+        const directResult = await scrapePayhip(payUrl, env);
+        if (directResult.success) return json(directResult);
+      }
       try {
         const botResp = await fetch(`${BOT_API}/api/scrape?url=${encodeURIComponent(payUrl)}`, { headers: corsHeaders });
         if (botResp.ok) {
           const data = await botResp.json();
-          if (data && data.success) return json(data);
+          if (data && data.success) {
+            if (isPayhipUrl) data.price = "";
+            return json(data);
+          }
         }
       } catch(e) {}
 
-      const res = await scrapePayhip(payUrl);
+      const res = await scrapePayhip(payUrl, env);
       return json(res);
     }
 
@@ -5553,9 +5628,44 @@ async function storeAndProxyImage(env, imageUrl) {
 
         // One-time/admin reconciliation endpoint: link existing published resources
         // to a single unambiguous open request, then synchronize its Discord embed.
-        if (path === "/api/requests/reconcile-resources" && request.method === "POST") {
+        if ((path === "/api/requests/reconcile-resources" || path === "/api/requests/refresh-payhip-prices") && request.method === "POST") {
           if (!env.ZYREX_RECONCILE_KEY || providedApiKey !== env.ZYREX_RECONCILE_KEY) {
             return json({ success: false, error: "Unauthorized" }, 401);
+          }
+          if (path === "/api/requests/refresh-payhip-prices") {
+            const requestsToPrice = await loadRequestsFromR2();
+            const targets = requestsToPrice.filter(r => {
+              if (String(r.status || "").toLowerCase() === "rejected" || !r.product_url) return false;
+              try { return new URL(r.product_url).hostname.toLowerCase().endsWith("payhip.com"); } catch (_) { return false; }
+            });
+            const updatedPrices = [];
+            const scrapeFailures = [];
+            for (let i = 0; i < targets.length; i += 4) {
+              await Promise.all(targets.slice(i, i + 4).map(async reqItem => {
+                try {
+                  const scraped = await scrapePayhip(reqItem.product_url, env);
+                  if (!scraped.success || !scraped.price) {
+                    scrapeFailures.push({ request_id: reqItem.id, reason: scraped.error || "No authoritative product price found" });
+                    return;
+                  }
+                  if (reqItem.price !== scraped.price) {
+                    const previousPrice = reqItem.price || "";
+                    reqItem.price = scraped.price;
+                    reqItem.price_scraped_at = new Date().toISOString();
+                    reqItem.updated_at = new Date().toISOString();
+                    updatedPrices.push({ request_id: reqItem.id, title: reqItem.title, old_price: previousPrice, price: scraped.price });
+                  }
+                } catch (e) {
+                  scrapeFailures.push({ request_id: reqItem.id, reason: e.message });
+                }
+              }));
+            }
+            if (updatedPrices.length) await persistRequestsToR2(requestsToPrice);
+            const discordSynced = [];
+            for (const reqItem of targets.filter(r => updatedPrices.some(u => u.request_id === r.id) && r.discord_message_id)) {
+              if (await syncDiscordRequestAnnouncement(reqItem)) discordSynced.push(reqItem.id);
+            }
+            return json({ success: true, payhip_requests_checked: targets.length, prices_updated: updatedPrices, scrape_failures: scrapeFailures, discord_synced: discordSynced });
           }
           const productsResp = await fetch(`${BOT_API}/api/products`);
           if (!productsResp.ok) return json({ success: false, error: "Could not load published resources" }, 502);
