@@ -1368,6 +1368,9 @@
                 const contentLength = resp.headers.get('Content-Length');
                 const total = contentLength ? parseInt(contentLength) : 0;
                 let received = 0;
+                let lastSpeedSampleAt = performance.now();
+                let lastSpeedSampleBytes = 0;
+                let speedMBps = 0;
                 const reader = resp.body.getReader();
                 const chunks = fileHandle ? null : [];
                 if (fileHandle) writable = await fileHandle.createWritable();
@@ -1380,10 +1383,18 @@
                     if (writable) await writable.write(result.value);
                     else chunks.push(result.value);
                     received += result.value.length;
+                    const now = performance.now();
+                    const sampleSeconds = (now - lastSpeedSampleAt) / 1000;
+                    if (sampleSeconds >= 0.25) {
+                        speedMBps = (received - lastSpeedSampleBytes) / sampleSeconds / 1048576;
+                        lastSpeedSampleAt = now;
+                        lastSpeedSampleBytes = received;
+                    }
+                    const transferSpeed = speedMBps.toFixed(2) + ' MB/s';
                     if (total > 0) {
-                        updateProgress(Math.round((received / total) * 100), formatSize(received) + ' / ' + formatSize(total));
+                        updateProgress(Math.min(99, Math.round((received / total) * 100)), formatSize(received) + ' / ' + formatSize(total) + ' · ' + transferSpeed);
                     } else {
-                        updateProgress(0, formatSize(received) + ' received');
+                        updateProgress(0, formatSize(received) + ' received · ' + transferSpeed);
                     }
                     document.getElementById('progText').textContent = 'Downloading...';
                 }
