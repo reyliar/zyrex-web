@@ -7,6 +7,99 @@ const SFTPGO_API = "https://storage.zyrexediting.xyz/api/v2";  // SFTPGo via Clo
 const ADMIN_IDS = ["1421177012814614548", "1382421118098346174"];
 const ZYREX_MASTER_KEY = "zyrex_master_k9x7v2m4q8p1w5e6r3t0y9u8i7o6a5s4d";
 
+function normalizeRequestMatchText(value) {
+  return String(value || "").normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+function normalizeRequestMatchUrl(value) {
+  try {
+    const parsed = new URL(String(value || "").trim());
+    const path = parsed.pathname.replace(/\/+$/, "");
+    if (!path) return "";
+    return `${parsed.hostname.toLowerCase().replace(/^www\./, "")}${path}`;
+  } catch (_) { return ""; }
+}
+
+function getRequestMatchIdentities(item, isRequest) {
+  const values = isRequest
+    ? [item.creator_name, item.creator_social_url]
+    : [item.creator_nickname, item.creator_username, item.creator_social_url];
+  const identities = new Set();
+  const ignored = new Set(["http", "https", "www", "com", "tiktok", "instagram", "twitter", "x"]);
+  for (const value of values) {
+    const raw = String(value || "").trim();
+    if (!raw) continue;
+    try {
+      if (/^https?:\/\//i.test(raw)) {
+        const parsed = new URL(raw);
+        const handle = parsed.pathname.split("/").filter(Boolean).pop() || "";
+        const normalizedHandle = normalizeRequestMatchText(handle.replace(/^@/, ""));
+        if (normalizedHandle && !ignored.has(normalizedHandle)) identities.add(normalizedHandle);
+        continue;
+      }
+    } catch (_) {}
+    const normalized = normalizeRequestMatchText(raw.replace(/^@/, ""));
+    if (normalized && !ignored.has(normalized)) identities.add(normalized);
+  }
+  return identities;
+}
+
+function requestResourceTypeCompatible(req, product) {
+  const wanted = normalizeRequestMatchText(req.type).replace(/ /g, "-");
+  if (!wanted || wanted === "other") return true;
+  const subcategories = Array.isArray(product.resource_subcategories)
+    ? product.resource_subcategories
+    : String(product.resource_subcategories || "").split(/[,/]/);
+  const actual = new Set([product.type, product.resource_category, ...subcategories]
+    .flatMap(value => String(value || "").split(/[,/]/))
+    .map(value => normalizeRequestMatchText(value).replace(/ /g, "-"))
+    .filter(Boolean));
+  if (!actual.size) return true;
+  if (wanted === "project-file") return actual.has("project-file") || actual.has("projectfile") || actual.has("preset");
+  if (wanted === "preset") return actual.has("preset") || actual.has("project-file") || actual.has("projectfile");
+  return actual.has(wanted);
+}
+
+function findBestRequestForResource(product, requests) {
+  const title = normalizeRequestMatchText(product?.name);
+  if (!product || !title) return null;
+  const genericWords = new Set(["a", "an", "the", "pack", "preset", "editing", "edit", "project", "file", "cc", "coloring", "bundle", "effect", "effects", "new"]);
+  const titleTokens = new Set(title.split(/\s+/).filter(Boolean));
+  const informativeTokens = [...titleTokens].filter(token => !genericWords.has(token));
+  const productUrls = new Set([product.product_url, product.source_url].map(normalizeRequestMatchUrl).filter(Boolean));
+  const productIdentities = getRequestMatchIdentities(product, false);
+  const candidates = [];
+
+  for (const req of requests || []) {
+    if (["completed", "rejected"].includes(String(req.status || "pending").toLowerCase())) continue;
+    if (!requestResourceTypeCompatible(req, product)) continue;
+    const reqTitle = normalizeRequestMatchText(req.title);
+    if (!reqTitle) continue;
+    const reqUrls = [req.product_url, req.source_url].map(normalizeRequestMatchUrl).filter(Boolean);
+    const exactUrl = reqUrls.some(value => productUrls.has(value));
+    const exactTitle = reqTitle === title;
+    const reqIdentities = getRequestMatchIdentities(req, true);
+    const identityMatch = [...reqIdentities].some(value => productIdentities.has(value));
+    const identityConflict = reqIdentities.size > 0 && productIdentities.size > 0 && !identityMatch;
+    const reqTokens = new Set(reqTitle.split(/\s+/).filter(Boolean));
+    const overlap = [...titleTokens].filter(token => reqTokens.has(token)).length;
+    const union = new Set([...titleTokens, ...reqTokens]).size;
+    const similarity = union ? overlap / union : 0;
+    let score = 0;
+    if (exactUrl) score = 1000 + (identityMatch ? 20 : 0);
+    else if (exactTitle && !identityConflict && (identityMatch || informativeTokens.length >= 2)) score = 600 + (identityMatch ? 100 : 0);
+    else if (!identityConflict && identityMatch && similarity >= 0.78 && overlap > 0) score = 300 + Math.round(similarity * 100) + 100;
+    else if (!identityConflict && !reqIdentities.size && !productIdentities.size && similarity >= 0.94 && informativeTokens.length >= 3) score = 300 + Math.round(similarity * 100);
+    if (score) candidates.push({ req, score });
+  }
+
+  candidates.sort((a, b) => b.score - a.score);
+  if (!candidates.length) return null;
+  if (candidates[1] && candidates[0].score - candidates[1].score < 60) return null;
+  return candidates[0].req;
+}
+
 function extractApiKey(request, url = null) {
   if (!request) return "";
   let key = request.headers.get("X-Zyrex-Key") ||
@@ -5489,44 +5582,18 @@ async function storeAndProxyImage(env, imageUrl) {
               repairedLinks.push({ request_id: reqItem.id, title: reqItem.title, resource_id: resourceId, resource_name: productsById.get(resourceId).name });
             }
           }
-          const normalizeTitle = value => String(value || "")
-            .normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
-            .toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-          const titleSimilarity = (left, right) => {
-            const a = new Set(normalizeTitle(left).split(/\s+/).filter(Boolean));
-            const b = new Set(normalizeTitle(right).split(/\s+/).filter(Boolean));
-            if (!a.size || !b.size) return 0;
-            let overlap = 0;
-            for (const token of a) if (b.has(token)) overlap++;
-            return overlap / (a.size + b.size - overlap);
-          };
-          const normalizeSourceUrl = value => {
-            try {
-              const source = new URL(String(value || "").trim());
-              return (source.hostname || "").toLowerCase().replace(/^www\./, "") + source.pathname.replace(/\/+$/, "").toLowerCase();
-            } catch (_) { return ""; }
-          };
           const updated = [];
-          const claimed = new Set(allReqs.filter(r => r.resource_id).map(r => r.resource_id));
+          const claimed = new Set(allReqs.filter(r => r.resource_id).map(r => String(r.resource_id)));
           for (const product of products) {
-            if (!product?.id || claimed.has(product.id)) continue;
-            const productUrls = new Set([product.product_url, product.source_url].map(normalizeSourceUrl).filter(Boolean));
-            const candidates = allReqs.filter(r => !["completed", "rejected"].includes(String(r.status || "pending").toLowerCase()))
-              .map(req => {
-                const reqUrls = [req.product_url, req.source_url].map(normalizeSourceUrl).filter(Boolean);
-                const exactTitle = normalizeTitle(req.title) && normalizeTitle(req.title) === normalizeTitle(product.name);
-                const exactUrl = reqUrls.some(value => productUrls.has(value));
-                return { req, score: exactTitle || exactUrl ? 1 : titleSimilarity(product.name, req.title) };
-              }).sort((a, b) => b.score - a.score);
-            const best = candidates[0];
-            if (!best || best.score < 0.72 || (candidates[1] && best.score - candidates[1].score < 0.2)) continue;
-            const target = best.req;
+            if (!product?.id || claimed.has(String(product.id))) continue;
+            const target = findBestRequestForResource(product, allReqs);
+            if (!target) continue;
             target.status = "completed";
             target.completed_at = target.completed_at || new Date().toISOString();
             target.updated_at = new Date().toISOString();
             target.resource_id = product.id;
             target.resource_url = `/resource?id=${encodeURIComponent(product.id)}`;
-            claimed.add(product.id);
+            claimed.add(String(product.id));
             updated.push({ request_id: target.id, title: target.title, resource_id: product.id, resource_name: product.name });
           }
           if (updated.length || repairedLinks.length) await persistRequestsToR2(allReqs);
@@ -6678,38 +6745,9 @@ async function storeAndProxyImage(env, imageUrl) {
               const submitPayload = JSON.parse(body);
               let linkedReqId = submitPayload.request_id || "";
               if (!linkedReqId) {
-                const normalizeTitle = value => String(value || "")
-                  .normalize("NFKD").replace(/[\u0300-\u036f]/g, "")
-                  .toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-                const titleSimilarity = (left, right) => {
-                  const a = new Set(normalizeTitle(left).split(/\s+/).filter(Boolean));
-                  const b = new Set(normalizeTitle(right).split(/\s+/).filter(Boolean));
-                  if (!a.size || !b.size) return 0;
-                  let overlap = 0;
-                  for (const token of a) if (b.has(token)) overlap++;
-                  return overlap / (a.size + b.size - overlap);
-                };
-                const normalizeSourceUrl = value => {
-                  try {
-                    const source = new URL(String(value || "").trim());
-                    return (source.hostname || "").toLowerCase().replace(/^www\./, "") + source.pathname.replace(/\/+$/, "").toLowerCase();
-                  } catch (_) { return ""; }
-                };
-                const submittedTitle = normalizeTitle(submitPayload.name);
-                const submittedUrls = new Set([submitPayload.product_url, submitPayload.source_url].map(normalizeSourceUrl).filter(Boolean));
                 const openRequests = await loadRequestsFromR2();
-                const matches = openRequests.map(req => {
-                  if (["completed", "rejected"].includes(String(req.status || "pending").toLowerCase())) return false;
-                  const titleMatch = submittedTitle && normalizeTitle(req.title) === submittedTitle;
-                  const requestUrls = [req.product_url, req.source_url].map(normalizeSourceUrl).filter(Boolean);
-                  const urlMatch = requestUrls.some(value => submittedUrls.has(value));
-                  if (titleMatch || urlMatch) return { req, score: 1 };
-                  return { req, score: titleSimilarity(submitPayload.name, req.title) };
-                }).filter(Boolean).sort((a, b) => b.score - a.score);
-                // Allow an unambiguous close title match when source links differ
-                // (for example, a Payhip product URL versus a request store URL).
-                if (matches.length === 1 && matches[0].score >= 0.72) linkedReqId = matches[0].req.id;
-                else if (matches.length > 1 && matches[0].score >= 0.72 && matches[0].score - matches[1].score >= 0.2) linkedReqId = matches[0].req.id;
+                const matchedRequest = findBestRequestForResource(submitPayload, openRequests);
+                if (matchedRequest) linkedReqId = matchedRequest.id;
               }
               if (linkedReqId) {
                 const prodId = parsed.id || submitPayload.id || "";
