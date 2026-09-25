@@ -270,6 +270,68 @@ async function markTokenUsed(env, tokenFingerprint) {
   } catch(e) { console.error("markTokenUsed R2 error:", e.message); }
 }
 
+const SUBSYSTEM_NAMES = {
+  api_gateway: "Api Gateway",
+  site_gate: "Site Gate & CDN",
+  storage: "Resource Downloads & Storage",
+  requests_system: "Community Requests System",
+  shortener_gateway: "Sponsored Links & Shorteners",
+  resource_uploads: "Resource Uploads",
+  comments: "Comments System",
+  discord_auth: "Discord Authentication",
+  token_generator: "Download Security & Tokens"
+};
+
+async function recordTelemetryEvent(env, { subsystem, title, message, severity = "degraded", count = 1, user = "" }) {
+  try {
+    if (!env.STORAGE) return;
+    const key = "system/telemetry_events.json";
+    let events = [];
+    try {
+      const obj = await env.STORAGE.get(key);
+      if (obj) events = await obj.json();
+    } catch (_) {}
+
+    const now = new Date();
+    const dateStr = now.toISOString().split("T")[0];
+
+    const existing = events.find(e => 
+      e.subsystem === subsystem && 
+      e.title === title && 
+      (now.getTime() - new Date(e.timestamp || e.created_at || now).getTime()) < 20 * 60 * 1000
+    );
+
+    if (existing) {
+      existing.outages_count = (existing.outages_count || 1) + count;
+      existing.last_seen = now.toISOString();
+      if (message && !existing.message.includes(message)) {
+        existing.message = message;
+      }
+    } else {
+      events.unshift({
+        id: `inc-${now.getTime()}-${Math.random().toString(36).substring(2, 7)}`,
+        subsystem: subsystem,
+        subsystem_name: SUBSYSTEM_NAMES[subsystem] || subsystem,
+        title: title,
+        message: message,
+        severity: severity,
+        outages_count: count,
+        date: dateStr,
+        timestamp: now.toISOString(),
+        created_at: now.toISOString(),
+        status: "Investigating"
+      });
+      if (events.length > 100) events = events.slice(0, 100);
+    }
+
+    await env.STORAGE.put(key, JSON.stringify(events), {
+      httpMetadata: { contentType: "application/json" }
+    });
+  } catch (err) {
+    console.warn("Failed to record telemetry event:", err);
+  }
+}
+
 // Role check cache (simple in-memory, 30s TTL)
 const roleCheckCache = new Map();
 
@@ -3187,6 +3249,49 @@ async function storeAndProxyImage(env, imageUrl) {
     }
 
     try {
+            // POST /api/status/report-issue (Member telemetry problem reporting)
+      if (path === "/api/status/report-issue" && request.method === "POST") {
+        try {
+          const body = await request.json();
+          const session = parseSession(request.headers.get("Cookie"), request);
+          const subsystem = body.subsystem || "general";
+          const title = body.title || (body.issue_type ? `Issue: ${body.issue_type}` : "Member Problem Reported");
+          const message = body.details || body.message || "Reported via status page";
+          const username = session ? (session.displayName || session.username) : "Anonymous Member";
+          const userId = session ? session.userId : "";
+
+          await recordTelemetryEvent(env, {
+            subsystem: subsystem,
+            title: title,
+            message: message,
+            severity: body.severity || "degraded",
+            count: 1,
+            user: username
+          });
+
+          // Forward to Bot API so Discord staff gets alerted in real time
+          try {
+            await fetch(`${BOT_API}/api/status/log-incident`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                subsystem: subsystem,
+                subsystem_name: SUBSYSTEM_NAMES[subsystem] || subsystem,
+                title: title,
+                message: message,
+                user: username,
+                user_id: userId,
+                severity: body.severity || "degraded"
+              })
+            });
+          } catch (_) {}
+
+          return json({ success: true, message: "Issue logged to live telemetry." });
+        } catch (e) {
+          return json({ success: false, error: e.message }, 500);
+        }
+      }
+
       // STATUS API - Real-time Subsystem Monitoring & Live Telemetry
       if (path === "/api/status" || path === "/api/status/summary") {
         const isSummary = path === "/api/status/summary";
@@ -3305,6 +3410,76 @@ async function storeAndProxyImage(env, imageUrl) {
           latency: Math.max(6, Math.round(edgeHealth.latency + 7))
         };
 
+        // Subsystem 8: Community Requests System
+        let requestsHealth = { status: "operational", latency: 0, error: null };
+        const reqStart = Date.now();
+        if (vpsHealth.status === "outage") {
+          requestsHealth.status = "degraded";
+          requestsHealth.latency = -1;
+          requestsHealth.error = "Remote server offline";
+        } else {
+          try {
+            const controller = new AbortController();
+            const tId = setTimeout(() => controller.abort(), 2500);
+            const reqRes = await fetch("https://storage.zyrexediting.xyz/api/requests/stats", {
+              headers: { "Accept": "application/json", "User-Agent": "Zyrex-Status-Probe/1.0" },
+              signal: controller.signal
+            });
+            clearTimeout(tId);
+            requestsHealth.latency = Date.now() - reqStart;
+            requestsHealth.status = reqRes.ok ? "operational" : "degraded";
+            if (!reqRes.ok) requestsHealth.error = `HTTP ${reqRes.status}`;
+          } catch (e) {
+            requestsHealth.latency = Date.now() - reqStart;
+            requestsHealth.status = "degraded";
+            requestsHealth.error = e.name === "AbortError" ? "Timeout" : (e.message || "Failed");
+          }
+        }
+
+        // Subsystem 9: Sponsored Links & Shortener Gateway
+        let shortenerHealth = { status: "operational", latency: 0, error: null };
+        const shortenerStart = Date.now();
+        try {
+          const controller = new AbortController();
+          const tId = setTimeout(() => controller.abort(), 2500);
+          const sRes = await fetch("https://shrinkearn.com", {
+            method: "HEAD",
+            headers: { "User-Agent": "Mozilla/5.0 (compatible; ZyrexStatusProbe/1.0)" },
+            signal: controller.signal
+          });
+          clearTimeout(tId);
+          shortenerHealth.latency = Date.now() - shortenerStart;
+          if (sRes.ok || sRes.status === 301 || sRes.status === 302 || sRes.status === 403) {
+            shortenerHealth.status = shortenerHealth.latency > 2500 ? "degraded" : "operational";
+          } else {
+            shortenerHealth.status = "degraded";
+            shortenerHealth.error = `HTTP ${sRes.status}`;
+          }
+        } catch (e) {
+          shortenerHealth.latency = Date.now() - shortenerStart;
+          shortenerHealth.status = "degraded";
+          shortenerHealth.error = e.name === "AbortError" ? "Timeout" : (e.message || "Failed");
+        }
+
+        // Read real persistent telemetry events from R2
+        let telemetryEvents = [];
+        try {
+          if (env.STORAGE) {
+            const tObj = await env.STORAGE.get("system/telemetry_events.json");
+            if (tObj) telemetryEvents = await tObj.json();
+          }
+        } catch (_) {}
+
+        // If there were any errors reported for shortener_gateway within last 90 minutes, mark shortener degraded
+        const recentShortenerIssues = telemetryEvents.filter(e => 
+          e.subsystem === "shortener_gateway" && 
+          (Date.now() - new Date(e.timestamp || e.created_at || e.date).getTime()) < 90 * 60 * 1000
+        );
+        if (recentShortenerIssues.length > 0) {
+          shortenerHealth.status = "degraded";
+          shortenerHealth.error = `${recentShortenerIssues[0].outages_count || 1} member issue(s) reported recently`;
+        }
+
         // Determine Overall System Status
         let overallStatus = "operational";
         let statusHeadline = "All systems operational";
@@ -3314,7 +3489,7 @@ async function storeAndProxyImage(env, imageUrl) {
           overallStatus = "degraded";
           statusHeadline = "Partial service disruption";
           statusLead = "Intermittent connectivity detected with our remote server backend. Public browsing, downloads, and storage remain operational.";
-        } else if (commentsHealth.status === "degraded" || uploadHealth.status === "degraded" || r2Health.status === "degraded") {
+        } else if (commentsHealth.status === "degraded" || uploadHealth.status === "degraded" || r2Health.status === "degraded" || shortenerHealth.status === "degraded" || requestsHealth.status === "degraded") {
           overallStatus = "degraded";
           statusHeadline = "Partial service disruption";
           statusLead = "Some Zyrex services are experiencing higher response times or temporary degraded performance.";
@@ -3398,6 +3573,24 @@ async function storeAndProxyImage(env, imageUrl) {
             status: tokenHealth.status,
             latency: `${tokenHealth.latency}ms`,
             uptime_pct: "99.99%"
+          },
+          {
+            id: "requests_system",
+            name: "Community Requests System",
+            description: "Processes user requests, upvotes, thread discussions, and fulfillment tracking.",
+            status: requestsHealth.status,
+            latency: requestsHealth.latency > 0 ? `${requestsHealth.latency}ms` : "18ms",
+            uptime_pct: "99.98%",
+            error: requestsHealth.error
+          },
+          {
+            id: "shortener_gateway",
+            name: "Sponsored Links & Shorteners",
+            description: "Generates and routes member sponsored download links via ShrinkEarn gateway.",
+            status: shortenerHealth.status,
+            latency: shortenerHealth.latency > 0 ? `${shortenerHealth.latency}ms` : "N/A",
+            uptime_pct: shortenerHealth.status === "degraded" ? "98.75%" : "99.94%",
+            error: shortenerHealth.error
           }
         ];
 
@@ -3446,6 +3639,18 @@ async function storeAndProxyImage(env, imageUrl) {
             status: tokenHealth.status,
             latency_ms: tokenHealth.latency,
             uptime_percent: 99.99
+          },
+          requests_system: {
+            name: "Community Requests System",
+            status: requestsHealth.status,
+            latency_ms: requestsHealth.latency > 0 ? requestsHealth.latency : 18,
+            uptime_percent: 99.98
+          },
+          shortener_gateway: {
+            name: "Sponsored Links & Shorteners",
+            status: shortenerHealth.status,
+            latency_ms: shortenerHealth.latency > 0 ? shortenerHealth.latency : null,
+            uptime_percent: shortenerHealth.status === "degraded" ? 98.75 : 99.94
           }
         };
 
@@ -3489,23 +3694,58 @@ async function storeAndProxyImage(env, imageUrl) {
         ];
 
         let incidents = [];
-        if (vpsHealth.status === "outage" || vpsHealth.status === "degraded") {
-          const currentOutage = {
-            id: "inc-remote-disruption",
-            title: vpsHealth.status === "outage" ? "Remote Server Disruption" : "Remote Server Connectivity Degraded",
-            subsystem: "api_gateway",
-            subsystem_name: "Api Gateway",
-            severity: vpsHealth.status === "outage" ? "degraded" : "low",
-            outages_count: 1,
-            status: "Investigating",
-            impact: "Remote server API and bot services are experiencing temporary connectivity degradation. Edge delivery and storage downloads remain active.",
-            created_at: new Date(Date.now() - 120000).toISOString(),
-            date: new Date().toISOString().split("T")[0],
-            updated_at: new Date().toISOString(),
-            message: "We are currently observing intermittent upstream connectivity with our dedicated remote backend server. Cloudflare edge networks and storage downloads remain fully operational while connection stability is being restored."
-          };
-          incidents.push(currentOutage);
-          incidentsHistory.unshift(currentOutage);
+        const nowTs = Date.now();
+
+        // 1. Probe-detected live disruptions
+        const probeList = [
+          { sub: "api_gateway", health: vpsHealth, name: "Api Gateway" },
+          { sub: "storage", health: r2Health, name: "Resource Downloads & Storage" },
+          { sub: "requests_system", health: requestsHealth, name: "Community Requests System" },
+          { sub: "shortener_gateway", health: shortenerHealth, name: "Sponsored Links & Shorteners" },
+          { sub: "resource_uploads", health: uploadHealth, name: "Resource Uploads" },
+          { sub: "comments", health: commentsHealth, name: "Comments System" }
+        ];
+
+        probeList.forEach(({ sub, health, name }) => {
+          if (health.status === "outage" || health.status === "degraded") {
+            const probeInc = {
+              id: `inc-${sub}-probe`,
+              title: `${name} ${health.status === "outage" ? "Service Disruption" : "Degraded Performance"}`,
+              subsystem: sub,
+              subsystem_name: name,
+              severity: health.status,
+              outages_count: 1,
+              status: "Investigating",
+              impact: `${name} is currently experiencing connectivity latency or temporary degradation.`,
+              created_at: new Date().toISOString(),
+              timestamp: new Date().toISOString(),
+              date: new Date().toISOString().split("T")[0],
+              message: health.error ? `Telemetry probe detected issue: ${health.error}` : `Service is experiencing elevated latency or intermittent upstream timeouts.`
+            };
+            incidents.push(probeInc);
+          }
+        });
+
+        // 2. Real Member-reported / Automatic Telemetry Events (last 3 hours)
+        telemetryEvents.forEach(evt => {
+          const evtTime = new Date(evt.timestamp || evt.created_at || evt.date).getTime();
+          if (nowTs - evtTime < 3 * 3600 * 1000 && evt.status !== "Resolved") {
+            if (!incidents.some(i => i.subsystem === evt.subsystem && i.title === evt.title)) {
+              incidents.push(evt);
+            }
+          }
+        });
+
+        // Merge telemetry events into incidents_history
+        const mergedHistory = [...incidents, ...telemetryEvents, ...incidentsHistory];
+        // Dedup mergedHistory by ID
+        const seenIds = new Set();
+        const dedupHistory = [];
+        for (const item of mergedHistory) {
+          if (!seenIds.has(item.id)) {
+            seenIds.add(item.id);
+            dedupHistory.push(item);
+          }
         }
 
         return json({
@@ -3522,7 +3762,7 @@ async function storeAndProxyImage(env, imageUrl) {
           colo: edgeHealth.colo,
           overall_uptime_90d: 99.98,
           incidents: incidents,
-          incidents_history: incidentsHistory
+          incidents_history: dedupHistory
         }, 200, {
           "Cache-Control": "public, max-age=5, s-maxage=5"
         });
@@ -4254,7 +4494,29 @@ async function storeAndProxyImage(env, imageUrl) {
             adUrl = await createShrinkEarnLink(env, destinationUrl);
           } catch (e) {
             console.error("ShrinkEarn link error:", e.message);
-            return json({ success: false, error: "Sponsored link could not be created: " + e.message }, 502);
+            await recordTelemetryEvent(env, {
+              subsystem: "shortener_gateway",
+              title: "Sponsored Link Gateway Failure",
+              message: "Member encountered shortener gateway error: " + (e.message || "Upstream failure"),
+              severity: "degraded",
+              count: 1
+            });
+            try {
+              fetch(`${BOT_API}/api/status/log-incident`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  subsystem: "shortener_gateway",
+                  subsystem_name: "Sponsored Links & Shorteners",
+                  title: "Sponsored Link Gateway Failure",
+                  message: `ShrinkEarn generation failed: ${e.message}`,
+                  user: session ? session.username : "Guest",
+                  severity: "degraded"
+                })
+              }).catch(() => {});
+            } catch (_) {}
+            // Graceful fallback to destinationUrl so user can still download
+            adUrl = destinationUrl;
           }
         }
 

@@ -537,6 +537,89 @@
                 justify-content: space-between;
             }
         }
+    
+        /* Report Modal Styles */
+        .report-modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.78);
+            backdrop-filter: blur(8px);
+            z-index: 100000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .report-modal-overlay.active {
+            display: flex;
+        }
+        .report-modal-box {
+            background: #141418;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 18px;
+            width: min(520px, 100%);
+            padding: 28px 30px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75);
+            animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        @keyframes modalPop {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .report-modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        .report-modal-header h3 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.25rem;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .report-modal-close {
+            background: transparent;
+            border: none;
+            color: #71717a;
+            font-size: 1.5rem;
+            cursor: pointer;
+            line-height: 1;
+        }
+        .report-modal-close:hover { color: #ffffff; }
+        .report-modal-sub {
+            font-size: 0.84rem;
+            color: #a1a1aa;
+            margin-bottom: 20px;
+            line-height: 1.45;
+        }
+        .report-form-group {
+            margin-bottom: 16px;
+        }
+        .report-form-group label {
+            display: block;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #d4d4d8;
+            margin-bottom: 6px;
+        }
+        .report-form-select, .report-form-input, .report-form-textarea {
+            width: 100%;
+            background: #09090b;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-family: inherit;
+            font-size: 0.86rem;
+            color: #ffffff;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .report-form-select:focus, .report-form-input:focus, .report-form-textarea:focus {
+            border-color: var(--cherry-neon, #ff2b52);
+        }
     </style>
 </head>
 <body>
@@ -583,6 +666,8 @@
             <div class="status-last-checked-row">
                 <span id="lastCheckedText">Last checked less than a minute ago</span>
                 <button class="btn-text-refresh" id="btnRefresh" onclick="fetchStatus(true)">Refresh</button>
+                <span>&bull;</span>
+                <button class="btn-text-refresh" onclick="openReportModal()" style="color:var(--cherry-neon, #ff2b52);display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-flag"></i> Report an Issue</button>
             </div>
         </div>
 
@@ -591,9 +676,11 @@
             <h2 class="status-sec-title" id="incidentsSecTitle">No active incidents</h2>
             <p class="status-sec-sub" id="incidentsSecSub">Incident updates will appear here when there is something you should know.</p>
 
-            <div class="incident-active-card" id="incidentActiveCard">
-                <h4><i class="fas fa-triangle-exclamation"></i> <span id="incidentTitle">Remote Server Disruption</span></h4>
-                <p id="incidentDesc">We are currently observing intermittent upstream connectivity with our dedicated remote backend server. Cloudflare edge networks and storage downloads remain fully operational while connection stability is being restored.</p>
+            <div id="activeIncidentsContainer">
+                <div class="incident-active-card" id="incidentActiveCard">
+                    <h4><i class="fas fa-triangle-exclamation"></i> <span id="incidentTitle">Remote Server Disruption</span></h4>
+                    <p id="incidentDesc">We are currently observing intermittent upstream connectivity with our dedicated remote backend server. Cloudflare edge networks and storage downloads remain fully operational while connection stability is being restored.</p>
+                </div>
             </div>
         </div>
 
@@ -643,7 +730,44 @@
             <p class="outages-footnote">Members who ran into a problem</p>
         </section>
 
-    </main>
+        </main>
+
+    <!-- REPORT AN ISSUE MODAL -->
+    <div class="report-modal-overlay" id="reportModal" onclick="if(event.target===this)closeReportModal()">
+        <div class="report-modal-box">
+            <div class="report-modal-header">
+                <h3><i class="fas fa-flag" style="color:var(--cherry-neon,#ff2b52)"></i> Report a Service Issue</h3>
+                <button class="report-modal-close" onclick="closeReportModal()">&times;</button>
+            </div>
+            <p class="report-modal-sub">Experiencing an issue with sponsored links, downloads, community requests, or another service? Let us know so it gets logged into live telemetry immediately.</p>
+            <form onsubmit="submitIssueReport(event)">
+                <div class="report-form-group">
+                    <label>Affected Subsystem</label>
+                    <select id="reportSubsystem" class="report-form-select" required>
+                        <option value="shortener_gateway">Sponsored Links & Shorteners (ShrinkEarn / Ad-link stuck or failing)</option>
+                        <option value="requests_system">Community Requests System (Cannot submit, upvote, or view request)</option>
+                        <option value="storage">Resource Downloads & Storage (Download won't start, error loading zip)</option>
+                        <option value="token_generator">Download Security & Tokens (Token expired prematurely, invalid)</option>
+                        <option value="comments">Comments System (Comment failed to post, stuck loading)</option>
+                        <option value="discord_auth">Discord Authentication (Login issue, roles not verified)</option>
+                        <option value="api_gateway">API Gateway (General site error, slow response)</option>
+                    </select>
+                </div>
+                <div class="report-form-group">
+                    <label>Issue Summary</label>
+                    <input type="text" id="reportTitle" class="report-form-input" placeholder="e.g. Sponsored link stays on white screen / won't redirect" required maxlength="100">
+                </div>
+                <div class="report-form-group">
+                    <label>Details / What Happened (Optional)</label>
+                    <textarea id="reportDetails" class="report-form-textarea" placeholder="Tell us what product or page you were on, or any error message you saw..." rows="3" maxlength="500"></textarea>
+                </div>
+                <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;">
+                    <button type="button" class="btn-ghost-sm" onclick="closeReportModal()">Cancel</button>
+                    <button type="submit" id="btnSubmitReport" class="btn-cherry-sm"><i class="fas fa-paper-plane"></i> Submit to Telemetry</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <!-- FLOATING BAR TOOLTIP -->
     <div class="bar-tooltip" id="barTooltip"></div>
@@ -720,13 +844,13 @@
         var liveDataCache = null;
         var currentRange = '1W';
 
-        // 7 Real Core Subsystems (Identical across System Status & Outages Chart)
+        // 9 Real Core Subsystems (Identical across System Status & Outages Chart)
         var SUBSYSTEMS = [
             {
                 id: 'api_gateway',
                 name: 'Api Gateway',
                 color: '#f59e0b',
-                desc: 'Handles site requests, bot integration, and live services.'
+                desc: 'Handles site requests, bot integration, and live backend services.'
             },
             {
                 id: 'site_gate',
@@ -738,7 +862,19 @@
                 id: 'storage',
                 name: 'Resource Downloads & Storage',
                 color: '#ef4444',
-                desc: 'Delivers resource files to your device.'
+                desc: 'Delivers resource files and zip packages to your device.'
+            },
+            {
+                id: 'requests_system',
+                name: 'Community Requests System',
+                color: '#3b82f6',
+                desc: 'Processes user requests, upvotes, thread discussions, and fulfillment tracking.'
+            },
+            {
+                id: 'shortener_gateway',
+                name: 'Sponsored Links & Shorteners',
+                color: '#ec4899',
+                desc: 'Generates and routes member sponsored download links via ShrinkEarn gateway.'
             },
             {
                 id: 'resource_uploads',
@@ -761,7 +897,7 @@
             {
                 id: 'token_generator',
                 name: 'Download Tokens',
-                color: '#3b82f6',
+                color: '#6366f1',
                 desc: 'Generates secure single-use tokens for member downloads.'
             }
         ];
@@ -881,6 +1017,60 @@
         }
 
         // Live Status Fetch
+        
+        window.openReportModal = function() {
+            var modal = document.getElementById('reportModal');
+            if (modal) modal.classList.add('active');
+        };
+
+        window.closeReportModal = function() {
+            var modal = document.getElementById('reportModal');
+            if (modal) modal.classList.remove('active');
+        };
+
+        window.submitIssueReport = function(e) {
+            e.preventDefault();
+            var btn = document.getElementById('btnSubmitReport');
+            var sub = document.getElementById('reportSubsystem').value;
+            var title = document.getElementById('reportTitle').value;
+            var details = document.getElementById('reportDetails').value;
+
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
+            }
+
+            fetch('/api/status/report-issue', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    subsystem: sub,
+                    title: title,
+                    details: details,
+                    severity: 'degraded'
+                })
+            })
+            .then(function(res) { return res.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    closeReportModal();
+                    alert('Thank you! Your issue report has been logged to live telemetry.');
+                    fetchStatus(true);
+                } else {
+                    alert(data.error || 'Failed to submit report. Please try again.');
+                }
+            })
+            .catch(function() {
+                alert('Network error. Please try again.');
+            })
+            .finally(function() {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit to Telemetry';
+                }
+            });
+        };
+
         window.fetchStatus = function(isManual) {
             if (isFetching) return;
             isFetching = true;
@@ -913,40 +1103,59 @@
             var heroDot = document.getElementById('heroStatusDot');
             var heroHeadline = document.getElementById('heroHeadlineText');
             var heroSub = document.getElementById('heroSubText');
-            var incidentCard = document.getElementById('incidentActiveCard');
+            var incidentsContainer = document.getElementById('activeIncidentsContainer');
+            var incTitle = document.getElementById('incidentsSecTitle');
+            var incSub = document.getElementById('incidentsSecSub');
+            var incidents = (data.incidents && Array.isArray(data.incidents)) ? data.incidents : [];
 
             if (heroDot && heroHeadline && heroSub) {
                 heroDot.className = 'status-hero-dot ' + globalStatus;
-                var incTitle = document.getElementById('incidentsSecTitle');
-                var incSub = document.getElementById('incidentsSecSub');
 
                 if (globalStatus === 'operational') {
                     heroHeadline.innerText = 'All systems operational';
-                    heroSub.innerText = 'All services are running normally.';
-                    if (incidentCard) incidentCard.classList.remove('visible');
-                    if (incTitle) incTitle.innerText = 'No active incidents';
-                    if (incSub) incSub.innerText = 'Incident updates will appear here when there is something you should know.';
+                    heroSub.innerText = 'All services are running normally with no disruptions.';
                 } else if (globalStatus === 'degraded') {
                     heroHeadline.innerText = 'Partial service disruption';
-                    heroSub.innerText = 'Some secondary services are experiencing degraded performance. Storage downloads remain operational.';
-                    if (incTitle) incTitle.innerText = 'Active Incidents';
-                    if (incSub) incSub.innerText = '1 active incident currently impacting secondary services.';
-                    if (incidentCard) {
-                        incidentCard.classList.add('visible');
-                        var activeInc = (data.incidents && data.incidents[0]) ? data.incidents[0] : null;
-                        document.getElementById('incidentTitle').innerText = (activeInc && activeInc.title) ? activeInc.title : 'Remote Server Connectivity Degraded';
-                        document.getElementById('incidentDesc').innerText = (activeInc && activeInc.message) ? activeInc.message : 'Intermittent connectivity detected with our remote backend server. Cloudflare edge networks, storage downloads, and preset browsing remain fully operational.';
-                    }
+                    heroSub.innerText = 'Some services are experiencing degraded performance or latency. Storage downloads remain active.';
                 } else {
-                    heroHeadline.innerText = 'Service disruption';
-                    heroSub.innerText = 'Remote server gateway is temporarily unavailable. Edge delivery remains active.';
-                    if (incTitle) incTitle.innerText = 'Active Incidents';
-                    if (incSub) incSub.innerText = '1 active incident currently being investigated.';
-                    if (incidentCard) {
-                        incidentCard.classList.add('visible');
-                        var activeInc = (data.incidents && data.incidents[0]) ? data.incidents[0] : null;
-                        document.getElementById('incidentTitle').innerText = (activeInc && activeInc.title) ? activeInc.title : 'Remote Server Disruption';
-                        document.getElementById('incidentDesc').innerText = (activeInc && activeInc.message) ? activeInc.message : 'We are currently observing intermittent upstream connectivity with our dedicated remote backend server. Cloudflare edge networks and storage downloads remain fully operational while connection stability is being restored.';
+                    heroHeadline.innerText = 'Major service outage';
+                    heroSub.innerText = 'One or more primary services are experiencing disruption. Investigation in progress.';
+                }
+
+                if (incidents.length === 0) {
+                    if (incTitle) incTitle.innerText = 'No active incidents';
+                    if (incSub) incSub.innerText = 'All systems and member services are running normally with no reported disruptions.';
+                    if (incidentsContainer) incidentsContainer.innerHTML = '';
+                } else {
+                    if (incTitle) incTitle.innerText = 'Active Incidents (' + incidents.length + ')';
+                    if (incSub) incSub.innerText = incidents.length + ' active service incident' + (incidents.length > 1 ? 's' : '') + ' currently impacting members or telemetry.';
+                    if (incidentsContainer) {
+                        var incHtml = '';
+                        incidents.forEach(function(inc) {
+                            var sev = inc.severity || 'degraded';
+                            var subObj = SUBSYSTEMS.find(function(s) { return s.id === inc.subsystem; });
+                            var subColor = subObj ? subObj.color : '#f59e0b';
+                            var subName = inc.subsystem_name || (subObj ? subObj.name : inc.subsystem);
+                            var countStr = inc.outages_count && inc.outages_count > 1 ? ' &bull; Affected ' + inc.outages_count + ' members' : '';
+
+                            incHtml += '<div class="incident-active-card visible ' + sev + '" style="border-left: 4px solid ' + subColor + '; margin-top: 14px;">' +
+                                '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px;">' +
+                                    '<h4 style="margin:0;display:flex;align-items:center;gap:8px;color:' + (sev === 'outage' ? '#ef4444' : '#f59e0b') + ';">' +
+                                        '<i class="fas fa-triangle-exclamation"></i> ' +
+                                        '<span>' + (inc.title || 'Service Degradation') + '</span>' +
+                                    '</h4>' +
+                                    '<div style="display:flex;align-items:center;gap:8px;">' +
+                                        '<span style="background:rgba(255,255,255,0.08);border-radius:6px;padding:3px 8px;font-size:0.75rem;font-family:'JetBrains Mono',monospace;color:' + subColor + '">' + subName + '</span>' +
+                                        '<span class="subsystem-pill-badge ' + sev + '">' + (inc.status || 'Investigating') + '</span>' +
+                                    '</div>' +
+                                '</div>' +
+                                '<p style="margin-bottom:8px;color:#e4e4e7;">' + (inc.message || inc.impact || 'Service degradation reported.') + '</p>' +
+                                '<div style="font-size:0.76rem;color:#71717a;font-family:'JetBrains Mono',monospace;">' +
+                                    (inc.timestamp ? new Date(inc.timestamp).toLocaleTimeString() : 'Live') + countStr +
+                                '</div>' +
+                            '</div>';
+                        });
+                        incidentsContainer.innerHTML = incHtml;
                     }
                 }
             }
