@@ -272,14 +272,14 @@ async function markTokenUsed(env, tokenFingerprint) {
 
 const SUBSYSTEM_NAMES = {
   api_gateway: "Api Gateway",
-  site_gate: "Site Gate & CDN",
-  storage: "Resource Downloads & Storage",
+  site_gate: "Site Gate",
+  storage: "Resource Downloads",
   requests_system: "Community Requests System",
-  shortener_gateway: "Sponsored Links & Shorteners",
+  shortener_gateway: "Sponsored Links",
   resource_uploads: "Resource Uploads",
   comments: "Comments System",
   discord_auth: "Discord Authentication",
-  token_generator: "Download Security & Tokens"
+  token_generator: "Download Tokens"
 };
 
 async function recordTelemetryEvent(env, { subsystem, title, message, severity = "degraded", count = 1, user = "" }) {
@@ -3533,7 +3533,7 @@ async function storeAndProxyImage(env, imageUrl) {
           },
           {
             id: "storage",
-            name: "Resource Downloads & Storage",
+            name: "Resource Downloads",
             description: "Delivers resource files to your device.",
             status: r2Health.status,
             latency: r2Health.latency > 0 ? `${r2Health.latency}ms` : "14ms",
@@ -3585,7 +3585,7 @@ async function storeAndProxyImage(env, imageUrl) {
           },
           {
             id: "shortener_gateway",
-            name: "Sponsored Links & Shorteners",
+            name: "Sponsored Links",
             description: "Generates and routes member sponsored download links via ShrinkEarn gateway.",
             status: shortenerHealth.status,
             latency: shortenerHealth.latency > 0 ? `${shortenerHealth.latency}ms` : "N/A",
@@ -3611,7 +3611,7 @@ async function storeAndProxyImage(env, imageUrl) {
             colo: edgeHealth.colo
           },
           storage: {
-            name: "Resource Downloads & Storage",
+            name: "Resource Downloads",
             status: r2Health.status,
             latency_ms: r2Health.latency > 0 ? r2Health.latency : 14,
             uptime_percent: 99.99
@@ -3647,7 +3647,7 @@ async function storeAndProxyImage(env, imageUrl) {
             uptime_percent: 99.98
           },
           shortener_gateway: {
-            name: "Sponsored Links & Shorteners",
+            name: "Sponsored Links",
             status: shortenerHealth.status,
             latency_ms: shortenerHealth.latency > 0 ? shortenerHealth.latency : null,
             uptime_percent: shortenerHealth.status === "degraded" ? 98.75 : 99.94
@@ -3699,9 +3699,9 @@ async function storeAndProxyImage(env, imageUrl) {
         // 1. Probe-detected live disruptions
         const probeList = [
           { sub: "api_gateway", health: vpsHealth, name: "Api Gateway" },
-          { sub: "storage", health: r2Health, name: "Resource Downloads & Storage" },
+          { sub: "storage", health: r2Health, name: "Resource Downloads" },
           { sub: "requests_system", health: requestsHealth, name: "Community Requests System" },
-          { sub: "shortener_gateway", health: shortenerHealth, name: "Sponsored Links & Shorteners" },
+          { sub: "shortener_gateway", health: shortenerHealth, name: "Sponsored Links" },
           { sub: "resource_uploads", health: uploadHealth, name: "Resource Uploads" },
           { sub: "comments", health: commentsHealth, name: "Comments System" }
         ];
@@ -4507,7 +4507,7 @@ async function storeAndProxyImage(env, imageUrl) {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                   subsystem: "shortener_gateway",
-                  subsystem_name: "Sponsored Links & Shorteners",
+                  subsystem_name: "Sponsored Links",
                   title: "Sponsored Link Gateway Failure",
                   message: `ShrinkEarn generation failed: ${e.message}`,
                   user: session ? session.username : "Guest",

@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -744,10 +744,10 @@
                 <div class="report-form-group">
                     <label>Affected Subsystem</label>
                     <select id="reportSubsystem" class="report-form-select" required>
-                        <option value="shortener_gateway">Sponsored Links & Shorteners (ShrinkEarn / Ad-link stuck or failing)</option>
+                        <option value="shortener_gateway">Sponsored Links (ShrinkEarn / Ad-link stuck or failing)</option>
                         <option value="requests_system">Community Requests System (Cannot submit, upvote, or view request)</option>
-                        <option value="storage">Resource Downloads & Storage (Download won't start, error loading zip)</option>
-                        <option value="token_generator">Download Security & Tokens (Token expired prematurely, invalid)</option>
+                        <option value="storage">Resource Downloads (Download won't start, error loading zip)</option>
+                        <option value="token_generator">Download Security (Token expired prematurely, invalid)</option>
                         <option value="comments">Comments System (Comment failed to post, stuck loading)</option>
                         <option value="discord_auth">Discord Authentication (Login issue, roles not verified)</option>
                         <option value="api_gateway">API Gateway (General site error, slow response)</option>
@@ -844,6 +844,15 @@
         var liveDataCache = null;
         var currentRange = '1W';
 
+        // Helper to simplify status titles by removing everything after &
+        function simplifyName(name) {
+            if (!name || typeof name !== 'string') return name || '';
+            if (name.indexOf('&') !== -1) {
+                return name.split('&')[0].trim();
+            }
+            return name.trim();
+        }
+
         // 9 Real Core Subsystems (Identical across System Status & Outages Chart)
         var SUBSYSTEMS = [
             {
@@ -860,7 +869,7 @@
             },
             {
                 id: 'storage',
-                name: 'Resource Downloads & Storage',
+                name: 'Resource Downloads',
                 color: '#ef4444',
                 desc: 'Delivers resource files and zip packages to your device.'
             },
@@ -872,7 +881,7 @@
             },
             {
                 id: 'shortener_gateway',
-                name: 'Sponsored Links & Shorteners',
+                name: 'Sponsored Links',
                 color: '#ec4899',
                 desc: 'Generates and routes member sponsored download links via ShrinkEarn gateway.'
             },
@@ -978,7 +987,7 @@
 
                 html += '<div class="subsystem-item">' +
                     '<div class="subsystem-row-top">' +
-                        '<div class="subsystem-name">' + sub.name + '</div>' +
+                        '<div class="subsystem-name">' + simplifyName(sub.name) + '</div>' +
                         '<div class="subsystem-right-meta">' +
                             '<span class="subsystem-uptime-text">' + uptimeVal.toFixed(2) + '% uptime</span>' +
                             '<span class="subsystem-pill-badge ' + status + '">' +
@@ -1135,7 +1144,7 @@
                             var sev = inc.severity || 'degraded';
                             var subObj = SUBSYSTEMS.find(function(s) { return s.id === inc.subsystem; });
                             var subColor = subObj ? subObj.color : '#f59e0b';
-                            var subName = inc.subsystem_name || (subObj ? subObj.name : inc.subsystem);
+                            var subName = simplifyName(inc.subsystem_name || (subObj ? subObj.name : inc.subsystem));
                             var countStr = inc.outages_count && inc.outages_count > 1 ? ' &bull; Affected ' + inc.outages_count + ' members' : '';
 
                             incHtml += '<div class="incident-active-card visible ' + sev + '" style="border-left: 4px solid ' + subColor + '; margin-top: 14px;">' +
@@ -1233,9 +1242,9 @@
                 var opacityStyle = isFiltered ? 'opacity: 0.35;' : 'opacity: 1;';
                 var borderStyle = isActive ? 'font-weight: 600; text-decoration: underline;' : '';
 
-                html += '<div class="legend-item" style="' + opacityStyle + borderStyle + ' cursor: pointer;" onclick="toggleServiceFilter(\'' + sub.id + '\')" title="Click to isolate ' + sub.name + '">' +
+                html += '<div class="legend-item" style="' + opacityStyle + borderStyle + ' cursor: pointer;" onclick="toggleServiceFilter(\'' + sub.id + '\')" title="Click to isolate ' + simplifyName(sub.name) + '">' +
                     '<span class="legend-dot" style="background:' + sub.color + '"></span>' +
-                    '<span>' + sub.name + '</span>' +
+                    '<span>' + simplifyName(sub.name) + '</span>' +
                 '</div>';
             });
             legendEl.innerHTML = html;
@@ -1502,7 +1511,7 @@
                     var count = p.counts[sub.id] || 0;
 
                     rowsHtml += '<div class="chart-tooltip-row" style="' + (count > 0 ? 'font-weight:600;' : '') + '">' +
-                        '<span class="chart-tooltip-name" style="color:' + sub.color + '">' + sub.name + ' : </span>' +
+                        '<span class="chart-tooltip-name" style="color:' + sub.color + '">' + simplifyName(sub.name) + ' : </span>' +
                         '<span class="chart-tooltip-val" style="' + (count > 0 ? 'color:#ffffff; font-weight:700;' : '') + '">' + count + '</span>' +
                     '</div>';
 
