@@ -473,7 +473,7 @@ async function createShrinkEarnLink(env, destinationUrl) {
   return shortUrl;
 }
 
-function buildTokenLandingUrl(token, source = "shrinkearn") {
+function buildTokenLandingUrl(token, source = "rewarded_video") {
   const landingUrl = new URL("https://dl.zyrexediting.xyz/");
   landingUrl.searchParams.set("token", token);
   landingUrl.searchParams.set("src", source);
@@ -2634,6 +2634,7 @@ export default {
                                path.startsWith("/api/notifications") ||
                                path.startsWith("/api/guild/") ||
                                path.startsWith("/api/discord/") ||
+                               path.startsWith("/api/adserver/") ||
                                path.startsWith("/api/downloads/") ||
                                path.startsWith("/api/avatar/") || 
                                path.startsWith("/api/banner/") ||
@@ -3437,20 +3438,20 @@ async function storeAndProxyImage(env, imageUrl) {
           }
         }
 
-        // Subsystem 9: Sponsored Links & Shortener Gateway
+        // Subsystem 9: Sponsored Delivery & Rewarded Video Gateway
         let shortenerHealth = { status: "operational", latency: 0, error: null };
         const shortenerStart = Date.now();
         try {
           const controller = new AbortController();
           const tId = setTimeout(() => controller.abort(), 2500);
-          const sRes = await fetch("https://shrinkearn.com", {
+          const sRes = await fetch("https://adserver.unlimitedtextads.com/api/serve.php?slot=07d84c02aa3cfe1c600452085c30429b", {
             method: "HEAD",
             headers: { "User-Agent": "Mozilla/5.0 (compatible; ZyrexStatusProbe/1.0)" },
             signal: controller.signal
           });
           clearTimeout(tId);
           shortenerHealth.latency = Date.now() - shortenerStart;
-          if (sRes.ok || sRes.status === 301 || sRes.status === 302 || sRes.status === 403) {
+          if (sRes.ok || sRes.status === 200 || sRes.status === 204 || sRes.status === 301 || sRes.status === 302 || sRes.status === 403) {
             shortenerHealth.status = shortenerHealth.latency > 2500 ? "degraded" : "operational";
           } else {
             shortenerHealth.status = "degraded";
@@ -3586,8 +3587,8 @@ async function storeAndProxyImage(env, imageUrl) {
           },
           {
             id: "shortener_gateway",
-            name: "Sponsored Links",
-            description: "Generates and routes member sponsored download links via ShrinkEarn gateway.",
+            name: "Rewarded Video & Sponsored Delivery",
+            description: "Delivers on-site sponsor video rewards and unlocks member downloads.",
             status: shortenerHealth.status,
             latency: shortenerHealth.latency > 0 ? `${shortenerHealth.latency}ms` : "N/A",
             uptime_pct: shortenerHealth.status === "degraded" ? "98.75%" : "99.94%",
@@ -4122,6 +4123,41 @@ async function storeAndProxyImage(env, imageUrl) {
         });
       }
 
+      // UNLIMITED TEXT ADS - REWARDED VIDEO PROXY
+      if (path === "/api/adserver/video") {
+        const slot = url.searchParams.get("slot") || "07d84c02aa3cfe1c600452085c30429b";
+        const pid = url.searchParams.get("pid") || Date.now().toString(36) + Math.random().toString(36).slice(2);
+        try {
+          const resp = await fetch(`https://adserver.unlimitedtextads.com/api/serve.php?slot=${encodeURIComponent(slot)}&pid=${encodeURIComponent(pid)}`, {
+            headers: {
+              "User-Agent": request.headers.get("User-Agent") || "ZyrexWeb/1.0",
+              "Accept": "application/json"
+            }
+          });
+          if (resp.ok) {
+            const data = await resp.json();
+            return json(data);
+          }
+          return json({ status: "no_ad" });
+        } catch(e) {
+          return json({ status: "error", message: e.message });
+        }
+      }
+
+      // UNLIMITED TEXT ADS - CLICK TRACKING PROXY
+      if (path === "/api/adserver/click" && request.method === "POST") {
+        const body = await request.json().catch(() => ({}));
+        const imp = body.imp || url.searchParams.get("imp");
+        if (imp) {
+          try {
+            await fetch(`https://adserver.unlimitedtextads.com/api/click.php?imp=${encodeURIComponent(imp)}`, {
+              method: "POST"
+            });
+          } catch(e) {}
+        }
+        return json({ status: "ok" });
+      }
+
       // VERIFY COMPLETE - Proxy to Bot (one-time token verification)
       if (path === "/api/verify/complete" && request.method === "POST") {
         const session = parseSession(request.headers.get("Cookie"), request);
@@ -4461,12 +4497,14 @@ async function storeAndProxyImage(env, imageUrl) {
         // Check if token was already used (skip R2 on peek for speed — download endpoint enforces)
         const fingerprint = hashToken(token);
         if (await checkTokenUsed(env, fingerprint)) return json({ success: false, error: "This token has already been used. Generate a new download token.", code: "TOKEN_USED" }, 403);
+        const hasAdFree = data.discord_id ? await checkAdFreeRole(data.discord_id, env) : false;
         return json({
           success: true,
           token_id: fingerprint,
           product_id: data.product_id,
           file_path: data.file_path,
           discord_id: data.discord_id,
+          ad_free: hasAdFree,
           selected_files: Array.isArray(data.selected_files) ? data.selected_files : [],
           expires_in: Math.max(0, Math.floor((data.exp - Date.now()) / 1000)),
         });
@@ -4551,41 +4589,11 @@ async function storeAndProxyImage(env, imageUrl) {
         const bypassAdsForCountry = country === "BG";
         const destinationUrl = buildTokenLandingUrl(
           token,
-          isAdFree ? "ad-free" : bypassAdsForCountry ? "geo-bypass" : "shrinkearn"
+          isAdFree ? "ad-free" : bypassAdsForCountry ? "geo-bypass" : "rewarded_video"
         );
 
-        if (isAdFree || bypassAdsForCountry) {
-          adUrl = destinationUrl;
-        } else {
-          try {
-            adUrl = await createShrinkEarnLink(env, destinationUrl);
-          } catch (e) {
-            console.error("ShrinkEarn link error:", e.message);
-            await recordTelemetryEvent(env, {
-              subsystem: "shortener_gateway",
-              title: "Sponsored Link Gateway Failure",
-              message: "Member encountered shortener gateway error: " + (e.message || "Upstream failure"),
-              severity: "degraded",
-              count: 1
-            });
-            try {
-              fetch(`${BOT_API}/api/status/log-incident`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  subsystem: "shortener_gateway",
-                  subsystem_name: "Sponsored Links",
-                  title: "Sponsored Link Gateway Failure",
-                  message: `ShrinkEarn generation failed: ${e.message}`,
-                  user: session ? session.username : "Guest",
-                  severity: "degraded"
-                })
-              }).catch(() => {});
-            } catch (_) {}
-            // Graceful fallback to destinationUrl so user can still download
-            adUrl = destinationUrl;
-          }
-        }
+        // Direct destination: Rewarded video is hosted on-site, no third-party URL shortener
+        adUrl = destinationUrl;
 
         if (shouldRedirect) {
           return redirect(adUrl);
@@ -4596,7 +4604,7 @@ async function storeAndProxyImage(env, imageUrl) {
           ad_url: adUrl,
           short_url: adUrl,
           url: adUrl,
-          provider: (isAdFree || bypassAdsForCountry) ? "direct" : "shrinkearn",
+          provider: (isAdFree || bypassAdsForCountry) ? "direct" : "rewarded_video",
           ad_free: isAdFree,
           expires_in: TOKEN_EXPIRY,
           file_path: r2Prefix,

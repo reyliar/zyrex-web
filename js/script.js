@@ -1771,8 +1771,265 @@ window.showToast = function(title, message, type = 'success') {
     } else {
         setTimeout(window.initUnlimitedTextAds, 100);
     }
-    // Re-check for dynamically inserted ad slots after content loads
-    setTimeout(window.initUnlimitedTextAds, 1500);
+    // ==========================================
+    // REWARDED VIDEO AD SYSTEM (UNLIMITED TEXT ADS)
+    // ==========================================
+    const VIDEO_SLOT = '07d84c02aa3cfe1c600452085c30429b';
+    let currentRwCallback = null;
+    let currentRwCancel = null;
+    let rwTimerInterval = null;
+    let rwImpressionToken = null;
+
+    function ensureRwModal() {
+        let modal = document.getElementById('zyrexRwModal');
+        if (modal) return modal;
+
+        modal = document.createElement('div');
+        modal.id = 'zyrexRwModal';
+        modal.className = 'zyrex-rw-modal';
+        modal.innerHTML = `
+            <div class="zyrex-rw-backdrop" onclick="window.closeRewardedVideoModal()"></div>
+            <div class="zyrex-rw-card">
+                <div class="zyrex-rw-header">
+                    <div class="zyrex-rw-title-group">
+                        <span class="zyrex-rw-badge"><i class="fas fa-play"></i> Sponsor Video</span>
+                        <span class="zyrex-rw-title">Watch to Unlock Download</span>
+                    </div>
+                    <button type="button" class="zyrex-rw-close" onclick="window.closeRewardedVideoModal()" title="Close">&times;</button>
+                </div>
+                
+                <div class="zyrex-rw-body">
+                    <div class="zyrex-rw-video-wrap" id="rwVideoWrap">
+                        <video id="rwVideoElement" playsinline preload="auto" style="width:100%;height:100%;object-fit:contain;background:#000"></video>
+                        <div id="rwIframeContainer" style="display:none;width:100%;height:100%"></div>
+
+                        <div class="zyrex-rw-overlay-top">
+                            <span class="zyrex-rw-timer-badge" id="rwTimerBadge">
+                                <i class="fas fa-hourglass-half fa-spin"></i> Reward in <strong id="rwCountdownNum">10</strong>s
+                            </span>
+                            <button type="button" class="zyrex-rw-mute-btn" id="rwMuteBtn" onclick="window.toggleRwMute()" title="Mute/Unmute">
+                                <i class="fas fa-volume-high" id="rwMuteIcon"></i>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="zyrex-rw-progress-wrap">
+                        <div class="zyrex-rw-progress-bar" id="rwProgressBar" style="width: 0%"></div>
+                    </div>
+
+                    <div class="zyrex-rw-footer">
+                        <div class="zyrex-rw-status" id="rwStatusText">
+                            <i class="fas fa-circle-info"></i> Please watch this quick sponsor video to unlock your download.
+                        </div>
+                        <div class="zyrex-rw-actions">
+                            <a href="#" target="_blank" rel="noopener nofollow" class="zyrex-rw-sponsor-btn" id="rwSponsorLink" style="display:none" onclick="window.trackRwClick()">
+                                <i class="fas fa-arrow-up-right-from-square"></i> Visit Sponsor
+                            </a>
+                            <button type="button" class="zyrex-rw-claim-btn" id="rwClaimBtn" style="display:none" onclick="window.claimRewardedDownload()">
+                                <i class="fas fa-circle-check"></i> Unlock Download
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        return modal;
+    }
+
+    window.toggleRwMute = function() {
+        const video = document.getElementById('rwVideoElement');
+        const icon = document.getElementById('rwMuteIcon');
+        if (!video || !icon) return;
+        video.muted = !video.muted;
+        icon.className = video.muted ? 'fas fa-volume-xmark' : 'fas fa-volume-high';
+    };
+
+    window.trackRwClick = function() {
+        if (!rwImpressionToken) return;
+        fetch('/api/adserver/click', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ imp: rwImpressionToken })
+        }).catch(() => {});
+    };
+
+    window.closeRewardedVideoModal = function() {
+        const modal = document.getElementById('zyrexRwModal');
+        const video = document.getElementById('rwVideoElement');
+        const claimBtn = document.getElementById('rwClaimBtn');
+
+        // If reward is already claimed or available
+        if (claimBtn && claimBtn.style.display !== 'none') {
+            window.claimRewardedDownload();
+            return;
+        }
+
+        if (video) {
+            video.pause();
+            video.src = '';
+        }
+        if (rwTimerInterval) {
+            clearInterval(rwTimerInterval);
+            rwTimerInterval = null;
+        }
+        if (modal) modal.classList.remove('active');
+        if (currentRwCancel) currentRwCancel();
+    };
+
+    window.claimRewardedDownload = function() {
+        const modal = document.getElementById('zyrexRwModal');
+        const video = document.getElementById('rwVideoElement');
+        if (video) {
+            video.pause();
+            video.src = '';
+        }
+        if (rwTimerInterval) {
+            clearInterval(rwTimerInterval);
+            rwTimerInterval = null;
+        }
+        if (modal) modal.classList.remove('active');
+        if (currentRwCallback) {
+            const cb = currentRwCallback;
+            currentRwCallback = null;
+            cb();
+        }
+    };
+
+    window.showRewardedVideoAd = async function(options) {
+        options = options || {};
+        const onReward = options.onReward || function() {};
+        const onCancel = options.onCancel || function() {};
+
+        // Ad-free bypass
+        if (window.isAdFreeUser || (window.currentSession && window.currentSession.adFree)) {
+            onReward();
+            return;
+        }
+
+        currentRwCallback = onReward;
+        currentRwCancel = onCancel;
+
+        const modal = ensureRwModal();
+        const video = document.getElementById('rwVideoElement');
+        const iframeBox = document.getElementById('rwIframeContainer');
+        const timerBadge = document.getElementById('rwTimerBadge');
+        const countdownNum = document.getElementById('rwCountdownNum');
+        const progressBar = document.getElementById('rwProgressBar');
+        const statusText = document.getElementById('rwStatusText');
+        const sponsorLink = document.getElementById('rwSponsorLink');
+        const claimBtn = document.getElementById('rwClaimBtn');
+
+        // Reset UI
+        modal.classList.add('active');
+        timerBadge.className = 'zyrex-rw-timer-badge';
+        timerBadge.innerHTML = '<i class="fas fa-hourglass-half fa-spin"></i> Reward in <strong id="rwCountdownNum">10</strong>s';
+        progressBar.style.width = '0%';
+        progressBar.className = 'zyrex-rw-progress-bar';
+        claimBtn.style.display = 'none';
+        sponsorLink.style.display = 'none';
+        statusText.innerHTML = '<i class="fas fa-circle-info"></i> Loading sponsor video...';
+        video.style.display = 'block';
+        iframeBox.style.display = 'none';
+        iframeBox.innerHTML = '';
+        rwImpressionToken = null;
+
+        let rewardGranted = false;
+        function grantReward() {
+            if (rewardGranted) return;
+            rewardGranted = true;
+            if (rwTimerInterval) clearInterval(rwTimerInterval);
+            timerBadge.className = 'zyrex-rw-timer-badge completed';
+            timerBadge.innerHTML = '<i class="fas fa-circle-check"></i> Reward Ready';
+            progressBar.style.width = '100%';
+            progressBar.className = 'zyrex-rw-progress-bar completed';
+            statusText.innerHTML = '<i class="fas fa-circle-check" style="color:#00e676"></i> Reward granted! Download unlocked.';
+            claimBtn.style.display = 'inline-flex';
+
+            // Auto-claim after 1.2s for seamless UX
+            setTimeout(function() {
+                if (modal.classList.contains('active')) {
+                    window.claimRewardedDownload();
+                }
+            }, 1200);
+        }
+
+        try {
+            const resp = await fetch(`/api/adserver/video?slot=${VIDEO_SLOT}&pid=${encodeURIComponent(window.__adServerPageId || Date.now().toString(36))}`);
+            const data = await resp.json().catch(() => ({}));
+
+            if (data.status === 'ok' && data.ad && data.ad.media && data.ad.media.url) {
+                const ad = data.ad;
+                rwImpressionToken = data.impression_token;
+                if (ad.destination_url) {
+                    sponsorLink.href = ad.destination_url;
+                    sponsorLink.style.display = 'inline-flex';
+                }
+
+                statusText.innerHTML = '<i class="fas fa-play" style="color:var(--cherry-neon)"></i> Watching sponsor video...';
+                video.src = ad.media.url;
+                video.muted = false; // try unmuted with user gesture
+
+                let targetDuration = 10;
+                video.onloadedmetadata = function() {
+                    if (video.duration && !isNaN(video.duration)) {
+                        targetDuration = Math.min(Math.max(6, Math.round(video.duration)), 15);
+                    }
+                };
+
+                const playPromise = video.play();
+                if (playPromise !== undefined) {
+                    playPromise.catch(() => {
+                        // Browser autoplay policy required muted start
+                        video.muted = true;
+                        const icon = document.getElementById('rwMuteIcon');
+                        if (icon) icon.className = 'fas fa-volume-xmark';
+                        video.play().catch(() => {});
+                    });
+                }
+
+                video.ontimeupdate = function() {
+                    if (rewardGranted) return;
+                    const cur = video.currentTime;
+                    const pct = Math.min(100, (cur / targetDuration) * 100);
+                    progressBar.style.width = `${pct}%`;
+
+                    const rem = Math.max(0, Math.ceil(targetDuration - cur));
+                    const numEl = document.getElementById('rwCountdownNum');
+                    if (numEl) numEl.textContent = rem;
+
+                    if (cur >= targetDuration) {
+                        grantReward();
+                    }
+                };
+
+                video.onended = function() {
+                    grantReward();
+                };
+
+                video.onerror = function() {
+                    console.warn('Video failed to play, falling back to instant reward');
+                    setTimeout(grantReward, 2500);
+                };
+            } else {
+                // No active video ad in inventory - gracefully complete after short timer
+                statusText.innerHTML = '<i class="fas fa-circle-check" style="color:#00e676"></i> Verification complete! Unlocking download...';
+                let rem = 3;
+                rwTimerInterval = setInterval(() => {
+                    rem--;
+                    const numEl = document.getElementById('rwCountdownNum');
+                    if (numEl) numEl.textContent = rem;
+                    progressBar.style.width = `${((3 - rem) / 3) * 100}%`;
+                    if (rem <= 0) {
+                        grantReward();
+                    }
+                }, 1000);
+            }
+        } catch(e) {
+            console.warn('AdServer error, granting download reward:', e);
+            setTimeout(grantReward, 2000);
+        }
+    };
 })();
 
 console.log('Zyrex - Website loaded successfully!');

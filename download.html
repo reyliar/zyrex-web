@@ -562,6 +562,9 @@
         const params = new URLSearchParams(window.location.search);
         const token = params.get('token');
         const productId = params.get('id');
+        if (params.get('src') === 'ad-free' || params.get('src') === 'geo-bypass') {
+            window.isAdFreeUser = true;
+        }
         let downloadToken = null;
         let downloadTokenId = null;
         let product = null;
@@ -682,6 +685,7 @@
                 downloadTokenId = validateData.token_id || null;
                 resolvedFilePath = validateData.file_path || '';
                 initialSelectedFiles = Array.isArray(validateData.selected_files) ? validateData.selected_files : [];
+                if (validateData.ad_free) window.isAdFreeUser = true;
                 var expiresIn = validateData.expires_in || 0;
                 if (await loadProduct(validateData.product_id) === false) return;
                 if (!product) {
@@ -711,6 +715,7 @@
             try {
                 var resp = await fetch('/api/downloads/check-access', { credentials: 'include' });
                 var data = await resp.json();
+                if (data.ad_free) window.isAdFreeUser = true;
                 if (data.can_download) {
                     if (status) { status.className = 'verify-status verified'; status.innerHTML = '<i class="fas fa-circle-check"></i> Verified!'; }
                     // Reload page after short delay to show success
@@ -985,7 +990,7 @@
                 html += '<div class="countdown-row" id="countdownRow"><i class="fas fa-hourglass-half"></i> <span>Expires in</span> <span class="timer" id="countdownTimer">--:--</span></div>';
                 html += '<div class="adblock-warning-notice" style="margin-top:14px;margin-bottom:0">';
                 html += '<i class="fas fa-triangle-exclamation"></i>';
-                html += '<span>Using an ad blocker may break or interfere with sponsored links. If you experience issues, please temporarily disable your ad blocker.</span>';
+                html += '<span>Watching a short sponsor video unlocks your download. Using an ad blocker may interfere with video playback. If you experience issues, please temporarily disable your ad blocker.</span>';
                 html += '</div>';
                 html += '</div>';
             }
@@ -1487,6 +1492,22 @@
             const btn = document.getElementById('dlBtn');
             if (!btn) return;
             
+            const unlockKey = 'zyrex_rw_unlocked_' + (downloadToken || productId || (product && product.id) || 'active');
+            const isUnlocked = sessionStorage.getItem(unlockKey) === '1' || window.isAdFreeUser || (window.currentSession && window.currentSession.adFree);
+
+            if (!isUnlocked && typeof window.showRewardedVideoAd === 'function') {
+                window.showRewardedVideoAd({
+                    onReward: function() {
+                        sessionStorage.setItem(unlockKey, '1');
+                        triggerDownload();
+                    },
+                    onCancel: function() {
+                        resetDownloadButton(btn);
+                    }
+                });
+                return;
+            }
+
             const selectedFiles = getSelectedFiles();
             const fileParam = Array.isArray(selectedFiles) && selectedFiles.length
                 ? selectedFiles.map(function(name) { return '&file=' + encodeURIComponent(name); }).join('')
@@ -1539,7 +1560,6 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing...';
             
-            const targetTab = window.open('about:blank', '_blank');
             const requestUrl = buildTokenRequestUrl(Array.isArray(selectedFiles) ? selectedFiles : [], false);
 
             try {
@@ -1547,7 +1567,6 @@
                 const data = await readApiJson(resp);
 
                 if (!resp.ok || !data.success) {
-                    if (targetTab) targetTab.close();
                     resetDownloadButton(btn);
                     if (resp.status === 401) {
                         window.location.href = '/api/login?redirect=' + encodeURIComponent(location.pathname + location.search);
@@ -1560,24 +1579,13 @@
                 }
 
                 const targetUrl = getSponsoredRedirectUrl(data);
-                if (targetTab && targetUrl) {
-                    targetTab.location.href = targetUrl;
-                    btn.innerHTML = '<i class="fas fa-up-right-from-square"></i> Tab Opened...';
-                    const checkTimer = setInterval(function() {
-                        if (!targetTab || targetTab.closed) {
-                            clearInterval(checkTimer);
-                            resetDownloadButton(btn);
-                        }
-                    }, 500);
-                } else if (targetUrl) {
+                if (targetUrl) {
                     window.location.href = targetUrl;
                 } else {
-                    if (targetTab) targetTab.close();
                     resetDownloadButton(btn);
                     alert('No valid link received');
                 }
             } catch (e) {
-                if (targetTab) targetTab.close();
                 console.error('Download error:', e);
                 alert('Network error. Please try again.');
                 resetDownloadButton(btn);
@@ -1585,12 +1593,52 @@
         }
 
         async function triggerFileDownload(filePath, btn) {
-            if (!productId) return;
-            const origHtml = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            if (!productId && !downloadToken && !product) return;
+            const unlockKey = 'zyrex_rw_unlocked_' + (downloadToken || productId || (product && product.id) || 'active');
+            const isUnlocked = sessionStorage.getItem(unlockKey) === '1' || window.isAdFreeUser || (window.currentSession && window.currentSession.adFree);
 
-            const targetTab = window.open('about:blank', '_blank');
+            const origHtml = btn ? btn.innerHTML : '';
+            if (!isUnlocked && typeof window.showRewardedVideoAd === 'function') {
+                window.showRewardedVideoAd({
+                    onReward: function() {
+                        sessionStorage.setItem(unlockKey, '1');
+                        triggerFileDownload(filePath, btn);
+                    },
+                    onCancel: function() {
+                        if (btn) {
+                            btn.disabled = false;
+                            btn.innerHTML = origHtml;
+                        }
+                    }
+                });
+                return;
+            }
+
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            }
+
+            // Direct download with existing valid token if available
+            if (downloadToken) {
+                try {
+                    const downloadUrl = '/api/downloads/file?token=' + encodeURIComponent(downloadToken) + '&file=' + encodeURIComponent(filePath);
+                    const a = document.createElement('a');
+                    a.href = downloadUrl;
+                    a.download = filePath.split('/').pop() || 'file';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = origHtml;
+                    }
+                    return;
+                } catch(e) {
+                    console.warn('Direct file download fallback:', e);
+                }
+            }
+
             const requestUrl = buildTokenRequestUrl([filePath], false);
 
             try {
@@ -1598,39 +1646,33 @@
                 const data = await readApiJson(resp);
 
                 if (!resp.ok || !data.success) {
-                    if (targetTab) targetTab.close();
-                    btn.disabled = false;
-                    btn.innerHTML = origHtml;
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = origHtml;
+                    }
                     alert((data && data.error) || 'File download link failed');
                     return;
                 }
 
                 const targetUrl = getSponsoredRedirectUrl(data);
-                if (targetTab && targetUrl) {
-                    targetTab.location.href = targetUrl;
-                    const checkTimer = setInterval(function() {
-                        if (!targetTab || targetTab.closed) {
-                            clearInterval(checkTimer);
-                            btn.disabled = false;
-                            btn.innerHTML = origHtml;
-                        }
-                    }, 500);
-                } else if (targetUrl) {
+                if (targetUrl) {
                     window.location.href = targetUrl;
                 } else {
-                    if (targetTab) targetTab.close();
+                    if (btn) {
+                        btn.disabled = false;
+                        btn.innerHTML = origHtml;
+                    }
+                }
+            } catch (e) {
+                console.error('File download error:', e);
+                alert('Network error. Please try again.');
+                if (btn) {
                     btn.disabled = false;
                     btn.innerHTML = origHtml;
                 }
-            } catch (e) {
-                if (targetTab) targetTab.close();
-                console.error('File download error:', e);
-                alert('Network error. Please try again.');
-                btn.disabled = false;
-                btn.innerHTML = origHtml;
             }
         }
     </script>
-    <script src="/js/script.js?v=48"></script>
+    <script src="/js/script.js?v=49"></script>
 </body>
 </html>
