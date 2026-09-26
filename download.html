@@ -457,6 +457,16 @@
         .folder-cb { appearance: none; -webkit-appearance: none; width: 14px; height: 14px; border: 1.5px solid rgba(255,255,255,.12); border-radius: 3px; background: transparent; cursor: pointer; flex-shrink: 0; position: relative; transition: .15s; margin-right: 4px; }
         .folder-cb:checked { background: var(--cherry); border-color: var(--cherry); }
         .folder-cb:checked::after { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; font-size: .5rem; color: #fff; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); }
+
+        /* UnlimitedTextAds Banner Unit */
+        .zyrex-ad-unit { display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 20px auto 0; padding: 12px 14px 14px; background: rgba(18, 10, 22, 0.75); border: 1px solid rgba(255, 43, 82, 0.18); border-radius: 20px; box-shadow: 0 10px 32px rgba(0,0,0,0.5); max-width: 100%; width: fit-content; box-sizing: border-box; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); transition: all .28s; }
+        .zyrex-ad-unit:hover { border-color: rgba(255, 43, 82, 0.38); box-shadow: 0 14px 40px rgba(255, 43, 82, 0.15); }
+        .zyrex-ad-header { width: 100%; max-width: 300px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding: 0 2px; }
+        .zyrex-ad-label { font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: rgba(255, 255, 255, 0.5); display: inline-flex; align-items: center; gap: 5px; }
+        .zyrex-ad-label i { color: var(--cherry); font-size: 0.72rem; }
+        .zyrex-ad-badge { font-size: 0.62rem; font-weight: 600; color: rgba(255, 255, 255, 0.35); text-transform: uppercase; }
+        .zyrex-ad-container { width: 300px; height: 250px; max-width: 100%; display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,0.35); border-radius: 12px; overflow: hidden; }
+        .zyrex-ad-container iframe, .zyrex-ad-slot iframe { width: 300px; height: 250px; max-width: 100%; border: 0 !important; display: block !important; border-radius: 12px; }
     </style>
 </head>
 <body>
@@ -980,12 +990,22 @@
                 html += '</div>';
             }
 
+            // Sponsored Ad Banner (UnlimitedTextAds)
+            if (!window.isAdFreeUser) {
+                html += '<div class="zyrex-ad-unit" style="margin:20px auto 0;">';
+                html += '<div class="zyrex-ad-header"><span class="zyrex-ad-label"><i class="fas fa-rectangle-ad"></i> Sponsored Partner</span><span class="zyrex-ad-badge">Ad</span></div>';
+                html += '<div class="zyrex-ad-container"><div class="zyrex-ad-slot" data-slot="399f9a1468d78f0b359d13b1b78da21a" data-width="300" data-height="250"></div></div>';
+                html += '</div>';
+            }
+
             // Back link
             html += '<a href="https://zyrexediting.xyz/resources" class="back-link"><i class="fas fa-arrow-left"></i> Back to Resources</a>';
 
             document.getElementById('st-main').innerHTML = html;
+            if (window.initUnlimitedTextAds) window.initUnlimitedTextAds();
             setTimeout(function() {
                 updateDownloadCount();
+                if (window.initUnlimitedTextAds) window.initUnlimitedTextAds();
             }, 100);
             setTimeout(function() {
                 applyInitialSelectedFiles();
@@ -1611,5 +1631,6 @@
             }
         }
     </script>
+    <script src="/js/script.js?v=48"></script>
 </body>
 </html>
