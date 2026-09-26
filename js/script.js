@@ -1000,13 +1000,13 @@ window.showToast = function(title, message, type = 'success') {
                         <div class="notif-panel-title-group">
                             <span class="notif-panel-pill-icon"><i class="fas fa-bell"></i></span>
                             <span class="notif-panel-heading">Notifications</span>
-                            <span class="notif-bubble-badge" id="panelNotifBadge" style="position:static;display:none;margin-left:4px">0</span>
+                            <span class="notif-bubble-badge" id="panelNotifBadge" style="position:static;display:none;margin-left:6px">0</span>
                         </div>
                         <div class="notif-panel-actions">
                             <button type="button" class="notif-header-act-btn" onclick="window.toggleDNDQuick()" title="Do Not Disturb" id="btnQuickDND"><i class="fas fa-moon"></i></button>
                             <a href="/settings?tab=general" class="notif-header-act-btn" title="Notification Settings"><i class="fas fa-cog"></i></a>
                             <button type="button" class="notif-header-act-btn" onclick="window.markAllNotifsRead()" title="Mark all as read"><i class="fas fa-check-double"></i></button>
-                            <button type="button" class="notif-header-act-btn" onclick="window.clearAllNotifs()" title="Clear all"><i class="fas fa-trash-can"></i></button>
+                            <button type="button" class="notif-header-act-btn" onclick="window.clearAllNotifs()" title="Clear all notifications"><i class="fas fa-trash-can"></i></button>
                             <button type="button" class="notif-header-act-btn close-btn" onclick="window.toggleGlobalNotifPanel(event)" title="Close"><i class="fas fa-times"></i></button>
                         </div>
                     </div>
@@ -1014,7 +1014,7 @@ window.showToast = function(title, message, type = 'success') {
                     <div class="notif-panel-footer" id="globalNotifFooter" style="display:none">
                         <span id="notifFooterSummary" class="notif-footer-summary"></span>
                         <div class="notif-footer-actions">
-                            <button type="button" class="notif-footer-btn" onclick="window.markAllNotifsRead()"><i class="fas fa-check-double"></i> Mark read</button>
+                            <button type="button" class="notif-footer-btn" onclick="window.markAllNotifsRead()"><i class="fas fa-check-double"></i> Mark all read</button>
                             <button type="button" class="notif-footer-btn clear" onclick="window.clearAllNotifs()"><i class="fas fa-trash-can"></i> Clear all</button>
                         </div>
                     </div>
@@ -1220,7 +1220,7 @@ window.showToast = function(title, message, type = 'success') {
                         <i class="fas fa-moon"></i>
                     </div>
                     <div class="notif-empty-title">Do Not Disturb is Active</div>
-                    <div class="notif-empty-desc">Live notifications and badges are temporarily muted.</div>
+                    <div class="notif-empty-desc">Live notifications and badges are temporarily silenced.</div>
                     <button type="button" class="notif-footer-btn" onclick="window.toggleDNDQuick()" style="margin-top:14px">
                         <i class="fas fa-bell"></i> Turn Off DND
                     </button>
@@ -1251,7 +1251,7 @@ window.showToast = function(title, message, type = 'success') {
             badge1.style.display = unreadCount > 0 ? 'flex' : 'none';
         }
         if (badge2) {
-            badge2.textContent = unreadCount;
+            badge2.textContent = unreadCount > 0 ? `${unreadCount} New` : '';
             badge2.style.display = unreadCount > 0 ? 'inline-flex' : 'none';
         }
 
@@ -1262,8 +1262,8 @@ window.showToast = function(title, message, type = 'success') {
                     <div class="notif-empty-icon-wrap">
                         <i class="fas fa-bell-slash"></i>
                     </div>
-                    <div class="notif-empty-title">No New Notifications</div>
-                    <div class="notif-empty-desc">You are completely up to date!</div>
+                    <div class="notif-empty-title">No Notifications</div>
+                    <div class="notif-empty-desc">You're all caught up! No new notifications right now.</div>
                 </div>
             `;
             return;
@@ -1282,52 +1282,65 @@ window.showToast = function(title, message, type = 'success') {
             const timeAgo = formatNotifTime(n.created_at);
             const itemLink = n.link || '';
             const hasLink = itemLink && itemLink !== '#' && itemLink !== 'javascript:void(0)';
+            const categoryName = (n.category || 'ZYREX').toUpperCase();
             return `
                 <div class="notif-item ${isUnread ? 'unread' : 'read'} ${hasLink ? 'has-link' : ''}" 
                      data-id="${n.id}" 
                      onclick="window.handleNotifCardClick(event, '${escapeHtmlNotif(itemLink)}', '${n.id}')">
-                    ${isUnread ? '<span class="notif-unread-dot" title="Unread / Okunmadı"></span>' : ''}
-                    <div class="notif-icon-circle" style="background:${n.bg || 'rgba(255,43,82,0.14)'};color:${n.color || 'var(--cherry-neon)'}">
-                        <i class="${iconClass}"></i>
-                    </div>
-                    <div class="notif-content-wrap">
-                        <div class="notif-title-row">
-                            <span class="notif-title">${parseNotifMarkdown(n.title)}</span>
+                    <div class="notif-card-header">
+                        <div class="notif-card-source">
+                            <div class="notif-app-icon" style="background:${n.bg || 'rgba(255,43,82,0.18)'};color:${n.color || 'var(--cherry-neon)'}">
+                                <i class="${iconClass}"></i>
+                            </div>
+                            <span class="notif-app-name">${escapeHtmlNotif(categoryName)}</span>
+                            <span class="notif-bullet">·</span>
                             <span class="notif-time">${timeAgo}</span>
                         </div>
+                        <div class="notif-card-actions">
+                            ${isUnread ? `
+                                <button type="button" class="notif-ios-btn mark-read" onclick="window.markSingleNotifRead(event, '${n.id}')" title="Mark as read" aria-label="Mark as read">
+                                    <i class="fas fa-check"></i>
+                                </button>
+                            ` : `
+                                <button type="button" class="notif-ios-btn is-read" onclick="window.toggleSingleNotifRead(event, '${n.id}')" title="Mark as unread" aria-label="Mark as unread">
+                                    <i class="fas fa-check-double"></i>
+                                </button>
+                            `}
+                            <button type="button" class="notif-ios-btn dismiss" onclick="window.clearSingleNotif(event, '${n.id}')" title="Dismiss" aria-label="Dismiss">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="notif-card-body">
+                        <div class="notif-title">${parseNotifMarkdown(n.title)}</div>
                         <div class="notif-desc">${parseNotifMarkdown(n.desc)}</div>
                     </div>
-                    <div class="notif-item-actions">
-                        ${isUnread ? `
-                            <button type="button" class="notif-item-act-btn mark-read" onclick="window.markSingleNotifRead(event, '${n.id}')" title="Görüldü olarak işaretle">
-                                <i class="fas fa-check"></i>
-                            </button>
-                        ` : `
-                            <button type="button" class="notif-item-act-btn is-read" onclick="window.toggleSingleNotifRead(event, '${n.id}')" title="Görüldü (Okunmadı olarak değiştir)">
-                                <i class="fas fa-check-double"></i>
-                            </button>
-                        `}
-                        <button type="button" class="notif-item-act-btn dismiss" onclick="window.clearSingleNotif(event, '${n.id}')" title="Bildirimi Kaldır">
-                            <i class="fas fa-trash-can"></i>
-                        </button>
-                    </div>
+                    ${hasLink ? `
+                        <div class="notif-card-footer-link">
+                            <span>Open</span>
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    ` : ''}
                 </div>
             `;
         }).join('');
     }
 
     function formatNotifTime(isoDate) {
-        if (!isoDate) return 'Just now';
+        if (!isoDate) return 'now';
         try {
             const date = new Date(isoDate.endsWith('Z') ? isoDate : isoDate + 'Z');
             const sec = Math.floor((new Date() - date) / 1000);
-            if (isNaN(sec) || sec < 40) return 'Just now';
+            if (isNaN(sec) || sec < 45) return 'now';
             if (sec < 60) return `${sec}s ago`;
             const min = Math.floor(sec / 60);
             if (min < 60) return `${min}m ago`;
             const hrs = Math.floor(min / 60);
             if (hrs < 24) return `${hrs}h ago`;
-            return `${Math.floor(hrs / 24)}d ago`;
+            const days = Math.floor(hrs / 24);
+            if (days === 1) return 'Yesterday';
+            if (days < 7) return `${days}d ago`;
+            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         } catch(e) {
             return 'Recently';
         }
@@ -1341,7 +1354,7 @@ window.showToast = function(title, message, type = 'success') {
     window.handleNotifCardClick = function(e, link, id) {
         if (!e) return;
         // Don't trigger card navigation if clicked inside an interactive element
-        if (e.target.closest('a, button, input, select, textarea, .notif-item-act-btn, .notif-spoiler, .notif-inline-link')) {
+        if (e.target.closest('a, button, input, select, textarea, .notif-ios-btn, .notif-item-act-btn, .notif-spoiler, .notif-inline-link')) {
             return;
         }
         window.markNotifRead(id);
