@@ -979,6 +979,7 @@ window.showToast = function(title, message, type = 'success') {
     }
 
     function setupHub() {
+        if (window.location.pathname.startsWith('/download') || window.location.hostname.startsWith('dl.') || document.getElementById('dlBtn')) return;
         if (document.getElementById('globalFloatingHub')) return;
         if (!document.body) {
             setTimeout(setupHub, 50);
@@ -1696,80 +1697,25 @@ window.showToast = function(title, message, type = 'success') {
 })();
 
 // ==========================================
-// UNLIMITED TEXT ADS - GLOBAL ENGINE
+// ==========================================
+// UNLIMITED TEXT ADS - REWARDED VIDEO ONLY
+// (Partnered banner ads deactivated per request)
 // ==========================================
 (function() {
-    const DEFAULT_SLOT = '399f9a1468d78f0b359d13b1b78da21a';
-    const AD_ORIGIN = 'https://adserver.unlimitedtextads.com';
-
-    if (!window.__adServerPageId) {
-        window.__adServerPageId = Date.now().toString(36) + Math.random().toString(36).slice(2);
-    }
-
-    function renderAdServerSlot(el) {
-        if (!el || el.dataset.adInitialized === 'true') return;
-        el.dataset.adInitialized = 'true';
-
-        // Check if user has ad-free status
-        if (window.isAdFreeUser || (window.currentSession && window.currentSession.adFree)) {
-            const parentUnit = el.closest('.zyrex-ad-unit');
-            if (parentUnit) parentUnit.style.display = 'none';
-            return;
-        }
-
-        const slot = el.getAttribute('data-slot') || DEFAULT_SLOT;
-        const width = el.getAttribute('data-width') || '300';
-        const height = el.getAttribute('data-height') || '250';
-        const isResponsive = width.includes('%');
-        const cb = Date.now().toString(36) + Math.random().toString(36).slice(2);
-
-        const iframe = document.createElement('iframe');
-        iframe.src = `${AD_ORIGIN}/serve.php?slot=${encodeURIComponent(slot)}&pid=${encodeURIComponent(window.__adServerPageId)}&cb=${cb}`;
-        if (!isResponsive) iframe.width = width;
-        iframe.height = height;
-        iframe.style.border = '0';
-        iframe.style.overflow = 'hidden';
-        iframe.style.width = isResponsive ? width : `${width}px`;
-        iframe.style.height = `${height}px`;
-        iframe.style.display = 'block';
-        iframe.style.maxWidth = '100%';
-        iframe.setAttribute('scrolling', 'no');
-        iframe.setAttribute('loading', 'lazy');
-        iframe.setAttribute('sandbox', 'allow-scripts allow-popups allow-same-origin allow-top-navigation-by-user-activation');
-        iframe.setAttribute('title', 'Advertisement');
-
-        el.innerHTML = '';
-        el.appendChild(iframe);
-    }
-
-    window.initUnlimitedTextAds = function(root) {
-        const scope = root && root.querySelectorAll ? root : document;
-        const targets = scope.querySelectorAll(
-            '.zyrex-ad-slot, [data-ad-slot], [id^="adserver-"], #adserver-' + DEFAULT_SLOT
-        );
-        targets.forEach(renderAdServerSlot);
+    window.initUnlimitedTextAds = function() {
+        document.querySelectorAll('.zyrex-ad-unit, .zyrex-ad-home-section').forEach(function(el) {
+            el.remove();
+        });
     };
 
-    window.createZyrexAdHtml = function(customClass) {
-        return `
-            <div class="zyrex-ad-unit ${customClass || ''}">
-                <div class="zyrex-ad-header">
-                    <span class="zyrex-ad-label"><i class="fas fa-rectangle-ad"></i> Sponsored</span>
-                    <span class="zyrex-ad-badge">Ad</span>
-                </div>
-                <div class="zyrex-ad-container">
-                    <div class="zyrex-ad-slot" data-slot="${DEFAULT_SLOT}" data-width="300" data-height="250"></div>
-                </div>
-            </div>
-        `;
+    window.createZyrexAdHtml = function() {
+        return '';
     };
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-            window.initUnlimitedTextAds();
-        });
+        document.addEventListener('DOMContentLoaded', window.initUnlimitedTextAds);
     } else {
-        setTimeout(window.initUnlimitedTextAds, 100);
+        window.initUnlimitedTextAds();
     }
     // ==========================================
     // REWARDED VIDEO AD SYSTEM (UNLIMITED TEXT ADS)
