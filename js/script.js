@@ -1000,7 +1000,7 @@ window.showToast = function(title, message, type = 'success') {
                         <div class="notif-panel-title-group">
                             <span class="notif-panel-pill-icon"><i class="fas fa-bell"></i></span>
                             <span class="notif-panel-heading">Notifications</span>
-                            <span class="notif-bubble-badge" id="panelNotifBadge" style="position:static;display:none;margin-left:6px">0</span>
+                            <span class="notif-header-unread-pill" id="panelNotifBadge" style="display:none">0 New</span>
                         </div>
                         <div class="notif-panel-actions">
                             <button type="button" class="notif-header-act-btn" onclick="window.toggleDNDQuick()" title="Do Not Disturb" id="btnQuickDND"><i class="fas fa-moon"></i></button>
