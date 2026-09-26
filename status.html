@@ -538,88 +538,6 @@
             }
         }
     
-        /* Report Modal Styles */
-        .report-modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.78);
-            backdrop-filter: blur(8px);
-            z-index: 100000;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-        }
-        .report-modal-overlay.active {
-            display: flex;
-        }
-        .report-modal-box {
-            background: #141418;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 18px;
-            width: min(520px, 100%);
-            padding: 28px 30px;
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.75);
-            animation: modalPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        @keyframes modalPop {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        .report-modal-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 8px;
-        }
-        .report-modal-header h3 {
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.25rem;
-            color: #ffffff;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .report-modal-close {
-            background: transparent;
-            border: none;
-            color: #71717a;
-            font-size: 1.5rem;
-            cursor: pointer;
-            line-height: 1;
-        }
-        .report-modal-close:hover { color: #ffffff; }
-        .report-modal-sub {
-            font-size: 0.84rem;
-            color: #a1a1aa;
-            margin-bottom: 20px;
-            line-height: 1.45;
-        }
-        .report-form-group {
-            margin-bottom: 16px;
-        }
-        .report-form-group label {
-            display: block;
-            font-size: 0.8rem;
-            font-weight: 600;
-            color: #d4d4d8;
-            margin-bottom: 6px;
-        }
-        .report-form-select, .report-form-input, .report-form-textarea {
-            width: 100%;
-            background: #09090b;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            padding: 10px 14px;
-            font-family: inherit;
-            font-size: 0.86rem;
-            color: #ffffff;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-        .report-form-select:focus, .report-form-input:focus, .report-form-textarea:focus {
-            border-color: var(--cherry-neon, #ff2b52);
-        }
     </style>
 </head>
 <body>
@@ -666,8 +584,6 @@
             <div class="status-last-checked-row">
                 <span id="lastCheckedText">Last checked less than a minute ago</span>
                 <button class="btn-text-refresh" id="btnRefresh" onclick="fetchStatus(true)">Refresh</button>
-                <span>&bull;</span>
-                <button class="btn-text-refresh" onclick="openReportModal()" style="color:var(--cherry-neon, #ff2b52);display:inline-flex;align-items:center;gap:6px;"><i class="fas fa-flag"></i> Report an Issue</button>
             </div>
         </div>
 
@@ -731,43 +647,6 @@
         </section>
 
         </main>
-
-    <!-- REPORT AN ISSUE MODAL -->
-    <div class="report-modal-overlay" id="reportModal" onclick="if(event.target===this)closeReportModal()">
-        <div class="report-modal-box">
-            <div class="report-modal-header">
-                <h3><i class="fas fa-flag" style="color:var(--cherry-neon,#ff2b52)"></i> Report a Service Issue</h3>
-                <button class="report-modal-close" onclick="closeReportModal()">&times;</button>
-            </div>
-            <p class="report-modal-sub">Experiencing an issue with sponsored links, downloads, community requests, or another service? Let us know so it gets logged into live telemetry immediately.</p>
-            <form onsubmit="submitIssueReport(event)">
-                <div class="report-form-group">
-                    <label>Affected Subsystem</label>
-                    <select id="reportSubsystem" class="report-form-select" required>
-                        <option value="shortener_gateway">Sponsored Links (ShrinkEarn / Ad-link stuck or failing)</option>
-                        <option value="requests_system">Community Requests System (Cannot submit, upvote, or view request)</option>
-                        <option value="storage">Resource Downloads (Download won't start, error loading zip)</option>
-                        <option value="token_generator">Download Security (Token expired prematurely, invalid)</option>
-                        <option value="comments">Comments System (Comment failed to post, stuck loading)</option>
-                        <option value="discord_auth">Discord Authentication (Login issue, roles not verified)</option>
-                        <option value="api_gateway">API Gateway (General site error, slow response)</option>
-                    </select>
-                </div>
-                <div class="report-form-group">
-                    <label>Issue Summary</label>
-                    <input type="text" id="reportTitle" class="report-form-input" placeholder="e.g. Sponsored link stays on white screen / won't redirect" required maxlength="100">
-                </div>
-                <div class="report-form-group">
-                    <label>Details / What Happened (Optional)</label>
-                    <textarea id="reportDetails" class="report-form-textarea" placeholder="Tell us what product or page you were on, or any error message you saw..." rows="3" maxlength="500"></textarea>
-                </div>
-                <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:20px;">
-                    <button type="button" class="btn-ghost-sm" onclick="closeReportModal()">Cancel</button>
-                    <button type="submit" id="btnSubmitReport" class="btn-cherry-sm"><i class="fas fa-paper-plane"></i> Submit to Telemetry</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
     <!-- FLOATING BAR TOOLTIP -->
     <div class="bar-tooltip" id="barTooltip"></div>
@@ -1026,60 +905,6 @@
         }
 
         // Live Status Fetch
-        
-        window.openReportModal = function() {
-            var modal = document.getElementById('reportModal');
-            if (modal) modal.classList.add('active');
-        };
-
-        window.closeReportModal = function() {
-            var modal = document.getElementById('reportModal');
-            if (modal) modal.classList.remove('active');
-        };
-
-        window.submitIssueReport = function(e) {
-            e.preventDefault();
-            var btn = document.getElementById('btnSubmitReport');
-            var sub = document.getElementById('reportSubsystem').value;
-            var title = document.getElementById('reportTitle').value;
-            var details = document.getElementById('reportDetails').value;
-
-            if (btn) {
-                btn.disabled = true;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting...';
-            }
-
-            fetch('/api/status/report-issue', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    subsystem: sub,
-                    title: title,
-                    details: details,
-                    severity: 'degraded'
-                })
-            })
-            .then(function(res) { return res.json(); })
-            .then(function(data) {
-                if (data.success) {
-                    closeReportModal();
-                    alert('Thank you! Your issue report has been logged to live telemetry.');
-                    fetchStatus(true);
-                } else {
-                    alert(data.error || 'Failed to submit report. Please try again.');
-                }
-            })
-            .catch(function() {
-                alert('Network error. Please try again.');
-            })
-            .finally(function() {
-                if (btn) {
-                    btn.disabled = false;
-                    btn.innerHTML = '<i class="fas fa-paper-plane"></i> Submit to Telemetry';
-                }
-            });
-        };
-
         window.fetchStatus = function(isManual) {
             if (isFetching) return;
             isFetching = true;
