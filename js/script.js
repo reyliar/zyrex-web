@@ -1109,6 +1109,127 @@ window.showToast = function(title, message, type = 'success') {
         renderGlobalNotifications();
     }
 
+    const KNOWN_DISCORD_CHANNELS = {
+        '1553134078813929522': { name: 'bug-reports', type: 'forum' },
+        '1551118401508745367': { name: 'requests', type: 'forum' },
+        '1518954946110685184': { name: 'general', type: 'text' }
+    };
+
+    function getCachedDiscordChannel(channelId) {
+        try {
+            const raw = localStorage.getItem('zyrex_discord_channels_cache');
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (parsed && parsed[channelId]) return parsed[channelId];
+            }
+        } catch(e) {}
+        return null;
+    }
+
+    function setCachedDiscordChannel(channelId, data) {
+        try {
+            const raw = localStorage.getItem('zyrex_discord_channels_cache') || '{}';
+            const parsed = JSON.parse(raw);
+            parsed[channelId] = data;
+            localStorage.setItem('zyrex_discord_channels_cache', JSON.stringify(parsed));
+        } catch(e) {}
+    }
+
+    const pendingChannelFetches = new Set();
+    function fetchDiscordChannelAsync(channelId) {
+        if (!channelId || pendingChannelFetches.has(channelId)) return;
+        if (KNOWN_DISCORD_CHANNELS[channelId] || getCachedDiscordChannel(channelId)) return;
+        pendingChannelFetches.add(channelId);
+
+        fetch(`/api/discord/channel/${channelId}`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.success && data.channel) {
+                    const info = {
+                        name: data.channel.name,
+                        type: data.channel.type === 15 ? 'forum' : (data.channel.type === 5 ? 'announcement' : (data.channel.type === 2 ? 'voice' : 'text'))
+                    };
+                    setCachedDiscordChannel(channelId, info);
+                    const pills = document.querySelectorAll(`.notif-discord-channel-pill[data-channel-id="${channelId}"]`);
+                    pills.forEach(pill => {
+                        const iconEl = pill.querySelector('i');
+                        const spanEl = pill.querySelector('span');
+                        if (spanEl) spanEl.textContent = info.name;
+                        if (iconEl) {
+                            iconEl.className = info.type === 'forum' ? 'fas fa-comments' : (info.type === 'announcement' ? 'fas fa-bullhorn' : 'fas fa-hashtag');
+                        }
+                        if (info.type === 'forum') pill.classList.add('forum');
+                    });
+                }
+            })
+            .catch(() => {})
+            .finally(() => {
+                pendingChannelFetches.delete(channelId);
+            });
+    }
+
+    function renderDiscordChannelPill(url, channelId, rawLabel) {
+        const known = KNOWN_DISCORD_CHANNELS[channelId] || getCachedDiscordChannel(channelId) || {};
+        let chName = known.name;
+        if (!chName && rawLabel && rawLabel !== url && !rawLabel.startsWith('http')) {
+            chName = rawLabel.replace(/^[#@]/, '').trim();
+        }
+        if (!chName) {
+            if (channelId === '1553134078813929522') chName = 'bug-reports';
+            else if (channelId === '1551118401508745367') chName = 'requests';
+            else {
+                chName = `channel-${channelId.slice(-4)}`;
+                fetchDiscordChannelAsync(channelId);
+            }
+        }
+
+        let chType = known.type || 'text';
+        const lowerName = chName.toLowerCase();
+        if (lowerName.includes('bug') || lowerName.includes('report') || lowerName.includes('request') || lowerName.includes('forum')) {
+            chType = 'forum';
+        } else if (lowerName.includes('announc')) {
+            chType = 'announcement';
+        }
+
+        let icon = 'fas fa-hashtag';
+        if (chType === 'forum' || chType === 15) {
+            icon = 'fas fa-comments';
+            chType = 'forum';
+        } else if (chType === 'announcement' || chType === 5) {
+            icon = 'fas fa-bullhorn';
+            chType = 'announcement';
+        } else if (chType === 'voice' || chType === 2) {
+            icon = 'fas fa-volume-high';
+        }
+
+        return `<a href="${url}" target="_blank" rel="noopener noreferrer" class="notif-discord-channel-pill ${chType}" data-channel-id="${channelId}" onclick="event.stopPropagation()" title="Open #${chName} on Discord"><i class="${icon}"></i><span>${chName}</span></a>`;
+    }
+
+    function formatNotifLink(url, rawLabel) {
+        if (!url) return '';
+        const cleanUrl = url.replace(/&amp;/g, '&').trim();
+
+        // 1. Check if it's a Discord channel URL
+        // e.g. https://discord.com/channels/:guildId/:channelId
+        const discordMatch = cleanUrl.match(/(?:https?:\/\/)?(?:ptb\.|canary\.)?discord(?:app)?\.com\/channels\/(?:[0-9]+)\/([0-9]+)/i);
+        if (discordMatch) {
+            const channelId = discordMatch[1];
+            return renderDiscordChannelPill(cleanUrl, channelId, rawLabel);
+        }
+
+        // 2. Check if it's a Discord invite link
+        const inviteMatch = cleanUrl.match(/(?:https?:\/\/)?(?:www\.)?(?:discord\.gg|discord(?:app)?\.com\/invite)\/([a-zA-Z0-9_-]+)/i);
+        if (inviteMatch) {
+            return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" class="notif-discord-channel-pill invite" onclick="event.stopPropagation()" title="Join Discord Server"><i class="fab fa-discord"></i><span>Discord Server</span></a>`;
+        }
+
+        // 3. Regular web link
+        const isExternal = cleanUrl.startsWith('http');
+        const target = isExternal ? ' target="_blank" rel="noopener noreferrer"' : '';
+        const displayLabel = rawLabel || cleanUrl;
+        return `<a href="${cleanUrl}"${target} class="notif-inline-link" onclick="event.stopPropagation()">${displayLabel}</a>`;
+    }
+
     function parseNotifMarkdown(str) {
         if (!str) return '';
         let text = escapeHtmlNotif(str);
@@ -1118,7 +1239,7 @@ window.showToast = function(title, message, type = 'success') {
         text = text.replace(/```(?:[a-zA-Z0-9_-]+)?\n?([\s\S]*?)```/g, (match, code) => {
             const idx = codeBlocks.length;
             codeBlocks.push(`<pre class="notif-code-block"><code>${code.trim()}</code></pre>`);
-            return `__CODEBLOCK_${idx}__`;
+            return `\uFFF0CB_${idx}\uFFF1`;
         });
 
         // Inline code `...`
@@ -1126,26 +1247,37 @@ window.showToast = function(title, message, type = 'success') {
         text = text.replace(/`([^`]+)`/g, (match, code) => {
             const idx = inlineCodes.length;
             inlineCodes.push(`<code class="notif-inline-code">${code}</code>`);
-            return `__INLINECODE_${idx}__`;
+            return `\uFFF0IC_${idx}\uFFF1`;
         });
 
-        // Markdown links [label](url)
         const links = [];
+        // Markdown links [label](url)
         text = text.replace(/\[([^\]]+)\]\(((?:https?:\/\/|\/)[^\s\)]+)\)/g, (match, label, url) => {
-            const cleanUrl = url.replace(/&amp;/g, '&');
-            const isExternal = cleanUrl.startsWith('http');
-            const target = isExternal ? ' target="_blank" rel="noopener noreferrer"' : '';
             const idx = links.length;
-            links.push(`<a href="${cleanUrl}"${target} class="notif-inline-link" onclick="event.stopPropagation()">${label}</a>`);
-            return `__NOTIFLINK_${idx}__`;
+            links.push(formatNotifLink(url, label));
+            return `\uFFF0LK_${idx}\uFFF1`;
         });
 
         // Auto-link raw URLs (https://... or http://...)
         text = text.replace(/(https?:\/\/[^\s<]+)/g, (match, url) => {
-            const cleanUrl = url.replace(/&amp;/g, '&');
+            let clean = url;
+            let trailing = '';
+            const m = clean.match(/([.,;:!?)]+)$/);
+            if (m) {
+                trailing = m[1];
+                clean = clean.slice(0, -trailing.length);
+            }
             const idx = links.length;
-            links.push(`<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" class="notif-inline-link" onclick="event.stopPropagation()">${cleanUrl}</a>`);
-            return `__NOTIFLINK_${idx}__`;
+            links.push(formatNotifLink(clean) + trailing);
+            return `\uFFF0LK_${idx}\uFFF1`;
+        });
+
+        // Discord channel mention tag <#123456789012345678>
+        text = text.replace(/&lt;#([0-9]{17,20})&gt;/g, (match, chId) => {
+            const idx = links.length;
+            const url = `https://discord.com/channels/1518954946110685184/${chId}`;
+            links.push(renderDiscordChannelPill(url, chId));
+            return `\uFFF0LK_${idx}\uFFF1`;
         });
 
         // Headings #, ##, ###
@@ -1175,17 +1307,17 @@ window.showToast = function(title, message, type = 'success') {
 
         // Restore links
         links.forEach((l, i) => {
-            text = text.replace(`__NOTIFLINK_${i}__`, l);
+            text = text.replace(`\uFFF0LK_${i}\uFFF1`, l);
         });
 
         // Restore inline code
         inlineCodes.forEach((c, i) => {
-            text = text.replace(`__INLINECODE_${i}__`, c);
+            text = text.replace(`\uFFF0IC_${i}\uFFF1`, c);
         });
 
         // Restore code blocks
         codeBlocks.forEach((cb, i) => {
-            text = text.replace(`__CODEBLOCK_${i}__`, cb);
+            text = text.replace(`\uFFF0CB_${i}\uFFF1`, cb);
         });
 
         // Newlines to <br>
@@ -1354,7 +1486,7 @@ window.showToast = function(title, message, type = 'success') {
     window.handleNotifCardClick = function(e, link, id) {
         if (!e) return;
         // Don't trigger card navigation if clicked inside an interactive element
-        if (e.target.closest('a, button, input, select, textarea, .notif-ios-btn, .notif-item-act-btn, .notif-spoiler, .notif-inline-link')) {
+        if (e.target.closest('a, button, input, select, textarea, .notif-ios-btn, .notif-item-act-btn, .notif-spoiler, .notif-inline-link, .notif-discord-channel-pill')) {
             return;
         }
         window.markNotifRead(id);

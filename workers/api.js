@@ -2633,6 +2633,7 @@ export default {
                                path.startsWith("/api/comments") ||
                                path.startsWith("/api/notifications") ||
                                path.startsWith("/api/guild/") ||
+                               path.startsWith("/api/discord/") ||
                                path.startsWith("/api/downloads/") ||
                                path.startsWith("/api/avatar/") || 
                                path.startsWith("/api/banner/") ||
@@ -4053,6 +4054,72 @@ async function storeAndProxyImage(env, imageUrl) {
           if (botResp.ok) return json(await botResp.json());
         } catch(e) { console.error("Role check error:", e.message); }
         return json({ has_role: false });
+      }
+
+      // DISCORD CHANNEL INFO - lookup channel info from Discord API or fallback cache
+      if (path.startsWith("/api/discord/channel/")) {
+        const channelId = path.replace("/api/discord/channel/", "").replace(/\//g, "").trim();
+        if (!channelId || !/^[0-9]{17,20}$/.test(channelId)) {
+          return json({ success: false, error: "Invalid channel ID" }, 400);
+        }
+
+        // Known static fallbacks
+        const KNOWN_MAP = {
+          "1553134078813929522": { id: "1553134078813929522", name: "bug-reports", type: 15 },
+          "1551118401508745367": { id: "1551118401508745367", name: "requests", type: 15 },
+          "1518954946777448559": { id: "1518954946777448559", name: "announcements", type: 5 },
+          "1518954946777448560": { id: "1518954946777448560", name: "general", type: 0 }
+        };
+
+        if (KNOWN_MAP[channelId]) {
+          return json({ success: true, channel: KNOWN_MAP[channelId] });
+        }
+
+        // Try Discord API directly if bot token is present
+        const botToken = env.DISCORD_BOT_TOKEN || env.BOT_TOKEN;
+        if (botToken) {
+          try {
+            const chResp = await fetch(`https://discord.com/api/v10/channels/${channelId}`, {
+              headers: {
+                "Authorization": `Bot ${botToken}`,
+                "Content-Type": "application/json"
+              }
+            });
+            if (chResp.ok) {
+              const chData = await chResp.json();
+              return json({
+                success: true,
+                channel: {
+                  id: chData.id,
+                  name: chData.name,
+                  type: chData.type,
+                  guild_id: chData.guild_id
+                }
+              });
+            }
+          } catch(e) {
+            console.error("Discord channel fetch error:", e.message);
+          }
+        }
+
+        // Try BOT_API proxy
+        try {
+          const bResp = await fetch(`${BOT_API}/api/discord/channel/${channelId}`);
+          if (bResp.ok) {
+            const bData = await bResp.json();
+            if (bData && bData.success) return json(bData);
+          }
+        } catch(e) {}
+
+        // Fallback placeholder
+        return json({
+          success: true,
+          channel: {
+            id: channelId,
+            name: `channel-${channelId.slice(-4)}`,
+            type: 0
+          }
+        });
       }
 
       // VERIFY COMPLETE - Proxy to Bot (one-time token verification)
