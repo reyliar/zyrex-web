@@ -7353,7 +7353,7 @@ async function storeAndProxyImage(env, imageUrl) {
         
         const ogTitle = product ? `${product.name} — Zyrex` : "Zyrex | Preset";
         const ogDesc = (product?.description || product?.desc || "Premium editing preset on Zyrex").substring(0, 200);
-        const ogImage = product?.thumbnail || "https://zyrexediting.xyz/assets/banner.png";
+        const ogImage = product?.thumbnail || "https://zyrexediting.xyz/assets/og-image.png";
         const ogUrl = `https://zyrexediting.xyz/preset?id=${encodeURIComponent(presetId)}`;
         
         // If it's a crawler, return a minimal HTML page with dynamic OG tags
