@@ -10,7 +10,7 @@
     var currentUserData = null;
     var activeCommentInputId = 'mainCommentText';
     var MEDIA_SERVICE_ERROR_MSG = "Media service is currently unavailable.";
-    var GIPHY_API_KEY = "dc6zaTOxFJmzC";
+    var GIPHY_API_KEY = "hF2tiiF3deZinjO4V7X75pc1q1CwLTkp";
 
     function escapeHtml(str) {
         if (!str) return '';
@@ -317,8 +317,15 @@
         }
     };
 
+    function isPickerPopoverOpen() {
+        var openPop = document.querySelector('.popover-card[style*="display: block"]');
+        return Boolean(openPop);
+    }
+    window.isPickerPopoverOpen = isPickerPopoverOpen;
+
     window.handleCommentKeydown = function(e, textarea) {
         if (window.isMentionPopupActive && window.isMentionPopupActive()) return;
+        if (isPickerPopoverOpen()) return;
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             var form = textarea.closest('form');
@@ -331,6 +338,7 @@
 
     window.handleReplyKeydown = function(e, parentId) {
         if (window.isMentionPopupActive && window.isMentionPopupActive()) return;
+        if (isPickerPopoverOpen()) return;
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             var form = e.target.closest('form');

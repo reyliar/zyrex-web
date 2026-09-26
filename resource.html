@@ -1932,7 +1932,7 @@
                 </span>
                 <button type="button" onclick="closePickerPopover()" style="background:none;border:none;color:var(--text-sub);cursor:pointer;font-size:1rem">&times;</button>
             </div>
-            <input type="text" class="popover-search-input" id="${targetPopId}_giphySearchInput" placeholder="Search GIFs..." oninput="onGiphySearchInput(this.value, '${targetPopId}')">
+            <input type="text" class="popover-search-input" id="${targetPopId}_giphySearchInput" placeholder="Search GIFs..." oninput="onGiphySearchInput(this.value, '${targetPopId}')" onkeydown="handleGiphySearchKeydown(event, '${targetPopId}')">
             <div class="popover-grid" id="${targetPopId}_gifsGrid">
                 <div style="grid-column:1/-1;text-align:center;padding:25px 0;color:var(--text-sub)">
                     <i class="fas fa-spinner fa-spin" style="color:#00d2ff;margin-bottom:6px"></i>
@@ -1948,13 +1948,36 @@
     }
     window.toggleGifPicker = toggleGifPicker;
 
+    var giphySearchTimeout = null;
+
     function onGiphySearchInput(val, popoverId) {
-        clearTimeout(giphySearchTimeout);
+        if (giphySearchTimeout) {
+            clearTimeout(giphySearchTimeout);
+            giphySearchTimeout = null;
+        }
         giphySearchTimeout = setTimeout(() => {
-            fetchGiphyGifs(val.trim(), popoverId || activeCommentPopoverId);
-        }, 350);
+            fetchGiphyGifs(val ? val.trim() : '', popoverId || activeCommentPopoverId);
+        }, 300);
     }
     window.onGiphySearchInput = onGiphySearchInput;
+
+    function handleGiphySearchKeydown(e, popoverId) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            e.stopPropagation();
+            if (giphySearchTimeout) {
+                clearTimeout(giphySearchTimeout);
+                giphySearchTimeout = null;
+            }
+            fetchGiphyGifs(e.target.value ? e.target.value.trim() : '', popoverId || activeCommentPopoverId);
+            return false;
+        }
+        if (e.key === 'Escape') {
+            e.preventDefault();
+            closePickerPopover();
+        }
+    }
+    window.handleGiphySearchKeydown = handleGiphySearchKeydown;
 
     async function fetchGiphyGifs(query, popoverId) {
         const targetPopId = popoverId || activeCommentPopoverId || 'commentPickerPopover';
@@ -1963,35 +1986,45 @@
         grid.innerHTML = `
             <div style="grid-column:1/-1;text-align:center;padding:25px 0;color:var(--text-sub)">
                 <i class="fas fa-spinner fa-spin" style="color:#00d2ff;margin-bottom:6px"></i>
-                <div>Searching GIFs...</div>
+                <div>${query ? 'Searching GIFs...' : 'Loading trending GIFs...'}</div>
             </div>
         `;
         try {
-            let url = `https://api.giphy.com/v1/gifs/trending?api_key=${GIPHY_API_KEY}&limit=24&rating=g`;
+            let url = `https://api.giphy.com/v1/gifs/trending?api_key=${GIPHY_API_KEY}&limit=24&rating=pg-13`;
             if (query) {
-                url = `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=${encodeURIComponent(query)}&limit=24&rating=g`;
+                url = `https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=${encodeURIComponent(query)}&limit=24&rating=pg-13`;
             }
             const res = await fetch(url);
             const json = await res.json();
-            const gifs = (json && json.data) ? json.data : [];
+            const gifs = (json && Array.isArray(json.data)) ? json.data : [];
             if (gifs.length === 0) {
                 grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:25px;color:var(--text-sub)">No GIFs found</div>';
                 return;
             }
             grid.innerHTML = gifs.map(g => {
-                const previewUrl = (g.images && g.images.fixed_height_small && g.images.fixed_height_small.url) || g.images.fixed_height.url;
-                const fullUrl = (g.images && g.images.fixed_height && g.images.fixed_height.url) || g.images.original.url;
-                const title = g.title || 'GIF';
+                const img = g.images || {};
+                const previewUrl = (img.fixed_height_small && img.fixed_height_small.url) || (img.fixed_height && img.fixed_height.url) || (img.original && img.original.url) || '';
+                const fullUrl = (img.fixed_height && img.fixed_height.url) || (img.original && img.original.url) || previewUrl;
+                const title = (g.title || 'GIF').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+                if (!previewUrl) return '';
                 return `
-                    <div class="popover-item" onclick="insertGifToComment('${fullUrl}')" title="${title.replace(/'/g, "\\'")}">
+                    <div class="popover-item" data-gif-url="${fullUrl}" onclick="insertGifToComment(this.getAttribute('data-gif-url'))" title="${title}">
                         <img src="${previewUrl}" alt="${title}" loading="lazy">
                     </div>
                 `;
             }).join('');
         } catch(e) {
+            console.error('fetchGiphyGifs error:', e);
             grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:rgba(255,100,100,0.8)">Error loading GIFs</div>';
         }
     }
+    window.fetchGiphyGifs = fetchGiphyGifs;
+
+    function isPickerPopoverOpen() {
+        const openCard = document.querySelector('.popover-card[style*="display: block"]');
+        return Boolean(openCard);
+    }
+    window.isPickerPopoverOpen = isPickerPopoverOpen;
 
     function closePickerPopover() {
         document.querySelectorAll('.popover-card').forEach(p => p.style.display = 'none');
