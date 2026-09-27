@@ -615,9 +615,259 @@ async function prefixHasDownloadableFiles(bucket, prefix) {
   return (listed.objects || []).some(obj => isDownloadableR2Object(obj, prefix));
 }
 
-async function fetchProductHint(productId, session) {
+// ============================================================
+// R2 DATABASE ENGINE — All core data lives in R2, not Bot VPS
+// ============================================================
+
+const DB = {
+  PRODUCTS:       "database/products.json",
+  STATS:          "database/presets_stats.json",
+  COMMENTS:       "database/comments.json",
+  DOWNLOADS:      "database/downloads_counts.json",
+  UPLOADERS:      "database/uploaders.json",
+  TEAM:           "database/team.json",
+  GUILD_STATS:    "database/guild_stats.json",
+  CREATOR_INDEX:  "database/search_creator_index.json",
+};
+
+async function r2GetJSON(env, key, fallback = null) {
+  try {
+    const obj = await env.STORAGE.get(key);
+    if (!obj) return fallback;
+    return await obj.json();
+  } catch(e) {
+    console.error("r2GetJSON error", key, e.message);
+    return fallback;
+  }
+}
+
+async function r2PutJSON(env, key, data) {
+  try {
+    await env.STORAGE.put(key, JSON.stringify(data), {
+      httpMetadata: { contentType: "application/json" }
+    });
+    return true;
+  } catch(e) {
+    console.error("r2PutJSON error", key, e.message);
+    return false;
+  }
+}
+
+// --- Products ---
+async function dbGetProducts(env) {
+  const data = await r2GetJSON(env, DB.PRODUCTS, []);
+  return Array.isArray(data) ? data : [];
+}
+
+async function dbGetProduct(env, id) {
+  const products = await dbGetProducts(env);
+  return products.find(p => p.id === id) || null;
+}
+
+async function dbSaveProducts(env, products) {
+  return r2PutJSON(env, DB.PRODUCTS, products);
+}
+
+async function dbAddProduct(env, product) {
+  const products = await dbGetProducts(env);
+  products.push(product);
+  await dbSaveProducts(env, products);
+  return product;
+}
+
+async function dbUpdateProduct(env, id, updates) {
+  const products = await dbGetProducts(env);
+  const idx = products.findIndex(p => p.id === id);
+  if (idx === -1) return null;
+  products[idx] = { ...products[idx], ...updates, updated_at: new Date().toISOString().replace('T',' ').slice(0,19) };
+  await dbSaveProducts(env, products);
+  return products[idx];
+}
+
+async function dbDeleteProduct(env, id) {
+  const products = await dbGetProducts(env);
+  const idx = products.findIndex(p => p.id === id);
+  if (idx === -1) return false;
+  products.splice(idx, 1);
+  await dbSaveProducts(env, products);
+  return true;
+}
+
+// --- Stats (views + downloads per preset) ---
+async function dbGetStats(env) {
+  const data = await r2GetJSON(env, DB.STATS, {});
+  return typeof data === 'object' && !Array.isArray(data) ? data : {};
+}
+
+async function dbGetPresetStats(env, id) {
+  const stats = await dbGetStats(env);
+  return stats[id] || { views: 0, downloads: 0, likes: 0 };
+}
+
+async function dbIncrementView(env, id) {
+  const stats = await dbGetStats(env);
+  if (!stats[id]) stats[id] = { views: 0, downloads: 0, likes: 0 };
+  stats[id].views = (stats[id].views || 0) + 1;
+  await r2PutJSON(env, DB.STATS, stats);
+  return stats[id];
+}
+
+async function dbIncrementDownload(env, id) {
+  const stats = await dbGetStats(env);
+  if (!stats[id]) stats[id] = { views: 0, downloads: 0, likes: 0 };
+  stats[id].downloads = (stats[id].downloads || 0) + 1;
+  await r2PutJSON(env, DB.STATS, stats);
+  return stats[id];
+}
+
+// --- Download counts ---
+async function dbGetDownloadCounts(env) {
+  const data = await r2GetJSON(env, DB.DOWNLOADS, { counts: {} });
+  return data && data.counts ? data : { success: true, counts: {} };
+}
+
+async function dbIncrementDownloadCount(env, productId) {
+  const data = await dbGetDownloadCounts(env);
+  if (!data.counts) data.counts = {};
+  data.counts[productId] = (data.counts[productId] || 0) + 1;
+  await r2PutJSON(env, DB.DOWNLOADS, data);
+  return data.counts[productId];
+}
+
+// --- Comments ---
+async function dbGetComments(env) {
+  // { "preset-id": [ ...comments ] }
+  const data = await r2GetJSON(env, DB.COMMENTS, {});
+  return typeof data === 'object' && !Array.isArray(data) ? data : {};
+}
+
+async function dbGetPresetComments(env, presetId) {
+  const all = await dbGetComments(env);
+  return Array.isArray(all[presetId]) ? all[presetId] : [];
+}
+
+async function dbAddComment(env, comment) {
+  const all = await dbGetComments(env);
+  const key = comment.preset_id;
+  if (!all[key]) all[key] = [];
+  // If has parent_id, attach as reply
+  if (comment.parent_id) {
+    const parent = all[key].find(c => c.id === comment.parent_id);
+    if (parent) {
+      if (!parent.replies) parent.replies = [];
+      parent.replies.push(comment);
+    } else {
+      all[key].push(comment);
+    }
+  } else {
+    comment.replies = comment.replies || [];
+    all[key].push(comment);
+  }
+  await r2PutJSON(env, DB.COMMENTS, all);
+  return comment;
+}
+
+async function dbUpdateComment(env, presetId, commentId, updates) {
+  const all = await dbGetComments(env);
+  let found = null;
+  for (const key of Object.keys(all)) {
+    for (let i = 0; i < all[key].length; i++) {
+      if (all[key][i].id === commentId) {
+        all[key][i] = { ...all[key][i], ...updates, updated_at: new Date().toISOString() };
+        found = all[key][i];
+        break;
+      }
+      // check replies
+      const replies = all[key][i].replies || [];
+      for (let j = 0; j < replies.length; j++) {
+        if (replies[j].id === commentId) {
+          replies[j] = { ...replies[j], ...updates, updated_at: new Date().toISOString() };
+          found = replies[j];
+          break;
+        }
+      }
+      if (found) break;
+    }
+    if (found) break;
+  }
+  if (found) await r2PutJSON(env, DB.COMMENTS, all);
+  return found;
+}
+
+async function dbDeleteComment(env, commentId) {
+  const all = await dbGetComments(env);
+  let deleted = false;
+  for (const key of Object.keys(all)) {
+    const topIdx = all[key].findIndex(c => c.id === commentId);
+    if (topIdx !== -1) {
+      all[key].splice(topIdx, 1);
+      deleted = true;
+      break;
+    }
+    // check replies
+    for (let i = 0; i < all[key].length; i++) {
+      const replies = all[key][i].replies || [];
+      const rIdx = replies.findIndex(r => r.id === commentId);
+      if (rIdx !== -1) {
+        replies.splice(rIdx, 1);
+        deleted = true;
+        break;
+      }
+    }
+    if (deleted) break;
+  }
+  if (deleted) await r2PutJSON(env, DB.COMMENTS, all);
+  return deleted;
+}
+
+// --- Uploaders ---
+async function dbGetUploaders(env) {
+  const data = await r2GetJSON(env, DB.UPLOADERS, { uploaders: [] });
+  return data;
+}
+
+async function dbIsUploader(env, userId) {
+  const data = await dbGetUploaders(env);
+  const uploaders = data.uploaders || [];
+  return uploaders.includes(userId);
+}
+
+// --- Team ---
+async function dbGetTeam(env) {
+  return r2GetJSON(env, DB.TEAM, { success: true, founders: [], staff: [], contributors: [] });
+}
+
+// --- Guild Stats ---
+async function dbGetGuildStats(env) {
+  return r2GetJSON(env, DB.GUILD_STATS, { name: "Zyrex", member_count: 0, online_count: 0 });
+}
+
+// --- Creator Search Index ---
+async function dbGetCreatorIndex(env) {
+  return r2GetJSON(env, DB.CREATOR_INDEX, { success: true, index: {} });
+}
+
+// --- Generate unique ID for new items ---
+function generateId(prefix = "cmt") {
+  const bytes = new Uint8Array(7);
+  crypto.getRandomValues(bytes);
+  const hex = Array.from(bytes).map(b => b.toString(16).padStart(2,'0')).join('');
+  return `${prefix}_${hex}`;
+}
+
+// ============================================================
+// END R2 DATABASE ENGINE
+// ============================================================
+
+async function fetchProductHint(productId, session, env) {
   if (!productId) return null;
   try {
+    // R2-first: read directly from database/products.json
+    if (env && env.STORAGE) {
+      const product = await dbGetProduct(env, productId);
+      if (product) return product;
+    }
+    // Fallback to bot VPS if R2 doesn't have it (should be rare)
     const headers = {};
     if (session) {
       headers["X-User-ID"] = session.userId || "";
@@ -634,6 +884,7 @@ async function fetchProductHint(productId, session) {
     return null;
   }
 }
+
 
 async function resolveProductionPrefix(env, productId, hintPath, product = null) {
   const prodBucket = env.STORAGE_PROD || env.STORAGE;
@@ -1229,12 +1480,34 @@ async function scanDetectedResources(discordId, env) {
   }
 }
 
+function normalizeScrapeUrl(rawUrl) {
+  if (typeof rawUrl !== "string" || !rawUrl.trim()) return null;
+  const value = rawUrl.trim();
+  const lower = value.toLowerCase();
+  let parsed;
+  try { parsed = new URL(lower.startsWith("https://") || lower.startsWith("http://") ? value : "https://" + value); } catch (_) { return null; }
+  const host = parsed.hostname.toLowerCase();
+  if (parsed.protocol !== "https:" || parsed.username || parsed.password || (parsed.port && parsed.port !== "443")) return null;
+  const providers = { payhip: ["payhip.com", "www.payhip.com"], patreon: ["patreon.com", "www.patreon.com"], boosty: ["boosty.to", "www.boosty.to"] };
+  for (const [provider, hosts] of Object.entries(providers)) {
+    if (hosts.includes(host)) {
+      if (host.startsWith("www.")) parsed.hostname = host.slice(4);
+      return { provider, url: parsed.toString() };
+    }
+  }
+  return null;
+}
+
 async function scrapePayhip(url, env = null) {
+  const validated = normalizeScrapeUrl(url);
+  if (!validated || validated.provider !== "payhip") return { success: false, error: "Invalid Payhip URL" };
+  url = validated.url;
   try {
     let html = "";
     let isMarkdown = false;
     try {
       const resp = await fetch(url, {
+        redirect: "manual",
         headers: { "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36" },
         signal: AbortSignal.timeout(12000),
       });
@@ -2995,8 +3268,10 @@ export default {
         const body = await request.json().catch(() => ({}));
         payUrl = body.url || payUrl;
       }
-      let isPayhipUrl = false;
-      try { isPayhipUrl = new URL(payUrl).hostname.toLowerCase().endsWith("payhip.com"); } catch (_) {}
+      const validatedScrapeUrl = normalizeScrapeUrl(payUrl);
+      if (!validatedScrapeUrl) return json({ success: false, error: "Unsupported or invalid scraper URL" }, 400);
+      payUrl = validatedScrapeUrl.url;
+      const isPayhipUrl = validatedScrapeUrl.provider === "payhip";
       if (isPayhipUrl) {
         const directResult = await scrapePayhip(payUrl, env);
         if (directResult.success) return json(directResult);
@@ -3012,8 +3287,8 @@ export default {
         }
       } catch(e) {}
 
-      const res = await scrapePayhip(payUrl, env);
-      return json(res);
+      if (!isPayhipUrl) return json({ success: false, error: "Scraper service unavailable" }, 502);
+      return json(await scrapePayhip(payUrl, env));
     }
 
 // Download & store image in R2 to serve via thumbnail.zyrexediting.xyz
@@ -3997,17 +4272,27 @@ async function storeAndProxyImage(env, imageUrl) {
         });
       }
 
-      // GUILD STATS - Proxy to Bot
+      // GUILD STATS - R2 first, Discord API fallback
       if (path === "/api/guild/stats") {
-        const resp = await fetch(`${BOT_API}/api/guild/stats`);
-        if (resp.ok) return json(await resp.json());
+        // Try R2 cached guild stats
+        const guildData = await dbGetGuildStats(env);
+        if (guildData && guildData.member_count !== undefined) return json(guildData);
+        // Fallback: bot VPS
+        try {
+          const resp = await fetch(`${BOT_API}/api/guild/stats`);
+          if (resp.ok) return json(await resp.json());
+        } catch(e) {}
         return json({ name: "Zyrex", member_count: 0, online_count: 0, channels_count: 0, roles_count: 0, boost_level: 0 });
       }
 
-      // GUILD UPLOADERS - Proxy to Bot
+      // GUILD UPLOADERS - R2 first, bot VPS fallback
       if (path === "/api/guild/uploaders") {
-        const resp = await fetch(`${BOT_API}/api/guild/uploaders`);
-        if (resp.ok) return json(await resp.json());
+        const upData = await dbGetUploaders(env);
+        if (upData && Array.isArray(upData.uploaders)) return json(upData);
+        try {
+          const resp = await fetch(`${BOT_API}/api/guild/uploaders`);
+          if (resp.ok) return json(await resp.json());
+        } catch(e) {}
         return json({ uploaders: [] });
       }
 
@@ -4470,7 +4755,12 @@ async function storeAndProxyImage(env, imageUrl) {
         if (!scrapeUrl) {
           return json({ success: false, error: "URL parameter required" }, 400);
         }
-        const targetUrl = `${BOT_API}/api/scrape?url=${encodeURIComponent(scrapeUrl)}`;
+        const validatedScrapeUrl = normalizeScrapeUrl(scrapeUrl);
+        const expectedProvider = path === "/api/payhip/scrape" ? "payhip" : path === "/api/patreon/scrape" ? "patreon" : path === "/api/boosty/scrape" ? "boosty" : "";
+        if (!validatedScrapeUrl || (expectedProvider && validatedScrapeUrl.provider !== expectedProvider)) {
+          return json({ success: false, error: "Invalid URL for scraper endpoint" }, 400);
+        }
+        const targetUrl = `${BOT_API}/api/scrape?url=${encodeURIComponent(validatedScrapeUrl.url)}`;
         const botResp = await fetch(targetUrl);
         const data = await botResp.text();
         try {
@@ -4562,7 +4852,7 @@ async function storeAndProxyImage(env, imageUrl) {
         const selectedFiles = getRequestedFileSet(url);
         try {
           const hintPath = url.searchParams.get("file_path");
-          productHint = await fetchProductHint(productId, session);
+          productHint = await fetchProductHint(productId, session, env);
           r2Prefix = await resolveProductionPrefix(env, productId, hintPath, productHint);
           
           if (!r2Prefix) {
@@ -4615,43 +4905,40 @@ async function storeAndProxyImage(env, imageUrl) {
         const id = url.searchParams.get("id");
         if (!id) return json({ success: false, error: "id parameter required" }, 400);
 
-        try {
-          const resp = await fetch(`${BOT_API}/api/presets/stats?${url.searchParams.toString()}`, {
-            method: request.method,
-            headers: { "Content-Type": "application/json" },
-          });
-          if (resp.ok) return json(await resp.json());
-        } catch(e) {}
-
+        // R2 first
+        const statsData = await dbGetPresetStats(env, id);
         return json({
           success: true,
           id,
-          downloads: 0,
-          views: 0,
+          downloads: statsData.downloads || 0,
+          views: statsData.views || 0,
+          likes: statsData.likes || 0,
         });
       }
 
       if (path === "/api/presets/views" || path === "/api/presets/view") {
         try {
-          const resp = await fetch(`${BOT_API}${path}${url.search ? url.search : ''}`, {
-            method: request.method,
-            headers: request.headers,
-            body: request.method !== "GET" ? request.body : undefined,
-          });
-          if (resp.ok) return json(await resp.json());
+          let presetId = url.searchParams.get("id") || url.searchParams.get("preset_id");
+          if (!presetId && request.method === "POST") {
+            try {
+              const body = await request.clone().json();
+              presetId = body.id || body.preset_id;
+            } catch(e) {}
+          }
+          if (presetId) {
+            const updated = await dbIncrementView(env, presetId);
+            return json({ success: true, id: presetId, views: updated.views });
+          }
         } catch(e) {}
         return json({ success: true, views: {} });
       }
 
       if (path === "/api/comments" || path.startsWith("/api/comments/")) {
         if (request.method === "GET") {
-          try {
-            const resp = await fetch(`${BOT_API}/api/comments?${url.searchParams.toString()}`);
-            if (resp.ok) return json(await resp.json());
-            return json({ success: false, error: "Failed to fetch comments" }, resp.status);
-          } catch(e) {
-            return json({ success: false, error: "Bot API unavailable" }, 502);
-          }
+          const presetId = url.searchParams.get("preset_id") || url.searchParams.get("id") || "";
+          if (!presetId) return json({ success: false, error: "preset_id required" }, 400);
+          const comments = await dbGetPresetComments(env, presetId);
+          return json({ success: true, preset_id: presetId, comments, total: comments.length });
         }
 
         if (request.method === "POST") {
@@ -4676,7 +4963,8 @@ async function storeAndProxyImage(env, imageUrl) {
             }, 400);
           }
 
-          const payload = {
+          const comment = {
+            id: generateId("cmt"),
             preset_id: body.preset_id || body.id,
             user_id: session.userId,
             user_name: session.globalName || session.displayName || session.username || "Zyrex Member",
@@ -4684,19 +4972,21 @@ async function storeAndProxyImage(env, imageUrl) {
             content: body.content,
             parent_id: body.parent_id || null,
             is_admin: isAdmin,
-            source: "web"
+            source: "web",
+            created_at: new Date().toISOString().replace('T', ' ').slice(0, 19),
+            replies: []
           };
 
           try {
             const resp = await fetch(`${BOT_API}/api/comments`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(payload)
+              body: JSON.stringify(comment)
             });
             const data = await resp.json();
             return json(data, resp.status);
           } catch(e) {
-            return json({ success: false, error: "Failed to post comment" }, 502);
+            return json({ success: false, error: "Failed to post comment: " + e.message }, 500);
           }
         }
 
@@ -4716,17 +5006,19 @@ async function storeAndProxyImage(env, imageUrl) {
             }, 400);
           }
 
-          const commentId = path.replace("/api/comments/", "").replace("/api/comments", "") || body.id;
+          const commentId = path.replace("/api/comments/", "").replace("/api/comments", "").trim() || body.id;
+          const presetId = body.preset_id || "";
+          const isAdmin = ADMIN_IDS.includes(session.userId);
           try {
             const resp = await fetch(`${BOT_API}/api/comments/${encodeURIComponent(commentId)}`, {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify(body)
+              body: JSON.stringify({ ...body, id: commentId })
             });
             const data = await resp.json();
             return json(data, resp.status);
           } catch(e) {
-            return json({ success: false, error: "Bot API unavailable" }, 502);
+            return json({ success: false, error: "Failed to update comment: " + e.message }, 500);
           }
         }
 
@@ -4735,67 +5027,43 @@ async function storeAndProxyImage(env, imageUrl) {
           if (!session || !session.userId) {
             return json({ success: false, error: "Unauthorized" }, 401);
           }
-          const commentId = path.replace("/api/comments/", "").replace("/api/comments", "") || url.searchParams.get("id");
+          const commentId = path.replace("/api/comments/", "").replace("/api/comments", "").trim() || url.searchParams.get("id");
+          const isAdmin = ADMIN_IDS.includes(session.userId);
           try {
-            const resp = await fetch(`${BOT_API}/api/comments/${commentId}`, { method: "DELETE" });
+            const resp = await fetch(`${BOT_API}/api/comments/${encodeURIComponent(commentId)}`, { method: "DELETE" });
             const data = await resp.json();
             return json(data, resp.status);
           } catch(e) {
-            return json({ success: false, error: "Bot API unavailable" }, 502);
+            return json({ success: false, error: "Failed to delete comment: " + e.message }, 500);
           }
         }
       }
 
       if (path === "/api/downloads/counts") {
         try {
-          const resp = await fetch(`${BOT_API}/api/downloads/counts`);
-          if (resp.ok) return json(await resp.json());
-          return json({ success: true, counts: {} });
+          const data = await dbGetDownloadCounts(env);
+          return json(data);
         } catch (e) { return json({ success: true, counts: {} }); }
       }
       
       if (path === "/api/downloads/track" && request.method === "POST") {
         try {
           const body = await request.json();
-          const session = parseSession(request.headers.get("Cookie"));
-          const clientIp = request.headers.get("cf-connecting-ip") || request.headers.get("x-forwarded-for") || "";
-          const clientCountry = request.headers.get("cf-ipcountry") || "";
-          const userAgent = request.headers.get("user-agent") || "";
-
-          const payload = {
-            ...body,
-            token_id: /^[A-Za-z0-9_-]{1,64}$/.test(String(body.token_id || "")) ? String(body.token_id) : "",
-            session: session ? {
-              userId: session.userId,
-              username: session.username,
-              displayName: session.displayName || session.username,
-              avatar: session.avatar || "",
-              canUpload: !!session.canUpload,
-              isAdmin: !!session.is_admin || ADMIN_IDS.includes(session.userId)
-            } : null,
-            ip: clientIp,
-            country: clientCountry,
-            userAgent: userAgent
-          };
-
-          const proxyHeaders = {
-            "Content-Type": "application/json"
-          };
-          if (session) {
-            proxyHeaders["X-User-ID"] = session.userId || "";
-            proxyHeaders["X-User-Name"] = session.username || "";
-            proxyHeaders["X-User-Display-Name"] = session.displayName || session.username || "";
-            proxyHeaders["X-User-Avatar"] = session.avatar || "";
+          const productId = body.product_id || body.preset_id || "";
+          
+          // Write to R2 (async, don't block)
+          if (productId) {
+            // Increment both download counts and preset stats in R2
+            const trackPromises = [
+              dbIncrementDownloadCount(env, productId),
+              dbIncrementDownload(env, productId)
+            ];
+            // Run in background
+            ctx.waitUntil(Promise.all(trackPromises).catch(e => console.error("Track R2 write failed:", e.message)));
           }
-
-          const resp = await fetch(`${BOT_API}/api/downloads/track`, {
-            method: "POST",
-            headers: proxyHeaders,
-            body: JSON.stringify(payload),
-          });
-          if (resp.ok) return json(await resp.json());
-          return json({ success: false, error: "Bot API unavailable" }, 502);
-        } catch (e) { return json({ success: false, error: "Bot API unreachable" }, 502); }
+          
+          return json({ success: true, tracked: !!productId, product_id: productId });
+        } catch (e) { return json({ success: false, error: "Track failed: " + e.message }, 500); }
       }
 
       if (path === "/api/downloads/preview" || path === "/api/files/preview") {
@@ -5704,21 +5972,23 @@ async function storeAndProxyImage(env, imageUrl) {
 
         // Read all requests from R2
         async function loadRequestsFromR2() {
-          if (!env.STORAGE) return [];
+          if (!env.STORAGE) throw new Error("Requests R2 storage is unavailable");
           try {
             const obj = await env.STORAGE.get(REQUESTS_R2_KEY);
             if (!obj) return [];
             const data = await obj.json();
-            return Array.isArray(data) ? data : (data.requests || []);
+            if (Array.isArray(data)) return data;
+            if (data && Array.isArray(data.requests)) return data.requests;
+            throw new Error("Requests R2 data has an invalid format");
           } catch (e) {
             console.error("loadRequestsFromR2 error:", e);
-            return [];
+            throw new Error("Requests data could not be read from R2");
           }
         }
 
         // Save all requests to R2
         async function persistRequestsToR2(requestsList) {
-          if (!env.STORAGE) return false;
+          if (!env.STORAGE) throw new Error("Requests R2 storage is unavailable");
           try {
             const payload = JSON.stringify({
               requests: requestsList,
@@ -5731,7 +6001,7 @@ async function storeAndProxyImage(env, imageUrl) {
             return true;
           } catch (e) {
             console.error("persistRequestsToR2 error:", e);
-            return false;
+            throw new Error("Requests data could not be saved to R2");
           }
         }
 
@@ -6044,7 +6314,7 @@ async function storeAndProxyImage(env, imageUrl) {
             }
             const targets = requestsToPrice.filter(r => {
               if (String(r.status || "").toLowerCase() === "rejected" || !r.product_url) return false;
-              try { return new URL(r.product_url).hostname.toLowerCase().endsWith("payhip.com"); } catch (_) { return false; }
+              return normalizeScrapeUrl(r.product_url)?.provider === "payhip";
             });
             const updatedPrices = [];
             const scrapeFailures = [];
@@ -6506,25 +6776,18 @@ async function storeAndProxyImage(env, imageUrl) {
             const targetKey = extractCanonicalStoreKey(productUrl);
             if (targetKey) {
               try {
-                const pResp = await fetch(`${BOT_API}/api/products`, {
-                  headers: { "X-Zyrex-Key": "zyrex_app_sec_k982f81a7b54c29013e9a" }
+                const products = await dbGetProducts(env);
+                const dup = products.find(p => {
+                  const pKey = extractCanonicalStoreKey(p.product_url);
+                  const sKey = extractCanonicalStoreKey(p.source_url);
+                  return (pKey && pKey === targetKey) || (sKey && sKey === targetKey);
                 });
-                if (pResp.ok) {
-                  const products = await pResp.json();
-                  if (Array.isArray(products)) {
-                    const dup = products.find(p => {
-                      const pKey = extractCanonicalStoreKey(p.product_url);
-                      const sKey = extractCanonicalStoreKey(p.source_url);
-                      return (pKey && pKey === targetKey) || (sKey && sKey === targetKey);
-                    });
-                    if (dup) {
-                      return json({
-                        error: "already_exists",
-                        message: "This resource is already available on Zyrex!",
-                        product: { id: dup.id, name: dup.name }
-                      }, 409);
-                    }
-                  }
+                if (dup) {
+                  return json({
+                    error: "already_exists",
+                    message: "This resource is already available on Zyrex!",
+                    product: { id: dup.id, name: dup.name }
+                  }, 409);
                 }
               } catch (e) {
                 console.warn("Product duplicate check failed:", e.message);
