@@ -29,6 +29,11 @@ on:
         description: Comma-separated leak IDs whose legacy installer objects should move into the leak folder
         required: false
         type: string
+      relocate_sources:
+        description: Move every preset leak's FFX source into the _source_ffx backup so only installers ship
+        required: false
+        default: false
+        type: boolean
   repository_dispatch:
     types: [zyrex_preset_published]
 
@@ -77,7 +82,7 @@ jobs:
 
   windows-installers:
     needs: prepare
-    if: needs.prepare.result == 'success' && inputs.assemble_only != true && inputs.migrate_ids == ''
+    if: needs.prepare.result == 'success' && inputs.assemble_only != true && inputs.migrate_ids == '' && inputs.relocate_sources != true
     runs-on: windows-latest
     timeout-minutes: 35
     strategy:
@@ -99,7 +104,7 @@ jobs:
 
   macos-installers:
     needs: prepare
-    if: needs.prepare.result == 'success' && inputs.assemble_only != true && inputs.migrate_ids == ''
+    if: needs.prepare.result == 'success' && inputs.assemble_only != true && inputs.migrate_ids == '' && inputs.relocate_sources != true
     runs-on: macos-latest
     timeout-minutes: 35
     strategy:
@@ -118,6 +123,24 @@ jobs:
           preset_id: ${{ matrix.product_id }}
           platform: macOS
           release_id: ${{ github.run_id }}
+
+  relocate-sources:
+    if: inputs.relocate_sources == true
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      FFX_RELEASE_SOURCE_TOKEN: ${{ secrets.FFX_RELEASE_SOURCE_TOKEN }}
+    steps:
+      - name: Check out installer source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Move FFX sources into the backup prefix
+        run: python tools/zyrex_effects_installer/relocate_sources.py
 
   migrate-installers:
     needs: prepare

@@ -2708,6 +2708,47 @@ async function handleInstallerMigrate(request, url, env) {
   return json({ success: true, product_id: productId, moved }, 200, { "Cache-Control": "no-store" });
 }
 
+// Production folders only ship the installer plus the Zyrex watermark files, so the
+// FFX source is relocated to the _source_ffx/ backup the build endpoint already reads.
+async function handleInstallerRelocateSource(request, url, env) {
+  if (request.method !== "POST") return json({ success: false, error: "Method not allowed" }, 405, { "Cache-Control": "no-store" });
+  const expected = String(env.FFX_RELEASE_SOURCE_TOKEN || "").trim();
+  const provided = String(request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "").trim();
+  if (!expected || !installerSecretMatches(provided, expected)) return json({ success: false, error: "Unauthorized" }, 401, { "Cache-Control": "no-store" });
+  const productId = String(url.searchParams.get("id") || "").trim();
+  if (!/^[A-Za-z0-9_-]{1,100}$/.test(productId)) return json({ success: false, error: "Invalid leak ID" }, 400, { "Cache-Control": "no-store" });
+  const product = await dbGetProduct(env, productId).catch(() => null);
+  const prefix = normalizeR2Prefix(product?.file_path);
+  const bucket = env.STORAGE_PROD || env.STORAGE;
+  if (!product || !bucket || !prefix) return json({ success: false, error: "Leak storage is unavailable" }, 404, { "Cache-Control": "no-store" });
+
+  const objects = await r2List(env, prefix, true);
+  const hasInstaller = objects.some(object => /\.(exe|dmg)$/i.test(object.key));
+  if (!hasInstaller) {
+    return json({ success: true, product_id: productId, skipped: "no-installer", moved: 0, remaining: [] }, 200, { "Cache-Control": "no-store" });
+  }
+
+  const moved = [];
+  const remaining = [];
+  for (const object of objects) {
+    const relative = object.key.slice(prefix.length);
+    if (!relative || relative.endsWith("/")) continue;
+    if (/\.ffx$/i.test(relative)) {
+      const stored = await bucket.get(object.key);
+      if (!stored) continue;
+      await bucket.put(`_source_ffx/${object.key}`, stored.body, {
+        httpMetadata: { contentType: "application/octet-stream" },
+        customMetadata: { product_id: productId, relocated_at: new Date().toISOString() },
+      });
+      await bucket.delete(object.key).catch(() => {});
+      moved.push(relative);
+    } else {
+      remaining.push(relative);
+    }
+  }
+  return json({ success: true, product_id: productId, moved: moved.length, remaining: remaining.slice(0, 40) }, 200, { "Cache-Control": "no-store" });
+}
+
 async function handleInstallerStatus(url, env) {
   const productId = String(url.searchParams.get("id") || "").trim();
   if (!/^[A-Za-z0-9_-]{1,100}$/.test(productId)) return json({ success: false, error: "Invalid leak ID" }, 400, { "Cache-Control": "no-store" });
@@ -25166,6 +25207,7 @@ async function announceProductToDiscord(env, product) {
 
       if (path === "/api/installer/publish" && request.method === "POST") return handleInstallerPublish(request, url, env);
       if (path === "/api/installer/migrate" && request.method === "POST") return handleInstallerMigrate(request, url, env);
+      if (path === "/api/installer/relocate-source" && request.method === "POST") return handleInstallerRelocateSource(request, url, env);
       if (path === "/api/installer/status" && request.method === "GET") return handleInstallerStatus(url, env);
       if (path === "/api/installer/download" && request.method === "GET") return handleInstallerDownload(request, url, env);
       if (path === "/api/installer/auth/start" && request.method === "POST") return handleInstallerAuthStart(request, env, url);
