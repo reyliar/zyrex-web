@@ -1082,9 +1082,9 @@ async function warmArchiveCache(env, ctx, options) {
   const task = (async () => {
     try {
       let objects = [];
-      try { objects = (await r2List(env, r2Prefix, true)).filter(object => isDownloadableR2Object(object, r2Prefix)); } catch (_) { objects = []; }
+      try { objects = archiveObjects(await r2List(env, r2Prefix, true), r2Prefix); } catch (_) { objects = []; }
       if (!objects.length) {
-        try { objects = (await r2List(env, r2Prefix, false)).filter(object => isDownloadableR2Object(object, r2Prefix)); } catch (_) { objects = []; }
+        try { objects = archiveObjects(await r2List(env, r2Prefix, false), r2Prefix); } catch (_) { objects = []; }
       }
       if (!objects.length) return false;
       const names = objects.map(object => relativeR2Name(object.key, r2Prefix)).filter(Boolean);
@@ -2959,10 +2959,17 @@ function isDownloadableR2Object(obj, prefix) {
   if (!obj || !obj.key || obj.key.endsWith("/") || obj.key === prefix) return false;
   const name = relativeR2Name(obj.key, prefix);
   if (!name || name.endsWith("/") || name === ".placeholder" || name.endsWith("/.placeholder")) return false;
-  // Preset sources live inside the installer's encrypted payload, so the archive never
-  // ships a bare .ffx.
-  if (/\.ffx$/i.test(name)) return false;
   return !isWatermarkName(name);
+}
+
+// A leak that already ships a Zyrex installer carries its presets inside the installer's
+// encrypted payload, so the archive drops the bare .ffx files. A leak without an
+// installer keeps them, otherwise its download would be empty.
+function archiveObjects(objects, prefix) {
+  const downloadable = (objects || []).filter(object => isDownloadableR2Object(object, prefix));
+  const hasInstaller = downloadable.some(object => /\.(exe|dmg)$/i.test(object.key));
+  if (!hasInstaller) return downloadable;
+  return downloadable.filter(object => !/\.ffx$/i.test(object.key));
 }
 
 function safeDecode(value) {
@@ -21516,7 +21523,7 @@ async function announceProductToDiscord(env, product) {
           let primaryListError = null;
           try {
             const allObjects = await r2List(env, r2Prefix, true);
-            fileObjects = allObjects.filter(o => isDownloadableR2Object(o, r2Prefix));
+            fileObjects = archiveObjects(allObjects, r2Prefix);
           } catch (error) {
             primaryListError = error;
             console.error("Primary download bucket list failed:", error?.message || String(error));
@@ -21525,7 +21532,7 @@ async function announceProductToDiscord(env, product) {
           if (fileObjects.length === 0) {
             try {
               const allObjects = await r2List(env, r2Prefix, false);
-              fileObjects = allObjects.filter(o => isDownloadableR2Object(o, r2Prefix));
+              fileObjects = archiveObjects(allObjects, r2Prefix);
               isProdBucket = false;
             } catch (fallbackError) {
               console.error("Fallback download bucket list failed:", fallbackError?.message || String(fallbackError));
