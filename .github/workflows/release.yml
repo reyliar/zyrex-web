@@ -116,6 +116,14 @@ jobs:
     if: always() && needs.prepare.result == 'success' && (inputs.assemble_only == true || inputs.base_run_id != '' || (needs.windows-installers.result == 'success' && needs.macos-installers.result == 'success'))
     runs-on: ubuntu-latest
     steps:
+      - name: Check out installer source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
       - name: Build installer artifact index
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
