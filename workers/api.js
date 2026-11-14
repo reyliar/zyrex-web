@@ -2588,7 +2588,8 @@ function installerStoragePrefix(productId, platform) {
 
 function safeInstallerLabel(value, fallback) {
   const cleaned = String(value || "")
-    .replace(/[<>:"/\\|?*\u0000-\u001f]/g, " ")
+    .replace(/[\u200b-\u200f\u2060\ufeff]/g, "")
+    .replace(/[<>:"/\\|?*\u0000-\u001f\u007f-\u009f]/g, " ")
     .replace(/\s+/g, " ")
     .trim()
     .replace(/^\.+|\.+$/g, "")
