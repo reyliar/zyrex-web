@@ -603,6 +603,26 @@
         .file-item .fl i { color: var(--cherry-neon); font-size: .75rem; flex-shrink: 0; }
         .file-item .fl span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #fff; }
         .file-item .fs { color: var(--text-sub); font-size: .72rem; flex-shrink: 0; margin-left: 8px; }
+        .file-item .fl .file-os {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-left: 8px;
+            padding: 2px 7px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            background: rgba(255, 255, 255, 0.05);
+            color: var(--text-sub);
+            font-size: .66rem;
+            font-weight: 700;
+            line-height: 1.4;
+            white-space: nowrap;
+            overflow: visible;
+            text-overflow: clip;
+            flex-shrink: 0;
+        }
+        .file-item .fl .file-os img { width: 11px; height: 11px; object-fit: contain; filter: invert(1); opacity: .8; }
+        .file-item .fl .file-os i { color: inherit; font-size: .74rem; opacity: .85; }
 
         /* Tree folder styling (identical to download.html) */
         .tree-folder-group { margin-bottom: 2px; text-align: left; }
@@ -3057,6 +3077,9 @@
                 } else {
                     var sz = child.size ? (child.size > 1048576 ? (child.size/1048576).toFixed(1)+' MB' : (child.size/1024).toFixed(1)+' KB') : '--';
                     var ext = child.name.split('.').pop().toLowerCase();
+                    var osBadge = ext === 'exe'
+                        ? '<span class="file-os"><img src="/assets/windows11.svg" alt="Windows" title="Windows"> windows</span>'
+                        : (ext === 'dmg' ? '<span class="file-os"><i class="fab fa-apple" title="macOS"></i> mac</span>' : '');
                     var iconMap = {mp4:'fa-file-video',mov:'fa-file-video',webm:'fa-file-video',mp3:'fa-file-audio',wav:'fa-file-audio',aac:'fa-file-audio',png:'fa-file-image',jpg:'fa-file-image',jpeg:'fa-file-image',gif:'fa-file-image',webp:'fa-file-image',zip:'fa-file-zipper',rar:'fa-file-zipper','7z':'fa-file-zipper',pdf:'fa-file-pdf',aep:'fa-file-video',prproj:'fa-file-video',psd:'fa-file-image',ffx:'fa-sliders'};
                     var fi = iconMap[ext] || 'fa-file-lines';
                     var customIcon = window.getFileExtIcon(child.name);
@@ -3067,7 +3090,7 @@
                     tHtml += '<div class="file-item" style="padding-left:' + (indent + 12) + 'px">';
                     tHtml += '<div class="fl">';
                     tHtml += iconDisplay;
-                    tHtml += '<span title="' + child.name + '">' + child.name + '</span>';
+                    tHtml += '<span title="' + child.name + '">' + child.name + '</span>' + osBadge;
                     tHtml += '</div>';
                     tHtml += '<span class="fs">' + sz + '</span>';
                     tHtml += '</div>';
