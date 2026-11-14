@@ -58,8 +58,17 @@ def main() -> None:
     for item in files:
         key = str(item.get("key", ""))
         name = safe_filename(str(item.get("name", "")))
-        if not key or name.casefold() in seen:
-            raise SystemExit(f"Invalid or duplicate FFX source entry: {name}")
+        if not key:
+            raise SystemExit(f"Invalid FFX source entry: {name}")
+        # Production packs may contain the same basename in different folders.
+        # Preserve every preset with a deterministic unique filename for the
+        # crediting and installer stages instead of dropping the whole leak.
+        stem, suffix = Path(name).stem, Path(name).suffix
+        candidate, duplicate = name, 2
+        while candidate.casefold() in seen:
+            candidate = f"{stem} ({duplicate}){suffix}"
+            duplicate += 1
+        name = candidate
         seen.add(name.casefold())
         try:
             data = request(args.preset_id, token, key)
