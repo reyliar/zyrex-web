@@ -217,7 +217,8 @@ def main():
         assert "__OUTFIT_FONT_DATA__" not in html
         import webview
         assert hasattr(webview, "create_window") and hasattr(webview, "start")
-        print(f"OK: {state['leak']} · {state['presetCount']} presets · creator folder {api.creator_folder} · payload {len(api.encrypted_payload)} bytes")
+        if sys.stdout:
+            print(f"OK: {state['leak']} · {state['presetCount']} presets · creator folder {api.creator_folder} · payload {len(api.encrypted_payload)} bytes")
         return
     import webview
     api = InstallerAPI()

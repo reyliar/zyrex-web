@@ -103,6 +103,14 @@ def build(product_id: str, source: Path, output_root: Path, release_id: str) -> 
         args.append(str(PROJECT / "app.py"))
         subprocess.run(args, check=True, cwd=PROJECT)
 
+        if system == "darwin":
+            # Fail the build instead of shipping a bundle whose AES-GCM or pyobjc
+            # imports are broken on the release architecture.
+            bundle_binary = stage / f"{leak}.app" / "Contents" / "MacOS" / leak
+            if not bundle_binary.is_file():
+                raise RuntimeError("PyInstaller did not produce the expected macOS executable.")
+            subprocess.run([str(bundle_binary), "--self-test"], check=True)
+
         platform_folder = "Windows" if system == "windows" else "macOS"
         release = output_root / platform_folder / leak
         release.mkdir(parents=True, exist_ok=True)
