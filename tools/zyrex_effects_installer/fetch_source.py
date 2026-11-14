@@ -18,7 +18,12 @@ def request(product_id: str, token: str, file_key: str = "") -> bytes:
         query["file"] = file_key
     req = urllib.request.Request(
         f"{API}?{urllib.parse.urlencode(query)}",
-        headers={"Authorization": f"Bearer {token}", "Accept": "application/octet-stream" if file_key else "application/json"},
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/octet-stream" if file_key else "application/json",
+            "Cache-Control": "no-cache",
+            "User-Agent": "Zyrex-Installer-Backfill/1.0",
+        },
     )
     with urllib.request.urlopen(req, timeout=45) as response:
         return response.read()
@@ -40,7 +45,11 @@ def main() -> None:
     token = os.environ.get("FFX_RELEASE_SOURCE_TOKEN", "").strip()
     if not token:
         raise SystemExit("FFX_RELEASE_SOURCE_TOKEN is not configured in GitHub Actions.")
-    listing = __import__("json").loads(request(args.preset_id, token).decode("utf-8"))
+    try:
+        listing = __import__("json").loads(request(args.preset_id, token).decode("utf-8"))
+    except HTTPError as error:
+        detail = error.read().decode("utf-8", "replace").strip().replace("\n", " ")[:400]
+        raise SystemExit(f"Could not list FFX source for {args.preset_id}: HTTP {error.code} {detail}") from error
     files = listing.get("files") if isinstance(listing, dict) else None
     if not isinstance(files, list) or not files:
         raise SystemExit(f"No FFX source files are available for {args.preset_id}.")
