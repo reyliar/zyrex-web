@@ -12,6 +12,9 @@ from pathlib import Path
 
 from build_payload import build_payload, safe_name
 
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(errors="replace")
+
 PROJECT = Path(__file__).resolve().parent
 
 
