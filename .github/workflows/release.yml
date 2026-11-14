@@ -12,6 +12,14 @@ on:
         required: false
         default: false
         type: boolean
+      preset_ids:
+        description: Comma-separated leak IDs to build or retry
+        required: false
+        type: string
+      base_run_id:
+        description: Existing Actions run whose successful installer artifacts should be included
+        required: false
+        type: string
   repository_dispatch:
     types: [zyrex_preset_published]
 
@@ -21,7 +29,7 @@ permissions:
 
 jobs:
   prepare:
-    if: github.event_name == 'repository_dispatch' || inputs.backfill_all == true || inputs.preset_id != ''
+    if: github.event_name == 'repository_dispatch' || inputs.backfill_all == true || inputs.preset_id != '' || inputs.preset_ids != '' || inputs.base_run_id != ''
     runs-on: ubuntu-latest
     outputs:
       product_ids: ${{ steps.targets.outputs.product_ids }}
@@ -43,8 +51,8 @@ jobs:
       - name: Select requested leak
         if: inputs.backfill_all != true
         env:
-          PRODUCT_ID: ${{ github.event.client_payload.product_id || inputs.preset_id }}
-        run: python -c 'import json,os,re,pathlib; p=os.environ["PRODUCT_ID"].strip(); assert re.fullmatch(r"[A-Za-z0-9_-]{1,100}",p), "Invalid preset ID"; pathlib.Path(os.environ["RUNNER_TEMP"],"product_ids.json").write_text(json.dumps([p]))'
+          PRODUCT_IDS: ${{ inputs.preset_ids || github.event.client_payload.product_id || inputs.preset_id }}
+        run: python -c 'import json,os,re,pathlib; ids=[p.strip() for p in os.environ["PRODUCT_IDS"].split(",") if p.strip()]; assert ids and all(re.fullmatch(r"[A-Za-z0-9_-]{1,100}",p) for p in ids), "Invalid preset ID list"; pathlib.Path(os.environ["RUNNER_TEMP"],"product_ids.json").write_text(json.dumps(list(dict.fromkeys(ids))))'
 
       - name: Publish build matrix
         id: targets
@@ -93,13 +101,23 @@ jobs:
           platform: macOS
 
   assemble-release:
-    needs: [windows-installers, macos-installers]
-    if: needs.windows-installers.result == 'success' && needs.macos-installers.result == 'success'
+    needs: [prepare, windows-installers, macos-installers]
+    if: needs.prepare.result == 'success' && needs.windows-installers.result == 'success' && needs.macos-installers.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Download Windows and macOS folders
         uses: actions/download-artifact@v4
         with:
+          pattern: zyrex-build-*
+          path: release
+          merge-multiple: true
+
+      - name: Include successful builds from the base run
+        if: inputs.base_run_id != ''
+        uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ inputs.base_run_id }}
           pattern: zyrex-build-*
           path: release
           merge-multiple: true
