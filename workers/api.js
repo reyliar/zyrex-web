@@ -1087,7 +1087,13 @@ async function warmArchiveCache(env, ctx, options) {
         try { objects = (await r2List(env, r2Prefix, false)).filter(object => isDownloadableR2Object(object, r2Prefix)); } catch (_) { objects = []; }
       }
       if (!objects.length) return false;
-      const names = objects.map(object => relativeR2Name(object.key, r2Prefix)).filter(Boolean);
+      let names = objects.map(object => relativeR2Name(object.key, r2Prefix)).filter(Boolean);
+      // Match the selection the download route makes for preset leaks.
+      const installerNames = objects
+        .filter(object => /\.(exe|dmg)$/i.test(object.key))
+        .map(object => relativeR2Name(object.key, r2Prefix))
+        .filter(Boolean);
+      if (installerNames.length) names = installerNames;
       const key = await archiveCacheKey(productId, r2Prefix, names);
       if (await readCachedArchive(env, key)) return true;
       const built = await requestStorageZip({
