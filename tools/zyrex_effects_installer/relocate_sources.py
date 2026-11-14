@@ -1,6 +1,7 @@
 """Move each preset leak's FFX source into _source_ffx/ so the folder only ships installers."""
 from __future__ import annotations
 
+import argparse
 import json
 import os
 import sys
@@ -42,8 +43,8 @@ def preset_ids() -> list[str]:
     return list(dict.fromkeys(ids))
 
 
-def relocate(preset_id: str, token: str) -> dict:
-    query = urllib.parse.urlencode({"id": preset_id})
+def relocate(preset_id: str, token: str, mode: str = "move") -> dict:
+    query = urllib.parse.urlencode({"id": preset_id, "mode": mode})
     headers = {
         "Authorization": f"Bearer {token}",
         "Accept": "application/json",
@@ -70,30 +71,36 @@ def relocate(preset_id: str, token: str) -> dict:
 
 
 def main() -> None:
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--mode", default="move", choices=("move", "restore"), help="move hides the FFX sources; restore brings non-FFX backups back")
+    args = parser.parse_args()
     token = os.environ.get("FFX_RELEASE_SOURCE_TOKEN", "").strip()
     if not token:
         raise SystemExit("FFX_RELEASE_SOURCE_TOKEN is required to relocate leak sources.")
     ids = preset_ids()
-    relocated = skipped = 0
+    relocated = skipped = restored = 0
     leftovers: dict[str, list[str]] = {}
     for index, preset_id in enumerate(ids, start=1):
-        result = relocate(preset_id, token)
+        result = relocate(preset_id, token, args.mode)
         if result.get("skipped"):
             skipped += 1
+        elif args.mode == "restore":
+            restored += int(result.get("restored") or 0)
         elif int(result.get("moved") or 0) > 0:
             relocated += 1
-        # Only the installer and the injected watermark files may remain.
-        unexpected = [
-            name for name in result.get("remaining") or []
-            if not name.lower().endswith((".exe", ".dmg", ".txt", ".url"))
-        ]
-        if unexpected:
-            leftovers[preset_id] = unexpected
+        if args.mode == "move":
+            # Only the FFX sources leave the leak folder.
+            unexpected = [name for name in result.get("remaining") or [] if name.lower().endswith(".ffx")]
+            if unexpected:
+                leftovers[preset_id] = unexpected
         if index % 25 == 0:
             print(f"Inspected {index}/{len(ids)} leaks.", file=sys.stderr)
+    if args.mode == "restore":
+        print(f"Restored {restored} file(s) across {len(ids)} leak(s); skipped {skipped} without an installer.")
+        return
     print(f"Relocated sources for {relocated} leak(s); skipped {skipped} without an installer.")
     if leftovers:
-        print("Leaks still holding other files:")
+        print("Leaks still holding FFX sources:")
         for preset_id, names in leftovers.items():
             print(f"  {preset_id}: {', '.join(names[:8])}")
 

@@ -34,6 +34,11 @@ on:
         required: false
         default: false
         type: boolean
+      restore_sources:
+        description: Bring project files, tutorials and images that an earlier relocation moved back into their leak folder
+        required: false
+        default: false
+        type: boolean
   repository_dispatch:
     types: [zyrex_preset_published]
 
@@ -43,7 +48,11 @@ permissions:
 
 jobs:
   prepare:
-    if: github.event_name == 'repository_dispatch' || inputs.backfill_all == true || inputs.preset_id != '' || inputs.preset_ids != '' || inputs.base_run_id != '' || inputs.assemble_only == true || inputs.migrate_ids != ''
+    if: >-
+      github.event_name == 'repository_dispatch' || inputs.backfill_all == true ||
+      inputs.preset_id != '' || inputs.preset_ids != '' || inputs.base_run_id != '' ||
+      inputs.assemble_only == true || inputs.migrate_ids != '' ||
+      inputs.relocate_sources == true || inputs.restore_sources == true
     runs-on: ubuntu-latest
     outputs:
       product_ids: ${{ steps.targets.outputs.product_ids }}
@@ -125,7 +134,7 @@ jobs:
           release_id: ${{ github.run_id }}
 
   relocate-sources:
-    if: inputs.relocate_sources == true
+    if: inputs.relocate_sources == true || inputs.restore_sources == true
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
@@ -140,7 +149,12 @@ jobs:
           python-version: "3.12"
 
       - name: Move FFX sources into the backup prefix
-        run: python tools/zyrex_effects_installer/relocate_sources.py
+        if: inputs.restore_sources != true
+        run: python tools/zyrex_effects_installer/relocate_sources.py --mode move
+
+      - name: Restore non-FFX files into their leak folders
+        if: inputs.restore_sources == true
+        run: python tools/zyrex_effects_installer/relocate_sources.py --mode restore
 
   migrate-installers:
     needs: prepare

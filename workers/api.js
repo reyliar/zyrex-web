@@ -1087,13 +1087,7 @@ async function warmArchiveCache(env, ctx, options) {
         try { objects = (await r2List(env, r2Prefix, false)).filter(object => isDownloadableR2Object(object, r2Prefix)); } catch (_) { objects = []; }
       }
       if (!objects.length) return false;
-      let names = objects.map(object => relativeR2Name(object.key, r2Prefix)).filter(Boolean);
-      // Match the selection the download route makes for preset leaks.
-      const installerNames = objects
-        .filter(object => /\.(exe|dmg)$/i.test(object.key))
-        .map(object => relativeR2Name(object.key, r2Prefix))
-        .filter(Boolean);
-      if (installerNames.length) names = installerNames;
+      const names = objects.map(object => relativeR2Name(object.key, r2Prefix)).filter(Boolean);
       const key = await archiveCacheKey(productId, r2Prefix, names);
       if (await readCachedArchive(env, key)) return true;
       const built = await requestStorageZip({
@@ -2708,15 +2702,19 @@ async function handleInstallerMigrate(request, url, env) {
   return json({ success: true, product_id: productId, moved }, 200, { "Cache-Control": "no-store" });
 }
 
-// Production folders only ship the installer plus the Zyrex watermark files, so the
-// FFX source is relocated to the _source_ffx/ backup the build endpoint already reads.
+// Production folders keep everything except the FFX source, which is relocated to the
+// _source_ffx/ backup the build endpoint already reads. mode=restore undoes an earlier
+// relocation for non-FFX files (project files, tutorials, images).
 async function handleInstallerRelocateSource(request, url, env) {
   if (request.method !== "POST") return json({ success: false, error: "Method not allowed" }, 405, { "Cache-Control": "no-store" });
   const expected = String(env.FFX_RELEASE_SOURCE_TOKEN || "").trim();
   const provided = String(request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "").trim();
   if (!expected || !installerSecretMatches(provided, expected)) return json({ success: false, error: "Unauthorized" }, 401, { "Cache-Control": "no-store" });
   const productId = String(url.searchParams.get("id") || "").trim();
-  if (!/^[A-Za-z0-9_-]{1,100}$/.test(productId)) return json({ success: false, error: "Invalid leak ID" }, 400, { "Cache-Control": "no-store" });
+  const mode = String(url.searchParams.get("mode") || "move").trim().toLowerCase();
+  if (!/^[A-Za-z0-9_-]{1,100}$/.test(productId) || (mode !== "move" && mode !== "restore")) {
+    return json({ success: false, error: "Invalid leak ID" }, 400, { "Cache-Control": "no-store" });
+  }
   const product = await dbGetProduct(env, productId).catch(() => null);
   const prefix = normalizeR2Prefix(product?.file_path);
   const bucket = env.STORAGE_PROD || env.STORAGE;
@@ -2725,7 +2723,29 @@ async function handleInstallerRelocateSource(request, url, env) {
   const objects = await r2List(env, prefix, true);
   const hasInstaller = objects.some(object => /\.(exe|dmg)$/i.test(object.key));
   if (!hasInstaller) {
-    return json({ success: true, product_id: productId, skipped: "no-installer", moved: 0, remaining: [] }, 200, { "Cache-Control": "no-store" });
+    return json({ success: true, product_id: productId, skipped: "no-installer", moved: 0, restored: 0, remaining: [] }, 200, { "Cache-Control": "no-store" });
+  }
+
+  if (mode === "restore") {
+    const backupPrefix = `_source_ffx/${prefix}`;
+    const backups = await r2List(env, backupPrefix, true);
+    let restored = 0;
+    for (const object of backups) {
+      const relative = object.key.slice(backupPrefix.length);
+      if (!relative || relative.endsWith("/") || /\.ffx$/i.test(relative)) continue;
+      const existing = await bucket.head(prefix + relative).catch(() => null);
+      if (!existing) {
+        const stored = await bucket.get(object.key);
+        if (!stored) continue;
+        await bucket.put(prefix + relative, stored.body, {
+          httpMetadata: { contentType: "application/octet-stream" },
+          customMetadata: { product_id: productId, restored_at: new Date().toISOString() },
+        });
+      }
+      await bucket.delete(object.key).catch(() => {});
+      restored += 1;
+    }
+    return json({ success: true, product_id: productId, mode, restored }, 200, { "Cache-Control": "no-store" });
   }
 
   const moved = [];
@@ -2733,10 +2753,9 @@ async function handleInstallerRelocateSource(request, url, env) {
   for (const object of objects) {
     const relative = object.key.slice(prefix.length);
     if (!relative || relative.endsWith("/")) continue;
-    // Only the installer and the injected watermark files stay in the leak folder;
-    // everything else (FFX sources, project files, tutorials, images) is preserved
-    // under _source_ffx/ so the pack can still be rebuilt later.
-    if (/\.(exe|dmg)$/i.test(relative) || isWatermarkName(relative)) {
+    // Only the preset sources leave the leak folder; project files, tutorials and
+    // images stay where the pack has always kept them.
+    if (!/\.ffx$/i.test(relative)) {
       remaining.push(relative);
       continue;
     }
@@ -2749,7 +2768,8 @@ async function handleInstallerRelocateSource(request, url, env) {
     await bucket.delete(object.key).catch(() => {});
     moved.push(relative);
   }
-  return json({ success: true, product_id: productId, moved: moved.length, remaining: remaining.slice(0, 40) }, 200, { "Cache-Control": "no-store" });
+  const ffxLeft = remaining.filter(name => /\.ffx$/i.test(name));
+  return json({ success: true, product_id: productId, mode, moved: moved.length, remaining: remaining.slice(0, 40), ffx_left: ffxLeft.length }, 200, { "Cache-Control": "no-store" });
 }
 
 async function handleInstallerStatus(url, env) {
@@ -2939,6 +2959,9 @@ function isDownloadableR2Object(obj, prefix) {
   if (!obj || !obj.key || obj.key.endsWith("/") || obj.key === prefix) return false;
   const name = relativeR2Name(obj.key, prefix);
   if (!name || name.endsWith("/") || name === ".placeholder" || name.endsWith("/.placeholder")) return false;
+  // Preset sources live inside the installer's encrypted payload, so the archive never
+  // ships a bare .ffx.
+  if (/\.ffx$/i.test(name)) return false;
   return !isWatermarkName(name);
 }
 
@@ -21514,7 +21537,7 @@ async function announceProductToDiscord(env, product) {
             return json({ success: false, error: "No files found in storage" }, 404);
           }
           
-          let selectedObjects = selectedSet
+          const selectedObjects = selectedSet
             ? fileObjects.filter(o => {
                 const rel = relativeR2Name(o.key, r2Prefix);
                 const base = rel.split("/").pop();
@@ -21522,14 +21545,6 @@ async function announceProductToDiscord(env, product) {
                 return selectedSet.has(rel) || selectedSet.has(base) || selectedSet.has(full);
               })
             : fileObjects;
-
-          // Preset leaks ship their Zyrex Installer next to their own files. Unless the
-          // member picked specific files, the archive is the installer (the encrypted
-          // presets live inside it) plus the Zyrex watermark files.
-          if (!selectedSet) {
-            const installers = fileObjects.filter(o => /\.(exe|dmg)$/i.test(o.key));
-            if (installers.length) selectedObjects = installers;
-          }
           
           if (selectedObjects.length === 0) {
             return json({ success: false, error: "Selected files were not found in storage" }, 404);
