@@ -4,11 +4,15 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import sys
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
+
+if hasattr(sys.stdout, "reconfigure"):
+    sys.stdout.reconfigure(errors="replace")
 
 SITE = "https://zyrexediting.xyz"
 PUBLISH_API = f"{SITE}/api/installer/publish"
