@@ -12,6 +12,15 @@ The release folder contains exactly three entries:
 
 The app is version `v1.0.0`; its icon is generated from `content.png`. Its detected After Effects destination is clickable; after install the green Completed button and notification show the exact preset folder. The executable does not contain plaintext FFX files or the decryption key.
 
+## Bundle layout
+
+The distributed app is a single file on both platforms (`<Leak name>.exe`, `<Leak name>.dmg` containing a one-file `.app`). To keep it small:
+
+- `ui.html` inlines the logo as a data URI, so no loose asset files are read at runtime.
+- AES-256-GCM decryption uses pycryptodome; `cryptography` stays a build-time dependency only for encrypting the payload.
+- `pyihooks/hook-Crypto.py` ships only the AES/ECB/CTR/GHASH backends instead of every pycryptodome module.
+- Unused stdlib and packaging modules (`tkinter`, `setuptools`, `unittest`, `PIL`, ...) are excluded in `build_release.py`.
+
 ## Automatic release flow
 
 `.github/workflows/release.yml` builds Windows and macOS artifacts. Product publishing triggers it using `repository_dispatch`; `workflow_dispatch` can build one leak by ID or backfill every existing preset leak with production FFX files. Both platform builds use the same release ID and Worker-derived encryption key. The combined artifact contains separate `Windows/` and `macOS/` folders. Failed IDs can be rebuilt and merged with a successful base run by setting `preset_ids` and `base_run_id`.

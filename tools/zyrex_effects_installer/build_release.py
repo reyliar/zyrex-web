@@ -20,6 +20,11 @@ if hasattr(sys.stdout, "reconfigure"):
 
 PROJECT = Path(__file__).resolve().parent
 INSTALLER_API = "https://zyrexediting.xyz/api/installer/build-key"
+EXCLUDED_MODULES = (
+    "tkinter", "_tkinter", "unittest", "doctest", "pydoc", "pdb", "lib2to3",
+    "PIL", "numpy", "pytest", "IPython", "cryptography",
+    "setuptools", "_distutils_hack", "pkg_resources",
+)
 
 
 def get_payload_key(product_id: str, release_id: str) -> bytes:
@@ -81,11 +86,16 @@ def build(product_id: str, source: Path, output_root: Path, release_id: str) -> 
             "--icon", str(icon_path),
             "--add-data", f"{PROJECT / 'ui.html'}{data_sep}.",
             "--add-data", f"{PROJECT / 'content.png'}{data_sep}.",
-            "--add-data", f"{PROJECT / 'outfit-latin.woff2'}{data_sep}.",
-            "--add-data", f"{PROJECT / 'outfit-latin-ext.woff2'}{data_sep}.",
         ]
+        # Keep the bundle small: the UI inlines its own assets and only urllib,
+        # tkinter-free pywebview, and the AES-GCM backend of pycryptodome are
+        # needed at runtime.
+        args += ["--additional-hooks-dir", str(PROJECT / "pyihooks")]
+        for excluded in EXCLUDED_MODULES:
+            args += ["--exclude-module", excluded]
         if system == "darwin":
-            args += ["--windowed", "--onedir"]
+            # A single-file bundle keeps the DMG at ~1/3 of the onedir size.
+            args += ["--windowed", "--onefile", "--strip"]
         elif system == "windows":
             args += ["--windowed", "--onefile"]
         else:

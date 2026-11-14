@@ -2,7 +2,7 @@
 from __future__ import annotations
 import base64, datetime, json, os, re, secrets, shutil, subprocess, sys, threading, time, urllib.error, urllib.parse, urllib.request, zipfile
 from pathlib import Path
-from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+from Crypto.Cipher import AES
 
 SITE = "https://zyrexediting.xyz"
 VERSION = "v1.0.0"
@@ -10,6 +10,12 @@ VERSION = "v1.0.0"
 def resource(name: str) -> Path:
     root = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
     return root / name
+
+def data_uri(name: str, mime: str) -> str:
+    return f"data:{mime};base64,{base64.b64encode(resource(name).read_bytes()).decode('ascii')}"
+
+def render_html() -> str:
+    return resource("ui.html").read_text(encoding="utf-8").replace("__ZYREX_LOGO__", data_uri("content.png", "image/png"))
 
 def safe_part(value: str, fallback: str) -> str:
     value = re.sub(r'[<>:"/\\|?*\x00-\x1f]', " ", str(value or ""))
@@ -143,8 +149,9 @@ class InstallerAPI:
         try:
             from io import BytesIO
             nonce, ciphertext = self.encrypted_payload[:12], self.encrypted_payload[12:]
-            aad = f"{self.product_id}:{self.release_id}".encode("utf-8")
-            plaintext = AESGCM(self.payload_key).decrypt(nonce, ciphertext, aad)
+            cipher = AES.new(self.payload_key, AES.MODE_GCM, nonce=nonce)
+            cipher.update(f"{self.product_id}:{self.release_id}".encode("utf-8"))
+            plaintext = cipher.decrypt_and_verify(ciphertext[:-16], ciphertext[-16:])
             archive = zipfile.ZipFile(BytesIO(plaintext))
             downloaded_at = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds")
             folder.mkdir(parents=True, exist_ok=True)
@@ -197,13 +204,25 @@ def main():
         api = InstallerAPI()
         state = api.get_state()
         assert state["presetCount"] > 0 and state["leak"]
-        print(f"OK: {state['leak']} · {state['presetCount']} presets · creator folder {api.creator_folder}")
+        probe_key, probe_nonce, probe_aad, probe_data = secrets.token_bytes(32), secrets.token_bytes(12), b"preset-probe:probe-release", b"Zyrex preset payload" * 64
+        cipher = AES.new(probe_key, AES.MODE_GCM, nonce=probe_nonce)
+        cipher.update(probe_aad)
+        sealed, tag = cipher.encrypt_and_digest(probe_data)
+        opened = AES.new(probe_key, AES.MODE_GCM, nonce=probe_nonce)
+        opened.update(probe_aad)
+        assert opened.decrypt_and_verify(sealed, tag) == probe_data
+        assert len(api.encrypted_payload) > 28
+        html = render_html()
+        assert "__ZYREX_LOGO__" not in html and "data:image/png;base64," in html
+        assert "__OUTFIT_FONT_DATA__" not in html
+        import webview
+        assert hasattr(webview, "create_window") and hasattr(webview, "start")
+        print(f"OK: {state['leak']} · {state['presetCount']} presets · creator folder {api.creator_folder} · payload {len(api.encrypted_payload)} bytes")
         return
     import webview
-    html = resource("ui.html").read_text(encoding="utf-8").replace("__ZYREX_LOGO__", "content.png")
     api = InstallerAPI()
     threading.Thread(target=lambda: (time.sleep(2), api.refresh_metadata()), daemon=True).start()
-    webview.create_window("Zyrex Effects Installer", html=html, js_api=api, width=900, height=720, min_size=(620, 560), background_color="#100b0e")
+    webview.create_window("Zyrex Effects Installer", html=render_html(), js_api=api, width=900, height=720, min_size=(620, 560), background_color="#100b0e")
     webview.start(debug=False)
 
 if __name__ == "__main__": main()

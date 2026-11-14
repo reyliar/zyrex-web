@@ -11,7 +11,7 @@ $Python = Join-Path $Venv 'Scripts\python.exe'
 if ([string]::IsNullOrWhiteSpace($OutputRoot)) { $OutputRoot = Join-Path $Project 'releases' }
 if ([string]::IsNullOrWhiteSpace($ReleaseId)) { $ReleaseId = Get-Date -Format 'yyyyMMddHHmmss' }
 if (-not (Test-Path -LiteralPath $Python)) { py -3.12 -m venv $Venv }
-& $Python -m pip install --upgrade pyinstaller pywebview cryptography pillow
+& $Python -m pip install --upgrade pyinstaller pywebview pycryptodome cryptography pillow
 if ($LASTEXITCODE -ne 0) { throw 'Build dependencies could not be installed.' }
 & $Python (Join-Path $Project 'build_release.py') --preset-id $PresetId --source $SourceFolder --output-root $OutputRoot --release-id $ReleaseId
 if ($LASTEXITCODE -ne 0) { throw 'The session-gated installer could not be built.' }
