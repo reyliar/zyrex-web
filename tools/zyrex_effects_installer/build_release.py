@@ -10,6 +10,8 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -32,13 +34,29 @@ def get_payload_key(product_id: str, release_id: str) -> bytes:
     if not token:
         raise RuntimeError("FFX_RELEASE_SOURCE_TOKEN is required to create a session-gated installer.")
     body = json.dumps({"product_id": product_id, "release_id": release_id}).encode("utf-8")
-    request = urllib.request.Request(INSTALLER_API, data=body, method="POST", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json", "Accept": "application/json", "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36", "Origin": "https://zyrexediting.xyz", "Referer": "https://zyrexediting.xyz/", "Sec-Fetch-Site": "same-origin", "Sec-Fetch-Mode": "cors", "Sec-Fetch-Dest": "empty"})
-    with urllib.request.urlopen(request, timeout=20) as response:
-        data = json.loads(response.read().decode("utf-8"))
-    encoded = str(data.get("key") or "")
-    if not encoded:
-        raise RuntimeError("The Zyrex API did not return an installer payload key.")
-    return base64.urlsafe_b64decode(encoded + "=" * (-len(encoded) % 4))
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json", "Accept": "application/json", "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36", "Origin": "https://zyrexediting.xyz", "Referer": "https://zyrexediting.xyz/", "Sec-Fetch-Site": "same-origin", "Sec-Fetch-Mode": "cors", "Sec-Fetch-Dest": "empty"}
+    # Many matrix jobs hit this endpoint at once; Cloudflare answers with 429 when the
+    # zone limit trips, so the build waits it out instead of failing the whole leak.
+    last_error = "key request did not run"
+    for attempt in range(1, 7):
+        request = urllib.request.Request(INSTALLER_API, data=body, method="POST", headers=headers)
+        try:
+            with urllib.request.urlopen(request, timeout=20) as response:
+                data = json.loads(response.read().decode("utf-8"))
+            encoded = str(data.get("key") or "")
+            if not encoded:
+                raise RuntimeError("The Zyrex API did not return an installer payload key.")
+            return base64.urlsafe_b64decode(encoded + "=" * (-len(encoded) % 4))
+        except urllib.error.HTTPError as error:
+            last_error = f"HTTP {error.code}"
+            if error.code not in {429, 500, 502, 503, 504} or attempt == 6:
+                raise RuntimeError(f"Could not obtain the installer payload key: {last_error}") from error
+            try:
+                retry_after = float(error.headers.get("Retry-After") or 0)
+            except (TypeError, ValueError):
+                retry_after = 0.0
+            time.sleep(min(90.0, retry_after or attempt * 8))
+    raise RuntimeError(f"Could not obtain the installer payload key: {last_error}")
 
 
 def build(product_id: str, source: Path, output_root: Path, release_id: str) -> Path:
