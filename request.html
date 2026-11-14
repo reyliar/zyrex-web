@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Community request detail on Zyrex.">
+    <meta name="description" content="Request details, status and replies.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://zyrexediting.xyz/request">
     <meta property="og:title" content="Zyrex | Request">
-    <meta property="og:description" content="View community resource request details on Zyrex.">
+    <meta property="og:description" content="Request details, status and replies.">
     <meta property="og:image" content="https://zyrexediting.xyz/assets/og-image.png">
     <meta property="og:image:width" content="1024">
     <meta property="og:image:height" content="576">
@@ -16,13 +16,13 @@
     <meta name="author" content="Zyrex">
     <title>Zyrex | Request</title>
     <link rel="icon" type="image/png" href="/assets/content.png">
-    <link rel="stylesheet" href="/css/style.css?v=46">
+    <link rel="stylesheet" href="/css/style.css?v=92">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,800,900&amp;f[]=outfit@400,500,600,700,800,900&amp;display=swap">
     <style>
         :root {
-            --req-accent: #ff2b52;
-            --req-accent-glow: rgba(255, 43, 82, 0.4);
+            --req-accent: var(--accent, var(--zr-accent, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1)));
+            --req-accent-glow: color-mix(in srgb, var(--req-accent) 40%, transparent);
             --card-glass: rgba(14, 8, 18, 0.82);
             --card-border: rgba(255, 255, 255, 0.09);
             --text-main: #f8f5f6;
@@ -32,11 +32,11 @@
         body {
             background: #060108;
             background-image:
-                radial-gradient(circle at 25% 10%, rgba(255, 43, 82, 0.14) 0%, transparent 55%),
+                radial-gradient(circle at 25% 10%, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.14) 0%, transparent 55%),
                 radial-gradient(circle at 75% 25%, rgba(168, 85, 247, 0.12) 0%, transparent 50%),
-                radial-gradient(circle at 50% 80%, rgba(255, 43, 82, 0.08) 0%, transparent 60%);
+                radial-gradient(circle at 50% 80%, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.08) 0%, transparent 60%);
             color: var(--text-main);
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Satoshi', sans-serif;
             min-height: 100vh;
             overflow-x: hidden;
         }
@@ -65,12 +65,12 @@
             transition: color 0.2s;
         }
         .breadcrumb-bar a:hover { color: var(--req-accent); }
-        .breadcrumb-bar .sep { color: rgba(255,255,255,0.2); }
+        .breadcrumb-bar .sep { color: rgba(255, 255, 255, 0.2); }
         .breadcrumb-bar .current { color: #fff; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 320px; }
 
         /* SKELETON */
         .skeleton-block {
-            background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.1) 50%, rgba(255,255,255,0.05) 75%);
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.05) 25%, rgba(255, 255, 255, 0.1) 50%, rgba(255, 255, 255, 0.05) 75%);
             background-size: 200% 100%;
             animation: skeletonShimmer 1.4s infinite;
             border-radius: 12px;
@@ -98,7 +98,7 @@
             overflow: hidden;
             backdrop-filter: blur(28px);
             -webkit-backdrop-filter: blur(28px);
-            box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -130,7 +130,7 @@
             flex-direction: column;
             align-items: center;
             gap: 14px;
-            color: rgba(255,255,255,0.25);
+            color: rgba(255, 255, 255, 0.25);
         }
         .req-stage-placeholder i { font-size: 3.5rem; }
         .req-stage-placeholder span { font-size: 0.9rem; }
@@ -163,12 +163,12 @@
             text-transform: uppercase;
             letter-spacing: 0.5px;
         }
-        .type-preset { background: rgba(255,43,82,0.15); color: #ff6b87; border: 1px solid rgba(255,43,82,0.3); }
-        .type-project_file, .type-project-file { background: rgba(168,85,247,0.15); color: #c084fc; border: 1px solid rgba(168,85,247,0.3); }
-        .type-plugin { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
-        .type-software { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
-        .type-scenepack { background: rgba(245,158,11,0.15); color: #fbbf24; border: 1px solid rgba(245,158,11,0.3); }
-        .type-other { background: rgba(255,255,255,0.08); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.18); }
+        .type-preset { background: rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.15); color: rgba(var(--zr-rgb-255-107-135, 255, 107, 135), 1); border: 1px solid rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.3); }
+        .type-project_file, .type-project-file { background: rgba(168, 85, 247, 0.15); color: #c084fc; border: 1px solid rgba(168, 85, 247, 0.3); }
+        .type-plugin { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
+        .type-software { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .type-scenepack { background: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+        .type-other { background: rgba(255, 255, 255, 0.08); color: #e2e8f0; border: 1px solid rgba(255, 255, 255, 0.18); }
 
         .req-status-pill {
             padding: 4px 12px;
@@ -181,9 +181,9 @@
             align-items: center;
             gap: 5px;
         }
-        .status-pending { background: rgba(245,158,11,0.12); color: #fbbf24; border: 1px solid rgba(245,158,11,0.25); }
-        .status-completed { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
-        .status-in_progress { background: rgba(59,130,246,0.15); color: #60a5fa; border: 1px solid rgba(59,130,246,0.3); }
+        .status-pending { background: rgba(245, 158, 11, 0.12); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.25); }
+        .status-completed { background: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
+        .status-in_progress { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.3); }
 
         .req-detail-title {
             font-size: 1.65rem;
@@ -199,8 +199,8 @@
             align-items: center;
             gap: 12px;
             padding: 14px 16px;
-            background: rgba(255,255,255,0.04);
-            border: 1px solid rgba(255,255,255,0.07);
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.07);
             border-radius: 14px;
         }
         .req-creator-avatar-lg {
@@ -208,15 +208,15 @@
             height: 44px;
             border-radius: 50%;
             object-fit: cover;
-            border: 2px solid rgba(255,255,255,0.15);
+            border: 2px solid rgba(255, 255, 255, 0.15);
             flex-shrink: 0;
         }
         .req-creator-info { flex: 1; min-width: 0; }
-        .req-creator-label { font-size: 0.7rem; color: rgba(255,255,255,0.4); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+        .req-creator-label { font-size: 0.7rem; color: rgba(255, 255, 255, 0.4); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
         .req-creator-name-link {
             font-size: 0.95rem;
             font-weight: 700;
-            color: #ff6b87;
+            color: rgba(var(--zr-rgb-255-107-135, 255, 107, 135), 1);
             text-decoration: none;
             display: block;
             white-space: nowrap;
@@ -240,13 +240,13 @@
             align-items: center;
             gap: 7px;
             padding: 7px 16px;
-            background: rgba(167,243,208,0.07);
-            border: 1px solid rgba(167,243,208,0.2);
+            background: rgba(167, 243, 208, 0.07);
+            border: 1px solid rgba(167, 243, 208, 0.2);
             border-radius: 10px;
             font-size: 0.95rem;
             font-weight: 700;
             color: #a7f3d0;
-            font-family: 'Outfit', sans-serif;
+            font-family: 'Satoshi', sans-serif;
             width: fit-content;
         }
 
@@ -264,8 +264,8 @@
             align-items: center;
             gap: 8px;
             padding: 10px 20px;
-            background: rgba(255,255,255,0.06);
-            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
             border-radius: 12px;
             color: #fff;
             text-decoration: none;
@@ -278,9 +278,9 @@
             white-space: nowrap;
         }
         .req-product-link-btn:hover {
-            background: rgba(255,43,82,0.12);
-            border-color: rgba(255,43,82,0.3);
-            color: #ff6b87;
+            background: rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.12);
+            border-color: rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.3);
+            color: rgba(var(--zr-rgb-255-107-135, 255, 107, 135), 1);
         }
 
         /* UPVOTE */
@@ -290,9 +290,9 @@
             gap: 10px;
             padding: 12px 28px;
             border-radius: 999px;
-            border: 1.5px solid rgba(255,255,255,0.18);
-            background: rgba(255,255,255,0.06);
-            color: rgba(255,255,255,0.75);
+            border: 1.5px solid rgba(255, 255, 255, 0.18);
+            background: rgba(255, 255, 255, 0.06);
+            color: rgba(255, 255, 255, 0.75);
             font-size: 1rem;
             font-weight: 700;
             cursor: pointer;
@@ -301,21 +301,21 @@
         }
         .req-detail-upvote-btn:hover {
             border-color: var(--req-accent);
-            background: rgba(255,43,82,0.12);
-            color: #ff6b87;
+            background: rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.12);
+            color: rgba(var(--zr-rgb-255-107-135, 255, 107, 135), 1);
         }
         .req-detail-upvote-btn.upvoted {
             border-color: var(--req-accent);
-            background: rgba(255,43,82,0.15);
-            color: #ff4d6d;
+            background: rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.15);
+            color: var(--zr-accent-soft, rgba(var(--zr-rgb-255-77-109, 255, 77, 109), 1));
         }
         .req-detail-upvote-btn i { font-size: 1rem; transition: transform 0.2s; }
         .req-detail-upvote-btn.upvoted i { transform: translateY(-2px); }
 
         /* REQUESTER INFO CARD */
         .req-submitter-card {
-            background: rgba(255,255,255,0.03);
-            border: 1px solid rgba(255,255,255,0.07);
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.07);
             border-radius: 16px;
             padding: 18px 22px;
             display: flex;
@@ -327,13 +327,13 @@
             height: 42px;
             border-radius: 50%;
             object-fit: cover;
-            border: 2px solid rgba(255,255,255,0.1);
+            border: 2px solid rgba(255, 255, 255, 0.1);
             flex-shrink: 0;
-            background: rgba(255,255,255,0.05);
+            background: rgba(255, 255, 255, 0.05);
         }
         .req-submitter-info .req-submitter-label {
             font-size: 0.7rem;
-            color: rgba(255,255,255,0.4);
+            color: rgba(255, 255, 255, 0.4);
             text-transform: uppercase;
             letter-spacing: 0.5px;
             margin-bottom: 2px;
@@ -345,7 +345,7 @@
         }
         .req-submitter-info .req-submitter-time {
             font-size: 0.77rem;
-            color: rgba(255,255,255,0.4);
+            color: rgba(255, 255, 255, 0.4);
             margin-top: 2px;
         }
 
@@ -356,7 +356,7 @@
         }
         .req-detail-error i {
             font-size: 3rem;
-            color: rgba(255,255,255,0.2);
+            color: rgba(255, 255, 255, 0.2);
             margin-bottom: 16px;
             display: block;
         }
@@ -367,15 +367,15 @@
             align-items: center;
             gap: 8px;
             padding: 10px 24px;
-            background: rgba(255,43,82,0.15);
-            border: 1px solid rgba(255,43,82,0.3);
+            background: rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.15);
+            border: 1px solid rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.3);
             border-radius: 10px;
-            color: #ff6b87;
+            color: rgba(var(--zr-rgb-255-107-135, 255, 107, 135), 1);
             text-decoration: none;
             font-weight: 600;
             transition: all 0.2s;
         }
-        .req-detail-error a:hover { background: rgba(255,43,82,0.25); }
+        .req-detail-error a:hover { background: rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.25); }
 
         /* SECTION DIVIDER */
         .req-detail-section {
@@ -392,7 +392,7 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1px;
-            color: rgba(255,255,255,0.35);
+            color: rgba(255, 255, 255, 0.35);
             margin-bottom: 14px;
             display: flex;
             align-items: center;
@@ -488,9 +488,144 @@
                 border-radius: 16px;
             }
         }
+        /* Request detail: focused editorial layout with a distinct media stage. */
+        .req-detail-wrap { max-width:1160px; padding-top:116px; }
+        .breadcrumb-bar { margin-bottom:24px; color:rgba(255, 255, 255, .52); }
+        .req-hero-split { gap:24px; align-items:stretch; }
+        .req-stage-card { border:1px solid rgba(255, 255, 255, .14); border-radius:28px; background:radial-gradient(ellipse at 50% 0%,rgba(var(--zr-rgb-255-43-82, 255, 43, 82),.14),transparent 60%),rgba(12, 9, 15, .7); box-shadow:0 26px 70px rgba(0, 0, 0, .3); }
+        .req-info-panel { border:1px solid rgba(255, 255, 255, .13); border-radius:28px; background:linear-gradient(145deg,rgba(255, 255, 255, .065),rgba(255, 255, 255, .012)),rgba(12, 9, 15, .72); box-shadow:0 24px 65px rgba(0, 0, 0, .24); }
+        .req-detail-section { border-radius:20px; background:linear-gradient(145deg,rgba(255, 255, 255, .045),rgba(255, 255, 255, .012)),rgba(12, 9, 15, .58); }
+        @media(max-width:800px) { .req-detail-wrap { padding-top:102px; } .req-stage-card { border-radius:22px; } .req-info-panel { border-radius:22px; } }
+    </style>
+    <link rel="stylesheet" href="/css/glass.css?v=67">
+    <link rel="stylesheet" href="/css/atmosphere.css?v=7">
+    <style id="request-detail-contrast-fix">
+        /* Keep the request artwork inside its media frame. The global glass
+           layer is intentionally very translucent, which let this artwork
+           wash through the detail copy on bright thumbnails. */
+        .req-stage-card .ambient-backdrop { display: none !important; }
+        .req-hero-split { position: relative; isolation: isolate; }
+        .req-stage-card {
+            position: relative;
+            z-index: 0;
+            align-self: start;
+            width: 100%;
+            min-width: 0;
+            max-width: 100%;
+            height: auto;
+            min-height: 300px;
+            aspect-ratio: 1 / 1;
+            isolation: isolate;
+            contain: paint;
+            overflow: hidden;
+        }
+        .req-stage-card .main-thumb {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            display: block;
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            object-fit: cover;
+        }
+        @media (max-width: 800px) {
+            .req-stage-card { aspect-ratio: 16 / 9; min-height: 240px; }
+        }
+        @media (max-width: 480px) {
+            .req-stage-card { min-height: 200px; max-height: 240px; }
+        }
+        html body:not(.legal-page) .req-info-panel {
+            position: relative;
+            z-index: 1;
+            isolation: isolate;
+            background: linear-gradient(145deg, rgba(255, 255, 255, .055), rgba(255, 255, 255, .015)), rgba(9, 7, 13, .94) !important;
+            border-color: rgba(255, 255, 255, .15) !important;
+            backdrop-filter: blur(14px) saturate(135%);
+            -webkit-backdrop-filter: blur(14px) saturate(135%);
+        }
+    </style>
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.fontshare.com">
+    <style id="request-page-refresh">
+        .req-detail-wrap { max-width:1180px; padding-top:108px; }
+        .breadcrumb-bar { margin-bottom:20px; }
+        .req-hero-split { gap:22px; }
+        .req-stage-card { aspect-ratio: 4 / 3; min-height:320px; border-radius:24px; }
+        .req-info-panel { border-radius:24px; padding:clamp(22px,3vw,34px); }
+        .req-detail-section { border-radius:18px; }
+        .req-stage-card, .req-info-panel { box-shadow:0 22px 60px rgba(0,0,0,.25); }
+        @media(max-width:800px) { .req-detail-wrap { padding-top:98px; } .req-stage-card { aspect-ratio:16/10; min-height:220px; } }
+        @media(max-width:480px) { .req-stage-card { aspect-ratio:16/10; min-height:190px; max-height:none; } }
+    </style>
+    <style id="request-liquid-rework">
+      :root { --request-glass:rgba(17,16,22,.58); --request-stroke:rgba(255,255,255,.12); }
+      body { background-image:radial-gradient(ellipse at 17% 20%,rgba(var(--zr-rgb-255-43-82,255,43,82),.12),transparent 34%),radial-gradient(ellipse at 88% 55%,rgba(116,92,255,.075),transparent 37%); }
+      .req-detail-wrap { width:min(1220px,calc(100% - 48px)); max-width:none; margin-inline:auto; padding-top:116px; padding-bottom:90px; }
+      .breadcrumb-bar { display:inline-flex; align-items:center; gap:12px; max-width:100%; padding:10px 15px; border:1px solid rgba(255,255,255,.09); border-radius:999px; background:rgba(255,255,255,.035); backdrop-filter:blur(18px); }
+      .req-hero-split { grid-template-columns:minmax(0,1.04fr) minmax(390px,.96fr); align-items:stretch; gap:20px; }
+      .req-stage-card { align-self:stretch; min-height:0; aspect-ratio:4/3; border:1px solid var(--request-stroke); border-radius:26px; background:linear-gradient(145deg,rgba(255,255,255,.08),rgba(var(--zr-rgb-255-43-82,255,43,82),.1)),rgba(17,16,22,.5); box-shadow:0 30px 80px rgba(0,0,0,.3),inset 0 1px rgba(255,255,255,.12); backdrop-filter:blur(28px) saturate(145%); }
+      .req-stage-card:after { content:''; position:absolute; inset:0; z-index:2; border-radius:inherit; pointer-events:none; background:linear-gradient(180deg,rgba(0,0,0,.02),transparent 56%,rgba(0,0,0,.22)); }
+      .req-stage-card .main-thumb { border-radius:inherit; }
+      .req-stage-placeholder { background:radial-gradient(circle at 50% 38%,rgba(var(--zr-rgb-255-43-82,255,43,82),.15),transparent 40%),rgba(14,13,18,.7); }
+      .req-info-panel { padding:clamp(24px,3vw,38px); border:1px solid var(--request-stroke); border-radius:26px; background:linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.018) 45%),rgba(16,15,20,.65)!important; box-shadow:0 30px 80px rgba(0,0,0,.26),inset 0 1px rgba(255,255,255,.1); backdrop-filter:blur(30px) saturate(150%); -webkit-backdrop-filter:blur(30px) saturate(150%); }
+      .req-badges-row { gap:9px; }
+      .req-detail-title { margin:18px 0 20px; max-width:780px; font-size:clamp(2rem,4vw,3.4rem); line-height:1.02; letter-spacing:-.055em; }
+      .req-hero-split,.req-info-panel,.req-detail-title,.req-detail-desc,.req-detail-section { min-width:0; max-width:100%; }
+      .req-detail-title { overflow-wrap:anywhere; word-break:normal; }
+      .req-detail-desc,.req-detail-section { overflow-wrap:anywhere; }
+      .req-info-panel :is(a,button) { max-width:100%; }
+      .req-detail-desc { color:rgba(255,255,255,.69); font-size:1rem; line-height:1.8; }
+      .req-price-block,.req-creator-block,.req-submitter-card,.req-detail-section { border-color:rgba(255,255,255,.09); background:rgba(255,255,255,.035); backdrop-filter:blur(16px); }
+      .req-price-block { display:inline-flex; border-radius:999px; padding:10px 15px; }
+      .req-creator-block,.req-submitter-card { border-radius:17px; padding:13px 15px; }
+      .req-product-link-btn { border-radius:14px; }
+      .req-detail-upvote-btn { border-radius:14px; }
+      .req-stage-card .ambient-backdrop { display:none!important; }
+      @media(max-width:850px) { .req-detail-wrap { width:calc(100% - 32px); padding-top:102px; } .req-hero-split { grid-template-columns:1fr; gap:14px; } .req-stage-card { aspect-ratio:16/10; min-height:0; } .req-info-panel { border-radius:22px; } }
+      @media(max-width:520px) { html,body { max-width:100%; overflow-x:clip; } .req-detail-wrap { width:calc(100% - 24px); padding-top:92px; } .req-stage-card { aspect-ratio:4/3; border-radius:20px; } .req-info-panel { padding:21px 18px; border-radius:20px; } .req-detail-title { font-size:clamp(1.7rem,8.5vw,2rem); line-height:1.08; } }
+    </style>
+    <style id="request-theme-variants">
+      html[data-zyrex-theme="light"] body:not(.legal-page) .req-info-panel { background:linear-gradient(145deg,rgba(255,255,255,.92),rgba(242,246,252,.8)),rgba(255,255,255,.84)!important; border-color:rgba(21,45,90,.14)!important; }
+      html[data-zyrex-theme="light"] body :is(.req-detail-title,.req-type-pill,.req-status-pill,.req-submitter-name,.req-creator-name-static) { color:#122a52; }
+      html[data-zyrex-theme="light"] body :is(.req-detail-desc,.breadcrumb-bar,.req-creator-label,.req-submitter-label,.req-submitter-time) { color:rgba(18,42,82,.7); }
+      html[data-zyrex-theme="light"] body :is(.req-price-block,.req-creator-block,.req-submitter-card,.req-detail-section) { background:rgba(21,45,90,.045); border-color:rgba(21,45,90,.12); }
+      html[data-zyrex-theme="light"] body .breadcrumb-bar { border-color:rgba(21,45,90,.12); background:rgba(255,255,255,.6); }
+      html[data-zyrex-theme="light"] body .req-stage-placeholder { color:#46618f; background:radial-gradient(circle at 50% 38%,rgba(var(--zr-rgb-27-79-168,27,79,168),.12),transparent 42%),rgba(241,245,252,.9); }
+      html[data-zyrex-theme="dark"] body.request-detail-page { --req-accent:#fff; --zr-rgb-255-43-82:255,255,255; --zr-rgb-255-49-88:255,255,255; --zr-rgb-255-77-109:255,255,255; --zr-rgb-184-20-50:190,190,190; }
+      html[data-zyrex-theme="dark"] body.request-detail-page :is(.req-info-panel,.req-price-block,.req-creator-block,.req-submitter-card,.req-detail-section,.breadcrumb-bar) { color:#fff; background:linear-gradient(145deg,rgba(255,255,255,.085),rgba(255,255,255,.025)),rgba(12,12,12,.68); border-color:rgba(255,255,255,.16); backdrop-filter:blur(22px) saturate(145%); -webkit-backdrop-filter:blur(22px) saturate(145%); }
+      html[data-zyrex-theme="dark"] body.request-detail-page :is(.req-detail-title,.req-type-pill,.req-status-pill,.req-submitter-name,.req-creator-name-static,.breadcrumb-bar .current,.req-detail-section-title) { color:#fff; }
+      html[data-zyrex-theme="dark"] body.request-detail-page :is(.req-detail-desc,.breadcrumb-bar,.req-creator-label,.req-submitter-label,.req-submitter-time) { color:rgba(255,255,255,.68); }
+      html[data-zyrex-theme="dark"] body.request-detail-page .req-stage-placeholder { color:#ddd; background:radial-gradient(circle at 50% 38%,rgba(255,255,255,.1),transparent 42%),rgba(12,12,12,.78); }
+      html[data-zyrex-theme="light"] body.request-detail-page :is(.req-info-panel,.req-price-block,.req-creator-block,.req-submitter-card,.req-detail-section,.breadcrumb-bar) { backdrop-filter:blur(22px) saturate(145%); -webkit-backdrop-filter:blur(22px) saturate(145%); }
+    </style>
+    <link rel="stylesheet" href="/css/i18n.css?v=3">
+    <script src="/js/i18n.js?v=18" defer></script>
+    <script src="/js/post-markdown.js?v=1"></script>
+    <style id="request-detail-rework">
+      .request-detail-page { font-family:'Outfit','Satoshi',sans-serif; }
+      .request-detail-page :is(button,input,textarea,.req-detail-title,.req-detail-desc,.req-status-pill,.req-type-pill,.req-submitter-name) { font-family:'Outfit','Satoshi',sans-serif; }
+      .request-detail-page .req-detail-wrap { width:min(1180px,calc(100% - 36px)); padding-top:112px; }
+      .request-detail-page .req-hero-split { gap:clamp(14px,2vw,24px); }
+      .request-detail-page .req-badges-row { display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
+      .request-detail-page .req-status-pill,.request-detail-page .req-type-pill { max-width:100%; width:fit-content; white-space:normal; overflow-wrap:anywhere; line-height:1.4; }
+      .request-detail-page .req-detail-desc { overflow-wrap:anywhere; line-height:1.8; }
+      .request-detail-page .req-detail-desc :is(strong,em,del,code,a) { font:inherit; }
+      .request-detail-page .req-detail-desc strong { color:#fff; font-weight:750; }
+      .request-detail-page .req-detail-desc em { font-style:italic; }
+      .request-detail-page .req-detail-desc code { padding:2px 6px; border-radius:6px; background:rgba(255,255,255,.09); font-family:ui-monospace,monospace; font-size:.92em; }
+      .request-detail-page .req-detail-desc a { color:var(--zr-accent-soft,#ff718a); text-decoration:underline; text-underline-offset:3px; }
+      .request-detail-page .req-submitter-card { gap:14px; }
+      .request-detail-page .req-anonymous-mark { display:grid;place-items:center;width:46px;height:46px;flex:0 0 46px;border:1px solid color-mix(in srgb,var(--zr-accent,#ff315d) 42%,transparent);border-radius:16px;background:linear-gradient(145deg,color-mix(in srgb,var(--zr-accent,#ff315d) 18%,transparent),rgba(255,255,255,.06));color:var(--zr-accent-soft,#ff718a);font-size:1.5rem;font-weight:800;box-shadow:inset 0 1px rgba(255,255,255,.12); }
+      html[data-zyrex-theme="light"] .request-detail-page .req-detail-desc strong { color:#122a52; }
+      html[data-zyrex-theme="light"] .request-detail-page .req-anonymous-mark { color:#1b4fa8;border-color:rgba(27,79,168,.25);background:linear-gradient(145deg,rgba(27,79,168,.12),rgba(27,79,168,.035)); }
+      @media(max-width:520px) { .request-detail-page .req-detail-wrap { width:calc(100% - 24px);padding:94px 0 58px; } .request-detail-page .req-info-panel { gap:16px; } .request-detail-page .req-badges-row { gap:8px; } }
     </style>
 </head>
-<body>
+<body class="request-detail-page">
+    <div class="zr-sweep" aria-hidden="true"></div>
+    <div class="lq-veil" aria-hidden="true"></div>
     <!-- NAVBAR -->
     <nav class="navbar">
         <div class="container">
@@ -499,12 +634,13 @@
                 <span class="logo-text">yrex</span>
             </a>
             <ul class="nav-links" id="navLinks">
-                <li><a href="/">Home</a></li>
-                <li><a href="/resources">Resources</a></li>
-                <li><a href="/plugins">Plugins</a></li>
-                <li><a href="/requests" class="active">Requests</a></li>
-                <li><a href="/more">More</a></li>
-                <li><a href="/#contact">Contact</a></li>
+                <li><a href="/"><span data-i18n="nav.home">Home</span></a></li>
+                <li><a href="/leaks"><span data-i18n="nav.leaks">Leaks</span></a></li>
+                <li><a href="/feed"><span data-i18n="nav.feed">Feed</span></a></li>
+                <li><a href="/plugins"><span data-i18n="nav.plugins">Plugins</span></a></li>
+                <li><a href="/requests" class="active"><span data-i18n="nav.requests">Requests</span></a></li>
+                <li><a href="/audio"><span data-i18n="nav.audio">Audios</span></a></li>
+                
             </ul>
             <div class="nav-actions">
                 <div id="authBtn"></div>
@@ -571,7 +707,6 @@
                 case 'project-file': return 'folder-open';
                 case 'plugin': return 'puzzle-piece';
                 case 'software': return 'laptop-code';
-                case 'scenepack': return 'film';
                 default: return 'cube';
             }
         }
@@ -634,7 +769,7 @@
                 var crName = req.creator_name || 'Creator';
                 var crAvatar = req.creator_avatar
                     ? `<img src="${escapeHtml(req.creator_avatar)}" class="req-creator-avatar-lg" alt="${escapeHtml(crName)}" onerror="this.src='/assets/content.png'">`
-                    : `<div class="req-creator-avatar-lg" style="background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;"><i class="fas fa-user" style="color:rgba(255,255,255,0.3)"></i></div>`;
+                    : `<div class="req-creator-avatar-lg" style="background:rgba(255, 255, 255, 0.08);display:flex;align-items:center;justify-content:center;"><i class="fas fa-user" style="color:rgba(255, 255, 255, 0.3)"></i></div>`;
                 var crNameHtml = req.creator_social_url
                     ? `<a href="${escapeHtml(req.creator_social_url)}" target="_blank" rel="noopener" class="req-creator-name-link">${escapeHtml(crName)}</a>`
                     : `<span class="req-creator-name-static">${escapeHtml(crName)}</span>`;
@@ -645,7 +780,7 @@
                             <div class="req-creator-label"><i class="fas fa-user-circle"></i> Creator</div>
                             ${crNameHtml}
                         </div>
-                        ${req.creator_social_url ? `<a href="${escapeHtml(req.creator_social_url)}" target="_blank" rel="noopener" style="color:rgba(255,255,255,0.3);font-size:1.1rem;transition:color 0.2s;" onmouseover="this.style.color='#ff6b87'" onmouseout="this.style.color='rgba(255,255,255,0.3)'"><i class="fas fa-external-link-alt"></i></a>` : ''}
+                        ${req.creator_social_url ? `<a href="${escapeHtml(req.creator_social_url)}" target="_blank" rel="noopener" style="color:rgba(255, 255, 255, 0.3);font-size:1.1rem;transition:color 0.2s;" onmouseover="this.style.color='rgba(var(--zr-rgb-255-107-135, 255, 107, 135), 1)'" onmouseout="this.style.color='rgba(255, 255, 255, 0.3)'"><i class="fas fa-external-link-alt"></i></a>` : ''}
                     </div>
                 `;
             }
@@ -668,7 +803,7 @@
 
             // Description
             var descHtml = req.description
-                ? `<p class="req-detail-desc">${escapeHtml(req.description)}</p>`
+                ? `<div class="req-detail-desc">${window.ZyrexPostFormat ? window.ZyrexPostFormat.blocks(req.description) : escapeHtml(req.description).replace(/\n/g, '<br>')}</div>`
                 : '';
 
             // Product URL
@@ -680,8 +815,11 @@
 
             // Submitter
             var requesterName = req.is_anonymous ? 'Anonymous Member' : (req.user_name || 'Zyrex Member');
-            var requesterAvatar = (req.is_anonymous || !req.user_avatar) ? '/assets/content.png' : req.user_avatar;
-            var isRequesterAdmin = !!(req.is_admin || (req.user_id && ['1421177012814614548', '1382421118098346174'].includes(String(req.user_id))));
+            var requesterAvatar = !req.is_anonymous && req.user_avatar ? req.user_avatar : '';
+            var requesterId = String(req.user_id || '');
+            // An anonymous request must never hint at the requester's staff status.
+            var isRequesterAdmin = !req.is_anonymous && requesterId !== '1382421118098346174' &&
+                !!(req.is_admin || requesterId === '1421177012814614548');
             var adminBadgeHtml = isRequesterAdmin ? '<i class="fas fa-circle-check" style="color:#38bdf8;margin-left:6px;font-size:0.95rem;vertical-align:middle;" title="Verified Admin"></i>' : '';
 
             // Update page title & meta
@@ -692,15 +830,15 @@
             var fulfilledCardHtml = '';
             if (req.status === 'completed') {
                 var resourceBtn = req.resource_url
-                    ? `<a href="${escapeHtml(req.resource_url)}" style="padding:10px 22px;border-radius:10px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;text-decoration:none;font-size:0.88rem;font-weight:700;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(16,185,129,0.3);"><i class="fas fa-download"></i> View Resource</a>`
+                    ? `<a href="${escapeHtml(req.resource_url)}" style="padding:10px 22px;border-radius:10px;background:linear-gradient(135deg,#10b981,#059669);color:#fff;text-decoration:none;font-size:0.88rem;font-weight:700;display:inline-flex;align-items:center;gap:8px;box-shadow:0 4px 16px rgba(16, 185, 129, 0.3);"><i class="fas fa-download"></i> View Leak</a>`
                     : '';
                 fulfilledCardHtml = `
-                    <div style="margin-top:16px;padding:16px 20px;background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.3);border-radius:16px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
+                    <div style="margin-top:16px;padding:16px 20px;background:rgba(16, 185, 129, 0.1);border:1px solid rgba(16, 185, 129, 0.3);border-radius:16px;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;">
                         <div style="display:flex;align-items:center;gap:12px;">
                             <i class="fas fa-circle-check" style="color:#34d399;font-size:1.6rem;"></i>
                             <div>
                                 <div style="font-weight:700;color:#fff;font-size:0.95rem;">Request Completed!</div>
-                                <div style="font-size:0.78rem;color:rgba(255,255,255,0.6);">This resource is published and ready for download.</div>
+                                <div style="font-size:0.78rem;color:rgba(255, 255, 255, 0.6);">This leak is published and ready for download.</div>
                             </div>
                         </div>
                         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
@@ -710,15 +848,7 @@
                 `;
             }
 
-            var discordChannelId = req.discord_channel_id || '1551118401508745367';
-            var guildId = '1518954946110685184';
-            var discordTargetId = req.discord_thread_id || req.discord_message_id;
-            var discordUrl = discordTargetId
-                ? `https://discord.com/channels/${guildId}/${discordTargetId}`
-                : `https://discord.com/channels/${guildId}/${discordChannelId}`;
-            var discordLabel = 'Open on Discord';
-            var discordLinkHtml = `<a href="${discordUrl}" target="_blank" rel="noopener" style="display:inline-flex;align-items:center;gap:7px;padding:8px 16px;border-radius:10px;background:rgba(88,101,242,0.15);border:1px solid rgba(88,101,242,0.32);color:#8ea1e1;font-size:0.84rem;font-weight:700;text-decoration:none;transition:all 0.2s;" onmouseover="this.style.background='rgba(88,101,242,0.25)';this.style.color='#fff';" onmouseout="this.style.background='rgba(88,101,242,0.15)';this.style.color='#8ea1e1';"><i class="fab fa-discord"></i> ${discordLabel}</a>`;
-            var liveChatBtnHtml = `<button type="button" onclick="openDiscordThreadDrawer('${req.id}')" style="display:inline-flex;align-items:center;gap:8px;padding:8px 18px;border-radius:10px;background:#5865f2;border:1px solid #5865f2;color:#fff;font-size:0.84rem;font-weight:700;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 15px rgba(88,101,242,0.35);" onmouseover="this.style.background='#4752c4';this.style.transform='translateY(-1px)';" onmouseout="this.style.background='#5865f2';this.style.transform='none';"><i class="fab fa-discord"></i> Live Discord Chat</button>`;
+            var liveChatBtnHtml = `<button type="button" onclick="openDiscordThreadDrawer('${req.id}')" style="display:inline-flex;align-items:center;gap:8px;padding:8px 18px;border-radius:10px;background:#5865f2;border:1px solid #5865f2;color:#fff;font-size:0.84rem;font-weight:700;cursor:pointer;transition:all 0.2s;box-shadow:0 4px 15px rgba(88, 101, 242, 0.35);" onmouseover="this.style.background='#4752c4';this.style.transform='translateY(-1px)';" onmouseout="this.style.background='#5865f2';this.style.transform='none';"><i class="fab fa-discord"></i> Live Discord Chat</button>`;
 
 
             var html = `
@@ -754,53 +884,52 @@
                                 <i class="fas fa-arrow-up"></i>
                                 <span id="detailUpvoteCount">${req.upvotes_count || 1}</span> Upvotes
                             </button>
-                            <div style="display:inline-flex;align-items:center;gap:7px;padding:10px 16px;border-radius:12px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);color:#94a3b8;font-size:0.88rem;font-weight:600;font-family:'Outfit',sans-serif;">
+                            <div style="display:inline-flex;align-items:center;gap:7px;padding:10px 16px;border-radius:12px;background:rgba(255, 255, 255, 0.03);border:1px solid rgba(255, 255, 255, 0.08);color:#94a3b8;font-size:0.88rem;font-weight:600;font-family:'Satoshi', sans-serif;">
                                 <i class="far fa-eye" style="color:#64748b;"></i>
                                 <span><strong id="detailViewsCount" style="color:#fff;">${typeof req.views_count === 'number' ? req.views_count : (parseInt(req.views_count, 10) || 0)}</strong> Views</span>
                             </div>
                             ${liveChatBtnHtml}
-                            ${discordLinkHtml}
                         </div>
 
                         <!-- ADMIN ACTIONS PANEL -->
-                        <div id="adminActionsPanel" style="display:none;flex-direction:column;gap:10px;padding:16px 18px;background:linear-gradient(135deg, rgba(255,43,82,0.12) 0%, rgba(18,12,20,0.88) 100%);border:1px solid rgba(255,43,82,0.35);border-radius:16px;margin:16px 0;box-shadow:0 8px 25px rgba(255,43,82,0.14);">
+                        <div id="adminActionsPanel" style="display:none;flex-direction:column;gap:10px;padding:16px 18px;background:linear-gradient(135deg, rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.12) 0%, rgba(18, 12, 20, 0.88) 100%);border:1px solid rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.35);border-radius:16px;margin:16px 0;box-shadow:0 8px 25px rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.14);">
                             <div style="display:flex;align-items:center;justify-content:space-between;width:100%;">
-                                <span style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#ff6b87;display:flex;align-items:center;gap:7px;font-family:'Outfit',sans-serif;">
-                                    <i class="fas fa-shield-halved" style="color:#ff2b52;"></i> Admin Management Panel
+                                <span style="font-size:0.75rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:rgba(var(--zr-rgb-255-107-135, 255, 107, 135), 1);display:flex;align-items:center;gap:7px;font-family:'Satoshi', sans-serif;">
+                                    <i class="fas fa-shield-halved" style="color:var(--zr-accent, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1));"></i> Admin Management Panel
                                 </span>
-                                <span style="font-size:0.7rem;color:rgba(255,255,255,0.45);font-family:'Outfit',sans-serif;">Staff Privilege Active</span>
+                                <span style="font-size:0.7rem;color:rgba(255, 255, 255, 0.45);font-family:'Satoshi', sans-serif;">Staff Privilege Active</span>
                             </div>
                             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                                <button onclick="openAdminEdit()" style="padding:9px 16px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.18);border-radius:10px;color:#fff;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'">
+                                <button onclick="openAdminEdit()" style="padding:9px 16px;background:rgba(255, 255, 255, 0.08);border:1px solid rgba(255, 255, 255, 0.18);border-radius:10px;color:#fff;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s;" onmouseover="this.style.background='rgba(255, 255, 255, 0.15)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.08)'">
                                     <i class="fas fa-edit"></i> Edit
                                 </button>
-                                <a href="/upload?request_id=${encodeURIComponent(req.id)}&title=${encodeURIComponent(req.title)}&url=${encodeURIComponent(req.product_url || '')}&creator=${encodeURIComponent(req.creator_name || '')}" style="padding:9px 16px;background:rgba(16,185,129,0.14);border:1px solid rgba(16,185,129,0.35);border-radius:10px;color:#34d399;font-size:0.82rem;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s;" onmouseover="this.style.background='rgba(16,185,129,0.22)'" onmouseout="this.style.background='rgba(16,185,129,0.14)'">
+                                <a href="/upload?request_id=${encodeURIComponent(req.id)}&title=${encodeURIComponent(req.title)}&url=${encodeURIComponent(req.product_url || '')}&creator=${encodeURIComponent(req.creator_name || '')}" style="padding:9px 16px;background:rgba(16, 185, 129, 0.14);border:1px solid rgba(16, 185, 129, 0.35);border-radius:10px;color:#34d399;font-size:0.82rem;font-weight:600;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s;" onmouseover="this.style.background='rgba(16, 185, 129, 0.22)'" onmouseout="this.style.background='rgba(16, 185, 129, 0.14)'">
                                     <i class="fas fa-upload"></i> Fulfill on Studio
                                 </a>
-                                <button onclick="openAdminCompleteModal()" style="padding:9px 16px;background:rgba(16,185,129,0.12);border:1px solid rgba(16,185,129,0.3);border-radius:10px;color:#34d399;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s;" onmouseover="this.style.background='rgba(16,185,129,0.2)'" onmouseout="this.style.background='rgba(16,185,129,0.12)'">
+                                <button onclick="openAdminCompleteModal()" style="padding:9px 16px;background:rgba(16, 185, 129, 0.12);border:1px solid rgba(16, 185, 129, 0.3);border-radius:10px;color:#34d399;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s;" onmouseover="this.style.background='rgba(16, 185, 129, 0.2)'" onmouseout="this.style.background='rgba(16, 185, 129, 0.12)'">
                                     <i class="fas fa-check"></i> Mark Complete
                                 </button>
                                 ${req.status !== 'in_progress' ? `
-                                <button onclick="adminChangeStatus('in_progress')" style="padding:9px 16px;background:rgba(56,189,248,0.12);border:1px solid rgba(56,189,248,0.3);border-radius:10px;color:#38bdf8;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s;" onmouseover="this.style.background='rgba(56,189,248,0.22)'" onmouseout="this.style.background='rgba(56,189,248,0.12)'">
+                                <button onclick="adminChangeStatus('in_progress')" style="padding:9px 16px;background:rgba(56, 189, 248, 0.12);border:1px solid rgba(56, 189, 248, 0.3);border-radius:10px;color:#38bdf8;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s;" onmouseover="this.style.background='rgba(56, 189, 248, 0.22)'" onmouseout="this.style.background='rgba(56, 189, 248, 0.12)'">
                                     <i class="fas fa-spinner"></i> In Progress
                                 </button>
                                 ` : ''}
                                 ${req.status !== 'pending' ? `
-                                <button onclick="adminChangeStatus('pending')" style="padding:9px 16px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.15);border-radius:10px;color:rgba(255,255,255,0.7);font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.12)'" onmouseout="this.style.background='rgba(255,255,255,0.06)'">
+                                <button onclick="adminChangeStatus('pending')" style="padding:9px 16px;background:rgba(255, 255, 255, 0.06);border:1px solid rgba(255, 255, 255, 0.15);border-radius:10px;color:rgba(255, 255, 255, 0.7);font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s;" onmouseover="this.style.background='rgba(255, 255, 255, 0.12)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.06)'">
                                     <i class="fas fa-clock"></i> Mark Pending
                                 </button>
                                 ` : ''}
-                                <button onclick="adminRejectRequest()" style="padding:9px 16px;background:rgba(245,158,11,0.12);border:1px solid rgba(245,158,11,0.3);border-radius:10px;color:#fbbf24;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s;" onmouseover="this.style.background='rgba(245,158,11,0.2)'" onmouseout="this.style.background='rgba(245,158,11,0.12)'">
+                                <button onclick="adminRejectRequest()" style="padding:9px 16px;background:rgba(245, 158, 11, 0.12);border:1px solid rgba(245, 158, 11, 0.3);border-radius:10px;color:#fbbf24;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s;" onmouseover="this.style.background='rgba(245, 158, 11, 0.2)'" onmouseout="this.style.background='rgba(245, 158, 11, 0.12)'">
                                     <i class="fas fa-ban"></i> Reject
                                 </button>
-                                <button onclick="adminDeleteRequest()" style="padding:9px 16px;background:rgba(255,43,82,0.12);border:1px solid rgba(255,43,82,0.3);border-radius:10px;color:#ff6b87;font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s;" onmouseover="this.style.background='rgba(255,43,82,0.22)'" onmouseout="this.style.background='rgba(255,43,82,0.12)'">
+                                <button onclick="adminDeleteRequest()" style="padding:9px 16px;background:rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.12);border:1px solid rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.3);border-radius:10px;color:rgba(var(--zr-rgb-255-107-135, 255, 107, 135), 1);font-size:0.82rem;font-weight:600;cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;gap:6px;transition:all 0.2s;" onmouseover="this.style.background='rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.22)'" onmouseout="this.style.background='rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.12)'">
                                     <i class="fas fa-trash"></i> Delete
                                 </button>
                             </div>
                         </div>
 
                         <div class="req-submitter-card">
-                            <img src="${escapeHtml(requesterAvatar)}" class="req-submitter-avatar" alt="${escapeHtml(requesterName)}" onerror="this.src='/assets/content.png'">
+                            ${req.is_anonymous ? '<span class="req-anonymous-mark" aria-label="Anonymous">?</span>' : `<img src="${escapeHtml(requesterAvatar || '/assets/content.png')}" class="req-submitter-avatar" alt="${escapeHtml(requesterName)}" onerror="this.src='/assets/content.png'">`}
                             <div class="req-submitter-info">
                                 <div class="req-submitter-label"><i class="fas fa-paper-plane"></i> Requested by</div>
                                 <div class="req-submitter-name" style="display:flex;align-items:center;flex-wrap:wrap;">${escapeHtml(requesterName)}${adminBadgeHtml}</div>
@@ -891,58 +1020,57 @@
     </script>
 
     <!-- ADMIN EDIT MODAL -->
-    <div id="adminEditModal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px;">
-        <div style="background:#0e0812;border:1px solid rgba(255,43,82,0.3);border-radius:20px;padding:32px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0,0,0,0.7);">
+    <div id="adminEditModal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0, 0, 0, 0.75);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px;">
+        <div style="background:#0e0812;border:1px solid rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.3);border-radius:20px;padding:32px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;box-shadow:0 30px 80px rgba(0, 0, 0, 0.7);">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
-                <h2 style="margin:0;font-size:1.2rem;font-weight:800;color:#fff;"><i class="fas fa-edit" style="color:#ff4d6d;margin-right:8px;"></i>Edit Request</h2>
-                <button onclick="closeAdminEdit()" style="background:none;border:none;color:rgba(255,255,255,0.5);font-size:1.5rem;cursor:pointer;line-height:1;">&times;</button>
+                <h2 style="margin:0;font-size:1.2rem;font-weight:800;color:#fff;"><i class="fas fa-edit" style="color:var(--zr-accent-soft, rgba(var(--zr-rgb-255-77-109, 255, 77, 109), 1));margin-right:8px;"></i>Edit Request</h2>
+                <button onclick="closeAdminEdit()" style="background:none;border:none;color:rgba(255, 255, 255, 0.5);font-size:1.5rem;cursor:pointer;line-height:1;">&times;</button>
             </div>
             <form id="adminEditForm" onsubmit="submitAdminEdit(event)">
                 <div style="display:flex;flex-direction:column;gap:14px;">
                     <div>
-                        <label style="font-size:0.78rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block;">Title *</label>
-                        <input id="adminEditTitle" type="text" required style="width:100%;box-sizing:border-box;padding:10px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.9rem;font-family:inherit;outline:none;">
+                        <label style="font-size:0.78rem;color:rgba(255, 255, 255, 0.5);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block;">Title *</label>
+                        <input id="adminEditTitle" type="text" required style="width:100%;box-sizing:border-box;padding:10px 14px;background:rgba(255, 255, 255, 0.06);border:1px solid rgba(255, 255, 255, 0.12);border-radius:10px;color:#fff;font-size:0.9rem;font-family:inherit;outline:none;">
                     </div>
                     <div>
-                        <label style="font-size:0.78rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block;">Type</label>
-                        <select id="adminEditType" style="width:100%;box-sizing:border-box;padding:10px 14px;background:#1a0e22;border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.9rem;font-family:inherit;outline:none;">
+                        <label style="font-size:0.78rem;color:rgba(255, 255, 255, 0.5);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block;">Type</label>
+                        <select id="adminEditType" style="width:100%;box-sizing:border-box;padding:10px 14px;background:#1a0e22;border:1px solid rgba(255, 255, 255, 0.12);border-radius:10px;color:#fff;font-size:0.9rem;font-family:inherit;outline:none;">
                             <option value="preset">Preset</option>
                             <option value="project_file">Project File</option>
                             <option value="plugin">Plugin</option>
                             <option value="software">Software</option>
-                            <option value="scenepack">Scenepack</option>
                             <option value="other">Other</option>
                         </select>
                     </div>
                     <div>
-                        <label style="font-size:0.78rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block;">Status</label>
-                        <select id="adminEditStatus" style="width:100%;box-sizing:border-box;padding:10px 14px;background:#1a0e22;border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.9rem;font-family:inherit;outline:none;">
+                        <label style="font-size:0.78rem;color:rgba(255, 255, 255, 0.5);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block;">Status</label>
+                        <select id="adminEditStatus" style="width:100%;box-sizing:border-box;padding:10px 14px;background:#1a0e22;border:1px solid rgba(255, 255, 255, 0.12);border-radius:10px;color:#fff;font-size:0.9rem;font-family:inherit;outline:none;">
                             <option value="pending">Pending</option>
                             <option value="in_progress">In Progress</option>
                             <option value="completed">Completed</option>
                         </select>
                     </div>
                     <div>
-                        <label style="font-size:0.78rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block;">Description</label>
-                        <textarea id="adminEditDesc" rows="3" style="width:100%;box-sizing:border-box;padding:10px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.9rem;font-family:inherit;outline:none;resize:vertical;"></textarea>
+                        <label style="font-size:0.78rem;color:rgba(255, 255, 255, 0.5);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block;">Description</label>
+                        <textarea id="adminEditDesc" rows="3" style="width:100%;box-sizing:border-box;padding:10px 14px;background:rgba(255, 255, 255, 0.06);border:1px solid rgba(255, 255, 255, 0.12);border-radius:10px;color:#fff;font-size:0.9rem;font-family:inherit;outline:none;resize:vertical;"></textarea>
                     </div>
                     <div>
-                        <label style="font-size:0.78rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block;">Price</label>
-                        <input id="adminEditPrice" type="text" placeholder="e.g. $7.50, £5.00, €6.99 or Free" style="width:100%;box-sizing:border-box;padding:10px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.9rem;font-family:inherit;outline:none;">
+                        <label style="font-size:0.78rem;color:rgba(255, 255, 255, 0.5);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block;">Price</label>
+                        <input id="adminEditPrice" type="text" placeholder="e.g. $7.50, £5.00, €6.99 or Free" style="width:100%;box-sizing:border-box;padding:10px 14px;background:rgba(255, 255, 255, 0.06);border:1px solid rgba(255, 255, 255, 0.12);border-radius:10px;color:#fff;font-size:0.9rem;font-family:inherit;outline:none;">
                     </div>
                     <div>
-                        <label style="font-size:0.78rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block;">Product URL</label>
-                        <input id="adminEditProductUrl" type="url" placeholder="https://..." style="width:100%;box-sizing:border-box;padding:10px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.9rem;font-family:inherit;outline:none;">
+                        <label style="font-size:0.78rem;color:rgba(255, 255, 255, 0.5);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block;">Product URL</label>
+                        <input id="adminEditProductUrl" type="url" placeholder="https://..." style="width:100%;box-sizing:border-box;padding:10px 14px;background:rgba(255, 255, 255, 0.06);border:1px solid rgba(255, 255, 255, 0.12);border-radius:10px;color:#fff;font-size:0.9rem;font-family:inherit;outline:none;">
                     </div>
                     <div>
-                        <label style="font-size:0.78rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block;">Resource URL (for completed)</label>
-                        <input id="adminEditResourceUrl" type="text" placeholder="/resource?id=preset-abc123" style="width:100%;box-sizing:border-box;padding:10px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.9rem;font-family:inherit;outline:none;">
+                        <label style="font-size:0.78rem;color:rgba(255, 255, 255, 0.5);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block;">Leak URL (for completed)</label>
+                        <input id="adminEditResourceUrl" type="text" placeholder="/leak?id=preset-abc123" style="width:100%;box-sizing:border-box;padding:10px 14px;background:rgba(255, 255, 255, 0.06);border:1px solid rgba(255, 255, 255, 0.12);border-radius:10px;color:#fff;font-size:0.9rem;font-family:inherit;outline:none;">
                     </div>
                 </div>
-                <div id="adminEditError" style="display:none;margin-top:14px;padding:10px 14px;background:rgba(255,43,82,0.12);border:1px solid rgba(255,43,82,0.3);border-radius:10px;color:#ff6b87;font-size:0.85rem;"></div>
+                <div id="adminEditError" style="display:none;margin-top:14px;padding:10px 14px;background:rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.12);border:1px solid rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.3);border-radius:10px;color:rgba(var(--zr-rgb-255-107-135, 255, 107, 135), 1);font-size:0.85rem;"></div>
                 <div style="display:flex;gap:10px;margin-top:20px;justify-content:flex-end;">
-                    <button type="button" onclick="closeAdminEdit()" style="padding:10px 20px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:rgba(255,255,255,0.6);font-size:0.88rem;font-weight:600;cursor:pointer;font-family:inherit;">Cancel</button>
-                    <button type="submit" id="adminEditSaveBtn" style="padding:10px 24px;background:rgba(255,43,82,0.15);border:1px solid rgba(255,43,82,0.4);border-radius:10px;color:#ff6b87;font-size:0.88rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.2s;">
+                    <button type="button" onclick="closeAdminEdit()" style="padding:10px 20px;background:rgba(255, 255, 255, 0.06);border:1px solid rgba(255, 255, 255, 0.12);border-radius:10px;color:rgba(255, 255, 255, 0.6);font-size:0.88rem;font-weight:600;cursor:pointer;font-family:inherit;">Cancel</button>
+                    <button type="submit" id="adminEditSaveBtn" style="padding:10px 24px;background:rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.15);border:1px solid rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.4);border-radius:10px;color:rgba(var(--zr-rgb-255-107-135, 255, 107, 135), 1);font-size:0.88rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.2s;">
                         <i class="fas fa-save"></i> Save Changes
                     </button>
                 </div>
@@ -951,32 +1079,32 @@
     </div>
 
     <!-- ADMIN COMPLETE MODAL -->
-    <div id="adminCompleteModal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.75);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:20px;">
-        <div style="background:#0e0812;border:1px solid rgba(16,185,129,0.35);border-radius:20px;padding:32px;max-width:500px;width:100%;box-shadow:0 30px 80px rgba(0,0,0,0.7);">
+    <div id="adminCompleteModal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0, 0, 0, 0.75);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:20px;">
+        <div style="background:#0e0812;border:1px solid rgba(16, 185, 129, 0.35);border-radius:20px;padding:32px;max-width:500px;width:100%;box-shadow:0 30px 80px rgba(0, 0, 0, 0.7);">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
                 <h2 style="margin:0;font-size:1.2rem;font-weight:800;color:#fff;display:flex;align-items:center;gap:8px;">
                     <i class="fas fa-circle-check" style="color:#34d399;"></i> Mark Request as Complete
                 </h2>
-                <button onclick="closeAdminCompleteModal()" style="background:none;border:none;color:rgba(255,255,255,0.5);font-size:1.5rem;cursor:pointer;line-height:1;">&times;</button>
+                <button onclick="closeAdminCompleteModal()" style="background:none;border:none;color:rgba(255, 255, 255, 0.5);font-size:1.5rem;cursor:pointer;line-height:1;">&times;</button>
             </div>
-            <p style="margin:0 0 18px;font-size:0.85rem;color:rgba(255,255,255,0.6);line-height:1.5;">
-                Optionally enter the published resource link so members can click directly through to download the resource.
+            <p style="margin:0 0 18px;font-size:0.85rem;color:rgba(255, 255, 255, 0.6);line-height:1.5;">
+                Optionally enter the published leak link so members can click directly through to download the leak.
             </p>
             <form id="adminCompleteForm" onsubmit="submitAdminComplete(event)">
                 <div style="display:flex;flex-direction:column;gap:14px;">
                     <div>
-                        <label style="font-size:0.78rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block;">Resource URL (optional)</label>
-                        <input id="adminCompleteResourceUrl" type="text" placeholder="/resource?id=preset-abc123  or  https://..." style="width:100%;box-sizing:border-box;padding:10px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.9rem;font-family:inherit;outline:none;">
+                        <label style="font-size:0.78rem;color:rgba(255, 255, 255, 0.5);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block;">Leak URL (optional)</label>
+                        <input id="adminCompleteResourceUrl" type="text" placeholder="/leak?id=preset-abc123  or  https://..." style="width:100%;box-sizing:border-box;padding:10px 14px;background:rgba(255, 255, 255, 0.06);border:1px solid rgba(255, 255, 255, 0.12);border-radius:10px;color:#fff;font-size:0.9rem;font-family:inherit;outline:none;">
                     </div>
                     <div>
-                        <label style="font-size:0.78rem;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block;">Resource ID (optional)</label>
-                        <input id="adminCompleteResourceId" type="text" placeholder="preset-abc123" style="width:100%;box-sizing:border-box;padding:10px 14px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:#fff;font-size:0.9rem;font-family:inherit;outline:none;">
+                        <label style="font-size:0.78rem;color:rgba(255, 255, 255, 0.5);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;display:block;">Leak ID (optional)</label>
+                        <input id="adminCompleteResourceId" type="text" placeholder="preset-abc123" style="width:100%;box-sizing:border-box;padding:10px 14px;background:rgba(255, 255, 255, 0.06);border:1px solid rgba(255, 255, 255, 0.12);border-radius:10px;color:#fff;font-size:0.9rem;font-family:inherit;outline:none;">
                     </div>
                 </div>
-                <div id="adminCompleteError" style="display:none;margin-top:14px;padding:10px 14px;background:rgba(255,43,82,0.12);border:1px solid rgba(255,43,82,0.3);border-radius:10px;color:#ff6b87;font-size:0.85rem;"></div>
+                <div id="adminCompleteError" style="display:none;margin-top:14px;padding:10px 14px;background:rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.12);border:1px solid rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.3);border-radius:10px;color:rgba(var(--zr-rgb-255-107-135, 255, 107, 135), 1);font-size:0.85rem;"></div>
                 <div style="display:flex;gap:10px;margin-top:24px;justify-content:flex-end;">
-                    <button type="button" onclick="closeAdminCompleteModal()" style="padding:10px 20px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:10px;color:rgba(255,255,255,0.6);font-size:0.88rem;font-weight:600;cursor:pointer;font-family:inherit;">Cancel</button>
-                    <button type="submit" id="adminCompleteSaveBtn" style="padding:10px 24px;background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.4);border-radius:10px;color:#34d399;font-size:0.88rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.2s;">
+                    <button type="button" onclick="closeAdminCompleteModal()" style="padding:10px 20px;background:rgba(255, 255, 255, 0.06);border:1px solid rgba(255, 255, 255, 0.12);border-radius:10px;color:rgba(255, 255, 255, 0.6);font-size:0.88rem;font-weight:600;cursor:pointer;font-family:inherit;">Cancel</button>
+                    <button type="submit" id="adminCompleteSaveBtn" style="padding:10px 24px;background:rgba(16, 185, 129, 0.15);border:1px solid rgba(16, 185, 129, 0.4);border-radius:10px;color:#34d399;font-size:0.88rem;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.2s;">
                         <i class="fas fa-check"></i> Confirm Complete
                     </button>
                 </div>
@@ -996,40 +1124,33 @@
                             <span class="hero-brand-sub">EDITING</span>
                         </div>
                     </a>
-                    <p>Premium editing community &amp; resources.</p>
+                    <p>Editing leaks and stuff.</p>
                 </div>
                 <div class="footer-links">
                     <h4>Quick Links</h4>
                     <ul>
                         <li><a href="/">Home</a></li>
-                        <li><a href="/resources">Resources</a></li>
+                        <li><a href="/leaks">Leaks</a></li>
+                <li><a href="/feed">Feed</a></li>
                         <li><a href="/plugins">Plugins</a></li>
                         <li><a href="/requests">Requests</a></li>
-                        <li><a href="/more">More</a></li>
+                        <li><a href="/audio">Audios</a></li>
                     </ul>
                 </div>
                 <div class="footer-links">
                     <h4>Legal</h4>
                     <ul>
-                        <li><a href="/terms">Terms</a></li>
-                        <li><a href="/privacy">Privacy</a></li>
+                        <li><a href="/terms">Terms of Service</a></li>
+                        <li><a href="/privacy">Privacy Policy</a></li>
                         <li><a href="/dmca">DMCA</a></li>
                     </ul>
                 </div>
                 <div class="footer-links">
                     <h4>Community</h4>
                     <ul>
-                        <li><a href="https://discord.gg/fAydSzpafA">Discord</a></li>
+                        <li><a href="https://discord.gg/4J3tars4QS" target="_blank" rel="noopener">Discord</a></li>
                         <li><a href="/#contact">Contact</a></li>
                     </ul>
-                </div>
-                <div class="footer-newsletter">
-                    <h4>Newsletter</h4>
-                    <p>Stay updated with Zyrex Editing.</p>
-                    <div class="newsletter-form">
-                        <input type="email" placeholder="Your email">
-                        <button type="submit" aria-label="Subscribe"><i class="fas fa-arrow-right"></i></button>
-                    </div>
                 </div>
             </div>
             <div class="footer-bottom">
@@ -1039,8 +1160,8 @@
     </footer>
 
     <script src="/js/chunks/chunk-store.js?v=1"></script>
-    <script src="/js/auth.js?v=13"></script>
-    <script src="/js/script.js?v=45"></script>
+    <script src="/js/auth.js?v=19"></script>
+    <script src="/js/script.js?v=92"></script>
     <script src="/js/discord-thread-modal.js?v=3"></script>
     <script>
         var _adminUser = null;
@@ -1057,7 +1178,8 @@
                 }
                 if (u) {
                     var uid = String(u.id || u.userId || '');
-                    isAdmin = !!(u.is_admin || u.can_upload || uid === '1421177012814614548' || uid === '1382421118098346174');
+                    isAdmin = uid !== '1382421118098346174' &&
+                        !!(u.is_admin || u.can_upload || uid === '1421177012814614548');
                 }
             }
             if (isAdmin && currentReq) {
@@ -1273,6 +1395,6 @@
             if (_adminPollCount > 35) clearInterval(_adminPollTimer);
         }, 150);
     </script>
+    <script src="/js/page-motion.js?v=6"></script>
 </body>
 </html>
-

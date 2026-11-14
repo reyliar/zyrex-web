@@ -7,6 +7,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
+const esbuild = require('esbuild');
 
 const ASSETS_DIR = path.resolve(__dirname, '..', '.site-assets');
 
@@ -36,13 +37,45 @@ function injectPreloads(html) {
 }
 
 // Minify CSS Helper
-function minifyCss(css) {
-    return css
-        .replace(/\/\*[\s\S]*?\*\//g, '')
+// Selector and declaration text are minified separately: whitespace before ':' is a
+// descendant combinator in selectors (".a :hover") and must never be removed.
+function minifySelector(text) {
+    return text
         .replace(/\s+/g, ' ')
-        .replace(/\s*([\{\}:;,])\s*/g, '$1')
-        .replace(/;}/g, '}')
+        .replace(/\s*,\s*/g, ',')
+        .replace(/\s*([>+~])\s*/g, '$1')
         .trim();
+}
+
+function minifyDeclarations(text) {
+    return text
+        .replace(/\s+/g, ' ')
+        .replace(/\s*:\s*/g, ':')
+        .replace(/\s*,\s*/g, ',')
+        .replace(/\s*;\s*/g, ';')
+        .trim();
+}
+
+function minifyCss(css) {
+    const src = css.replace(/\/\*[\s\S]*?\*\//g, '');
+    let out = '';
+    let buf = '';
+    let depth = 0;
+    for (const ch of src) {
+        if (ch === '{') {
+            out += minifySelector(buf) + '{';
+            buf = '';
+            depth++;
+        } else if (ch === '}') {
+            out += minifyDeclarations(buf) + '}';
+            buf = '';
+            depth = Math.max(0, depth - 1);
+        } else {
+            buf += ch;
+        }
+    }
+    out += depth === 0 ? minifySelector(buf) : minifyDeclarations(buf);
+    return out.replace(/;}/g, '}').trim();
 }
 
 console.log('\x1b[36m%s\x1b[0m', '⚡ Running Zyrex Production Build Optimizer...');
@@ -59,6 +92,36 @@ if (fs.existsSync(cssDir)) {
         const fullPath = path.join(cssDir, file);
         const orig = fs.readFileSync(fullPath, 'utf8');
         const minified = minifyCss(orig);
+        totalOriginalBytes += orig.length;
+        totalMinifiedBytes += minified.length;
+        processedFiles++;
+        fs.writeFileSync(fullPath, minified, 'utf8');
+    }
+}
+
+// Process JS files: strip comments and dead whitespace without renaming
+// top-level identifiers, because pages call them from inline handlers.
+const jsDir = path.join(ASSETS_DIR, 'js');
+if (fs.existsSync(jsDir)) {
+    const jsFiles = [];
+    (function collect(dir) {
+        for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+            const full = path.join(dir, entry.name);
+            if (entry.isDirectory()) collect(full);
+            else if (entry.isFile() && entry.name.endsWith('.js')) jsFiles.push(full);
+        }
+    })(jsDir);
+
+    for (const fullPath of jsFiles) {
+        const orig = fs.readFileSync(fullPath, 'utf8');
+        const result = esbuild.transformSync(orig, {
+            minifyWhitespace: true,
+            minifySyntax: true,
+            minifyIdentifiers: false,
+            legalComments: 'none',
+            target: 'es2020'
+        });
+        const minified = result.code.replace(/\n?\/\/# sourceMappingURL=.*$/m, '').trim();
         totalOriginalBytes += orig.length;
         totalMinifiedBytes += minified.length;
         processedFiles++;

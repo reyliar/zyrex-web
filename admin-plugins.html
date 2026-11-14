@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex,nofollow">
+    <title>Zyrex | Admin — Plugins</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,800,900&amp;display=swap">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --cherry: var(--zr-accent, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1));
+            --glass: rgba(14, 10, 18, 0.82);
+            --border: rgba(255, 255, 255, 0.12);
+            --muted: rgba(255, 255, 255, 0.80);
+            --ok: #34d399;
+            --warn: #fbbf24;
+            --danger: #f87171;
+        }
+        body { background: #070209; color: #f8f5f6; font-family: 'Satoshi', sans-serif; min-height: 100vh; padding: 84px 18px 70px; }
+        body::before { content: ''; position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 15% 0%, rgba(var(--zr-rgb-255-43-82, 255, 43, 82),.16) 0%, transparent 40%), radial-gradient(circle at 85% 20%, rgba(var(--zr-rgb-120-0-40, 120, 0, 40),.1) 0%, transparent 35%); }
+        .topbar { position: fixed; top: 0; left: 0; right: 0; height: 64px; display: flex; align-items: center; gap: 14px; padding: 0 20px; background: rgba(7, 2, 9, .86); border-bottom: 1px solid var(--border); backdrop-filter: blur(14px); z-index: 5; }
+        .topbar img { width: 26px; height: 26px; }
+        .topbar strong { font-size: 1rem; letter-spacing: .02em; }
+        .topbar .badge { padding: 3px 9px; border-radius: 999px; background: rgba(var(--zr-rgb-255-43-82, 255, 43, 82),.16); border: 1px solid rgba(var(--zr-rgb-255-43-82, 255, 43, 82),.35); color: rgba(var(--zr-rgb-255-128-152, 255, 128, 152), 1); font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; }
+        .topbar .links { margin-left: auto; display: flex; gap: 16px; }
+        .topbar a { color: var(--muted); text-decoration: none; font-size: .82rem; }
+        .topbar a:hover { color: #fff; }
+        .wrap { max-width: 1240px; margin: 0 auto; }
+        .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+        .tab { padding: 9px 16px; border-radius: 999px; border: 1px solid var(--border); background: rgba(255, 255, 255, .04); color: var(--muted); font: inherit; font-size: .84rem; cursor: pointer; }
+        .tab.is-active { border-color: rgba(var(--zr-rgb-255-43-82, 255, 43, 82),.55); background: rgba(var(--zr-rgb-255-43-82, 255, 43, 82),.16); color: #fff; }
+        .panel { display: none; }
+        .panel.is-active { display: block; }
+        .card { background: var(--glass); border: 1px solid var(--border); border-radius: 16px; padding: 18px; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 16px; }
+        .stat { background: rgba(255, 255, 255, .04); border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
+        .stat span { display: block; color: var(--muted); font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; }
+        .stat strong { display: block; margin-top: 6px; font-size: 1.4rem; }
+        .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+        input[type=search], input[type=text], input[type=url], input[type=number], select, textarea {
+            background: rgba(255, 255, 255, .05); border: 1px solid var(--border); border-radius: 10px;
+            color: #fff; padding: 9px 12px; font: inherit; font-size: .84rem; min-width: 0;
+        }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: rgba(var(--zr-rgb-255-43-82, 255, 43, 82),.6); }
+        textarea { width: 100%; min-height: 90px; font-family: inherit; font-size: .84rem; resize: vertical; }
+        .btn { padding: 9px 14px; border-radius: 10px; border: 1px solid var(--border); background: rgba(255, 255, 255, .05); color: #fff; font: inherit; font-size: .82rem; cursor: pointer; }
+        .btn:hover { border-color: rgba(var(--zr-rgb-255-43-82, 255, 43, 82),.5); }
+        .btn:disabled { opacity: .5; cursor: not-allowed; }
+        .btn.primary { background: var(--cherry); border-color: var(--cherry); }
+        .btn.danger { color: #ffb3c0; border-color: rgba(248,113,113,.45); }
+        .btn.ghost { background: transparent; }
+        .tableWrap { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { text-align: left; padding: 11px 10px; border-bottom: 1px solid rgba(255, 255, 255, .07); font-size: .82rem; vertical-align: top; }
+        th { color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: .05em; font-size: .68rem; }
+        tr:last-child td { border-bottom: 0; }
+        .name { font-weight: 600; }
+        .sub { display: block; color: var(--muted); font-size: .72rem; margin-top: 3px; overflow-wrap: anywhere; }
+        .chip { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: .68rem; border: 1px solid var(--border); color: var(--muted); margin: 2px 4px 2px 0; }
+        .chip.ok { color: var(--ok); border-color: rgba(52, 211, 153, .4); background: rgba(52, 211, 153, .1); }
+        .chip.warn { color: var(--warn); border-color: rgba(251, 191, 36, .4); background: rgba(251, 191, 36, .1); }
+        .chip.bad { color: var(--danger); border-color: rgba(248,113,113,.4); background: rgba(248,113,113,.1); }
+        .chip.edit { color: rgba(var(--zr-rgb-255-128-152, 255, 128, 152), 1); border-color: rgba(var(--zr-rgb-255-43-82, 255, 43, 82),.4); background: rgba(var(--zr-rgb-255-43-82, 255, 43, 82),.1); }
+        .row-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+        .drawer { position: fixed; inset: 0; background: rgba(4, 1, 6, .72); backdrop-filter: blur(6px); display: none; z-index: 20; padding: 24px 14px; overflow-y: auto; }
+        .drawer.is-open { display: block; }
+        .drawer-inner { max-width: 820px; margin: 0 auto; background: #0d0710; border: 1px solid var(--border); border-radius: 18px; padding: 20px; }
+        .drawer h2 { font-size: 1.05rem; margin-bottom: 4px; }
+        .drawer .hint { color: var(--muted); font-size: .78rem; margin-bottom: 16px; }
+        .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+        .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 12px; }
+        .field label { font-size: .72rem; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+        .field.wide { grid-column: 1 / -1; }
+        .links { display: flex; flex-direction: column; gap: 8px; }
+        .link-row { display: grid; grid-template-columns: 1fr 150px 34px; gap: 8px; align-items: center; }
+        .link-row button { padding: 0; height: 34px; }
+        .drawer-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+        .status { margin-top: 12px; font-size: .8rem; min-height: 20px; color: var(--muted); }
+        .status.ok { color: var(--ok); }
+        .status.bad { color: var(--danger); }
+        .gate { max-width: 420px; margin: 60px auto; text-align: center; }
+        .gate i { font-size: 1.6rem; color: var(--cherry); margin-bottom: 10px; display: block; }
+        .gate h1 { font-size: 1.1rem; margin-bottom: 8px; }
+        .gate p { color: var(--muted); font-size: .86rem; }
+        .toast { position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%) translateY(20px); background: rgba(20, 12, 24, .96); border: 1px solid var(--border); color: #fff; padding: 11px 18px; border-radius: 12px; font-size: .84rem; opacity: 0; pointer-events: none; transition: opacity .18s ease, transform .18s ease; z-index: 40; }
+        .toast.is-visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .toast.is-error { border-color: rgba(248,113,113,.5); color: #ffc7d1; }
+        .empty { color: var(--muted); font-size: .84rem; padding: 18px 4px; }
+        pre.diag { background: rgba(255, 255, 255, .04); border: 1px solid var(--border); border-radius: 12px; padding: 12px; font-size: .76rem; overflow-x: auto; white-space: pre-wrap; overflow-wrap: anywhere; max-height: 420px; }
+    </style>
+    <link rel="stylesheet" href="/css/glass.css?v=67">
+    <link rel="stylesheet" href="/css/atmosphere.css?v=7">
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.fontshare.com">
+    <link rel="stylesheet" href="/css/i18n.css?v=3">
+    <script src="/js/i18n.js?v=15" defer></script>
+</head>
+<body>
+    <div class="zr-sweep" aria-hidden="true"></div>
+    <div class="lq-veil" aria-hidden="true"></div>
+<div class="topbar">
+    <img src="/assets/content.png" alt="Zyrex">
+    <strong>Plugin Admin</strong>
+    <span class="badge">Staff</span>
+    <div class="links">
+        <a href="/plugins"><i class="fas fa-puzzle-piece"></i> Catalogue</a>
+        <a href="/admin-scenepacks"><i class="fas fa-film"></i> Scenepacks</a>
+        <a href="/admin-feed"><i class="fas fa-rss"></i> Feed admin</a>
+    </div>
+</div>
+
+<div class="wrap">
+    <div class="tabs">
+        <button class="tab is-active" data-tab="products">Products</button>
+        <button class="tab" data-tab="audit">Change log</button>
+        <button class="tab" data-tab="verify">Discord verify</button>
+    </div>
+
+    <section class="panel is-active" id="panel-products">
+        <div class="stats">
+            <div class="stat"><span>Products</span><strong id="statTotal">â€”</strong></div>
+            <div class="stat"><span>Edited</span><strong id="statEdited">â€”</strong></div>
+            <div class="stat"><span>Hidden / deleted</span><strong id="statHidden">â€”</strong></div>
+            <div class="stat"><span>No download link</span><strong id="statNoLink">â€”</strong></div>
+            <div class="stat"><span>Catalogue version</span><strong id="statVersion">â€”</strong></div>
+        </div>
+        <div class="card">
+            <div class="toolbar">
+                <input type="search" id="q" placeholder="Search name, id, categoryâ€¦" style="flex:1;min-width:220px">
+                <select id="filterCategory"><option value="">All categories</option></select>
+                <select id="filterState">
+                    <option value="">All states</option>
+                    <option value="edited">Edited</option>
+                    <option value="hidden">Hidden</option>
+                    <option value="deleted">Deleted</option>
+                    <option value="nolink">No link</option>
+                </select>
+                <button class="btn" id="reload">Reload</button>
+            </div>
+            <div class="tableWrap">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Category</th>
+                            <th>Download</th>
+                            <th>Zip password</th>
+                            <th>State</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="rows">
+                        <tr><td colspan="6" class="empty">Loading catalogueâ€¦</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section class="panel" id="panel-audit">
+        <div class="card">
+            <div class="toolbar">
+                <button class="btn" id="reloadAudit">Reload log</button>
+                <span class="hint" style="color:var(--muted);font-size:.8rem">Last 100 changes, newest first.</span>
+            </div>
+            <div class="tableWrap">
+                <table>
+                    <thead><tr><th>When</th><th>Actor</th><th>Product</th><th>Action</th><th>Fields</th></tr></thead>
+                    <tbody id="auditRows"><tr><td colspan="5" class="empty">Loadingâ€¦</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <section class="panel" id="panel-verify">
+        <div class="card">
+            <h2 style="font-size:1rem;margin-bottom:6px">Discord verification diagnostics</h2>
+            <p style="color:var(--muted);font-size:.82rem;margin-bottom:14px">
+                Shows exactly which Discord call fails when a member cannot verify.
+            </p>
+            <div class="toolbar">
+                <input type="text" id="diagUser" placeholder="Discord user id" style="min-width:240px">
+                <button class="btn primary" id="runDiag">Run check</button>
+            </div>
+            <pre class="diag" id="diagOut">No check has run yet.</pre>
+        </div>
+    </section>
+</div>
+
+<div class="drawer" id="drawer">
+    <div class="drawer-inner">
+        <h2 id="drawerTitle">Edit product</h2>
+        <p class="hint" id="drawerSub"></p>
+        <form id="editForm" autocomplete="off">
+            <input type="hidden" id="fId">
+            <div class="grid2">
+                <div class="field"><label for="fName">Title</label><input type="text" id="fName" required></div>
+                <div class="field"><label for="fLabel">Label / badge</label><input type="text" id="fLabel" placeholder="e.g. FREE"></div>
+                <div class="field"><label for="fCategory">Category</label><input type="text" id="fCategory" placeholder="adobe-plugin"></div>
+                <div class="field"><label for="fPlatform">Platform</label><input type="text" id="fPlatform" placeholder="win / mac / both"></div>
+                <div class="field"><label for="fVersion">Version</label><input type="text" id="fVersion"></div>
+                <div class="field"><label for="fRelease">Release date</label><input type="text" id="fRelease"></div>
+                <div class="field"><label for="fSize">File size</label><input type="text" id="fSize"></div>
+                <div class="field"><label for="fPassword">Zip password</label><input type="text" id="fPassword"></div>
+                <div class="field wide"><label for="fThumbnail">Thumbnail URL</label><input type="url" id="fThumbnail"></div>
+                <div class="field wide"><label for="fDescription">Description</label><textarea id="fDescription"></textarea></div>
+                <div class="field wide"><label for="fNotes">Notes</label><textarea id="fNotes"></textarea></div>
+            </div>
+            <div class="field wide">
+                <label>Download links</label>
+                <div class="links" id="linkRows"></div>
+                <div><button type="button" class="btn ghost" id="addLink" style="margin-top:8px"><i class="fas fa-plus"></i> Add link</button></div>
+            </div>
+            <div class="grid2">
+                <div class="field"><label for="fOrder">Sort order</label><input type="number" id="fOrder" step="1"></div>
+                <div class="field"><label for="fHidden">Visibility</label>
+                    <select id="fHidden">
+                        <option value="no">Visible</option>
+                        <option value="yes">Hidden from the site</option>
+                    </select>
+                </div>
+            </div>
+            <div class="drawer-actions">
+                <button type="submit" class="btn primary" id="saveBtn"><i class="fas fa-floppy-disk"></i> Save &amp; publish</button>
+                <button type="button" class="btn danger" id="deleteBtn"><i class="fas fa-trash"></i> Delete product</button>
+                <button type="button" class="btn" id="restoreBtn"><i class="fas fa-rotate-left"></i> Restore original</button>
+                <button type="button" class="btn ghost" id="closeDrawer">Close</button>
+            </div>
+            <div class="status" id="saveStatus"></div>
+        </form>
+    </div>
+</div>
+
+<div class="gate card" id="gate" hidden>
+    <i class="fas fa-lock"></i>
+    <h1>Staff only</h1>
+    <p id="gateText">Sign in with an admin account to edit the plugin catalogue.</p>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="js/plugins-data.js?v=5"></script>
+<script src="/js/auth.js"></script>
+<script>
+(function () {
+    'use strict';
+
+    var $ = function (id) { return document.getElementById(id); };
+    var esc = function (value) {
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    };
+    var toastTimer = 0;
+    function toast(message, isError) {
+        var node = $('toast');
+        node.textContent = message || '';
+        node.classList.toggle('is-error', Boolean(isError));
+        node.classList.add('is-visible');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { node.classList.remove('is-visible'); }, 3600);
+    }
+
+    function api(path, options) {
+        var init = Object.assign({ credentials: 'include' }, options || {});
+        if (init.body && typeof init.body !== 'string') {
+            init.headers = Object.assign({ 'Content-Type': 'application/json' }, init.headers || {});
+            init.body = JSON.stringify(init.body);
+        }
+        return fetch(path, init).then(function (response) {
+            return response.json().catch(function () { return {}; }).then(function (data) {
+                if (!response.ok || data.success === false) {
+                    var error = new Error(data.error || ('Request failed (' + response.status + ')'));
+                    error.code = data.code;
+                    error.payload = data;
+                    throw error;
+                }
+                return data;
+            });
+        });
+    }
+
+    var state = {
+        rows: [],
+        overrides: {},
+        version: 0,
+        openId: null,
+        openEntry: null
+    };
+
+    // â”€â”€ data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    function bundlePlugins() {
+        return Array.isArray(window.pluginsData) ? window.pluginsData : [];
+    }
+
+    function mergeCatalogue(apiProducts) {
+        var byId = {};
+        var order = [];
+        function add(product, source) {
+            if (!product || !product.id) return;
+            var id = String(product.id);
+            if (!byId[id]) {
+                byId[id] = { id: id, base: product, source: source };
+                order.push(id);
+            } else if (source === 'catalogue' || !byId[id].base.name) {
+                byId[id].base = Object.assign({}, byId[id].base, product);
+                byId[id].source = 'both';
+            }
+        }
+        bundlePlugins().forEach(function (product) { add(product, 'bundle'); });
+        apiProducts.forEach(function (product) { add(product, 'catalogue'); });
+        // Products that only exist as a tombstone still need a row so they can be restored.
+        Object.keys(state.overrides).forEach(function (id) {
+            if (!byId[id]) {
+                byId[id] = { id: id, base: { id: id, name: '' }, source: 'override' };
+                order.push(id);
+            }
+        });
+        return order.map(function (id) {
+            var entry = state.overrides[id] || null;
+            var patch = (entry && entry.patch) || {};
+            var merged = Object.assign({}, byId[id].base, patch);
+            if (patch.title !== undefined && patch.name === undefined) merged.name = patch.title;
+            if (patch.name !== undefined && patch.title === undefined) merged.title = patch.name;
+            if (patch.password !== undefined && patch.zip_password === undefined) merged.zip_password = patch.password;
+            if (patch.zip_password !== undefined && patch.password === undefined) merged.password = patch.zip_password;
+            return {
+                id: id,
+                product: merged,
+                source: byId[id].source,
+                entry: entry,
+                edited: Boolean(entry),
+                hidden: Boolean(entry && entry.hidden),
+                deleted: Boolean(entry && entry.deleted)
+            };
+        });
+    }
+
+    function loadAll() {
+        $('rows').innerHTML = '<tr><td colspan="6" class="empty">Loading catalogueâ€¦</td></tr>';
+        return Promise.all([
+            fetch('/api/products', { credentials: 'include' }).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }),
+            api('/api/admin/products')
+        ]).then(function (results) {
+            var apiProducts = Array.isArray(results[0]) ? results[0] : (results[0] && results[0].data) || [];
+            var admin = results[1] || {};
+            state.overrides = admin.items || {};
+            state.version = admin.version || 0;
+            state.rows = mergeCatalogue(apiProducts.filter(function (product) {
+                return product && (String(product.id).indexOf('plugin-') === 0 || isPluginCategory(product.category));
+            }));
+            renderStats();
+            renderCategoryOptions();
+            renderRows();
+        }).catch(function (error) {
+            $('rows').innerHTML = '<tr><td colspan="6" class="empty">Could not load the catalogue: ' + esc(error.message) + '</td></tr>';
+        });
+    }
+
+    function isPluginCategory(category) {
+        return ['adobe-plugin', 'ofx-plugin', 'software', 'photoshop', 'after-effects', 'premiere-pro', 'video-star', 'topaz-labs', 'others']
+            .indexOf(String(category || '').toLowerCase()) !== -1;
+    }
+
+    function renderStats() {
+        $('statTotal').textContent = String(state.rows.length);
+        $('statEdited').textContent = String(state.rows.filter(function (row) { return row.edited; }).length);
+        $('statHidden').textContent = String(state.rows.filter(function (row) { return row.hidden || row.deleted; }).length);
+        $('statNoLink').textContent = String(state.rows.filter(function (row) {
+            var links = row.product.links;
+            return !Array.isArray(links) || !links.filter(function (link) { return link && /^https?:/i.test(String(link.url || '')); }).length;
+        }).length);
+        $('statVersion').textContent = String(state.version || 0);
+    }
+
+    function renderCategoryOptions() {
+        var select = $('filterCategory');
+        var seen = {};
+        state.rows.forEach(function (row) {
+            var category = String(row.product.category || '').trim();
+            if (category) seen[category] = true;
+        });
+        var current = select.value;
+        select.innerHTML = '<option value="">All categories</option>' + Object.keys(seen).sort().map(function (category) {
+            return '<option value="' + esc(category) + '">' + esc(category) + '</option>';
+        }).join('');
+        select.value = current;
+    }
+
+    function visibleRows() {
+        var query = $('q').value.trim().toLowerCase();
+        var category = $('filterCategory').value;
+        var filter = $('filterState').value;
+        return state.rows.filter(function (row) {
+            if (category && String(row.product.category || '') !== category) return false;
+            if (filter === 'edited' && !row.edited) return false;
+            if (filter === 'hidden' && !row.hidden) return false;
+            if (filter === 'deleted' && !row.deleted) return false;
+            if (filter === 'nolink') {
+                var links = row.product.links;
+                if (Array.isArray(links) && links.some(function (link) { return link && /^https?:/i.test(String(link.url || '')); })) return false;
+            }
+            if (!query) return true;
+            var haystack = [row.id, row.product.name, row.product.title, row.product.category, row.product.platform].join(' ').toLowerCase();
+            return haystack.indexOf(query) !== -1;
+        });
+    }
+
+    function renderRows() {
+        var rows = visibleRows();
+        if (!rows.length) {
+            $('rows').innerHTML = '<tr><td colspan="6" class="empty">No product matches that filter.</td></tr>';
+            return;
+        }
+        $('rows').innerHTML = rows.map(function (row) {
+            var product = row.product;
+            var links = Array.isArray(product.links) ? product.links.filter(function (link) { return link && link.url; }) : [];
+            var firstLink = links[0] || null;
+            var chips = [];
+            if (row.deleted) chips.push('<span class="chip bad">deleted</span>');
+            else if (row.hidden) chips.push('<span class="chip warn">hidden</span>');
+            if (row.edited) chips.push('<span class="chip edit">edited</span>');
+            if (row.source === 'override') chips.push('<span class="chip">override only</span>');
+            if (!chips.length) chips.push('<span class="chip ok">live</span>');
+            return '<tr>' +
+                '<td><span class="name">' + esc(product.name || product.title || '(untitled)') + '</span>' +
+                '<span class="sub">' + esc(row.id) + '</span></td>' +
+                '<td><span class="chip">' + esc(product.category || 'â€”') + '</span>' +
+                (product.platform ? '<span class="chip">' + esc(product.platform) + '</span>' : '') + '</td>' +
+                '<td>' + (firstLink
+                    ? '<a href="' + esc(firstLink.url) + '" target="_blank" rel="noopener" style="color:rgba(var(--zr-rgb-255-128-152, 255, 128, 152), 1);font-size:.78rem">' + esc(firstLink.label || 'Download') + '</a>' +
+                      (links.length > 1 ? '<span class="sub">+' + (links.length - 1) + ' more</span>' : '')
+                    : '<span class="chip bad">missing</span>') + '</td>' +
+                '<td>' + (product.password || product.zip_password ? '<code style="font-size:.78rem">' + esc(product.password || product.zip_password) + '</code>' : '<span class="sub">none</span>') + '</td>' +
+                '<td>' + chips.join('') + '</td>' +
+                '<td><div class="row-actions">' +
+                    '<button class="btn" data-edit="' + esc(row.id) + '">Edit</button>' +
+                    (row.edited ? '<button class="btn ghost" data-restore="' + esc(row.id) + '">Restore</button>' : '') +
+                '</div></td>' +
+            '</tr>';
+        }).join('');
+    }
+
+    // â”€â”€ drawer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    function linkRow(link) {
+        var row = document.createElement('div');
+        row.className = 'link-row';
+        var url = document.createElement('input');
+        url.type = 'url';
+        url.className = 'linkUrl';
+        url.placeholder = 'https://â€¦/file.zip';
+        url.value = (link && link.url) || '';
+        var label = document.createElement('input');
+        label.type = 'text';
+        label.className = 'linkLabel';
+        label.placeholder = 'Download';
+        label.value = (link && link.label) || '';
+        var remove = document.createElement('button');
+        remove.type = 'button';
+        remove.className = 'btn danger';
+        remove.innerHTML = '<i class="fas fa-xmark"></i>';
+        remove.addEventListener('click', function () { row.remove(); });
+        row.appendChild(url); row.appendChild(label); row.appendChild(remove);
+        return row;
+    }
+
+    function openDrawer(id) {
+        var row = state.rows.filter(function (item) { return item.id === id; })[0];
+        if (!row) return;
+        var product = row.product;
+        state.openId = id;
+        state.openEntry = row.entry;
+        $('drawerTitle').textContent = product.name || product.title || id;
+        $('drawerSub').textContent = id + (row.deleted ? ' â€” currently deleted' : row.hidden ? ' â€” currently hidden' : '') +
+            (row.source === 'bundle' ? ' â€” shipped in the static bundle' : row.source === 'catalogue' ? ' â€” stored in the catalogue' : ' â€” override only');
+        $('fId').value = id;
+        $('fName').value = product.name || product.title || '';
+        $('fLabel').value = product.label || '';
+        $('fCategory').value = product.category || '';
+        $('fPlatform').value = product.platform || '';
+        $('fVersion').value = product.version || '';
+        $('fRelease').value = product.release_date || '';
+        $('fSize').value = product.file_size || '';
+        $('fPassword').value = product.password || product.zip_password || '';
+        $('fThumbnail').value = product.thumbnail || '';
+        $('fDescription').value = product.description || '';
+        $('fNotes').value = product.notes || '';
+        $('fOrder').value = row.entry && row.entry.order ? row.entry.order : '';
+        $('fHidden').value = row.hidden || row.deleted ? 'yes' : 'no';
+        var container = $('linkRows');
+        container.innerHTML = '';
+        var links = Array.isArray(product.links) && product.links.length ? product.links : [{ url: '', label: 'Download' }];
+        links.forEach(function (link) { container.appendChild(linkRow(link)); });
+        $('saveStatus').textContent = '';
+        $('saveStatus').className = 'status';
+        $('drawer').classList.add('is-open');
+    }
+
+    function closeDrawer() {
+        $('drawer').classList.remove('is-open');
+        state.openId = null;
+        state.openEntry = null;
+    }
+
+    function collectPatch() {
+        var links = [];
+        Array.prototype.forEach.call(document.querySelectorAll('#linkRows .link-row'), function (row) {
+            var url = row.querySelector('.linkUrl').value.trim();
+            var label = row.querySelector('.linkLabel').value.trim() || 'Download';
+            if (url) links.push({ url: url, label: label });
+        });
+        return {
+            name: $('fName').value.trim(),
+            title: $('fName').value.trim(),
+            label: $('fLabel').value.trim(),
+            category: $('fCategory').value.trim(),
+            platform: $('fPlatform').value.trim(),
+            version: $('fVersion').value.trim(),
+            release_date: $('fRelease').value.trim(),
+            file_size: $('fSize').value.trim(),
+            password: $('fPassword').value.trim(),
+            zip_password: $('fPassword').value.trim(),
+            thumbnail: $('fThumbnail').value.trim(),
+            description: $('fDescription').value,
+            notes: $('fNotes').value,
+            links: links
+        };
+    }
+
+    function setStatus(message, kind) {
+        var node = $('saveStatus');
+        node.textContent = message || '';
+        node.className = 'status' + (kind ? ' ' + kind : '');
+    }
+
+    // After saving, re-read the public endpoint so the panel proves the change is live
+    // instead of trusting the write response.
+    function verifyLive(id, expectedTitle) {
+        return fetch('/api/products/overrides?ts=' + Date.now(), { credentials: 'include' })
+            .then(function (response) { return response.json(); })
+            .then(function (data) {
+                var entry = data && data.items ? data.items[id] : null;
+                var title = entry && entry.patch ? entry.patch.name || entry.patch.title : '';
+                if (entry && (entry.deleted || entry.hidden)) {
+                    return 'Saved â€” product is hidden from the site.';
+                }
+                if (!expectedTitle) return 'Saved.';
+                if (String(title) === String(expectedTitle)) {
+                    return 'Saved â€” live on the site (v' + (data.version || 0) + ').';
+                }
+                return 'Saved, but the public endpoint still reports a different title. Reload with a hard refresh.';
+            })
+            .catch(function () { return 'Saved (could not re-read the public endpoint).'; });
+    }
+
+    function save(event) {
+        event.preventDefault();
+        if (!state.openId) return;
+        var id = state.openId;
+        var patch = collectPatch();
+        var button = $('saveBtn');
+        button.disabled = true;
+        setStatus('Savingâ€¦');
+        api('/api/admin/products/' + encodeURIComponent(id), {
+            method: 'PUT',
+            body: {
+                patch: patch,
+                hidden: $('fHidden').value === 'yes',
+                order: $('fOrder').value === '' ? null : Number($('fOrder').value),
+                expected_updated_at: state.openEntry ? state.openEntry.updated_at : null
+            }
+        }).then(function () {
+            if (window.ZyrexProductOverrides) window.ZyrexProductOverrides.reload();
+            return verifyLive(id, patch.name);
+        }).then(function (message) {
+            setStatus(message, 'ok');
+            toast(message);
+            return loadAll();
+        }).catch(function (error) {
+            if (error.code === 'STALE') {
+                setStatus('Someone else saved this product in the meantime. Reloadingâ€¦', 'bad');
+                return loadAll();
+            }
+            setStatus(error.message, 'bad');
+        }).then(function () {
+            button.disabled = false;
+        });
+    }
+
+    function removeProduct() {
+        if (!state.openId) return;
+        if (!window.confirm('Delete this product? It disappears from the whole site immediately.')) return;
+        var id = state.openId;
+        setStatus('Deletingâ€¦');
+        api('/api/admin/products/' + encodeURIComponent(id), { method: 'DELETE' })
+            .then(function (data) {
+                if (window.ZyrexProductOverrides) window.ZyrexProductOverrides.reload();
+                setStatus(data.catalog_row_removed ? 'Deleted from the catalogue and hidden everywhere.' : 'Deleted â€” hidden everywhere.', 'ok');
+                toast('Product deleted');
+                return loadAll();
+            })
+            .catch(function (error) { setStatus(error.message, 'bad'); });
+    }
+
+    function restoreProduct(id) {
+        var target = id || state.openId;
+        if (!target) return;
+        api('/api/admin/products/' + encodeURIComponent(target) + '/restore', { method: 'POST' })
+            .then(function (data) {
+                if (window.ZyrexProductOverrides) window.ZyrexProductOverrides.reload();
+                var message = data.removed ? 'Restored to the shipped version.' : 'That product had no override.';
+                if (state.openId === target) setStatus(message, 'ok');
+                toast(message);
+                return loadAll();
+            })
+            .catch(function (error) { toast(error.message, true); });
+    }
+
+    // â”€â”€ audit â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    function loadAudit() {
+        $('auditRows').innerHTML = '<tr><td colspan="5" class="empty">Loadingâ€¦</td></tr>';
+        api('/api/admin/products/audit?limit=100').then(function (data) {
+            var rows = data.items || [];
+            if (!rows.length) {
+                $('auditRows').innerHTML = '<tr><td colspan="5" class="empty">No changes recorded yet.</td></tr>';
+                return;
+            }
+            $('auditRows').innerHTML = rows.map(function (row) {
+                return '<tr>' +
+                    '<td>' + esc(new Date(row.at).toLocaleString()) + '</td>' +
+                    '<td>' + esc(row.actor || 'â€”') + '</td>' +
+                    '<td>' + esc(row.id || 'â€”') + '</td>' +
+                    '<td><span class="chip ' + (row.action === 'delete' ? 'bad' : row.action === 'restore' ? 'ok' : 'edit') + '">' + esc(row.action || 'update') + '</span></td>' +
+                    '<td>' + esc((row.changed || []).join(', ') || 'â€”') + '</td>' +
+                '</tr>';
+            }).join('');
+        }).catch(function (error) {
+            $('auditRows').innerHTML = '<tr><td colspan="5" class="empty">' + esc(error.message) + '</td></tr>';
+        });
+    }
+
+    // â”€â”€ verify diagnostics â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    function runDiagnostics() {
+        var userId = $('diagUser').value.trim();
+        $('diagOut').textContent = 'Runningâ€¦';
+        api('/api/admin/diagnostics/verify' + (userId ? '?user_id=' + encodeURIComponent(userId) : ''))
+            .then(function (data) { $('diagOut').textContent = JSON.stringify(data, null, 2); })
+            .catch(function (error) { $('diagOut').textContent = 'Check failed: ' + error.message; });
+    }
+
+    // â”€â”€ wiring â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    Array.prototype.forEach.call(document.querySelectorAll('[data-tab]'), function (tab) {
+        tab.addEventListener('click', function () {
+            Array.prototype.forEach.call(document.querySelectorAll('[data-tab]'), function (other) {
+                other.classList.toggle('is-active', other === tab);
+            });
+            ['products', 'audit', 'verify'].forEach(function (name) {
+                $('panel-' + name).classList.toggle('is-active', name === tab.dataset.tab);
+            });
+            if (tab.dataset.tab === 'audit') loadAudit();
+        });
+    });
+
+    $('rows').addEventListener('click', function (event) {
+        var edit = event.target.closest('[data-edit]');
+        if (edit) { openDrawer(edit.getAttribute('data-edit')); return; }
+        var restore = event.target.closest('[data-restore]');
+        if (restore) restoreProduct(restore.getAttribute('data-restore'));
+    });
+    $('q').addEventListener('input', renderRows);
+    $('filterCategory').addEventListener('change', renderRows);
+    $('filterState').addEventListener('change', renderRows);
+    $('reload').addEventListener('click', loadAll);
+    $('reloadAudit').addEventListener('click', loadAudit);
+    $('runDiag').addEventListener('click', runDiagnostics);
+    $('editForm').addEventListener('submit', save);
+    $('deleteBtn').addEventListener('click', removeProduct);
+    $('restoreBtn').addEventListener('click', function () { restoreProduct(); });
+    $('closeDrawer').addEventListener('click', closeDrawer);
+    $('addLink').addEventListener('click', function () {
+        $('linkRows').appendChild(linkRow({ url: '', label: 'Download' }));
+    });
+    $('drawer').addEventListener('click', function (event) {
+        if (event.target === $('drawer')) closeDrawer();
+    });
+
+    fetch('/api/me', { credentials: 'include' })
+        .then(function (response) { return response.json(); })
+        .then(function (payload) {
+            var user = (payload && (payload.user || payload)) || null;
+            var admin = Boolean(user && (user.is_admin || (window.isZyrexAdmin && window.isZyrexAdmin(user))));
+            if (!admin) {
+                $('gate').hidden = false;
+                $('gateText').textContent = user && user.id
+                    ? 'This account is not a site admin.'
+                    : 'Sign in with an admin account to edit the plugin catalogue.';
+                document.querySelectorAll('.panel, .tabs').forEach(function (node) { node.hidden = true; });
+                return;
+            }
+            loadAll();
+        })
+        .catch(function () {
+            $('gate').hidden = false;
+            document.querySelectorAll('.panel, .tabs').forEach(function (node) { node.hidden = true; });
+        });
+})();
+</script>
+    <script src="/js/page-motion.js?v=6"></script>
+</body>
+</html>

@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Post | Zyrex</title>
+    <meta name="description" content="A single post from the Zyrex community feed.">
+    <meta property="og:type" content="article">
+    <meta property="og:site_name" content="Zyrex">
+    <meta property="og:title" content="Post | Zyrex">
+    <meta property="og:description" content="A single post from the Zyrex community feed.">
+    <meta property="og:image" content="https://zyrexediting.xyz/assets/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://zyrexediting.xyz/assets/og-image.png">
+    <link rel="icon" type="image/png" href="/assets/content.png">
+    <link rel="stylesheet" href="/css/style.css?v=92">
+    <link rel="stylesheet" href="/css/profile-system.css?v=20">
+    <link rel="stylesheet" href="/css/social-pages.css?v=44">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,800,900&amp;display=swap">
+    <link rel="stylesheet" href="/css/glass.css?v=67">
+    <link rel="stylesheet" href="/css/atmosphere.css?v=7">
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.fontshare.com">
+    <link rel="stylesheet" href="/css/i18n.css?v=3">
+    <script src="/js/i18n.js?v=15" defer></script>
+</head>
+
+<body class="pf-social-page">
+    <div class="zr-sweep" aria-hidden="true"></div>
+    <div class="lq-veil" aria-hidden="true"></div>
+
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo"><img src="/assets/content.png" alt="ZYREX" class="logo-img"><span
+                    class="logo-text">yrex</span></a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="/">Home</a></li>
+                <li><a href="/leaks">Leaks</a></li>
+                <li><a href="/feed" class="active">Feed</a></li>
+                <li><a href="/plugins">Plugins</a></li>
+                <li><a href="/requests">Requests</a></li>
+                <li><a href="/audio">Audios</a></li>
+                
+            </ul>
+            <div class="nav-actions">
+                <div id="authBtn"></div>
+                <button class="hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="profile-page pf-post-page" id="postPage">
+        <section class="pf-post-shell">
+            <a class="pf-post-back" href="/feed"><i class="fas fa-arrow-left"></i> Back to feed</a>
+            <div class="pf-state" id="postLoading"><i class="fas fa-circle-notch fa-spin"></i>
+                <h2>Loading the post</h2>
+                <p>Fetching the conversation.</p>
+            </div>
+            <div class="pf-state" id="postError" hidden>
+                <i class="fas fa-comment-slash"></i>
+                <h2 id="postErrorTitle">Post not found</h2>
+                <p id="postErrorMessage">That post is no longer available.</p>
+                <a class="pf-btn" href="/feed"><i class="fas fa-arrow-left"></i> Back to the feed</a>
+            </div>
+            <div id="postContent" hidden></div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <a href="/" class="hero-brand-lockup footer-brand-lockup">
+                        <img src="/assets/content.png" alt="Zyrex Logo" class="hero-brand-icon">
+                        <div class="hero-brand-text-col">
+                            <span class="hero-brand-title">Zyrex<sup>™</sup></span>
+                            <span class="hero-brand-sub">EDITING</span>
+                        </div>
+                    </a>
+                    <p>Editing leaks and stuff.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/leaks">Leaks</a></li>
+                        <li><a href="/feed">Feed</a></li>
+                        <li><a href="/plugins">Plugins</a></li>
+                        <li><a href="/requests">Requests</a></li>
+                        <li><a href="/audio">Audios</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="/terms">Terms of Service</a></li>
+                        <li><a href="/privacy">Privacy Policy</a></li>
+                        <li><a href="/dmca">DMCA</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="https://discord.gg/4J3tars4QS" target="_blank" rel="noopener">Discord</a></li>
+                        <li><a href="/#contact">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Zyrex Editing. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/js/chunks/chunk-store.js?v=1"></script>
+    <script src="/js/auth.js?v=19"></script>
+    <script src="/js/script.js?v=92"></script>
+    <script src="/js/social-interactions.js?v=6"></script>
+    <script src="/js/post-markdown.js?v=2"></script>
+    <script>
+        (function () {
+            'use strict';
+            var $ = function (id) { return document.getElementById(id); };
+            var esc = function (value) {
+                return String(value == null ? '' : value).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            };
+            // Both shapes are parsed once so the guard and the lookup agree.
+            var pathMatch = /^\/post\/([A-Za-z0-9-]{16,40})\/?$/.exec(location.pathname);
+            var seqMatch = /^\/feed\/post\/(\d{1,9})\/?$/.exec(location.pathname);
+            var postId = pathMatch ? pathMatch[1] : (new URLSearchParams(location.search).get('id') || '');
+
+            function ago(value) {
+                var then = Date.parse(String(value || ''));
+                if (!then) return '';
+                var diff = Math.max(0, Date.now() - then) / 1000;
+                if (diff < 60) return 'now';
+                if (diff < 3600) return Math.floor(diff / 60) + 'm';
+                if (diff < 86400) return Math.floor(diff / 3600) + 'h';
+                if (diff < 604800) return Math.floor(diff / 86400) + 'd';
+                return new Date(then).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            }
+
+                        function renderText(text, mentions) {
+                function decorate(part) {
+                    return part.replace(/@([a-zA-Z0-9_.-]{1,32})/g, function (match, handle) {
+                        var known = (mentions || []).some(function (entry) {
+                            return String((entry && entry.username) || '').toLowerCase() === handle.toLowerCase();
+                        });
+                        return known ? '<a class="pf-mention-link" href="/@' + handle.toLowerCase() + '">' + match + '</a>' : match;
+                    });
+                }
+                return window.ZyrexPostFormat ? window.ZyrexPostFormat.blocks(text, decorate) : esc(text || '').replace(/\n/g, '<br>');
+            }
+
+            function error(title, message) {
+                $('postLoading').hidden = true;
+                $('postContent').hidden = true;
+                $('postError').hidden = false;
+                $('postErrorTitle').textContent = title;
+                $('postErrorMessage').textContent = message;
+            }
+
+            function replyMediaClass(value) {
+                var url = String(value || '');
+                if (/\/stickers\//i.test(url)) return ' is-sticker';
+                if (/(?:giphy|tenor)\.(?:com|co)\//i.test(url)) return ' is-gif';
+                return '';
+            }
+
+            function repliesMarkup(items) {
+                // The shared renderer keeps the feed and the permalink identical, and it
+                // never ships a composer: that only appears after a Reply click.
+                if (window.ZyrexSocialInteractions && window.ZyrexSocialInteractions.thread) {
+                    var list = window.ZyrexSocialInteractions.thread(items, {});
+                    var count = (items || []).length;
+                    return '<div class="pf-social-thread-head"><span><i class="far fa-comments"></i> ' + count + (count === 1 ? ' reply' : ' replies') + '</span></div>' +
+                        '<div class="pf-social-reply-list">' + list.html + '</div>';
+                }
+                return '';
+            }
+
+            function categoryLabel(value) {
+                var text = String(value || '').replace(/[-_]+/g, ' ').trim();
+                return text ? text.replace(/\b[a-z]/g, function (c) { return c.toUpperCase(); }) : 'Leak';
+            }
+
+            // Upload announcements only carry the thumbnail as media, so the page rebuilds
+            // the same compact leak card the feed shows instead of a bare image.
+            function resourceDetailCard(resource) {
+                var item = resource || {};
+                var uploader = item.uploader || {};
+                var label = uploader.handle ? '@' + uploader.handle : (uploader.name || 'Zyrex member');
+                var uploaderUrl = uploader.url || (uploader.id ? '/profile?id=' + encodeURIComponent(uploader.id) : '');
+                var founder = String(uploader.id || '') === '1421177012814614548';
+                var target = item.url || '/leaks';
+                var thumb = item.thumbnail
+                    ? '<span class="pf-notice-thumb"><img src="' + esc(item.thumbnail) + '" alt="' + esc(item.name || 'Leak') + '" loading="lazy" onerror="this.closest(\'.pf-notice-thumb\').classList.add(\'is-empty\');this.remove()"></span>'
+                    : '<span class="pf-notice-thumb is-empty"></span>';
+                var byline = uploaderUrl
+                    ? '<small>Uploaded by <a class="pf-feed-uploader' + (founder ? ' founder-name' : '') + '" href="' + esc(uploaderUrl) + '">' + esc(label) + '</a></small>'
+                    : '<small>Uploaded by ' + esc(label) + '</small>';
+                // Every category the leak belongs to, e.g. "After Effects · Setting Preset".
+                var catLabel = Array.isArray(item.category_labels) && item.category_labels.length
+                    ? item.category_labels.join(' · ')
+                    : categoryLabel(item.category || item.type);
+                return '<div class="pf-notice-resource pf-post-resource">' + thumb +
+                    '<span class="pf-notice-info"><strong><a class="pf-notice-title" href="' + esc(target) + '">' + esc(item.name || 'New leak') + '</a></strong>' +
+                    byline +
+                    '<span><i class="fas fa-layer-group"></i> ' + esc(catLabel) + ' <i class="fas fa-arrow-up-right-from-square"></i></span></span></div>';
+            }
+
+            function linkCards(links) {
+                return (Array.isArray(links) ? links : []).slice(0, 2).map(function (link) {
+                    if (!link || !link.url) return '';
+                    var host = '';
+                    try { host = new URL(link.url).hostname.replace(/^www\./, ''); } catch (_) {}
+                    var thumb = link.image ? '<span class="pf-link-card-thumb"><img src="' + esc(link.image) + '" alt="" decoding="async" onerror="this.parentNode.remove()"></span>' : '';
+                    return '<a class="pf-link-card" href="' + esc(link.url) + '" target="_blank" rel="noopener nofollow ugc">' + thumb + '<span class="pf-link-card-body"><small>' + esc(link.site || host) + '</small><strong>' + esc(link.title || link.url) + '</strong>' + (link.description ? '<span>' + esc(link.description) + '</span>' : '') + '</span></a>';
+                }).join('');
+            }
+            function render(payload) {
+                var post = payload.post || {};
+                var author = payload.author || {};
+                var interaction = payload.interaction || {};
+                var resource = payload.resource || {};
+                var noticeCard = resource.id ? resourceDetailCard(resource) : '';
+                // The sentence repeats the leak name the card already shows, so trim it and
+                // link the uploader mention the notice payload never records.
+                var postText = String(post.text || '');
+                var leakName = noticeCard ? String(resource.name || '') : '';
+                if (leakName && postText.slice(-leakName.length) === leakName) {
+                    postText = postText.slice(0, postText.length - leakName.length).replace(/[:\s]+$/, '');
+                }
+                var mentions = Array.isArray(post.mentions) ? post.mentions.slice() : [];
+                var uploaderHandle = noticeCard && resource.uploader ? String(resource.uploader.handle || '') : '';
+                if (uploaderHandle && !mentions.some(function (entry) {
+                    return String((entry && entry.username) || '').toLowerCase() === uploaderHandle.toLowerCase();
+                })) {
+                    mentions.push({ username: uploaderHandle });
+                }
+                var media = (post.media || []).map(function (src) {
+                    var url = String(src || '');
+                    var small = /\/stickers\//i.test(url) || /(?:giphy|tenor)\.(?:com|co)\//i.test(url);
+                    return '<img class="pf-post-media' + (small ? ' is-sticker' : '') + '" src="' + esc(window.ZyrexMedia ? window.ZyrexMedia.src(url) : url) + '" alt="" decoding="async">';
+                }).join('');
+                var videoMarkup = post.video && post.video.url
+                    ? '<video class="pf-post-media pf-post-video" src="' + esc(post.video.url) + '"' + (post.video.poster ? ' poster="' + esc(post.video.poster) + '"' : '') + ' controls playsinline preload="metadata"></video>'
+                    : '';
+                var html = '' +
+                    '<article class="pf-card pf-post-detail" data-social-type="post" data-social-id="' + esc(post.id) + '" data-social-author="' + esc(author.id || '') + '">' +
+                    '<div class="pf-post-top"><a class="pf-post-author" href="' + esc(author.url || '/feed') + '">' +
+                    '<img src="' + esc(author.avatar || '/assets/default-avatar.png') + '" alt="" onerror="this.src=\'/assets/default-avatar.png\'">' +
+                    '<span><strong>' + esc(author.name || 'Zyrex Member') + (author.is_admin ? ' <i class="fas fa-circle-check is-admin-check" aria-label="Verified"></i>' : '') + '</strong><small>' +
+                    (author.handle ? '@' + esc(author.handle) + ' · ' : '') + esc(ago(post.created_at)) +
+                    '</small></span></a></div>' +
+                    '<div class="pf-post-text">' + renderText(postText, mentions) + '</div>' + (noticeCard || (media + videoMarkup)) + linkCards(post.links) +
+                    '<div class="pf-social-interactions"><div class="pf-social-actions">' +
+                    '<button type="button" data-social-like><i class="far fa-heart"></i><span data-like-label>Like</span><b data-social-likes>0</b></button>' +
+                    '<span class="pf-social-stat"><i class="far fa-eye"></i><b data-social-views>0</b></span>' +
+                    '<button type="button" data-social-reply-toggle><i class="far fa-comment"></i><span>Reply</span><b data-social-replies>0</b></button>' +
+                    '</div><div class="pf-social-thread" data-social-thread>' + repliesMarkup(interaction.items) + '</div></div>' +
+                    '</article>' +
+                    '<p class="pf-post-permalink"><i class="fas fa-link"></i> <a href="' + esc(location.href) + '">' + esc(location.origin + (post.short_url || ('/post/' + post.id))) + '</a></p>';
+                $('postContent').innerHTML = html;
+                $('postContent').hidden = false;
+                $('postLoading').hidden = true;
+                document.title = noticeCard
+                    ? String((payload.resource && payload.resource.name) || 'Leak') + ' · Zyrex Leaks'
+                    : (author.name || 'Post') + ' on Zyrex';
+                var card = $('postContent').querySelector('[data-social-type]');
+                if (window.ZyrexSocialInteractions) window.ZyrexSocialInteractions.mount($('postContent'));
+                var thread = card && card.querySelector('[data-social-thread]');
+                if (thread) thread.hidden = false;
+                // Feed and profile reply buttons land here with #replies so the conversation
+                // and its composer are already open and ready to type in.
+                var wantsReply = location.hash === '#replies' || /^(1|true)$/i.test(new URLSearchParams(location.search).get('reply') || '');
+                if (wantsReply && thread) {
+                    try { thread.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch (_) { thread.scrollIntoView(); }
+                    // The composer is created by the Reply control, so the deep link clicks it.
+                    var replyTrigger = card && card.querySelector('[data-social-reply-toggle]');
+                    if (replyTrigger) setTimeout(function () { try { replyTrigger.click(); } catch (_) {} }, 260);
+                }
+            }
+
+            if (!postId && !seqMatch) {
+                error('Post not found', 'That link does not point at a post.');
+                return;
+            }
+
+            // A short link resolves through the sequence index before the post is fetched.
+            var lookup = seqMatch
+                ? fetch('/api/feed/post?n=' + encodeURIComponent(seqMatch[1]), { credentials: 'include', cache: 'no-store' })
+                    .then(function (response) { return response.json().then(function (data) { return { ok: response.ok, data: data }; }); })
+                    .then(function (result) {
+                        if (!result.ok || !result.data || !result.data.post_id) throw new Error('This post is no longer available.');
+                        return result.data.post_id;
+                    })
+                : Promise.resolve(postId);
+            lookup
+                .then(function (resolvedId) {
+                    postId = resolvedId;
+                    return fetch('/api/post?id=' + encodeURIComponent(postId), { credentials: 'include' });
+                })
+                .then(function (response) {
+                    return response.json().then(function (data) { return { ok: response.ok, data: data }; });
+                })
+                .then(function (result) {
+                    if (!result.ok || !result.data.success) {
+                        var code = result.data && result.data.code;
+                        if (code === 'NOT_IN_GUILD') error('Post not found', 'That member is no longer part of the Zyrex Discord server.');
+                        else if (code === 'POST_PRIVATE') error('This post is private', 'The author keeps their feed activity private.');
+                        else error('Post not found', (result.data && result.data.error) || 'That post is no longer available.');
+                        return;
+                    }
+                    render(result.data);
+                })
+                .catch(function () {
+                    error('Could not load the post', 'Please check your connection and try again.');
+                });
+        })();
+    </script>
+    <script src="/js/page-motion.js?v=6"></script>
+</body>
+
+</html>

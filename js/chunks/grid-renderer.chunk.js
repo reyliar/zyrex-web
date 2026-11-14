@@ -16,10 +16,25 @@
         var discordIdMatch = (item.creator_avatar || item.uploader_avatar || '').match(/\/avatars\/(\d{17,20})\//);
         var extractedDiscordId = discordIdMatch ? discordIdMatch[1] : '';
 
-        var uploaderName = (item.uploader_name || item.creator_nickname || item.author_name || 'Zyrex').trim();
-        var uploaderId = (item.uploader_id || extractedDiscordId || item.author_id || '').trim();
-        var uploaderAv = (item.uploader_avatar || item.creator_avatar || item.author_avatar || '').trim();
-        var avatarHtml = '<img src="' + (uploaderAv || window.DEFAULT_AVATAR) + '" class="preset-card-avatar" data-uploader-id="' + uploaderId + '" data-fallback="' + uploaderAv + '" alt="" loading="lazy" decoding="async" onerror="window.handleAvatarError(this)">';
+        var profile = window.ZyrexProfile ? window.ZyrexProfile.forProduct(item) : null;
+        var uploaderName = item.is_anonymous ? 'Anonymous' : (profile ? profile.uploaderName : (item.uploader_name || item.author_name || item.creator_nickname || 'Zyrex').trim());
+        var uploaderId = profile ? profile.uploaderId : (item.is_anonymous ? '' : (item.uploader_id || item.author_id || extractedDiscordId || '').trim());
+        var uploaderAv = item.is_anonymous ? '' : (item.uploader_avatar || item.author_avatar || (!item.uploader_id && !item.author_id ? item.creator_avatar : '') || '').trim();
+        // Resolve through the shared profile layer so the grid always agrees with
+        // the detail pages. Product data can hold a bare Discord avatar hash
+        // (e.g. "8505f9e5...") which must never be used as a relative image path.
+        var uploaderAvSrc = item.is_anonymous
+            ? (window.DEFAULT_AVATAR || '/assets/default-avatar.png')
+            : (profile ? profile.uploaderAvatar : uploaderAv);
+        if (!uploaderAvSrc) uploaderAvSrc = window.DEFAULT_AVATAR;
+        var avatarHtml = '<img src="' + uploaderAvSrc + '" class="preset-card-avatar" data-uploader-id="' + uploaderId + '" data-fallback="' + uploaderAv + '" alt="" loading="lazy" decoding="async" onerror="window.handlePresetCardAvatarError(this)">';
+        // The whole card is already an anchor, so the uploader name routes to the
+        // profile itself instead of nesting links.
+        var uploaderProfileUrl = item.is_anonymous || (profile && profile.isSocialCreator) ? '' : String(item.uploader_profile_url || '').trim();
+        var uploaderNameAttr = uploaderProfileUrl
+            ? ' style="cursor:pointer" title="View profile" onclick="event.preventDefault();event.stopPropagation();location.href=\'' + uploaderProfileUrl + '\'"'
+            : '';
+        var founderClass = uploaderId === '1421177012814614548' ? ' is-founder-name' : '';
         var dlCount = downloadCounts[item.id] || item.downloads || 0;
         var likeCount = likeCounts[item.id] || 0;
 
@@ -29,8 +44,8 @@
             '<div class="rimg-fallback"><span class="cat-svg-icon ' + catSvgClass + '" style="font-size:2.8rem"></span></div>';
 
         var itemType = (item.type || '').toLowerCase();
-        var detailUrl = '/resource?id=' + encodeURIComponent(item.id);
-        if (itemType === 'scenepack') detailUrl = '/product-scenepack?id=' + encodeURIComponent(item.id);
+        var detailUrl = '/leak?id=' + encodeURIComponent(item.id);
+        if (itemType === 'scenepack') detailUrl = '/leaks';
         else if (itemType === 'audio') detailUrl = '/product-audio?id=' + encodeURIComponent(item.id);
         else if (itemType === 'plugin' || itemType === 'software') detailUrl = '/product?id=' + encodeURIComponent(item.id);
 
@@ -62,7 +77,7 @@
             '<div class="rc-footer">' +
             '<div class="rc-meta">' +
             '<div class="rava-fb">' + avatarHtml + '</div>' +
-            '<span class="rname preset-card-name" data-uploader-id="' + uploaderId + '">' + uploaderName + '</span></div>' +
+            '<span class="rname preset-card-name' + founderClass + '"' + uploaderNameAttr + ' data-uploader-id="' + uploaderId + '">' + uploaderName + '</span></div>' +
             '<div class="rc-actions">' +
             '<span><i class="fas fa-download"></i> ' + dlCount + '</span>' +
             '<span><i class="fas fa-heart"></i> ' + likeCount + '</span>' +

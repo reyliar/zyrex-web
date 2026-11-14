@@ -4,11 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Secure Download - Zyrex</title>
-    <meta name="description" content="Zyrex Editing - Secure download page for editing resources.">
+    <meta name="description" content="Secure download page for Zyrex files.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://zyrexediting.xyz/download">
     <meta property="og:title" content="Zyrex Editing">
-    <meta property="og:description" content="Free resources, plugins, softwares, and more.">
+    <meta property="og:description" content="Secure download page for Zyrex files.">
     <meta property="og:image" content="https://zyrexediting.xyz/assets/og-image.png">
     <meta property="og:image:width" content="1024">
     <meta property="og:image:height" content="576">
@@ -16,26 +16,30 @@
     <meta name="twitter:image" content="https://zyrexediting.xyz/assets/og-image.png">
     <link rel="icon" type="image/png" href="/assets/content.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,800,900&amp;display=swap">
     <style>
         :root {
-            --cherry: #ff2b52;
-            --cherry-light: #ff6b8b;
+            --cherry: var(--zr-accent, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1));
+            --cherry-light: var(--zr-accent-soft, rgba(var(--zr-rgb-255-107-139, 255, 107, 139), 1));
             --cherry-rgb: 255,43,82;
-            --dark: #060108;
-            --card: rgba(14, 8, 18, 0.85);
-            --light: #ffffff;
-            --gray: rgba(255, 255, 255, 0.65);
-            --gray-dark: rgba(255, 255, 255, 0.35);
+            --dark: var(--site-bg, #060108);
+            --card: var(--site-surface, rgba(14, 8, 18, 0.85));
+            --light: var(--site-text, #ffffff);
+            --gray: var(--site-muted, #c3ccd9);
+            --gray-dark: var(--site-muted, #94a3b6);
+            /* Cards, soft panels and hairlines follow the palette chosen in Settings. */
+            --dl-soft: var(--site-surface-2, rgba(255, 255, 255, 0.03));
+            --dl-border: var(--site-border, rgba(255, 255, 255, 0.12));
+            --dl-border-soft: var(--site-border, rgba(255, 255, 255, 0.06));
         }
         * { margin:0; padding:0; box-sizing:border-box }
         body {
-            background: #060108;
+            background: var(--dark);
             background-image: 
-                radial-gradient(circle at 50% 15%, rgba(255, 43, 82, 0.16) 0%, transparent 60%),
-                radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.12) 0%, transparent 50%);
+                radial-gradient(circle at 50% 15%, var(--site-bg-glow, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.16)) 0%, transparent 60%),
+                radial-gradient(circle at 80% 80%, var(--site-bg-glow, rgba(168, 85, 247, 0.12)) 0%, transparent 50%);
             color: var(--light);
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Satoshi', sans-serif;
             min-height: 100vh;
             display: flex;
             align-items: center;
@@ -46,18 +50,17 @@
         }
         .bg-grid {
             position: fixed; inset:0; pointer-events: none; z-index:0;
-            background-image: radial-gradient(circle at 50% 30%, rgba(255,43,82,0.14) 0%, transparent 65%);
+            background-image: radial-gradient(120% 85% at 50% 10%, rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.12) 0%, transparent 70%);
         }
         .glow {
-            position: fixed;
-            width: 450px; height: 450px;
-            border-radius: 50%;
-            filter: blur(120px);
-            opacity: .12;
-            pointer-events: none;
+        position: fixed;
+        width: 450px; height: 450px;
+        border-radius: 50%;
+        opacity: .12;
+        pointer-events: none;
         }
-        .glow-top { background: var(--cherry); top: 5%; left: 50%; transform: translate(-50%,0) }
-        .glow-bot { background: rgba(168, 85, 247, 0.5); bottom: 0; left: 50%; transform: translate(-50%,30%); opacity: .08 }
+        .glow-top { background: radial-gradient(circle, var(--cherry), transparent 70%); top: 5%; left: 50%; transform: translate(-50%,0) }
+        .glow-bot { background: radial-gradient(circle, rgba(168, 85, 247, 0.5), transparent 70%); bottom: 0; left: 50%; transform: translate(-50%,30%); opacity: .08 }
 
         .page-wrap {
             position: relative; z-index:1;
@@ -71,30 +74,30 @@
         /* States */
         .state { display:none; text-align:center; width:100% }
         .state.active { display:block }
-        .loader { width:44px; height:44px; border:3px solid rgba(255,255,255,.08); border-top-color:var(--cherry); border-radius:50%; animation:spin .7s linear infinite; margin:0 auto 20px }
+        .loader { width:44px; height:44px; border:3px solid var(--dl-border-soft); border-top-color:var(--cherry); border-radius:50%; animation:spin .7s linear infinite; margin:0 auto 20px }
         @keyframes spin { to{transform:rotate(360deg)} }
         .state-err-icon { font-size:3rem; color:var(--cherry); opacity:.6; margin-bottom:16px; display:block }
-        .state-err h2 { font-size:1.35rem; font-weight:800; font-family:'Outfit',sans-serif; color:var(--light); margin-bottom:8px }
+        .state-err h2 { font-size:1.35rem; font-weight:800; font-family:'Satoshi',sans-serif; color:var(--light); margin-bottom:8px }
         .state-err p { color:var(--gray); font-size:.88rem; margin-bottom:24px; line-height:1.6 }
 
         /* 404 */
-        .state-404 .code-404 { font-size:6rem; font-weight:900; letter-spacing:-3px; font-family:'Outfit',sans-serif; background:linear-gradient(135deg,#ff2b52,#ff6b8b,#c8002a); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; line-height:1 }
+        .state-404 .code-404 { font-size:6rem; font-weight:900; letter-spacing:-3px; font-family:'Satoshi',sans-serif; background:linear-gradient(135deg,var(--zr-accent, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1)),var(--zr-accent-soft, rgba(var(--zr-rgb-255-107-139, 255, 107, 139), 1)),rgba(var(--zr-rgb-200-0-42, 200, 0, 42), 1)); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; line-height:1 }
         .state-404 .badge-404 { display:inline-block; font-size:.7rem; font-weight:800; text-transform:uppercase; letter-spacing:2px; color:var(--cherry-light); background:rgba(var(--cherry-rgb),.12); border:1px solid rgba(var(--cherry-rgb),.25); padding:5px 16px; border-radius:999px; margin:8px 0 20px }
 
         /* Login Required */
         .state-login .login-icon { font-size:3.5rem; color:#5865F2; opacity:.6; margin-bottom:16px; display:block }
-        .state-login h2 { font-size:1.35rem; font-weight:800; font-family:'Outfit',sans-serif; color:var(--light); margin-bottom:8px }
+        .state-login h2 { font-size:1.35rem; font-weight:800; font-family:'Satoshi',sans-serif; color:var(--light); margin-bottom:8px }
         .state-login p { color:var(--gray); font-size:.86rem; margin-bottom:24px }
-        .btn-discord-login { display:inline-flex; align-items:center; gap:10px; padding:14px 34px; border-radius:999px; font-size:.92rem; font-weight:800; font-family:'Outfit',sans-serif; text-decoration:none; background:linear-gradient(135deg,#5865F2,#4752c4); color:#fff; border:1px solid rgba(255,255,255,.2); box-shadow:0 10px 30px rgba(88,101,242,.4); transition:all .3s cubic-bezier(0.16,1,0.3,1) }
-        .btn-discord-login:hover { transform:translateY(-2px); box-shadow:0 14px 40px rgba(88,101,242,.6) }
+        .btn-discord-login { display:inline-flex; align-items:center; gap:10px; padding:14px 34px; border-radius:999px; font-size:.92rem; font-weight:800; font-family:'Satoshi',sans-serif; text-decoration:none; background:linear-gradient(135deg,#5865F2,#4752c4); color:#fff; border:1px solid rgba(255, 255, 255, .2); box-shadow:0 10px 30px rgba(88, 101, 242, .4); transition:all .3s cubic-bezier(0.16,1,0.3,1) }
+        .btn-discord-login:hover { transform:translateY(-2px); box-shadow:0 14px 40px rgba(88, 101, 242, .6) }
 
         /* Verify Required */
         .state-verify .verify-icon { font-size:3.5rem; color:var(--cherry); opacity:.6; margin-bottom:14px; display:block }
-        .state-verify h2 { font-size:1.35rem; font-weight:800; font-family:'Outfit',sans-serif; color:var(--light); margin-bottom:8px }
+        .state-verify h2 { font-size:1.35rem; font-weight:800; font-family:'Satoshi',sans-serif; color:var(--light); margin-bottom:8px }
         .state-verify .verify-desc { color:var(--gray); font-size:.86rem; margin-bottom:10px; line-height:1.6 }
         .state-verify .verify-desc strong { color:var(--cherry-light); font-weight:700 }
         .verify-steps { text-align:left; margin:20px 0; padding:0; list-style:none }
-        .verify-steps li { display:flex; align-items:flex-start; gap:12px; padding:14px 0; border-bottom:1px solid rgba(255,255,255,.05); font-size:.82rem; color:var(--gray) }
+        .verify-steps li { display:flex; align-items:flex-start; gap:12px; padding:14px 0; border-bottom:1px solid var(--dl-border-soft); font-size:.82rem; color:var(--gray) }
         .verify-steps li:last-child { border-bottom:none }
         .verify-steps .step-num { width:30px; height:30px; border-radius:50%; background:rgba(var(--cherry-rgb),.15); border:1px solid rgba(var(--cherry-rgb),.3); display:flex; align-items:center; justify-content:center; flex-shrink:0; color:var(--cherry-light); font-weight:800; font-size:.78rem }
         .verify-steps .step-text strong { display:block; color:var(--light); font-size:.85rem; margin-bottom:2px }
@@ -102,8 +105,8 @@
         
         /* LIQUID GLASS CARD CONTAINER */
         .card-box {
-            background: rgba(14, 8, 18, 0.85);
-            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: var(--card);
+            border: 1px solid var(--dl-border);
             border-radius: 32px;
             padding: 38px 32px;
             width: 100%;
@@ -118,7 +121,7 @@
             position: absolute;
             top: 0; left: 15%; right: 15%;
             height: 2px;
-            background: linear-gradient(90deg, transparent, var(--cherry), rgba(168,85,247,0.8), transparent);
+            background: linear-gradient(90deg, transparent, var(--cherry), rgba(168, 85, 247, 0.8), transparent);
             pointer-events: none;
         }
         
@@ -128,9 +131,9 @@
             gap: 8px;
             padding: 12px 26px;
             border-radius: 999px;
-            background: rgba(255, 43, 82, 0.14);
-            border: 1px solid rgba(255, 43, 82, 0.35);
-            color: #fff;
+            background: rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.14);
+            border: 1px solid rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.35);
+            color: var(--light);
             font-size: 0.86rem;
             font-weight: 800;
             text-decoration: none;
@@ -138,34 +141,35 @@
             backdrop-filter: blur(16px);
         }
         .btn-home:hover {
-            background: rgba(255, 43, 82, 0.25);
+            background: rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.25);
             transform: translateY(-2px);
-            box-shadow: 0 10px 25px rgba(255, 43, 82, 0.35);
+            box-shadow: 0 10px 25px rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.35);
         }
-        .verify-status.checking { background:rgba(255,180,0,.15); border:1px solid rgba(255,180,0,.3); color:#ffb700 }
-        .verify-status.verified { background:rgba(0,220,120,.15); border:1px solid rgba(0,220,120,.3); color:#00ff88 }
+        .verify-status.checking { background:rgba(255, 180, 0, .15); border:1px solid rgba(255, 180, 0, .3); color:#ffb700 }
+        .verify-status.verified { background:rgba(0, 220, 120, .15); border:1px solid rgba(0, 220, 120, .3); color:#00ff88 }
 
         /* Thumbnail */
         .thumb-wrap {
             width: 100%; aspect-ratio: 16/9;
             border-radius: 20px; overflow: hidden;
-            background: linear-gradient(135deg, #09030a, #140718, #09030a);
-            border: 1px solid rgba(255,255,255,.08);
+            background: var(--dl-soft);
+            border: 1px solid var(--dl-border-soft);
             display: flex; align-items: center; justify-content: center;
             margin-bottom: 24px; position: relative;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.6);
         }
         .thumb-wrap img { width: 100%; height: 100%; object-fit: contain; position: relative; z-index:1 }
         .thumb-wrap .ph-icon { position: absolute; font-size:4rem; color:var(--cherry); opacity:.12; z-index:0 }
         .thumb-badges { position: absolute; bottom:12px; left:14px; z-index:2; display:flex; gap:6px; flex-wrap:wrap }
-        .tbadge { padding:5px 12px; border-radius:999px; font-size:.65rem; font-weight:800; text-transform:uppercase; letter-spacing:.8px; background:rgba(0,0,0,.75); backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,.12); color:#fff; display:inline-flex; align-items:center; gap:4px }
-        .tbadge.free { background:rgba(0,220,120,.2); border-color:rgba(0,220,120,.4); color:#00ff88 }
+        .tbadge { padding:5px 12px; border-radius:999px; font-size:.65rem; font-weight:800; text-transform:uppercase; letter-spacing:.8px; background:rgba(0, 0, 0, .75); backdrop-filter:blur(12px); border:1px solid rgba(255, 255, 255, .12); color:#fff; display:inline-flex; align-items:center; gap:4px }
+        .tbadge.free { background:rgba(0, 220, 120, .2); border-color:rgba(0, 220, 120, .4); color:#00ff88 }
+        .tbadge.booster { background:linear-gradient(135deg,var(--zr-accent, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1)),var(--zr-accent-soft, rgba(var(--zr-rgb-255-117-143, 255, 117, 143), 1))); border-color:rgba(var(--zr-rgb-255-117-143, 255, 117, 143),.65); color:#fff }
 
         /* Title */
-        .product-title { font-size: 1.6rem; font-weight: 900; font-family:'Outfit',sans-serif; color: #fff; text-align: center; margin-bottom: 8px; letter-spacing: -.4px; line-height: 1.3 }
+        .product-title { font-size: 1.6rem; font-weight: 900; font-family:'Satoshi',sans-serif; color: var(--light); text-align: center; margin-bottom: 8px; letter-spacing: -.4px; line-height: 1.3 }
         .product-meta { font-size: .75rem; color: var(--gray); text-align: center; margin-bottom: 24px; display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap }
         .product-meta i { color: var(--cherry); font-size: .7rem }
-        .product-meta .sep { width:3px; height:3px; border-radius:50%; background:rgba(255,255,255,.3) }
+        .product-meta .sep { width:3px; height:3px; border-radius:50%; background:var(--gray) }
 
         .cat-svg-icon {
             display: inline-block;
@@ -220,15 +224,15 @@
             align-items: center;
             gap: 12px;
             padding: 12px 16px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: var(--dl-soft);
+            border: 1px solid var(--dl-border-soft);
             border-radius: 16px;
             backdrop-filter: blur(14px);
             transition: all 0.25s ease;
         }
         .duo-card:hover {
-            border-color: rgba(255, 255, 255, 0.16);
-            background: rgba(255, 255, 255, 0.05);
+            border-color: var(--dl-border);
+            background: var(--dl-soft);
         }
         .duo-card.admin-card {
             background: rgba(0, 149, 246, 0.06);
@@ -243,7 +247,7 @@
             height: 36px;
             border-radius: 50%;
             object-fit: cover;
-            border: 1px solid rgba(255, 255, 255, 0.12);
+            border: 1px solid var(--dl-border);
         }
         .duo-card img.admin-glow-ring {
             border-color: rgba(0, 149, 246, 0.55);
@@ -277,11 +281,11 @@
             text-align: left;
             width: 100%;
             font-size: 0.86rem;
-            color: #fff;
+            color: var(--light);
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            font-family: 'Outfit', sans-serif;
+            font-family: 'Satoshi', sans-serif;
             margin: 0;
             padding: 0;
         }
@@ -296,39 +300,39 @@
         .duo-link:hover { text-decoration: underline; }
 
         /* Creator & Uploader legacy fallback */
-        .creator-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: rgba(255,255,255,.03); border: 1px solid rgba(255,255,255,.07); border-radius: 16px; margin-bottom: 14px; width: 100% }
+        .creator-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: var(--dl-soft); border: 1px solid var(--dl-border-soft); border-radius: 16px; margin-bottom: 14px; width: 100% }
         .creator-row img { width:36px; height:36px; border-radius:50%; border:2px solid rgba(var(--cherry-rgb),.3); object-fit:cover }
         .creator-row .cav-fb { width:36px; height:36px; border-radius:50%; background:rgba(var(--cherry-rgb),.15); display:flex; align-items:center; justify-content:center; color:var(--cherry); font-size:.75rem }
-        .creator-row strong { font-size:.85rem; color:var(--light); font-family:'Outfit',sans-serif }
+        .creator-row strong { font-size:.85rem; color:var(--light); font-family:'Satoshi',sans-serif }
         .creator-row a { font-size:.72rem; color:var(--cherry-light); text-decoration:none; margin-left:auto; font-weight:700 }
         .creator-row a:hover { text-decoration:underline }
 
-        .uploader-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: rgba(88,101,242,.06); border: 1px solid rgba(88,101,242,.18); border-radius: 16px; margin-bottom: 20px; width: 100% }
-        .uploader-row img { width:34px; height:34px; border-radius:50%; border:2px solid rgba(88,101,242,.3); object-fit:cover }
-        .uploader-row .uav-fb { width:34px; height:34px; border-radius:50%; background:rgba(88,101,242,.15); display:flex; align-items:center; justify-content:center; color:#5865F2; font-size:.85rem }
-        .uploader-row strong { font-size:.82rem; color:var(--light); font-family:'Outfit',sans-serif }
-        .uploader-row span { font-size:.7rem; color:rgba(255,255,255,.4) }
+        .uploader-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: rgba(88, 101, 242, .06); border: 1px solid rgba(88, 101, 242, .18); border-radius: 16px; margin-bottom: 20px; width: 100% }
+        .uploader-row img { width:34px; height:34px; border-radius:50%; border:2px solid rgba(88, 101, 242, .3); object-fit:cover }
+        .uploader-row .uav-fb { width:34px; height:34px; border-radius:50%; background:rgba(88, 101, 242, .15); display:flex; align-items:center; justify-content:center; color:#5865F2; font-size:.85rem }
+        .uploader-row strong { font-size:.82rem; color:var(--light); font-family:'Satoshi',sans-serif }
+        .uploader-row span { font-size:.7rem; color:var(--gray) }
 
         /* Description */
-        .desc-block { width: 100%; padding: 18px; background: rgba(255,255,255,.02); border: 1px solid rgba(255,255,255,.06); border-radius: 18px; margin-bottom: 20px; color: var(--gray); font-size: .84rem; line-height: 1.7 }
-        .desc-block .desc-label { font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; color: rgba(255,255,255,.4); margin-bottom: 8px; display: flex; align-items: center; gap: 6px }
+        .desc-block { width: 100%; padding: 18px; background: var(--dl-soft); border: 1px solid var(--dl-border-soft); border-radius: 18px; margin-bottom: 20px; color: var(--gray); font-size: .84rem; line-height: 1.7 }
+        .desc-block .desc-label { font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; color: var(--gray); margin-bottom: 8px; display: flex; align-items: center; gap: 6px }
         .desc-block .desc-label i { color: var(--cherry); font-size: .75rem }
 
         /* Files */
         .files-block { width: 100%; margin-bottom: 20px }
         .files-scroll { max-height: 260px; overflow-y: auto; border-radius: 14px; padding-right: 4px }
         .files-scroll::-webkit-scrollbar { width: 4px }
-        .files-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); border-radius: 2px }
+        .files-scroll::-webkit-scrollbar-thumb { background: var(--dl-border); border-radius: 2px }
         .files-scroll::-webkit-scrollbar-track { background: transparent }
-        .files-label { font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; color: rgba(255,255,255,.4); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; justify-content: space-between }
+        .files-label { font-size: .68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1.2px; color: var(--gray); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; justify-content: space-between }
         .files-label i { color: var(--cherry); font-size: .75rem }
         .files-label-right { display: flex; align-items: center; gap: 12px }
         .select-all-btn { font-size: .66rem; color: var(--cherry-light); cursor: pointer; background: none; border: 1px solid rgba(var(--cherry-rgb),.25); padding: 4px 10px; border-radius: 6px; font-family: inherit; font-weight:700; transition: .15s }
         .select-all-btn:hover { background: rgba(var(--cherry-rgb),.12) }
-        .file-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: rgba(255,255,255,.02); border: 1px solid rgba(255,255,255,.05); border-radius: 12px; margin-bottom: 6px; font-size: .8rem; transition: .2s }
+        .file-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--dl-soft); border: 1px solid var(--dl-border-soft); border-radius: 12px; margin-bottom: 6px; font-size: .8rem; transition: .2s }
         .file-item:hover { background: rgba(var(--cherry-rgb),.05); border-color: rgba(var(--cherry-rgb),.15) }
         .file-item .fl { display:flex; align-items:center; gap:10px; min-width:0; flex:1 }
-        .file-item .fl .file-cb { appearance: none; -webkit-appearance: none; width: 15px; height: 15px; border: 1.5px solid rgba(255,255,255,.2); border-radius: 4px; background: transparent; cursor: pointer; flex-shrink: 0; position: relative; transition: .15s }
+        .file-item .fl .file-cb { appearance: none; -webkit-appearance: none; width: 15px; height: 15px; border: 1.5px solid var(--dl-border); border-radius: 4px; background: transparent; cursor: pointer; flex-shrink: 0; position: relative; transition: .15s }
         .file-item .fl .file-cb:checked { background: var(--cherry); border-color: var(--cherry) }
         .file-item .fl .file-cb:checked::after { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; font-size: .55rem; color: #fff; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%) }
         .file-item .fl i { color:var(--cherry); font-size:.75rem; flex-shrink:0 }
@@ -342,14 +346,20 @@
         .file-preview-panel .fp-header i { color: var(--cherry-light); font-size: .75rem }
         .file-preview-panel .fp-header span { font-size: .7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--cherry-light) }
         .file-preview-panel .fp-body { display: flex; gap: 16px; align-items: flex-start; padding: 18px }
-        .file-preview-thumb { width: 90px; height: 75px; border-radius: 12px; background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.1); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; padding: 4px }
-        .file-preview-thumb img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.5)) }
+        .file-preview-thumb { width: 90px; height: 75px; border-radius: 12px; background: rgba(0, 0, 0, .55); border: 1px solid rgba(255, 255, 255, .1); display: flex; align-items: center; justify-content: center; overflow: hidden; flex-shrink: 0; padding: 4px }
+        .file-preview-thumb img { width: 100%; height: 100%; object-fit: contain; filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.5)) }
         .file-preview-thumb .fp-icon { font-size: 2.2rem; color: var(--cherry); opacity: .6 }
         .file-preview-info { flex: 1; min-width: 0 }
         .file-preview-info .fp-name { font-size: .88rem; font-weight: 700; color: var(--light); margin-bottom: 4px; text-align: left; overflow-wrap: break-word }
         .file-preview-info .fp-meta { font-size: .72rem; color: var(--gray-dark); display: flex; gap: 12px; flex-wrap: wrap }
         .file-preview-info .fp-meta span { display: inline-flex; align-items: center; gap: 4px }
         .file-preview-info .fp-meta i { color: var(--cherry); font-size: .65rem }
+        .ffx-effects-preview { padding: 14px 16px; margin-top: 12px; border-radius: 12px; background: rgba(0, 0, 0, .35); border: 1px solid rgba(255, 255, 255, .08) }
+        .ffx-effects-title { display: flex; align-items: center; gap: 7px; color: var(--light); font-size: .76rem; font-weight: 700; margin-bottom: 9px }
+        .ffx-effects-title i { color: var(--cherry-light) }
+        .ffx-effects-list { display: flex; flex-wrap: wrap; gap: 7px }
+        .ffx-effect-chip { padding: 5px 9px; border: 1px solid rgba(var(--cherry-rgb),.22); border-radius: 999px; background: rgba(var(--cherry-rgb),.08); color: var(--light); font-size: .7rem; line-height: 1.2 }
+        .ffx-effects-empty { color: var(--gray-dark); font-size: .72rem }
         .file-item.file-selected { background: rgba(var(--cherry-rgb),.08); border-color: rgba(var(--cherry-rgb),.2) }
 
         /* Shutterstock-style Diagonal Zyrex Watermark Overlay */
@@ -358,8 +368,8 @@
             border-radius: 14px;
             overflow: hidden;
             background: #000;
-            border: 1px solid rgba(255,255,255,0.12);
-            box-shadow: 0 12px 36px rgba(0,0,0,0.8);
+            border: 1px solid var(--dl-border);
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.8);
             user-select: none;
             -webkit-user-select: none;
         }
@@ -370,7 +380,7 @@
             height: 100%;
             pointer-events: none;
             z-index: 6;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='80' viewBox='0 0 140 80'%3E%3Ctext x='70' y='40' fill='rgba(255,255,255,0.22)' stroke='rgba(0,0,0,0.5)' stroke-width='0.6' font-family='Outfit, -apple-system, sans-serif' font-size='15' font-weight='900' letter-spacing='2' text-anchor='middle' dominant-baseline='middle' transform='rotate(-28, 70, 40)'%3EZYREX%3C/text%3E%3C/svg%3E");
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='80' viewBox='0 0 140 80'%3E%3Ctext x='70' y='40' fill='rgba(255, 255, 255, 0.22)' stroke='rgba(0, 0, 0, 0.5)' stroke-width='0.6' font-family='Outfit, -apple-system, sans-serif' font-size='15' font-weight='900' letter-spacing='2' text-anchor='middle' dominant-baseline='middle' transform='rotate(-28, 70, 40)'%3EZYREX%3C/text%3E%3C/svg%3E");
             background-repeat: repeat;
             background-size: 110px 65px;
             opacity: 0.88;
@@ -381,19 +391,19 @@
         }
 
         /* Download Card */
-        .dl-card { width: 100%; background: rgba(255, 43, 82, 0.06); border: 1px solid rgba(255, 43, 82, 0.25); border-radius: 24px; padding: 30px 24px; text-align: center; position: relative; overflow: hidden; box-shadow: 0 15px 40px rgba(255, 43, 82, 0.12) }
+        .dl-card { width: 100%; background: rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.06); border: 1px solid rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.25); border-radius: 24px; padding: 30px 24px; text-align: center; position: relative; overflow: hidden; box-shadow: 0 15px 40px rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.12) }
         .dl-card::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse at 50% 0%, rgba(var(--cherry-rgb),.12), transparent 70%); pointer-events: none }
-        .dl-btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 18px 24px; background: linear-gradient(135deg, #ff2b52 0%, #c8002a 100%); border: 1px solid rgba(255,255,255,.25); border-radius: 16px; color: #fff; font-size: 1.02rem; font-weight: 800; font-family: 'Outfit', sans-serif; cursor: pointer; transition: all .3s cubic-bezier(0.16,1,0.3,1); box-shadow: 0 12px 32px rgba(var(--cherry-rgb),.45); position: relative; z-index: 1 }
+        .dl-btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 18px 24px; background: linear-gradient(135deg, var(--zr-accent, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1)) 0%, rgba(var(--zr-rgb-200-0-42, 200, 0, 42), 1) 100%); border: 1px solid rgba(255, 255, 255, .25); border-radius: 16px; color: #fff; font-size: 1.02rem; font-weight: 800; font-family: 'Satoshi', sans-serif; cursor: pointer; transition: all .3s cubic-bezier(0.16,1,0.3,1); box-shadow: 0 12px 32px rgba(var(--cherry-rgb),.45); position: relative; z-index: 1 }
         .dl-btn:hover { box-shadow: 0 16px 42px rgba(var(--cherry-rgb),.65); transform: translateY(-2px); filter: brightness(1.08) }
         .dl-btn:disabled { opacity: .55; cursor: not-allowed; transform: none; box-shadow: 0 4px 15px rgba(var(--cherry-rgb),.15) }
         .dl-btn i { font-size: 1.1rem }
 
         /* Countdown */
-        .countdown-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 16px; font-size: .8rem; color: rgba(255,255,255,.6); position: relative; z-index: 1 }
+        .countdown-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin-top: 16px; font-size: .8rem; color: var(--gray); position: relative; z-index: 1 }
         .countdown-row i { font-size: .75rem; opacity: .6 }
-        .countdown-row .timer { font-weight: 800; color: #fff; font-variant-numeric: tabular-nums; min-width: 45px; text-align: center }
+        .countdown-row .timer { font-weight: 800; color: var(--light); font-variant-numeric: tabular-nums; min-width: 45px; text-align: center }
         .countdown-row.warning .timer { color: #ffb700 }
-        .countdown-row.expired .timer { color: #ff3860 }
+        .countdown-row.expired .timer { color: rgba(var(--zr-rgb-255-56-96, 255, 56, 96), 1) }
 
         /* Stats */
         .dl-stats { text-align: center; margin-top: 8px; font-size: .74rem; color: var(--gray-dark) }
@@ -401,10 +411,10 @@
         /* Progress overlay */
         .prog-overlay { display: none; position: fixed; inset: 0; background: rgba(6, 2, 8, 0.88); backdrop-filter: blur(24px); z-index: 9999; align-items: center; justify-content: center; flex-direction: column; gap: 16px }
         .prog-overlay.active { display: flex }
-        .prog-ring { width: 70px; height: 70px; border-radius: 50%; border: 3px solid rgba(255,255,255,.08); border-top-color: var(--cherry); animation: spin .8s linear infinite }
-        .prog-text { color: var(--light); font-size: .92rem; font-weight: 700; font-family:'Outfit',sans-serif }
-        .prog-bar-wrap { width: 280px; height: 6px; background: rgba(255,255,255,.08); border-radius: 4px; overflow: hidden }
-        .prog-bar-fill { height: 100%; background: linear-gradient(90deg, var(--cherry), #c8002a); border-radius: 4px; transition: width .3s; width: 0% }
+        .prog-ring { width: 70px; height: 70px; border-radius: 50%; border: 3px solid var(--dl-border-soft); border-top-color: var(--cherry); animation: spin .8s linear infinite }
+        .prog-text { color: var(--light); font-size: .92rem; font-weight: 700; font-family:'Satoshi',sans-serif }
+        .prog-bar-wrap { width: 280px; height: 6px; background: var(--dl-soft); border-radius: 4px; overflow: hidden }
+        .prog-bar-fill { height: 100%; background: linear-gradient(90deg, var(--cherry), rgba(var(--zr-rgb-200-0-42, 200, 0, 42), 1)); border-radius: 4px; transition: width .3s; width: 0% }
         .prog-detail { color: var(--gray-dark); font-size: .74rem }
 
         /* Back link */
@@ -412,8 +422,8 @@
         .back-link:hover { color: var(--cherry-light) }
 
         /* Util buttons */
-        .btn-ghost-sm { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 999px; font-size: .8rem; font-weight: 700; text-decoration: none; transition: .2s; font-family: inherit; cursor: pointer; background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.08); color: var(--light) }
-        .btn-ghost-sm:hover { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.15) }
+        .btn-ghost-sm { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: 999px; font-size: .8rem; font-weight: 700; text-decoration: none; transition: .2s; font-family: inherit; cursor: pointer; background: var(--dl-soft); border: 1px solid var(--dl-border-soft); color: var(--light) }
+        .btn-ghost-sm:hover { background: var(--dl-soft); border-color: var(--dl-border) }
         .btn-cherry-sm { display: inline-flex; align-items: center; gap: 6px; padding: 9px 20px; border-radius: 999px; font-size: .8rem; font-weight: 800; text-decoration: none; transition: .2s; font-family: inherit; cursor: pointer; background: rgba(var(--cherry-rgb),.15); border: 1px solid rgba(var(--cherry-rgb),.35); color: #fff }
         .btn-cherry-sm:hover { background: rgba(var(--cherry-rgb),.25); box-shadow: 0 4px 15px rgba(var(--cherry-rgb),.3) }
 
@@ -447,291 +457,30 @@
 
         /* Tree structure CSS */
         .tree-folder-group { margin-bottom: 2px; text-align: left; }
-        .tree-folder-row { display: flex; align-items: center; gap: 8px; padding: 9px 12px; background: rgba(255,255,255,0.015); border: 1px solid rgba(255,255,255,0.02); border-radius: 8px; cursor: pointer; user-select: none; font-size: 0.78rem; transition: 0.15s; margin-bottom: 2px; }
+        .tree-folder-row { display: flex; align-items: center; gap: 8px; padding: 9px 12px; background: var(--dl-soft); border: 1px solid var(--dl-border-soft); border-radius: 8px; cursor: pointer; user-select: none; font-size: 0.78rem; transition: 0.15s; margin-bottom: 2px; }
         .tree-folder-row:hover { background: rgba(var(--cherry-rgb), 0.02); border-color: rgba(var(--cherry-rgb), 0.06); }
         .tree-arrow { display: inline-flex; align-items: center; justify-content: center; width: 12px; font-size: 0.65rem; color: var(--gray-dark); transition: transform 0.2s; }
         .tree-icon-folder { color: #ffca28; font-size: 0.8rem; }
         .tree-folder-name { font-weight: 600; color: var(--light); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .tree-folder-content { overflow: hidden; }
         .tree-folder-content.collapsed { display: none; }
-        .folder-cb { appearance: none; -webkit-appearance: none; width: 14px; height: 14px; border: 1.5px solid rgba(255,255,255,.12); border-radius: 3px; background: transparent; cursor: pointer; flex-shrink: 0; position: relative; transition: .15s; margin-right: 4px; }
+        .folder-cb { appearance: none; -webkit-appearance: none; width: 14px; height: 14px; border: 1.5px solid var(--dl-border); border-radius: 3px; background: transparent; cursor: pointer; flex-shrink: 0; position: relative; transition: .15s; margin-right: 4px; }
         .folder-cb:checked { background: var(--cherry); border-color: var(--cherry); }
         .folder-cb:checked::after { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; font-size: .5rem; color: #fff; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); }
 
-        /* ========================================================
-           UNLIMITED TEXT ADS - REWARDED VIDEO MODAL
-           ======================================================== */
-        .zyrex-rw-modal {
-            position: fixed;
-            inset: 0;
-            z-index: 2147483647;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 16px;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.28s;
-        }
-        .zyrex-rw-modal.active {
-            opacity: 1;
-            visibility: visible;
-        }
-        .zyrex-rw-backdrop {
-            position: absolute;
-            inset: 0;
-            background: rgba(4, 1, 7, 0.88);
-            backdrop-filter: blur(28px) saturate(180%);
-            -webkit-backdrop-filter: blur(28px) saturate(180%);
-        }
-        .zyrex-rw-card {
-            position: relative;
-            width: 100%;
-            max-width: 660px;
-            background: rgba(15, 8, 20, 0.95);
-            border: 1px solid rgba(255, 43, 82, 0.3);
-            border-radius: 24px;
-            box-shadow: 
-                0 30px 90px rgba(0, 0, 0, 0.92),
-                0 0 50px rgba(255, 43, 82, 0.2),
-                inset 0 1px 0 rgba(255, 255, 255, 0.15);
-            overflow: hidden;
-            transform: scale(0.93) translateY(14px);
-            transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
-            display: flex;
-            flex-direction: column;
-        }
-        .zyrex-rw-modal.active .zyrex-rw-card {
-            transform: scale(1) translateY(0);
-        }
-        .zyrex-rw-header {
-            padding: 14px 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        .zyrex-rw-title-group {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            min-width: 0;
-        }
-        .zyrex-rw-badge {
-            padding: 3px 9px;
-            background: rgba(255, 43, 82, 0.16);
-            border: 1px solid rgba(255, 43, 82, 0.35);
-            border-radius: 999px;
-            color: #ff2b52;
-            font-size: 0.68rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .zyrex-rw-title {
-            font-size: 0.92rem;
-            font-weight: 700;
-            color: #ffffff;
-            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .zyrex-rw-close {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            color: rgba(255, 255, 255, 0.7);
-            font-size: 1.1rem;
-            line-height: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        .zyrex-rw-close:hover {
-            color: #ffffff;
-            background: rgba(255, 43, 82, 0.25);
-            border-color: rgba(255, 43, 82, 0.5);
-            transform: scale(1.08);
-        }
-        .zyrex-rw-body {
-            padding: 16px 20px 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-        .zyrex-rw-video-wrap {
-            position: relative;
-            width: 100%;
-            aspect-ratio: 16 / 9;
-            max-height: 360px;
-            background: #000000;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .zyrex-rw-video-wrap video {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            background: #000;
-            display: block;
-        }
-        .zyrex-rw-overlay-top {
-            position: absolute;
-            top: 12px;
-            left: 12px;
-            right: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            pointer-events: none;
-            z-index: 5;
-        }
-        .zyrex-rw-timer-badge {
-            pointer-events: auto;
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            color: #ffffff;
-            padding: 6px 12px;
-            border-radius: 999px;
-            font-size: 0.78rem;
-            font-weight: 700;
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
-        }
-        .zyrex-rw-timer-badge.completed {
-            background: rgba(34, 197, 94, 0.85);
-            border-color: rgba(34, 197, 94, 0.5);
-            color: #ffffff;
-        }
-        .zyrex-rw-mute-btn {
-            pointer-events: auto;
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            color: #ffffff;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            font-size: 0.85rem;
-            transition: all 0.2s;
-        }
-        .zyrex-rw-mute-btn:hover {
-            background: rgba(255, 43, 82, 0.8);
-            border-color: rgba(255, 43, 82, 1);
-            transform: scale(1.08);
-        }
-        .zyrex-rw-progress-wrap {
-            width: 100%;
-            height: 6px;
-            background: rgba(255, 255, 255, 0.08);
-            border-radius: 999px;
-            overflow: hidden;
-            position: relative;
-        }
-        .zyrex-rw-progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #ff2b52, #ff6b8b);
-            border-radius: 999px;
-            transition: width 0.15s linear;
-            box-shadow: 0 0 10px rgba(255, 43, 82, 0.7);
-        }
-        .zyrex-rw-progress-bar.completed {
-            background: linear-gradient(90deg, #00e676, #4ade80);
-            box-shadow: 0 0 12px rgba(0, 230, 118, 0.8);
-        }
-        .zyrex-rw-footer {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-top: 4px;
-        }
-        .zyrex-rw-status {
-            font-size: 0.76rem;
-            color: rgba(255, 255, 255, 0.65);
-            display: flex;
-            align-items: center;
-            gap: 7px;
-            flex: 1;
-            min-width: 200px;
-        }
-        .zyrex-rw-status i {
-            color: #ff2b52;
-            font-size: 0.84rem;
-        }
-        .zyrex-rw-actions {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .zyrex-rw-sponsor-btn {
-            padding: 8px 14px;
-            border-radius: 999px;
-            background: rgba(255, 255, 255, 0.06);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            color: #ffffff;
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-decoration: none;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            transition: all 0.2s;
-        }
-        .zyrex-rw-sponsor-btn:hover {
-            background: rgba(255, 43, 82, 0.2);
-            border-color: rgba(255, 43, 82, 0.4);
-            color: #ffffff;
-        }
-        .zyrex-rw-claim-btn {
-            padding: 10px 20px;
-            border-radius: 999px;
-            background: linear-gradient(135deg, #00e676, #00b0ff);
-            color: #000000;
-            font-size: 0.82rem;
-            font-weight: 800;
-            border: none;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            box-shadow: 0 4px 20px rgba(0, 230, 118, 0.4);
-            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .zyrex-rw-claim-btn:hover {
-            transform: translateY(-2px) scale(1.03);
-            box-shadow: 0 8px 30px rgba(0, 230, 118, 0.6);
-        }
     </style>
+    <link rel="stylesheet" href="/css/glass.css?v=67">
+    <link rel="stylesheet" href="/css/atmosphere.css?v=7">
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.fontshare.com">
+    <link rel="stylesheet" href="/css/i18n.css?v=3">
+    <script src="/js/i18n.js?v=15" defer></script>
 </head>
 <body>
-    <div class="bg-aura"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
+    <div class="zr-sweep" aria-hidden="true"></div>
+    <div class="lq-veil" aria-hidden="true"></div>
     <div class="bg-grid"></div>
-    <div class="glow glow-top"></div>
-    <div class="glow glow-bot"></div>
 
     <div class="page-wrap">
         <!-- Loading -->
@@ -742,7 +491,7 @@
             <i class="fas fa-exclamation-circle state-err-icon"></i>
             <h2>Download Unavailable</h2>
             <p id="errMsg">This download link is invalid or has expired.</p>
-            <a href="https://zyrexediting.xyz/resources" class="btn-cherry-sm"><i class="fas fa-arrow-left"></i> Back to Resources</a>
+            <a href="https://zyrexediting.xyz/leaks" class="btn-cherry-sm"><i class="fas fa-arrow-left"></i> Back to Leaks</a>
         </div>
 
         <!-- 404 (no token, no id) -->
@@ -753,7 +502,7 @@
             <p>You need a valid download token or product ID to access this page.</p>
             <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
                 <a href="https://zyrexediting.xyz/" class="btn-cherry-sm"><i class="fas fa-home"></i> Home</a>
-                <a href="https://zyrexediting.xyz/resources" class="btn-ghost-sm"><i class="fas fa-layer-group"></i> Resources</a>
+                <a href="https://zyrexediting.xyz/leaks" class="btn-ghost-sm"><i class="fas fa-layer-group"></i> Leaks</a>
             </div>
         </div>
 
@@ -773,12 +522,12 @@
             <div class="verify-status not-verified" id="verifyStatus"><i class="fas fa-circle-xmark"></i> Not Verified</div>
             <ol class="verify-steps">
                 <li><span class="step-num">1</span><span class="step-text"><strong>Join the Discord Server</strong>Click the button below to join the server.</span></li>
-                <li><span class="step-num">2</span><span class="step-text"><strong>Go to #verify Channel</strong>Find the <code style="background:rgba(255,255,255,.04);padding:1px 6px;border-radius:3px;font-size:.72rem">#verify</code> channel in the server.</span></li>
+                <li><span class="step-num">2</span><span class="step-text"><strong>Go to #verify Channel</strong>Find the <code style="background:rgba(255, 255, 255, .04);padding:1px 6px;border-radius:3px;font-size:.72rem">#verify</code> channel in the server.</span></li>
                 <li><span class="step-num">3</span><span class="step-text"><strong>Click the Verify Button</strong>Press the <strong style="color:var(--cherry-light)">Verify</strong> button in the channel.</span></li>
                 <li><span class="step-num">4</span><span class="step-text"><strong>Come Back &amp; Check</strong>Once verified, click the button below.</span></li>
             </ol>
             <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
-                <a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord-login"><i class="fab fa-discord"></i> Join Discord</a>
+                <a href="https://discord.gg/4J3tars4QS" target="_blank" class="btn-discord-login"><i class="fab fa-discord"></i> Join Discord</a>
                 <button class="btn-cherry-sm" id="recheckBtn" onclick="recheckAccess()"><i class="fas fa-arrows-rotate"></i> Verified — Check Again</button>
             </div>
         </div>
@@ -796,8 +545,12 @@
     </div>
 
     <script src="/js/resources-data.js?v=6"></script>
+    <script src="/js/product-overrides.js?v=2"></script>
+    <script src="/js/ffx-preview.js?v=3"></script>
     <script>
-        window.DEFAULT_AVATAR = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2EwYTBiMCI+PHBhdGggZD0iTTEyIDEyYzIuMjEgMCA0LTEuNzkgNC00cy0xLjc5LTQtNC00LTQgMS43OS00IDQgMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYyaDE2di0yYzAtMi42Ni01LjMzLTQtOC00eiIvPjwvc3ZnPg==";
+        window.DEFAULT_AVATAR = '/assets/default-avatar.png';
+
+        window.ANONYMOUS_AVATAR = window.DEFAULT_AVATAR || '/assets/default-avatar.png';
 
         window.handleAvatarError = function(img) {
             if (!img) return;
@@ -819,10 +572,7 @@
 
         const params = new URLSearchParams(window.location.search);
         const token = params.get('token');
-        const productId = params.get('id');
-        if (params.get('src') === 'ad-free' || params.get('src') === 'geo-bypass') {
-            window.isAdFreeUser = true;
-        }
+        let productId = params.get('id');
         let downloadToken = null;
         let downloadTokenId = null;
         let product = null;
@@ -876,26 +626,49 @@
         const iconMap = {"after-effects":"fa-film","premiere-pro":"fa-video","photoshop":"fa-image","video-star":"fa-star","topaz-labs":"fa-gem","others":"fa-folder"};
         const catLabels = {"after-effects":"After Effects","premiere-pro":"Premiere Pro","photoshop":"Photoshop","video-star":"Video Star","topaz-labs":"Topaz Labs","others":"Others"};
 
+        function resolveUploaderAvatar(avatar, userId) {
+            if (window.ZyrexProfile) {
+                // The shared profile layer keeps every page in agreement, including
+                // the per-user avatar cache written by whichever page loaded first.
+                var cached = window.ZyrexProfile.cachedAvatar(userId);
+                if (cached) return cached;
+                var resolved = window.ZyrexProfile.avatarUrl(avatar, userId);
+                if (resolved) {
+                    window.ZyrexProfile.rememberAvatar(userId, resolved);
+                    return resolved;
+                }
+                return window.ZyrexProfile.defaultDiscordAvatar(userId) || window.DEFAULT_AVATAR;
+            }
+            var value = String(avatar || '').trim();
+            var id = String(userId || '').trim();
+            if (/^https?:\/\//i.test(value) || /^data:image\//i.test(value)) return value;
+            if (value.startsWith('//')) return 'https:' + value;
+            var hash = value.replace(/\.(png|jpg|jpeg|webp|gif)$/i, '');
+            if (/^\d{17,20}$/.test(id) && /^(?:a_)?[a-z0-9_-]{16,}$/i.test(hash)) {
+                var ext = hash.startsWith('a_') ? 'gif' : 'png';
+                return 'https://cdn.discordapp.com/avatars/' + id + '/' + hash + '.' + ext + '?size=128';
+            }
+            if (/^\d{17,20}$/.test(id)) {
+                var defIdx = 0;
+                try { defIdx = Number((BigInt(id) >> 22n) % 6n); } catch(e) { defIdx = Math.abs(parseInt(id, 10) || 0) % 6; }
+                return 'https://cdn.discordapp.com/embed/avatars/' + defIdx + '.png';
+            }
+            return window.DEFAULT_AVATAR;
+        }
+
         async function fetchDiscordUser(userId) {
             if (!userId) return null;
             try {
-                const resp = await fetch('/api/discord-user?userId=' + userId);
+                const resp = await fetch('/api/discord-user?userId=' + encodeURIComponent(userId));
+                if (!resp.ok) return null;
                 const data = await resp.json();
                 if (data.success && data.user) {
-                    let av = '';
-                    if (data.user.avatar_url) {
-                        av = data.user.avatar_url;
-                    } else if (data.user.avatar) {
-                        const ext = data.user.avatar.startsWith('a_') ? 'gif' : 'png';
-                        av = '/api/avatar/' + userId + '/' + data.user.avatar + '.' + ext + '?size=64';
-                    }
+                    const av = resolveUploaderAvatar(data.user.avatar_url || data.user.avatar, data.user.id || userId);
                     const name = data.user.display_name || data.user.global_name || data.user.username || '';
                     return { avatarUrl: av, name: name };
                 }
             } catch(e) {}
-            let defIdx = 0;
-            try { defIdx = Number((BigInt(userId) >> 22n) % 6n); } catch(e) { defIdx = parseInt(userId) % 5; }
-            return { avatarUrl: '/api/avatar/default/' + defIdx + '.png', name: '' };
+            return null;
         }
 
         async function fetchDiscordAvatar(userId) {
@@ -912,7 +685,7 @@
             }
 
             // Public mirror resources belong to the Resources catalog, not the
-            // private R2 ZIP package download screen.
+            // private server ZIP package download screen.
             if (!token && productId && (window.resourcesData || []).some(function(item) { return item.id === productId; })) {
                 window.location.replace('/product?id=' + encodeURIComponent(productId));
                 return;
@@ -921,7 +694,7 @@
             // Every private download page requires a newly generated, unused token.
             if (!token) {
                 if (productId) {
-                    window.location.replace('/resource?id=' + encodeURIComponent(productId));
+                    window.location.replace('/leak?id=' + encodeURIComponent(productId));
                     return;
                 }
                 showState('st-404');
@@ -934,13 +707,46 @@
                 var validateResp = await fetch('/api/downloads/validate?token=' + encodeURIComponent(token) + '&peek=1', { signal: controller.signal });
                 clearTimeout(timeoutId);
                 var validateData = await validateResp.json();
+                if (!validateData.success && validateData.code === 'ACCESS_REQUIRED') {
+                    showError(validateData.error || 'Your 7-day download access has expired.');
+                    if (window.showAccessRequiredModal) window.showAccessRequiredModal();
+                    return;
+                }
+                if (!validateData.success && validateData.code === 'AD_REQUIRED') {
+                    var loadingText = document.querySelector('#st-load p');
+                    if (loadingText) loadingText.textContent = 'Verifying your completed offer...';
+                    for (var checkAttempt = 0; checkAttempt < 6 && validateData.code === 'AD_REQUIRED'; checkAttempt++) {
+                        await new Promise(function(resolve) { setTimeout(resolve, 1200); });
+                        validateResp = await fetch('/api/downloads/validate?token=' + encodeURIComponent(token) + '&peek=1');
+                        validateData = await validateResp.json();
+                    }
+                }
                 if (!validateData.success) {
-                    showError(validateData.error || 'This download token is invalid, expired, or already used. Generate a new token from the resource page.');
+                    if (validateData.code === 'TOKEN_USED') {
+                        // Single-use links must stay dead: reloading this page never mints a
+                        // replacement token, the visitor has to request a new link.
+                        showError('This download link has already been used. Open the leak page again to generate a new download link.');
+                        return;
+                    }
+                    if (validateData.code === 'AD_REQUIRED') {
+                        var errorTitle = document.querySelector('#st-err h2');
+                        if (errorTitle) {
+                            errorTitle.textContent = 'Offer Required';
+                            errorTitle.style.color = 'rgba(var(--zr-rgb-255-82-107, 255, 82, 107), 1)';
+                        }
+                        var errorText = document.getElementById('errMsg');
+                        if (errorText) {
+                            errorText.textContent = 'You must complete a free offer to access this download. Skipping or blocking the offer page will not unlock the file. Return to the resource page and use the Ready link.';
+                            errorText.style.color = 'rgba(var(--zr-rgb-255-113-130, 255, 113, 130), 1)';
+                        }
+                    }
+                    showError(validateData.error || 'This download token is invalid, expired, or already used. Generate a new token from the leak page.');
                     return;
                 }
 
                 downloadToken = token;
                 downloadTokenId = validateData.token_id || null;
+                productId = validateData.product_id || productId;
                 resolvedFilePath = validateData.file_path || '';
                 initialSelectedFiles = Array.isArray(validateData.selected_files) ? validateData.selected_files : [];
                 if (validateData.ad_free) window.isAdFreeUser = true;
@@ -949,7 +755,7 @@
                 if (!product) {
                     product = {
                         id: validateData.product_id || 'product',
-                        name: (validateData.product_id || 'Editing Resource').toUpperCase(),
+                        name: (validateData.product_id || 'Editing Leak').toUpperCase(),
                         category: 'others',
                         file_path: resolvedFilePath,
                         description: 'Download package generated for your account.'
@@ -960,7 +766,7 @@
                 if (expiresIn > 0) startCountdown(expiresIn);
             } catch (e) {
                 console.error('Validation error:', e);
-                showError('Could not validate this download token. Please return to the resource page and generate a new one.');
+                showError('Could not validate this download token. Please return to the leak page and generate a new one.');
                 return;
             }        })();
 
@@ -1010,7 +816,14 @@
             const p = product;
             const ic = iconMap[p.category] || 'fa-folder';
             const cat = catLabels[p.category] || 'Others';
-            const av = p.creator_avatar || '';
+            const creatorDisplayName = (p.creator_nickname || p.author_name || '').trim().toLowerCase();
+            const uploaderDisplayName = (p.uploader_name || p.author_name || '').trim().toLowerCase();
+            // Resolve through the shared profile layer so the download page shows
+            // the same creator/uploader identity as the leak pages.
+            const profile = window.ZyrexProfile ? window.ZyrexProfile.forProduct(p) : null;
+            const av = profile
+                ? profile.creatorAvatar
+                : (p.creator_avatar || (!p.is_anonymous && creatorDisplayName && creatorDisplayName === uploaderDisplayName ? (p.uploader_avatar || p.author_avatar || '') : ''));
             const nick = p.creator_nickname || p.author_name || 'Zyrex Creator';
             function linkifyUrls(text) {
                 if (!text) return '';
@@ -1024,16 +837,16 @@
             const authorId = p.author_id || '';
             const creatorNick = (p.creator_nickname || '').trim();
             const authorName = (p.author_name || '').trim();
-            let uploaderName = (p.uploader_name || '').trim();
+            let uploaderName = p.is_anonymous ? 'Anonymous' : (p.uploader_name || '').trim();
 
             const ADMIN_IDS = ["1421177012814614548"];
-            const isUploaderAdmin = p.uploader_is_admin === true || 
+            const isUploaderAdmin = !p.is_anonymous && (p.uploader_is_admin === true || 
                                     ADMIN_IDS.includes(String(authorId)) || 
                                     ADMIN_IDS.includes(String(p.uploader_id)) || 
-                                    (uploaderName && (uploaderName.toLowerCase().includes('reyli') || uploaderName.toLowerCase().includes('zyrex')));
+                                    Boolean(uploaderName || authorId || p.uploader_id));
 
             // Discard duplicate uploaderName if it equals creator_nickname
-            if (creatorNick && uploaderName.toLowerCase() === creatorNick.toLowerCase()) {
+            if (!p.is_anonymous && creatorNick && uploaderName.toLowerCase() === creatorNick.toLowerCase()) {
                 if (authorName && authorName.toLowerCase() !== creatorNick.toLowerCase()) {
                     uploaderName = authorName;
                 } else if (isUploaderAdmin) {
@@ -1042,17 +855,20 @@
                     uploaderName = '';
                 }
             }
-            if (!uploaderName && isUploaderAdmin) {
+            if (p.is_anonymous) { uploaderName = 'Anonymous'; }
+            else if (!uploaderName && isUploaderAdmin) {
                 uploaderName = 'reyli';
             } else if (!uploaderName) {
                 uploaderName = authorName || 'Zyrex';
             }
 
-            let displayUploaderAv = '';
-            if (authorId || p.uploader_id) {
+            const uploaderId = String(p.uploader_id || authorId || '').trim();
+            let displayUploaderAv = p.is_anonymous ? window.ANONYMOUS_AVATAR : resolveUploaderAvatar(p.uploader_avatar, uploaderId);
+            if (!p.is_anonymous && uploaderId && !(window.ZyrexProfile && window.ZyrexProfile.cachedAvatar(uploaderId))) {
                 try {
-                    const uData = await fetchDiscordUser(p.uploader_id || authorId);
+                    const uData = await fetchDiscordUser(uploaderId);
                     if (uData && uData.avatarUrl) {
+                        if (window.ZyrexProfile) window.ZyrexProfile.rememberAvatar(uploaderId, uData.avatarUrl);
                         displayUploaderAv = uData.avatarUrl;
                     }
                     if (uData && uData.name) {
@@ -1061,12 +877,6 @@
                         }
                     }
                 } catch(e) {}
-            }
-            if (!displayUploaderAv) {
-                displayUploaderAv = await fetchDiscordAvatar(authorId);
-            }
-            if (p.uploader_avatar && (p.uploader_avatar.includes('discordapp.com') || p.uploader_avatar.includes('discord.com'))) {
-                displayUploaderAv = p.uploader_avatar;
             }
 
             function getCategorySvgClass(cat) {
@@ -1089,8 +899,8 @@
                 html += '<img src="' + p.thumbnail + '" alt="' + p.name + '" onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">';
             }
             html += '<div class="ph-icon" style="' + (p.thumbnail ? 'display:none;' : '') + 'position:absolute;inset:0;display:flex;align-items:center;justify-content:center"><span class="cat-svg-icon ' + catSvgClass + '" style="font-size:4.5rem;color:var(--cherry);opacity:0.25"></span></div>';
-            var adFreeBadge = window.isAdFreeUser ? '<span class="tbadge adfree" style="background:linear-gradient(135deg,#eab308,#f59e0b);color:#000;font-weight:700"><i class="fas fa-bolt"></i> Ad-Free</span>' : '';
-            html += '<div class="thumb-badges"><span class="tbadge">' + catSvgIcon + ' ' + cat + '</span><span class="tbadge free"><i class="fas fa-circle-check"></i> Free</span>' + adFreeBadge + '</div>';
+            var boosterBadge = window.isAdFreeUser ? '<span class="tbadge booster"><i class="fab fa-discord"></i> Booster</span>' : '';
+            html += '<div class="thumb-badges"><span class="tbadge">' + catSvgIcon + ' ' + cat + '</span><span class="tbadge free"><i class="fas fa-circle-check"></i> Free</span>' + boosterBadge + '</div>';
             html += '</div>';
 
             // Title
@@ -1109,7 +919,7 @@
             // Uploader Card
             if (uploaderName) {
                 html += '<div class="duo-card uploader-card ' + (isUploaderAdmin ? 'admin-card' : '') + '">';
-                html += displayUploaderAv ? '<img id="upAvatarImg" src="' + displayUploaderAv + '" alt="" class="' + (isUploaderAdmin ? 'admin-glow-ring' : '') + '" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="window.handleAvatarError(this)">' : '<div class="uav-fb" style="width:36px;height:36px;border-radius:50%;background:rgba(88,101,242,0.15);display:flex;align-items:center;justify-content:center;color:#5865F2;flex-shrink:0"><i class="fab fa-discord"></i></div>';
+                html += displayUploaderAv ? '<img id="upAvatarImg" src="' + displayUploaderAv + '" alt="" class="' + (isUploaderAdmin ? 'admin-glow-ring' : '') + '" style="width:36px;height:36px;border-radius:50%;object-fit:cover;flex-shrink:0" onerror="window.handleAvatarError(this)">' : '<div class="uav-fb" style="width:36px;height:36px;border-radius:50%;background:rgba(88, 101, 242, 0.15);display:flex;align-items:center;justify-content:center;color:#5865F2;flex-shrink:0"><i class="fab fa-discord"></i></div>';
                 html += '<div class="duo-info">';
                 html += '<span class="duo-label">Uploader</span>';
                 html += '<strong style="display:flex;align-items:center;gap:5px"><span id="upNameSpan">' + uploaderName + '</span>' + (isUploaderAdmin ? '<i class="fas fa-circle-check" style="color:#0095F6;font-size:0.88rem;flex-shrink:0" title="Admin"></i>' : '') + '</strong>';
@@ -1124,7 +934,7 @@
             }
 
             // Files (exclude watermarks) - fetch from API if not in product data
-            const watermarkNames = ['LEAKED BY ZYREX.txt', 'Visit for more resources!.url'];
+            const watermarkNames = ['LEAKED BY ZYREX.txt', 'Visit for more leaks!.url'];
             let fileList = p.files || [];
             
             if (fileList.length === 0 && (p.id || p.file_path || resolvedFilePath)) {
@@ -1158,7 +968,17 @@
                         parts.forEach(function(part, index) {
                             if (!part) return;
                             var isLast = index === parts.length - 1;
-                            if (!current.children[part]) {
+                            var existing = current.children[part];
+                            // A name cannot be both a file and a folder at once. When a
+                            // pack holds "Tutorial.mp4" and "Tutorial/notes.txt", the
+                            // file is promoted into a folder so nothing is dropped.
+                            if (existing && !existing.children && !isLast) {
+                                var promoted = { name: part, isFolder: true, children: {} };
+                                promoted.children[part] = existing;
+                                current.children[part] = promoted;
+                                existing = promoted;
+                            }
+                            if (!existing) {
                                 if (isLast) {
                                     current.children[part] = {
                                         name: part,
@@ -1181,6 +1001,11 @@
                     return root;
                 }
 
+                // A pack nests a handful of folders at most, so anything deeper is
+                // malformed data. Descending without a ceiling overflows the call
+                // stack and blanks the page, so the renderer stops and says so.
+                var MAX_TREE_DEPTH = 32;
+
                 function renderTreeHTML(node, depth) {
                     var tHtml = '';
                     var keys = Object.keys(node.children).sort(function(a, b) {
@@ -1190,10 +1015,17 @@
                         if (!nodeA.isFolder && nodeB.isFolder) return 1;
                         return a.localeCompare(b);
                     });
-                    
+                    var indent = depth * 16;
+
+                    if (depth >= MAX_TREE_DEPTH) {
+                        tHtml += '<div class="tree-truncated" style="padding-left: ' + (indent + 12) + 'px;color: var(--gray); font-size: 0.76rem">' +
+                            '<i class="fas fa-ellipsis"></i> ' + keys.length + ' more item(s) in ' + (node.name ? '"' + node.name + '"' : 'this folder') + ' hidden — the folder tree is nested too deeply to show' +
+                            '</div>';
+                        return tHtml;
+                    }
+
                     keys.forEach(function(key) {
                         var child = node.children[key];
-                        var indent = depth * 16;
                         if (child.isFolder) {
                             tHtml += '<div class="tree-folder-group">';
                             tHtml += '<div class="tree-folder-row" style="padding-left: ' + (indent + 8) + 'px" onclick="toggleFolderCollapse(this)">';
@@ -1246,15 +1078,11 @@
                 html += '<div class="dl-card">';
                 html += '<button class="dl-btn" id="dlBtn" onclick="triggerDownload()"><i class="fas fa-cloud-arrow-down"></i> Download Full Package (ZIP)</button>';
                 html += '<div class="countdown-row" id="countdownRow"><i class="fas fa-hourglass-half"></i> <span>Expires in</span> <span class="timer" id="countdownTimer">--:--</span></div>';
-                html += '<div class="adblock-warning-notice" style="margin-top:14px;margin-bottom:0">';
-                html += '<i class="fas fa-triangle-exclamation"></i>';
-                html += '<span>Watching a short sponsor video unlocks your download. Using an ad blocker may interfere with video playback. If you experience issues, please temporarily disable your ad blocker.</span>';
-                html += '</div>';
                 html += '</div>';
             }
 
             // Back link
-            html += '<a href="https://zyrexediting.xyz/resources" class="back-link"><i class="fas fa-arrow-left"></i> Back to Resources</a>';
+            html += '<a href="https://zyrexediting.xyz/leaks" class="back-link"><i class="fas fa-arrow-left"></i> Back to Leaks</a>';
 
             document.getElementById('st-main').innerHTML = html;
             setTimeout(function() {
@@ -1378,24 +1206,35 @@
         };
         
         window.updateParentFolderCheckboxState = function(folderCb) {
-            if (!folderCb) return;
-            var parentGroup = folderCb.parentElement.closest('.tree-folder-group');
-            if (parentGroup) {
+            // Walks up the folder chain so every ancestor reflects its children.
+            // `.closest('.tree-folder-group')` from the checkbox itself already
+            // returns its OWN group, so the parent group is reached from that
+            // group's parent element. Walking iteratively with a guard keeps a
+            // malformed tree from recursing until the call stack overflows.
+            var current = folderCb;
+            var guard = 0;
+            while (current && guard++ < 64) {
+                var ownGroup = current.closest('.tree-folder-group');
+                if (!ownGroup || !ownGroup.parentElement) return;
+                var parentGroup = ownGroup.parentElement.closest('.tree-folder-group');
+                if (!parentGroup) return;
                 var parentFolderCb = parentGroup.querySelector('.tree-folder-row .folder-cb');
-                if (parentFolderCb) {
-                    var content = parentGroup.querySelector('.tree-folder-content');
-                    var childFolderCbs = content.querySelectorAll('.folder-cb');
-                    var childFileCbs = content.querySelectorAll('.file-cb');
-                    var allChecked = Array.from(childFileCbs).every(function(cb) { return cb.checked; }) && 
-                                     Array.from(childFolderCbs).every(function(cb) { return cb.checked; });
-                    parentFolderCb.checked = allChecked;
-                    updateParentFolderCheckboxState(parentFolderCb);
-                }
+                if (!parentFolderCb || parentFolderCb === current) return;
+                var content = parentGroup.querySelector('.tree-folder-content');
+                if (!content) return;
+                var childFolderCbs = content.querySelectorAll('.folder-cb');
+                var childFileCbs = content.querySelectorAll('.file-cb');
+                var allChecked = Array.from(childFileCbs).every(function(cb) { return cb.checked; }) &&
+                                 Array.from(childFolderCbs).every(function(cb) { return cb.checked; });
+                parentFolderCb.checked = allChecked;
+                current = parentFolderCb;
             }
         };
 
         // File preview panel
         let selectedPreviewFile = null;
+        let ffxPreviewRequestId = 0;
+        let ffxPreviewController = null;
         function initFilePreviewClicks() {
             document.querySelectorAll('.file-item').forEach(function(el) {
                 el.addEventListener('click', function(e) {
@@ -1422,6 +1261,11 @@
         }
 
         async function selectFilePreview(rowEl, filename, size, iconClass, isImage, sizeBytes) {
+            if (ffxPreviewController) {
+                ffxPreviewController.abort();
+                ffxPreviewController = null;
+            }
+            var previewRequestId = ++ffxPreviewRequestId;
             document.querySelectorAll('.file-item.file-selected').forEach(function(el) { el.classList.remove('file-selected'); });
             var panel = document.getElementById('filePreviewPanel');
             var mediaContainer = document.getElementById('fpMediaContainer');
@@ -1440,6 +1284,7 @@
 
             rowEl.classList.add('file-selected');
             selectedPreviewFile = { name: filename, size: size, icon: iconClass, isImage: isImage, sizeBytes: sizeBytes };
+            var currentPreviewFile = selectedPreviewFile;
             
             panel.classList.add('active');
             panel.querySelector('.fp-header span').textContent = 'File Preview — Selected';
@@ -1478,22 +1323,22 @@
             if (['mp4', 'webm', 'mov', 'm4v'].includes(ext)) {
                 mediaContainer.style.display = 'block';
                 mediaContainer.innerHTML = '<div class="media-protect-box">' +
-                    '<div id="videoLoadingSpinner" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.7);z-index:7;color:var(--cherry-light);font-size:1.5rem"><i class="fas fa-spinner fa-spin"></i></div>' +
+                    '<div id="videoLoadingSpinner" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0, 0, 0, 0.7);z-index:7;color:var(--cherry-light);font-size:1.5rem"><i class="fas fa-spinner fa-spin"></i></div>' +
                     '<div class="zyrex-watermark-grid"></div>' +
-                    '<video controls controlsList="nodownload nofullscreen noremoteplayback" disablePictureInPicture playsinline webkit-playsinline oncontextmenu="return false;" style="width:100%;max-height:280px;display:block;outline:none;background:#000;position:relative;z-index:1" preload="auto" src="' + streamUrl + '" oncanplay="var s=document.getElementById(\'videoLoadingSpinner\');if(s)s.style.display=\'none\'" onerror="var s=document.getElementById(\'videoLoadingSpinner\');if(s)s.innerHTML=\'<span style=\\\'font-size:0.75rem;color:#ff6b8b\\\'>Video preview unavailable</span>\'"></video>' +
+                    '<video controls controlsList="nodownload nofullscreen noremoteplayback" disablePictureInPicture playsinline webkit-playsinline oncontextmenu="return false;" style="width:100%;max-height:280px;display:block;outline:none;background:#000;position:relative;z-index:1" preload="auto" src="' + streamUrl + '" oncanplay="var s=document.getElementById(\'videoLoadingSpinner\');if(s)s.style.display=\'none\'" onerror="var s=document.getElementById(\'videoLoadingSpinner\');if(s)s.innerHTML=\'<span style=\\\'font-size:0.75rem;color:var(--zr-accent-soft, rgba(var(--zr-rgb-255-107-139, 255, 107, 139), 1))\\\'>Video preview unavailable</span>\'"></video>' +
                     '</div>';
             } 
             // 2. Audio preview
             else if (['mp3', 'wav', 'aac', 'ogg'].includes(ext)) {
                 mediaContainer.style.display = 'block';
-                mediaContainer.innerHTML = '<div style="background:rgba(255,255,255,0.03);padding:14px;border-radius:14px;border:1px solid rgba(255,255,255,0.08)">' +
+                mediaContainer.innerHTML = '<div style="background:rgba(255, 255, 255, 0.03);padding:14px;border-radius:14px;border:1px solid rgba(255, 255, 255, 0.08)">' +
                     '<audio controls controlsList="nodownload" oncontextmenu="return false;" style="width:100%;outline:none" src="' + streamUrl + '"></audio>' +
                     '</div>';
             }
             // 3. Image preview (protected with Shutterstock-style Zyrex Watermark)
             else if (['png', 'jpg', 'jpeg', 'gif', 'webp'].includes(ext)) {
                 mediaContainer.style.display = 'block';
-                mediaContainer.innerHTML = '<div class="media-protect-box" style="text-align:center;padding:12px;background:rgba(0,0,0,0.5)">' +
+                mediaContainer.innerHTML = '<div class="media-protect-box" style="text-align:center;padding:12px;background:rgba(0, 0, 0, 0.5)">' +
                     '<div class="zyrex-watermark-grid image-wm"></div>' +
                     '<img src="' + streamUrl + '" alt="" oncontextmenu="return false;" ondragstart="return false;" style="max-width:100%;max-height:250px;object-fit:contain;border-radius:8px;pointer-events:none;-webkit-user-drag:none;user-select:none;position:relative;z-index:1" onerror="this.parentElement.style.display=\'none\'">' +
                     '</div>';
@@ -1507,13 +1352,73 @@
                     if (textResp.ok) {
                         const rawText = await textResp.text();
                         const safeText = rawText.slice(0, 5000).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                        mediaContainer.innerHTML = '<div style="max-height:160px;overflow-y:auto;padding:12px 14px;background:rgba(0,0,0,0.5);border-radius:12px;border:1px solid rgba(255,255,255,0.08);font-family:monospace;font-size:0.75rem;line-height:1.6;color:#e0e0e0;white-space:pre-wrap;word-break:break-all;user-select:none" oncontextmenu="return false;" oncopy="return false;">' + safeText + '</div>';
+                        mediaContainer.innerHTML = '<div style="max-height:160px;overflow-y:auto;padding:12px 14px;background:rgba(0, 0, 0, 0.5);border-radius:12px;border:1px solid rgba(255, 255, 255, 0.08);font-family:monospace;font-size:0.75rem;line-height:1.6;color:#e0e0e0;white-space:pre-wrap;word-break:break-all;user-select:none" oncontextmenu="return false;" oncopy="return false;">' + safeText + '</div>';
                     } else {
                         mediaContainer.style.display = 'none';
                     }
                 } catch(e) {
                     mediaContainer.style.display = 'none';
                 }
+            }
+            // 5. Read-only effect-name preview for After Effects presets
+            else if (ext === 'ffx') {
+                mediaContainer.style.display = 'block';
+                mediaContainer.innerHTML = '<div class="ffx-effects-preview"><div class="ffx-effects-title"><i class="fas fa-wand-magic-sparkles"></i> Effects in this preset</div><div class="ffx-effects-empty"><i class="fas fa-spinner fa-spin"></i> Reading preset...</div></div>';
+                if (sizeBytes > 16 * 1024 * 1024) {
+                    renderFfxEffectsPreview(mediaContainer, [], 'This preset is too large to preview.');
+                    return;
+                }
+
+                ffxPreviewController = new AbortController();
+                try {
+                    const ffxResponse = await fetch(streamUrl, {
+                        credentials: 'include',
+                        signal: ffxPreviewController.signal
+                    });
+                    if (previewRequestId !== ffxPreviewRequestId || selectedPreviewFile !== currentPreviewFile) return;
+                    if (!ffxResponse.ok) throw new Error('Preset preview unavailable');
+                    const contentLength = Number(ffxResponse.headers.get('Content-Length') || 0);
+                    if (contentLength > 16 * 1024 * 1024) {
+                        renderFfxEffectsPreview(mediaContainer, [], 'This preset is too large to preview.');
+                        return;
+                    }
+                    const ffxBuffer = await ffxResponse.arrayBuffer();
+                    if (previewRequestId !== ffxPreviewRequestId || selectedPreviewFile !== currentPreviewFile) return;
+                    if (ffxBuffer.byteLength > 16 * 1024 * 1024) {
+                        renderFfxEffectsPreview(mediaContainer, [], 'This preset is too large to preview.');
+                        return;
+                    }
+                    const effects = window.extractFfxEffectNames(ffxBuffer);
+                    renderFfxEffectsPreview(
+                        mediaContainer,
+                        effects,
+                        effects.length ? '' : 'No effect names were detected in this preset.'
+                    );
+                } catch (error) {
+                    if (error.name !== 'AbortError' && previewRequestId === ffxPreviewRequestId) {
+                        renderFfxEffectsPreview(mediaContainer, [], 'Effect names could not be loaded.');
+                    }
+                } finally {
+                    if (previewRequestId === ffxPreviewRequestId) ffxPreviewController = null;
+                }
+            }
+        }
+
+        function renderFfxEffectsPreview(container, effects, message) {
+            container.innerHTML = '<div class="ffx-effects-preview"><div class="ffx-effects-title"><i class="fas fa-wand-magic-sparkles"></i> Effects in this preset</div><div class="ffx-effects-list"></div></div>';
+            var list = container.querySelector('.ffx-effects-list');
+            if (effects.length) {
+                effects.forEach(function(effect) {
+                    var chip = document.createElement('span');
+                    chip.className = 'ffx-effect-chip';
+                    chip.textContent = effect;
+                    list.appendChild(chip);
+                });
+            } else {
+                var empty = document.createElement('span');
+                empty.className = 'ffx-effects-empty';
+                empty.textContent = message || 'No effect names were detected in this preset.';
+                list.appendChild(empty);
             }
         }
 
@@ -1561,29 +1466,8 @@
         }
 
         function trackDownload() {
-            // Single source of truth: Bot VPS via API with rich Discord logging
-            if (!product || !product.id) return;
-            const checkedBoxes = document.querySelectorAll('.file-cb:checked');
-            const filesList = Array.from(checkedBoxes).map(function(cb) {
-                return cb.dataset.filename || '';
-            }).filter(Boolean);
-
-            fetch('/api/downloads/track', {
-                method: 'POST',
-                credentials: 'include',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    productId: product.id,
-                    token_id: downloadTokenId || (downloadToken ? downloadToken.slice(0, 16) : ''),
-                    productName: product.name || product.title || product.id,
-                    category: product.category || product.resource_category || 'resource',
-                    price: product.price || '',
-                    creator: product.creator_nickname || product.creator_name || product.creator_username || '',
-                    selectedFiles: filesList
-                })
-            }).then(function() {
-                updateDownloadCount();  // re-fetch from API to show updated count
-            }).catch(function(){});
+            // Successful ZIP delivery is already recorded by the server.
+            updateDownloadCount();
         }
 
         // Progress UI
@@ -1591,6 +1475,8 @@
             document.getElementById('progText').textContent = text || 'Preparing download...';
             document.getElementById('progDetail').textContent = detail || '';
             document.getElementById('progBar').style.width = '0%';
+            document.getElementById('progRing').style.display = '';
+            document.getElementById('progBar').style.background = '';
             document.getElementById('progOverlay').classList.add('active');
         }
         function updateProgress(percent, detail) {
@@ -1606,9 +1492,12 @@
             return (bytes/1048576).toFixed(1) + ' MB';
         }
 
+        // Must match the name the server sends in Content-Disposition: this value becomes
+        // a.download, which overrides that header in every browser.
+        var ZIP_BRAND = 'zyrexediting.xyz';
         function zipDownloadFilename(name) {
-            var safe = String(name || 'download').replace(/[\\/:*?"<>|\r\n]+/g, '_').trim().replace(/[. ]+$/, '').slice(0, 140);
-            return (safe || 'download') + '.zip';
+            var safe = String(name || 'download').replace(/[\\/:*?"<>|\r\n]+/g, '_').trim().replace(/[. ]+$/, '').slice(0, 120);
+            return (safe || 'download') + ' - ' + ZIP_BRAND + '.zip';
         }
 
         async function downloadWithProgress(url, filename, fileHandle) {
@@ -1617,6 +1506,18 @@
             try {
                 const resp = await fetch(url, {credentials: 'include'});
                 if (!resp.ok) {
+                    var errorData = await resp.clone().json().catch(function() { return {}; });
+                    if (errorData.code === 'ACCESS_REQUIRED') {
+                        var accessError = new Error(errorData.error || 'Your download access has expired.');
+                        accessError.code = 'ACCESS_REQUIRED';
+                        throw accessError;
+                    }
+                    if (errorData.code) {
+                        var apiError = new Error(errorData.error || ('Download failed: ' + resp.status));
+                        apiError.code = errorData.code;
+                        apiError.status = resp.status;
+                        throw apiError;
+                    }
                     var errorText = await resp.text().catch(function() { return ''; });
                     throw new Error(errorText || ('Download failed: ' + resp.status));
                 }
@@ -1634,7 +1535,14 @@
                 updateProgress(0, total ? '0 / ' + formatSize(total) : 'Downloading...');
                 
                 while (true) {
-                    const result = await reader.read();
+                    let result;
+                    try {
+                        result = await reader.read();
+                    } catch (readError) {
+                        const interrupted = new Error('The connection dropped before the download finished.');
+                        interrupted.code = 'DOWNLOAD_INTERRUPTED';
+                        throw interrupted;
+                    }
                     if (result.done) break;
                     if (writable) await writable.write(result.value);
                     else chunks.push(result.value);
@@ -1653,6 +1561,12 @@
                         updateProgress(0, formatSize(received) + ' received · ' + transferSpeed);
                     }
                     document.getElementById('progText').textContent = 'Downloading...';
+                }
+
+                if (total > 0 && received !== total) {
+                    const interrupted = new Error('The download ended before all bytes arrived.');
+                    interrupted.code = 'DOWNLOAD_INTERRUPTED';
+                    throw interrupted;
                 }
                 
                 updateProgress(100, 'Saving...');
@@ -1709,6 +1623,40 @@
             return '/api/downloads/request-token/' + encodeURIComponent(productId) + (qs ? '?' + qs : '');
         }
 
+        async function refreshInterruptedDownloadToken(selectedFiles, previousToken) {
+            const requestUrl = new URL(buildTokenRequestUrl(Array.isArray(selectedFiles) ? selectedFiles : [], false), window.location.href);
+            requestUrl.searchParams.set('retry_token', previousToken);
+            const resp = await fetch(requestUrl.toString(), { credentials: 'include' });
+            const data = await readApiJson(resp);
+            if (!resp.ok || !data.success) {
+                const error = new Error(data.error || 'Could not prepare a fresh download link.');
+                error.code = data.code || (resp.status === 429 ? 'RATE_LIMITED' : 'TOKEN_REFRESH_FAILED');
+                throw error;
+            }
+            const landing = data.ad_url || data.url || '';
+            let freshToken = '';
+            try { freshToken = new URL(landing, window.location.href).searchParams.get('token') || ''; } catch (_) {}
+            if (!freshToken) throw new Error('The server did not return a fresh download token.');
+            downloadToken = freshToken;
+            downloadTokenId = null;
+            window.history.replaceState({}, '', '/download?token=' + encodeURIComponent(freshToken));
+            return freshToken;
+        }
+
+        async function downloadWithRecovery(url, filename, fileHandle, selectedFiles) {
+            try {
+                return await downloadWithProgress(url, filename, fileHandle);
+            } catch (error) {
+                if (!error || error.code !== 'DOWNLOAD_INTERRUPTED' || !productId || !downloadToken) throw error;
+                showProgress('Connection interrupted', 'Preparing a fresh download link...');
+                const freshToken = await refreshInterruptedDownloadToken(selectedFiles, downloadToken);
+                const retryUrl = '/api/downloads/download?token=' + encodeURIComponent(freshToken) +
+                    (Array.isArray(selectedFiles) ? selectedFiles.map(name => '&file=' + encodeURIComponent(name)).join('') : '') +
+                    (product ? '&title=' + encodeURIComponent(product.name) : '');
+                return await downloadWithProgress(retryUrl, filename, fileHandle);
+            }
+        }
+
         function resetDownloadButton(btn) {
             if (!btn) return;
             btn.disabled = false;
@@ -1739,23 +1687,9 @@
         async function triggerDownload() {
             const btn = document.getElementById('dlBtn');
             if (!btn) return;
+            const pendingTab = !downloadToken && productId ? window.open('about:blank', '_blank') : null;
+            if (pendingTab) pendingTab.opener = null;
             
-            const unlockKey = 'zyrex_rw_unlocked_' + (downloadToken || productId || (product && product.id) || 'active');
-            const isUnlocked = sessionStorage.getItem(unlockKey) === '1' || window.isAdFreeUser || (window.currentSession && window.currentSession.adFree);
-
-            if (!isUnlocked && typeof window.showRewardedVideoAd === 'function') {
-                window.showRewardedVideoAd({
-                    onReward: function() {
-                        sessionStorage.setItem(unlockKey, '1');
-                        triggerDownload();
-                    },
-                    onCancel: function() {
-                        resetDownloadButton(btn);
-                    }
-                });
-                return;
-            }
-
             const selectedFiles = getSelectedFiles();
             const fileParam = Array.isArray(selectedFiles) && selectedFiles.length
                 ? selectedFiles.map(function(name) { return '&file=' + encodeURIComponent(name); }).join('')
@@ -1763,6 +1697,11 @@
             const titleParam = product ? '&title=' + encodeURIComponent(product.name) : '';
             const filename = zipDownloadFilename(product ? product.name : 'download');
             let fileHandle = null;
+
+            // Show immediate feedback before opening the native save dialog. On
+            // browsers that suspend the page while the picker is open, this
+            // prevents the download action from appearing to do nothing.
+            showProgress('Choose where to save your download...', 'The download will start after you choose a location.');
 
             // The picker must be opened directly from the user's click. Stream
             // chunks into the chosen file so large ZIPs never accumulate in RAM.
@@ -1773,8 +1712,12 @@
                         types: [{description: 'ZIP archive', accept: {'application/zip': ['.zip']}}]
                     });
                 } catch (pickerError) {
-                    if (pickerError && pickerError.name === 'AbortError') return;
+                    if (pickerError && pickerError.name === 'AbortError') {
+                        hideProgress();
+                        return;
+                    }
                     console.warn('Save location picker unavailable:', pickerError);
+                    updateProgress(0, 'The save dialog was unavailable. Starting a standard browser download...');
                 }
             }
             
@@ -1782,10 +1725,11 @@
                 btn.disabled = true;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing...';
                 try {
-                    const complete = await downloadWithProgress('/api/downloads/download?token=' + encodeURIComponent(downloadToken) + fileParam + titleParam, filename, fileHandle);
+                    const complete = await downloadWithRecovery('/api/downloads/download?token=' + encodeURIComponent(downloadToken) + fileParam + titleParam, filename, fileHandle, selectedFiles);
                     if (complete) {
                         btn.innerHTML = '<i class="fas fa-check"></i> Download Complete';
                         btn.disabled = true;
+                        if (typeof window.celebrateDownload === 'function') window.celebrateDownload();
                     } else {
                         btn.disabled = false;
                     }
@@ -1793,11 +1737,28 @@
                     console.error('Download failed:', downloadError);
                     btn.disabled = false;
                     updateButtonText();
-                    var retryMessage = 'Download failed: ' + downloadError.message + '. The one-time link may have expired.';
-                    if (product && product.id && confirm(retryMessage + ' Return to the resource page to generate a fresh link?')) {
-                        window.location.href = '/resource?id=' + encodeURIComponent(product.id);
+                    document.getElementById('progText').textContent = 'Download could not be completed';
+                    document.getElementById('progDetail').textContent = downloadError.message || 'Check your connection and try again.';
+                    document.getElementById('progRing').style.display = 'none';
+                    document.getElementById('progBar').style.background = '#f43f5e';
+                    document.getElementById('progBar').style.width = '100%';
+                    if (downloadError.code === 'ACCESS_REQUIRED' && window.showAccessRequiredModal) {
+                        hideProgress();
+                        window.showAccessRequiredModal();
+                        return;
+                    }
+                    if (downloadError.code === 'DOWNLOAD_INTERRUPTED') {
+                        alert('The connection interrupted the download twice. A fresh link is ready; click Download to try again.');
+                        return;
+                    }
+                    if (downloadError.code === 'TOKEN_USED') {
+                        alert('This download link has already been used. Return to the leak page to generate a fresh link.');
+                        return;
+                    }
+                    if (product && product.id && confirm('Download failed: ' + downloadError.message + '. Return to the leak page to generate a fresh link?')) {
+                        window.location.href = '/leak?id=' + encodeURIComponent(product.id);
                     } else if (!product || !product.id) {
-                        alert(retryMessage + ' Reopen the resource download page to get a new link.');
+                        alert('Download failed: ' + downloadError.message + '. Reopen the leak download page to get a new link.');
                     }
                 }
                 return;
@@ -1815,9 +1776,12 @@
                 const data = await readApiJson(resp);
 
                 if (!resp.ok || !data.success) {
+                    if (pendingTab && !pendingTab.closed) pendingTab.close();
                     resetDownloadButton(btn);
                     if (resp.status === 401) {
                         window.location.href = '/api/login?redirect=' + encodeURIComponent(location.pathname + location.search);
+                    } else if (data.code === 'ACCESS_REQUIRED' && window.showAccessRequiredModal) {
+                        window.showAccessRequiredModal();
                     } else if (resp.status === 403) {
                         showState('st-verify');
                     } else {
@@ -1828,12 +1792,15 @@
 
                 const targetUrl = getSponsoredRedirectUrl(data);
                 if (targetUrl) {
-                    window.location.href = targetUrl;
+                    if (pendingTab && !pendingTab.closed) pendingTab.location.href = targetUrl;
+                    else window.location.href = targetUrl;
                 } else {
+                    if (pendingTab && !pendingTab.closed) pendingTab.close();
                     resetDownloadButton(btn);
                     alert('No valid link received');
                 }
             } catch (e) {
+                if (pendingTab && !pendingTab.closed) pendingTab.close();
                 console.error('Download error:', e);
                 alert('Network error. Please try again.');
                 resetDownloadButton(btn);
@@ -1842,26 +1809,9 @@
 
         async function triggerFileDownload(filePath, btn) {
             if (!productId && !downloadToken && !product) return;
-            const unlockKey = 'zyrex_rw_unlocked_' + (downloadToken || productId || (product && product.id) || 'active');
-            const isUnlocked = sessionStorage.getItem(unlockKey) === '1' || window.isAdFreeUser || (window.currentSession && window.currentSession.adFree);
-
+            const pendingTab = !downloadToken && productId ? window.open('about:blank', '_blank') : null;
+            if (pendingTab) pendingTab.opener = null;
             const origHtml = btn ? btn.innerHTML : '';
-            if (!isUnlocked && typeof window.showRewardedVideoAd === 'function') {
-                window.showRewardedVideoAd({
-                    onReward: function() {
-                        sessionStorage.setItem(unlockKey, '1');
-                        triggerFileDownload(filePath, btn);
-                    },
-                    onCancel: function() {
-                        if (btn) {
-                            btn.disabled = false;
-                            btn.innerHTML = origHtml;
-                        }
-                    }
-                });
-                return;
-            }
-
             if (btn) {
                 btn.disabled = true;
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
@@ -1894,24 +1844,32 @@
                 const data = await readApiJson(resp);
 
                 if (!resp.ok || !data.success) {
+                    if (pendingTab && !pendingTab.closed) pendingTab.close();
                     if (btn) {
                         btn.disabled = false;
                         btn.innerHTML = origHtml;
                     }
-                    alert((data && data.error) || 'File download link failed');
+                    if (data.code === 'ACCESS_REQUIRED' && window.showAccessRequiredModal) {
+                        window.showAccessRequiredModal();
+                    } else {
+                        alert((data && data.error) || 'File download link failed');
+                    }
                     return;
                 }
 
                 const targetUrl = getSponsoredRedirectUrl(data);
                 if (targetUrl) {
-                    window.location.href = targetUrl;
+                    if (pendingTab && !pendingTab.closed) pendingTab.location.href = targetUrl;
+                    else window.location.href = targetUrl;
                 } else {
+                    if (pendingTab && !pendingTab.closed) pendingTab.close();
                     if (btn) {
                         btn.disabled = false;
                         btn.innerHTML = origHtml;
                     }
                 }
             } catch (e) {
+                if (pendingTab && !pendingTab.closed) pendingTab.close();
                 console.error('File download error:', e);
                 alert('Network error. Please try again.');
                 if (btn) {
@@ -1921,6 +1879,51 @@
             }
         }
     </script>
-    <script src="/js/script.js?v=50"></script>
+    <script>
+        // Confetti burst when the archive finishes downloading.
+        (function () {
+            'use strict';
+            var STYLE_ID = 'zyrexConfettiStyles';
+            function ensureStyles() {
+                if (document.getElementById(STYLE_ID)) return;
+                var style = document.createElement('style');
+                style.id = STYLE_ID;
+                style.textContent =
+                    '.zyrex-confetti{position:fixed;z-index:99999;width:9px;height:13px;border-radius:2px;pointer-events:none;' +
+                    'transform:translate3d(-50%,-50%,0);animation:zyrexConfettiBurst var(--dur,1.9s) cubic-bezier(.16,.72,.3,1) forwards;}' +
+                    '@keyframes zyrexConfettiBurst{0%{opacity:1;transform:translate3d(-50%,-50%,0) rotate(0) scale(1);}' +
+                    '100%{opacity:0;transform:translate3d(calc(-50% + var(--dx)),calc(-50% + var(--dy)),0) rotate(var(--rot,320deg)) scale(.7);}}' +
+                    '@media(prefers-reduced-motion:reduce){.zyrex-confetti{display:none !important;}}';
+                document.head.appendChild(style);
+            }
+            window.celebrateDownload = function celebrateDownload() {
+                if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+                ensureStyles();
+                var colors = ['var(--zr-accent, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1))', 'rgba(var(--zr-rgb-255-113-144, 255, 113, 144), 1)', '#ffffff', '#f7a5ff', '#9abaff', '#ffd166', '#7ce4c3'];
+                var originX = window.innerWidth / 2;
+                var originY = Math.min(window.innerHeight * 0.42, 320);
+                var count = window.innerWidth < 640 ? 46 : 84;
+                for (var i = 0; i < count; i += 1) {
+                    var piece = document.createElement('i');
+                    piece.className = 'zyrex-confetti';
+                    var angle = (Math.PI * 2 * i) / count + Math.random() * 0.35;
+                    var spread = 120 + Math.random() * Math.min(window.innerWidth * 0.42, 420);
+                    piece.style.left = originX + 'px';
+                    piece.style.top = originY + 'px';
+                    piece.style.background = colors[i % colors.length];
+                    piece.style.setProperty('--dx', Math.cos(angle) * spread + 'px');
+                    piece.style.setProperty('--dy', (Math.sin(angle) * spread + 140 + Math.random() * 220) + 'px');
+                    piece.style.setProperty('--rot', Math.round(180 + Math.random() * 540) + 'deg');
+                    piece.style.setProperty('--dur', (1.5 + Math.random() * 1.1).toFixed(2) + 's');
+                    piece.style.width = (6 + Math.round(Math.random() * 6)) + 'px';
+                    piece.style.height = (9 + Math.round(Math.random() * 8)) + 'px';
+                    document.body.appendChild(piece);
+                    (function (node) { setTimeout(function () { node.remove(); }, 2800); })(piece);
+                }
+            };
+        })();
+    </script>
+    <script src="/js/script.js?v=92"></script>
+    <script src="/js/page-motion.js?v=6"></script>
 </body>
 </html>

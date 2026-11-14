@@ -236,10 +236,32 @@
         }
 
         let profileData = null;
+        var profileResponse = null;
         try {
-            var r1 = await fetch('/api/hlx/resolve?url=' + encodeURIComponent(socialUrl), { credentials: 'include' });
-            profileData = await r1.json();
+            profileResponse = await fetch('/api/hlx/resolve?url=' + encodeURIComponent(socialUrl), { credentials: 'include' });
+            profileData = await profileResponse.json();
         } catch(e) {}
+
+        if (!profileResponse || !profileResponse.ok || !profileData || profileData.success === false) {
+            var lookupError = (profileData && profileData.error) || 'Scrapin could not resolve this profile right now. You can retry or enter creator details manually.';
+            if (statusEl) {
+                statusEl.className = 'wiz-status warning';
+                statusEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> <div><h4>Profile Lookup Failed</h4><p></p></div>';
+                var errorMessage = statusEl.querySelector('p');
+                if (errorMessage) errorMessage.textContent = lookupError;
+            }
+            if (badgeStatus) {
+                badgeStatus.textContent = 'Lookup Failed';
+                badgeStatus.style.color = '#fbbf24';
+                badgeStatus.style.background = 'rgba(251, 191, 36, 0.1)';
+                badgeStatus.style.borderColor = 'rgba(251, 191, 36, 0.2)';
+            }
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-rotate"></i> Retry Lookup';
+            }
+            return;
+        }
 
         var cleanUserFallback = rawInput.replace(/^@/, '').split('?')[0].replace(/\/$/, '').split('/').pop();
         var creatorName = (profileData && profileData.nickname) || cleanUserFallback;
@@ -265,15 +287,15 @@
         var badgeAv = document.getElementById('badgeAvatar');
         if (badgeAv && creatorAv) badgeAv.src = creatorAv;
         var badgeTitle = document.getElementById('badgeTitle');
-        if (badgeTitle) badgeTitle.textContent = creatorName;
+        if (badgeTitle) { badgeTitle.textContent = creatorName; badgeTitle.setAttribute('data-i18n-skip', ''); }
         var badgeUrl = document.getElementById('badgeUrl');
-        if (badgeUrl) badgeUrl.textContent = socialUrl;
+        if (badgeUrl) { badgeUrl.textContent = socialUrl; badgeUrl.setAttribute('data-i18n-skip', ''); }
         var badgeStatus = document.getElementById('badgeStatus');
         if (badgeStatus) {
             badgeStatus.innerHTML = '<i class="fas fa-check-circle"></i> Profile Set';
             badgeStatus.style.color = '#00e676';
-            badgeStatus.style.background = 'rgba(0,200,100,0.1)';
-            badgeStatus.style.borderColor = 'rgba(0,200,100,0.2)';
+            badgeStatus.style.background = 'rgba(0, 200, 100, 0.1)';
+            badgeStatus.style.borderColor = 'rgba(0, 200, 100, 0.2)';
         }
 
         // Render creator card in wizard
@@ -284,8 +306,8 @@
             cardHtml += '<div class="wiz-cc-avatar-placeholder"><i class="fas fa-user"></i></div>';
         }
         cardHtml += '<div class="wiz-cc-info">';
-        cardHtml += '<div class="wiz-cc-name">' + creatorName + '</div>';
-        cardHtml += '<div class="wiz-cc-url">' + socialUrl + '</div>';
+        cardHtml += '<div class="wiz-cc-name" data-i18n-skip>' + creatorName + '</div>';
+        cardHtml += '<div class="wiz-cc-url" data-i18n-skip>' + socialUrl + '</div>';
         cardHtml += '</div>';
         cardHtml += '<div class="wiz-cc-badge ok"><i class="fas fa-check-circle"></i> Profile Set</div>';
         cardHtml += '</div>';
@@ -300,13 +322,13 @@
 
         let scanData = null;
         try {
-            var r2 = await fetch('/api/scan-creator-links?url=' + encodeURIComponent(socialUrl));
-            scanData = await r2.json();
+            var scanResponse = await fetch('/api/scan-creator-links?url=' + encodeURIComponent(socialUrl));
+            scanData = await scanResponse.json();
         } catch(e) {}
 
         if (scanData && scanData.success && scanData.found && scanData.storeUrl) {
             var storeUrl = scanData.storeUrl;
-            var platformName = scanData.platform === 'boosty' ? 'Boosty' : scanData.platform === 'patreon' ? 'Patreon' : 'Payhip';
+            var platformName = ({ payhip: 'Payhip', boosty: 'Boosty', patreon: 'Patreon', gumroad: 'Gumroad', ko_fi: 'Ko-fi', sellfy: 'Sellfy', shopify: 'Shopify', amazon: 'Amazon' })[scanData.platform] || 'Creator Store';
 
             if (statusEl) {
                 statusEl.className = 'wiz-status success';
@@ -664,7 +686,7 @@
             if (dup) {
                 if (dupBox) dupBox.style.display = 'flex';
                 var dupLink = document.getElementById('duplicateLink');
-                if (dupLink) dupLink.href = '/resource?id=' + dup.id;
+                if (dupLink) dupLink.href = '/leak?id=' + dup.id;
                 if (submitBtn) {
                     submitBtn.disabled = true;
                     submitBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Already on Zyrex';
@@ -708,7 +730,7 @@
             overlay.id = 'wizCheckOverlay';
             overlay.innerHTML = '<div class="wiz-check-circle"><i class="fas fa-check"></i></div>' +
                 '<div style="font-size:1.1rem;font-weight:800;color:#fff;text-align:center;">Product Selected!</div>' +
-                '<div style="font-size:0.78rem;color:rgba(255,255,255,0.6);max-width:280px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (prod.title || 'Auto-filling details...') + '</div>';
+                '<div style="font-size:0.78rem;color:rgba(255, 255, 255, 0.6);max-width:280px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (prod.title || 'Auto-filling details...') + '</div>';
             modalContainer.appendChild(overlay);
         }
 

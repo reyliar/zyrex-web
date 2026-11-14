@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zyrex | Home Feed</title>
+    <meta name="description" content="Community posts, uploads and updates from Zyrex members.">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Zyrex">
+    <meta property="og:title" content="Zyrex | Home Feed">
+    <meta property="og:description" content="Community posts, uploads and updates from Zyrex members.">
+    <meta property="og:image" content="https://zyrexediting.xyz/assets/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://zyrexediting.xyz/assets/og-image.png">
+    <link rel="icon" type="image/png" href="/assets/content.png">
+    <link rel="stylesheet" href="/css/style.css?v=92">
+    <link rel="stylesheet" href="/css/profile-system.css?v=20">
+    <link rel="stylesheet" href="/css/social-pages.css?v=44">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,800,900&amp;display=swap">
+    <link rel="stylesheet" href="/css/glass.css?v=67">
+    <link rel="stylesheet" href="/css/atmosphere.css?v=7">
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.fontshare.com">
+    <link rel="stylesheet" href="/css/i18n.css?v=3">
+    <script src="/js/i18n.js?v=15" defer></script>
+    <script src="/js/profile-hover.js?v=1" defer></script>
+</head>
+
+<body class="pf-social-page">
+    <div class="zr-sweep" aria-hidden="true"></div>
+    <div class="lq-veil" aria-hidden="true"></div>
+
+<nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo"><img src="/assets/content.png" alt="ZYREX" class="logo-img"><span
+                    class="logo-text">yrex</span></a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="/">Home</a></li>
+                <li><a href="/leaks">Leaks</a></li>
+                <li><a href="/feed" class="active">Feed</a></li>
+                <li><a href="/plugins">Plugins</a></li>
+                <li><a href="/requests">Requests</a></li>
+                <li><a href="/audio">Audios</a></li>
+                
+            </ul>
+            <div class="nav-actions">
+                <div id="authBtn"></div>
+
+                <button class="hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="profile-page pf-home-feed" id="feedPage" style="--pf-accent:var(--zr-accent, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1))">
+        <section class="pf-feed-shell">
+            <header class="pf-feed-home-head"><div><span class="pf-feed-kicker">ZYREX COMMUNITY</span><h1>Home</h1></div></header>
+            <div class="pf-feed-tabs"><button type="button" class="pf-feed-tab is-active" data-feed-sort="latest">Latest activity</button><button type="button" class="pf-feed-tab" data-feed-sort="trending">Trending</button><a class="pf-feed-tagfilter" id="fdTagFilter" href="/feed" hidden></a><a href="/leaks">Browse leaks <i class="fas fa-arrow-up-right-from-square"></i></a></div>
+            <section class="pf-feed-composer-card" id="fdComposerCard">
+                <form id="fdComposer" hidden>
+                    <div class="pf-feed-composer-row">
+                        <img class="pf-feed-composer-avatar" id="fdComposerAvatar" src="/assets/default-avatar.png" alt="" width="42" height="42">
+                        <div class="pf-feed-bubble">
+                            <textarea id="fdPostText" maxlength="1200" placeholder="Write a post..." aria-label="Write a feed post"></textarea>
+                        </div>
+                    </div>
+                    <div class="pf-feed-media-preview" id="fdMediaPreview" hidden></div>
+                    <div class="pf-feed-link-preview" id="fdLinkPreview" hidden></div>
+                    <div class="pf-feed-video-preview" id="fdVideoPreview" hidden></div>
+                    <div class="pf-feed-composer-tools">
+                        <div><button type="button" class="pf-feed-tool" data-feed-picker="stickers"><i class="fas fa-face-smile"></i> Sticker</button><button type="button" class="pf-feed-tool" data-feed-picker="gifs"><i class="fas fa-film"></i> GIF</button><button type="button" class="pf-feed-tool" id="fdImageBtn"><i class="fas fa-image"></i> Image</button><input type="file" id="fdImageInput" accept="image/png,image/jpeg,image/webp,image/gif" hidden><button type="button" class="pf-feed-tool" id="fdVideoBtn"><i class="fas fa-video"></i> Video</button><input type="file" id="fdVideoInput" accept="video/mp4,video/webm" hidden></div>
+                        <span id="fdPostCount">0 / 1200</span>
+                        <button class="pf-btn is-primary" id="fdPostSubmit" type="submit" disabled><i class="fas fa-paper-plane"></i> Post</button>
+                    </div>
+                    <div class="pf-feed-mention-suggestions" id="fdMentionSuggestions" hidden></div>
+                    <p class="pf-form-note" id="fdPostNote" aria-live="polite"></p>
+                </form>
+                <a class="pf-feed-signin" id="fdSignIn" href="/api/login?redirect=%2Ffeed"><i class="fab fa-discord"></i> Sign in to write a post</a>
+            </section>
+            <div class="pf-state" id="fdLoading"><i class="fas fa-circle-notch fa-spin"></i><h2>Loading the latest updates</h2></div>
+            <div class="pf-state" id="fdEmpty" hidden><i class="fas fa-sparkles"></i><h2 id="fdEmptyTitle">No activity yet</h2><p id="fdEmptyText">New posts and leaks will appear here.</p></div>
+            <div id="fdContent" hidden><div class="pf-feed-timeline" id="fdGrid"></div><div class="pf-feed-foot" id="fdFoot"></div></div>
+        </section>
+    </main>
+
+    <div class="pf-media-modal" id="fdMediaModal" hidden>
+        <div class="pf-media-modal-backdrop" data-media-close></div>
+        <div class="pf-media-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="fdMediaTitle">
+            <div class="pf-media-modal-head">
+                <strong id="fdMediaTitle">Stickers</strong>
+                <button type="button" class="pf-media-modal-close" data-media-close aria-label="Close"><i class="fas fa-xmark"></i></button>
+            </div>
+            <input class="pf-feed-gif-search" id="fdGifSearch" placeholder="Search GIFs..." autocomplete="off" hidden>
+            <div class="pf-media-modal-grid" id="fdPickerGrid"></div>
+            <p class="pf-media-modal-note" id="fdMediaNote" aria-live="polite"></p>
+        </div>
+    </div>
+
+<footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                                <div class="footer-brand">
+                    <a href="/" class="hero-brand-lockup footer-brand-lockup">
+                        <img src="/assets/content.png" alt="Zyrex Logo" class="hero-brand-icon">
+                        <div class="hero-brand-text-col">
+                            <span class="hero-brand-title">Zyrex<sup>™</sup></span>
+                            <span class="hero-brand-sub">EDITING</span>
+                        </div>
+                    </a>
+                    <p>Editing leaks and stuff.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/leaks">Leaks</a></li>
+                        <li><a href="/feed">Feed</a></li>
+                        <li><a href="/plugins">Plugins</a></li>
+                        <li><a href="/requests">Requests</a></li>
+                        <li><a href="/audio">Audios</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="/terms">Terms of Service</a></li>
+                        <li><a href="/privacy">Privacy Policy</a></li>
+                        <li><a href="/dmca">DMCA</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="https://discord.gg/4J3tars4QS" target="_blank" rel="noopener">Discord</a></li>
+                        <li><a href="/#contact">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Zyrex Editing. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/js/chunks/chunk-store.js?v=1"></script>
+    <script src="/js/auth.js?v=19"></script>
+    <script src="/js/script.js?v=92"></script>
+    <script src="/js/social-interactions.js?v=6"></script>
+    <script src="/js/post-markdown.js?v=2"></script>
+    <script>
+(function(){
+  'use strict';
+  var pickerKind='stickers',page=1,pages=1,mentions=new Map(),mentionTimer=0,mentionRequest=0,mentionItems=[],mentionIndex=0,stickerCache=null,gifTimer=0,viewerId='',composerMedia=[],feedSort='latest';
+  var postTexts={},feedTag=(new URLSearchParams(location.search).get('tag')||'').trim().toLowerCase();
+  // Twelve posts per page keeps the timeline short enough to read in one screen.
+  var FEED_PAGE_SIZE=12,requestedPage=Math.max(1,Number(new URLSearchParams(location.search).get('page'))||1);
+  var $=function(id){return document.getElementById(id);};
+  var esc=function(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');};
+  function ago(value){var time=new Date(value||'').getTime();if(!time)return '';var mins=Math.max(1,Math.floor((Date.now()-time)/60000));if(mins<60)return mins+'m';var hours=Math.floor(mins/60);if(hours<24)return hours+'h';var days=Math.floor(hours/24);return days<7?days+'d':new Date(time).toLocaleDateString();}
+  // Same wording as the profile timeline, so a post reads the same on both pages.
+  function when(value){if(!value)return '';var then=new Date(value).getTime();if(!then)return String(value).slice(0,10);var days=Math.floor((Date.now()-then)/86400000);if(days<=0)return 'today';if(days===1)return 'yesterday';if(days<30)return days+' days ago';if(days<365)return Math.floor(days/30)+' months ago';var years=Math.floor(days/365);return years+(years===1?' year ago':' years ago');}
+  function safeMediaUrl(value){try{var u=new URL(value);return u.protocol==='https:'&&(/^(cdn\.discordapp\.com|media\.discordapp\.net)$/.test(u.hostname)||/^(media\d*\.giphy\.com|i\.giphy\.com)$/.test(u.hostname)||/^(media\.tenor\.com|tenor\.com)$/.test(u.hostname)||u.hostname==='thumbnail.zyrexediting.xyz');}catch(_){return false;}}
+  // Stickers, GIFs and uploads all render through the site proxy, which keeps a remote
+  // CDN's referer rules from turning a post into a broken image.
+  function mediaSrc(value){return window.ZyrexMedia?window.ZyrexMedia.src(value):String(value||'');}
+  // Stickers and GIFs are decoration, not artwork: they get a smaller frame than uploads.
+  function isSmallMedia(value){return /\/stickers\//i.test(String(value||''))||/(?:giphy|tenor)\.(?:com|co)\//i.test(String(value||''));}
+  // Only real images can live in a post; Giphy also hands out .mp4 links.
+  function isImageUrl(value){return /\.(?:apng|gif|webp|png|jpe?g)$/i.test(String(value||'').split('?')[0]);}
+  function renderText(value,tagged){
+    var raw=String(value||''),html='',cursor=0,media=/!\[(sticker:([^\]]*)|gif)\]\((https:\/\/[^\s)]+)\)/gi;
+    function decorate(part){var out=part;(Array.isArray(tagged)?tagged:[]).forEach(function(m){var id=String(m.id||''),name=String(m.username||'');if(!/^\d{17,20}$/.test(id)||! /^[a-zA-Z0-9_.-]{1,32}$/.test(name))return;var token=('@'+name).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');out=out.replace(new RegExp('(^|[^a-zA-Z0-9_.&;-])('+token+')(?![a-zA-Z0-9_.-])','gi'),'$1<a class="pf-mention-link" href="/profile?id='+encodeURIComponent(id)+'">$2</a>');});return out.replace(/(^|[^a-zA-Z0-9_#&;])#([a-zA-Z0-9_]{2,24})/g,'$1<a class="pf-hashtag" href="/feed?tag=$2">#$2</a>');}
+    function plain(part){return window.ZyrexPostFormat?window.ZyrexPostFormat.blocks(part,decorate):esc(part).replace(/\n/g,'<br>');}
+    raw.replace(media,function(match,kind,name,url,offset){html+=plain(raw.slice(cursor,offset));html+=safeMediaUrl(url)?'<span class="pf-post-embed"><img src="'+esc(mediaSrc(url))+'" alt="'+esc(name||(kind==='gif'?'GIF':'Discord sticker'))+'" loading="lazy"></span>':plain(match);cursor=offset+match.length;return match;});
+    return html+plain(raw.slice(cursor));
+  }
+  // Short links first: /feed/post/<n> has no uuid in it.
+  function postHref(post){var seq=Number(post&&post.seq);return seq>0?'/feed/post/'+seq:'/post/'+esc(post&&post.id);}
+  // Reading the conversation and writing to it are two different actions: the count
+  // chip opens the thread read-only, the Reply button opens it with the composer.
+  function controls(postId,tailHtml,postHref){
+    var href=postHref||(postId?('/post/'+esc(postId)):'');
+    var reply='<button type="button" class="pf-social-stat is-replies" data-social-replies-toggle title="Show the conversation"><i class="far fa-comment"></i><b data-social-replies>0</b></button>'+
+      '<button type="button" class="pf-social-reply-cta" data-social-reply-toggle><i class="fas fa-reply"></i><span>Reply</span></button>';
+    var tail=tailHtml?'<span class="pf-social-tail">'+tailHtml+'</span>':'';
+    var open=href?'<a class="pf-social-thread-open" href="'+href+(href.indexOf('#')<0?'#replies':'')+'" title="Open this post">'+'<i class="fas fa-arrow-up-right-from-square"></i></a>':'';
+    // Share/Edit/Repost and the permalink share one right-aligned group, so a wrapped
+    // row never leaves a stray icon on its own line.
+    var more=(tail||open)?'<span class="pf-social-more">'+tail+open+'</span>':'';
+    return '<div class="pf-social-interactions"><div class="pf-social-actions"><button type="button" data-social-like><i class="far fa-heart"></i><span data-like-label>Like</span><b data-social-likes>0</b></button><span class="pf-social-stat"><i class="far fa-eye"></i><b data-social-views>0</b></span>'+reply+more+'</div><div class="pf-social-thread" data-social-thread hidden></div></div>';
+  }
+  function resourceCard(item){
+    var author=item.uploader||{},founder=String(author.id||'')==='1421177012814614548';
+    var thumbImg=item.thumbnail?'<img src="'+esc(item.thumbnail)+'" alt="'+esc(item.name)+'" loading="lazy" onerror="this.closest(\'.pf-notice-thumb\').classList.add(\'is-empty\');this.remove()">':'';
+    // No thumbnail means the compact card renders as a single full-width column.
+    var thumbClass='pf-notice-thumb'+(item.thumbnail?'':' is-empty');
+    var label=author.handle?'@'+author.handle:(author.name||'Zyrex member');
+    var byline='<small>Uploaded by <a class="pf-feed-uploader'+(founder?' founder-name':'')+'" data-profile-preview data-profile-id="'+esc(author.id||'')+'" href="'+esc(author.url||('/profile?id='+encodeURIComponent(author.id||'')))+'">'+esc(label)+'</a></small>';
+    var profileUrl=esc(author.url||('/profile?id='+encodeURIComponent(author.id||'')));
+    var targetUrl=esc(item.url||'/leaks');
+    // The uploader tag must be a real link, so the mention in the sentence is linked too.
+    var mention=author.handle?'<a class="pf-mention-link" data-profile-preview data-profile-id="'+esc(author.id||'')+'" href="'+profileUrl+'">'+esc(label)+'</a>':esc(author.name||'Zyrex member');
+    var body=String(item.text||'A new leak was uploaded!');
+    var noticeText=author.handle&&body.indexOf(label)===0?mention+esc(body.slice(label.length)):esc(body);
+    // A plain container, not an <a>: nesting the uploader link inside the leak anchor
+    // made the HTML parser close the card early and push the byline out of the info block.
+    // Upload announcements carry the official profile, so the header links to it.
+    var ann=item.announcement||{},annUrl=esc(ann.url||'/@zyrex'),annName=esc(ann.name||'Zyrex'),annHandle=esc(ann.handle||'zyrex');
+    // Announcements list every category the leak belongs to.
+    var catText=Array.isArray(item.category_labels)&&item.category_labels.length?item.category_labels.join(' · '):(item.category||item.type||'Leak');
+    return '<article class="pf-feed-entry pf-notice" data-social-type="resource" data-social-id="'+esc(item.id)+'"'+(item.post_url?' data-post-open="'+esc(item.post_url)+'"':'')+'><header class="pf-notice-head"><a class="pf-notice-author" data-profile-preview data-profile-id="'+esc(ann.id||item.author_id||'')+'" href="'+annUrl+'"><img src="'+esc(ann.avatar||'/assets/content.png')+'" alt="'+annName+'" onerror="this.src=\'/assets/content.png\'"><span><strong>'+annName+' <i class="fas fa-circle-check is-admin-check" aria-label="Official"></i></strong><small>@'+annHandle+' · '+esc(when(item.created_at))+'</small></span></a>'+(item.post_url?'<a class="pf-notice-stamp" href="'+esc(item.post_url)+'" title="Open this post">#'+esc(String(item.seq||''))+'</a>':'')+'</header><p class="pf-notice-text">'+noticeText+'</p><div class="pf-notice-resource"><a class="'+thumbClass+'" href="'+targetUrl+'">'+thumbImg+'</a><span class="pf-notice-info"><strong><a class="pf-notice-title" href="'+targetUrl+'">'+esc(item.name||'New leak')+'</a></strong>'+byline+'<span><i class="fas fa-layer-group"></i> '+esc(catText)+' <i class="fas fa-arrow-up-right-from-square"></i></span></span></div>'+controls('','',item.post_url?esc(item.post_url):'')+'</article>';
+  }
+  function linkCards(links) {
+      return (Array.isArray(links) ? links : []).slice(0, 2).map(function (link) {
+          if (!link || !link.url) return '';
+          var host = '';
+          try { host = new URL(link.url).hostname.replace(/^www\./, ''); } catch (_) {}
+          var thumb = link.image ? '<span class="pf-link-card-thumb"><img src="' + esc(link.image) + '" alt="" decoding="async" onerror="this.parentNode.remove()"></span>' : '';
+          return '<a class="pf-link-card" href="' + esc(link.url) + '" target="_blank" rel="noopener nofollow ugc">' + thumb + '<span class="pf-link-card-body"><small>' + esc(link.site || host) + '</small><strong>' + esc(link.title || link.url) + '</strong>' + (link.description ? '<span>' + esc(link.description) + '</span>' : '') + '</span></a>';
+      }).join('');
+  }
+  function postCard(item){
+    // A repost card keeps its own id for the DOM but drives likes, views and replies
+    // through the original post, so both cards share one conversation.
+    var repost=item.repost_of||null,source=repost||item;
+    var sourceAuthor=source.author||{},reposter=item.author||{};
+    var authorId=String(source.author_id||''),founder=authorId==='1421177012814614548';
+    var name=sourceAuthor.name||'Zyrex Member',handle=sourceAuthor.handle?'@'+sourceAuthor.handle:'';
+    var own=Boolean(viewerId)&&String(item.author_id||'')===String(viewerId);
+    // Nothing that belongs to the official Zyrex profile can be reposted.
+    var officialSource=Boolean(source.official)||Boolean(repost&&repost.author_is_official);
+    // Profiles show the button on every post a member can see, so the feed matches that.
+    var canRepost=Boolean(viewerId)&&!officialSource;
+    var reposted=Boolean(source.viewer_reposted);
+    var repostLabel=repost?'<div class="pf-post-repost-label"><i class="fas fa-retweet"></i> '+esc(reposter.name||'A member')+' reposted</div>':'';
+    postTexts[item.id]=source.text||'';
+    var edited=source.edited_at?' · edited':'';
+    var pinned=Boolean(item.pinned);
+    var pinButton=own&&!repost?'<button type="button" class="pf-post-action'+(pinned?' is-pinned':'')+'" data-pin-post="'+esc(item.id)+'" data-pinned="'+(pinned?'1':'0')+'"><i class="fas fa-thumbtack"></i> '+(pinned?'Unpin':'Pin')+'</button>':'';
+    var pinnedBadge=pinned?'<div class="pf-post-pinned"><i class="fas fa-thumbtack"></i> Pinned</div>':'';
+    var actions=(own&&!repost?'<button type="button" class="pf-post-action" data-edit-post="'+esc(item.id)+'"><i class="fas fa-pen"></i> Edit</button>':'')+
+      pinButton+
+      '<button type="button" class="pf-post-action" data-share-post="'+esc(source.id)+'"><i class="fas fa-share-nodes"></i> Share</button>'+
+      (canRepost?'<button type="button" class="pf-post-action'+(reposted?' is-reposted':'')+'" data-repost-author="'+esc(authorId)+'" data-repost-id="'+esc(source.id)+'"><i class="fas fa-retweet"></i> '+(reposted?'Reposted':'Repost')+'</button>':'')+
+      (own?'<button type="button" class="pf-post-action is-danger" data-delete-post="'+esc(item.id)+'"><i class="fas fa-trash-can"></i> Delete</button>':'');
+    return '<article id="post-'+esc(item.id)+'" class="pf-feed-entry pf-feed-post pf-post'+(repost?' is-repost':'')+'" data-social-preview data-social-type="post" data-social-author="'+esc(authorId)+'" data-social-id="'+esc(source.id)+'" data-post-open="'+esc(postHref(source))+'">'+pinnedBadge+repostLabel+'<div class="pf-post-top"><a class="pf-post-author" data-profile-preview data-profile-id="'+esc(authorId)+'" href="'+esc(sourceAuthor.url||('/profile?id='+encodeURIComponent(authorId)))+'"><img src="'+esc(sourceAuthor.avatar||'/assets/default-avatar.png')+'" alt="" loading="lazy" onerror="this.src=\'/assets/default-avatar.png\'"><span><strong'+(founder?' class="founder-name"':'')+'>'+esc(name)+(sourceAuthor.is_admin?' <i class="fas fa-circle-check is-admin-check" aria-label="Admin"></i>':'')+'</strong><small>'+esc(handle?handle+' · ':'')+esc(when(source.created_at))+esc(edited)+'</small></span></a><small class="pf-post-permalink"><a class="pf-post-stamp" href="'+esc(postHref(source))+'" title="'+esc(ago(source.created_at))+'">'+esc(ago(source.created_at))+'</a></small></div><div class="pf-post-text">'+renderText(source.text,source.mentions)+'</div>'+((source.tags||[]).length?'<div class="pf-post-tags">'+source.tags.map(function(tag){return '<a class="pf-hashtag" href="/feed?tag='+esc(tag)+'">#'+esc(tag)+'</a>';}).join('')+'</div>':'')+(source.media||[]).map(function(src){return '<img class="pf-post-media'+(isSmallMedia(src)?' is-sticker':'')+'" src="'+esc(mediaSrc(src))+'" alt="" decoding="async" onerror="this.classList.add(\'is-broken\')">';}).join('')+(source.video?'<video class="pf-post-media pf-post-video" src="'+esc(source.video.url)+'"'+(source.video.poster?' poster="'+esc(source.video.poster)+'"':'')+' controls playsinline preload="metadata"></video>':'')+linkCards(source.links)+controls(source.id,actions,postHref(source))+'</article>';
+  }
+  // Notification links point at #post-<id>, so a clicked mention lands on the post.
+  function focusHashPost(){var match=/^#post-([a-f0-9-]{16,40})$/i.exec(location.hash||'');if(!match)return;var node=document.getElementById('post-'+match[1].toLowerCase());if(!node)return;node.scrollIntoView({behavior:'smooth',block:'center'});node.classList.add('is-highlighted');setTimeout(function(){node.classList.remove('is-highlighted');},2800);}
+  window.addEventListener('hashchange',focusHashPost);
+  function card(item){return item.kind==='member_post'?postCard(item):resourceCard(item);}
+  function emptyCopy(){var trending=feedSort==='trending';$('fdEmptyTitle').textContent=trending?'Nothing trending yet':'No activity yet';return trending?'No liked posts yet. Like a post and it will show up here.':'New posts and leaks will appear here.';}
+  function syncFeedTabs(){document.querySelectorAll('[data-feed-sort]').forEach(function(button){button.classList.toggle('is-active',button.dataset.feedSort===feedSort);});}
+  function load(next){
+    $('fdLoading').hidden=next>1;
+    $('fdLoading').querySelector('h2').textContent=feedSort==='trending'?'Loading trending posts':'Loading the latest updates';
+    fetch('/api/profile/feed?page='+next+'&limit='+FEED_PAGE_SIZE+'&sort='+encodeURIComponent(feedSort)+(feedTag?'&tag='+encodeURIComponent(feedTag):''),{credentials:'include',cache:'no-store'}).then(function(r){return r.json().then(function(d){return {ok:r.ok,data:d};});}).then(function(result){
+      $('fdLoading').hidden=true;var data=result.data||{};if(!result.ok||!data.success)throw new Error(data.error||'Could not load updates.');
+      page=data.page||1;pages=data.pages||1;$('fdEmpty').hidden=!!(data.items||[]).length;$('fdContent').hidden=!(data.items||[]).length;
+      if(!data.items||!data.items.length){if(next===1)$('fdGrid').innerHTML='';$('fdEmptyText').textContent=emptyCopy();return;}
+      $('fdGrid').innerHTML=data.items.map(card).join('');
+      if(next>1)scrollToFeedTop();
+      var nextUrl=new URL(location.href);if(page>1)nextUrl.searchParams.set('page',String(page));else nextUrl.searchParams.delete('page');history.replaceState(null,'',nextUrl.pathname+(nextUrl.search||'')+(nextUrl.hash||''));
+      if(next===1)focusHashPost();
+      renderPager();
+    }).catch(function(){ $('fdLoading').hidden=true;$('fdEmpty').hidden=false;$('fdEmptyText').textContent='Could not load the latest updates. Please try again.';});
+  }
+  function scrollToFeedTop(){var shell=document.querySelector('.pf-feed-shell');if(!shell)return;var top=shell.getBoundingClientRect().top+window.scrollY-90;window.scrollTo({top:Math.max(0,top),behavior:'smooth'});}
+  function renderPager(){
+    var foot=$('fdFoot');if(!foot)return;
+    if(pages<=1){foot.innerHTML='';return;}
+    foot.innerHTML='<div class="pf-feed-pager">'+
+      '<button type="button" class="pf-feed-page-btn" data-page="'+(page-1)+'"'+(page<=1?' disabled':'')+'><i class="fas fa-chevron-left"></i> Previous</button>'+
+      '<span class="pf-feed-page-count">Page '+page+' / '+pages+'</span>'+
+      '<button type="button" class="pf-feed-page-btn" data-page="'+(page+1)+'"'+(page>=pages?' disabled':'')+'>Next <i class="fas fa-chevron-right"></i></button></div>';
+  }
+  $('fdFoot').addEventListener('click',function(event){var button=event.target.closest('[data-page]');if(!button||button.disabled)return;var target=Number(button.dataset.page);if(!target||target===page)return;button.disabled=true;load(target);});
+  function note(message,error){var node=$('fdPostNote');node.textContent=message||'';node.classList.toggle('is-error',!!error);if(message&&window.showStatusAlert&&!/^(Uploading (?:image|video)|Preparing the video)/i.test(message))window.showStatusAlert(message,!!error);}
+  function closeMentions(){mentionRequest++;clearTimeout(mentionTimer);$('fdMentionSuggestions').hidden=true;$('fdMentionSuggestions').innerHTML='';mentionItems=[];}
+  function showMentions(members){mentionItems=(members||[]).slice(0,12);mentionIndex=0;var box=$('fdMentionSuggestions');if(!mentionItems.length){closeMentions();return;}box.innerHTML=mentionItems.map(function(m,i){var avatar=/^https:\/\/(cdn\.discordapp\.com|media\.discordapp\.net)\//i.test(m.avatar||'')||/^\/api\/avatar\//.test(m.avatar||'')?m.avatar:'/assets/default-avatar.png';return '<button type="button" class="pf-mention-option'+(i?'':' is-active')+'" data-mention-index="'+i+'"><img src="'+esc(avatar)+'" alt="" onerror="this.src=\'/assets/default-avatar.png\'"><span><strong>'+esc(m.display_name||m.username||'Member')+'</strong><small>@'+esc(m.username||'')+'</small></span></button>';}).join('');box.hidden=false;}
+  function chooseMention(index){var user=mentionItems[index],textarea=$('fdPostText');if(!user||!user.id||!user.username)return;var cursor=textarea.selectionStart,match=textarea.value.slice(0,cursor).match(/(^|\s)@([a-zA-Z0-9_.-]*)$/);if(!match)return closeMentions();var start=cursor-match[0].length+match[1].length,tag='@'+user.username+' ';textarea.value=textarea.value.slice(0,start)+tag+textarea.value.slice(cursor);textarea.setSelectionRange(start+tag.length,start+tag.length);mentions.set(String(user.id),String(user.username));$('fdPostCount').textContent=textarea.value.length+' / 1200';syncPostButton();textarea.focus();closeMentions();}
+  // Attachments are real media, not markdown typed into the post.
+  // The Post button only lights up once there is something to publish.
+  function syncPostButton(){var submit=$('fdPostSubmit');if(!submit)return;var typed=$('fdPostText').value.trim();submit.disabled=(!typed&&!composerMedia.length&&!composerVideo)||pendingMedia().length>0;}
+  function renderComposerMedia(){var box=$('fdMediaPreview');syncPostButton();if(!box)return;if(!composerMedia.length){box.hidden=true;box.innerHTML='';return;}box.innerHTML=composerMedia.map(function(url,index){var busy=Boolean((mediaPending||{})[url]);return '<span class="pf-feed-media-thumb'+(busy?' is-pending':'')+'"><img src="'+esc(mediaSrc(url))+'" alt="" loading="lazy">'+(busy?'<span class="pf-media-veil" aria-hidden="true"><i class="fas fa-circle-notch fa-spin"></i></span>':'')+'<button type="button" data-media-remove="'+index+'" aria-label="Remove attachment"><i class="fas fa-xmark"></i></button></span>';}).join('');box.hidden=false;}
+  function addComposerMedia(url,alreadyReady){if(composerVideo){setMediaNote('Remove the video first: a video cannot be combined with images.',true);return;}var clean=String(url||'').split('?')[0];if(!safeMediaUrl(clean)||!isImageUrl(clean)){setMediaNote('That attachment cannot be used.',true);return;}if(composerMedia.indexOf(clean)!==-1){closeMediaModal();return;}if(composerMedia.length>=4){setMediaNote('You can attach up to 4 images.',true);return;}composerMedia.push(clean);if(!alreadyReady&&/^https:\/\/thumbnail\.zyrexediting\.xyz\//i.test(clean))markPending(clean);renderComposerMedia();pollMediaStatus();note('');closeMediaModal();}
+  // Pasted links are inspected once: an image link is copied into the bucket and becomes
+  // an attachment, any other page becomes a link card under the post.
+  var composerLinks=[],linkChecks={},linkTimer=0;
+  // A post carries either one video or images, never both.
+  var composerVideo=null,VIDEO_MAX_BYTES=50*1024*1024,VIDEO_MAX_SECONDS=120;
+  function syncComposerTools(){var hasVideo=Boolean(composerVideo),hasMedia=composerMedia.length>0;Array.prototype.forEach.call(document.querySelectorAll('[data-feed-picker]'),function(button){button.disabled=hasVideo;});if($('fdImageBtn'))$('fdImageBtn').disabled=hasVideo;if($('fdVideoBtn'))$('fdVideoBtn').disabled=hasMedia;}
+  function videoMetaText(video){var parts=[];if(video.duration)parts.push(Math.round(video.duration)+'s');if(video.width&&video.height)parts.push(video.width+'\u00d7'+video.height);if(video.size)parts.push(video.size>=1048576?(video.size/1048576).toFixed(1)+' MB':(Math.max(1,Math.round(video.size/1024)))+' KB');return parts.join(' \u00b7 ')||'MP4 / WebM';}
+  function renderComposerVideo(){var box=$('fdVideoPreview');syncPostButton();syncComposerTools();if(!box)return;if(!composerVideo){box.hidden=true;box.innerHTML='';return;}var busy=Boolean((mediaPending||{})[composerVideo.url])||Boolean(composerVideo.poster&&(mediaPending||{})[composerVideo.poster]);
+    box.innerHTML='<span class="pf-feed-video-chip'+(busy?' is-pending':'')+'"><video src="'+esc(composerVideo.url)+'"'+(composerVideo.poster?' poster="'+esc(composerVideo.poster)+'"':'')+' muted playsinline preload="metadata"></video>'+(busy?'<span class="pf-media-veil" aria-hidden="true"><i class="fas fa-circle-notch fa-spin"></i></span>':'')+'<span class="pf-feed-video-meta"><strong>Video attached</strong><small>'+esc(videoMetaText(composerVideo))+'</small></span><button type="button" data-video-remove aria-label="Remove video"><i class="fas fa-xmark"></i></button></span>';box.hidden=false;}
+  function readVideoMeta(file){return new Promise(function(resolve){var url=URL.createObjectURL(file),probe=document.createElement('video');probe.preload='metadata';probe.muted=true;probe.onloadedmetadata=function(){var meta={duration:probe.duration||0,width:probe.videoWidth||0,height:probe.videoHeight||0};URL.revokeObjectURL(url);resolve(meta);};probe.onerror=function(){URL.revokeObjectURL(url);resolve({duration:0,width:0,height:0});};probe.src=url;});}
+  // The poster is the video's own first frame, so the feed and the Discord card show it.
+  // The poster becomes the visible frame; the contact sheet lets the site check six moments
+  // of the video instead of only the first one.
+  var VIDEO_SCAN_TIMES=[0.05,0.2,0.38,0.55,0.72,0.9];
+  function captureVideoFrames(file){return new Promise(function(resolve){var url=URL.createObjectURL(file),probe=document.createElement('video'),done=false;probe.preload='auto';probe.muted=true;probe.playsInline=true;
+    function finish(value){if(done)return;done=true;URL.revokeObjectURL(url);resolve(value||{poster:'',sheet:'',frames:0});}
+    function drawCell(ctx,cellWidth,cellHeight,index){var sourceWidth=probe.videoWidth||cellWidth,sourceHeight=probe.videoHeight||cellHeight,scale=Math.max(cellWidth/sourceWidth,cellHeight/sourceHeight),drawWidth=sourceWidth*scale,drawHeight=sourceHeight*scale;ctx.drawImage(probe,(cellWidth-drawWidth)/2,(cellHeight-drawHeight)/2,drawWidth,drawHeight);return true;}
+    function capture(){
+      try{
+        var posterWidth=Math.min(probe.videoWidth||640,720),posterHeight=Math.round(posterWidth*((probe.videoHeight||360)/(probe.videoWidth||640)));
+        var posterCanvas=document.createElement('canvas');posterCanvas.width=posterWidth;posterCanvas.height=posterHeight;
+        posterCanvas.getContext('2d').drawImage(probe,0,0,posterWidth,posterHeight);
+        var sheet=document.createElement('canvas');sheet.width=960;sheet.height=540;
+        var ctx=sheet.getContext('2d');ctx.fillStyle='#000';ctx.fillRect(0,0,960,540);
+        var cellWidth=480,cellHeight=180,times=[],duration=probe.duration||0,frames=0;
+        for(var i=0;i<VIDEO_SCAN_TIMES.length;i+=1)times.push(duration?Math.min(duration-0.05,duration*VIDEO_SCAN_TIMES[i]):0);
+        var index=0;
+        function nextFrame(){
+          if(index>=times.length){finish({poster:posterCanvas.toDataURL('image/jpeg',0.82),sheet:sheet.toDataURL('image/jpeg',0.8),frames:frames});return;}
+          var slot=index;index+=1;
+          try{probe.currentTime=times[slot];}catch(_){nextFrame();return;}
+          var handled=false;
+          function paint(){
+            if(handled)return;handled=true;
+            try{ctx.save();ctx.beginPath();ctx.rect((slot%2)*cellWidth,Math.floor(slot/2)*cellHeight,cellWidth,cellHeight);ctx.clip();ctx.translate((slot%2)*cellWidth,Math.floor(slot/2)*cellHeight);drawCell(ctx,cellWidth,cellHeight,slot);ctx.restore();frames+=1;}catch(_){}
+            nextFrame();
+          }
+          probe.onseeked=function(){setTimeout(paint,30);};
+          setTimeout(paint,900);
+        }
+        nextFrame();
+      }catch(_){finish(null);}
+    }
+    probe.onloadeddata=function(){try{probe.currentTime=Math.min(0.2,Math.max(0.05,(probe.duration||1)/10));}catch(_){capture();return;}setTimeout(capture,250);};
+    probe.onerror=function(){finish(null);};
+    setTimeout(function(){if(!done&&probe.readyState>=2)capture();},4000);
+    probe.src=url;});}
+  // Attachments become usable a moment after the upload; until then the Post button stays
+  // dormant and nothing about the check is shown.
+  var mediaPending={},mediaPollTimer=0;
+  function pendingMedia(){var list=[],pending=mediaPending||{};composerMedia.forEach(function(url){if(pending[url])list.push(url);});if(composerVideo){if(pending[composerVideo.url])list.push(composerVideo.url);if(composerVideo.poster&&pending[composerVideo.poster])list.push(composerVideo.poster);}return list;}
+  function markPending(url){if(url)mediaPending[url]=true;}
+  function dropSilently(url){composerMedia=composerMedia.filter(function(item){return item!==url;});if(composerVideo&&(composerVideo.url===url||composerVideo.poster===url))composerVideo=null;delete mediaPending[url];renderComposerMedia();renderComposerVideo();}
+  function pollMediaStatus(){clearTimeout(mediaPollTimer);var list=pendingMedia();if(!list.length){syncPostButton();return;}fetch('/api/profile/media/status?url='+encodeURIComponent(list.join(',')),{credentials:'include'}).then(function(response){return response.json();}).then(function(data){if(!data||!data.success)throw new Error('retry');(data.states||[]).forEach(function(entry){if(!entry||!entry.url)return;if(entry.state==='clean'){delete mediaPending[entry.url];return;}if(entry.state==='pending')return;dropSilently(entry.url);});renderComposerMedia();renderComposerVideo();syncPostButton();if(pendingMedia().length)mediaPollTimer=setTimeout(pollMediaStatus,1500);}).catch(function(){mediaPollTimer=setTimeout(pollMediaStatus,2500);});}
+  // The frame sheet is sent once the video is already in the bucket.
+  function scanVideoFrames(videoUrl,captured){return fetch('/api/profile/video/scan',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({video:videoUrl,poster:captured.poster||'',frames:captured.sheet||''})}).then(function(response){return response.json().then(function(data){return {ok:response.ok,data:data||{}};});});}
+  function uploadVideoPoster(captured){var dataUrl=String(captured.poster||'');if(!dataUrl||!window.ZyrexMedia)return Promise.resolve('');return fetch(dataUrl).then(function(response){return response.blob();}).then(function(blob){return window.ZyrexMedia.upload(new File([blob],'poster.jpg',{type:'image/jpeg'}),'post');}).then(function(data){return data&&data.url?data.url:'';}).catch(function(){return '';});}
+  function uploadComposerVideo(file){
+    if(!file)return;
+    if(file.size>VIDEO_MAX_BYTES){note('That video is larger than 50 MB.',true);return;}
+    if(composerMedia.length){note('Remove the images first: a video cannot be combined with images.',true);return;}
+    var type=/webm/i.test(file.type||'')?'video/webm':'video/mp4';
+    if($('fdVideoBtn'))$('fdVideoBtn').disabled=true;
+    readVideoMeta(file).then(function(meta){
+      if(meta.duration&&meta.duration>VIDEO_MAX_SECONDS){note('Videos can be at most 120 seconds.',true);return null;}
+      return captureVideoFrames(file).then(function(captured){
+        if(!captured||(!captured.poster&&!captured.sheet)){note('That video could not be read.',true);return null;}
+        note('Uploading video... 0%');
+        return new Promise(function(resolve){
+          var xhr=new XMLHttpRequest();
+          xhr.open('POST','/api/profile/video');
+          xhr.setRequestHeader('Content-Type',type);
+          xhr.upload.onprogress=function(event){if(event.lengthComputable)note('Uploading video... '+Math.round((event.loaded/event.total)*100)+'%');};
+          xhr.onload=function(){
+            var data={};try{data=JSON.parse(xhr.responseText||'{}');}catch(_){}
+            if(xhr.status>=200&&xhr.status<300&&data.url)resolve({url:data.url,size:data.size||file.size,duration:meta.duration,width:meta.width,height:meta.height});
+            else{note(data.error||'That video could not be uploaded.',true);resolve(null);}
+          };
+          xhr.onerror=function(){note('That video could not be uploaded.',true);resolve(null);};
+          xhr.send(file);
+        }).then(function(video){
+          if(!video)return null;
+          note('Preparing the video...');
+          return scanVideoFrames(video.url,captured).then(function(scan){
+            if(!scan.ok||!scan.data.success){note('That video could not be used.',true);return null;}
+            return uploadVideoPoster({poster:captured.poster}).then(function(poster){
+              video.poster=poster||'';
+              markPending(video.url);
+              if(poster)markPending(poster);
+              pollMediaStatus();
+              return video;
+            });
+          });
+        });
+      });
+    }).then(function(video){
+      if($('fdVideoBtn'))$('fdVideoBtn').disabled=false;
+      if(!video)return;
+      composerVideo=video;
+      composerMedia=[];
+      renderComposerMedia();
+      renderComposerVideo();
+      note('Video attached.');
+    }).catch(function(){
+      if($('fdVideoBtn'))$('fdVideoBtn').disabled=false;
+      note('That video could not be uploaded.',true);
+    });
+  }
+
+  function trimUrlTail(value){var url=String(value||''),tail='';var punctuation=/[.,;:!?]+$/.exec(url);if(punctuation){tail=punctuation[0];url=url.slice(0,-tail.length);}while(url.slice(-1)===')'&&url.indexOf('(')===-1){tail=')'+tail;url=url.slice(0,-1);}return url;}
+  function composerUrlList(text){var list=[],pattern=/https?:\/\/[^\s<>"'`]+/gi,match;while((match=pattern.exec(String(text||'')))!==null){var url=trimUrlTail(match[0]);if(url&&/^https?:\/\/[^/?#]+/i.test(url)&&list.indexOf(url)===-1)list.push(url);}return list;}
+  function removeComposerUrl(url){var box=$('fdPostText'),pattern=new RegExp(String(url).replace(/[.*+?^${}()|[\]\\]/g,'\\$&'),'g');box.value=box.value.replace(pattern,'').replace(/[ \t]{2,}/g,' ').replace(/^\s+|\s+$/g,'');$('fdPostCount').textContent=box.value.length+' / 1200';syncPostButton();}
+  function renderComposerLinks(){var box=$('fdLinkPreview');syncPostButton();if(!box)return;if(!composerLinks.length){box.hidden=true;box.innerHTML='';return;}box.innerHTML=composerLinks.map(function(link,index){var host='';try{host=new URL(link.url).hostname.replace(/^www\./,'');}catch(_){host='';}var thumb=link.image?'<img src="'+esc(link.image)+'" alt="" loading="lazy">':'';return '<span class="pf-feed-link-chip">'+thumb+'<span class="pf-feed-link-chip-text"><small>'+esc(link.site||host)+'</small><strong>'+esc(link.title||link.url)+'</strong></span><button type="button" data-link-remove="'+index+'" aria-label="Remove link preview"><i class="fas fa-xmark"></i></button></span>';}).join('');box.hidden=false;}
+  function inspectComposerLink(url){if(linkChecks[url])return;linkChecks[url]=true;fetch('/api/profile/media/remote',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({url:url})}).then(function(response){return response.json().then(function(data){return data||{};});}).then(function(data){if(data.success&&data.url){removeComposerUrl(url);addComposerMedia(data.url);note('Image added from the pasted link.');return;}if(!data.not_image){linkChecks[url]=false;if(data.error&&data.error!=='That link cannot be read.')note(data.error,true);return;}return fetch('/api/link/preview?url='+encodeURIComponent(url),{credentials:'include'}).then(function(response){return response.json();}).then(function(preview){if(!preview||!preview.success||!preview.link)return;if(composerLinks.length>=2||composerLinks.some(function(item){return item.url===preview.link.url;}))return;composerLinks.push(preview.link);renderComposerLinks();});}).catch(function(){linkChecks[url]=false;});}
+  function scanComposerLinks(){var text=$('fdPostText').value,kept=composerLinks.filter(function(link){return text.indexOf(link.url)!==-1;});if(kept.length!==composerLinks.length){composerLinks=kept;renderComposerLinks();}composerUrlList(text).forEach(inspectComposerLink);}
+  function setMediaNote(message,error){var node=$('fdMediaNote');if(!node)return;node.textContent=message||'';node.classList.toggle('is-error',Boolean(error));}
+  function closeMediaModal(){var modal=$('fdMediaModal');if(!modal||modal.hidden)return;modal.hidden=true;document.body.classList.remove('pf-modal-open');setMediaNote('');}
+  function openMediaModal(kind){pickerKind=kind;var modal=$('fdMediaModal');if(!modal)return;modal.hidden=false;document.body.classList.add('pf-modal-open');$('fdMediaTitle').textContent=kind==='stickers'?'Discord stickers':'GIFs';var search=$('fdGifSearch');search.hidden=kind==='stickers';search.value='';setMediaNote('');var grid=$('fdPickerGrid');grid.innerHTML='<span class="pf-media-modal-empty">Loading…</span>';
+    if(kind==='stickers'){
+      var request=stickerCache?Promise.resolve(stickerCache):fetch('/api/guild/stickers',{credentials:'include'}).then(function(r){return r.json();}).then(function(data){stickerCache=Array.isArray(data.stickers)?data.stickers:[];return stickerCache;});
+      request.then(function(items){var usable=(items||[]).filter(function(sticker){return sticker&&safeMediaUrl(sticker.url)&&isImageUrl(sticker.url);});if(!usable.length){grid.innerHTML='<span class="pf-media-modal-empty">No server stickers found.</span>';return;}grid.innerHTML=usable.map(function(sticker){return '<button type="button" class="pf-media-modal-item" data-media-pick="'+esc(sticker.url.split('?')[0])+'" title="'+esc(sticker.name)+'"><img src="'+esc(sticker.url)+'" alt="" loading="lazy"><span class="sr-only">'+esc(sticker.name)+'</span></button>';}).join('');}).catch(function(){grid.innerHTML='<span class="pf-media-modal-empty">Could not load server stickers.</span>';});
+    }else{
+      var loadGifs=function(query){grid.innerHTML='<span class="pf-media-modal-empty">Loading GIFs…</span>';var url='https://api.giphy.com/v1/gifs/'+(query?'search':'trending')+'?api_key=hF2tiiF3deZinjO4V7X75pc1q1CwLTkp&limit=24&rating=pg-13'+(query?'&q='+encodeURIComponent(query):'');fetch(url).then(function(r){return r.json();}).then(function(data){var rows=Array.isArray(data.data)?data.data:[];var gifs=rows.map(function(g){var images=g.images||{},preview=images.fixed_height_small&&images.fixed_height_small.url||images.fixed_height&&images.fixed_height.url||'';var options=[images.fixed_height&&images.fixed_height.url,images.fixed_width&&images.fixed_width.url,images.downsized_medium&&images.downsized_medium.url,preview];var full='';for(var i=0;i<options.length;i++){var candidate=String(options[i]||'').split('?')[0];if(candidate&&isImageUrl(candidate)){full=candidate;break;}}return {preview:preview,url:full};}).filter(function(g){return g.preview&&g.url&&safeMediaUrl(g.url);});if(!gifs.length){grid.innerHTML='<span class="pf-media-modal-empty">No GIFs found.</span>';return;}grid.innerHTML=gifs.map(function(gif){return '<button type="button" class="pf-media-modal-item" data-media-pick="'+esc(gif.url)+'" title="GIF"><img src="'+esc(gif.preview)+'" alt="" loading="lazy"></button>';}).join('');}).catch(function(){grid.innerHTML='<span class="pf-media-modal-empty">Could not load GIFs.</span>';});};
+      loadGifs('');
+      search.oninput=function(){var value=this.value.trim();clearTimeout(gifTimer);gifTimer=setTimeout(function(){loadGifs(value);},250);};
+    }
+  }
+  // Discord's sticker CDN refuses server-side downloads, so the browser copies the
+  // sticker into our own bucket. That keeps the feed, the profile and the Discord card
+  // all able to read it.
+  function storeMediaInCdn(url){return fetch(url,{mode:'cors'}).then(function(r){if(!r.ok)throw new Error('sticker');return r.blob();}).then(function(blob){if(!blob.size||blob.size>3*1024*1024)return '';return new Promise(function(resolve){var reader=new FileReader();reader.onload=function(){resolve(String(reader.result||''));};reader.onerror=function(){resolve('');};reader.readAsDataURL(blob);});}).then(function(dataUrl){if(!dataUrl)return '';return fetch('/api/profile/media',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({data:dataUrl,kind:'post'})}).then(function(r){return r.json();}).then(function(data){return data&&data.success&&data.url?data.url:'';});}).catch(function(){return '';});}
+  $('fdMediaModal').addEventListener('click',function(event){
+    var pick=event.target.closest('[data-media-pick]');
+    if(pick){
+      var picked=pick.getAttribute('data-media-pick');
+      if(pickerKind==='stickers'){setMediaNote('Adding sticker...');storeMediaInCdn(picked).then(function(stored){addComposerMedia(stored||picked);});return;}
+      addComposerMedia(picked);
+      return;
+    }
+    if(event.target.closest('[data-media-close]'))closeMediaModal();
+  });
+  $('fdMediaPreview').addEventListener('click',function(event){var remove=event.target.closest('[data-media-remove]');if(!remove)return;composerMedia.splice(Number(remove.dataset.mediaRemove),1);renderComposerMedia();syncComposerTools();});
+  // Uploads are shrunk in the browser first, through the shared media helper.
+  function uploadComposerImage(file){var button=$('fdImageBtn');if(!window.ZyrexMedia)return Promise.resolve();if(button)button.disabled=true;note('Uploading image...');return window.ZyrexMedia.upload(file,'post').then(function(data){if(composerMedia.length>=4){note('You can attach up to 4 images.',true);return;}addComposerMedia(data.url);note('');}).catch(function(error){note(error.message||'That image could not be uploaded.',true);}).finally(function(){if(button)button.disabled=false;syncPostButton();});}
+  // A copied screenshot arrives as a file on the clipboard, so it uploads exactly like
+  // the Image button. Pasted text is scanned for links once it has landed.
+  $('fdPostText').addEventListener('paste',function(event){var data=event.clipboardData;if(!data)return;var file=null,index;if(data.files&&data.files.length){for(index=0;index<data.files.length;index+=1){if(/^image\//.test(data.files[index].type)){file=data.files[index];break;}}}if(!file&&data.items){for(index=0;index<data.items.length;index+=1){var item=data.items[index];if(item.kind==='file'&&/^image\//.test(item.type)){file=item.getAsFile();break;}}}if(file){event.preventDefault();if(file.size>8*1024*1024){note('That image is larger than 8 MB.',true);return;}uploadComposerImage(file);return;}clearTimeout(linkTimer);linkTimer=setTimeout(scanComposerLinks,60);});
+  $('fdPostText').addEventListener('input',function(){clearTimeout(linkTimer);linkTimer=setTimeout(scanComposerLinks,900);});
+  $('fdLinkPreview').addEventListener('click',function(event){var remove=event.target.closest('[data-link-remove]');if(!remove)return;composerLinks.splice(Number(remove.dataset.linkRemove),1);renderComposerLinks();});
+  var videoButton=$('fdVideoBtn'),videoInput=$('fdVideoInput');
+  if(videoButton&&videoInput){videoButton.addEventListener('click',function(){videoInput.click();});videoInput.addEventListener('change',function(){var file=videoInput.files&&videoInput.files[0];videoInput.value='';if(file)uploadComposerVideo(file);});}
+  $('fdVideoPreview').addEventListener('click',function(event){var remove=event.target.closest('[data-video-remove]');if(!remove)return;composerVideo=null;renderComposerVideo();note('');});
+  var imageButton=$('fdImageBtn'),imageInput=$('fdImageInput');
+  if(imageButton&&imageInput){imageButton.addEventListener('click',function(){imageInput.click();});imageInput.addEventListener('change',function(){var file=imageInput.files&&imageInput.files[0];imageInput.value='';if(!file)return;if(file.size>8*1024*1024){note('That image is larger than 8 MB.',true);return;}uploadComposerImage(file);});}
+  document.addEventListener('keydown',function(event){if(event.key==='Escape')closeMediaModal();});
+  var form=$('fdComposer'),textarea=$('fdPostText');
+  fetch('/api/me',{credentials:'include'}).then(function(r){return r.ok?r.json():null;}).then(function(data){var user=data&&(data.user||data.data||data);if(user&&(user.id||user.username)){viewerId=String(user.id||user.userId||'');form.hidden=false;$('fdSignIn').hidden=true;var avatar=$('fdComposerAvatar');var avatarUrl=String(user.avatar_url||'');if(avatar&&avatarUrl){avatar.src=avatarUrl;avatar.onerror=function(){this.onerror=null;this.src='/assets/default-avatar.png';};}
+      // Cards render before the session is known, so repaint once it is: repost and
+      // delete only exist for a signed-in viewer. Keep whatever page is on screen.
+      load(page>1?page:requestedPage);}}).catch(function(){});
+  textarea.addEventListener('input',function(){
+    $('fdPostCount').textContent=this.value.length+' / 1200';syncPostButton();var match=this.value.slice(0,this.selectionStart).match(/(^|\s)@([a-zA-Z0-9_.-]{0,32})$/);if(!match){closeMentions();return;}var query=match[2];if(!query){closeMentions();return;}var requestId=++mentionRequest;clearTimeout(mentionTimer);mentionTimer=setTimeout(function(){fetch('/api/guild/members?q='+encodeURIComponent(query)+'&autocomplete=1',{credentials:'include'}).then(function(r){return r.ok?r.json():null;}).then(function(data){if(requestId!==mentionRequest||document.activeElement!==textarea)return;showMentions(data&&data.success&&Array.isArray(data.members)?data.members:[]);}).catch(function(){if(requestId===mentionRequest)closeMentions();});},130);
+  });
+  textarea.addEventListener('keydown',function(event){var box=$('fdMentionSuggestions');if(box.hidden)return;if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();mentionIndex=(mentionIndex+(event.key==='ArrowDown'?1:mentionItems.length-1))%mentionItems.length;Array.prototype.forEach.call(box.children,function(node,i){node.classList.toggle('is-active',i===mentionIndex);});}else if(event.key==='Enter'||event.key==='Tab'){event.preventDefault();chooseMention(mentionIndex);}else if(event.key==='Escape')closeMentions();});
+  // Enter publishes, Shift+Enter breaks the line. Mention selection and IME input
+  // consume the key first, so they never double as "post".
+  textarea.addEventListener('keydown',function(event){
+    if(event.key!=='Enter'||event.shiftKey||event.isComposing||event.defaultPrevented)return;
+    event.preventDefault();
+    if(form.requestSubmit)form.requestSubmit();else form.dispatchEvent(new Event('submit',{cancelable:true,bubbles:true}));
+  });
+  // Pressing Enter while searching inside a modal must not submit the post.
+  $('fdMediaModal').addEventListener('keydown',function(event){if(event.key==='Enter'&&event.target.closest('input,textarea')){event.preventDefault();event.stopPropagation();}});
+  $('fdMentionSuggestions').addEventListener('mousedown',function(event){event.preventDefault();});$('fdMentionSuggestions').addEventListener('click',function(event){var option=event.target.closest('[data-mention-index]');if(option)chooseMention(Number(option.dataset.mentionIndex));});
+  document.querySelectorAll('[data-feed-picker]').forEach(function(button){button.addEventListener('click',function(){openMediaModal(button.dataset.feedPicker);});});
+  // Editing rewrites the words only; likes, replies and the Discord embed stay put.
+  function startPostEdit(button){
+    var postId=button.getAttribute('data-edit-post'),card=button.closest('.pf-feed-entry');
+    if(!card||card.querySelector('.pf-post-edit'))return;
+    var body=card.querySelector('.pf-post-text');
+    if(!body)return;
+    var editor=document.createElement('form');
+    editor.className='pf-post-edit';
+    editor.innerHTML='<textarea maxlength="1200" rows="3" aria-label="Edit your post">'+esc(postTexts[postId]||'')+'</textarea><div class="pf-post-edit-bar"><button type="button" class="pf-post-action" data-edit-cancel>Cancel</button><button type="submit" class="pf-post-action is-primary">Save</button></div>';
+    body.replaceWith(editor);
+    var area=editor.querySelector('textarea');
+    area.focus();area.setSelectionRange(area.value.length,area.value.length);
+    editor.addEventListener('click',function(clickEvent){if(clickEvent.target.closest('[data-edit-cancel]'))load(1);});
+    editor.addEventListener('submit',function(submitEvent){
+      submitEvent.preventDefault();
+      var next=area.value.trim();
+      if(!next){note('Write something first.',true);return;}
+      fetch('/api/profile/posts',{method:'PATCH',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:postId,text:next})})
+        .then(function(response){return response.json().then(function(data){if(!response.ok||!data.success)throw new Error(data.error||'Could not save your edit.');return data;});})
+        .then(function(data){
+          postTexts[postId]=data.post.text;
+          var fresh=document.createElement('div');
+          fresh.className='pf-post-text';
+          fresh.innerHTML=renderText(data.post.text,data.post.mentions);
+          editor.replaceWith(fresh);
+          var stamp=card.querySelector('.pf-post-stamp');
+          if(stamp&&stamp.parentNode&&stamp.parentNode.textContent.indexOf('edited')===-1)stamp.insertAdjacentText('afterend',' \u00b7 edited');
+          note('Your post was updated.');
+        })
+        .catch(function(error){note(error.message||'Could not save your edit.',true);});
+    });
+  }
+  function sharePost(postId,button){
+    var card=document.querySelector('[data-social-id="'+postId+'"]');
+    var href=(card&&card.querySelector('.pf-post-stamp'))?card.querySelector('.pf-post-stamp').getAttribute('href'):'/post/'+postId;
+    var url=href.indexOf('http')===0?href:location.origin+href;
+    if(navigator.share){navigator.share({title:'Zyrex post',url:url}).catch(function(){});return;}
+    var done=function(){if(!button)return;var previous=button.innerHTML;button.innerHTML='<i class="fas fa-check"></i> Copied';setTimeout(function(){button.innerHTML=previous;},1600);};
+    if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(url).then(done).catch(function(){window.prompt('Copy this link',url);});
+    else window.prompt('Copy this link',url);
+  }
+  $('fdGrid').addEventListener('click',function(event){
+    var pinButton=event.target.closest('[data-pin-post]');
+    if(pinButton){
+      if(pinButton.disabled)return;
+      var unpin=pinButton.getAttribute('data-pinned')==='1';
+      pinButton.disabled=true;
+      fetch('/api/profile/posts/pin',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:unpin?'':pinButton.getAttribute('data-pin-post')})})
+        .then(function(response){return response.json().then(function(data){if(!response.ok||!data.success)throw new Error(data.error||'Could not update your pinned post.');return data;});})
+        .then(function(){note(unpin?'Post unpinned.':'Post pinned to your profile.');load(1);})
+        .catch(function(error){note(error.message||'Could not update your pinned post.',true);pinButton.disabled=false;});
+      return;
+    }
+    var editButton=event.target.closest('[data-edit-post]');
+    if(editButton){startPostEdit(editButton);return;}
+    var shareButton=event.target.closest('[data-share-post]');
+    if(shareButton){sharePost(shareButton.getAttribute('data-share-post'),shareButton);return;}
+    var repostButton=event.target.closest('[data-repost-author]');
+    if(repostButton){
+      if(repostButton.disabled)return;
+      repostButton.disabled=true;
+      fetch('/api/profile/posts',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({repost_of:{author_id:repostButton.dataset.repostAuthor,post_id:repostButton.dataset.repostId}})})
+        .then(function(r){return r.json().then(function(d){if(!r.ok||!d.success)throw new Error(d.error||'Could not repost.');return d;});})
+        .then(function(data){note(data.reposted===false?'Repost removed.':'Reposted to your profile.');load(1);})
+        .catch(function(error){if(String(error.message||'').indexOf('Sign in')!==-1){location.href='/api/login?redirect=%2Ffeed';return;}note(error.message||'Could not repost.',true);})
+        .finally(function(){repostButton.disabled=false;});
+      return;
+    }
+    var button=event.target.closest('[data-delete-post]');if(!button)return;
+    if(!window.confirm('Delete this post? This cannot be undone.'))return;
+    button.disabled=true;
+    fetch('/api/profile/posts?id='+encodeURIComponent(button.dataset.deletePost),{method:'DELETE',credentials:'include'}).then(function(r){return r.json().then(function(d){if(!r.ok||!d.success)throw new Error(d.error||'Could not delete the post.');return d;});}).then(function(){
+      var entry=button.closest('.pf-feed-entry');if(entry)entry.remove();
+      if(!$('fdGrid').children.length){$('fdContent').hidden=true;$('fdEmpty').hidden=false;$('fdEmptyText').textContent=emptyCopy();}
+      note('Post deleted.');
+    }).catch(function(error){button.disabled=false;note(error.message||'Could not delete the post.',true);});
+  });
+  // The whole card opens the post, but only when the click did not land on a control.
+  $('fdGrid').addEventListener('click',function(event){
+    if(event.defaultPrevented||event.button!==0||event.metaKey||event.ctrlKey||event.shiftKey||event.altKey)return;
+    var target=event.target&&event.target.closest?event.target:event.target&&event.target.parentElement;
+    if(!target||!target.closest)return;
+    var entry=target.closest('[data-post-open]');
+    if(!entry)return;
+    if(target.closest('a,button,video,audio,input,textarea,select,label,.pf-social-interactions'))return;
+    var selection=window.getSelection?window.getSelection():null;
+    if(selection&&!selection.isCollapsed&&entry.contains(selection.anchorNode))return;
+    location.href=entry.getAttribute('data-post-open');
+  });
+  form.addEventListener('submit',function(event){event.preventDefault();var message=textarea.value.trim(),submit=$('fdPostSubmit');if(!message&&!composerMedia.length){note('Write something first.',true);return;}submit.disabled=true;note('Publishing...');fetch('/api/profile/posts',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:message,media:composerMedia.slice(),video:composerVideo,links:composerLinks.slice(),mentions:Array.from(mentions,function(entry){return {id:entry[0],username:entry[1]};}).filter(function(m){return message.toLowerCase().indexOf('@'+m.username.toLowerCase())!==-1;})})}).then(function(r){return r.json().then(function(data){if(!r.ok||!data.success)throw new Error(data.error||'Post could not be published.');return data;});}).then(function(data){textarea.value='';mentions.clear();composerMedia=[];composerVideo=null;composerLinks=[];linkChecks={};renderComposerMedia();renderComposerVideo();renderComposerLinks();$('fdPostCount').textContent='0 / 1200';closeMediaModal();note('Your post is live.');feedSort='latest';syncFeedTabs();var created=data&&data.post;if(created&&!created.repost_of){var item={kind:'member_post',id:created.id,author_id:created.author_id,author:created.author,text:created.text,mentions:created.mentions,media:created.media,links:created.links,video:created.video,created_at:created.created_at};$('fdGrid').insertAdjacentHTML('afterbegin',postCard(item));var node=$('fdGrid').firstElementChild;$('fdContent').hidden=false;$('fdEmpty').hidden=true;if(window.ZyrexSocialInteractions&&node)window.ZyrexSocialInteractions.mount(node);node&&node.classList.add('is-fresh');setTimeout(function(){node&&node.classList.remove('is-fresh');},2400);focusHashPost();}else{load(1);}}).catch(function(error){if(error.message==='Sign in to post.')location.href='/api/login?redirect=%2Ffeed';var text=String(error.message||'Post could not be published.');note(text.indexOf('still being prepared')!==-1||text.indexOf('not available')!==-1?'That attachment is not available right now.':text,true);if(text.indexOf('still being prepared')!==-1)pollMediaStatus();}).finally(function(){syncPostButton();});});
+  document.querySelectorAll('[data-feed-sort]').forEach(function(button){button.addEventListener('click',function(){var next=button.dataset.feedSort==='trending'?'trending':'latest';if(next===feedSort)return;feedSort=next;syncFeedTabs();$('fdGrid').innerHTML='';$('fdFoot').innerHTML='';$('fdEmpty').hidden=true;$('fdContent').hidden=false;$('fdLoading').hidden=false;load(1);});});
+  syncFeedTabs();
+  if(feedTag&&$('fdTagFilter')){var tagChip=$('fdTagFilter');tagChip.hidden=false;tagChip.innerHTML='#'+esc(feedTag)+' <i class="fas fa-xmark"></i>';tagChip.title='Clear the #'+feedTag+' filter';}
+  load(requestedPage);
+})();
+</script>
+    <script src="/js/page-motion.js?v=6"></script>
+</body>
+
+</html>

@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scenepacks | Zyrex</title>
+    <meta name="description" content="Scenepacks and stuff, ready to download.">
+    <meta name="theme-color" content="#0f0f11">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Zyrex">
+    <meta property="og:url" content="https://zyrexediting.xyz/scenepacks">
+    <meta property="og:title" content="Scenepacks | Zyrex">
+    <meta property="og:description" content="Scenepacks and stuff, ready to download.">
+    <meta property="og:image" content="https://zyrexediting.xyz/assets/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://zyrexediting.xyz/assets/og-image.png">
+    <link rel="icon" type="image/png" href="/assets/content.png">
+    <link rel="stylesheet" href="css/style.css?v=92">
+    <link rel="stylesheet" href="css/scenepacks.css?v=15">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,800,900&amp;display=swap">
+    <link rel="stylesheet" href="/css/page-loader.css?v=1">
+    <link rel="stylesheet" href="/css/glass.css?v=67">
+    <link rel="stylesheet" href="/css/atmosphere.css?v=7">
+    <link rel="stylesheet" href="/css/i18n.css?v=3">
+    <script src="/js/i18n.js?v=15" defer></script>
+</head>
+
+<body>
+    <div class="zr-sweep" aria-hidden="true"></div>
+    <div class="lq-veil" aria-hidden="true"></div>
+
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo"><img src="/assets/content.png" alt="ZYREX" class="logo-img"><span
+                    class="logo-text">yrex</span></a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="/">Home</a></li>
+                <li><a href="/leaks">Leaks</a></li>
+                <li><a href="/feed">Feed</a></li>
+                <li><a href="/plugins">Plugins</a></li>
+                <li><a href="/requests">Requests</a></li>
+                <li><a href="/audio">Audios</a></li>
+                <li><a href="/scenepacks" class="active">Scenepacks</a></li>
+            </ul>
+            <div class="nav-actions">
+                <div id="authBtn"></div>
+                <button class="hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="sp-app">
+        <section class="sp-hero">
+            <div class="sp-hero-mark">
+                <img src="/assets/content.png" alt="Zyrex">
+            </div>
+            <h1>Zyrex™ Scenepacks</h1>
+        </section>
+
+        <div class="sp-shell">
+            <div class="sp-searchbar">
+                <div class="sp-suggest">
+                    <label class="sp-search-field">
+                        <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+                        <input type="search" id="spSearch" placeholder="Search scenepacks" autocomplete="off"
+                            aria-label="Search scenepacks">
+                        <kbd>Ctrl + K</kbd>
+                    </label>
+                    <div class="sp-suggest-list" id="spSuggest" hidden></div>
+                </div>
+                <button type="button" class="sp-icon-btn" id="spFiltersBtn" aria-label="Filters"
+                    aria-expanded="false"><i class="fas fa-sliders" aria-hidden="true"></i></button>
+            </div>
+
+            <div id="spFilterPanel" hidden>
+                <div class="sp-searchbar" style="max-width:none;margin-bottom:34px;flex-wrap:wrap">
+                    <button type="button" class="sp-btn sp-btn-ghost is-on" data-type-filter="">All</button>
+                    <button type="button" class="sp-btn sp-btn-ghost" data-type-filter="movie">Movies</button>
+                    <button type="button" class="sp-btn sp-btn-ghost" data-type-filter="series">TV</button>
+                    <button type="button" class="sp-btn sp-btn-ghost" data-type-filter="anime">Anime</button>
+                    <button type="button" class="sp-btn sp-btn-ghost" data-type-filter="game">Games</button>
+                    <select class="sp-input" id="spFilterSort" aria-label="Sort scenepacks"
+                        style="max-width:220px;margin-left:auto;height:42px">
+                        <option value="recent">Newest first</option>
+                        <option value="popular">Most downloaded</option>
+                        <option value="views">Most viewed</option>
+                        <option value="rating">Highest IMDb rating</option>
+                        <option value="az">A → Z</option>
+                    </select>
+                </div>
+            </div>
+
+            <section class="sp-rail" id="spResultsSection" style="display:none">
+                <div class="sp-rail-head">
+                    <h2 id="spResultsLabel">Results</h2>
+                    <span></span>
+                </div>
+                <div class="sp-rail-track" id="spResults"></div>
+            </section>
+
+            <section class="sp-rail">
+                <div class="sp-rail-head">
+                    <h2>Trending</h2>
+                    <button type="button" class="see-all" data-see-all="trending">See all <i
+                            class="fas fa-arrow-right" aria-hidden="true"></i></button>
+                </div>
+                <div class="sp-rail-track" id="spTrending"></div>
+            </section>
+
+            <section class="sp-rail">
+                <div class="sp-rail-head">
+                    <h2>Most Popular</h2>
+                    <button type="button" class="see-all" data-see-all="popular">See all <i
+                            class="fas fa-arrow-right" aria-hidden="true"></i></button>
+                </div>
+                <div class="sp-rail-track" id="spPopular"></div>
+            </section>
+
+            <section class="sp-rail">
+                <div class="sp-rail-head">
+                    <h2>New</h2>
+                    <button type="button" class="see-all" data-see-all="new">See all <i
+                            class="fas fa-arrow-right" aria-hidden="true"></i></button>
+                </div>
+                <div class="sp-rail-track" id="spNew"></div>
+            </section>
+
+            <section class="sp-cats" id="spCatsSection">
+                <h2>Top by category</h2>
+                <div class="sp-cat-grid" id="spCats"></div>
+            </section>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <a href="/" class="hero-brand-lockup footer-brand-lockup">
+                        <img src="/assets/content.png" alt="Zyrex Logo" class="hero-brand-icon">
+                        <div class="hero-brand-text-col">
+                            <span class="hero-brand-title">Zyrex<sup>™</sup></span>
+                            <span class="hero-brand-sub">EDITING</span>
+                        </div>
+                    </a>
+                    <p>Editing leaks and stuff.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/leaks">Leaks</a></li>
+                        <li><a href="/feed">Feed</a></li>
+                        <li><a href="/plugins">Plugins</a></li>
+                        <li><a href="/requests">Requests</a></li>
+                        <li><a href="/audio">Audios</a></li>
+                        <li><a href="/scenepacks">Scenepacks</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="/terms">Terms of Service</a></li>
+                        <li><a href="/privacy">Privacy Policy</a></li>
+                        <li><a href="/dmca">DMCA</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="https://discord.gg/4J3tars4QS" target="_blank" rel="noopener">Discord</a></li>
+                        <li><a href="/#contact">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Zyrex Editing. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/auth.js?v=19"></script>
+    <script src="js/script.js?v=92"></script>
+    <script src="/js/safe-dom.js?v=2"></script>
+    <script src="/js/scenepacks-common.js?v=7"></script>
+    <script src="/js/scenepacks.js?v=4"></script>
+    <script src="/js/page-motion.js?v=6"></script>
+</body>
+
+</html>

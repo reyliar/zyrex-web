@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#100911">
+    <meta name="description" content="Apply for the leak uploader role on Zyrex.">
+    <title>Leak Uploader application | Zyrex</title>
+    <link rel="icon" type="image/png" href="/assets/content.png">
+    <link rel="stylesheet" href="/css/style.css?v=92">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,800,900&f[]=outfit@400,500,600,700,800,900&display=swap">
+    <link rel="stylesheet" href="/css/glass.css?v=67">
+    <link rel="stylesheet" href="/css/atmosphere.css?v=7">
+    <link rel="stylesheet" href="/css/staff-apply.css?v=6">
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.fontshare.com">
+    <link rel="stylesheet" href="/css/i18n.css?v=3">
+    <script src="/js/i18n.js?v=18" defer></script>
+</head>
+<body class="staff-page" data-staff-role="leak-uploader">
+    <div class="zr-sweep" aria-hidden="true"></div>
+    <div class="lq-veil" aria-hidden="true"></div>
+
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="/">Home</a></li>
+                <li><a href="/leaks">Leaks</a></li>
+                <li><a href="/feed">Feed</a></li>
+                <li><a href="/plugins">Plugins</a></li>
+                <li><a href="/requests">Requests</a></li>
+                <li><a href="/audio">Audios</a></li>
+            </ul>
+            <div class="nav-actions">
+                <div id="authBtn"></div>
+                <button class="hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="staff-shell">
+        <a class="staff-back" href="/apply"><i class="fa-solid fa-arrow-left"></i> All staff roles</a>
+
+        <header class="staff-hero">
+            <span class="staff-kicker"><i class="fa-solid fa-cloud-arrow-up"></i> Staff application</span>
+            <h1><span data-role-label>Leak Uploader</span> application</h1>
+            <p data-role-blurb>Find, check and publish editing leaks and stuff.</p>
+            <div class="staff-hero-meta">
+                <span><i class="fa-solid fa-clock"></i> Most reviews take a few days</span>
+                <span><i class="fa-brands fa-discord"></i> We answer by Discord DM</span>
+            </div>
+        </header>
+
+        <p class="staff-intake-note" id="closedNotice" hidden><i class="fa-solid fa-lock"></i><span>This role is closed right now.</span></p>
+
+        <section class="staff-card" id="statusCard" hidden>
+            <div class="staff-card-head">
+                <span class="staff-card-icon"><i class="fa-solid fa-inbox"></i></span>
+                <div>
+                    <h2>Your applications</h2>
+                    <p>What you have sent for this role.</p>
+                </div>
+            </div>
+            <div class="staff-card-body">
+                <ul class="staff-status-list" id="statusList"></ul>
+            </div>
+        </section>
+
+        <section class="staff-gate" id="authGate" hidden>
+            <div class="staff-gate-icon"><i class="fa-brands fa-discord"></i></div>
+            <h2>Sign in to apply</h2>
+            <p>We link applications to your Discord account so we can DM you the answer.</p>
+            <a class="staff-btn is-primary" href="/api/login?redirect=%2Fapply-uploader"><i class="fa-brands fa-discord"></i> Continue with Discord</a>
+        </section>
+
+        <form class="staff-form" id="applyForm" novalidate hidden>
+            <section class="staff-card">
+                <div class="staff-card-head">
+                    <span class="staff-card-icon"><i class="fa-solid fa-id-card"></i></span>
+                    <div>
+                        <h2>1. About you</h2>
+                        <p>Only the founder reads this.</p>
+                    </div>
+                </div>
+                <div class="staff-card-body staff-fields">
+                    <div class="staff-field">
+                        <label for="fullName">Name</label>
+                        <input id="fullName" name="full_name" type="text" maxlength="60" placeholder="Your name" autocomplete="name" required>
+                        <p class="staff-field-error" data-error-for="full_name"></p>
+                    </div>
+                    <div class="staff-field">
+                        <label for="age">Age</label>
+                        <input id="age" name="age" type="number" min="13" max="99" step="1" placeholder="16" required>
+                        <p class="staff-field-hint">You must be 13 or older, same as Discord.</p>
+                        <p class="staff-field-error" data-error-for="age"></p>
+                    </div>
+                    <div class="staff-field">
+                        <label for="timezone">Timezone <span>(optional)</span></label>
+                        <input id="timezone" name="timezone" type="text" maxlength="40" placeholder="GMT+3 / Europe/Istanbul">
+                    </div>
+                    <div class="staff-field">
+                        <label for="hours">Weekly availability <span>(optional)</span></label>
+                        <input id="hours" name="hours_per_week" type="number" min="1" max="80" step="1" placeholder="10">
+                    </div>
+                </div>
+            </section>
+
+            <section class="staff-card">
+                <div class="staff-card-head">
+                    <span class="staff-card-icon"><i class="fa-solid fa-briefcase"></i></span>
+                    <div>
+                        <h2>2. Experience</h2>
+                        <p>Not required — it just helps to know.</p>
+                    </div>
+                </div>
+                <div class="staff-card-body staff-fields">
+                    <div class="staff-field">
+                        <label>Have you done something similar before?</label>
+                        <div class="staff-toggle" id="experienceToggle" role="radiogroup" aria-label="Experience">
+                            <button type="button" data-experience="yes" role="radio" aria-checked="false">Yes</button>
+                            <button type="button" data-experience="no" role="radio" aria-checked="false">No</button>
+                        </div>
+                        <p class="staff-field-error" data-error-for="has_experience"></p>
+                    </div>
+                    <div class="staff-field" id="experienceWrap" hidden>
+                        <label for="experienceDetails">Tell us about it</label>
+                        <textarea id="experienceDetails" name="experience_details" rows="4" maxlength="1200" placeholder="Where, what you did, and how long."></textarea>
+                        <p class="staff-field-error" data-error-for="experience_details"></p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="staff-card">
+                <div class="staff-card-head">
+                    <span class="staff-card-icon"><i class="fa-solid fa-list-check"></i></span>
+                    <div>
+                        <h2>3. Uploader questions</h2>
+                        <p>Answer as specifically as you can.</p>
+                    </div>
+                </div>
+                <div class="staff-card-body staff-fields" id="roleQuestions"></div>
+            </section>
+
+            <section class="staff-card">
+                <div class="staff-card-head">
+                    <span class="staff-card-icon"><i class="fa-solid fa-scale-balanced"></i></span>
+                    <div>
+                        <h2>4. Why you, and the rules</h2>
+                        <p>Short answer, then the rules this role follows.</p>
+                    </div>
+                </div>
+                <div class="staff-card-body staff-fields">
+                    <div class="staff-field">
+                        <label for="motivation">Why do you want this role?</label>
+                        <textarea id="motivation" name="motivation" rows="4" maxlength="1000" placeholder="What you would do in your first month."></textarea>
+                        <p class="staff-field-error" data-error-for="motivation"></p>
+                    </div>
+                    <ul class="staff-rules" id="roleRules"></ul>
+                    <label class="staff-check">
+                        <input type="checkbox" id="rulesAgree">
+                        <span>I read the <a href="/terms" target="_blank" rel="noopener">site rules</a> and the rules above, and I will follow them.</span>
+                    </label>
+                    <p class="staff-field-error" data-error-for="rules"></p>
+                    <div class="staff-submit-row">
+                        <p class="staff-form-status" id="formStatus" role="status" aria-live="polite"></p>
+                        <button class="staff-btn is-primary" type="submit" id="submitBtn"><i class="fa-solid fa-paper-plane"></i> Send application</button>
+                    </div>
+                </div>
+            </section>
+        </form>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <a href="/" class="hero-brand-lockup footer-brand-lockup">
+                        <img src="/assets/content.png" alt="Zyrex Logo" class="hero-brand-icon">
+                        <div class="hero-brand-text-col">
+                            <span class="hero-brand-title">Zyrex<sup>™</sup></span>
+                            <span class="hero-brand-sub">EDITING</span>
+                        </div>
+                    </a>
+                    <p>Editing leaks and stuff.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/leaks">Leaks</a></li>
+                        <li><a href="/feed">Feed</a></li>
+                        <li><a href="/plugins">Plugins</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="/terms">Terms of Service</a></li>
+                        <li><a href="/privacy">Privacy Policy</a></li>
+                        <li><a href="/dmca">DMCA</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="https://discord.gg/4J3tars4QS" target="_blank" rel="noopener">Discord</a></li>
+                        <li><a href="/apply">Staff application</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Zyrex Editing. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="/js/auth.js?v=19"></script>
+    <script src="/js/script.js?v=92"></script>
+    <script src="/js/page-motion.js?v=6"></script>
+    <script src="/js/staff-apply.js?v=3"></script>
+</body>
+</html>

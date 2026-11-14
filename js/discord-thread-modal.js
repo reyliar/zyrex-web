@@ -49,7 +49,7 @@
                 display: flex;
                 flex-direction: column;
                 transition: transform 0.32s cubic-bezier(0.16, 1, 0.3, 1);
-                font-family: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                font-family: 'Satoshi', sans-serif;
                 color: #dbdee1;
                 overflow: hidden;
             }

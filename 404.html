@@ -3,184 +3,119 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>404 — Page Not Found | Zyrex</title>
-    <meta name="description" content="The page you requested could not be found on Zyrex Editing.">
+    <title>404 | Zyrex</title>
+    <meta name="robots" content="noindex, nofollow">
     <link rel="icon" type="image/png" href="/assets/content.png">
+    <link rel="stylesheet" href="/css/style.css?v=92">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,800,900&display=swap">
     <style>
-        :root {
-            --cherry: #ff2b52;
-            --cherry-rgb: 255, 43, 82;
-            --dark: #060608;
-            --light: #ffffff;
-            --gray: rgba(255, 255, 255, 0.45);
-        }
-        * { margin:0; padding:0; box-sizing:border-box }
-        body {
-            background: #060608;
-            color: var(--light);
-            font-family: 'Poppins', sans-serif;
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            position: relative;
-        }
-        .bg-grid {
-            position: fixed; inset:0; pointer-events: none; z-index:0;
-            background-image: radial-gradient(circle at 50% 35%, rgba(255,43,82,0.15) 0%, transparent 65%);
-        }
-        .glow {
-            position: fixed;
-            width: 500px; height: 500px;
-            border-radius: 50%;
-            filter: blur(140px);
-            opacity: .14;
-            pointer-events: none;
-            background: var(--cherry);
-            top: 25%; left: 50%; transform: translate(-50%,-50%);
-        }
+        :root { --err-bg:#141416; --err-ink:#6f6f78; --err-code:#777781; --err-btn-bg:#2a2a2f; --err-btn-ink:#c9c9d1; --err-btn-hover:#35353c; }
+        html[data-zyrex-theme="light"] { --err-bg:#f5f7fc; --err-ink:#46618f; --err-code:#6d84a8; --err-btn-bg:#1b4fa8; --err-btn-ink:#ffffff; --err-btn-hover:#133a80; }
+        html, body { margin:0; min-height:100%; background:var(--err-bg); }
+        body.err-body { display:flex; flex-direction:column; min-height:100vh; background:var(--err-bg); color:var(--err-ink); font-family:'Satoshi',system-ui,sans-serif; }
+        .err-main { position:relative; flex:1 1 auto; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:34px; padding:120px 24px; text-align:center; background:var(--err-bg); }
+        .err-main::before { content:""; position:absolute; inset:0 0 auto; height:150px; background:linear-gradient(180deg,rgba(6, 6, 8, .92),rgba(20, 20, 22, 0)); pointer-events:none; }
+        .err-main::after { content:""; position:absolute; inset:auto 0 0; height:150px; background:linear-gradient(0deg,rgba(6, 6, 8, .92),rgba(20, 20, 22, 0)); pointer-events:none; }
+        .err-code { position:relative; font-size:clamp(4.6rem,17vw,11rem); font-weight:800; letter-spacing:.06em; line-height:1; color:var(--err-code); }
+        .err-home { position:relative; display:inline-flex; align-items:center; justify-content:center; padding:13px 32px; border:0; border-radius:0; background:var(--err-btn-bg); color:var(--err-btn-ink); font:inherit; font-size:.8rem; font-weight:750; letter-spacing:.04em; text-decoration:none; transition:background .15s ease,color .15s ease; }
+        .err-home:hover { background:var(--err-btn-hover); color:#fff; }
+        html[data-zyrex-theme="light"] .err-main::before, html[data-zyrex-theme="light"] .err-main::after { display:none; }
 
-        /* iOS 26 GLASS CONTAINER CARD */
-        .wrap {
-            position: relative; z-index:1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            padding: 46px 36px;
-            max-width: 520px;
-            width: calc(100% - 40px);
-            background: rgba(14, 10, 18, 0.78);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 32px;
-            backdrop-filter: blur(36px) saturate(210%);
-            -webkit-backdrop-filter: blur(36px) saturate(210%);
-            box-shadow: 0 30px 70px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(255, 255, 255, 0.15);
-        }
-
-        .code-badge {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 12px;
-        }
-        .code-badge img {
-            width: 54px;
-            height: 54px;
-            object-fit: contain;
-            filter: drop-shadow(0 0 14px rgba(255,43,82,0.6));
-        }
-
-        .code {
-            font-size: clamp(5.5rem, 16vw, 8rem);
-            font-weight: 900;
-            letter-spacing: -3px;
-            font-family: 'Outfit', sans-serif;
-            background: linear-gradient(135deg, #ffffff 0%, #ff6b8b 50%, #ff2b52 100%);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            line-height: 1;
-            margin-bottom: 6px;
-            text-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        
-        .tag {
-            font-size: 0.68rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: #ff6b8b;
-            background: rgba(255, 43, 82, 0.12);
-            border: 1px solid rgba(255, 43, 82, 0.3);
-            padding: 6px 18px;
-            border-radius: 999px;
-            margin-bottom: 20px;
-        }
-        
-        h1 {
-            font-size: 1.6rem;
-            font-weight: 800;
-            font-family: 'Outfit', sans-serif;
-            color: #fff;
-            margin-bottom: 10px;
-            letter-spacing: -0.3px;
-        }
-
-        p {
-            color: var(--gray);
-            font-size: 0.88rem;
-            margin-bottom: 28px;
-            max-width: 400px;
-            line-height: 1.6;
-        }
-        
-        .btns {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            justify-content: center;
-            width: 100%;
-        }
-        
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            padding: 13px 26px;
-            border-radius: 999px;
-            font-size: 0.85rem;
-            font-weight: 700;
-            text-decoration: none;
-            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-            font-family: inherit;
-            cursor: pointer;
-        }
-        .btn-primary {
-            background: rgba(255, 43, 82, 0.16);
-            border: 1px solid rgba(255, 43, 82, 0.4);
-            color: #fff;
-            box-shadow: 0 4px 20px rgba(255, 43, 82, 0.25);
-            backdrop-filter: blur(16px);
-        }
-        .btn-primary:hover {
-            background: rgba(255, 43, 82, 0.28);
-            box-shadow: 0 10px 30px rgba(255, 43, 82, 0.4);
-            transform: scale(1.03);
-        }
-        .btn-ghost {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            color: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(16px);
-        }
-        .btn-ghost:hover {
-            background: rgba(255, 255, 255, 0.12);
-            color: #fff;
-            transform: scale(1.03);
-        }
     </style>
+    <link rel="stylesheet" href="/css/glass.css?v=67">
+    <link rel="stylesheet" href="/css/atmosphere.css?v=7">
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.fontshare.com">
+    <link rel="stylesheet" href="/css/i18n.css?v=3">
+    <script src="/js/i18n.js?v=15" defer></script>
 </head>
-<body>
-    <div class="bg-grid"></div>
-    <div class="glow"></div>
-    
-    <div class="wrap">
-        <div class="code-badge">
-            <img src="/assets/content.png" alt="Zyrex">
+<body class="err-body">
+    <div class="zr-sweep" aria-hidden="true"></div>
+    <div class="lq-veil" aria-hidden="true"></div>
+<nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo"><img src="/assets/content.png" alt="ZYREX" class="logo-img"><span
+                    class="logo-text">yrex</span></a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="/">Home</a></li>
+                <li><a href="/leaks" class="active">Leaks</a></li><li><a href="/feed">Feed</a></li>
+                <li><a href="/plugins">Plugins</a></li>
+                <li><a href="/requests">Requests</a></li>
+                <li><a href="/audio">Audios</a></li>
+                
+            </ul>
+            <div class="nav-actions">
+                <div id="authBtn"></div>
+
+                <button class="hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+            </div>
         </div>
-        <div class="code">404</div>
-        <div class="tag">Page Not Found</div>
-        <h1>Lost in the Void?</h1>
-        <p>The link you followed might be broken, moved or no longer exists. Let's get you back on track.</p>
-        <div class="btns">
-            <a href="/" class="btn btn-primary"><i class="fas fa-home"></i> Back to Home</a>
-            <a href="/resources" class="btn btn-ghost"><i class="fas fa-cubes"></i> Browse Resources</a>
+    </nav>
+
+    <main class="err-main">
+        <div class="err-code" id="errCode">404</div>
+        <a class="err-home" href="https://zyrexediting.xyz">Back to home</a>
+    </main>
+
+<footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                                <div class="footer-brand">
+                    <a href="/" class="hero-brand-lockup footer-brand-lockup">
+                        <img src="/assets/content.png" alt="Zyrex Logo" class="hero-brand-icon">
+                        <div class="hero-brand-text-col">
+                            <span class="hero-brand-title">Zyrex<sup>™</sup></span>
+                            <span class="hero-brand-sub">EDITING</span>
+                        </div>
+                    </a>
+                    <p>Editing leaks and stuff.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/leaks">Leaks</a></li>
+                        <li><a href="/feed">Feed</a></li>
+                        <li><a href="/plugins">Plugins</a></li>
+                        <li><a href="/requests">Requests</a></li>
+                        <li><a href="/audio">Audios</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="/terms">Terms of Service</a></li>
+                        <li><a href="/privacy">Privacy Policy</a></li>
+                        <li><a href="/dmca">DMCA</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="https://discord.gg/4J3tars4QS" target="_blank" rel="noopener">Discord</a></li>
+                        <li><a href="/#contact">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Zyrex Editing. All rights reserved.</p>
+            </div>
         </div>
-    </div>
+    </footer>
+
+    <script src="/js/chunks/chunk-store.js?v=1"></script>
+    <script src="/js/auth.js?v=19"></script>
+    <script src="/js/script.js?v=92"></script>
+    <script>
+        (function () {
+            var match = /[?&]code=(\d{3})/.exec(location.search || '');
+            var code = match ? match[1] : '404';
+            document.getElementById('errCode').textContent = code;
+            document.title = code + ' | Zyrex';
+        })();
+    </script>
+    <script src="/js/page-motion.js?v=6"></script>
 </body>
 </html>

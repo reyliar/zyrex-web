@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scenepack Control — Zyrex</title>
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="theme-color" content="#0f0f11">
+    <link rel="icon" type="image/png" href="/assets/content.png">
+    <link rel="stylesheet" href="css/style.css?v=92">
+    <link rel="stylesheet" href="css/scenepacks.css?v=15">
+    <link rel="stylesheet" href="css/scenepacks-control.css?v=3">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,800,900&amp;display=swap">
+    <link rel="stylesheet" href="/css/page-loader.css?v=1">
+    <link rel="stylesheet" href="/css/glass.css?v=67">
+    <link rel="stylesheet" href="/css/atmosphere.css?v=7">
+    <link rel="stylesheet" href="/css/i18n.css?v=3">
+    <script src="/js/i18n.js?v=15" defer></script>
+</head>
+
+<body>
+    <div class="zr-sweep" aria-hidden="true"></div>
+    <div class="lq-veil" aria-hidden="true"></div>
+
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo"><img src="/assets/content.png" alt="ZYREX" class="logo-img"><span
+                    class="logo-text">yrex</span></a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="/">Home</a></li>
+                <li><a href="/leaks">Leaks</a></li>
+                <li><a href="/feed">Feed</a></li>
+                <li><a href="/plugins">Plugins</a></li>
+                <li><a href="/requests">Requests</a></li>
+                <li><a href="/audio">Audios</a></li>
+                <li><a href="/scenepacks" class="active">Scenepacks</a></li>
+            </ul>
+            <div class="nav-actions">
+                <div id="authBtn"></div>
+                <button class="hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="sp-app spc-app">
+        <nav class="sp-breadcrumb" aria-label="Breadcrumb">
+            <a href="/"><i class="fas fa-house" aria-hidden="true"></i> Home</a>
+            <span class="sep">/</span>
+            <a href="/scenepacks"><i class="fas fa-film" aria-hidden="true"></i> Scenepacks</a>
+            <span class="sep">/</span>
+            <span class="current">Control</span>
+        </nav>
+
+        <div class="spc-shell">
+            <header class="spc-head">
+                <div>
+                    <h1><i class="fas fa-sliders" aria-hidden="true"></i> Scenepack Control</h1>
+                    <p>Every pack, every title page and the production queue in one place.</p>
+                </div>
+                <div class="spc-head-actions">
+                    <a class="sp-btn sp-btn-ghost" href="/upload"><i class="fas fa-arrow-left" aria-hidden="true"></i> Studio</a>
+                    <button type="button" class="sp-btn sp-btn-primary" id="spcRefresh"><i class="fas fa-rotate" aria-hidden="true"></i> Refresh</button>
+                </div>
+            </header>
+
+            <div class="spc-stats" id="spcStats"></div>
+
+            <div class="spc-tabs" role="tablist">
+                <button type="button" class="spc-tab is-on" data-spc-tab="packs" role="tab"><i class="fas fa-box" aria-hidden="true"></i> Scenepacks</button>
+                <button type="button" class="spc-tab" data-spc-tab="titles" role="tab"><i class="fas fa-clapperboard" aria-hidden="true"></i> Title pages</button>
+            </div>
+
+            <section class="spc-pane" data-spc-pane="packs">
+                <div class="spc-toolbar">
+                    <label class="spc-search">
+                        <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+                        <input type="search" id="spcPackQuery" placeholder="Search packs, characters, credits…" aria-label="Search scenepacks">
+                    </label>
+                    <select class="spc-select" id="spcPackStatus" aria-label="Filter by status">
+                        <option value="all">All statuses</option>
+                        <option value="published">Published</option>
+                        <option value="draft">Draft</option>
+                        <option value="pending">Pending</option>
+                        <option value="rejected">Rejected</option>
+                    </select>
+                    <span class="spc-count" id="spcPackCount"></span>
+                </div>
+                <div class="spc-list" id="spcPackList"></div>
+                <div class="spc-pager" id="spcPackPager"></div>
+            </section>
+
+            <section class="spc-pane" data-spc-pane="titles" hidden>
+                <div class="spc-toolbar">
+                    <label class="spc-search">
+                        <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+                        <input type="search" id="spcTitleQuery" placeholder="Search title pages…" aria-label="Search title pages">
+                    </label>
+                    <span class="spc-count" id="spcTitleCount"></span>
+                </div>
+                <div class="spc-list" id="spcTitleList"></div>
+                <div class="spc-pager" id="spcTitlePager"></div>
+            </section>
+
+            <div class="spc-note" id="spcNote" style="display:none"></div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <a href="/" class="hero-brand-lockup footer-brand-lockup">
+                        <img src="/assets/content.png" alt="Zyrex Logo" class="hero-brand-icon">
+                        <div class="hero-brand-text-col">
+                            <span class="hero-brand-title">Zyrex<sup>™</sup></span>
+                            <span class="hero-brand-sub">EDITING</span>
+                        </div>
+                    </a>
+                    <p>Editing leaks and stuff.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/leaks">Leaks</a></li>
+                        <li><a href="/feed">Feed</a></li>
+                        <li><a href="/plugins">Plugins</a></li>
+                        <li><a href="/scenepacks">Scenepacks</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="/terms">Terms of Service</a></li>
+                        <li><a href="/privacy">Privacy Policy</a></li>
+                        <li><a href="/dmca">DMCA</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="https://discord.gg/4J3tars4QS" target="_blank" rel="noopener">Discord</a></li>
+                        <li><a href="/#contact">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Zyrex Editing. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/auth.js?v=19"></script>
+    <script src="js/script.js?v=92"></script>
+    <script src="/js/safe-dom.js?v=2"></script>
+    <script src="/js/scenepacks-common.js?v=7"></script>
+    <script src="/js/scenepacks-control.js?v=4"></script>
+    <script src="/js/page-motion.js?v=6"></script>
+</body>
+
+</html>

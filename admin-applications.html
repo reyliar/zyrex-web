@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex,nofollow">
+    <meta name="theme-color" content="#100911">
+    <title>Staff applications | Zyrex</title>
+    <link rel="icon" type="image/png" href="/assets/content.png">
+    <link rel="stylesheet" href="/css/style.css?v=92">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,800,900&display=swap">
+    <link rel="stylesheet" href="/css/glass.css?v=67">
+    <link rel="stylesheet" href="/css/atmosphere.css?v=7">
+    <link rel="stylesheet" href="/css/staff-apply.css?v=6">
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="stylesheet" href="/css/i18n.css?v=3">
+    <script src="/js/i18n.js?v=15" defer></script>
+</head>
+<body class="staff-page">
+    <div class="zr-sweep" aria-hidden="true"></div>
+    <div class="lq-veil" aria-hidden="true"></div>
+
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="/">Home</a></li>
+                <li><a href="/leaks">Leaks</a></li>
+                <li><a href="/feed">Feed</a></li>
+                <li><a href="/plugins">Plugins</a></li>
+                <li><a href="/requests">Requests</a></li>
+                <li><a href="/audio">Audios</a></li>
+            </ul>
+            <div class="nav-actions">
+                <div id="authBtn"></div>
+                <button class="hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="staff-admin-shell">
+        <div class="staff-admin-bar">
+            <div>
+                <h1>Staff applications</h1>
+                <p>Accepting or rejecting sends the applicant a Discord DM embed straight away.</p>
+            </div>
+            <div class="staff-tabs" id="tabs" role="tablist" aria-label="Filter applications">
+                <button class="staff-tab is-active" data-status="pending" role="tab" aria-selected="true">Pending <b data-count="pending">0</b></button>
+                <button class="staff-tab" data-status="accepted" role="tab" aria-selected="false">Accepted <b data-count="accepted">0</b></button>
+                <button class="staff-tab" data-status="rejected" role="tab" aria-selected="false">Rejected <b data-count="rejected">0</b></button>
+                <button class="staff-tab" data-status="all" role="tab" aria-selected="false">All <b data-count="all">0</b></button>
+            </div>
+        </div>
+
+        <section class="staff-intake" id="intakeBar" hidden aria-label="Application intake">
+            <span class="staff-intake-title"><i class="fa-solid fa-toggle-on"></i> Application intake</span>
+            <label class="staff-switch" data-switch="leak-uploader">
+                <input type="checkbox" data-role-toggle="leak-uploader">
+                <span class="staff-switch-track" aria-hidden="true"></span>
+                <span class="staff-switch-copy"><span data-switch-label>Leak Uploader</span><span class="staff-switch-state" data-switch-state>Open</span></span>
+            </label>
+            <label class="staff-switch" data-switch="moderator">
+                <input type="checkbox" data-role-toggle="moderator">
+                <span class="staff-switch-track" aria-hidden="true"></span>
+                <span class="staff-switch-copy"><span data-switch-label>Moderator</span><span class="staff-switch-state" data-switch-state>Open</span></span>
+            </label>
+        </section>
+
+        <div id="board"></div>
+    </main>
+
+    <div class="staff-toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script src="/js/auth.js?v=19"></script>
+    <script src="/js/script.js?v=92"></script>
+    <script src="/js/page-motion.js?v=6"></script>
+    <script>
+    (function () {
+        'use strict';
+
+        var board = document.getElementById('board');
+        var tabs = document.getElementById('tabs');
+        var toast = document.getElementById('toast');
+        var intakeBar = document.getElementById('intakeBar');
+        var status = 'pending';
+        var busy = '';
+        var schemas = {};
+        var lastData = null;
+
+        var esc = function (value) {
+            return String(value == null ? '' : value).replace(/[&<>"']/g, function (c) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+            });
+        };
+
+        function showToast(message, isError) {
+            toast.textContent = message;
+            toast.classList.toggle('is-error', Boolean(isError));
+            toast.classList.add('is-visible');
+            clearTimeout(showToast.timer);
+            showToast.timer = setTimeout(function () { toast.classList.remove('is-visible'); }, 4200);
+        }
+
+        function when(value) {
+            var stamp = Date.parse(value);
+            if (!Number.isFinite(stamp)) return '';
+            return new Date(stamp).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+
+        var STATUS_LABEL = { pending: 'Pending', accepted: 'Accepted', rejected: 'Rejected', withdrawn: 'Withdrawn' };
+
+        function answer(label, value, wide) {
+            if (!value) return '';
+            return '<div class="staff-app-answer' + (wide ? ' is-wide' : '') + '"><small>' + esc(label) + '</small><p>' + esc(value) + '</p></div>';
+        }
+
+        function card(app) {
+            var decided = app.status !== 'pending';
+            var actions = decided
+                ? '<div class="staff-app-actions">' +
+                    '<span class="staff-status-chip is-' + esc(app.status) + '">' + esc(STATUS_LABEL[app.status] || app.status) + '</span>' +
+                    (app.decision_note
+                        ? '<span class="staff-app-answer is-wide"><small>Note sent to the applicant</small><p>' + esc(app.decision_note) + '</p></span>'
+                        : '') +
+                    '<span class="staff-app-answer"><small>Discord DM</small><p>' + (app.dm_sent ? 'Delivered' : 'Not delivered — the applicant may have DMs closed') + '</p></span>' +
+                  '</div>'
+                : '<div class="staff-app-actions">' +
+                    '<input type="text" maxlength="900" placeholder="Optional note that goes into the DM" data-note="' + esc(app.id) + '">' +
+                    '<button class="staff-btn is-primary" type="button" data-decision="accepted" data-id="' + esc(app.id) + '"><i class="fa-solid fa-check"></i> Accept</button>' +
+                    '<button class="staff-btn is-danger" type="button" data-decision="rejected" data-id="' + esc(app.id) + '"><i class="fa-solid fa-xmark"></i> Reject</button>' +
+                  '</div>';
+
+            return '<article class="staff-app" data-app="' + esc(app.id) + '">' +
+                '<header class="staff-app-head">' +
+                    '<img class="staff-app-avatar" src="' + esc(app.avatar || '/assets/default-avatar.png') + '" alt="" loading="lazy" onerror="this.src=\'/assets/default-avatar.png\'">' +
+                    '<div class="staff-app-identity">' +
+                        '<strong>' + esc(app.full_name || app.user_name || 'Applicant') + '</strong>' +
+                        '<small>' + esc(app.user_name || '') + (app.username ? ' · @' + esc(app.username) : '') + ' · ' + esc(when(app.created_at)) + '</small>' +
+                    '</div>' +
+                    '<div class="staff-app-badges">' +
+                        '<span class="staff-status-chip is-role">' + esc(app.role_label || 'Staff') + '</span>' +
+                        '<span class="staff-status-chip is-' + esc(app.status) + '">' + esc(STATUS_LABEL[app.status] || app.status) + '</span>' +
+                    '</div>' +
+                '</header>' +
+                '<div class="staff-app-body">' +
+                    answer('Age', String(app.age)) +
+                    answer('Experience', app.has_experience ? 'Yes' : 'No') +
+                    answer('Weekly availability', app.hours_per_week ? app.hours_per_week + ' h / week' : 'Not given') +
+                    answer('Timezone', app.timezone || 'Not given') +
+                    answer('Experience details', app.experience_details, true) +
+                    (schemas[app.role] || []).map(function (question) {
+                        var value = app.answers ? app.answers[question.key] : '';
+                        return answer(question.label, value, true);
+                    }).join('') +
+                    answer('Why this role', app.motivation, true) +
+                    answer('Rules accepted', app.rules_agreed ? 'Yes' : 'No') +
+                '</div>' +
+                actions +
+            '</article>';
+        }
+
+        function render(data) {
+            lastData = data;
+            var counts = data.counts || {};
+            tabs.querySelectorAll('[data-count]').forEach(function (node) {
+                node.textContent = counts[node.getAttribute('data-count')] || 0;
+            });
+            var rows = data.applications || [];
+            if (!rows.length) {
+                board.innerHTML = '<div class="staff-empty"><i class="fa-solid fa-inbox"></i>Nothing here yet.</div>';
+                return;
+            }
+            board.innerHTML = '<div class="staff-app-list">' + rows.map(card).join('') + '</div>';
+        }
+
+        function load() {
+            board.innerHTML = '<div class="staff-empty"><i class="fa-solid fa-circle-notch fa-spin"></i>Loading applications…</div>';
+            return fetch('/api/staff/applications?status=' + encodeURIComponent(status), { credentials: 'include', cache: 'no-store' })
+                .then(function (response) {
+                    if (response.status === 403) {
+                        board.innerHTML = '<div class="staff-empty"><i class="fa-solid fa-lock"></i>Founder access required. Sign in with the founder account.</div>';
+                        return null;
+                    }
+                    return response.json();
+                })
+                .then(function (data) {
+                    if (data && data.success) render(data);
+                })
+                .catch(function () {
+                    board.innerHTML = '<div class="staff-empty"><i class="fa-solid fa-triangle-exclamation"></i>Applications could not be loaded.</div>';
+                });
+        }
+
+        tabs.addEventListener('click', function (event) {
+            var button = event.target.closest('[data-status]');
+            if (!button) return;
+            status = button.getAttribute('data-status');
+            tabs.querySelectorAll('[data-status]').forEach(function (node) {
+                var active = node === button;
+                node.classList.toggle('is-active', active);
+                node.setAttribute('aria-selected', active ? 'true' : 'false');
+            });
+            load();
+        });
+
+        board.addEventListener('click', function (event) {
+            var button = event.target.closest('[data-decision]');
+            if (!button || busy) return;
+            var id = button.getAttribute('data-id');
+            var decision = button.getAttribute('data-decision');
+            var noteInput = board.querySelector('[data-note="' + id + '"]');
+            var note = noteInput ? noteInput.value.trim() : '';
+            busy = id;
+            board.querySelectorAll('[data-decision]').forEach(function (node) { node.disabled = true; });
+            fetch('/api/staff/applications', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ id: id, decision: decision, note: note })
+            }).then(function (response) {
+                return response.json().then(function (data) { return { ok: response.ok, data: data }; });
+            }).then(function (result) {
+                if (!result.ok || !result.data.success) throw new Error(result.data.error || 'The decision could not be saved.');
+                showToast(result.data.dm_sent
+                    ? 'Saved — the applicant was notified in Discord.'
+                    : 'Saved, but the Discord DM could not be delivered (DMs closed?).', !result.data.dm_sent);
+                load();
+            }).catch(function (error) {
+                showToast(error.message || 'The decision could not be saved.', true);
+                board.querySelectorAll('[data-decision]').forEach(function (node) { node.disabled = false; });
+            }).finally(function () { busy = ''; });
+        });
+
+        function paintIntake(roles) {
+            if (!intakeBar) return;
+            intakeBar.hidden = false;
+            (roles || []).forEach(function (role) {
+                schemas[role.value] = role.questions || [];
+                var toggle = intakeBar.querySelector('[data-role-toggle="' + role.value + '"]');
+                var label = intakeBar.querySelector('[data-switch="' + role.value + '"] [data-switch-label]');
+                var stateText = intakeBar.querySelector('[data-switch="' + role.value + '"] [data-switch-state]');
+                if (label) label.textContent = role.label;
+                if (!toggle) return;
+                toggle.checked = role.open !== false;
+                toggle.disabled = false;
+                if (stateText) stateText.textContent = toggle.checked ? 'Open' : 'Closed';
+            });
+            // The schema arrives after the first list render, so the answers are
+            // painted again once the question labels are known.
+            if (lastData) render(lastData);
+        }
+
+        function loadIntake() {
+            return fetch('/api/staff/settings', { credentials: 'include', cache: 'no-store' })
+                .then(function (response) {
+                    if (response.status === 403) return null;
+                    return response.json();
+                })
+                .then(function (data) {
+                    if (data && data.success) paintIntake(data.roles);
+                })
+                .catch(function () {});
+        }
+
+        intakeBar.addEventListener('change', function (event) {
+            var toggle = event.target.closest('[data-role-toggle]');
+            if (!toggle) return;
+            var role = toggle.getAttribute('data-role-toggle');
+            var open = toggle.checked;
+            var stateText = intakeBar.querySelector('[data-switch="' + role + '"] [data-switch-state]');
+            toggle.disabled = true;
+            if (stateText) stateText.textContent = open ? 'Open' : 'Closed';
+            fetch('/api/staff/settings', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ role: role, open: open })
+            }).then(function (response) {
+                return response.json().then(function (data) { return { ok: response.ok, data: data }; });
+            }).then(function (result) {
+                if (!result.ok || !result.data.success) throw new Error(result.data.error || 'The switch could not be saved.');
+                paintIntake(result.data.roles);
+                showToast(open ? 'Applications are open for that role.' : 'Applications are closed for that role.');
+            }).catch(function (error) {
+                toggle.checked = !open;
+                if (stateText) stateText.textContent = toggle.checked ? 'Open' : 'Closed';
+                toggle.disabled = false;
+                showToast(error.message || 'The switch could not be saved.', true);
+            });
+        });
+
+        loadIntake().then(function () { load(); });
+    })();
+    </script>
+</body>
+</html>

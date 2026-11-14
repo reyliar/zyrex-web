@@ -3,24 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Upload a leak, preset or plugin to the catalogue.">
     <title>Creator Studio — Zyrex</title>
     <link rel="icon" type="image/png" href="/assets/content.png">
-    <link rel="stylesheet" href="css/style.css?v=46">
+    <link rel="stylesheet" href="css/style.css?v=92">
+    <link rel="stylesheet" href="css/scenepacks-studio.css?v=7">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,800,900&amp;display=swap">
     <style>
         :root {
-            --cherry: #ff2b52;
+            --cherry: var(--zr-accent, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1));
             --cherry-rgb: 255, 43, 82;
-            --cherry-light: #ff6b85;
-            --cherry-dark: #c8002a;
+            --cherry-light: rgba(var(--zr-rgb-255-107-133, 255, 107, 133), 1);
+            --cherry-dark: rgba(var(--zr-rgb-200-0-42, 200, 0, 42), 1);
             --dark: #070209;
             --dark-panel: rgba(14, 10, 18, 0.85);
             --border: rgba(255, 255, 255, 0.11);
-            --border-hover: rgba(255, 43, 82, 0.35);
+            --border-hover: rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.35);
             --text: #f8f5f6;
-            --muted: rgba(255,255,255,0.45);
-            --muted-dark: rgba(255,255,255,0.25);
+            --muted: rgba(255, 255, 255, 0.80);
+            --muted-dark: rgba(255, 255, 255, 0.25);
             --radius-lg: 28px;
             --radius-md: 16px;
             --transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -30,9 +32,12 @@
         body {
             background: var(--dark);
             color: var(--text);
-            font-family: 'Inter', 'Poppins', sans-serif;
+            font-family: 'Satoshi', sans-serif;
             min-height: 100vh;
+            /* The studio container and the site footer are siblings: lay them out in
+               a column, otherwise flex puts the footer beside the uploader. */
             display: flex;
+            flex-direction: column;
             overflow-x: hidden;
         }
         body::before {
@@ -42,21 +47,21 @@
             z-index: 0;
             pointer-events: none;
             background:
-                radial-gradient(circle at 10% 0%, rgba(255,43,82,0.16) 0%, transparent 40%),
-                radial-gradient(circle at 88% 18%, rgba(120,0,40,0.10) 0%, transparent 35%),
-                radial-gradient(circle at 50% 100%, rgba(60,0,20,0.08) 0%, transparent 50%);
+                radial-gradient(circle at 10% 0%, rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.16) 0%, transparent 40%),
+                radial-gradient(circle at 88% 18%, rgba(var(--zr-rgb-120-0-40, 120, 0, 40),0.10) 0%, transparent 35%),
+                radial-gradient(circle at 50% 100%, rgba(60, 0, 20, 0.08) 0%, transparent 50%);
         }
 
         .bg-aura { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
-        .bg-aura .orb { position: absolute; border-radius: 50%; filter: blur(120px); opacity: .07; }
-        .orb-1 { width: 500px; height: 500px; background: var(--cherry); top: -10%; left: -10%; }
-        .orb-2 { width: 400px; height: 400px; background: #5865F2; bottom: -5%; right: -5%; opacity: .04; }
-        .orb-3 { width: 300px; height: 300px; background: var(--cherry-light); top: 50%; left: 30%; opacity: .03; }
+        .bg-aura .orb { position: absolute; border-radius: 50%; opacity: .07; }
+        .orb-1 { width: 500px; height: 500px; background: radial-gradient(circle, var(--cherry), transparent 70%); top: -10%; left: -10%; }
+        .orb-2 { width: 400px; height: 400px; background: radial-gradient(circle, #5865F2, transparent 70%); bottom: -5%; right: -5%; opacity: .04; }
+        .orb-3 { width: 300px; height: 300px; background: radial-gradient(circle, var(--cherry-light), transparent 70%); top: 50%; left: 30%; opacity: .03; }
         
         .grid-bg {
             position: fixed; inset: 0; pointer-events: none; z-index: 0;
-            background-image: linear-gradient(rgba(230, 21, 54, 0.015) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(230, 21, 54, 0.015) 1px, transparent 1px);
+            background-image: linear-gradient(rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.015) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.015) 1px, transparent 1px);
             background-size: 50px 50px;
             mask-image: radial-gradient(ellipse at 50% 30%, black 40%, transparent 80%);
             -webkit-mask-image: radial-gradient(ellipse at 50% 30%, black 40%, transparent 80%);
@@ -115,21 +120,21 @@
         .sidebar-brand img {
             height: 30px;
             width: auto;
-            filter: drop-shadow(0 0 10px rgba(255, 43, 82, 0.35));
+            filter: drop-shadow(0 0 10px rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.35));
             transition: transform 0.25s ease;
         }
         .sidebar-brand:hover img {
             transform: scale(1.06);
         }
         .sidebar-brand span {
-            font-family: 'Outfit', sans-serif;
+            font-family: 'Satoshi', sans-serif;
             font-weight: 800;
             font-size: 1.15rem;
             letter-spacing: -0.2px;
             color: #ffffff;
         }
         .sidebar-brand span b {
-            background: linear-gradient(135deg, #ff2b52, #ff6b85);
+            background: linear-gradient(135deg, var(--zr-accent, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1)), rgba(var(--zr-rgb-255-107-133, 255, 107, 133), 1));
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -187,13 +192,13 @@
         .menu-item.active a {
             color: #ffffff;
             font-weight: 700;
-            background: linear-gradient(135deg, rgba(255, 43, 82, 0.18), rgba(255, 43, 82, 0.08));
-            border-color: rgba(255, 43, 82, 0.32);
-            box-shadow: 0 4px 18px rgba(255, 43, 82, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+            background: linear-gradient(135deg, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.18), rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.08));
+            border-color: rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.32);
+            box-shadow: 0 4px 18px rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.12);
         }
         .menu-item.active a i {
-            color: var(--cherry-light, #ff3b60);
-            text-shadow: 0 0 10px rgba(255, 43, 82, 0.5);
+            color: var(--cherry-light, rgba(var(--zr-rgb-255-59-96, 255, 59, 96), 1));
+            text-shadow: 0 0 10px rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.5);
         }
         .menu-item .locked-item {
             opacity: 0.4;
@@ -209,11 +214,11 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            background: rgba(255, 43, 82, 0.12);
-            color: var(--cherry-light, #ff3b60);
+            background: rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.12);
+            color: var(--cherry-light, rgba(var(--zr-rgb-255-59-96, 255, 59, 96), 1));
             padding: 2px 7px;
             border-radius: 999px;
-            border: 1px solid rgba(255, 43, 82, 0.25);
+            border: 1px solid rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.25);
             margin-left: auto;
         }
 
@@ -244,8 +249,8 @@
             width: 36px;
             height: 36px;
             border-radius: 50%;
-            border: 2px solid rgba(255, 43, 82, 0.55);
-            box-shadow: 0 0 12px rgba(255, 43, 82, 0.25);
+            border: 2px solid rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.55);
+            box-shadow: 0 0 12px rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.25);
             object-fit: cover;
             display: block;
             flex-shrink: 0;
@@ -263,7 +268,7 @@
             text-overflow: ellipsis;
             overflow: hidden;
             white-space: nowrap;
-            font-family: 'Outfit', sans-serif;
+            font-family: 'Satoshi', sans-serif;
         }
 
         .footer-nav {
@@ -295,14 +300,14 @@
             background: rgba(255, 255, 255, 0.05);
         }
         .footer-nav a:hover i, .footer-nav-link:hover i {
-            color: var(--cherry-light, #ff3b60);
+            color: var(--cherry-light, rgba(var(--zr-rgb-255-59-96, 255, 59, 96), 1));
         }
         .footer-nav a.link-logout:hover {
-            color: #ff5c75;
+            color: rgba(var(--zr-rgb-255-92-117, 255, 92, 117), 1);
             background: rgba(255, 68, 68, 0.08);
         }
         .footer-nav a.link-logout:hover i {
-            color: #ff5c75;
+            color: rgba(var(--zr-rgb-255-92-117, 255, 92, 117), 1);
         }
 
         .studio-main {
@@ -319,14 +324,14 @@
             align-items: center;
             margin-bottom: 28px;
             padding: 22px 28px;
-            background: rgba(14,10,18,0.7);
-            border: 1px solid rgba(255,255,255,0.09);
+            background: rgba(14, 10, 18, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.09);
             border-radius: 24px;
             backdrop-filter: blur(28px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.08);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.08);
         }
         .studio-header h1 {
-            font-family: 'Outfit', sans-serif;
+            font-family: 'Satoshi', sans-serif;
             font-size: 1.6rem;
             font-weight: 900;
             letter-spacing: -0.5px;
@@ -357,7 +362,7 @@
             justify-content: center;
             font-size: 0.78rem;
             font-weight: 800;
-            background: rgba(230, 21, 54, 0.05);
+            background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.05);
             border: 1.5px solid var(--border);
             color: var(--muted);
             transition: var(--transition);
@@ -366,10 +371,10 @@
             background: var(--cherry);
             border-color: var(--cherry-light);
             color: #fff;
-            box-shadow: 0 0 15px rgba(230, 21, 54, 0.4);
+            box-shadow: 0 0 15px rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.4);
         }
         .step-dot.done {
-            background: rgba(230, 21, 54, 0.15);
+            background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.15);
             border-color: var(--cherry);
             color: var(--cherry-light);
         }
@@ -382,7 +387,7 @@
         .step-label.active { color: var(--cherry-light); }
         .step-connector {
             width: 40px; height: 1.5px;
-            background: rgba(230, 21, 54, 0.1);
+            background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.1);
         }
         .step-connector.done { background: var(--cherry); }
 
@@ -393,7 +398,7 @@
             padding: 36px;
             backdrop-filter: blur(32px) saturate(220%);
             -webkit-backdrop-filter: blur(32px) saturate(220%);
-            box-shadow: 0 24px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.12);
+            box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.12);
             position: relative;
             overflow: hidden;
         }
@@ -402,7 +407,7 @@
             position: absolute;
             top: 0; left: 0; right: 0;
             height: 1px;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
         }
 
         .form-layout {
@@ -437,8 +442,8 @@
         }
         .field input:focus, .field textarea:focus, .field select:focus {
             border-color: var(--cherry-light);
-            background: rgba(230, 21, 54, 0.02);
-            box-shadow: 0 0 0 3px rgba(230, 21, 54, 0.08);
+            background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.02);
+            box-shadow: 0 0 0 3px rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.08);
         }
         .field textarea { min-height: 120px; resize: vertical; }
 
@@ -457,9 +462,9 @@
         }
         .social-input-wrap input { border: none; background: transparent; flex: 1; }
         .social-lookup-btn {
-            width: 48px; border: none; background: rgba(230, 21, 54, 0.08); color: var(--cherry-light); cursor: pointer; transition: var(--transition);
+            width: 48px; border: none; background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.08); color: var(--cherry-light); cursor: pointer; transition: var(--transition);
         }
-        .social-lookup-btn:hover { background: rgba(230, 21, 54, 0.15); color: #fff; }
+        .social-lookup-btn:hover { background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.15); color: #fff; }
 
         .subcat-pill-label {
             cursor: pointer;
@@ -483,15 +488,15 @@
             transition: all 0.2s ease;
         }
         .subcat-pill:hover {
-            border-color: rgba(255, 43, 82, 0.35);
-            background: rgba(255, 43, 82, 0.08);
+            border-color: rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.35);
+            background: rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.08);
             color: #fff;
         }
         .subcat-pill-label input[type="checkbox"]:checked + .subcat-pill {
-            border-color: var(--cherry-light, #ff2b52);
-            background: rgba(255, 43, 82, 0.2);
+            border-color: var(--cherry-light, var(--zr-accent, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1)));
+            background: rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.2);
             color: #fff;
-            box-shadow: 0 0 14px rgba(255, 43, 82, 0.25);
+            box-shadow: 0 0 14px rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.25);
         }
         .tag-project-file {
             background: rgba(168, 85, 247, .2);
@@ -503,9 +508,9 @@
             font-weight: 700;
         }
         .tag-preset {
-            background: rgba(255, 43, 82, .15);
-            color: #ff6b87;
-            border: 1px solid rgba(255, 43, 82, .25);
+            background: rgba(var(--zr-rgb-255-43-82, 255, 43, 82), .15);
+            color: rgba(var(--zr-rgb-255-107-135, 255, 107, 135), 1);
+            border: 1px solid rgba(var(--zr-rgb-255-43-82, 255, 43, 82), .25);
             padding: 3px 8px;
             border-radius: 6px;
             font-size: 0.65rem;
@@ -553,7 +558,7 @@
             border: 1px solid var(--border);
             border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
             transition: var(--transition);
         }
         .lc-media {
@@ -561,15 +566,15 @@
             background: #100609;
             position: relative;
             display: flex; align-items: center; justify-content: center;
-            border-bottom: 1px solid rgba(230, 21, 54, 0.06);
+            border-bottom: 1px solid rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.06);
         }
         .lc-media img { width: 100%; height: 100%; object-fit: cover; }
         .lc-media i { font-size: 2.2rem; color: var(--cherry); opacity: 0.15; }
         .lc-badge {
             position: absolute; top: 12px; left: 12px;
             font-size: 0.6rem; font-weight: 700; text-transform: uppercase;
-            background: rgba(230, 21, 54, 0.12); color: var(--cherry-light);
-            border: 1px solid rgba(230, 21, 54, 0.2); padding: 3px 8px; border-radius: 4px;
+            background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.12); color: var(--cherry-light);
+            border: 1px solid rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.2); padding: 3px 8px; border-radius: 4px;
         }
         .lc-details { padding: 16px; }
         .lc-details h4 {
@@ -581,7 +586,7 @@
             line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
         }
         .lc-meta {
-            display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255,255,255,0.03); padding-top: 10px;
+            display: flex; justify-content: space-between; align-items: center; border-top: 1px solid rgba(255, 255, 255, 0.03); padding-top: 10px;
         }
         .lc-creator { display: flex; align-items: center; gap: 8px; font-size: 0.7rem; color: var(--muted); }
         .lc-creator img { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; }
@@ -591,27 +596,27 @@
         .btn {
             display: inline-flex; align-items: center; justify-content: center; gap: 8px;
             padding: 13px 26px; border-radius: 999px; font-size: 0.84rem; font-weight: 700;
-            border: none; cursor: pointer; transition: var(--transition); font-family: 'Outfit', sans-serif;
+            border: none; cursor: pointer; transition: var(--transition); font-family: 'Satoshi', sans-serif;
         }
         .btn-primary {
             background: linear-gradient(135deg, var(--cherry), var(--cherry-dark));
-            color: #fff; border: 1px solid rgba(255,255,255,0.18);
-            box-shadow: 0 8px 22px rgba(255, 43, 82, 0.38);
+            color: #fff; border: 1px solid rgba(255, 255, 255, 0.18);
+            box-shadow: 0 8px 22px rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.38);
         }
         .btn-primary:hover {
-            transform: translateY(-2px); box-shadow: 0 12px 30px rgba(255, 43, 82, 0.55);
+            transform: translateY(-2px); box-shadow: 0 12px 30px rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.55);
         }
         .btn-primary:disabled {
             opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none;
         }
         .btn-ghost {
-            background: rgba(255,255,255,0.06); color: var(--text); border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255, 255, 255, 0.06); color: var(--text); border: 1px solid rgba(255, 255, 255, 0.12);
         }
-        .btn-ghost:hover { background: rgba(255,255,255,0.11); border-color: rgba(255,255,255,0.2); }
+        .btn-ghost:hover { background: rgba(255, 255, 255, 0.11); border-color: rgba(255, 255, 255, 0.2); }
         .btn-sm { padding: 8px 18px; font-size: 0.78rem; border-radius: 999px; }
 
         .form-actions {
-            display: flex; justify-content: flex-end; gap: 12px; margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.04);
+            display: flex; justify-content: flex-end; gap: 12px; margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(255, 255, 255, 0.04);
         }
 
         .step-section { display: none; }
@@ -628,13 +633,13 @@
         }
         .res-card {
             display: flex; align-items: center; justify-content: space-between; padding: 14px 18px;
-            background: rgba(230, 21, 54, 0.02); border: 1px solid var(--border); border-radius: var(--radius-md);
+            background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.02); border: 1px solid var(--border); border-radius: var(--radius-md);
             cursor: pointer; transition: var(--transition);
         }
-        .res-card:hover { border-color: var(--border-hover); background: rgba(230, 21, 54, 0.04); }
-        .res-card.selected { border-color: var(--cherry-light); background: rgba(230, 21, 54, 0.08); }
+        .res-card:hover { border-color: var(--border-hover); background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.04); }
+        .res-card.selected { border-color: var(--cherry-light); background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.08); }
         .res-card .rc-icon {
-            width: 38px; height: 38px; border-radius: 10px; background: rgba(230, 21, 54, 0.1);
+            width: 38px; height: 38px; border-radius: 10px; background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.1);
             display: flex; align-items: center; justify-content: center; color: var(--cherry-light);
         }
         .res-card .rc-info { flex: 1; margin-left: 14px; }
@@ -656,7 +661,7 @@
         .tpb-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
         .tpb-title { font-size: 0.82rem; font-weight: 600; color: #fff; display: flex; align-items: center; gap: 8px; }
         .tpb-percent { font-size: 0.85rem; font-weight: 700; color: var(--cherry-light); font-family: monospace; }
-        .tpb-bar-bg { width: 100%; height: 8px; background: rgba(255,255,255,0.08); border-radius: 4px; overflow: hidden; margin-bottom: 10px; }
+        .tpb-bar-bg { width: 100%; height: 8px; background: rgba(255, 255, 255, 0.08); border-radius: 4px; overflow: hidden; margin-bottom: 10px; }
         .tpb-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--cherry) 0%, var(--cherry-light) 100%); transition: width 0.4s ease; border-radius: 4px; }
         .tpb-details { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--muted); }
         .tpb-current-file { color: var(--text); font-weight: 500; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; max-width: 70%; }
@@ -667,10 +672,10 @@
         .lock-card {
             max-width: 480px; text-align: center; padding: 48px 36px;
             background: var(--dark-panel); border: 1px solid var(--border); border-radius: var(--radius-lg);
-            box-shadow: 0 25px 70px rgba(0,0,0,0.6);
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6);
         }
         .lock-card i.lock-icon { font-size: 4rem; color: var(--cherry); opacity: 0.2; margin-bottom: 24px; display: block; }
-        .lock-card h2 { font-family: 'Outfit', sans-serif; font-size: 1.6rem; font-weight: 800; color: #fff; margin-bottom: 12px; }
+        .lock-card h2 { font-family: 'Satoshi', sans-serif; font-size: 1.6rem; font-weight: 800; color: #fff; margin-bottom: 12px; }
         .lock-card p { font-size: 0.88rem; color: var(--muted); line-height: 1.6; margin-bottom: 28px; }
         .lock-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
         .btn-discord { background: #5865F2; color: #fff; }
@@ -680,16 +685,16 @@
             position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
             z-index: 10000; padding: 13px 26px; border-radius: 999px; font-size: 0.84rem; font-weight: 700;
             display: none; align-items: center; gap: 8px; backdrop-filter: blur(20px);
-            box-shadow: 0 12px 36px rgba(0,0,0,0.5);
+            box-shadow: 0 12px 36px rgba(0, 0, 0, 0.5);
             animation: alertIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         @keyframes alertIn { from { opacity: 0; transform: translate(-50%, -10px); } to { opacity: 1; transform: translate(-50%, 0); } }
         .studio-alert.show { display: flex; }
-        .studio-alert.error { background: rgba(255,43,82,0.18); border: 1px solid rgba(255,43,82,0.3); color: #ff9ab0; }
+        .studio-alert.error { background: rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.18); border: 1px solid rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.3); color: rgba(var(--zr-rgb-255-154-176, 255, 154, 176), 1); }
         .studio-alert.success { background: rgba(52, 211, 153, 0.15); border: 1px solid rgba(52, 211, 153, 0.3); color: #34d399; }
 
         .info-banner {
-            display: flex; gap: 14px; padding: 16px; border-radius: var(--radius-md); background: rgba(230, 21, 54, 0.05); border: 1px solid var(--border); margin-bottom: 24px;
+            display: flex; gap: 14px; padding: 16px; border-radius: var(--radius-md); background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.05); border: 1px solid var(--border); margin-bottom: 24px;
         }
         .info-banner i { font-size: 1.1rem; color: var(--cherry-light); margin-top: 2px; }
         .info-banner h4 { font-size: 0.84rem; font-weight: 700; color: #fff; margin-bottom: 2px; }
@@ -704,7 +709,7 @@
             text-align: left; padding: 20px; border-radius: var(--radius-md); background: rgba(0, 0, 0, 0.25); border: 1px solid var(--border); margin: 24px 0;
         }
         .rs-row {
-            display: flex; justify-content: space-between; padding: 10px 0; font-size: 0.82rem; border-bottom: 1px solid rgba(255,255,255,0.03);
+            display: flex; justify-content: space-between; padding: 10px 0; font-size: 0.82rem; border-bottom: 1px solid rgba(255, 255, 255, 0.03);
         }
         .rs-row span { color: var(--muted); }
         .rs-row strong { color: #fff; }
@@ -736,7 +741,7 @@
         .sidebar-mobile-close span {
             font-size: 0.78rem;
             font-weight: 800;
-            color: var(--cherry-light, #ff3b60);
+            color: var(--cherry-light, rgba(var(--zr-rgb-255-59-96, 255, 59, 96), 1));
             text-transform: uppercase;
             letter-spacing: 1px;
         }
@@ -755,8 +760,8 @@
             transition: all 0.2s ease;
         }
         .sidebar-mobile-close button:hover {
-            background: rgba(255, 43, 82, 0.2);
-            border-color: rgba(255, 43, 82, 0.4);
+            background: rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.2);
+            border-color: rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.4);
             color: #fff;
         }
 
@@ -770,9 +775,9 @@
                 border-radius: 0 24px 24px 0;
                 padding-top: 85px;
                 z-index: 9999;
-                box-shadow: 10px 0 40px rgba(0,0,0,0.85);
+                box-shadow: 10px 0 40px rgba(0, 0, 0, 0.85);
                 background: #0e0306;
-                border-right: 1px solid rgba(230, 21, 54, 0.2);
+                border-right: 1px solid rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.2);
             }
             .studio-sidebar.open {
                 left: 0;
@@ -783,7 +788,7 @@
             .sidebar-overlay { z-index: 9998; }
             .sidebar-mobile-close { display: flex !important; }
             .studio-main { margin-left: 0; padding: 24px 16px; width: 100%; }
-            .mobile-trigger { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 10px; background: rgba(230,21,54,0.1); border: 1px solid var(--border); margin-right: 12px; }
+            .mobile-trigger { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 10px; background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.1); border: 1px solid var(--border); margin-right: 12px; }
             .form-layout { grid-template-columns: 1fr; gap: 24px; }
             .studio-header { flex-direction: column; align-items: flex-start; gap: 16px; }
             .wizard-stepper { width: 100%; overflow-x: auto; max-width: 100%; justify-content: space-between; padding: 8px 12px; }
@@ -811,20 +816,20 @@
         
         .scanner-modal {
             background: rgba(12, 8, 18, 0.97);
-            border: 1px solid rgba(255,255,255,0.13);
+            border: 1px solid rgba(255, 255, 255, 0.13);
             border-radius: 28px;
             width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto;
             padding: 0;
-            box-shadow: 0 36px 100px rgba(0,0,0,0.9), inset 0 1px 0 rgba(255,255,255,0.1), 0 0 60px rgba(255,43,82,0.06);
+            box-shadow: 0 36px 100px rgba(0, 0, 0, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 0 60px rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.06);
             position: relative;
             backdrop-filter: blur(40px);
             animation: wizardPopIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .scanner-modal::-webkit-scrollbar { width: 4px; }
-        .scanner-modal::-webkit-scrollbar-thumb { background: rgba(255,43,82,0.2); border-radius: 2px; }
+        .scanner-modal::-webkit-scrollbar-thumb { background: rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.2); border-radius: 2px; }
         .wiz-top-glow {
             position: absolute; top: 0; left: 10%; right: 10%; height: 2px;
-            background: linear-gradient(90deg, transparent, var(--cherry), rgba(168,85,247,0.8), transparent);
+            background: linear-gradient(90deg, transparent, var(--cherry), rgba(168, 85, 247, 0.8), transparent);
             pointer-events: none;
         }
 
@@ -837,8 +842,8 @@
             to { opacity: 1; transform: translateY(0); }
         }
         @keyframes wizardPulse {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(230,21,54,0.4); }
-            50% { box-shadow: 0 0 0 12px rgba(230,21,54,0); }
+            0%, 100% { box-shadow: 0 0 0 0 rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.4); }
+            50% { box-shadow: 0 0 0 12px rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0); }
         }
         @keyframes wizardShimmer {
             0% { background-position: -200% center; }
@@ -873,14 +878,14 @@
         }
         .wiz-header-icon {
             width: 44px; height: 44px; border-radius: 14px;
-            background: linear-gradient(135deg, rgba(230,21,54,0.2), rgba(230,21,54,0.05));
-            border: 1px solid rgba(230,21,54,0.2);
+            background: linear-gradient(135deg, rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.2), rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.05));
+            border: 1px solid rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.2);
             display: flex; align-items: center; justify-content: center;
             color: var(--cherry-light); font-size: 1.15rem;
             flex-shrink: 0;
         }
         .wiz-header-text h3 {
-            font-family: 'Outfit', sans-serif;
+            font-family: 'Satoshi', sans-serif;
             font-size: 1.15rem; font-weight: 800; color: #fff; margin: 0; letter-spacing: -0.3px;
         }
         .wiz-header-text span {
@@ -888,12 +893,12 @@
         }
         .wiz-close-btn {
             width: 34px; height: 34px; border-radius: 50%;
-            background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255, 255, 255, 0.06);
             color: var(--muted); cursor: pointer; display: flex; align-items: center;
             justify-content: center; transition: all 0.25s ease; font-size: 0.85rem;
             flex-shrink: 0;
         }
-        .wiz-close-btn:hover { color: #fff; background: rgba(230,21,54,0.2); border-color: rgba(230,21,54,0.3); }
+        .wiz-close-btn:hover { color: #fff; background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.2); border-color: rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.3); }
 
         .wiz-stepper {
             display: flex; align-items: center; justify-content: center;
@@ -907,9 +912,9 @@
             width: 36px; height: 36px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             font-size: 0.8rem; font-weight: 800;
-            background: rgba(255,255,255,0.04);
-            border: 2px solid rgba(255,255,255,0.08);
-            color: rgba(255,255,255,0.3);
+            background: rgba(255, 255, 255, 0.04);
+            border: 2px solid rgba(255, 255, 255, 0.08);
+            color: rgba(255, 255, 255, 0.3);
             transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             position: relative;
         }
@@ -917,17 +922,17 @@
             background: linear-gradient(135deg, var(--cherry), var(--cherry-dark));
             border-color: var(--cherry-light);
             color: #fff;
-            box-shadow: 0 0 20px rgba(230,21,54,0.4), 0 4px 12px rgba(230,21,54,0.3);
+            box-shadow: 0 0 20px rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.4), 0 4px 12px rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.3);
             animation: wizardPulse 2s infinite;
         }
         .wiz-step-circle.done {
             background: linear-gradient(135deg, #00c853, #009624);
             border-color: #00e676;
             color: #fff;
-            box-shadow: 0 0 14px rgba(0,200,83,0.3);
+            box-shadow: 0 0 14px rgba(0, 200, 83, 0.3);
         }
         .wiz-step-label {
-            font-size: 0.68rem; font-weight: 700; color: rgba(255,255,255,0.3);
+            font-size: 0.68rem; font-weight: 700; color: rgba(255, 255, 255, 0.3);
             text-transform: uppercase; letter-spacing: 0.5px;
             transition: color 0.4s ease;
             white-space: nowrap;
@@ -937,7 +942,7 @@
 
         .wiz-step-line {
             flex: 1; height: 2px; min-width: 32px; position: relative;
-            background: rgba(255,255,255,0.06); border-radius: 1px;
+            background: rgba(255, 255, 255, 0.06); border-radius: 1px;
             overflow: hidden; margin: 0 8px; margin-bottom: 20px;
         }
         .wiz-step-line-fill {
@@ -952,8 +957,8 @@
         }
         .wiz-platform-card {
             padding: 16px 14px; border-radius: 16px;
-            background: rgba(255,255,255,0.02);
-            border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.06);
             cursor: pointer; transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             display: flex; align-items: center; gap: 12px;
             position: relative; overflow: hidden;
@@ -963,22 +968,22 @@
             opacity: 0; transition: opacity 0.3s ease;
         }
         .wiz-platform-card:hover {
-            border-color: rgba(230,21,54,0.25);
-            background: rgba(230,21,54,0.04);
+            border-color: rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.25);
+            background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.04);
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
         }
         .wiz-platform-card:active { transform: translateY(0); }
         .wiz-plat-icon {
             width: 42px; height: 42px; border-radius: 12px;
             display: flex; align-items: center; justify-content: center;
             font-size: 1.3rem; flex-shrink: 0;
-            background: rgba(255,255,255,0.06);
+            background: rgba(255, 255, 255, 0.06);
         }
-        .wiz-plat-icon.tt { background: rgba(255,0,80,0.15); color: #ff0050; }
-        .wiz-plat-icon.ig { background: rgba(225,48,108,0.15); color: #e1306c; }
-        .wiz-plat-icon.yt { background: rgba(255,0,0,0.15); color: #ff0000; }
-        .wiz-plat-icon.x { background: rgba(255,255,255,0.1); color: #fff; }
+        .wiz-plat-icon.tt { background: rgba(var(--zr-rgb-255-0-80, 255, 0, 80),0.15); color: rgba(var(--zr-rgb-255-0-80, 255, 0, 80), 1); }
+        .wiz-plat-icon.ig { background: rgba(var(--zr-rgb-225-48-108, 225, 48, 108),0.15); color: rgba(var(--zr-rgb-225-48-108, 225, 48, 108), 1); }
+        .wiz-plat-icon.yt { background: rgba(255,0,0,0.15); color: rgba(var(--zr-rgb-255-0-0, 255, 0, 0), 1); }
+        .wiz-plat-icon.x { background: rgba(255, 255, 255, 0.1); color: #fff; }
         .wiz-plat-info { text-align: left; min-width: 0; }
         .wiz-plat-info strong { display: block; font-size: 0.84rem; font-weight: 800; color: #fff; }
         .wiz-plat-info span { font-size: 0.68rem; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
@@ -990,19 +995,19 @@
             animation: wizardSlideUp 0.35s ease;
         }
         .wiz-status.scanning {
-            background: rgba(230,21,54,0.04); border: 1px solid rgba(230,21,54,0.12);
+            background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.04); border: 1px solid rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.12);
             color: var(--muted);
         }
         .wiz-status.success {
-            background: rgba(0,200,83,0.06); border: 1px solid rgba(0,200,83,0.18);
+            background: rgba(0, 200, 83, 0.06); border: 1px solid rgba(0, 200, 83, 0.18);
             color: #00e676;
         }
         .wiz-status.warning {
-            background: rgba(255,152,0,0.06); border: 1px solid rgba(255,152,0,0.18);
+            background: rgba(255, 152, 0, 0.06); border: 1px solid rgba(255, 152, 0, 0.18);
             color: #ffb74d;
         }
         .wiz-status.error {
-            background: rgba(230,21,54,0.06); border: 1px solid rgba(230,21,54,0.18);
+            background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.06); border: 1px solid rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.18);
             color: var(--cherry-light);
         }
         .wiz-status i { font-size: 1rem; margin-top: 1px; flex-shrink: 0; }
@@ -1013,19 +1018,19 @@
         .wiz-creator-card {
             display: flex; align-items: center; gap: 14px;
             padding: 16px; border-radius: 16px;
-            background: linear-gradient(135deg, rgba(230,21,54,0.04), rgba(15,3,6,0.6));
-            border: 1px solid rgba(230,21,54,0.12);
+            background: linear-gradient(135deg, rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.04), rgba(15, 3, 6, 0.6));
+            border: 1px solid rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.12);
             animation: wizardSlideUp 0.4s ease;
         }
         .wiz-creator-card img {
             width: 52px; height: 52px; border-radius: 50%; object-fit: cover;
             border: 2px solid var(--cherry);
-            box-shadow: 0 0 16px rgba(230,21,54,0.2);
+            box-shadow: 0 0 16px rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.2);
             flex-shrink: 0;
         }
         .wiz-creator-card .wiz-cc-avatar-placeholder {
             width: 52px; height: 52px; border-radius: 50%;
-            background: rgba(230,21,54,0.1); border: 2px solid rgba(230,21,54,0.2);
+            background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.1); border: 2px solid rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.2);
             display: flex; align-items: center; justify-content: center;
             color: var(--cherry-light); font-size: 1.3rem; flex-shrink: 0;
         }
@@ -1036,19 +1041,19 @@
             padding: 6px 12px; border-radius: 20px; font-size: 0.68rem; font-weight: 700;
             display: flex; align-items: center; gap: 5px; flex-shrink: 0;
         }
-        .wiz-cc-badge.ok { background: rgba(0,200,83,0.1); border: 1px solid rgba(0,200,83,0.2); color: #00e676; }
-        .wiz-cc-badge.scanning { background: rgba(255,152,0,0.1); border: 1px solid rgba(255,152,0,0.2); color: #ffb74d; }
+        .wiz-cc-badge.ok { background: rgba(0, 200, 83, 0.1); border: 1px solid rgba(0, 200, 83, 0.2); color: #00e676; }
+        .wiz-cc-badge.scanning { background: rgba(255, 152, 0, 0.1); border: 1px solid rgba(255, 152, 0, 0.2); color: #ffb74d; }
 
         .wiz-store-card {
             padding: 16px; border-radius: 16px;
-            background: linear-gradient(135deg, rgba(0,200,83,0.04), rgba(0,0,0,0.3));
-            border: 1px solid rgba(0,200,83,0.2);
+            background: linear-gradient(135deg, rgba(0, 200, 83, 0.04), rgba(0, 0, 0, 0.3));
+            border: 1px solid rgba(0, 200, 83, 0.2);
             display: flex; align-items: center; gap: 14px;
             animation: wizardSlideUp 0.4s ease;
         }
         .wiz-store-icon {
             width: 44px; height: 44px; border-radius: 12px;
-            background: rgba(0,200,83,0.12); border: 1px solid rgba(0,200,83,0.2);
+            background: rgba(0, 200, 83, 0.12); border: 1px solid rgba(0, 200, 83, 0.2);
             display: flex; align-items: center; justify-content: center;
             color: #00e676; font-size: 1.1rem; flex-shrink: 0;
         }
@@ -1058,19 +1063,19 @@
             margin-top: 12px; max-height: 380px; overflow-y: auto; padding-right: 4px;
         }
         .wiz-product-grid::-webkit-scrollbar { width: 3px; }
-        .wiz-product-grid::-webkit-scrollbar-thumb { background: rgba(230,21,54,0.15); border-radius: 2px; }
+        .wiz-product-grid::-webkit-scrollbar-thumb { background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.15); border-radius: 2px; }
 
         .wiz-product-card {
-            background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(255, 255, 255, 0.02); border: 1px solid rgba(255, 255, 255, 0.06);
             border-radius: 14px; overflow: hidden; cursor: pointer;
             transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
             position: relative;
         }
         .wiz-product-card:hover {
-            border-color: rgba(230,21,54,0.35);
-            background: rgba(230,21,54,0.04);
+            border-color: rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.35);
+            background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.04);
             transform: translateY(-3px);
-            box-shadow: 0 12px 30px rgba(0,0,0,0.5), 0 0 20px rgba(230,21,54,0.08);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.5), 0 0 20px rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.08);
         }
         .wiz-product-card:active { transform: translateY(-1px); }
         .wiz-product-img-wrap {
@@ -1084,7 +1089,7 @@
         .wiz-product-card:hover .wiz-product-img-wrap img { transform: scale(1.06); }
         .wiz-product-img-placeholder {
             width: 100%; height: 100%; display: flex; align-items: center;
-            justify-content: center; color: rgba(255,255,255,0.08); font-size: 1.8rem;
+            justify-content: center; color: rgba(255, 255, 255, 0.08); font-size: 1.8rem;
         }
         .wiz-product-body { padding: 10px 12px 12px; }
         .wiz-product-title {
@@ -1100,7 +1105,7 @@
         }
         .wiz-product-select-bar {
             margin-top: 8px; padding: 6px 0 0 0;
-            border-top: 1px solid rgba(255,255,255,0.03);
+            border-top: 1px solid rgba(255, 255, 255, 0.03);
             font-size: 0.66rem; font-weight: 700; color: var(--muted);
             display: flex; align-items: center; gap: 4px;
             transition: color 0.2s ease;
@@ -1110,10 +1115,10 @@
         .wiz-search-wrap {
             display: flex; align-items: center; gap: 10px;
             padding: 10px 14px; border-radius: 12px;
-            background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.06);
             transition: border-color 0.3s ease;
         }
-        .wiz-search-wrap:focus-within { border-color: rgba(230,21,54,0.25); }
+        .wiz-search-wrap:focus-within { border-color: rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.25); }
         .wiz-search-wrap input {
             flex: 1; background: transparent; border: none; color: #fff;
             font-size: 0.82rem; font-family: inherit; outline: none;
@@ -1127,16 +1132,16 @@
         .wiz-pagination {
             display: flex; align-items: center; justify-content: space-between;
             margin-top: 14px; padding-top: 12px;
-            border-top: 1px solid rgba(255,255,255,0.04);
+            border-top: 1px solid rgba(255, 255, 255, 0.04);
         }
         .wiz-page-btn {
             padding: 8px 14px; border-radius: 10px; font-size: 0.74rem; font-weight: 700;
-            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08);
             color: var(--muted); cursor: pointer; transition: all 0.2s ease;
             display: flex; align-items: center; gap: 5px;
         }
         .wiz-page-btn:hover:not(:disabled) {
-            border-color: rgba(230,21,54,0.3); color: #fff; background: rgba(230,21,54,0.06);
+            border-color: rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.3); color: #fff; background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.06);
         }
         .wiz-page-btn:disabled { opacity: 0.3; cursor: not-allowed; }
         .wiz-page-info { font-size: 0.74rem; font-weight: 600; color: var(--muted); }
@@ -1146,11 +1151,11 @@
         }
         .wiz-input-row input {
             flex: 1; padding: 12px 16px; border-radius: 12px;
-            background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(255, 255, 255, 0.08);
             color: #fff; font-size: 0.84rem; font-family: inherit; outline: none;
             transition: border-color 0.3s ease;
         }
-        .wiz-input-row input:focus { border-color: rgba(230,21,54,0.3); }
+        .wiz-input-row input:focus { border-color: rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.3); }
         .wiz-input-row input::placeholder { color: var(--muted); }
 
         .wiz-btn {
@@ -1161,24 +1166,24 @@
         }
         .wiz-btn-primary {
             background: linear-gradient(135deg, var(--cherry), var(--cherry-dark));
-            color: #fff; border: 1px solid rgba(255,77,109,0.2);
-            box-shadow: 0 4px 18px rgba(230,21,54,0.25);
+            color: #fff; border: 1px solid rgba(var(--zr-rgb-255-77-109, 255, 77, 109),0.2);
+            box-shadow: 0 4px 18px rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.25);
         }
         .wiz-btn-primary:hover:not(:disabled) {
             transform: translateY(-1px);
-            box-shadow: 0 8px 28px rgba(230,21,54,0.4);
+            box-shadow: 0 8px 28px rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.4);
         }
         .wiz-btn-primary:disabled { opacity: 0.45; cursor: not-allowed; transform: none; }
         .wiz-btn-ghost {
-            background: rgba(255,255,255,0.04); color: var(--muted);
-            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(255, 255, 255, 0.04); color: var(--muted);
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
-        .wiz-btn-ghost:hover { border-color: rgba(230,21,54,0.25); color: #fff; }
+        .wiz-btn-ghost:hover { border-color: rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.25); color: #fff; }
         .wiz-btn-sm { padding: 8px 14px; font-size: 0.74rem; border-radius: 8px; }
 
         .wiz-manual-section {
             padding: 16px; border-radius: 14px;
-            background: rgba(255,255,255,0.015); border: 1px dashed rgba(255,255,255,0.08);
+            background: rgba(255, 255, 255, 0.015); border: 1px dashed rgba(255, 255, 255, 0.08);
             margin-top: 12px;
         }
         .wiz-manual-section label {
@@ -1200,7 +1205,7 @@
             width: 68px; height: 68px; border-radius: 50%;
             background: linear-gradient(135deg, #00e676, #00b0ff);
             display: grid; place-items: center;
-            box-shadow: 0 12px 35px rgba(0,230,118,0.45);
+            box-shadow: 0 12px 35px rgba(0, 230, 118, 0.45);
             color: #000; font-size: 2rem;
             animation: wizardCheckPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) 0.1s both;
         }
@@ -1210,8 +1215,8 @@
 
         .wiz-count-badge {
             font-size: 0.72rem; font-weight: 700; color: var(--muted);
-            background: rgba(255,255,255,0.03); padding: 4px 10px;
-            border-radius: 20px; border: 1px solid rgba(255,255,255,0.06);
+            background: rgba(255, 255, 255, 0.03); padding: 4px 10px;
+            border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.06);
         }
 
         .wiz-section-title {
@@ -1233,7 +1238,7 @@
         }
         .uploader-search-box:focus-within {
             border-color: var(--cherry-light);
-            box-shadow: 0 0 16px rgba(230, 21, 54, 0.15);
+            box-shadow: 0 0 16px rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.15);
         }
         .uploader-search-box .search-icon {
             margin-left: 14px;
@@ -1268,11 +1273,11 @@
             right: 0;
             margin-top: 6px;
             background: rgba(14, 5, 10, 0.98);
-            border: 1px solid rgba(255, 43, 82, 0.3);
+            border: 1px solid rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.3);
             border-radius: var(--radius-md);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            box-shadow: 0 16px 36px rgba(0,0,0,0.7);
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7);
             max-height: 250px;
             overflow-y: auto;
             z-index: 1000;
@@ -1284,20 +1289,20 @@
             padding: 10px 14px;
             cursor: pointer;
             transition: background 0.15s ease;
-            border-bottom: 1px solid rgba(255,255,255,0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
         }
         .uploader-member-item:last-child {
             border-bottom: none;
         }
         .uploader-member-item:hover, .uploader-member-item.selected {
-            background: rgba(230, 21, 54, 0.15);
+            background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.15);
         }
         .uploader-member-avatar {
             width: 34px;
             height: 34px;
             border-radius: 50%;
             object-fit: cover;
-            border: 1px solid rgba(255, 43, 82, 0.3);
+            border: 1px solid rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.3);
             background: #11050b;
         }
         .uploader-member-info {
@@ -1330,8 +1335,8 @@
             align-items: center;
             gap: 12px;
             padding: 10px 16px;
-            background: rgba(230, 21, 54, 0.10);
-            border: 1px solid rgba(230, 21, 54, 0.35);
+            background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.10);
+            border: 1px solid rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.35);
             border-radius: var(--radius-md);
             margin-top: 4px;
         }
@@ -1367,13 +1372,21 @@
             transition: all 0.2s ease;
         }
         .credited-remove-btn:hover {
-            color: #ff2b52;
-            background: rgba(255, 43, 82, 0.1);
+            color: var(--zr-accent, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1));
+            background: rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.1);
         }
     </style>
+    <link rel="stylesheet" href="/css/glass.css?v=67">
+    <link rel="stylesheet" href="/css/atmosphere.css?v=7">
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.fontshare.com">
+    <link rel="stylesheet" href="/css/i18n.css?v=3">
+    <script src="/js/i18n.js?v=15" defer></script>
 </head>
 <body>
-    <div class="bg-aura"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
+    <div class="zr-sweep" aria-hidden="true"></div>
+    <div class="lq-veil" aria-hidden="true"></div>
     <div class="grid-bg"></div>
 
     <!-- NAVBAR -->
@@ -1385,15 +1398,16 @@
             </a>
             <ul class="nav-links" id="navLinks">
                 <li><a href="/">Home</a></li>
-                <li><a href="/resources">Resources</a></li>
+                <li><a href="/leaks">Leaks</a></li>
+                <li><a href="/feed">Feed</a></li>
                 <li><a href="/plugins">Plugins</a></li>
                 <li><a href="/requests">Requests</a></li>
-                <li><a href="/more">More</a></li>
-                <li><a href="/#contact">Contact</a></li>
+                <li><a href="/audio">Audios</a></li>
+                
             </ul>
             <div class="nav-actions">
                 <div id="authBtn"></div>
-                <button class="hamburger" id="hamburger" aria-label="Toggle Menu">
+                <button class="hamburger" id="hamburger" aria-label="Menu">
                     <span></span>
                     <span></span>
                     <span></span>
@@ -1401,8 +1415,6 @@
             </div>
         </div>
     </nav>
-
-    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
 
     <!-- CREATOR STUDIO AUTO-FILL WIZARD v2 — PREMIUM REDESIGN      -->
     <div id="creatorWizardModal" class="scanner-modal-overlay" onclick="if(event.target===this)closeCreatorWizard()">
@@ -1468,6 +1480,7 @@
     <div class="studio-alert" id="alertBox"></div>
 
     <div class="studio-container">
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
         <!-- SIDEBAR -->
         <div class="studio-sidebar" id="sidebar">
             <div class="sidebar-mobile-close">
@@ -1482,20 +1495,23 @@
                 <ul class="sidebar-menu">
                     <div class="menu-title">Publish Portals</div>
                     <li class="menu-item active">
-                        <a href="/upload"><i class="fas fa-layer-group"></i> <span>Resource Uploader</span></a>
+                        <a href="/upload"><i class="fas fa-layer-group"></i> <span>Leak Uploader</span></a>
                     </li>
                     <li class="menu-item" id="sidebarAudio">
                         <a href="/upload-audio"><i class="fas fa-music"></i> <span>Audio Uploader</span></a>
                     </li>
-                    <li class="menu-item" id="sidebarScenepack">
-                        <a href="/upload-scenepack"><i class="fas fa-film"></i> <span>Scenepack Uploader</span></a>
+                    <li class="menu-item" id="sidebarScenepacks" style="display:none">
+                        <a href="#scenepack-studio" onclick="ScenepackStudio.open(event)"><i class="fas fa-film"></i> <span>Scenepack Studio</span></a>
+                    </li>
+                    <li class="menu-item" id="sidebarScenepackControl" style="display:none">
+                        <a href="/admin-scenepacks"><i class="fas fa-sliders"></i> <span>Scenepack Control</span></a>
                     </li>
                 </ul>
             </div>
             
             <div class="sidebar-footer">
                 <div class="user-profile" id="userProfile" style="display:none">
-                    <img src="" id="userAvatar" alt="Avatar">
+                    <img id="userAvatar" alt="Avatar">
                     <div class="user-info">
                         <span class="name" id="userName">Creator</span>
                     </div>
@@ -1514,8 +1530,8 @@
             <div class="studio-header">
                 <div>
                     <button class="mobile-trigger" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
-                    <h1>Resource Upload</h1>
-                    <p>Share your professional presets and project files with the Zyrex library</p>
+                    <h1>Leak Upload</h1>
+                    <p>Share your editing leaks and stuff with the Zyrex library</p>
                 </div>
                 <!-- STEPPER -->
                 <div class="wizard-stepper" id="stepper">
@@ -1531,6 +1547,64 @@
             </div>
 
             <!-- CONTENT CARD -->
+            <div class="glass-panel sp-studio" id="spStudio" style="display:none">
+                <div class="sp-studio-head">
+                    <div>
+                        <h2><i class="fas fa-film" aria-hidden="true"></i> Scenepack Studio</h2>
+                        <p>Build numbered title pages from IMDb and RAWG, then store character scenepacks on Zyrex
+                            Cloud (SFTPGo / S3) or Google Drive. Visitors only ever see our own download page — the
+                            cloud links stay on the server.</p>
+                    </div>
+                    <div class="sp-studio-tabs" role="tablist">
+                        <button type="button" class="sp-studio-tab is-on" data-sp-tab="discover" role="tab">Discover</button>
+                        <button type="button" class="sp-studio-tab" data-sp-tab="titles" role="tab">Title pages</button>
+                        <button type="button" class="sp-studio-tab" data-sp-tab="storage" role="tab">Storage</button>
+                        <a class="sp-studio-tab sp-studio-tab-link" href="/admin-scenepacks"><i class="fas fa-sliders" aria-hidden="true"></i> Control</a>
+                    </div>
+                </div>
+
+                <div class="sps-note" id="spsNote" style="display:none"></div>
+
+                <section class="sp-studio-pane" data-sp-pane="discover">
+                    <form class="sps-row" id="spsDiscoverForm" autocomplete="off">
+                        <select class="sps-select" id="spsDiscoverProvider" aria-label="Catalogue">
+                            <option value="movie">Movies</option>
+                            <option value="series">Series</option>
+                            <option value="game">Games</option>
+                        </select>
+                        <input class="sps-input is-flex" id="spsDiscoverQuery" placeholder="Interstellar, Breaking Bad, Elden Ring…" aria-label="Search titles">
+                        <button type="submit" class="sps-btn sps-btn-primary"><i class="fas fa-magnifying-glass" aria-hidden="true"></i> Search</button>
+                    </form>
+                    <div class="sps-row" style="justify-content:space-between">
+                        <span class="sps-card-meta" id="spsDiscoverCount"></span>
+                    </div>
+                    <div class="sps-grid" id="spsDiscoverGrid"></div>
+                    <div class="sps-pager" id="spsDiscoverPager"></div>
+                </section>
+
+                <section class="sp-studio-pane" data-sp-pane="titles" hidden>
+                    <div class="sps-row">
+                        <input class="sps-input is-flex" id="spsTitlesQuery" placeholder="Filter title pages…" aria-label="Filter title pages">
+                        <span class="sps-card-meta" id="spsTitlesCount"></span>
+                    </div>
+                    <div class="sps-grid" id="spsTitlesGrid"></div>
+                    <div class="sps-pager" id="spsTitlesPager"></div>
+                    <div class="sps-detail" id="spsDetail" style="display:none"></div>
+                </section>
+
+                <section class="sp-studio-pane" data-sp-pane="storage" hidden>
+                    <p class="sp-studio-head-p" id="spsStorageScope" style="font-size:.8rem;color:var(--gray-dark);margin:0 0 12px">
+                        Your own SFTPGo folder — the same one the leak uploader writes to.
+                    </p>
+                    <p style="font-size:.78rem;color:var(--gray-dark);margin:0 0 12px">
+                        Press <strong>Publish</strong> on a pack file to move it into production; the pack form then
+                        points at the production copy, and visitors only ever download through Zyrex.
+                    </p>
+                    <div class="sps-crumbs" id="spsCrumbs"></div>
+                    <div class="sps-storage-list" id="spsStorageList"></div>
+                </section>
+            </div>
+
             <div class="glass-panel" id="mainPanel">
                 <!-- STEP 1 -->
                 <div class="step-section active" id="sec1">
@@ -1544,7 +1618,7 @@
                             </div>
 
                             <div class="field">
-                                <label><i class="fas fa-shapes"></i> Resource Sub-Categories * <small style="color:var(--muted);font-weight:400;margin-left:6px">(Select one or more)</small></label>
+                                <label><i class="fas fa-shapes"></i> Leak Sub-Categories * <small style="color:var(--muted);font-weight:400;margin-left:6px">(Select one or more)</small></label>
                                 <div class="subcat-checkbox-group" id="uploadSubcatGroup" style="display:flex;gap:10px;flex-wrap:wrap;margin-top:6px;">
                                     <label class="subcat-pill-label" id="lblSubcatPreset">
                                         <input type="checkbox" name="uploadSubcat" value="preset" checked onchange="onUploadSubcatChange()">
@@ -1562,7 +1636,7 @@
                             </div>
 
                             <!-- EXTRA SELECTOR WHEN SETTING PRESET IS CHECKED -->
-                            <div class="field" id="settingPresetTypeGroup" style="display:none;background:rgba(56,189,248,0.06);border:1px solid rgba(56,189,248,0.22);border-radius:14px;padding:14px;margin-top:-10px;margin-bottom:20px;">
+                            <div class="field" id="settingPresetTypeGroup" style="display:none;background:rgba(56, 189, 248, 0.06);border:1px solid rgba(56, 189, 248, 0.22);border-radius:14px;padding:14px;margin-top:-10px;margin-bottom:20px;">
                                 <label style="color:#38bdf8;font-size:0.8rem;font-weight:700;"><span class="cat-svg-icon cat-icon-topaz" style="margin-right:6px"></span>Setting Preset Software / Tool</label>
                                 <select id="settingPresetType" onchange="onSettingPresetTypeChange()" style="margin-top:6px;">
                                     <option value="topaz-labs" selected>Topaz Labs</option>
@@ -1585,9 +1659,9 @@
                             </div>
 
                             <!-- CREATOR SOCIAL LOOKUP -->
-                            <div class="creator-studio-panel" style="background:linear-gradient(135deg,rgba(230,21,54,0.06),rgba(15,3,6,0.8));border:1px solid var(--border-hover);border-radius:18px;padding:20px;margin-bottom:24px;box-shadow:0 10px 30px rgba(0,0,0,0.5),inset 0 1px 0 rgba(255,255,255,0.08);">
+                            <div class="creator-studio-panel" style="background:linear-gradient(135deg,rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.06),rgba(15, 3, 6, 0.8));border:1px solid var(--border-hover);border-radius:18px;padding:20px;margin-bottom:24px;box-shadow:0 10px 30px rgba(0, 0, 0, 0.5),inset 0 1px 0 rgba(255, 255, 255, 0.08);">
                                 <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
-                                    <div style="width:36px;height:36px;border-radius:10px;background:rgba(230,21,54,0.15);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--cherry-light);font-size:1rem;flex-shrink:0;">
+                                    <div style="width:36px;height:36px;border-radius:10px;background:rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.15);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--cherry-light);font-size:1rem;flex-shrink:0;">
                                         <i class="fas fa-wand-magic-sparkles"></i>
                                     </div>
                                     <div>
@@ -1615,13 +1689,13 @@
                                 </div>
 
                                 <!-- Resolved Creator Live Badge -->
-                                <div id="creatorLiveBadge" style="display:none;margin-top:14px;padding:10px 14px;background:rgba(0,0,0,0.4);border:1px solid var(--border);border-radius:12px;align-items:center;gap:12px;">
-                                    <img id="badgeAvatar" src="" alt="" referrerpolicy="no-referrer" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--cherry);">
+                                <div id="creatorLiveBadge" style="display:none;margin-top:14px;padding:10px 14px;background:rgba(0, 0, 0, 0.4);border:1px solid var(--border);border-radius:12px;align-items:center;gap:12px;">
+                                    <img id="badgeAvatar" alt="" referrerpolicy="no-referrer" style="width:36px;height:36px;border-radius:50%;object-fit:cover;border:2px solid var(--cherry);">
                                     <div style="flex:1">
                                         <div id="badgeTitle" style="font-size:0.85rem;font-weight:800;color:#fff">Creator</div>
                                         <div id="badgeUrl" style="font-size:0.7rem;color:var(--muted)">URL</div>
                                     </div>
-                                    <span id="badgeStatus" style="font-size:0.68rem;font-weight:700;color:#ffb74d;background:rgba(255,183,77,0.1);border:1px solid rgba(255,183,77,0.2);padding:4px 10px;border-radius:12px;"><i class="fas fa-spinner fa-spin"></i> Scanning...</span>
+                                    <span id="badgeStatus" style="font-size:0.68rem;font-weight:700;color:#ffb74d;background:rgba(255, 183, 77, 0.1);border:1px solid rgba(255, 183, 77, 0.2);padding:4px 10px;border-radius:12px;"><i class="fas fa-spinner fa-spin"></i> Scanning...</span>
                                 </div>
                             </div>
 
@@ -1650,6 +1724,14 @@
                                 <div class="field-hint" style="font-size:0.72rem;color:var(--muted);margin-top:6px">Search for any member on the Discord server. Selecting a member will bind their Discord User ID and profile as the uploader.</div>
                             </div>
 
+                            <div class="field" style="margin-top:-4px;margin-bottom:20px;padding:15px 16px;border:1px solid rgba(var(--zr-rgb-255-43-82, 255, 43, 82),.55);border-radius:14px;background:linear-gradient(110deg,rgba(var(--zr-rgb-255-43-82, 255, 43, 82),.14),rgba(var(--zr-rgb-255-43-82, 255, 43, 82),.045));box-shadow:0 0 22px rgba(var(--zr-rgb-255-43-82, 255, 43, 82),.09)">
+                                <label for="anonymousUploader" style="display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0;color:#fff;font-size:.9rem;font-weight:800;cursor:pointer">
+                                    <span style="display:flex;align-items:center;gap:9px"><i class="fas fa-user-secret" style="color:rgba(var(--zr-rgb-255-107-131, 255, 107, 131), 1);font-size:1rem"></i> Upload anonymously</span>
+                                    <input type="checkbox" id="anonymousUploader" style="width:20px;height:20px;flex:0 0 20px;accent-color:var(--cherry);cursor:pointer">
+                                </label>
+                                <div style="font-size:.74rem;color:rgba(255, 255, 255, .72);line-height:1.5;margin:8px 30px 0 27px">Your uploader name, Discord ID, and avatar will be hidden on this leak.</div>
+                            </div>
+
                             <div class="field">
                                 <label><i class="fas fa-hashtag"></i> Tags</label>
                                 <input type="text" id="productTags" placeholder="cinematic, velocity, shake">
@@ -1666,7 +1748,7 @@
                                     <input type="url" id="payhipLink" placeholder="https://payhip.com/b/xxxxx" onblur="autoScrape()">
                                     <button type="button" class="btn btn-ghost btn-sm" id="btnScrape" onclick="scrapeProduct()"><i class="fas fa-magic"></i> Scrape</button>
                                 </div>
-                                <div class="scraped-badge" id="scrapedBadge" style="display:none;align-items:center;gap:6px;margin-top:10px;padding:8px 12px;border-radius:8px;font-size:0.75rem;background:rgba(0,200,100,0.06);border:1px solid rgba(0,200,100,0.15);color:#00e676;">
+                                <div class="scraped-badge" id="scrapedBadge" style="display:none;align-items:center;gap:6px;margin-top:10px;padding:8px 12px;border-radius:8px;font-size:0.75rem;background:rgba(0, 200, 100, 0.06);border:1px solid rgba(0, 200, 100, 0.15);color:#00e676;">
                                     <i class="fas fa-check-circle"></i> Data auto-filled from link
                                 </div>
                             </div>
@@ -1695,7 +1777,7 @@
                                     <p id="lcDesc">No description provided yet. Describe your presets in the field to the left.</p>
                                     <div class="lc-meta">
                                         <div class="lc-creator">
-                                            <div id="lcAv" style="width:20px;height:20px;border-radius:50%;background:rgba(230,21,54,0.1);display:flex;align-items:center;justify-content:center;overflow:hidden;">
+                                            <div id="lcAv" style="width:20px;height:20px;border-radius:50%;background:rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.1);display:flex;align-items:center;justify-content:center;overflow:hidden;">
                                                 <i class="fas fa-user" style="font-size:0.5rem;color:var(--cherry-light)"></i>
                                             </div>
                                             <span id="lcName">Zyrex</span>
@@ -1713,7 +1795,7 @@
                     <div class="info-banner">
                         <i class="fas fa-info-circle"></i>
                         <div>
-                            <h4>Resource Upload Selection</h4>
+                            <h4>Leak Upload Selection</h4>
                             <p>Pick a file/folder from your personal cloud storage. This file will be packaged and served on Zyrex servers.</p>
                         </div>
                     </div>
@@ -1751,7 +1833,7 @@
                     </div>
 
                     <div class="panel-box">
-                        <h3>3. Complete Resource Packaging</h3>
+                        <h3>3. Complete Leak Packaging</h3>
                         <p class="transfer-path" id="destPath">Destination Path: <strong>--</strong></p>
                         <div class="field">
                             <label>File Source Path</label>
@@ -1799,28 +1881,200 @@
     </div>
 
     <script src="/js/chunks/chunk-store.js?v=1"></script>
-    <script src="js/auth.js?v=13"></script>
+    <script src="js/auth.js?v=19"></script>
     <script>
         let step=1,prod={},selRes=null,selDstEditor='',transferred='',cloudOk=false,cloudFiles=[],allEditors=[],currentUser=null,hlxPlatform='tiktok',cdnThumb='';
+
+        // ── Editing an existing resource ───────────────────────────────────────
+        // Manage Products sends resources here with ?edit=<id>. Only the step-1 metadata
+        // form is used: the file steps are removed, and saving goes through the product
+        // update route, so stored files are never touched.
+        let editModeId='';
+
+        async function enterEditMode(id){
+            editModeId=id;
+            let product=null;
+            try{
+                const r=await fetch('/api/products?id='+encodeURIComponent(id),{credentials:'include'});
+                if(r.ok){
+                    const d=await r.json();
+                    product=d&&(d.product||d);
+                }
+            }catch(e){}
+            if(!product||!product.id||String(product.id)!==String(id)){
+                alertMsg('Could not load that leak for editing',true);
+                return;
+            }
+            lockStudioToStepOne();
+            fillStepOne(product);
+        }
+
+        function lockStudioToStepOne(){
+            const stepper=document.getElementById('stepper');
+            if(stepper) stepper.style.display='none';
+            ['sec2','sec3'].forEach(function(secId){
+                const sec=document.getElementById(secId);
+                if(sec){ sec.classList.remove('active'); sec.style.display='none'; }
+            });
+            const heading=document.querySelector('.studio-head h1,.studio-head h2,.page-title');
+            if(heading) heading.textContent='Edit Leak';
+            document.querySelectorAll('.wizard-stepper,.step-connector').forEach(function(el){el.style.display='none'});
+            // The step-1 action becomes the save action.
+            const actions=document.querySelector('#sec1 .form-actions');
+            if(actions){
+                actions.innerHTML='<a href="/settings?tab=products" class="btn btn-ghost">Cancel</a>'
+                    +'<button type="button" class="btn btn-primary" id="saveResourceEditsBtn" onclick="saveResourceEdits()">'
+                    +'<i class="fas fa-floppy-disk"></i> Save Changes</button>';
+            }
+        }
+
+        function fillStepOne(p){
+            const setValue=function(id,value){
+                const el=document.getElementById(id);
+                if(el&&value!==undefined&&value!==null) el.value=value;
+            };
+            setValue('productName',p.name||'');
+            setValue('productCategory',p.category||'');
+            setValue('productTags',p.tags||'');
+            setValue('productDesc',p.description||'');
+            setValue('creatorSocialUrl',p.creator_social_url||'');
+            setValue('creatorName',p.creator_nickname||'');
+            setValue('creatorUsername',p.creator_username||'');
+            setValue('creatorAvatar',p.creator_avatar||'');
+            setValue('payhipLink',p.product_url||p.source_url||'');
+            setValue('thumbUrl',p.thumbnail||'');
+
+            const subs=(Array.isArray(p.resource_subcategories)&&p.resource_subcategories.length)
+                ? p.resource_subcategories
+                : String(p.resource_category||'preset').split(',').map(function(s){return s.trim()}).filter(Boolean);
+            document.querySelectorAll('input[name="uploadSubcat"]').forEach(function(cb){cb.checked=subs.indexOf(cb.value)>=0});
+            if(typeof onUploadSubcatChange==='function') onUploadSubcatChange();
+            setValue('settingPresetType',p.setting_preset_type||'topaz-labs');
+
+            const anon=document.getElementById('anonymousUploader');
+            if(anon) anon.checked=p.is_anonymous===true;
+
+            const creditId=p.credited_uploader_id||p.uploader_id||p.author_id||'';
+            if(creditId){
+                selectCreditedMember({
+                    id:String(creditId),
+                    display_name:p.credited_uploader_name||p.uploader_name||p.author_name||'',
+                    avatar:p.credited_uploader_avatar||p.uploader_avatar||p.author_avatar||'',
+                });
+                const idEl=document.getElementById('creditedId');
+                if(idEl) idEl.textContent='Discord ID: '+creditId;
+            }else{
+                clearCreditedUploader();
+            }
+            if(typeof updateLivePreview==='function') updateLivePreview();
+        }
+
+        async function saveResourceEdits(){
+            if(!editModeId) return;
+            const btn=document.getElementById('saveResourceEditsBtn');
+            const name=document.getElementById('productName').value.trim();
+            const category=(document.getElementById('productCategory')||{}).value||'';
+            const description=document.getElementById('productDesc').value.trim();
+            const creatorSocial=((document.getElementById('creatorSocialUrl')||{}).value||'').trim();
+            if(!name){alertMsg('Product Name is required',true);return}
+            if(!category){alertMsg('Category is required',true);return}
+            if(!creatorSocial){alertMsg('Creator Social URL is required',true);return}
+            if(!description){alertMsg('Description is required',true);return}
+
+            const selectedSubcats=Array.from(document.querySelectorAll('input[name="uploadSubcat"]:checked')).map(function(cb){return cb.value});
+            const finalSubcats=selectedSubcats.length?selectedSubcats:['preset'];
+            const isSettingPreset=finalSubcats.indexOf('setting-preset')>=0;
+            const anonymous=!!(document.getElementById('anonymousUploader')||{}).checked;
+
+            // Only step-1 fields: file_path and the transfer result are deliberately absent,
+            // so the update route merges onto the stored product without touching its files.
+            const payload={
+                name:name,
+                category:category,
+                tags:document.getElementById('productTags').value.trim(),
+                description:description,
+                creator_nickname:document.getElementById('creatorName').value||'',
+                creator_username:document.getElementById('creatorUsername').value||'',
+                creator_social_url:creatorSocial,
+                creator_avatar:document.getElementById('creatorAvatar').value||'',
+                thumbnail:document.getElementById('thumbUrl').value.trim(),
+                product_url:document.getElementById('payhipLink').value.trim(),
+                source_url:document.getElementById('payhipLink').value.trim(),
+                resource_category:finalSubcats.join(','),
+                resource_subcategories:finalSubcats,
+                setting_preset_type:isSettingPreset?(((document.getElementById('settingPresetType')||{}).value)||'topaz-labs'):'',
+                is_anonymous:anonymous,
+                // The credit is part of the step-1 form, so it has to be writable too -
+                // otherwise an existing credit could never be changed or removed.
+                credited_uploader_id:anonymous?'':(document.getElementById('customUploaderId').value||''),
+                credited_uploader_name:anonymous?'':(document.getElementById('customUploaderName').value||''),
+                credited_uploader_avatar:anonymous?'':(document.getElementById('customUploaderAvatar').value||''),
+                uploader_id:anonymous?'':(document.getElementById('customUploaderId').value||''),
+                uploader_name:anonymous?'':(document.getElementById('customUploaderName').value||''),
+                uploader_avatar:anonymous?'':(document.getElementById('customUploaderAvatar').value||''),
+                author_id:anonymous?'':(document.getElementById('customUploaderId').value||''),
+                author_name:anonymous?'':(document.getElementById('customUploaderName').value||''),
+                author_avatar:anonymous?'':(document.getElementById('customUploaderAvatar').value||''),
+            };
+
+            if(typeof btn!=='undefined'&&btn){btn.disabled=true;btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Saving...'}
+            try{
+                const r=await fetch('/api/products/edit/'+encodeURIComponent(editModeId),{
+                    method:'POST',
+                    headers:{'Content-Type':'application/json'},
+                    body:JSON.stringify(payload),
+                    credentials:'include',
+                });
+                const d=await r.json().catch(function(){return {}});
+                if(r.ok&&d.success!==false){
+                    try{
+                        localStorage.removeItem('zyrex_products_cache');
+                        localStorage.removeItem('zyrex_resources_cache');
+                        if(window.ZyrexChunkStore&&typeof window.ZyrexChunkStore.clearStore==='function'){
+                            window.ZyrexChunkStore.clearStore('products');
+                        }
+                    }catch(e){}
+                    const panel=document.getElementById('mainPanel');
+                    if(panel){
+                        panel.innerHTML='<div class="review-card"><div class="check"><i class="fas fa-check"></i></div>'
+                            +'<h2>Saved</h2><p style="color:var(--muted);margin-bottom:8px">The leak details were updated. Stored files were left untouched.</p>'
+                            +'<div style="display:flex;gap:12px;justify-content:center;margin-top:24px">'
+                            +'<a href="/leak?id='+encodeURIComponent(editModeId)+'" class="btn btn-primary">View Leak</a>'
+                            +'<a href="/settings?tab=products" class="btn btn-ghost">Back to Manage Products</a></div></div>';
+                    }
+                    return;
+                }
+                alertMsg(d.error||'Could not save the changes',true);
+            }catch(e){alertMsg('Network error',true)}
+            if(btn){btn.disabled=false;btn.innerHTML='<i class="fas fa-floppy-disk"></i> Save Changes'}
+        }
         
+        // Uploader credit and the anonymous switch are VISIBLE for both admins and non-admin uploaders.
+        function applyAttributionPermissions(isAdmin){
+            // Both admins and non-admin uploaders have credit and anonymous controls visible.
+        }
+
         function toggleSidebar() {
             const sb = document.getElementById('sidebar');
             const ov = document.getElementById('sidebarOverlay');
             if (sb) {
                 sb.classList.remove('sidebar-hidden');
-                sb.classList.toggle('open');
+                sb.classList.toggle('open', !sb.classList.contains('open'));
             }
-            if (ov) ov.classList.toggle('show');
+            if (ov) ov.classList.toggle('show', !!sb && sb.classList.contains('open'));
         }
 
         document.addEventListener('DOMContentLoaded',async()=>{
-            prod.id='preset-'+Date.now().toString(36);
+            const editId=new URLSearchParams(location.search).get('edit');
+            prod.id=editId||('preset-'+Date.now().toString(36));
             document.getElementById('resourceId').value=prod.id;
+            if(editId) await enterEditMode(editId);
             try{
                 const r=await fetch('/api/me',{credentials:'include'});
                 if(!r.ok){redirectToLogin();return}
                 const u=await r.json();
                 currentUser=u;
+                applyAttributionPermissions(!!u.is_admin);
                 
                 // Show profile footer
                 document.getElementById('userProfile').style.display = 'flex';
@@ -1832,14 +2086,14 @@
                 document.getElementById('userName').textContent = u.global_name || u.username;
 
                 if(u.is_admin){
+                    if (window.ScenepackStudio) window.ScenepackStudio.mount(u);
                     return;
                 }
                 
-                // Check all 3 uploader roles
+                // Check the resource and audio uploader roles
                 const roles=[
                     {id:'1519624224476762122',label:'Preset Uploader'},
-                    {id:'1522976282688880720',label:'Audio Uploader'},
-                    {id:'1522976376293167124',label:'Scenepack Uploader'}
+                    {id:'1522976282688880720',label:'Audio Uploader'}
                 ];
                 const checks=await Promise.all(roles.map(role=>fetch('/api/guild/check-role?userId='+u.id+'&roleId='+role.id,{credentials:'include'}).then(resp=>resp.json()).then(d=>d.has_role).catch(()=>false)));
                 const hasAny=checks.some(c=>c);
@@ -1851,9 +2105,6 @@
                 // Update sidebar items
                 if(!checks[1]){
                     document.getElementById('sidebarAudio').innerHTML = '<span class="locked-item"><i class="fas fa-lock"></i> <span>Audio Uploader</span> <span class="lock-badge">Locked</span></span>';
-                }
-                if(!checks[2]){
-                    document.getElementById('sidebarScenepack').innerHTML = '<span class="locked-item"><i class="fas fa-lock"></i> <span>Scenepack Uploader</span> <span class="lock-badge">Locked</span></span>';
                 }
                 if(!checks[0]){
                     showLockScreen('No Preset Uploader Access', 'You do not have the <strong>Preset Uploader</strong> role on Discord yet. Claim it to unlock preset packaging.');
@@ -1869,7 +2120,7 @@
                         <h2>${title}</h2>
                         <p>${text}</p>
                         <div class="lock-actions">
-                            <a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn btn-discord"><i class="fab fa-discord"></i> Join Discord Server</a>
+                            <a href="https://discord.gg/4J3tars4QS" target="_blank" class="btn btn-discord"><i class="fab fa-discord"></i> Join Discord Server</a>
                             <a href="/" class="btn btn-ghost"><i class="fas fa-home"></i> Go Back</a>
                         </div>
                     </div>
@@ -1878,12 +2129,15 @@
         }
 
         function goStep(s,dir){
+            if(editModeId) return;   // editing limits the studio to the metadata step
             if(s>step&&step===1){
                 var n=document.getElementById('productName').value.trim();
                 var c=(document.getElementById('productCategory')||{}).value;
                 var d=document.getElementById('productDesc').value.trim();
+                var creatorSocial=(document.getElementById('creatorSocialUrl')||{}).value||'';
                 if(!n){alertMsg('Product Name is required',true);return}
                 if(!c){alertMsg('Category is required',true);return}
+                if(!creatorSocial.trim()){alertMsg('Creator Social URL is required',true);document.getElementById('creatorSocialUrl').focus();return}
                 if(!d){alertMsg('Description is required',true);return}
             }
             if(s>step&&step===2){
@@ -1925,6 +2179,7 @@
         }
 
         function alertMsg(msg,err){
+            if(window.showStatusAlert){window.showStatusAlert(msg,!!err);return;}
             const b=document.getElementById('alertBox');
             b.textContent=msg;
             b.className='studio-alert show '+(err?'error':'success');
@@ -2189,10 +2444,33 @@
             statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <div><h4>Step 1: Resolving Profile</h4><p>Fetching creator name &amp; avatar...</p></div>';
 
             let profileData = null;
+            var profileResponse = null;
             try {
-                var r1 = await fetch('/api/hlx/resolve?url=' + encodeURIComponent(socialUrl), { credentials: 'include' });
-                profileData = await r1.json();
+                profileResponse = await fetch('/api/hlx/resolve?url=' + encodeURIComponent(socialUrl), { credentials: 'include' });
+                profileData = await profileResponse.json();
             } catch(e) {}
+
+            if (!profileResponse || !profileResponse.ok || !profileData || profileData.success === false) {
+                var lookupError = (profileData && profileData.error) || 'Scrapin could not resolve this profile right now. You can retry or enter creator details manually.';
+                if (statusEl) {
+                    statusEl.className = 'wiz-status warning';
+                    statusEl.innerHTML = '<i class="fas fa-exclamation-circle"></i> <div><h4>Profile Lookup Failed</h4><p></p></div>';
+                    var errorMessage = statusEl.querySelector('p');
+                    if (errorMessage) errorMessage.textContent = lookupError;
+                }
+                var failedBadgeStatus = document.getElementById('badgeStatus');
+                if (failedBadgeStatus) {
+                    failedBadgeStatus.textContent = 'Lookup Failed';
+                    failedBadgeStatus.style.color = '#fbbf24';
+                    failedBadgeStatus.style.background = 'rgba(251, 191, 36, 0.1)';
+                    failedBadgeStatus.style.borderColor = 'rgba(251, 191, 36, 0.2)';
+                }
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fas fa-rotate"></i> Retry Lookup';
+                }
+                return;
+            }
 
             var cleanUserFallback = rawInput.replace(/^@/, '').split('?')[0].replace(/\/$/, '').split('/').pop();
             var creatorName = (profileData && profileData.nickname) || cleanUserFallback;
@@ -2211,13 +2489,13 @@
             var badgeAv = document.getElementById('badgeAvatar');
             if (badgeAv && creatorAv) badgeAv.src = creatorAv;
             var badgeTitle = document.getElementById('badgeTitle');
-            if (badgeTitle) badgeTitle.textContent = creatorName;
+            if (badgeTitle) { badgeTitle.textContent = creatorName; badgeTitle.setAttribute('data-i18n-skip', ''); }
             var badgeStatus = document.getElementById('badgeStatus');
             if (badgeStatus) {
                 badgeStatus.innerHTML = '<i class="fas fa-check-circle"></i> Profile Set';
                 badgeStatus.style.color = '#00e676';
-                badgeStatus.style.background = 'rgba(0,200,100,0.1)';
-                badgeStatus.style.borderColor = 'rgba(0,200,100,0.2)';
+                badgeStatus.style.background = 'rgba(0, 200, 100, 0.1)';
+                badgeStatus.style.borderColor = 'rgba(0, 200, 100, 0.2)';
             }
             if (document.getElementById('creatorAvatar') && creatorAv) document.getElementById('creatorAvatar').value = creatorAv;
 
@@ -2229,8 +2507,8 @@
                 cardHtml += '<div class="wiz-cc-avatar-placeholder"><i class="fas fa-user"></i></div>';
             }
             cardHtml += '<div class="wiz-cc-info">';
-            cardHtml += '<div class="wiz-cc-name">' + creatorName + '</div>';
-            cardHtml += '<div class="wiz-cc-url">' + socialUrl + '</div>';
+            cardHtml += '<div class="wiz-cc-name" data-i18n-skip>' + creatorName + '</div>';
+            cardHtml += '<div class="wiz-cc-url" data-i18n-skip>' + socialUrl + '</div>';
             cardHtml += '</div>';
             cardHtml += '<div class="wiz-cc-badge ok"><i class="fas fa-check-circle"></i> Profile Set</div>';
             cardHtml += '</div>';
@@ -2243,8 +2521,8 @@
 
             let scanData = null;
             try {
-                var r2 = await fetch('/api/scan-creator-links?url=' + encodeURIComponent(socialUrl));
-                scanData = await r2.json();
+                var scanResponse = await fetch('/api/scan-creator-links?url=' + encodeURIComponent(socialUrl));
+                scanData = await scanResponse.json();
             } catch(e) {}
 
             if (scanData && scanData.success && scanData.found && scanData.storeUrl) {
@@ -2599,7 +2877,7 @@
                 overlay.id = 'wizCheckOverlay';
                 overlay.innerHTML = '<div class="wiz-check-circle"><i class="fas fa-check"></i></div>' +
                     '<div style="font-size:1.1rem;font-weight:800;color:#fff;text-align:center;">Product Selected!</div>' +
-                    '<div style="font-size:0.78rem;color:rgba(255,255,255,0.6);max-width:280px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (prod.title || 'Auto-filling details...') + '</div>';
+                    '<div style="font-size:0.78rem;color:rgba(255, 255, 255, 0.6);max-width:280px;text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (prod.title || 'Auto-filling details...') + '</div>';
                 modalContainer.appendChild(overlay);
             }
 
@@ -2690,21 +2968,37 @@
             }
         }
 
+        function cloudRetryHtml(message,detail){
+            return '<div class="empty" style="text-align:center;padding:24px;color:var(--muted);">'
+                +'<i class="fas fa-cloud-upload-alt"></i> '+(message||'No leaks detected in your cloud.')
+                +(detail?'<div style="margin-top:6px;font-size:12px;opacity:.75">'+detail+'</div>':'')
+                +'<div style="margin-top:12px"><button type="button" class="btn btn-ghost" onclick="scanCloud()"><i class="fas fa-rotate"></i> Scan again</button></div></div>';
+        }
+
         async function scanCloud(){
             const list=document.getElementById('resList');
             list.innerHTML='<div class="empty" style="text-align:center;padding:24px;color:var(--muted);"><i class="fas fa-spinner fa-spin"></i> Scanning cloud...</div>';
             try{
                 const r=await fetch('/api/sftpgo/detected-resources',{credentials:'include'});
-                const d=await r.json();
-                if(d.success&&d.resources&&d.resources.length){
+                let d=null;
+                try{ d=await r.json(); }catch(parseErr){ d=null; }
+                if(!r.ok&&!d){
+                    cloudOk=false;
+                    list.innerHTML=cloudRetryHtml('Cloud scan is temporarily unavailable.','Server responded with HTTP '+r.status+'. Nothing was lost — try again in a moment.');
+                    return;
+                }
+                if(d&&d.success&&d.resources&&d.resources.length){
                     cloudOk=true;
                     cloudFiles=d.resources;
                     list.innerHTML=d.resources.map((res,i)=>'<div class="res-card'+(selRes===i?' selected':'')+'" onclick="selectResource('+i+')"><div class="rc-icon"><i class="fas fa-folder"></i></div><div class="rc-info"><strong>'+res.editor+' / '+res.resource+'</strong><span>'+(res.files||[]).length+' files</span></div><i class="fas fa-chevron-right" style="color:var(--muted)"></i></div>').join('')
                 }else{
                     cloudOk=false;
-                    list.innerHTML='<div class="empty" style="text-align:center;padding:24px;color:var(--muted);"><i class="fas fa-cloud-upload-alt"></i> No resources detected in your cloud. Upload via SFTP first.</div>'
+                    list.innerHTML=cloudRetryHtml('No leaks detected in your cloud. Upload via SFTP first.',(d&&(d.note||d.error))||'');
                 }
-            }catch(e){list.innerHTML='<div class="empty" style="text-align:center;padding:24px;color:var(--cherry-light);"><i class="fas fa-exclamation-triangle"></i> Failed to scan cloud</div>'}
+            }catch(e){
+                cloudOk=false;
+                list.innerHTML=cloudRetryHtml('Could not reach the cloud service.',(e&&e.message)||'');
+            }
         }
 
         function selectResource(i){
@@ -2816,7 +3110,7 @@
             currentFile.innerText = `Source: ${res.editor}/${res.resource}`;
             fileCounts.innerText = '0%';
 
-            // Simulate multi-stage visual progress while S3/R2 multipart copy runs in backend
+            // Simulate multi-stage visual progress while the server-side multipart copy runs in backend
             let simulatedProgress = 5;
             const progressInterval = setInterval(() => {
                 if (simulatedProgress < 90) {
@@ -2828,9 +3122,9 @@
 
                     if (simulatedProgress < 30) {
                         statusTitle.innerHTML = '<i class="fas fa-cloud-arrow-up fa-fade"></i> Copying Files to Production...';
-                        currentFile.innerText = 'Transferring R2 S3 objects & large multipart chunks...';
+                        currentFile.innerText = 'Transferring files securely...';
                     } else if (simulatedProgress < 75) {
-                        statusTitle.innerHTML = '<i class="fas fa-microchip fa-spin"></i> Processing Bucket Transfer...';
+                        statusTitle.innerHTML = '<i class="fas fa-microchip fa-spin"></i> Finalizing Secure Upload...';
                         currentFile.innerText = 'Syncing cloud storage & preserving metadata...';
                     } else {
                         statusTitle.innerHTML = '<i class="fas fa-stamp fa-bounce"></i> Injecting Protection Watermarks...';
@@ -3046,6 +3340,13 @@
             var creditedId = (document.getElementById('customUploaderId') || {}).value || '';
             var creditedName = (document.getElementById('customUploaderName') || {}).value || '';
             var creditedAvatar = (document.getElementById('customUploaderAvatar') || {}).value || '';
+            var isAnonymous = !!(document.getElementById('anonymousUploader') || {}).checked;
+
+            if (isAnonymous) {
+                creditedId = '';
+                creditedName = '';
+                creditedAvatar = '';
+            }
 
             if (!creditedId && uploaderInput) {
                 var rawIn = uploaderInput.value.trim();
@@ -3079,6 +3380,7 @@
                 resource_category: finalSubcats.join(','),
                 resource_subcategories: finalSubcats,
                 setting_preset_type: settingPresetType,
+                is_anonymous: isAnonymous,
                 credited_uploader_id: creditedId || undefined,
                 credited_uploader_name: creditedName || undefined,
                 credited_uploader_avatar: creditedAvatar || undefined,
@@ -3091,7 +3393,7 @@
             if(!payload.name||!payload.category){
                 alertMsg('Fill required fields',true);
                 btn.disabled=false;
-                btn.innerHTML='<i class="fas fa-paper-plane"></i> Publish Resource';
+                btn.innerHTML='<i class="fas fa-paper-plane"></i> Publish Leak';
                 return;
             }
             try{
@@ -3105,11 +3407,11 @@
                             window.ZyrexChunkStore.clearStore('products');
                         }
                     } catch(e) {}
-                    document.getElementById('mainPanel').innerHTML='<div class="review-card"><div class="check"><i class="fas fa-check"></i></div><h2>Published!</h2><p style="color:var(--muted);margin-bottom:8px">Your resource is now live on the resources page.</p><p style="font-size:0.75rem;color:var(--muted)"><i class="fas fa-info-circle"></i> Resources are published instantly without administrative delay.</p><div style="display:flex;gap:12px;justify-content:center;margin-top:24px"><a href="/resource?id='+(d.id||prod.id)+'" class="btn btn-primary">View Resource</a> <a href="/resources" class="btn btn-ghost">Browse Resources</a> <button onclick="window.location.reload()" class="btn btn-ghost"><i class="fas fa-redo"></i> Upload Another</button></div></div>'
+                    document.getElementById('mainPanel').innerHTML='<div class="review-card"><div class="check"><i class="fas fa-check"></i></div><h2>Published!</h2><p style="color:var(--muted);margin-bottom:8px">Your leak is now live on the leaks page.</p><p style="font-size:0.75rem;color:var(--muted)"><i class="fas fa-info-circle"></i> Leaks are published instantly without administrative delay.</p><div style="display:flex;gap:12px;justify-content:center;margin-top:24px"><a href="/leak?id='+(d.id||prod.id)+'" class="btn btn-primary">View Leak</a> <a href="/leaks" class="btn btn-ghost">Browse Leaks</a> <button onclick="window.location.reload()" class="btn btn-ghost"><i class="fas fa-redo"></i> Upload Another</button></div></div>'
                 }else alertMsg(d.error||'Submit failed',true)
             }catch(e){alertMsg('Network error',true)}
             btn.disabled=false;
-            btn.innerHTML='<i class="fas fa-paper-plane"></i> Publish Resource';
+            btn.innerHTML='<i class="fas fa-paper-plane"></i> Publish Leak';
         }
         
         // Prefill from request URL params if fulfilling a request
@@ -3134,6 +3436,54 @@
 
         updateLivePreview();
     </script>
-    <script src="js/script.js?v=47"></script>
+    <script src="js/script.js?v=92"></script>
+
+<footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <a href="/" class="hero-brand-lockup footer-brand-lockup">
+                        <img src="/assets/content.png" alt="Zyrex Logo" class="hero-brand-icon">
+                        <div class="hero-brand-text-col">
+                            <span class="hero-brand-title">Zyrex<sup>™</sup></span>
+                            <span class="hero-brand-sub">EDITING</span>
+                        </div>
+                    </a>
+                    <p>Editing leaks and stuff.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/leaks">Leaks</a></li>
+                <li><a href="/feed">Feed</a></li>
+                        <li><a href="/plugins">Plugins</a></li>
+                        <li><a href="/requests">Requests</a></li>
+                        <li><a href="/audio">Audios</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="/terms">Terms of Service</a></li>
+                        <li><a href="/privacy">Privacy Policy</a></li>
+                        <li><a href="/dmca">DMCA</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="https://discord.gg/4J3tars4QS" target="_blank" rel="noopener">Discord</a></li>
+                        <li><a href="/#contact">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Zyrex Editing. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+    <script src="/js/scenepacks-admin.js?v=8"></script>
+    <script src="/js/page-motion.js?v=6"></script>
 </body>
 </html>

@@ -134,16 +134,13 @@ function renderResources(items) {
     try { deletedIds = JSON.parse(localStorage.getItem('zyrex_deleted_products') || '[]'); } catch(e) {}
     items = items.filter(r => !deletedIds.includes(r.id));
     
-    // Apply admin edits
-    try {
-        const edits = JSON.parse(localStorage.getItem('zyrex_edited_products') || '{}');
-        items = items.map(p => edits[p.id] ? { ...p, name: edits[p.id].name || p.name, category: edits[p.id].category || p.category, platform: edits[p.id].platform || p.platform, description: edits[p.id].description || p.description, desc: edits[p.id].description || p.desc, password: edits[p.id].password !== undefined ? edits[p.id].password : p.password, links: edits[p.id].links || p.links, notes: edits[p.id].notes || p.notes } : p);
-    } catch(e) {}
+    // Admin edits come from the server; see js/product-overrides.js.
+    if (window.ZyrexProductOverrides) items = window.ZyrexProductOverrides.applyList(items);
     
     const grid = document.getElementById('resourcesGrid');
     if (!grid) return;
     if (items.length === 0) {
-        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--gray-dark)"><i class="fas fa-search" style="font-size:2rem;margin-bottom:15px;display:block"></i>No resources found.</div>';
+        grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:60px 20px;color:var(--gray-dark)"><i class="fas fa-search" style="font-size:2rem;margin-bottom:15px;display:block"></i>No leaks found.</div>';
         return;
     }
     // Load download counts from localStorage
@@ -254,4 +251,4 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-console.log('📦 Zyrex Resources loaded!');
+console.log('📦 Zyrex Leaks loaded!');

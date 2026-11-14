@@ -14,24 +14,28 @@ if (Test-Path -LiteralPath $outputDir) {
 
 New-Item -ItemType Directory -Path $outputDir | Out-Null
 
-Push-Location $repoRoot
-try {
-  $publicFiles = @(
-    git ls-files -- "*.html" "favicon.ico" "_headers" "_redirects" "assets/**" "css/**" "js/*.js" "plugins/**"
-  ) | Sort-Object -Unique
-  if ($LASTEXITCODE -ne 0) {
-    throw "git ls-files failed while preparing public assets."
+$publicFiles = @()
+$publicFiles += Get-ChildItem -LiteralPath $repoRoot -File -Filter "*.html"
+foreach ($relativePath in @("_headers", "_redirects", "favicon.ico")) {
+  $source = Join-Path $repoRoot $relativePath
+  if (Test-Path -LiteralPath $source -PathType Leaf) {
+    $publicFiles += Get-Item -LiteralPath $source
   }
-} finally {
-  Pop-Location
 }
 
-foreach ($relativePath in $publicFiles) {
-  $source = Join-Path $repoRoot $relativePath
+foreach ($relativeDirectory in @("assets", "css", "js", "plugins")) {
+  $sourceDirectory = Join-Path $repoRoot $relativeDirectory
+  if (Test-Path -LiteralPath $sourceDirectory -PathType Container) {
+    $publicFiles += Get-ChildItem -LiteralPath $sourceDirectory -File -Recurse
+  }
+}
+
+foreach ($sourceFile in $publicFiles) {
+  $relativePath = $sourceFile.FullName.Substring($repoRoot.Length).TrimStart([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar)
   $destination = Join-Path $outputDir $relativePath
   $destinationParent = Split-Path -Parent $destination
   New-Item -ItemType Directory -Path $destinationParent -Force | Out-Null
-  Copy-Item -LiteralPath $source -Destination $destination
+  Copy-Item -LiteralPath $sourceFile.FullName -Destination $destination
 }
 
 $assetCount = (Get-ChildItem -LiteralPath $outputDir -Recurse -File).Count

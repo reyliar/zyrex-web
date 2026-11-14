@@ -21,7 +21,9 @@ function getProductSubcategories(item) {
 }
 window.getProductSubcategories = getProductSubcategories;
 
-window.DEFAULT_AVATAR = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2EwYTBiMCI+PHBhdGggZD0iTTEyIDEyYzIuMjEgMCA0LTEuNzkgNC00cy0xLjc5LTQtNC00LTQgMS43OS00IDQgMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYyaDE2di0yYzAtMi42Ni01LjMzLTQtOC00eiIvPjwvc3ZnPg==";
+window.DEFAULT_AVATAR = '/assets/default-avatar.png';
+
+window.ANONYMOUS_AVATAR = window.DEFAULT_AVATAR || '/assets/default-avatar.png';
 
 window.handleAvatarError = function(img) {
     if (!img) return;
@@ -30,40 +32,36 @@ window.handleAvatarError = function(img) {
 };
 
 var presetDiscordAvatarCache = {};
-async function fetchPresetDiscordAvatar(userId, fallback) {
-    if (userId && presetDiscordAvatarCache[userId]) return presetDiscordAvatarCache[userId];
-    if (userId && /^\d{17,20}$/.test(userId)) {
-        try {
-            const resp = await fetch('/api/discord-user?userId=' + userId);
-            if (resp.ok) {
-                const data = await resp.json();
-                if (data && data.success && data.user) {
-                    let avUrl = data.user.avatar_url;
-                    if (!avUrl && data.user.avatar) {
-                        const ext = data.user.avatar.startsWith('a_') ? 'gif' : 'png';
-                        avUrl = 'https://cdn.discordapp.com/avatars/' + userId + '/' + data.user.avatar + '.' + ext + '?size=128';
-                    }
-                    if (avUrl) {
-                        presetDiscordAvatarCache[userId] = avUrl;
-                    }
-                    const liveName = data.user.display_name || data.user.global_name || data.user.username;
-                    if (liveName) {
-                        document.querySelectorAll('.preset-card-name[data-uploader-id="' + userId + '"]').forEach(el => {
-                            el.textContent = liveName;
-                        });
-                    }
-                    if (avUrl) return avUrl;
-                }
-            }
-        } catch(e) {}
+var presetDiscordProfileCache = {};
+function resolvePresetDiscordAvatar(userId, fallback) {
+    // The shared localStorage cache is authoritative: it is what every resource
+    // page renders, so the grid must agree with the detail pages.
+    if (userId && window.ZyrexProfile) {
+        var shared = window.ZyrexProfile.cachedAvatar(userId);
+        if (shared) return shared;
     }
-    if (fallback && fallback.startsWith('http')) {
+    if (userId && presetDiscordAvatarCache[userId]) return presetDiscordAvatarCache[userId];
+    if (window.ZyrexProfile) {
+        var resolved = window.ZyrexProfile.avatarUrl(fallback, userId);
+        if (resolved) {
+            if (userId) {
+                presetDiscordAvatarCache[userId] = resolved;
+                window.ZyrexProfile.rememberAvatar(userId, resolved);
+            }
+            return resolved;
+        }
+        if (userId) return window.ZyrexProfile.defaultDiscordAvatar(userId) || window.DEFAULT_AVATAR;
+        return window.DEFAULT_AVATAR;
+    }
+    if (fallback && /^https?:\/\//i.test(fallback)) {
         if (userId) presetDiscordAvatarCache[userId] = fallback;
         return fallback;
     }
     if (fallback) {
-        const ext = fallback.startsWith('a_') ? 'gif' : 'png';
-        const url = 'https://cdn.discordapp.com/avatars/' + (userId || '0') + '/' + fallback + '.' + ext + '?size=128';
+        const hash = String(fallback).replace(/\.(png|jpg|jpeg|webp|gif)$/i, '');
+        if (!/^(?:a_)?[a-z0-9_-]{16,}$/i.test(hash) || !userId) return window.DEFAULT_AVATAR;
+        const ext = hash.startsWith('a_') ? 'gif' : 'png';
+        const url = 'https://cdn.discordapp.com/avatars/' + userId + '/' + hash + '.' + ext + '?size=128';
         if (userId) presetDiscordAvatarCache[userId] = url;
         return url;
     }
@@ -74,19 +72,65 @@ async function fetchPresetDiscordAvatar(userId, fallback) {
     return 'https://cdn.discordapp.com/embed/avatars/' + defIdx + '.png';
 }
 
+function fetchPresetDiscordAvatar(userId) {
+    if (!userId) return Promise.resolve('');
+    if (!presetDiscordProfileCache[userId]) {
+        presetDiscordProfileCache[userId] = fetch('/api/discord-user?userId=' + encodeURIComponent(userId))
+            .then(function(response) { return response.ok ? response.json() : null; })
+            .then(function(data) {
+                var user = data && data.success && data.user;
+                if (!user) return '';
+                var url = '';
+                if (user.avatar) {
+                    var ext = String(user.avatar).startsWith('a_') ? 'gif' : 'png';
+                    url = '/api/avatar/' + encodeURIComponent(userId) + '/' + encodeURIComponent(user.avatar) + '.' + ext + '?size=128';
+                } else {
+                    url = user.avatar_url || '';
+                }
+                if (url && window.ZyrexProfile) window.ZyrexProfile.rememberAvatar(userId, url);
+                return url;
+            })
+            .catch(function() { return ''; });
+    }
+    return presetDiscordProfileCache[userId];
+}
+
+window.handlePresetCardAvatarError = function(img) {
+    if (!img) return;
+    var userId = img.getAttribute('data-uploader-id') || '';
+    if (userId && img.dataset.profileLookupStarted !== 'true') {
+        img.dataset.profileLookupStarted = 'true';
+        fetchPresetDiscordAvatar(userId).then(function(url) {
+            if (url && img.isConnected) img.src = url;
+            else if (img.isConnected) window.handleAvatarError(img);
+        });
+        return;
+    }
+    window.handleAvatarError(img);
+};
+
 function loadPresetAvatars() {
-    document.querySelectorAll('.preset-card-avatar[data-uploader-id]').forEach(async function(img) {
+    document.querySelectorAll('.preset-card-avatar[data-uploader-id]').forEach(function(img) {
         var uid = img.getAttribute('data-uploader-id');
         var fb = img.getAttribute('data-fallback') || '';
+        img.onerror = function() { window.handlePresetCardAvatarError(this); };
         if (uid) {
-            var url = await fetchPresetDiscordAvatar(uid, fb);
+            var url = resolvePresetDiscordAvatar(uid, fb);
             if (url) img.src = url;
+            if (img.dataset.profileLookupStarted !== 'true') {
+                img.dataset.profileLookupStarted = 'true';
+                fetchPresetDiscordAvatar(uid).then(function(liveUrl) {
+                    if (liveUrl && img.isConnected) img.src = liveUrl;
+                });
+            }
         }
     });
 }
 
 // Cache helpers for products data
-var PRODUCTS_CACHE_KEY = 'zyrex_products_cache';
+// Bump this when creator identity/avatar handling changes so old catalogs do
+// not keep rendering stale creator photos for returning visitors.
+var PRODUCTS_CACHE_KEY = 'zyrex_products_cache_v4';
 var PRODUCTS_CACHE_TTL = 15 * 60 * 1000; // 15 minutes
 var PRESETS_PAGE_SIZE = 33;
 var currentPresetPage = 1;
@@ -114,30 +158,195 @@ function hideResourcesLoader() {
 }
 
 function getCachedProducts() {
-    try {
-        var raw = localStorage.getItem(PRODUCTS_CACHE_KEY);
-        if (!raw) return null;
-        var cached = JSON.parse(raw);
-        return cached.data || cached;
-    } catch(e) {}
+    if (window.ZyrexPrivacy && typeof window.ZyrexPrivacy.readProducts === 'function') {
+        return window.ZyrexPrivacy.readProducts();
+    }
     return null;
 }
 function setCachedProducts(data) {
-    try {
-        localStorage.setItem(PRODUCTS_CACHE_KEY, JSON.stringify({ ts: Date.now(), data: data }));
-    } catch(e) {}
+    if (window.ZyrexPrivacy && typeof window.ZyrexPrivacy.writeProducts === 'function') {
+        window.ZyrexPrivacy.writeProducts(data);
+    } else {
+        try {
+            localStorage.setItem(PRODUCTS_CACHE_KEY, JSON.stringify({ ts: Date.now(), data: data }));
+        } catch(e) {}
+    }
     if (window.ZyrexChunkStore && Array.isArray(data)) {
         window.ZyrexChunkStore.storeCatalogChunks('products', data, PRESETS_PAGE_SIZE);
     }
 }
 
+function updateCreatorMarquee(products) {
+    var root = document.getElementById('creatorMarquee');
+    var viewport = root && root.querySelector('.creator-marquee-viewport');
+    var track = document.getElementById('creatorMarqueeTrack');
+    if (!root || !viewport || !track || !Array.isArray(products)) return;
+
+    var unique = new Map();
+    products.forEach(function(product) {
+        if (!product) return;
+        var productType = String(product.type || product.resource_type || '').trim().toLowerCase();
+        var productCategory = String(product.category || '').trim().toLowerCase();
+        var productId = String(product.id || '').trim().toLowerCase();
+        // This strip only represents resources rendered on /resources. Scenepacks
+        // have their own catalog and should not introduce creators here.
+        if ((productType && productType !== 'preset') || productCategory === 'scenepack' || productId.indexOf('scenepack-') === 0) return;
+        var socialUrl = String(product.creator_social_url || '').trim();
+        var parsedUrl;
+        try {
+            parsedUrl = new URL(socialUrl);
+            if (!/^https?:$/.test(parsedUrl.protocol)) return;
+        } catch (_) { return; }
+
+        var host = parsedUrl.hostname.replace(/^www\./i, '').toLowerCase();
+        var path = parsedUrl.pathname.replace(/\/+$/, '');
+        var platform = String(product.creator_platform || host.split('.')[0]).toLowerCase();
+        if (platform === 'twitter') platform = 'x';
+        var accountId = String(product.creator_account_id || '').trim();
+        var key = accountId ? platform + ':' + accountId : host + path.toLowerCase();
+        if (!key) return;
+        var pathParts = path.split('/').filter(Boolean).map(function(part) {
+            try { return decodeURIComponent(part); } catch (_) { return part; }
+        });
+        var pathName = pathParts[0] || '';
+        if (/^(channel|channels|user|users|c|profile)$/i.test(pathName) && pathParts[1]) pathName = pathParts[1];
+        var username = pathName.replace(/^@+/, '');
+        var candidate = String(product.creator_username || '').trim().replace(/^@+/, '');
+        if (/^[a-zA-Z0-9._-]{1,64}$/.test(candidate) && !/^https?$/i.test(candidate)) username = candidate;
+        if (!/^[a-zA-Z0-9._-]{1,64}$/.test(username)) username = '';
+        if (!username) return;
+        var handle = '@' + username;
+
+        var avatar = String(product.creator_avatar || '').trim();
+        try {
+            if (!avatar || new URL(avatar, location.href).protocol !== 'https:') avatar = '';
+        } catch (_) { avatar = ''; }
+        var existing = unique.get(key);
+        if (existing) {
+            if (!existing.avatar && avatar) existing.avatar = avatar;
+        } else {
+            unique.set(key, { handle: handle, avatar: avatar, url: parsedUrl.href, key: key, host: host, platform: platform, accountId: accountId });
+        }
+    });
+
+    // Account IDs are the canonical identity, but older catalog rows may have
+    // incomplete IDs. Share a known avatar among rows for the same platform
+    // handle so a first row with an empty avatar cannot create a blank badge.
+    var avatarByHandle = new Map();
+    unique.forEach(function(creator) {
+        var handleKey = String(creator.platform || creator.host || '') + ':' + creator.handle.toLowerCase();
+        if (creator.avatar && !avatarByHandle.has(handleKey)) avatarByHandle.set(handleKey, creator.avatar);
+    });
+    unique.forEach(function(creator) {
+        if (creator.avatar) return;
+        var handleKey = String(creator.platform || creator.host || '') + ':' + creator.handle.toLowerCase();
+        if (avatarByHandle.has(handleKey)) creator.avatar = avatarByHandle.get(handleKey);
+    });
+
+    var creators = Array.from(unique.values());
+    if (!creators.length) {
+        root.style.display = 'none';
+        return;
+    }
+
+    var searchInput = document.getElementById('creatorMarqueeSearch');
+
+    function makeBadge(creator, clone) {
+        var badge = document.createElement('button');
+        badge.type = 'button';
+        badge.className = 'creator-marquee-badge';
+        badge.dataset.creatorKey = creator.key;
+        badge.dataset.creatorHost = creator.host;
+        badge.dataset.creatorHandle = creator.handle.toLowerCase();
+        badge.dataset.creatorPlatform = creator.platform || '';
+        badge.dataset.creatorAccountId = creator.accountId || '';
+        badge.title = 'Show leaks by ' + creator.handle;
+        badge.setAttribute('aria-label', 'Show leaks by ' + creator.handle);
+        if (clone) badge.tabIndex = -1;
+
+        var avatar = document.createElement('img');
+        avatar.src = creator.avatar || window.DEFAULT_AVATAR || '/assets/content.png';
+        avatar.alt = '';
+        avatar.loading = 'eager';
+        avatar.decoding = 'async';
+        avatar.onerror = function() {
+            this.onerror = null;
+            this.src = window.DEFAULT_AVATAR || '/assets/content.png';
+        };
+        var name = document.createElement('span');
+        name.className = 'creator-marquee-name';
+        name.textContent = creator.handle;
+        badge.append(avatar, name);
+        return badge;
+    }
+
+    function paintCreatorMarquee(query) {
+        track.replaceChildren();
+        root.style.display = '';
+        query = String(query || '').trim().toLowerCase().replace(/^@+/, '');
+
+        if (query) {
+            root.classList.add('is-searching');
+            var matches = creators.filter(function(creator) {
+                return creator.handle.toLowerCase().slice(1).includes(query);
+            });
+            if (!matches.length) {
+                var empty = document.createElement('div');
+                empty.className = 'creator-marquee-empty';
+                empty.textContent = 'No creators found';
+                track.appendChild(empty);
+                return;
+            }
+            matches.forEach(function(creator) { track.appendChild(makeBadge(creator, false)); });
+            return;
+        }
+
+        root.classList.remove('is-searching');
+        // Repeat short creator lists enough to fill the viewport, then mirror
+        // the complete sequence for a continuous, gap-free marquee.
+        creators.forEach(function(creator) { track.appendChild(makeBadge(creator, false)); });
+        var baseWidth = track.scrollWidth;
+        var repeatCount = Math.max(1, Math.ceil((viewport.clientWidth || 900) / Math.max(baseWidth, 1)));
+        for (var i = 1; i < repeatCount; i++) {
+            creators.forEach(function(creator) { track.appendChild(makeBadge(creator, true)); });
+        }
+        Array.from(track.children).forEach(function(badge) {
+            var duplicate = makeBadge({
+                key: badge.dataset.creatorKey,
+                host: badge.dataset.creatorHost,
+                handle: badge.dataset.creatorHandle,
+                platform: badge.dataset.creatorPlatform,
+                accountId: badge.dataset.creatorAccountId,
+                avatar: badge.querySelector('img').src,
+            }, true);
+            duplicate.setAttribute('aria-hidden', 'true');
+            track.appendChild(duplicate);
+        });
+    }
+
+    if (searchInput) searchInput.oninput = function() { paintCreatorMarquee(this.value); };
+    paintCreatorMarquee(searchInput ? searchInput.value : '');
+
+    viewport.onclick = function(event) {
+        var badge = event.target.closest('.creator-marquee-badge');
+        if (!badge || typeof window.filterByCreator !== 'function') return;
+        window.filterByCreator({ key: badge.dataset.creatorKey, host: badge.dataset.creatorHost, handle: badge.dataset.creatorHandle, platform: badge.dataset.creatorPlatform, accountId: badge.dataset.creatorAccountId });
+    };
+}
+
 async function initPresets() {
     var apiCounts = {}, statsData = {};
+    // Wait for the privacy epoch before trusting anything from storage: a cached
+    // catalog that predates an anonymity change must never be painted.
+    if (window.ZyrexPrivacy && typeof window.ZyrexPrivacy.whenReady === 'function') {
+        await window.ZyrexPrivacy.whenReady();
+    }
     var cachedProducts = getCachedProducts();
 
     // Stale-While-Revalidate: Render immediately from cache on frame 0
     if (cachedProducts && cachedProducts.length > 0) {
         try {
+            updateCreatorMarquee(cachedProducts);
             var localCounts = JSON.parse(localStorage.getItem("zyrex_downloads") || "{}");
             var initialPresets = cachedProducts.filter(function(p) { return !p.type || p.type === 'preset'; });
             initialPresets.forEach(function(p, idx) { if (p._origIdx === undefined) p._origIdx = idx; });
@@ -178,6 +387,7 @@ async function initPresets() {
         staticPresets.forEach(function(sp) {
             if (!merged.some(function(p) { return p.id === sp.id; })) merged.push(sp);
         });
+        updateCreatorMarquee(merged);
         var presetsOnly = merged.filter(function(p) { return !p.type || p.type === 'preset'; });
         presetsOnly.forEach(function(p, idx) { p._origIdx = idx; });
 
@@ -211,14 +421,12 @@ function updatePresetStats(data, apiCounts, statsData){
     animateRes('statDownloads', totalDl);
 
     // Hero Real Statistics Counters
-    var pluginsCount = 0, presetsCount = 0, scenepacksCount = 0, audiosCount = 0;
+    var pluginsCount = 0, presetsCount = 0, audiosCount = 0;
     (data || []).forEach(function(r) {
         var cat = (r.category || '').toLowerCase();
         var type = (r.type || '').toLowerCase();
         if (type === 'plugin' || cat === 'plugin' || cat === 'adobe' || cat === 'ofx' || cat === 'software') {
             pluginsCount++;
-        } else if (type === 'scenepack' || cat === 'scenepack') {
-            scenepacksCount++;
         } else if (type === 'audio' || cat === 'audio') {
             audiosCount++;
         } else {
@@ -229,7 +437,6 @@ function updatePresetStats(data, apiCounts, statsData){
     animateRes('heroStatTotal', total);
     animateRes('heroStatPlugins', pluginsCount);
     animateRes('heroStatPresets', presetsCount);
-    animateRes('heroStatScenepacks', scenepacksCount);
     animateRes('heroStatAudios', audiosCount);
 
     // Update category pill counts
@@ -365,24 +572,8 @@ function renderPresets(items) {
     try { deletedIds = JSON.parse(localStorage.getItem('zyrex_deleted_products') || '[]'); } catch(e) {}
     items = items.filter(p => !deletedIds.includes(p.id));
     
-    // Apply admin edits
-    try {
-        const edits = JSON.parse(localStorage.getItem('zyrex_edited_products') || '{}');
-        items = items.map(p => edits[p.id] ? { 
-            ...p, 
-            name: edits[p.id].name || p.name, 
-            category: edits[p.id].category || p.category, 
-            platform: edits[p.id].platform || p.platform, 
-            description: edits[p.id].description || p.description, 
-            desc: edits[p.id].description || p.desc, 
-            password: edits[p.id].password !== undefined ? edits[p.id].password : p.password, 
-            links: edits[p.id].links || p.links, 
-            notes: edits[p.id].notes || p.notes,
-            resource_category: edits[p.id].resource_category !== undefined ? edits[p.id].resource_category : p.resource_category,
-            resource_subcategories: edits[p.id].resource_subcategories !== undefined ? edits[p.id].resource_subcategories : p.resource_subcategories,
-            setting_preset_type: edits[p.id].setting_preset_type !== undefined ? edits[p.id].setting_preset_type : p.setting_preset_type
-        } : p);
-    } catch(e) {}
+    // Admin edits come from the server; see js/product-overrides.js.
+    if (window.ZyrexProductOverrides) items = window.ZyrexProductOverrides.applyList(items);
     
     const grid = document.getElementById('pg') || document.getElementById('presetsGrid');
     if (!grid) return;
@@ -450,22 +641,39 @@ window.getCategorySvgClass = getCategorySvgClass;
         const discordIdMatch = (item.creator_avatar || item.uploader_avatar || '').match(/\/avatars\/(\d{17,20})\//);
         const extractedDiscordId = discordIdMatch ? discordIdMatch[1] : '';
 
-        const uploaderName = (item.uploader_name || item.creator_nickname || item.author_name || 'Zyrex').trim();
-        const uploaderId = (item.uploader_id || extractedDiscordId || item.author_id || '').trim();
-        const uploaderAv = (item.uploader_avatar || item.creator_avatar || item.author_avatar || '').trim();
-        const avatarHtml = `<img src="${uploaderAv || window.DEFAULT_AVATAR}" class="preset-card-avatar" data-uploader-id="${uploaderId}" data-fallback="${uploaderAv}" alt="" onerror="window.handleAvatarError(this)">`;
+        const rawUploaderId = item.is_anonymous ? '' : String(item.credited_uploader_id || item.uploader_id || item.author_id || extractedDiscordId || '').trim();
+        const creatorUsername = String(item.creator_username || '').trim().replace(/^@+/, '');
+        const isFounderSocialImport = !item.is_anonymous && !item.credited_uploader_id
+            && rawUploaderId === '1421177012814614548' && creatorUsername
+            && !/^(reyli|reyliar)$/i.test(creatorUsername);
+        const uploaderName = item.is_anonymous ? 'Anonymous' : (isFounderSocialImport
+            ? (item.creator_nickname || '@' + creatorUsername)
+            : (item.credited_uploader_name || item.uploader_name || item.author_name || item.creator_nickname || 'Zyrex').trim());
+        const uploaderId = isFounderSocialImport ? '' : rawUploaderId;
+        const uploaderAv = item.is_anonymous ? '' : (isFounderSocialImport
+            ? (item.creator_avatar || '')
+            : (item.credited_uploader_avatar || item.uploader_avatar || item.author_avatar || (extractedDiscordId && !item.uploader_id && !item.author_id ? item.creator_avatar : '') || '').trim());
+        const avatarSrc = item.is_anonymous ? window.ANONYMOUS_AVATAR : (uploaderAv ? resolvePresetDiscordAvatar(uploaderId, uploaderAv) : window.DEFAULT_AVATAR);
+        const avatarHtml = `<img src="${avatarSrc}" class="preset-card-avatar" data-uploader-id="${uploaderId}" data-fallback="${uploaderAv}" alt="" onerror="window.handlePresetCardAvatarError(this)">`;
         const nickname = uploaderName;
+        // The whole card is already an anchor, so the uploader name routes to the
+        // profile itself instead of nesting links.
+        const uploaderProfileUrl = item.is_anonymous || isFounderSocialImport ? '' : String(item.uploader_profile_url || '').trim();
+        const uploaderNameAttr = uploaderProfileUrl
+            ? ` style="cursor:pointer" title="View profile" onclick="event.preventDefault();event.stopPropagation();location.href='${uploaderProfileUrl}'"`
+            : '';
         const dlCount = downloadCounts[item.id] || item.downloads || 0;
         const likeCount = likeCounts[item.id] || 0;
 
-        const thumbHtml = item.thumbnail ? 
-            `<img src="${item.thumbnail}" class="rimg" alt="" loading="lazy" onerror="this.style.display='none';this.parentElement.querySelector('.rimg-fallback').style.display='flex'">` +
+        const thumbnailUrl = String(item.thumbnail || '').replace(/&amp;/gi, '&').replace(/&#0*38;/gi, '&');
+        const thumbHtml = thumbnailUrl ?
+            `<img src="${thumbnailUrl}" class="rimg" alt="" loading="lazy" onerror="this.style.display='none';this.parentElement.querySelector('.rimg-fallback').style.display='flex'">` +
             `<div class="rimg-fallback" style="display:none"><span class="cat-svg-icon ${catSvgClass}" style="font-size:2.8rem"></span></div>` : 
             `<div class="rimg-fallback"><span class="cat-svg-icon ${catSvgClass}" style="font-size:2.8rem"></span></div>`;
 
         const itemType = (item.type || '').toLowerCase();
-        let detailUrl = '/resource?id=' + encodeURIComponent(item.id);
-        if (itemType === 'scenepack') detailUrl = '/product-scenepack?id=' + encodeURIComponent(item.id);
+        let detailUrl = '/leak?id=' + encodeURIComponent(item.id);
+        if (itemType === 'scenepack') detailUrl = '/leaks';
         else if (itemType === 'audio') detailUrl = '/product-audio?id=' + encodeURIComponent(item.id);
         else if (itemType === 'plugin' || itemType === 'software') detailUrl = '/product?id=' + encodeURIComponent(item.id);
 
@@ -497,7 +705,7 @@ window.getCategorySvgClass = getCategorySvgClass;
             '<div class="rc-footer">' +
             '<div class="rc-meta">' +
             '<div class="rava-fb">' + avatarHtml + '</div>' +
-            '<span class="rname preset-card-name" data-uploader-id="' + uploaderId + '">' + nickname + '</span></div>' +
+            '<span class="rname preset-card-name' + (uploaderId === '1421177012814614548' ? ' is-founder-name' : '') + '"' + uploaderNameAttr + ' data-uploader-id="' + uploaderId + '">' + nickname + '</span></div>' +
             '<div class="rc-actions">' +
             '<span><i class="fas fa-download"></i> ' + dlCount + '</span>' +
             '<span><i class="fas fa-heart"></i> ' + likeCount + '</span>' +
@@ -542,6 +750,7 @@ function getCategoryLabel(category) {
 
 let currentPresetCategory = 'all';
 let currentSearch = '';
+let currentCreatorFilter = null;
 let currentSort = 'recent';
 let creatorIndex = {}; // {username: [product_ids]}
 let creatorIndexLoaded = false;
@@ -638,6 +847,67 @@ function filterBySubcat(subcat) {
 }
 window.filterBySubcat = filterBySubcat;
 
+function filterByCreator(profile) {
+    if (!profile || !profile.key) return;
+    currentCreatorFilter = {
+        key: String(profile.key).toLowerCase(),
+        host: String(profile.host || '').toLowerCase(),
+        handle: String(profile.handle || '').toLowerCase(),
+        platform: String(profile.platform || '').toLowerCase(),
+        accountId: String(profile.accountId || '')
+    };
+    currentSearch = '';
+    var searchInput = document.getElementById('s');
+    if (searchInput) searchInput.value = '';
+    currentPresetCategory = 'all';
+    currentPresetSubcat = 'all';
+    currentPresetPage = 1;
+    document.querySelectorAll('#cp button').forEach(function(button) {
+        button.classList.toggle('active', button.dataset.c === 'all');
+    });
+    document.querySelectorAll('#subcatTabs .subcat-btn').forEach(function(button) {
+        button.classList.toggle('active', button.dataset.subcat === 'all');
+    });
+    var status = document.getElementById('activeCreatorFilter');
+    var name = document.getElementById('activeCreatorName');
+    if (name) name.textContent = profile.handle || '';
+    if (status) status.style.display = 'inline-flex';
+    filterPresets();
+    var results = document.querySelector('.ri');
+    if (results) results.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+window.filterByCreator = filterByCreator;
+
+function clearCreatorFilter() {
+    currentCreatorFilter = null;
+    var status = document.getElementById('activeCreatorFilter');
+    if (status) status.style.display = 'none';
+    currentPresetPage = 1;
+    filterPresets();
+}
+window.clearCreatorFilter = clearCreatorFilter;
+
+function productMatchesCreator(product, selected) {
+    if (!product || !selected) return false;
+    if (selected.accountId && String(product.creator_account_id || '') === selected.accountId && String(product.creator_platform || '').toLowerCase().replace('twitter', 'x') === selected.platform) return true;
+    var socialUrl = String(product.creator_social_url || '').trim();
+    if (socialUrl) {
+        try {
+            var parsed = new URL(socialUrl);
+            if (/^https?:$/.test(parsed.protocol)) {
+                var host = parsed.hostname.replace(/^www\./i, '').toLowerCase();
+                var key = host + parsed.pathname.replace(/\/+$/, '').toLowerCase();
+                if (key === selected.key) return true;
+                if (host === selected.host && selected.handle) {
+                    var username = String(product.creator_username || '').trim().replace(/^@+/, '').toLowerCase();
+                    if (username && username === selected.handle.replace(/^@/, '')) return true;
+                }
+            }
+        } catch (_) {}
+    }
+    return false;
+}
+
 function filterPresets() {
     try {
     const data = window.presetsData || [];
@@ -658,10 +928,8 @@ function filterPresets() {
         });
     }
 
-    // Filter by Access
-    const accessEl = document.getElementById('accessFilter');
-    if (accessEl && accessEl.value === 'free') {
-        filtered = filtered.filter(r => !r.price || r.price === 0 || r.price === '0' || r.is_free);
+    if (currentCreatorFilter) {
+        filtered = filtered.filter(function(product) { return productMatchesCreator(product, currentCreatorFilter); });
     }
 
     if (currentSearch) {
@@ -782,15 +1050,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (btn && btn.dataset.subcat) {
                 filterBySubcat(btn.dataset.subcat);
             }
-        });
-    }
-
-    // Access filter
-    const accessFilterEl = document.getElementById('accessFilter');
-    if (accessFilterEl) {
-        accessFilterEl.addEventListener('change', () => {
-            currentPresetPage = 1;
-            filterPresets();
         });
     }
 

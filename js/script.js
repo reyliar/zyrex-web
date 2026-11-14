@@ -1,232 +1,433 @@
+// Remember the last in-site page so pages with a "back" affordance (settings)
+// can return a visitor where they came from, not always to the home page.
+window.ZyrexHistory = {
+    key: 'zyrex_last_page',
+    remember: function () {
+        try {
+            var path = location.pathname.replace(/\/+$/, '') || '/';
+            if (path === '/settings') return;
+            sessionStorage.setItem(this.key, path + location.search + location.hash);
+        } catch (e) {}
+    },
+    previous: function () {
+        try { return sessionStorage.getItem(this.key) || ''; } catch (e) { return ''; }
+    }
+};
+window.ZyrexHistory.remember();
+
+// Timed pollers stand down while the tab is hidden or the device is offline: a
+// background tab cannot show the update, and every avoidable request is another
+// chance for a split-second network blip to look like a site fault.
+window.ZyrexPoll = {
+    whileVisible: function (task, intervalMs) {
+        var lastRunAt = 0;
+        function run() {
+            lastRunAt = Date.now();
+            try { task(); } catch (e) {}
+        }
+        setInterval(function () {
+            if (document.visibilityState === 'hidden' || navigator.onLine === false) return;
+            run();
+        }, intervalMs);
+        document.addEventListener('visibilitychange', function () {
+            if (document.visibilityState !== 'visible' || navigator.onLine === false) return;
+            if (Date.now() - lastRunAt < 5000) return;
+            run();
+        });
+        window.addEventListener('online', function () {
+            if (document.visibilityState === 'hidden') return;
+            if (Date.now() - lastRunAt < 5000) return;
+            run();
+        });
+        return run;
+    }
+};
+
+
+// Markdown for resource descriptions. Rendering is escape-first: the source is
+// HTML-escaped before any markdown is applied, so a description can never inject
+// markup, and link targets are restricted to safe schemes.
+window.ZyrexMarkdown = (function () {
+    var SAFE_SCHEME = /^(?:https?:\/\/|mailto:|tel:)/i;
+    var PLACEHOLDER = '\u0000';
+
+    function escapeHtml(value) {
+        return String(value == null ? '' : value)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    // Only explicit web, mail and telephone URLs, or same-site paths, may become
+    // links. Anything else (javascript:, data:, vbscript:) is dropped.
+    function safeUrl(raw) {
+        var url = String(raw == null ? '' : raw).trim().replace(/^<|>$/g, '');
+        if (!url) return '';
+        if (SAFE_SCHEME.test(url)) return url;
+        if (url.charAt(0) === '/' || url.charAt(0) === '#') return url;
+        return '';
+    }
+
+    function anchor(href, label, title) {
+        var external = /^https?:\/\//i.test(href);
+        return '<a href="' + href + '"' + (title ? ' title="' + title + '"' : '') +
+            (external ? ' target="_blank" rel="noopener noreferrer"' : '') + '>' + label + '</a>';
+    }
+
+    function renderInline(text) {
+        var store = [];
+        function keep(html) { store.push(html); return PLACEHOLDER + store.length + 'x' + PLACEHOLDER; }
+        var out = String(text == null ? '' : text);
+
+        // Code spans go first so their contents are never read as markdown.
+        out = out.replace(/`([^`]+)`/g, function (m, code) { return keep('<code>' + code + '</code>'); });
+
+        out = out.replace(/!\[([^\]]*)\]\(([^)\s]+)(?:\s+&quot;([^&]*)&quot;)?\)/g, function (m, alt, url, title) {
+            var href = safeUrl(url);
+            if (!href) return alt;
+            return keep('<img src="' + href + '" alt="' + alt + '"' + (title ? ' title="' + title + '"' : '') +
+                ' loading="lazy" style="max-width:100%;height:auto;border-radius:10px">');
+        });
+
+        out = out.replace(/\[([^\]]+)\]\(([^)\s]+)(?:\s+&quot;([^&]*)&quot;)?\)/g, function (m, label, url, title) {
+            var href = safeUrl(url);
+            if (!href) return label;
+            return keep(anchor(href, renderInline(label), title));
+        });
+
+        // <https://example.com> style autolinks
+        out = out.replace(/&lt;((?:https?:\/\/|mailto:)[^&\s]+)&gt;/gi, function (m, url) {
+            var href = safeUrl(url);
+            return href ? keep(anchor(href, url, '')) : url;
+        });
+
+        // Bare URLs, kept out of the way of anything already linked.
+        out = out.replace(/(^|[\s(])(https?:\/\/[^\s<)]*[^\s<).,;:!?])/g, function (m, lead, url) {
+            return lead + keep(anchor(url, url, ''));
+        });
+
+        out = out.replace(/\*\*\*([^*]+)\*\*\*/g, '<strong><em>$1</em></strong>');
+        out = out.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+        out = out.replace(/(^|[^\w*])\*([^*\s][^*]*)\*/g, '$1<em>$2</em>');
+        // Underscore emphasis needs word boundaries and must not cross a line
+        // break, so snake_case and __dunder__ names are left alone.
+        out = out.replace(/(^|[^\w_])__([^\s_][^_\n]*?)__([^\w_]|$)/g, '$1<strong>$2</strong>$3');
+        out = out.replace(/(^|[^\w_])_([^\s_][^_\n]*?)_([^\w_]|$)/g, '$1<em>$2</em>$3');
+        out = out.replace(/~~([^~]+)~~/g, '<del>$1</del>');
+        out = out.replace(/==([^=]+)==/g, '<mark>$1</mark>');
+
+        return out.replace(new RegExp(PLACEHOLDER + '(\\d+)x' + PLACEHOLDER, 'g'), function (m, i) {
+            return store[Number(i) - 1];
+        });
+    }
+
+    function listItemHtml(content) {
+        var task = /^\[([ xX])\]\s+(.*)$/.exec(content);
+        if (!task) return renderInline(content);
+        return '<input type="checkbox" disabled' + (task[1].toLowerCase() === 'x' ? ' checked' : '') + '> ' + renderInline(task[2]);
+    }
+
+    // Groups consecutive list lines and turns indentation into nesting.
+    function renderList(items, ordered) {
+        var html = '';
+        var i = 0;
+        while (i < items.length) {
+            var current = items[i];
+            var group = [];
+            while (i < items.length && items[i].indent >= current.indent) {
+                group.push(items[i]);
+                i++;
+            }
+            var inner = '';
+            var j = 0;
+            while (j < group.length) {
+                if (group[j].indent > current.indent) {
+                    var sub = [];
+                    while (j < group.length && group[j].indent > current.indent) { sub.push(group[j]); j++; }
+                    inner += renderList(sub, sub[0].ordered);
+                    continue;
+                }
+                var after = j + 1 < group.length ? group[j + 1] : null;
+                if (after && after.indent > current.indent) {
+                    // The parent label must be read before j walks onto the children.
+                    var head = group[j];
+                    var nested = [];
+                    while (j + 1 < group.length && group[j + 1].indent > current.indent) { nested.push(group[j + 1]); j++; }
+                    inner += '<li>' + listItemHtml(head.content) + renderList(nested, nested[0].ordered) + '</li>';
+                    j++;
+                    continue;
+                }
+                inner += '<li>' + listItemHtml(group[j].content) + '</li>';
+                j++;
+            }
+            var tag = current.ordered ? 'ol' : 'ul';
+            html += '<' + tag + '>' + inner + '</' + tag + '>';
+        }
+        return html;
+    }
+
+    function render(source) {
+        var text = String(source == null ? '' : source).replace(/\r\n?/g, '\n');
+        var lines = escapeHtml(text).split('\n');
+        var html = [];
+        var i = 0;
+
+        while (i < lines.length) {
+            var line = lines[i];
+
+            if (!line.trim()) { i++; continue; }
+
+            var fence = /^\s{0,3}(`{3,}|~{3,})\s*([\w+#-]*)\s*$/.exec(line);
+            if (fence) {
+                var char = fence[1].charAt(0);
+                var closer = new RegExp('^\\s{0,3}' + (char === '`' ? '`{3,}' : '~{3,}') + '\\s*$');
+                var body = [];
+                i++;
+                while (i < lines.length && !closer.test(lines[i])) { body.push(lines[i]); i++; }
+                if (i < lines.length) i++;
+                html.push('<pre><code' + (fence[2] ? ' class="language-' + fence[2] + '"' : '') + '>' +
+                    body.join('\n') + '</code></pre>');
+                continue;
+            }
+
+            var heading = /^\s{0,3}(#{1,6})\s+(.*?)\s*#*\s*$/.exec(line);
+            if (heading) {
+                var level = heading[1].length;
+                html.push('<h' + level + '>' + renderInline(heading[2]) + '</h' + level + '>');
+                i++;
+                continue;
+            }
+
+            if (/^\s{0,3}(?:(?:\*\s*){3,}|(?:-\s*){3,}|(?:_\s*){3,})$/.test(line)) {
+                html.push('<hr>');
+                i++;
+                continue;
+            }
+
+            if (/^\s{0,3}&gt;\s?/.test(line)) {
+                var quote = [];
+                while (i < lines.length && /^\s{0,3}&gt;\s?/.test(lines[i])) {
+                    quote.push(lines[i].replace(/^\s{0,3}&gt;\s?/, ''));
+                    i++;
+                }
+                html.push('<blockquote>' + renderInline(quote.join('\n')).replace(/\n/g, '<br>') + '</blockquote>');
+                continue;
+            }
+
+            if (line.indexOf('|') >= 0 && i + 1 < lines.length && /^[\s:|-]*-[\s:|-]*$/.test(lines[i + 1]) && lines[i + 1].indexOf('|') >= 0) {
+                function cells(row) {
+                    var trimmed = row.trim().replace(/^\|/, '').replace(/\|$/, '');
+                    return trimmed.split('|').map(function (cell) { return cell.trim(); });
+                }
+                var head = cells(line);
+                var aligns = cells(lines[i + 1]).map(function (spec) {
+                    if (/^:-+:$/.test(spec)) return 'center';
+                    if (/^-+:$/.test(spec)) return 'right';
+                    if (/^:-+$/.test(spec)) return 'left';
+                    return '';
+                });
+                i += 2;
+                var bodyRows = [];
+                while (i < lines.length && lines[i].trim() && lines[i].indexOf('|') >= 0) { bodyRows.push(cells(lines[i])); i++; }
+                var style = function (index) { return aligns[index] ? ' style="text-align:' + aligns[index] + '"' : ''; };
+                var table = '<table><thead><tr>' + head.map(function (cell, index) {
+                    return '<th' + style(index) + '>' + renderInline(cell) + '</th>';
+                }).join('') + '</tr></thead><tbody>' + bodyRows.map(function (row) {
+                    return '<tr>' + head.map(function (cell, index) {
+                        return '<td' + style(index) + '>' + renderInline(row[index] == null ? '' : row[index]) + '</td>';
+                    }).join('') + '</tr>';
+                }).join('') + '</tbody></table>';
+                html.push(table);
+                continue;
+            }
+
+            var bullet = /^(\s{0,3})(?:([-*+])|(\d{1,9})[.)])\s+(.*)$/.exec(line);
+            if (bullet) {
+                var items = [];
+                while (i < lines.length) {
+                    var entry = /^(\s*)(?:([-*+])|(\d{1,9})[.)])\s+(.*)$/.exec(lines[i]);
+                    if (!entry) break;
+                    items.push({ indent: entry[1].length, ordered: !!entry[3], content: entry[4] });
+                    i++;
+                }
+                html.push(renderList(items, items[0].ordered));
+                continue;
+            }
+
+            var paragraph = [];
+            while (i < lines.length && lines[i].trim() &&
+                   !/^\s{0,3}(?:#{1,6}\s|&gt;|`{3,}|~{3,})/.test(lines[i]) &&
+                   !/^\s*(?:[-*+]|\d{1,9}[.)])\s+/.test(lines[i])) {
+                paragraph.push(lines[i]);
+                i++;
+            }
+            if (paragraph.length) {
+                html.push('<p>' + renderInline(paragraph.join('\n')).replace(/\n/g, '<br>') + '</p>');
+            }
+        }
+        return html.join('\n');
+    }
+
+    return { render: render, renderInline: renderInline, escapeHtml: escapeHtml, safeUrl: safeUrl };
+})();
+
+// Three themes only: the signature Zyrex look, a pure black dark mode and the
+// inverted light mode. Every value below is a CSS custom property consumed by
+// style.css / glass.css, so a theme swap never has to touch individual rules.
 window.ZYREX_THEMES = {
-    cherry: {
-        name: 'Cherry Obsidian',
-        badge: 'Signature',
-        accent: '#ff2b52',
-        secondary: '#ff758f',
-        desc: 'Iconic Zyrex signature with intense neon crimson & blood rose accents.',
-        colors: ['#ff2b52', '#ff758f', '#b81432', '#070205'],
+    zyrex: {
+        name: 'Zyrex',
+        badge: 'Default',
+        desc: 'The signature Zyrex look: near-black surfaces with a vivid crimson accent.',
+        accent: 'rgba(var(--zr-rgb-255-49-88, 255, 49, 88), 1)',
+        secondary: 'rgba(var(--zr-rgb-255-113-136, 255, 113, 136), 1)',
+        font: "'Satoshi', sans-serif",
+        fontName: 'Satoshi',
+        headingFont: "'Satoshi', sans-serif",
+        colors: ['rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1)', 'rgba(var(--zr-rgb-184-20-50, 184, 20, 50), 1)', '#21131d', '#09070c'],
         vars: {
-            '--bordeaux-deep': '#070205',
-            '--bordeaux-dark': '#0f070b',
-            '--bordeaux-mid': '#1c0a13',
-            '--bordeaux-core': '#b81432',
-            '--bordeaux-vivid': '#ff2b52',
-            '--bordeaux-light': '#ff4d6d',
-            '--rose-glow': '#ff758f',
-            '--primary': '#b81432',
-            '--accent': '#ff2b52',
-            '--cherry': '#b81432',
-            '--cherry-rgb': '184, 20, 50',
-            '--cherry-light': '#ff2b52',
-            '--cherry-neon': '#ff2b52',
-            '--dark': '#070205',
-            '--glass-border-hover': 'rgba(255, 43, 82, 0.45)',
-            '--neon-glow': '0 0 25px rgba(255, 43, 82, 0.35)',
-            '--text-glow': '0 0 14px rgba(255, 117, 143, 0.35)',
-            '--gradient': 'linear-gradient(135deg, #ff2b52 0%, #1c0a13 100%)',
-            '--gradient-accent': 'linear-gradient(135deg, #ff4d6d 0%, #b81432 100%)',
-            '--gradient-text': 'linear-gradient(135deg, #ffffff 0%, #ff2b52 100%)'
+            '--site-bg': '#09070c', '--site-surface': 'rgba(20, 13, 20, 0.88)', '--site-surface-2': '#21131d',
+            '--site-text': '#ffffff', '--site-muted': '#c3ccd9', '--site-border': 'rgba(var(--zr-rgb-255-91-122, 255, 91, 122), 0.2)',
+            '--site-input': '#130c12', '--site-bg-glow': 'rgba(var(--zr-rgb-255-49-88, 255, 49, 88), 0.13)',
+            '--bordeaux-deep': '#09070c', '--bordeaux-dark': '#130c12', '--bordeaux-mid': '#21131d',
+            '--bordeaux-core': 'rgba(var(--zr-rgb-184-20-50, 184, 20, 50), 1)', '--bordeaux-vivid': 'rgba(var(--zr-rgb-255-49-88, 255, 49, 88), 1)', '--bordeaux-light': 'rgba(var(--zr-rgb-255-113-136, 255, 113, 136), 1)',
+            '--rose-glow': '#f4dfe4', '--primary': 'rgba(var(--zr-rgb-213-29-67, 213, 29, 67), 1)', '--primary-dark': 'rgba(var(--zr-rgb-142-21-48, 142, 21, 48), 1)',
+            '--primary-light': '#ffffff', '--secondary': 'rgba(var(--zr-rgb-168-23-55, 168, 23, 55), 1)', '--accent': 'rgba(var(--zr-rgb-255-49-88, 255, 49, 88), 1)',
+            '--cherry': 'rgba(var(--zr-rgb-184-20-50, 184, 20, 50), 1)', '--cherry-rgb': '255, 49, 88', '--cherry-dark': '#21131d',
+            '--cherry-light': '#f4dfe4', '--cherry-neon': 'rgba(var(--zr-rgb-255-49-88, 255, 49, 88), 1)', '--dark': '#09070c',
+            '--dark-2': 'rgba(19, 12, 18, 0.9)', '--dark-3': 'rgba(33, 19, 29, 0.82)',
+            '--light': '#ffffff', '--warm-light': '#f2f6fb', '--gray': '#c3ccd9', '--gray-dark': '#94a3b6',
+            '--glass-bg': 'rgba(20, 13, 20, 0.78)', '--glass-border': 'rgba(255, 255, 255, 0.1)',
+            '--glass-border-hover': 'rgba(var(--zr-rgb-255-49-88, 255, 49, 88), 0.48)', '--gradient': 'linear-gradient(135deg, rgba(var(--zr-rgb-255-49-88, 255, 49, 88), 1), #71142e)',
+            '--gradient-accent': 'linear-gradient(135deg, rgba(var(--zr-rgb-255-113-136, 255, 113, 136), 1), rgba(var(--zr-rgb-184-20-50, 184, 20, 50), 1))',
+            '--gradient-text': 'linear-gradient(135deg, #ffffff, #c3ccd9)'
         }
     },
-    cyberpunk: {
-        name: 'Cyberpunk 2077',
-        badge: 'Synthwave',
-        accent: '#00f0ff',
-        secondary: '#ff007f',
-        desc: 'Electric cyan, hot neon magenta & dark Tokyo night synthwave glow.',
-        colors: ['#00f0ff', '#ff007f', '#7928ca', '#05030f'],
+    dark: {
+        name: 'Dark',
+        badge: 'Monochrome',
+        desc: 'True black surfaces with pure white type and white accents.',
+        accent: '#ffffff',
+        secondary: '#d4d4d4',
+        font: "'Satoshi', sans-serif",
+        fontName: 'Satoshi',
+        headingFont: "'Satoshi', sans-serif",
+        colors: ['#ffffff', '#d4d4d4', '#161616', '#000000'],
         vars: {
-            '--bordeaux-deep': '#05030f',
-            '--bordeaux-dark': '#0b061e',
-            '--bordeaux-mid': '#170c38',
-            '--bordeaux-core': '#00d2ff',
-            '--bordeaux-vivid': '#00f0ff',
-            '--bordeaux-light': '#38bdf8',
-            '--rose-glow': '#ff007f',
-            '--primary': '#00f0ff',
-            '--accent': '#ff007f',
-            '--cherry': '#00d2ff',
-            '--cherry-rgb': '0, 240, 255',
-            '--cherry-light': '#00f0ff',
-            '--cherry-neon': '#ff007f',
-            '--dark': '#05030f',
-            '--glass-border-hover': 'rgba(0, 240, 255, 0.45)',
-            '--neon-glow': '0 0 25px rgba(0, 240, 255, 0.35)',
-            '--text-glow': '0 0 14px rgba(0, 240, 255, 0.4)',
-            '--gradient': 'linear-gradient(135deg, #00f0ff 0%, #ff007f 100%)',
-            '--gradient-accent': 'linear-gradient(135deg, #00f0ff 0%, #7928ca 100%)',
-            '--gradient-text': 'linear-gradient(135deg, #ffffff 0%, #00f0ff 100%)'
+            '--site-bg': '#000000', '--site-surface': 'rgba(10, 10, 10, 0.92)', '--site-surface-2': '#161616',
+            '--site-text': '#ffffff', '--site-muted': '#a8a8a8', '--site-border': 'rgba(255, 255, 255, 0.16)',
+            '--site-input': '#0a0a0a', '--site-bg-glow': 'rgba(255, 255, 255, 0.05)',
+            '--bordeaux-deep': '#000000', '--bordeaux-dark': '#080808', '--bordeaux-mid': '#161616',
+            '--bordeaux-core': '#ffffff', '--bordeaux-vivid': '#ffffff', '--bordeaux-light': '#d4d4d4',
+            '--rose-glow': '#e6e6e6', '--primary': '#ffffff', '--primary-dark': '#bdbdbd',
+            '--primary-light': '#ffffff', '--secondary': '#d4d4d4', '--accent': '#ffffff',
+            '--cherry': '#ffffff', '--cherry-rgb': '255, 255, 255', '--cherry-dark': '#161616',
+            '--cherry-light': '#ffffff', '--cherry-neon': '#ffffff', '--dark': '#000000',
+            '--dark-2': 'rgba(8, 8, 8, 0.94)', '--dark-3': 'rgba(22, 22, 22, 0.9)',
+            '--light': '#ffffff', '--warm-light': '#f5f5f5', '--gray': '#a8a8a8', '--gray-dark': '#7a7a7a',
+            '--glass-bg': 'rgba(10, 10, 10, 0.86)', '--glass-border': 'rgba(255, 255, 255, 0.16)',
+            '--glass-border-hover': 'rgba(255, 255, 255, 0.55)', '--gradient': 'linear-gradient(135deg, #ffffff, #c7c7c7)',
+            '--gradient-accent': 'linear-gradient(135deg, #ffffff, #bdbdbd)',
+            '--gradient-text': 'linear-gradient(135deg, #ffffff, #c9c9c9)'
         }
     },
-    emerald: {
-        name: 'Matrix Emerald',
-        badge: 'Cyber Green',
-        accent: '#00ff88',
-        secondary: '#10b981',
-        desc: 'Futuristic tactical cyber aesthetic with radiant neon mint & matrix noir.',
-        colors: ['#00ff88', '#10b981', '#064e3b', '#020905'],
+    light: {
+        name: 'Light',
+        badge: 'Daylight',
+        desc: 'Bright surfaces with blue-toned ink and a deep blue accent.',
+        accent: 'rgba(var(--zr-rgb-27-79-168, 27, 79, 168), 1)',
+        secondary: 'rgba(var(--zr-rgb-16-50-110, 16, 50, 110), 1)',
+        font: "'Satoshi', sans-serif",
+        fontName: 'Satoshi',
+        headingFont: "'Satoshi', sans-serif",
+        colors: ['rgba(var(--zr-rgb-27-79-168, 27, 79, 168), 1)', 'rgba(var(--zr-rgb-16-50-110, 16, 50, 110), 1)', '#e6ebf5', '#f5f7fc'],
         vars: {
-            '--bordeaux-deep': '#020905',
-            '--bordeaux-dark': '#04140b',
-            '--bordeaux-mid': '#062615',
-            '--bordeaux-core': '#059669',
-            '--bordeaux-vivid': '#00ff88',
-            '--bordeaux-light': '#34d399',
-            '--rose-glow': '#00ff88',
-            '--primary': '#10b981',
-            '--accent': '#00ff88',
-            '--cherry': '#059669',
-            '--cherry-rgb': '0, 255, 136',
-            '--cherry-light': '#00ff88',
-            '--cherry-neon': '#00ff88',
-            '--dark': '#020905',
-            '--glass-border-hover': 'rgba(0, 255, 136, 0.45)',
-            '--neon-glow': '0 0 25px rgba(0, 255, 136, 0.35)',
-            '--text-glow': '0 0 14px rgba(0, 255, 136, 0.4)',
-            '--gradient': 'linear-gradient(135deg, #00ff88 0%, #04140b 100%)',
-            '--gradient-accent': 'linear-gradient(135deg, #34d399 0%, #064e3b 100%)',
-            '--gradient-text': 'linear-gradient(135deg, #ffffff 0%, #00ff88 100%)'
-        }
-    },
-    cosmic: {
-        name: 'Cosmic Nebula',
-        badge: 'Starlight',
-        accent: '#6366f1',
-        secondary: '#38bdf8',
-        desc: 'Interstellar deep space atmosphere with celestial indigo & starlight glow.',
-        colors: ['#38bdf8', '#6366f1', '#4338ca', '#030514'],
-        vars: {
-            '--bordeaux-deep': '#030514',
-            '--bordeaux-dark': '#060c28',
-            '--bordeaux-mid': '#0e1747',
-            '--bordeaux-core': '#4f46e5',
-            '--bordeaux-vivid': '#6366f1',
-            '--bordeaux-light': '#818cf8',
-            '--rose-glow': '#38bdf8',
-            '--primary': '#6366f1',
-            '--accent': '#38bdf8',
-            '--cherry': '#4f46e5',
-            '--cherry-rgb': '99, 102, 241',
-            '--cherry-light': '#818cf8',
-            '--cherry-neon': '#38bdf8',
-            '--dark': '#030514',
-            '--glass-border-hover': 'rgba(99, 102, 241, 0.45)',
-            '--neon-glow': '0 0 25px rgba(99, 102, 241, 0.35)',
-            '--text-glow': '0 0 14px rgba(56, 189, 248, 0.4)',
-            '--gradient': 'linear-gradient(135deg, #6366f1 0%, #38bdf8 100%)',
-            '--gradient-accent': 'linear-gradient(135deg, #818cf8 0%, #4338ca 100%)',
-            '--gradient-text': 'linear-gradient(135deg, #ffffff 0%, #818cf8 100%)'
-        }
-    },
-    amethyst: {
-        name: 'Amethyst Royal',
-        badge: 'VIP Luxury',
-        accent: '#a855f7',
-        secondary: '#c084fc',
-        desc: 'Prestige luxury aesthetic with electric violet, royal amethyst & velvet tones.',
-        colors: ['#c084fc', '#a855f7', '#581c87', '#0a0314'],
-        vars: {
-            '--bordeaux-deep': '#0a0314',
-            '--bordeaux-dark': '#140626',
-            '--bordeaux-mid': '#240a42',
-            '--bordeaux-core': '#9333ea',
-            '--bordeaux-vivid': '#a855f7',
-            '--bordeaux-light': '#c084fc',
-            '--rose-glow': '#e879f9',
-            '--primary': '#9333ea',
-            '--accent': '#c084fc',
-            '--cherry': '#9333ea',
-            '--cherry-rgb': '168, 85, 247',
-            '--cherry-light': '#c084fc',
-            '--cherry-neon': '#e879f9',
-            '--dark': '#0a0314',
-            '--glass-border-hover': 'rgba(168, 85, 247, 0.45)',
-            '--neon-glow': '0 0 25px rgba(168, 85, 247, 0.35)',
-            '--text-glow': '0 0 14px rgba(192, 132, 252, 0.4)',
-            '--gradient': 'linear-gradient(135deg, #a855f7 0%, #140626 100%)',
-            '--gradient-accent': 'linear-gradient(135deg, #c084fc 0%, #581c87 100%)',
-            '--gradient-text': 'linear-gradient(135deg, #ffffff 0%, #c084fc 100%)'
-        }
-    },
-    solar: {
-        name: 'Solar Magma',
-        badge: 'High-Octane',
-        accent: '#f59e0b',
-        secondary: '#ff4500',
-        desc: 'Burning sunset & molten lava aesthetic with vibrant golden-amber flames.',
-        colors: ['#fbbf24', '#f59e0b', '#dc2626', '#0d0602'],
-        vars: {
-            '--bordeaux-deep': '#0d0602',
-            '--bordeaux-dark': '#1c0c04',
-            '--bordeaux-mid': '#311406',
-            '--bordeaux-core': '#ea580c',
-            '--bordeaux-vivid': '#f59e0b',
-            '--bordeaux-light': '#fbbf24',
-            '--rose-glow': '#ff6b35',
-            '--primary': '#ea580c',
-            '--accent': '#f59e0b',
-            '--cherry': '#ea580c',
-            '--cherry-rgb': '245, 158, 11',
-            '--cherry-light': '#fbbf24',
-            '--cherry-neon': '#ff6b35',
-            '--dark': '#0d0602',
-            '--glass-border-hover': 'rgba(245, 158, 11, 0.45)',
-            '--neon-glow': '0 0 25px rgba(245, 158, 11, 0.35)',
-            '--text-glow': '0 0 14px rgba(251, 191, 36, 0.4)',
-            '--gradient': 'linear-gradient(135deg, #f59e0b 0%, #ff4500 100%)',
-            '--gradient-accent': 'linear-gradient(135deg, #fbbf24 0%, #c2410c 100%)',
-            '--gradient-text': 'linear-gradient(135deg, #ffffff 0%, #fbbf24 100%)'
-        }
-    },
-    hyperborea: {
-        name: 'Glacier Frost',
-        badge: 'Ice Diamond',
-        accent: '#38bdf8',
-        secondary: '#ffffff',
-        desc: 'Sub-zero diamond frost with titanium slate, arctic ice & clean highlights.',
-        colors: ['#ffffff', '#bae6fd', '#0284c7', '#05080f'],
-        vars: {
-            '--bordeaux-deep': '#05080f',
-            '--bordeaux-dark': '#0a101f',
-            '--bordeaux-mid': '#111b33',
-            '--bordeaux-core': '#0284c7',
-            '--bordeaux-vivid': '#38bdf8',
-            '--bordeaux-light': '#7dd3fc',
-            '--rose-glow': '#e0f2fe',
-            '--primary': '#0284c7',
-            '--accent': '#38bdf8',
-            '--cherry': '#0284c7',
-            '--cherry-rgb': '56, 189, 248',
-            '--cherry-light': '#7dd3fc',
-            '--cherry-neon': '#38bdf8',
-            '--dark': '#05080f',
-            '--glass-border-hover': 'rgba(56, 189, 248, 0.45)',
-            '--neon-glow': '0 0 25px rgba(56, 189, 248, 0.35)',
-            '--text-glow': '0 0 14px rgba(224, 242, 254, 0.4)',
-            '--gradient': 'linear-gradient(135deg, #38bdf8 0%, #0a101f 100%)',
-            '--gradient-accent': 'linear-gradient(135deg, #7dd3fc 0%, #0369a1 100%)',
-            '--gradient-text': 'linear-gradient(135deg, #ffffff 0%, #7dd3fc 100%)'
+            '--site-bg': '#f5f7fc', '--site-surface': 'rgba(255, 255, 255, 0.94)', '--site-surface-2': '#e9eef8',
+            '--site-text': '#122a52', '--site-muted': '#46618f', '--site-border': 'rgba(21, 45, 90, 0.14)',
+            '--site-input': '#ffffff', '--site-bg-glow': 'rgba(37, 84, 168, 0.10)',
+            '--bordeaux-deep': '#ffffff', '--bordeaux-dark': '#f7f9fd', '--bordeaux-mid': '#e6ebf5',
+            '--bordeaux-core': 'rgba(var(--zr-rgb-19-58-128, 19, 58, 128), 1)', '--bordeaux-vivid': 'rgba(var(--zr-rgb-27-79-168, 27, 79, 168), 1)', '--bordeaux-light': 'rgba(var(--zr-rgb-37-99-201, 37, 99, 201), 1)',
+            '--rose-glow': 'rgba(var(--zr-rgb-16-50-110, 16, 50, 110), 1)', '--primary': 'rgba(var(--zr-rgb-27-79-168, 27, 79, 168), 1)', '--primary-dark': 'rgba(var(--zr-rgb-19-58-128, 19, 58, 128), 1)',
+            '--primary-light': '#1b4fa8', '--secondary': 'rgba(var(--zr-rgb-37-99-201, 37, 99, 201), 1)', '--accent': 'rgba(var(--zr-rgb-27-79-168, 27, 79, 168), 1)',
+            '--cherry': 'rgba(var(--zr-rgb-19-58-128, 19, 58, 128), 1)', '--cherry-rgb': '27, 79, 168', '--cherry-dark': '#e6ebf5',
+            '--cherry-light': 'rgba(var(--zr-rgb-16-50-110, 16, 50, 110), 1)', '--cherry-neon': 'rgba(var(--zr-rgb-27-79-168, 27, 79, 168), 1)', '--dark': '#ffffff',
+            '--dark-2': 'rgba(248, 250, 254, 0.96)', '--dark-3': 'rgba(233, 238, 248, 0.96)',
+            '--light': '#122a52', '--warm-light': '#1c3a6b', '--gray': '#46618f', '--gray-dark': '#50699a',
+            '--glass-bg': 'rgba(255, 255, 255, 0.9)', '--glass-border': 'rgba(21, 45, 90, 0.16)',
+            '--glass-border-hover': 'rgba(var(--zr-rgb-27-79-168, 27, 79, 168), 0.4)', '--gradient': 'linear-gradient(135deg, rgba(var(--zr-rgb-27-79-168, 27, 79, 168), 1), rgba(var(--zr-rgb-16-50-110, 16, 50, 110), 1))',
+            '--gradient-accent': 'linear-gradient(135deg, rgba(var(--zr-rgb-58-123-220, 58, 123, 220), 1), rgba(var(--zr-rgb-19-58-128, 19, 58, 128), 1))',
+            '--gradient-text': 'linear-gradient(135deg, #122a52, rgba(var(--zr-rgb-16-50-110, 16, 50, 110), 1))'
         }
     }
 };
 
+// Old keys may still sit in localStorage or a stale cookie; fold them into the
+// three shipping themes instead of leaving a visitor without a palette.
+const ZYREX_THEME_ALIASES = {
+    cherry: 'zyrex', default: 'zyrex', midnight: 'zyrex', cyberpunk: 'zyrex',
+    emerald: 'zyrex', cosmic: 'zyrex', solar: 'zyrex', amethyst: 'zyrex',
+    darker: 'dark', black: 'dark', night: 'dark',
+    'light-tint': 'light', hyperborea: 'light', white: 'light', day: 'light'
+};
+
+function normalizeThemeKey(themeKey) {
+    if (themeKey && window.ZYREX_THEMES[themeKey]) return themeKey;
+    return ZYREX_THEME_ALIASES[String(themeKey || '').toLowerCase()] || 'zyrex';
+}
+
 window.applyGlobalTheme = function(themeKey) {
-    if (!themeKey || !window.ZYREX_THEMES[themeKey]) {
-        // Map old legacy keys if found
-        if (themeKey === 'default') themeKey = 'cherry';
-        else if (themeKey === 'midnight') themeKey = 'cherry';
-        else if (themeKey === 'darker') themeKey = 'cyberpunk';
-        else if (themeKey === 'light-tint') themeKey = 'hyperborea';
-        else themeKey = 'cherry';
-    }
+    themeKey = normalizeThemeKey(themeKey);
     localStorage.setItem('zyrex_theme', themeKey);
     const theme = window.ZYREX_THEMES[themeKey];
     if (theme && theme.vars) {
+        const googleFontSpecs = {
+            'Space Grotesk': 'Space+Grotesk:wght@400;500;600;700',
+            'IBM Plex Sans': 'IBM+Plex+Sans:wght@400;500;600;700',
+            Manrope: 'Manrope:wght@400;500;600;700;800',
+            'DM Sans': 'DM+Sans:wght@400;500;600;700;800',
+            'Playfair Display': 'Playfair+Display:wght@500;600;700',
+            Outfit: 'Outfit:wght@400;500;600;700;800',
+            Inter: 'Inter:wght@400;500;600;700;800'
+        };
+        const headingFontName = (theme.headingFont || theme.font || '')
+            .split(',')[0]
+            .replace(/['"]/g, '')
+            .trim();
+        const fontFamilies = [...new Set([theme.fontName, headingFontName])]
+            .map(fontName => googleFontSpecs[fontName])
+            .filter(Boolean);
+        const fontStylesheetId = 'zyrex-theme-fonts';
+        let fontStylesheet = document.getElementById(fontStylesheetId);
+        if (fontFamilies.length) {
+            if (!fontStylesheet) {
+                fontStylesheet = document.createElement('link');
+                fontStylesheet.id = fontStylesheetId;
+                fontStylesheet.rel = 'stylesheet';
+                document.head.appendChild(fontStylesheet);
+            }
+            const fontStylesheetUrl = `https://fonts.googleapis.com/css2?${fontFamilies.map(family => `family=${family}`).join('&')}&display=swap`;
+            if (fontStylesheet.href !== fontStylesheetUrl) {
+                fontStylesheet.href = fontStylesheetUrl;
+            }
+        } else if (fontStylesheet) {
+            fontStylesheet.remove();
+        }
+
         const root = document.documentElement;
+        const previousVars = (root.dataset.zyrexThemeVars || '').split(',').filter(Boolean);
+        previousVars.forEach(name => root.style.removeProperty(name));
         for (const [k, v] of Object.entries(theme.vars)) {
             root.style.setProperty(k, v);
         }
+        root.style.setProperty('--site-font', theme.font);
+        root.style.setProperty('--site-heading-font', theme.headingFont || theme.font);
+        root.style.setProperty('--site-primary', theme.vars['--primary-light'] || theme.accent);
+        root.style.setProperty('--zr-cursor-accent', theme.accent || theme.vars['--accent'] || '#ff3158');
+        root.dataset.zyrexThemeVars = Object.keys(theme.vars).join(',');
+        root.dataset.zyrexTheme = themeKey;
+        root.style.colorScheme = themeKey === 'light' ? 'light' : 'dark';
         document.body.className = document.body.className.replace(/\btheme-\S+/g, '').trim();
         document.body.classList.add('theme-' + themeKey);
 
@@ -239,16 +440,102 @@ window.applyGlobalTheme = function(themeKey) {
 
 // Auto-run theme immediately
 try {
-    const savedTheme = localStorage.getItem('zyrex_theme') || 'cherry';
+    const themeFromUrl = new URLSearchParams(window.location.search).get('theme');
+    const savedTheme = normalizeThemeKey(themeFromUrl || localStorage.getItem('zyrex_theme'));
     window.applyGlobalTheme(savedTheme);
 } catch(e) {}
 
-window.DEFAULT_AVATAR = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0iI2EwYTBiMCI+PHBhdGggZD0iTTEyIDEyYzIuMjEgMCA0LTEuNzkgNC00cy0xLjc5LTQtNC00LTQgMS43OS00IDQgMS43OSA0IDQgNHptMCAyYy0yLjY3IDAtOCAxLjM0LTggNHYyaDE2di0yYzAtMi42Ni01LjMzLTQtOC00eiIvPjwvc3ZnPg==";
+// Another tab (usually Settings) changing the palette should re-skin every page,
+// including the focused download tab, instead of waiting for a reload.
+window.addEventListener('storage', function (event) {
+    if (!event || event.key !== 'zyrex_theme') return;
+    try { window.applyGlobalTheme(event.newValue); } catch (_) {}
+});
+
+window.DEFAULT_AVATAR = '/assets/default-avatar.png';
+// Anonymous resources deliberately reuse the generic placeholder. A dedicated
+// "anonymous" icon would itself be a visual signal, and the generic one keeps
+// somebody who uploads anonymously indistinguishable from any other uploader.
+window.ANONYMOUS_AVATAR = window.DEFAULT_AVATAR;
 window.handleAvatarError = function(img) {
     if (!img) return;
     img.onerror = null;
     img.src = window.DEFAULT_AVATAR;
 };
+
+// ==========================================
+// Product cache privacy
+// The catalog cache is keyed by a server-side privacy epoch so a resource that
+// becomes anonymous can never be rendered from a cache that still holds its
+// uploader identity. The epoch request starts as early as possible so the first
+// paint does not have to wait for it, and a failed lookup fails closed (no
+// cache) rather than risking a stale identity.
+window.ZyrexPrivacy = (function () {
+    var LEGACY_KEYS = ['zyrex_products_cache', 'zyrex_products_cache_v4'];
+    var epoch = '';
+    var ready = null;
+    var started = false;
+
+    function purgeLegacyCaches() {
+        for (var i = 0; i < LEGACY_KEYS.length; i++) {
+            try { localStorage.removeItem(LEGACY_KEYS[i]); } catch (e) {}
+        }
+        try {
+            var doomed = [];
+            for (var k = 0; k < localStorage.length; k++) {
+                var key = localStorage.key(k) || '';
+                if (key.indexOf('zyrex_chk_products') === 0) doomed.push(key);
+            }
+            for (var d = 0; d < doomed.length; d++) localStorage.removeItem(doomed[d]);
+        } catch (e) {}
+    }
+
+    function start() {
+        if (started) return ready;
+        started = true;
+        purgeLegacyCaches();
+        ready = fetch('/api/privacy-epoch', { cache: 'no-store', credentials: 'include' })
+            .then(function (res) { return res.ok ? res.json() : null; })
+            .then(function (data) {
+                epoch = data && typeof data.epoch === 'string' ? data.epoch : '';
+                return epoch;
+            })
+            .catch(function () { epoch = ''; return ''; });
+        return ready;
+    }
+
+    function cacheKey() {
+        return 'zyrex_products_cache_v5_' + (epoch || 'nokey');
+    }
+
+    function readProducts() {
+        if (!epoch) return null;
+        try {
+            var raw = localStorage.getItem(cacheKey());
+            if (!raw) return null;
+            var cached = JSON.parse(raw);
+            if (cached && cached.data && Date.now() - Number(cached.ts || 0) < 15 * 60 * 1000) return cached.data;
+            localStorage.removeItem(cacheKey());
+        } catch (e) {}
+        return null;
+    }
+
+    function writeProducts(data) {
+        if (!epoch || !Array.isArray(data)) return;
+        try {
+            localStorage.setItem(cacheKey(), JSON.stringify({ ts: Date.now(), data: data }));
+        } catch (e) {}
+    }
+
+    return {
+        start: start,
+        whenReady: function () { return start(); },
+        cacheKey: cacheKey,
+        readProducts: readProducts,
+        writeProducts: writeProducts,
+    };
+})();
+try { window.ZyrexPrivacy.start(); } catch (e) {}
 
 const navbar = document.querySelector('.navbar');
 
@@ -262,22 +549,28 @@ function syncNavbarActiveState() {
     let activeHref = null;
     if (path === '/' || path === '') {
         activeHref = (hash === '#contact') ? '/#contact' : '/';
-    } else if (path === '/presets' || path === '/presets.html' || path === '/resources' || path === '/resources.html' || path === '/preset' || path === '/resource') {
-        activeHref = '/resources';
-    } else if (path === '/plugins' || path === '/plugins.html') {
+    } else if (path === '/presets' || path === '/presets.html' || path === '/leaks' || path === '/leaks.html' || path === '/resources' || path === '/resources.html' || path === '/preset' || path === '/leak' || path === '/resource') {
+        activeHref = '/leaks';
+    } else if (path === '/plugins' || path === '/plugins.html' || path.indexOf('/plugins/') === 0) {
         activeHref = '/plugins';
+    } else if (path === '/feed' || path === '/feed.html') {
+        activeHref = '/feed';
     } else if (path === '/requests' || path === '/requests.html') {
         activeHref = '/requests';
-    } else if (path === '/more' || path === '/more.html') {
-        activeHref = '/more';
+    } else if (path === '/audio' || path === '/audio.html') {
+        activeHref = '/audio';
+    } else if (path === '/access' || path === '/access.html') {
+        activeHref = '/access';
+    } else if (path === '/scenepacks' || path === '/scenepacks.html' || path === '/scenepack' || path === '/scenepack.html' || path === '/upload-scenepack' || path === '/upload-scenepack.html') {
+        activeHref = '/scenepacks';
     }
-    // Any other page (/audio, /scenepack, /product, /bookmarks, /settings, etc.) -> activeHref remains null!
+    // Other pages do not map to a primary navigation item.
 
     navLinks.forEach(link => {
         const href = (link.getAttribute('href') || '').toLowerCase();
         const isMatch = (activeHref && (
             href === activeHref || 
-            (activeHref === '/resources' && (href === '/resources' || href === '/presets' || href === 'presets' || href === 'resources')) ||
+            (activeHref === '/leaks' && (href === '/leaks' || href === '/presets' || href === '/resources' || href === 'presets' || href === 'resources')) ||
             (activeHref === '/' && (href === '#hero' || href === '/')) || 
             (activeHref === '/#contact' && (href === '#contact' || href === '/#contact'))
         ));
@@ -294,10 +587,164 @@ syncNavbarActiveState();
 window.addEventListener('popstate', syncNavbarActiveState);
 window.addEventListener('hashchange', syncNavbarActiveState);
 
+function setupAccessLinks() {
+    const navLinks = document.querySelector('.navbar .nav-links');
+    if (navLinks && !navLinks.querySelector('a[href="/access"]')) {
+        const item = document.createElement('li');
+        item.innerHTML = '<a href="/access">Access</a>';
+        const audioLink = navLinks.querySelector('a[href="/audio"]');
+        navLinks.insertBefore(item, audioLink ? audioLink.parentElement : null);
+    }
+
+    const quickLinks = document.querySelector('.footer-links ul');
+    if (quickLinks && !quickLinks.querySelector('a[href="/access"]')) {
+        const item = document.createElement('li');
+        item.innerHTML = '<a href="/access">Access</a>';
+        quickLinks.appendChild(item);
+    }
+    syncNavbarActiveState();
+}
+
+// The scenepack catalogue is reachable from every page, so its header entry is
+// injected once here instead of being pasted into 49 separate documents.
+function setupScenepackLinks() {
+    const navLinks = document.querySelector('.navbar .nav-links');
+    if (navLinks && !navLinks.querySelector('a[href="/scenepacks"]')) {
+        const item = document.createElement('li');
+        item.innerHTML = '<a href="/scenepacks">Scenepacks</a>';
+        // Sits right after Audios, which is where the scenepack pages place it.
+        const audioLink = navLinks.querySelector('a[href="/audio"]');
+        if (audioLink) navLinks.insertBefore(item, audioLink.parentElement.nextSibling);
+        else navLinks.appendChild(item);
+    }
+
+    const quickLinks = document.querySelector('.footer-links ul');
+    if (quickLinks && !quickLinks.querySelector('a[href="/scenepacks"]')) {
+        const item = document.createElement('li');
+        item.innerHTML = '<a href="/scenepacks">Scenepacks</a>';
+        const accessLink = quickLinks.querySelector('a[href="/access"]');
+        quickLinks.insertBefore(item, accessLink ? accessLink.parentElement : null);
+    }
+    syncNavbarActiveState();
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', function () {
+        setupAccessLinks();
+        setupScenepackLinks();
+    }, { once: true });
+} else {
+    setupAccessLinks();
+    setupScenepackLinks();
+}
+
+function getDownloadAccessModalCopy(verifiedRequired) {
+    const lang = window.ZyrexI18n ? window.ZyrexI18n.getLanguage() : 'en';
+    const copy = {
+        en: ["Unlock your downloads", "Complete one free offer to unlock eligible leak downloads for 7 days. Your pass is linked to your Discord account.", "Get Access", "Maybe later", "Verify to download", "Downloads are available to members with the Verified role. Join the Zyrex Discord and complete verification.", "Verify now", "Join Discord"],
+        tr: ["İndirmelerin kilidini aç", "Uygun sızıntı içeriklerini 7 gün indirmek için ücretsiz bir teklifi tamamlayın. Erişim Discord hesabınıza bağlanır.", "Erişim al", "Daha sonra", "İndirmek için doğrulanın", "İndirme erişimi için Discord sunucumuzdaki Verified rolü gerekir. Sunucuya katılın ve doğrulamayı tamamlayın.", "Şimdi doğrulan", "Discord'a katıl"],
+        es: ["Desbloquea tus descargas", "Completa una oferta gratuita para desbloquear durante 7 días las descargas disponibles. El acceso se vincula a tu cuenta de Discord.", "Obtener acceso", "Más tarde", "Verifica tu cuenta para descargar", "Las descargas requieren el rol Verified en nuestro servidor de Discord. Únete y completa la verificación.", "Verificar ahora", "Unirse a Discord"],
+        pt: ["Desbloqueie seus downloads", "Conclua uma oferta grátis para liberar por 7 dias os downloads elegíveis. O acesso fica vinculado à sua conta do Discord.", "Obter acesso", "Agora não", "Verifique para baixar", "Os downloads exigem o cargo Verified no nosso servidor do Discord. Entre no servidor e conclua a verificação.", "Verificar agora", "Entrar no Discord"],
+        ru: ["Откройте доступ к загрузкам", "Выполните одно бесплатное предложение, чтобы получить доступ к подходящим загрузкам на 7 дней. Доступ привязан к Discord.", "Получить доступ", "Позже", "Подтвердите аккаунт для загрузки", "Для загрузки нужна роль Verified на сервере Zyrex в Discord. Вступите на сервер и пройдите проверку.", "Подтвердить", "Войти в Discord"],
+        ar: ["افتح التنزيلات", "أكمل عرضًا مجانيًا واحدًا لفتح التنزيلات المؤهلة لمدة 7 أيام. يرتبط الوصول بحساب Discord الخاص بك.", "الحصول على الوصول", "لاحقًا", "تحقق للتنزيل", "تتطلب التنزيلات دور Verified في خادم Discord. انضم إلى الخادم وأكمل التحقق.", "تحقق الآن", "انضم إلى Discord"],
+        ko: ["다운로드 잠금 해제", "무료 오퍼 하나를 완료하면 이용 가능한 다운로드를 7일간 사용할 수 있습니다. 권한은 Discord 계정에 연결됩니다.", "액세스 받기", "나중에", "다운로드하려면 인증하세요", "다운로드하려면 Zyrex Discord 서버의 Verified 역할이 필요합니다. 서버에 가입하고 인증을 완료하세요.", "지금 인증", "Discord 가입"],
+        zh: ["解锁下载", "完成一个免费任务即可解锁符合条件的下载，有效期为 7 天。访问权限与 Discord 账号绑定。", "获取访问权限", "稍后再说", "验证后即可下载", "下载需要拥有 Zyrex Discord 服务器的 Verified 身份组。请加入服务器并完成验证。", "立即验证", "加入 Discord"]
+    };
+    const text = copy[lang] || copy.en;
+    return verifiedRequired
+        ? { title: text[4], body: text[5], primary: text[6], secondary: text[7] }
+        : { title: text[0], body: text[1], primary: text[2], secondary: text[3] };
+}
+
+window.showAccessRequiredModal = function() {
+    if (document.getElementById('zyrexAccessRequiredModal')) return;
+    const returnTo = window.location.pathname + window.location.search + window.location.hash;
+    const copy = getDownloadAccessModalCopy(false);
+    const overlay = document.createElement('div');
+    overlay.id = 'zyrexAccessRequiredModal';
+    overlay.className = 'zyrex-access-modal';
+    overlay.setAttribute('role', 'presentation');
+    overlay.innerHTML = `
+        <section class="zyrex-access-dialog" role="dialog" aria-modal="true" aria-labelledby="zyrexAccessTitle">
+            <button type="button" class="zyrex-access-close" aria-label="Close dialog">&times;</button>
+            <span class="zyrex-access-icon"><i class="fas fa-unlock-keyhole"></i></span>
+            <p class="zyrex-access-eyebrow">7-DAY DOWNLOAD PASS</p>
+            <h2 id="zyrexAccessTitle">${copy.title}</h2>
+            <p>${copy.body}</p>
+            <div class="zyrex-access-actions">
+                <a class="zyrex-access-primary" href="/access?return_to=${encodeURIComponent(returnTo)}">${copy.primary}</a>
+                <button type="button" class="zyrex-access-secondary">${copy.secondary}</button>
+            </div>
+            <p class="zyrex-access-tutorial">Stuck somewhere? Watch our <a href="https://zyrexediting.xyz/feed/post/386" target="_blank" rel="noopener">tutorial video</a>.</p>
+        </section>`;
+    document.body.appendChild(overlay);
+
+    const onKeyDown = event => {
+        if (event.key === 'Escape' && document.body.contains(overlay)) close();
+    };
+    const close = () => {
+        overlay.remove();
+        document.removeEventListener('keydown', onKeyDown);
+    };
+    overlay.addEventListener('click', event => {
+        if (event.target === overlay || event.target.closest('.zyrex-access-close, .zyrex-access-secondary')) close();
+    });
+    document.addEventListener('keydown', onKeyDown);
+    overlay.querySelector('.zyrex-access-close').focus();
+};
+
+// Plugin and software downloads are served from external mirrors, so the site only hands
+// the URL to members who hold the Discord Verified role. This dialog explains that rule
+// instead of the 7-day pass copy.
+window.showVerifyRequiredModal = function() {
+    if (document.getElementById('zyrexVerifyRequiredModal')) return;
+    const returnTo = window.location.pathname + window.location.search + window.location.hash;
+    const copy = getDownloadAccessModalCopy(true);
+    const overlay = document.createElement('div');
+    overlay.id = 'zyrexVerifyRequiredModal';
+    overlay.className = 'zyrex-access-modal';
+    overlay.setAttribute('role', 'presentation');
+    overlay.innerHTML = `
+        <section class="zyrex-access-dialog" role="dialog" aria-modal="true" aria-labelledby="zyrexVerifyTitle">
+            <button type="button" class="zyrex-access-close" aria-label="Close dialog">&times;</button>
+            <span class="zyrex-access-icon"><i class="fas fa-shield-halved"></i></span>
+            <p class="zyrex-access-eyebrow">${copy.title}</p>
+            <h2 id="zyrexVerifyTitle">${copy.title}</h2>
+            <p>${copy.body}</p>
+            <div class="zyrex-access-actions">
+                <a class="zyrex-access-primary" href="/verify?return_to=${encodeURIComponent(returnTo)}">${copy.primary}</a>
+                <a class="zyrex-access-secondary" href="https://discord.gg/4J3tars4QS" target="_blank" rel="noopener">${copy.secondary}</a>
+            </div>
+        </section>`;
+    document.body.appendChild(overlay);
+
+    const onKeyDown = event => {
+        if (event.key === 'Escape' && document.body.contains(overlay)) close();
+    };
+    const close = () => {
+        overlay.remove();
+        document.removeEventListener('keydown', onKeyDown);
+    };
+    overlay.addEventListener('click', event => {
+        if (event.target === overlay || event.target.closest('.zyrex-access-close')) close();
+    });
+    document.addEventListener('keydown', onKeyDown);
+    overlay.querySelector('.zyrex-access-close').focus();
+};
+
 let lastScrollY = 0;
 let studioSidebar = document.querySelector('.studio-sidebar');
 
 if (navbar || studioSidebar) {
+    // Scroll direction alone is too twitchy: a couple of pixels of jitter would
+    // flip the bar in and out. These thresholds require a deliberate gesture,
+    // and the reveal needs less travel than the hide so it feels immediate.
+    var NAV_HIDE_AFTER = 14;
+    var NAV_SHOW_AFTER = 6;
+    // Start from the restored scroll position, otherwise a page reloaded halfway
+    // down would treat the first event as a downward scroll and hide the bar.
+    let navAnchorY = window.scrollY || 0;
+
     window.addEventListener('scroll', () => {
         const currentScrollY = window.scrollY;
         if (!studioSidebar) studioSidebar = document.querySelector('.studio-sidebar');
@@ -309,17 +756,21 @@ if (navbar || studioSidebar) {
             } else {
                 navbar.classList.remove('scrolled');
                 navbar.classList.remove('nav-hidden');
+                navAnchorY = 0;
             }
             
             // Hide on scroll down, show on scroll up (only when past 100px)
             if (currentScrollY > 100) {
-                if (currentScrollY > lastScrollY) {
-                    // Scrolling down → hide
+                const delta = currentScrollY - navAnchorY;
+                if (delta > NAV_HIDE_AFTER) {
                     navbar.classList.add('nav-hidden');
-                } else {
-                    // Scrolling up → show
+                    navAnchorY = currentScrollY;
+                } else if (delta < -NAV_SHOW_AFTER) {
                     navbar.classList.remove('nav-hidden');
+                    navAnchorY = currentScrollY;
                 }
+            } else {
+                navAnchorY = currentScrollY;
             }
         }
 
@@ -641,14 +1092,16 @@ window.zyrexCacheFetch = async function(url, options) {
 };
 window.fetchWithCache = window.zyrexCacheFetch;
 
+var heroStatsLoadPromise = null;
+
 function fetchResourceStatsForHero() {
+    if (heroStatsLoadPromise) return heroStatsLoadPromise;
     // 0. Render immediately from local storage cache
     try {
         var cached = JSON.parse(localStorage.getItem('zyrex_cache_hero_stats') || 'null');
         if (cached) {
             animateHeroNum('heroStatPresets', cached.presetsCount || 0);
             animateHeroNum('heroStatPlugins', cached.pluginsCount || 0);
-            animateHeroNum('heroStatScenepacks', cached.scenepacksCount || 0);
             animateHeroNum('heroStatAudios', cached.audiosCount || 0);
         }
     } catch(e) {}
@@ -656,13 +1109,13 @@ function fetchResourceStatsForHero() {
     var p1 = fetch('/api/resource-stats', {credentials: 'include'}).then(function(r){ return r.json(); }).catch(function(){ return null; });
     var p2 = fetch('/api/products', {credentials: 'include'}).then(function(r){ return r.json(); }).catch(function(){ return null; });
 
-    Promise.all([p1, p2]).then(function(results) {
+    heroStatsLoadPromise = Promise.all([p1, p2]).then(function(results) {
         var rStats = results[0] || {};
         var products = results[1] || [];
         if (!Array.isArray(products) && products.data) products = products.data;
         if (!Array.isArray(products)) products = window.presetsData || [];
 
-        var pluginsCount = 0, presetsCount = 0, scenepacksCount = 0, audiosCount = 0;
+        var pluginsCount = 0, presetsCount = 0, audiosCount = 0;
         var seenIds = new Set();
 
         // 1. Process static/cached pluginsData (software, plugins, scripts)
@@ -692,8 +1145,6 @@ function fetchResourceStatsForHero() {
 
             if (type === 'audio' || cat.includes('audio') || cat.includes('sound') || cat.includes('music')) {
                 audiosCount++;
-            } else if (type === 'scenepack' || cat.includes('scenepack') || cat.includes('scene')) {
-                scenepacksCount++;
             } else if (isPlugin) {
                 pluginsCount++;
             } else {
@@ -704,7 +1155,6 @@ function fetchResourceStatsForHero() {
         // 3. Fallbacks if stats API returns direct category counts
         if (rStats && rStats.category_counts) {
             if (rStats.category_counts.presets) presetsCount = rStats.category_counts.presets;
-            if (rStats.category_counts.scenepacks) scenepacksCount = rStats.category_counts.scenepacks;
             if (rStats.category_counts.audios) audiosCount = rStats.category_counts.audios;
         }
 
@@ -712,22 +1162,21 @@ function fetchResourceStatsForHero() {
             localStorage.setItem('zyrex_cache_hero_stats', JSON.stringify({
                 presetsCount: presetsCount,
                 pluginsCount: pluginsCount,
-                scenepacksCount: scenepacksCount,
                 audiosCount: audiosCount
             }));
         } catch(e) {}
 
         animateHeroNum('heroStatPresets', presetsCount);
         animateHeroNum('heroStatPlugins', pluginsCount);
-        animateHeroNum('heroStatScenepacks', scenepacksCount);
         animateHeroNum('heroStatAudios', audiosCount);
     });
+    return heroStatsLoadPromise;
 }
 
 function animateHeroNum(id, target) {
     var el = document.getElementById(id);
     if (!el) return;
-    var start = 0;
+    var start = parseInt(el.textContent, 10) || 0;
     var duration = 1600;
     var startTime = performance.now();
     function step(now) {
@@ -742,8 +1191,11 @@ function animateHeroNum(id, target) {
 }
 
 if (document.getElementById('heroStatPresets') || document.getElementById('heroStatPlugins')) {
-    document.addEventListener('DOMContentLoaded', fetchResourceStatsForHero);
-    fetchResourceStatsForHero();
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', fetchResourceStatsForHero, { once: true });
+    } else {
+        fetchResourceStatsForHero();
+    }
 }
 
 if (document.querySelector('.stats-badge, .stats-item, .stats-number')) {
@@ -771,16 +1223,20 @@ const animateCounter = (counter) => {
     requestAnimationFrame(updateCounter);
 };
 
-const counterObserver = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            animateCounter(entry.target);
-            counterObserver.unobserve(entry.target);
-        }
-    });
-}, { threshold: 0.5 });
+if (typeof window.IntersectionObserver === 'function') {
+    const counterObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                animateCounter(entry.target);
+                counterObserver.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.5 });
 
-counters.forEach(counter => counterObserver.observe(counter));
+    counters.forEach(counter => counterObserver.observe(counter));
+} else {
+    counters.forEach(animateCounter);
+}
 });
 }
 
@@ -798,7 +1254,7 @@ if (contactForm) {
 
         setTimeout(() => {
             submitBtn.innerHTML = 'Sent! <i class="fas fa-check"></i>';
-            submitBtn.style.background = 'linear-gradient(135deg, #7a081e, #8b0000)';
+            submitBtn.style.background = 'linear-gradient(135deg, rgba(var(--zr-rgb-122-8-30, 122, 8, 30), 1), rgba(var(--zr-rgb-139-0-0, 139, 0, 0), 1))';
 
             // Show our custom premium toast
             if (typeof window.showToast === 'function') {
@@ -816,10 +1272,15 @@ if (contactForm) {
 }
 
 function initScrollReveal() {
-    const revealElements = document.querySelectorAll('.reveal, .reveal-scale, .reveal-left, .reveal-right, .resource-card, .team-card, .contact-grid, .stats-item, .about-intro-card');
+    const revealElements = document.querySelectorAll('.reveal, .reveal-scale, .reveal-left, .reveal-right, .resource-card, .team-card, .contact-grid, .stats-item, .about-intro-card, .staff-hero, .staff-card, .staff-gate, .staff-role-card, .req-stat-card, .req-card, .request-explorer, .more-leaks-section, .partner-ad-card, .preset-comments-deck, .feed-post, .pf-feed-entry, .profile-section, .access-card, .scenepack-card, main > section, main > article');
     if (!revealElements.length) return;
 
-    if (!('IntersectionObserver' in window)) {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        revealElements.forEach(el => el.classList.add('revealed'));
+        return;
+    }
+
+    if (typeof window.IntersectionObserver !== 'function') {
         revealElements.forEach(el => el.classList.add('revealed'));
         return;
     }
@@ -829,8 +1290,9 @@ function initScrollReveal() {
             if (entry.isIntersecting) {
                 entry.target.classList.add('revealed');
                 // Also handle inline-style approach for backward compat
-                entry.target.style.opacity = '1';
-                entry.target.style.transform = 'translateY(0)';
+            entry.target.style.opacity = '1';
+            entry.target.style.transform = 'translate3d(0,0,0) scale(1)';
+            entry.target.style.filter = 'blur(0)';
                 revealObserver.unobserve(entry.target);
             }
         });
@@ -841,8 +1303,9 @@ function initScrollReveal() {
         if (!el.classList.contains('reveal') && !el.classList.contains('reveal-scale') &&
             !el.classList.contains('reveal-left') && !el.classList.contains('reveal-right')) {
             el.style.opacity = '0';
-            el.style.transform = 'translateY(40px)';
-            el.style.transition = 'opacity 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94)';
+            el.style.transform = 'translate3d(0,24px,0) scale(.985)';
+            el.style.filter = 'blur(4px)';
+            el.style.transition = 'opacity .72s cubic-bezier(.2,.8,.2,1), transform .82s cubic-bezier(.2,.8,.2,1), filter .72s cubic-bezier(.2,.8,.2,1)';
         }
         revealObserver.observe(el);
     });
@@ -853,30 +1316,36 @@ initScrollReveal();
 document.querySelectorAll('a[href^="#"]').forEach(anchor => {
     anchor.addEventListener('click', function (e) {
         const href = this.getAttribute('href');
-        if (href === '#') return;
+        if (!href || href.charAt(0) !== '#' || href.length < 2) return;
+
+        let target = null;
+        try {
+            target = document.querySelector(href);
+        } catch (_) {
+            target = null;
+        }
+        if (!target) return;
 
         e.preventDefault();
-        const target = document.querySelector(href);
-        if (target) {
-            target.scrollIntoView({
-                behavior: 'smooth',
-                block: 'start'
-            });
-        }
+        target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+        });
     });
 });
 
 const particlesContainer = document.getElementById('particles');
-if (particlesContainer) {
+if (particlesContainer && !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches)) {
     const compactParticles = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
-    const particleCount = compactParticles ? 18 : 36;
+    // Every particle is its own composited layer, so keep the field sparse.
+    const particleCount = compactParticles ? 8 : 20;
     for (let i = 0; i < particleCount; i++) {
         const particle = document.createElement('div');
         particle.style.cssText = `
             position: absolute;
             width: ${Math.random() * 4 + 2}px;
             height: ${Math.random() * 4 + 2}px;
-            background: rgba(220, 20, 60, ${Math.random() * 0.4 + 0.1});
+            background: rgba(var(--zr-rgb-220-20-60, 220, 20, 60), ${Math.random() * 0.4 + 0.1});
             border-radius: 50%;
             top: ${Math.random() * 100}%;
             left: ${Math.random() * 100}%;
@@ -924,14 +1393,14 @@ window.showToast = function(title, message, type = 'success') {
     toast.style.background = 'rgba(12, 4, 8, 0.88)';
     toast.style.backdropFilter = 'blur(20px)';
     toast.style.webkitBackdropFilter = 'blur(20px)';
-    toast.style.border = '1px solid rgba(168, 15, 45, 0.35)';
+    toast.style.border = '1px solid rgba(var(--zr-rgb-168-15-45, 168, 15, 45), 0.35)';
     toast.style.borderRadius = '14px';
     toast.style.padding = '16px 20px';
     toast.style.color = '#fff';
     toast.style.display = 'flex';
     toast.style.alignItems = 'center';
     toast.style.gap = '14px';
-    toast.style.boxShadow = '0 10px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(168, 15, 45, 0.15)';
+    toast.style.boxShadow = '0 10px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(var(--zr-rgb-168-15-45, 168, 15, 45), 0.15)';
     toast.style.width = '340px';
     toast.style.pointerEvents = 'auto';
     toast.style.opacity = '0';
@@ -939,7 +1408,7 @@ window.showToast = function(title, message, type = 'success') {
     toast.style.transition = 'all 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
 
     const icon = type === 'success' ? 'fa-circle-check' : 'fa-circle-exclamation';
-    const iconColor = type === 'success' ? '#00c864' : '#ff3860';
+    const iconColor = type === 'success' ? '#00c864' : 'rgba(var(--zr-rgb-255-56-96, 255, 56, 96), 1)';
 
     toast.innerHTML = `
         <i class="fas ${icon}" style="font-size: 1.4rem; color: ${iconColor}; flex-shrink: 0;"></i>
@@ -966,6 +1435,81 @@ window.showToast = function(title, message, type = 'success') {
     }, 4500);
 };
 
+// Shared compact status banner used by the upload studio and other site actions.
+window.showStatusAlert = function(message, isError) {
+    if (!message) return;
+    let alert = document.getElementById('zyrexStatusAlert');
+    if (!alert) {
+        alert = document.createElement('div');
+        alert.id = 'zyrexStatusAlert';
+        alert.setAttribute('aria-atomic', 'true');
+        alert.style.position = 'fixed';
+        alert.style.top = 'max(20px, env(safe-area-inset-top))';
+        alert.style.left = '50%';
+        alert.style.zIndex = '10000';
+        alert.style.display = 'flex';
+        alert.style.alignItems = 'center';
+        alert.style.gap = '9px';
+        alert.style.width = 'max-content';
+        alert.style.maxWidth = 'calc(100vw - 32px)';
+        alert.style.padding = '13px 22px';
+        alert.style.borderRadius = '999px';
+        alert.style.backdropFilter = 'blur(20px)';
+        alert.style.webkitBackdropFilter = 'blur(20px)';
+        alert.style.boxShadow = '0 12px 36px rgba(0, 0, 0, .5)';
+        alert.style.fontSize = '.84rem';
+        alert.style.fontWeight = '700';
+        alert.style.opacity = '0';
+        alert.style.visibility = 'hidden';
+        alert.style.transform = 'translate(-50%,-10px)';
+        alert.style.transition = 'opacity .22s ease, transform .22s ease';
+        alert.style.pointerEvents = 'none';
+        const icon = document.createElement('i');
+        icon.setAttribute('aria-hidden', 'true');
+        const text = document.createElement('span');
+        text.style.overflow = 'hidden';
+        text.style.textOverflow = 'ellipsis';
+        alert.append(icon, text);
+        document.body.appendChild(alert);
+        alert._zyrexIcon = icon;
+        alert._zyrexText = text;
+    }
+    const error = isError === true || isError === 'error';
+    alert.className = 'studio-alert show zyrex-status-alert ' + (error ? 'error' : 'success');
+    alert.setAttribute('role', error ? 'alert' : 'status');
+    alert.setAttribute('aria-live', error ? 'assertive' : 'polite');
+    alert._zyrexIcon.className = 'fas ' + (error ? 'fa-circle-exclamation' : 'fa-circle-check');
+    alert._zyrexText.textContent = String(message);
+    alert.style.color = error ? '#ff9ab0' : '#34d399';
+    alert.style.background = error ? 'rgba(var(--zr-rgb-255-43-82, 255, 43, 82),.18)' : 'rgba(52, 211, 153, .15)';
+    alert.style.border = '1px solid ' + (error ? 'rgba(var(--zr-rgb-255-43-82, 255, 43, 82),.3)' : 'rgba(52, 211, 153, .3)');
+    alert.style.opacity = '1';
+    alert.style.visibility = 'visible';
+    alert.style.transform = 'translate(-50%,0)';
+    clearTimeout(alert._zyrexTimer);
+    clearTimeout(alert._zyrexVisibilityTimer);
+    alert._zyrexTimer = setTimeout(function() {
+        alert.style.opacity = '0';
+        alert.style.transform = 'translate(-50%,-10px)';
+        alert._zyrexVisibilityTimer = setTimeout(function() { alert.style.visibility = 'hidden'; }, 240);
+    }, 4000);
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    const params = new URLSearchParams(window.location.search);
+    const authError = params.get('error');
+    if (!authError) return;
+    const messages = {
+        auth_failed: 'Discord could not complete sign-in. Please try again in a moment.',
+        user_fetch_failed: 'Discord sign-in succeeded, but your profile could not be loaded. Please try again.',
+        no_code: 'Discord did not return a sign-in code. Please start sign-in again.',
+    };
+    window.showToast('Sign-in problem', messages[authError] || 'Sign-in could not be completed. Please try again.', 'error');
+    params.delete('error');
+    const query = params.toString();
+    history.replaceState(null, '', window.location.pathname + (query ? `?${query}` : '') + window.location.hash);
+});
+
 (function initGlobalFloatingHub() {
     let cachedLiveNotifs = [];
 
@@ -976,6 +1520,16 @@ window.showToast = function(title, message, type = 'success') {
         } catch(e) {
             return { dnd: false, presets: true, plugins: true, replies: true, announcements: true };
         }
+    }
+
+    function persistNotifPrefs(prefs) {
+        localStorage.setItem('zyrex_notif_prefs', JSON.stringify(prefs));
+        fetch('/api/profile/notif/prefs', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ dnd: !!prefs.dnd, leaks: prefs.presets !== false, plugins: prefs.plugins !== false, replies: prefs.replies !== false, announcements: prefs.announcements !== false })
+        }).catch(function() {});
     }
 
     function setupHub() {
@@ -1005,7 +1559,7 @@ window.showToast = function(title, message, type = 'success') {
                         </div>
                         <div class="notif-panel-actions">
                             <button type="button" class="notif-header-act-btn" onclick="window.toggleDNDQuick()" title="Do Not Disturb" id="btnQuickDND"><i class="fas fa-moon"></i></button>
-                            <a href="/settings?tab=general" class="notif-header-act-btn" title="Notification Settings"><i class="fas fa-cog"></i></a>
+                            <a href="/settings#notifications" class="notif-header-act-btn" title="Notification Settings"><i class="fas fa-cog"></i></a>
                             <button type="button" class="notif-header-act-btn" onclick="window.markAllNotifsRead()" title="Mark all as read"><i class="fas fa-check-double"></i></button>
                             <button type="button" class="notif-header-act-btn" onclick="window.clearAllNotifs()" title="Clear all notifications"><i class="fas fa-trash-can"></i></button>
                             <button type="button" class="notif-header-act-btn close-btn" onclick="window.toggleGlobalNotifPanel(event)" title="Close"><i class="fas fa-times"></i></button>
@@ -1053,8 +1607,8 @@ window.showToast = function(title, message, type = 'success') {
 
         // Load notifications data
         fetchLiveNotifications();
-        // Background live check every 45s
-        setInterval(fetchLiveNotifications, 45000);
+        // Background live check every 45s, paused while the tab is hidden
+        window.ZyrexPoll.whileVisible(fetchLiveNotifications, 20000);
     }
 
     function getReadIds() {
@@ -1076,32 +1630,15 @@ window.showToast = function(title, message, type = 'success') {
     async function fetchLiveNotifications() {
         const prefs = getNotifPrefs();
         try {
-            let userId = '';
-            try {
-                if (window.currentUser && window.currentUser.id) {
-                    userId = String(window.currentUser.id);
-                } else if (window._currentUser && window._currentUser.id) {
-                    userId = String(window._currentUser.id);
-                } else {
-                    const rawAuth = localStorage.getItem('zyrex_auth_user');
-                    if (rawAuth) {
-                        const parsed = JSON.parse(rawAuth);
-                        userId = String((parsed && parsed.data && parsed.data.id) || parsed.id || '');
-                    }
-                }
-                if (!userId) {
-                    const sessRaw = sessionStorage.getItem('zyrex_session_user');
-                    if (sessRaw) userId = String(JSON.parse(sessRaw).id || '');
-                }
-            } catch(e) {}
-
-            const res = await fetch('/api/notifications' + (userId ? '?user_id=' + encodeURIComponent(userId) : ''), {
+            const res = await fetch('/api/notifications', {
                 credentials: 'include'
             });
             if (res.ok) {
                 const data = await res.json();
                 if (data.success && Array.isArray(data.notifications)) {
                     cachedLiveNotifs = data.notifications;
+                    if (Array.isArray(data.read_ids)) localStorage.setItem('zyrex_read_notifs', JSON.stringify(data.read_ids));
+                    if (Array.isArray(data.dismissed_ids)) localStorage.setItem('zyrex_cleared_notifs', JSON.stringify(data.dismissed_ids));
                 }
             }
         } catch(e) {
@@ -1327,6 +1864,18 @@ window.showToast = function(title, message, type = 'success') {
         return text;
     }
 
+    /* Small bridge to the site language packs so notification copy follows the
+       visitor's language instead of always rendering in English. */
+    function zt(text, vars) {
+        var api = window.ZyrexI18n;
+        if (api && typeof api.format === 'function') return api.format(text, vars);
+        return text;
+    }
+
+    document.addEventListener('zyrex:languagechange', function () {
+        if (typeof renderGlobalNotifications === 'function' && cachedLiveNotifs.length) renderGlobalNotifications();
+    });
+
     function renderGlobalNotifications() {
         const list = document.getElementById('globalNotifList');
         const footer = document.getElementById('globalNotifFooter');
@@ -1338,8 +1887,8 @@ window.showToast = function(title, message, type = 'success') {
 
         const prefs = getNotifPrefs();
         if (dndBtn) {
-            dndBtn.style.color = prefs.dnd ? 'var(--cherry-neon)' : 'rgba(255,255,255,0.65)';
-            dndBtn.title = prefs.dnd ? 'Do Not Disturb is ON (Click to turn off)' : 'Enable Do Not Disturb';
+            dndBtn.style.color = prefs.dnd ? 'var(--cherry-neon)' : 'rgba(255, 255, 255, 0.65)';
+            dndBtn.title = prefs.dnd ? zt('Do Not Disturb is ON (Click to turn off)') : zt('Enable Do Not Disturb');
         }
 
         // If DND is enabled, hide all badges and show DND state
@@ -1367,7 +1916,8 @@ window.showToast = function(title, message, type = 'success') {
         const filteredNotifs = cachedLiveNotifs.filter(n => {
             if (clearedIds.includes(n.id)) return false;
             const cat = n.category || 'announcement';
-            if (cat === 'preset' && prefs.presets === false) return false;
+            // Older notifications still carry the old category value.
+            if ((cat === 'resource' || cat === 'preset') && prefs.presets === false) return false;
             if (cat === 'plugin' && prefs.plugins === false) return false;
             if (cat === 'scenepack' && prefs.presets === false) return false;
             if (cat === 'audio' && prefs.presets === false) return false;
@@ -1384,7 +1934,7 @@ window.showToast = function(title, message, type = 'success') {
             badge1.style.display = unreadCount > 0 ? 'flex' : 'none';
         }
         if (badge2) {
-            badge2.textContent = unreadCount > 0 ? `${unreadCount} New` : '';
+            badge2.textContent = unreadCount > 0 ? zt('{n} New', { n: unreadCount }) : '';
             badge2.style.display = unreadCount > 0 ? 'inline-flex' : 'none';
         }
 
@@ -1405,7 +1955,9 @@ window.showToast = function(title, message, type = 'success') {
         if (footer) {
             footer.style.display = 'flex';
             if (footerSummary) {
-                footerSummary.textContent = `${filteredNotifs.length} notification${filteredNotifs.length > 1 ? 's' : ''}`;
+                footerSummary.textContent = filteredNotifs.length === 1
+                    ? zt('{n} notification', { n: 1 })
+                    : zt('{n} notifications', { n: filteredNotifs.length });
             }
         }
 
@@ -1415,14 +1967,14 @@ window.showToast = function(title, message, type = 'success') {
             const timeAgo = formatNotifTime(n.created_at);
             const itemLink = n.link || '';
             const hasLink = itemLink && itemLink !== '#' && itemLink !== 'javascript:void(0)';
-            const categoryName = (n.category || 'ZYREX').toUpperCase();
+            const categoryName = zt(notifCategoryLabel(n.category)).toLocaleUpperCase();
             return `
                 <div class="notif-item ${isUnread ? 'unread' : 'read'} ${hasLink ? 'has-link' : ''}" 
                      data-id="${n.id}" 
                      onclick="window.handleNotifCardClick(event, '${escapeHtmlNotif(itemLink)}', '${n.id}')">
                     <div class="notif-card-header">
                         <div class="notif-card-source">
-                            <div class="notif-app-icon" style="background:${n.bg || 'rgba(255,43,82,0.18)'};color:${n.color || 'var(--cherry-neon)'}">
+                            <div class="notif-app-icon" style="background:${n.bg || 'rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.18)'};color:${n.color || 'var(--cherry-neon)'}">
                                 <i class="${iconClass}"></i>
                             </div>
                             <span class="notif-app-name">${escapeHtmlNotif(categoryName)}</span>
@@ -1445,8 +1997,8 @@ window.showToast = function(title, message, type = 'success') {
                         </div>
                     </div>
                     <div class="notif-card-body">
-                        <div class="notif-title">${parseNotifMarkdown(n.title)}</div>
-                        <div class="notif-desc">${parseNotifMarkdown(n.desc)}</div>
+                        <div class="notif-title">${parseNotifMarkdown(notifTitleText(n))}</div>
+                        <div class="notif-desc">${parseNotifMarkdown(notifDescText(n))}</div>
                     </div>
                     ${hasLink ? `
                         <div class="notif-card-footer-link">
@@ -1460,28 +2012,86 @@ window.showToast = function(title, message, type = 'success') {
     }
 
     function formatNotifTime(isoDate) {
-        if (!isoDate) return 'now';
+        if (!isoDate) return zt('now');
         try {
             const date = new Date(isoDate.endsWith('Z') ? isoDate : isoDate + 'Z');
             const sec = Math.floor((new Date() - date) / 1000);
-            if (isNaN(sec) || sec < 45) return 'now';
-            if (sec < 60) return `${sec}s ago`;
+            if (isNaN(sec) || sec < 45) return zt('now');
+            if (sec < 60) return zt('{n}s ago', { n: sec });
             const min = Math.floor(sec / 60);
-            if (min < 60) return `${min}m ago`;
+            if (min < 60) return zt('{n}m ago', { n: min });
             const hrs = Math.floor(min / 60);
-            if (hrs < 24) return `${hrs}h ago`;
+            if (hrs < 24) return zt('{n}h ago', { n: hrs });
             const days = Math.floor(hrs / 24);
-            if (days === 1) return 'Yesterday';
-            if (days < 7) return `${days}d ago`;
-            return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            if (days === 1) return zt('Yesterday');
+            if (days < 7) return zt('{n}d ago', { n: days });
+            return date.toLocaleDateString((window.ZyrexI18n && window.ZyrexI18n.getLanguage) ? window.ZyrexI18n.getLanguage() : 'en', { month: 'short', day: 'numeric' });
         } catch(e) {
-            return 'Recently';
+            return zt('Recently');
         }
+    }
+
+    /* Notification copy is written by the server in English, so the client
+       rebuilds the two patterns it uses instead of translating a whole title. */
+    function notifCategoryLabel(category) {
+        switch (String(category || '').toLowerCase()) {
+            case 'resource':
+            case 'preset': return 'Resource';
+            case 'plugin':
+            case 'software': return 'Plugin';
+            case 'audio': return 'Audio';
+            case 'scenepack': return 'Scenepack';
+            case 'reply': return 'Reply';
+            case 'announcement': return 'Announcement';
+            default: return 'ZYREX';
+        }
+    }
+
+    function notifTitleText(n) {
+        var title = String(n.title || '');
+        var match = title.match(/^New\s+(Leak|Preset|Plugin|Software|Audio|Scenepack)\s*:\s*([\s\S]+)$/i);
+        if (match) {
+            var type = match[1].toLowerCase() === 'preset' ? 'Leak' : match[1];
+            return zt('New {type}: {name}', { type: zt(type), name: match[2].trim() });
+        }
+        return zt(title);
+    }
+
+    function notifDescText(n) {
+        var desc = String(n.desc || '');
+        var match = desc.match(/^([\s\S]+?)\s+is now available in\s+([\s\S]+?)!?$/i);
+        if (match) {
+            var name = match[1].trim();
+            var category = String(match[2] || '').trim();
+            if (/^our catalog$/i.test(category)) {
+                return zt('{name} is now available in our catalog!', { name: name });
+            }
+            return zt('{name} is now available in {category}!', { name: name, category: zt(category) });
+        }
+        return zt(desc);
     }
 
     function escapeHtmlNotif(str) {
         if (!str) return '';
         return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    }
+
+    function persistNotificationAction(action, id, ids) {
+        try {
+            fetch('/api/notifications', {
+                method: 'POST', credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: action, id: id || '', ids: ids || [] })
+            }).then(function (response) {
+                if (response.ok) return response.json();
+                return null;
+            }).then(function (data) {
+                if (!data || !data.success) return;
+                if (Array.isArray(data.read_ids)) localStorage.setItem('zyrex_read_notifs', JSON.stringify(data.read_ids));
+                if (Array.isArray(data.dismissed_ids)) localStorage.setItem('zyrex_cleared_notifs', JSON.stringify(data.dismissed_ids));
+                renderGlobalNotifications();
+            }).catch(function () {});
+        } catch (_) {}
     }
 
     window.handleNotifCardClick = function(e, link, id) {
@@ -1514,13 +2124,17 @@ window.showToast = function(title, message, type = 'success') {
     window.toggleDNDQuick = function() {
         const prefs = getNotifPrefs();
         prefs.dnd = !prefs.dnd;
-        localStorage.setItem('zyrex_notif_prefs', JSON.stringify(prefs));
+        persistNotifPrefs(prefs);
         renderGlobalNotifications();
     };
 
     window.refreshGlobalNotifications = function() {
         renderGlobalNotifications();
     };
+
+    window.addEventListener('storage', function (event) {
+        if (event && (event.key === 'zyrex_read_notifs' || event.key === 'zyrex_cleared_notifs')) fetchLiveNotifications();
+    });
 
     window.scrollToTopSmooth = function() {
         window.scrollTo({
@@ -1534,6 +2148,7 @@ window.showToast = function(title, message, type = 'success') {
         if (!readIds.includes(id)) {
             readIds.push(id);
             localStorage.setItem('zyrex_read_notifs', JSON.stringify(readIds));
+            persistNotificationAction('read', id);
             renderGlobalNotifications();
         }
     };
@@ -1547,6 +2162,7 @@ window.showToast = function(title, message, type = 'success') {
         if (!readIds.includes(id)) {
             readIds.push(id);
             localStorage.setItem('zyrex_read_notifs', JSON.stringify(readIds));
+            persistNotificationAction('read', id);
             renderGlobalNotifications();
         }
     };
@@ -1563,12 +2179,14 @@ window.showToast = function(title, message, type = 'success') {
             readIds.push(id);
         }
         localStorage.setItem('zyrex_read_notifs', JSON.stringify(readIds));
+        persistNotificationAction(readIds.includes(id) ? 'read' : 'unread', id);
         renderGlobalNotifications();
     };
 
     window.markAllNotifsRead = function() {
         const allIds = cachedLiveNotifs.map(n => n.id);
         localStorage.setItem('zyrex_read_notifs', JSON.stringify(allIds));
+        persistNotificationAction('mark_all_read', '', allIds);
         renderGlobalNotifications();
     };
 
@@ -1581,6 +2199,7 @@ window.showToast = function(title, message, type = 'success') {
         if (!cleared.includes(id)) {
             cleared.push(id);
             localStorage.setItem('zyrex_cleared_notifs', JSON.stringify(cleared));
+            persistNotificationAction('dismiss', id);
             renderGlobalNotifications();
         }
     };
@@ -1591,6 +2210,7 @@ window.showToast = function(title, message, type = 'success') {
             if (!cleared.includes(n.id)) cleared.push(n.id);
         });
         localStorage.setItem('zyrex_cleared_notifs', JSON.stringify(cleared));
+        persistNotificationAction('clear_all', '', cachedLiveNotifs.map(n => n.id));
         renderGlobalNotifications();
     };
 
@@ -1693,289 +2313,324 @@ window.showToast = function(title, message, type = 'success') {
         injectFooterStatus();
     }
     setTimeout(injectFooterStatus, 400);
-    setInterval(syncFooterStatus, 45000);
+    window.ZyrexPoll.whileVisible(syncFooterStatus, 45000);
 })();
 
 // ==========================================
-// ==========================================
-// UNLIMITED TEXT ADS - REWARDED VIDEO ONLY
-// (Partnered banner ads deactivated per request)
-// ==========================================
-(function() {
-    window.initUnlimitedTextAds = function() {
-        document.querySelectorAll('.zyrex-ad-unit, .zyrex-ad-home-section').forEach(function(el) {
-            el.remove();
-        });
-    };
+// Shared product profile resolver
+// One rule for every page so a resource shows the same creator/uploader
+// identity (name + photo) on the card, detail and download screens.
+window.ZyrexProfile = (function () {
+    var AVATAR_CACHE_KEY = 'zyrex_avatar_cache';
 
-    window.createZyrexAdHtml = function() {
-        return '';
-    };
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', window.initUnlimitedTextAds);
-    } else {
-        window.initUnlimitedTextAds();
-    }
-    // ==========================================
-    // REWARDED VIDEO AD SYSTEM (UNLIMITED TEXT ADS)
-    // ==========================================
-    const VIDEO_SLOT = '07d84c02aa3cfe1c600452085c30429b';
-    let currentRwCallback = null;
-    let currentRwCancel = null;
-    let rwTimerInterval = null;
-    let rwImpressionToken = null;
-
-    function ensureRwModal() {
-        let modal = document.getElementById('zyrexRwModal');
-        if (modal) return modal;
-
-        modal = document.createElement('div');
-        modal.id = 'zyrexRwModal';
-        modal.className = 'zyrex-rw-modal';
-        modal.innerHTML = `
-            <div class="zyrex-rw-backdrop" onclick="window.closeRewardedVideoModal()"></div>
-            <div class="zyrex-rw-card">
-                <div class="zyrex-rw-header">
-                    <div class="zyrex-rw-title-group">
-                        <span class="zyrex-rw-badge"><i class="fas fa-play"></i> Sponsor Video</span>
-                        <span class="zyrex-rw-title">Watch to Unlock Download</span>
-                    </div>
-                    <button type="button" class="zyrex-rw-close" onclick="window.closeRewardedVideoModal()" title="Close">&times;</button>
-                </div>
-                
-                <div class="zyrex-rw-body">
-                    <div class="zyrex-rw-video-wrap" id="rwVideoWrap">
-                        <video id="rwVideoElement" playsinline preload="auto" style="width:100%;height:100%;object-fit:contain;background:#000"></video>
-                        <div id="rwIframeContainer" style="display:none;width:100%;height:100%"></div>
-
-                        <div class="zyrex-rw-overlay-top">
-                            <span class="zyrex-rw-timer-badge" id="rwTimerBadge">
-                                <i class="fas fa-hourglass-half fa-spin"></i> Reward in <strong id="rwCountdownNum">10</strong>s
-                            </span>
-                            <button type="button" class="zyrex-rw-mute-btn" id="rwMuteBtn" onclick="window.toggleRwMute()" title="Mute/Unmute">
-                                <i class="fas fa-volume-high" id="rwMuteIcon"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div class="zyrex-rw-progress-wrap">
-                        <div class="zyrex-rw-progress-bar" id="rwProgressBar" style="width: 0%"></div>
-                    </div>
-
-                    <div class="zyrex-rw-footer">
-                        <div class="zyrex-rw-status" id="rwStatusText">
-                            <i class="fas fa-circle-info"></i> Please watch this quick sponsor video to unlock your download.
-                        </div>
-                        <div class="zyrex-rw-actions">
-                            <a href="#" target="_blank" rel="noopener nofollow" class="zyrex-rw-sponsor-btn" id="rwSponsorLink" style="display:none" onclick="window.trackRwClick()">
-                                <i class="fas fa-arrow-up-right-from-square"></i> Visit Sponsor
-                            </a>
-                            <button type="button" class="zyrex-rw-claim-btn" id="rwClaimBtn" style="display:none" onclick="window.claimRewardedDownload()">
-                                <i class="fas fa-circle-check"></i> Unlock Download
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modal);
-        return modal;
+    function readAvatarCache() {
+        try { return JSON.parse(localStorage.getItem(AVATAR_CACHE_KEY) || '{}') || {}; } catch (e) { return {}; }
     }
 
-    window.toggleRwMute = function() {
-        const video = document.getElementById('rwVideoElement');
-        const icon = document.getElementById('rwMuteIcon');
-        if (!video || !icon) return;
-        video.muted = !video.muted;
-        icon.className = video.muted ? 'fas fa-volume-xmark' : 'fas fa-volume-high';
-    };
+    function writeAvatarCache(map) {
+        try { localStorage.setItem(AVATAR_CACHE_KEY, JSON.stringify(map)); } catch (e) {}
+    }
 
-    window.trackRwClick = function() {
-        if (!rwImpressionToken) return;
-        fetch('/api/adserver/click', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ imp: rwImpressionToken })
-        }).catch(() => {});
-    };
+    function isDefaultAvatar(url) {
+        var value = String(url || '');
+        return !value || value.indexOf('/api/avatar/default/') === 0 || value.indexOf('/embed/avatars/') !== -1;
+    }
 
-    window.closeRewardedVideoModal = function() {
-        const modal = document.getElementById('zyrexRwModal');
-        const video = document.getElementById('rwVideoElement');
-        const claimBtn = document.getElementById('rwClaimBtn');
+    // Resolved avatars are cached per Discord user id so the same uploader looks
+    // identical on every resource page instead of varying with per-product data.
+    function cachedAvatar(userId) {
+        if (!userId) return '';
+        var value = readAvatarCache()[String(userId)];
+        return isDefaultAvatar(value) ? '' : String(value);
+    }
 
-        // If reward is already claimed or available
-        if (claimBtn && claimBtn.style.display !== 'none') {
-            window.claimRewardedDownload();
-            return;
-        }
+    function rememberAvatar(userId, url) {
+        var value = String(url || '').trim();
+        if (!userId || isDefaultAvatar(value)) return;
+        if (!/^(https?:\/\/|\/api\/avatar\/)/.test(value)) return;
+        var map = readAvatarCache();
+        if (map[String(userId)] === value) return;
+        if (Object.keys(map).length > 400) map = {};
+        map[String(userId)] = value;
+        writeAvatarCache(map);
+    }
 
-        if (video) {
-            video.pause();
-            video.src = '';
-        }
-        if (rwTimerInterval) {
-            clearInterval(rwTimerInterval);
-            rwTimerInterval = null;
-        }
-        if (modal) modal.classList.remove('active');
-        if (currentRwCancel) currentRwCancel();
-    };
+    function defaultDiscordAvatar(userId) {
+        var id = String(userId || '');
+        if (!/^\d{17,20}$/.test(id)) return '';
+        var index = 0;
+        try { index = Number((BigInt(id) >> 22n) % 6n); } catch (e) { index = parseInt(id, 10) % 5 || 0; }
+        return '/api/avatar/default/' + index + '.png';
+    }
 
-    window.claimRewardedDownload = function() {
-        const modal = document.getElementById('zyrexRwModal');
-        const video = document.getElementById('rwVideoElement');
-        if (video) {
-            video.pause();
-            video.src = '';
-        }
-        if (rwTimerInterval) {
-            clearInterval(rwTimerInterval);
-            rwTimerInterval = null;
-        }
-        if (modal) modal.classList.remove('active');
-        if (currentRwCallback) {
-            const cb = currentRwCallback;
-            currentRwCallback = null;
-            cb();
-        }
-    };
-
-    window.showRewardedVideoAd = async function(options) {
-        options = options || {};
-        const onReward = options.onReward || function() {};
-        const onCancel = options.onCancel || function() {};
-
-        // Ad-free bypass
-        if (window.isAdFreeUser || (window.currentSession && window.currentSession.adFree)) {
-            onReward();
-            return;
-        }
-
-        currentRwCallback = onReward;
-        currentRwCancel = onCancel;
-
-        const modal = ensureRwModal();
-        const video = document.getElementById('rwVideoElement');
-        const iframeBox = document.getElementById('rwIframeContainer');
-        const timerBadge = document.getElementById('rwTimerBadge');
-        const countdownNum = document.getElementById('rwCountdownNum');
-        const progressBar = document.getElementById('rwProgressBar');
-        const statusText = document.getElementById('rwStatusText');
-        const sponsorLink = document.getElementById('rwSponsorLink');
-        const claimBtn = document.getElementById('rwClaimBtn');
-
-        // Reset UI
-        modal.classList.add('active');
-        timerBadge.className = 'zyrex-rw-timer-badge';
-        timerBadge.innerHTML = '<i class="fas fa-hourglass-half fa-spin"></i> Reward in <strong id="rwCountdownNum">10</strong>s';
-        progressBar.style.width = '0%';
-        progressBar.className = 'zyrex-rw-progress-bar';
-        claimBtn.style.display = 'none';
-        sponsorLink.style.display = 'none';
-        statusText.innerHTML = '<i class="fas fa-circle-info"></i> Loading sponsor video...';
-        video.style.display = 'block';
-        iframeBox.style.display = 'none';
-        iframeBox.innerHTML = '';
-        rwImpressionToken = null;
-
-        let rewardGranted = false;
-        function grantReward() {
-            if (rewardGranted) return;
-            rewardGranted = true;
-            if (rwTimerInterval) clearInterval(rwTimerInterval);
-            timerBadge.className = 'zyrex-rw-timer-badge completed';
-            timerBadge.innerHTML = '<i class="fas fa-circle-check"></i> Reward Ready';
-            progressBar.style.width = '100%';
-            progressBar.className = 'zyrex-rw-progress-bar completed';
-            statusText.innerHTML = '<i class="fas fa-circle-check" style="color:#00e676"></i> Reward granted! Download unlocked.';
-            claimBtn.style.display = 'inline-flex';
-
-            // Auto-claim after 1.2s for seamless UX
-            setTimeout(function() {
-                if (modal.classList.contains('active')) {
-                    window.claimRewardedDownload();
-                }
-            }, 1200);
-        }
-
-        try {
-            const resp = await fetch(`/api/adserver/video?slot=${VIDEO_SLOT}&pid=${encodeURIComponent(window.__adServerPageId || Date.now().toString(36))}`);
-            const data = await resp.json().catch(() => ({}));
-
-            if (data.status === 'ok' && data.ad && data.ad.media && data.ad.media.url) {
-                const ad = data.ad;
-                rwImpressionToken = data.impression_token;
-                if (ad.destination_url) {
-                    sponsorLink.href = ad.destination_url;
-                    sponsorLink.style.display = 'inline-flex';
-                }
-
-                statusText.innerHTML = '<i class="fas fa-play" style="color:var(--cherry-neon)"></i> Watching sponsor video...';
-                video.src = ad.media.url;
-                video.muted = false; // try unmuted with user gesture
-
-                let targetDuration = 10;
-                video.onloadedmetadata = function() {
-                    if (video.duration && !isNaN(video.duration)) {
-                        targetDuration = Math.min(Math.max(6, Math.round(video.duration)), 15);
-                    }
-                };
-
-                const playPromise = video.play();
-                if (playPromise !== undefined) {
-                    playPromise.catch(() => {
-                        // Browser autoplay policy required muted start
-                        video.muted = true;
-                        const icon = document.getElementById('rwMuteIcon');
-                        if (icon) icon.className = 'fas fa-volume-xmark';
-                        video.play().catch(() => {});
-                    });
-                }
-
-                video.ontimeupdate = function() {
-                    if (rewardGranted) return;
-                    const cur = video.currentTime;
-                    const pct = Math.min(100, (cur / targetDuration) * 100);
-                    progressBar.style.width = `${pct}%`;
-
-                    const rem = Math.max(0, Math.ceil(targetDuration - cur));
-                    const numEl = document.getElementById('rwCountdownNum');
-                    if (numEl) numEl.textContent = rem;
-
-                    if (cur >= targetDuration) {
-                        grantReward();
-                    }
-                };
-
-                video.onended = function() {
-                    grantReward();
-                };
-
-                video.onerror = function() {
-                    console.warn('Video failed to play, falling back to instant reward');
-                    setTimeout(grantReward, 2500);
-                };
-            } else {
-                // No active video ad in inventory - gracefully complete after short timer
-                statusText.innerHTML = '<i class="fas fa-circle-check" style="color:#00e676"></i> Verification complete! Unlocking download...';
-                let rem = 3;
-                rwTimerInterval = setInterval(() => {
-                    rem--;
-                    const numEl = document.getElementById('rwCountdownNum');
-                    if (numEl) numEl.textContent = rem;
-                    progressBar.style.width = `${((3 - rem) / 3) * 100}%`;
-                    if (rem <= 0) {
-                        grantReward();
-                    }
-                }, 1000);
+    function avatarUrl(value, discordId) {
+        var raw = String(value == null ? '' : value).trim();
+        if (!raw) return '';
+        // A field that was built from a missing value must never become the
+        // literal image request "/undefined".
+        if (/^(undefined|null|nan|false|true|\[object object\])$/i.test(raw)) return '';
+        if (raw.indexOf('/api/avatar/') === 0) return raw;
+        if (/^(a_[A-Za-z0-9_-]{16,}|[A-Za-z0-9_-]{16,})$/.test(raw)) {
+            if (/^\d{17,20}$/.test(String(discordId || ''))) {
+                var bareExt = raw.indexOf('a_') === 0 ? 'gif' : 'png';
+                return '/api/avatar/' + discordId + '/' + raw + '.' + bareExt + '?size=128';
             }
-        } catch(e) {
-            console.warn('AdServer error, granting download reward:', e);
-            setTimeout(grantReward, 2000);
+            // A bare hash with no owning Discord id can never be resolved, and
+            // using it as-is would request a bogus relative asset path.
+            return '';
         }
+        var cdn = raw.match(/^https?:\/\/(?:cdn\.discordapp\.com|media\.discordapp\.net)\/avatars\/(\d{17,20})\/((?:a_)?[A-Za-z0-9_-]{16,})(?:\.(?:png|gif|webp|jpg|jpeg))?/i);
+        if (cdn) {
+            var ext = cdn[2].indexOf('a_') === 0 ? 'gif' : 'png';
+            return '/api/avatar/' + cdn[1] + '/' + cdn[2] + '.' + ext + '?size=128';
+        }
+        // Guild-scoped links break once the member leaves the guild.
+        var guildCdn = raw.match(/^https?:\/\/(?:cdn\.discordapp\.com|media\.discordapp\.net)\/guilds\/\d{17,20}\/users\/(\d{17,20})\/avatars\/((?:a_)?[A-Za-z0-9_-]{16,})(?:\.(?:png|gif|webp|jpg|jpeg))?/i);
+        if (guildCdn) {
+            var guildExt = guildCdn[2].indexOf('a_') === 0 ? 'gif' : 'png';
+            return '/api/avatar/' + guildCdn[1] + '/' + guildCdn[2] + '.' + guildExt + '?size=128';
+        }
+        var embed = raw.match(/^https?:\/\/(?:cdn\.discordapp\.com|media\.discordapp\.net)\/embed\/avatars\/(\d+)\.png/i);
+        if (embed) return '/api/avatar/default/' + embed[1] + '.png';
+        return raw;
+    }
+
+    function text(value) {
+        return String(value == null ? '' : value).trim();
+    }
+
+    // The uploader photo must come from Discord (or our permanent CDN copy of
+    // it). Social creator photos were historically stored in the uploader
+    // field as signed links, which expired and credited the wrong person.
+    function uploaderAvatarUrl(value, discordId) {
+        var raw = String(value == null ? '' : value).trim();
+        if (!raw) return '';
+        if (raw.indexOf('https://thumbnail.zyrexediting.xyz/') === 0) return raw;
+        var resolved = avatarUrl(raw, discordId);
+        if (!resolved) return '';
+        return /^\/(?:api\/)?avatars?\//.test(resolved) ? resolved : '';
+    }
+
+    // The creator field only carries a valid uploader avatar when it actually
+    // belongs to the uploader; a social creator's photo must never be used.
+    function creatorAvatarBelongsTo(value, uploaderId) {
+        var raw = text(value);
+        if (!raw) return false;
+        var owner = raw.match(/\/(?:avatars|avatar)\/(\d{17,20})\//i);
+        if (owner) return owner[1] === text(uploaderId);
+        return /^(?:a_)?[a-z0-9_-]{16,}$/i.test(raw);
+    }
+
+    function forProduct(product) {
+        var p = product || {};
+        var isAnonymous = !!p.is_anonymous;
+        var creditedId = text(p.credited_uploader_id);
+        var rawUploaderId = (!isAnonymous && creditedId) ? creditedId : text(p.uploader_id || p.author_id);
+        var creatorName = text(p.creator_nickname) || text(p.author_name) || text(p.uploader_name) || 'Zyrex Creator';
+        var creditedName = text(p.credited_uploader_name);
+        var creatorUsername = text(p.creator_username).replace(/^@+/, '');
+        var isFounderSocialImport = !isAnonymous && !creditedId
+            && rawUploaderId === '1421177012814614548'
+            && creatorUsername
+            && !/^(reyli|reyliar)$/i.test(creatorUsername);
+        // Keep the submitting account in uploader fields. A social creator is
+        // a separate identity and must not replace the uploader's name/photo.
+        var uploaderId = rawUploaderId;
+        var uploaderName = (!isAnonymous && creditedName)
+            ? creditedName
+            : (text(p.uploader_name) || text(p.author_name) || creatorName);
+        // Resolve the uploader avatar deterministically for the same person:
+        // cached value first, then stored data, then Discord's id-based default.
+        var creditedAvatar = text(p.credited_uploader_avatar);
+        var storedUploaderAvatar = (!isAnonymous && creditedAvatar)
+            ? uploaderAvatarUrl(creditedAvatar, uploaderId)
+            : (uploaderAvatarUrl(p.uploader_avatar || p.author_avatar, uploaderId)
+                || (creatorAvatarBelongsTo(p.creator_avatar, uploaderId) ? uploaderAvatarUrl(p.creator_avatar, uploaderId) : ''));
+        var cached = cachedAvatar(uploaderId);
+        var uploaderAvatar = cached
+            || storedUploaderAvatar
+            || defaultDiscordAvatar(uploaderId);
+        if (!cached && !isDefaultAvatar(storedUploaderAvatar)) rememberAvatar(uploaderId, storedUploaderAvatar);
+
+        // Anonymous uploads only hide the uploader. The creator is a different
+        // person, so an uploader-owned photo is never reused as the creator's.
+        var hasSocialCreatorIdentity = Boolean(
+            text(p.creator_platform) || text(p.creator_social_url) || text(p.creator_account_id) || text(p.creator_username)
+        );
+        var creatorFallback = (!isAnonymous && !hasSocialCreatorIdentity) ? uploaderAvatar : '';
+        var isCreatorCdnPhoto = /^https:\/\/thumbnail\.zyrexediting\.xyz\//i.test(text(p.creator_avatar));
+        var creatorAvatar = avatarUrl(p.creator_avatar, uploaderId) || creatorFallback;
+
+        if (isAnonymous) {
+            var creatorLabel = creatorName;
+            var uploaderLabel = String(p.author_name || p.uploader_name || '').trim().toLowerCase();
+            uploaderName = 'Anonymous';
+            uploaderAvatar = '';
+            uploaderId = '';
+            creatorName = (!creatorLabel || creatorLabel.trim().toLowerCase() === uploaderLabel)
+                ? 'Zyrex Creator'
+                : creatorLabel;
+            if (!isCreatorCdnPhoto) creatorAvatar = '';
+        }
+
+        return {
+            isAnonymous: isAnonymous,
+            creatorName: creatorName,
+            creatorAvatar: creatorAvatar,
+            creatorUsername: text(p.creator_username).replace(/^@+/, ''),
+            creatorSocialUrl: text(p.creator_social_url || p.source_url || p.product_url),
+            uploaderName: uploaderName,
+            uploaderAvatar: uploaderAvatar,
+            uploaderId: uploaderId,
+            isSocialCreator: isFounderSocialImport,
+            isAdmin: !isAnonymous && p.uploader_is_admin === true && rawUploaderId === '1421177012814614548'
+        };
+    }
+
+    return {
+        avatarUrl: avatarUrl,
+        uploaderAvatarUrl: uploaderAvatarUrl,
+        forProduct: forProduct,
+        cachedAvatar: cachedAvatar,
+        rememberAvatar: rememberAvatar,
+        defaultDiscordAvatar: defaultDiscordAvatar
     };
 })();
 
+// ==========================================
+// Shared installation guide
+// One source of truth for the "How to Install" tab so the access rules and the
+// version-mismatch advice cannot drift between pages.
+window.ZyrexInstallGuide = (function () {
+    var HELIX_CONVERTER_URL = 'https://www.hlx.ae/download';
+    var ACCESS_DAYS = 7;
+
+    function esc(value) {
+        return String(value == null ? '' : value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function step(number, title, body) {
+        return '<div style="display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-top:1px solid rgba(255, 255, 255, .06)">' +
+            '<span style="flex:0 0 26px;height:26px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;' +
+                'background:linear-gradient(135deg,var(--cherry,rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1)),rgba(var(--zr-rgb-139-0-40, 139, 0, 40), 1));color:#fff;font-size:.78rem;font-weight:800">' + number + '</span>' +
+            '<div style="flex:1 1 auto;min-width:0">' +
+                '<strong style="display:block;color:#fff;font-size:.95rem;margin-bottom:4px">' + title + '</strong>' +
+                '<div style="color:var(--text-sub,#9aa0b4);font-size:.88rem;line-height:1.65">' + body + '</div>' +
+            '</div></div>';
+    }
+
+    // Returns pane content only: the caller owns the #tab-guide element, so
+    // wrapping here would nest a second pane and hide the guide.
+    function render(category) {
+        var target = esc(category || 'your editor');
+        return '' +
+            '<h4 style="color:#fff;margin-bottom:6px">Installation Guide</h4>' +
+            '<p style="color:var(--text-sub,#9aa0b4);font-size:.86rem;margin:0 0 4px;line-height:1.6">' +
+                'Leak downloads are protected by a free Zyrex download pass. Follow the steps below in order.' +
+            '</p>' +
+            step(1, 'Unlock download access',
+                'Sign in with Discord, then make sure you have the <strong>Verified</strong> role in the Zyrex Discord. ' +
+                'Open the <a href="/access" style="color:var(--cherry-neon,rgba(var(--zr-rgb-255-92-122, 255, 92, 122), 1));font-weight:600">Access page</a> and complete one free offer. ' +
+                'Your pass is linked to your Discord account, works on every device, and stays active for ' +
+                '<strong>' + ACCESS_DAYS + ' days</strong> from the moment the offer is confirmed. ' +
+                'When it runs out, simply complete another offer to renew it.') +
+            step(2, 'Generate a secure download link',
+                'Come back to this page with the pass active and use <strong>Download</strong>. ' +
+                'Downloads run from a one-time encrypted link that expires after a few minutes, so start the transfer right away and do not share the link.') +
+            step(3, 'Extract the archive',
+                'Unzip the package with 7-Zip, WinRAR or the built-in extractor. ' +
+                'If Windows blocks one of the files (an .ffx or .aex, for example), right-click it, open <em>Properties</em> and tick <em>Unblock</em> before importing.') +
+            step(4, 'Import the files into ' + target,
+                'Open ' + target + ' and import the extracted file, or drop it into the folder that app reads. ' +
+                '(For example, Adobe After Effects loads presets from <em>Documents/Adobe/After Effects/&lt;version&gt;/User Presets</em>.) ' +
+                'Keep the folder structure exactly as it arrived \u2014 a resource and its assets must stay together.') +
+            step(5, 'Apply the leak in your project',
+                'Select a clip or an adjustment layer, then apply the leak from your library. ' +
+                'If an effect shows as missing, install the plugins listed in the description and reopen the project.') +
+            '<div style="margin-top:14px;padding:14px 16px;border:1px solid rgba(var(--zr-rgb-255-43-82, 255, 43, 82),.45);border-radius:14px;' +
+                'background:linear-gradient(110deg,rgba(var(--zr-rgb-255-43-82, 255, 43, 82),.14),rgba(var(--zr-rgb-255-43-82, 255, 43, 82),.04))">' +
+                '<strong style="display:block;color:#fff;font-size:.92rem;margin-bottom:6px">' +
+                    '<i class="fas fa-triangle-exclamation" style="color:var(--cherry-neon,rgba(var(--zr-rgb-255-92-122, 255, 92, 122), 1))"></i> Version mismatch after installing?' +
+                '</strong>' +
+                '<p style="color:var(--text-sub,#9aa0b4);font-size:.86rem;line-height:1.65;margin:0 0 10px">' +
+                    'Leaks are frequently built for one specific editor release. ' +
+                    'If a file refuses to open, throws a version or compatibility error, or was made in an older or newer ' +
+                    'version than you run, convert it first and then import the converted copy.' +
+                '</p>' +
+                '<a href="' + HELIX_CONVERTER_URL + '" target="_blank" rel="noopener noreferrer" ' +
+                    'style="display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:10px;' +
+                    'background:linear-gradient(135deg,var(--cherry,rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1)),rgba(var(--zr-rgb-139-0-40, 139, 0, 40), 1));color:#fff;font-weight:700;' +
+                    'font-size:.85rem;text-decoration:none">' +
+                    '<i class="fas fa-arrows-rotate"></i> Get Helix Converter' +
+                    '<i class="fas fa-arrow-up-right-from-square" style="font-size:.72rem;opacity:.85"></i>' +
+                '</a>' +
+                '<div style="color:var(--text-sub,#9aa0b4);font-size:.74rem;margin-top:8px">' +
+                    'Helix Converter is a third-party tool provided by hlx.ae and is not affiliated with Zyrex.' +
+                '</div>' +
+            '</div>';
+    }
+
+    return { render: render, accessDays: ACCESS_DAYS, helixConverterUrl: HELIX_CONVERTER_URL };
+})();
+
+// ==========================================
 console.log('Zyrex - Website loaded successfully!');
+
+// Small liquid-glass cursor with gentle follow motion and a quiet click tick.
+(function setupMacCursorHover() {
+    if (!window.matchMedia || !window.matchMedia('(hover:hover) and (pointer:fine)').matches || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var body = document.body;
+    if (!body || body.dataset.zrCursorReady === '1') return;
+    body.dataset.zrCursorReady = '1';
+    var halo = document.createElement('span');
+    halo.className = 'zr-cursor-halo';
+    halo.setAttribute('aria-hidden', 'true');
+    halo.innerHTML = '<svg class="zr-cursor-shape zr-cursor-arrow" viewBox="0 0 32 42" focusable="false"><defs><linearGradient id="zrCursorArrowGlass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="white" stop-opacity=".96"/><stop offset=".48" stop-color="var(--zr-cursor-accent,#ff3158)" stop-opacity=".26"/><stop offset="1" stop-color="var(--zr-cursor-accent,#ff3158)" stop-opacity=".72"/></linearGradient></defs><path d="M3 2.5v34l8.4-9.2 6.1 12.1 6.1-3.1-6.2-12.2h12.1L3 2.5z"/></svg>' +
+        '<svg class="zr-cursor-shape zr-cursor-hand" viewBox="0 0 38 42" focusable="false"><defs><linearGradient id="zrCursorHandGlass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="white" stop-opacity=".96"/><stop offset=".48" stop-color="var(--zr-cursor-accent,#ff3158)" stop-opacity=".24"/><stop offset="1" stop-color="var(--zr-cursor-accent,#ff3158)" stop-opacity=".7"/></linearGradient></defs><path d="M12 39.5c-.2-5.2-1.5-8.5-4.7-11.9l-4.5-4.8a3.4 3.4 0 0 1 4.8-4.8l7.2 6.8V5.1a3.6 3.6 0 0 1 7.2 0v11.1a3.4 3.4 0 0 1 6.8.5v2.1a3.2 3.2 0 0 1 6.4.6v7.1c0 4.7-2.4 8.4-3.7 13H12z"/></svg>';
+    body.appendChild(halo);
+    var targetX = -100, targetY = -100, x = targetX, y = targetY, frame = 0;
+    function animateCursor() {
+        x += (targetX - x) * 0.22;
+        y += (targetY - y) * 0.22;
+        halo.style.transform = 'translate3d(' + x + 'px,' + y + 'px,0)';
+        if (Math.abs(targetX - x) + Math.abs(targetY - y) > 0.15) frame = window.requestAnimationFrame(animateCursor);
+        else frame = 0;
+    }
+    var audioContext = null;
+    function playClickTick() {
+        try {
+            var AudioCtor = window.AudioContext || window.webkitAudioContext;
+            if (!AudioCtor) return;
+            if (!audioContext) audioContext = new AudioCtor();
+            if (audioContext.state === 'suspended') audioContext.resume();
+            var now = audioContext.currentTime;
+            var oscillator = audioContext.createOscillator();
+            var gain = audioContext.createGain();
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(760, now);
+            oscillator.frequency.exponentialRampToValueAtTime(520, now + 0.028);
+            gain.gain.setValueAtTime(0.0001, now);
+            gain.gain.exponentialRampToValueAtTime(0.018, now + 0.004);
+            gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.038);
+            oscillator.connect(gain);
+            gain.connect(audioContext.destination);
+            oscillator.start(now);
+            oscillator.stop(now + 0.04);
+        } catch (_) { /* Audio is optional; the interface stays silent if unavailable. */ }
+    }
+    document.addEventListener('pointermove', function (event) {
+        if (event.pointerType !== 'mouse') return;
+        targetX = event.clientX;
+        targetY = event.clientY;
+        if (!frame) frame = window.requestAnimationFrame(animateCursor);
+        body.classList.add('zr-cursor-ready', 'zr-cursor-active');
+        body.classList.toggle('zr-cursor-hover', Boolean(event.target && event.target.closest && event.target.closest('a,button,[role="button"],[role="link"],input,textarea,select,label')));
+    }, { passive: true });
+    document.addEventListener('pointerdown', function (event) {
+        if (event.pointerType !== 'mouse' || event.button !== 0) return;
+        body.classList.add('zr-cursor-pressed');
+        playClickTick();
+    }, { passive: true });
+    document.addEventListener('pointerup', function () { body.classList.remove('zr-cursor-pressed'); }, { passive: true });
+    document.addEventListener('pointerleave', function () { body.classList.remove('zr-cursor-ready', 'zr-cursor-active', 'zr-cursor-hover', 'zr-cursor-pressed'); }, { passive: true });
+})();

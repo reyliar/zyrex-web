@@ -3,676 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zyrex | System Status</title>
-    <meta name="description" content="Live real-time operational status, system uptime, and incident telemetry for Zyrex Editing services.">
+    <title>System Status | Zyrex</title>
+    <meta name="description" content="Uptime and incident history for Zyrex services.">
     <link rel="icon" type="image/png" href="/assets/content.png">
-    <link rel="stylesheet" href="css/style.css?v=26">
+    <link rel="stylesheet" href="/css/style.css?v=92">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,800,900&display=swap">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        :root { --st-ok:#34d399; --st-warn:#fbbf24; --st-down:#f87171; --st-line:rgba(255, 255, 255, .08); }
+        body { background:#08070a; color:#fff; font-family:'Satoshi',system-ui,sans-serif; margin:0; }
+        .st-wrap { width:min(1020px, calc(100% - 36px)); margin:0 auto; padding:118px 0 80px; }
+        .st-hero { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:18px; padding:26px 30px; border:1px solid var(--st-line); border-radius:22px; background:radial-gradient(ellipse at 100% 0%, rgba(var(--zr-rgb-255-43-82, 255, 43, 82),.10), transparent 55%), rgba(255, 255, 255, .02); }
+        .st-hero-main { display:flex; align-items:center; gap:16px; min-width:0; }
+        .st-pill { display:inline-flex; align-items:center; gap:9px; padding:8px 16px; border-radius:999px; font-size:.78rem; font-weight:800; letter-spacing:.01em; border:1px solid rgba(255, 255, 255, .12); background:rgba(255, 255, 255, .05); }
+        .st-pill .dot { width:9px; height:9px; border-radius:50%; background:var(--st-ok); box-shadow:0 0 0 4px rgba(52, 211, 153, .16); }
+        .st-pill.is-degraded { border-color:rgba(251, 191, 36, .35); background:rgba(251, 191, 36, .10); color:#fde68a; }
+        .st-pill.is-degraded .dot { background:var(--st-warn); box-shadow:0 0 0 4px rgba(251, 191, 36, .16); }
+        .st-pill.is-outage { border-color:rgba(248,113,113,.35); background:rgba(248,113,113,.10); color:#fecaca; }
+        .st-pill.is-outage .dot { background:var(--st-down); box-shadow:0 0 0 4px rgba(248,113,113,.16); }
+        .st-hero h1 { margin:0; font-size:1.32rem; letter-spacing:-.02em; }
+        .st-hero-sub { margin:4px 0 0; color:rgba(255, 255, 255, .52); font-size:.82rem; }
+        .st-hero-side { display:flex; align-items:center; gap:10px; }
+        .st-refresh { display:inline-flex; align-items:center; gap:8px; padding:10px 18px; border:1px solid rgba(255, 255, 255, .14); border-radius:12px; background:rgba(255, 255, 255, .05); color:#fff; font:inherit; font-size:.78rem; font-weight:750; cursor:pointer; }
+        .st-refresh:hover { background:rgba(255, 255, 255, .1); }
+        .st-refresh:disabled { opacity:.6; cursor:progress; }
+        .st-stamp { color:rgba(255, 255, 255, .42); font-size:.72rem; }
+        .st-section { margin-top:26px; }
+        .st-section-head { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin:0 0 10px 4px; }
+        .st-section-head h2 { margin:0; font-size:.78rem; letter-spacing:.18em; text-transform:uppercase; color:rgba(255, 255, 255, .45); font-weight:800; }
+        .st-section-head span { font-size:.72rem; color:rgba(255, 255, 255, .35); }
+        .st-list { border:1px solid var(--st-line); border-radius:18px; overflow:hidden; background:rgba(255, 255, 255, .018); }
+        .st-row { display:grid; grid-template-columns:16px minmax(0,1fr) auto auto; align-items:center; gap:16px; padding:15px 20px; border-bottom:1px solid var(--st-line); }
+        .st-row:last-child { border-bottom:0; }
+        .st-row .dot { width:10px; height:10px; border-radius:50%; background:var(--st-ok); }
+        .st-row.is-degraded .dot { background:var(--st-warn); }
+        .st-row.is-outage .dot { background:var(--st-down); }
+        .st-name { font-size:.9rem; font-weight:750; }
+        .st-desc { margin:3px 0 0; font-size:.75rem; color:rgba(255, 255, 255, .45); line-height:1.45; }
+        .st-latency { font-variant-numeric:tabular-nums; font-size:.74rem; color:rgba(255, 255, 255, .4); min-width:56px; text-align:right; }
+        .st-state { font-size:.7rem; font-weight:800; letter-spacing:.04em; text-transform:uppercase; color:var(--st-ok); min-width:104px; text-align:right; }
+        .st-row.is-degraded .st-state { color:var(--st-warn); }
+        .st-row.is-outage .st-state { color:var(--st-down); }
+        .st-note { margin:22px 2px 0; color:rgba(255, 255, 255, .34); font-size:.72rem; line-height:1.6; }
+        .st-incidents { margin-top:26px; border:1px solid rgba(251, 191, 36, .22); border-radius:18px; background:rgba(251, 191, 36, .06); padding:18px 20px; }
+        .st-incidents h2 { margin:0 0 10px; font-size:.78rem; letter-spacing:.16em; text-transform:uppercase; color:#fcd34d; }
+        .st-incident { padding:10px 0; border-top:1px solid rgba(251, 191, 36, .16); }
+        .st-incident:first-of-type { border-top:0; padding-top:0; }
+        .st-incident strong { display:block; font-size:.84rem; }
+        .st-incident small { color:rgba(255, 255, 255, .5); font-size:.73rem; }
+        .st-error { margin-top:18px; padding:14px 18px; border:1px solid rgba(248,113,113,.3); border-radius:14px; background:rgba(248,113,113,.08); color:#fecaca; font-size:.8rem; }
+        @media (max-width:720px) {
+            .st-wrap { padding:96px 0 64px; }
+            .st-hero { padding:20px; }
+            .st-row { grid-template-columns:16px minmax(0,1fr) auto; gap:12px; padding:13px 15px; }
+            .st-latency { display:none; }
+            .st-state { min-width:0; }
         }
-
-        body {
-            background: #09090b;
-            color: #ffffff;
-            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            min-height: 100vh;
-            overflow-x: hidden;
-            line-height: 1.5;
-        }
-
-        /* Ambient Aura Background */
-        .status-bg-glow {
-            position: fixed;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 1000px;
-            height: 450px;
-            background: radial-gradient(ellipse at 50% 0%, rgba(255, 43, 82, 0.08) 0%, rgba(184, 20, 50, 0.03) 50%, transparent 80%);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .status-page-wrap {
-            position: relative;
-            z-index: 1;
-            width: min(880px, calc(100% - 40px));
-            margin: 0 auto;
-            padding: 130px 0 100px;
-        }
-
-        /* Top Header */
-        .status-hero-wrap {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            margin-bottom: 24px;
-        }
-
-        .status-top-label {
-            font-size: 0.78rem;
-            font-weight: 700;
-            letter-spacing: 2px;
-            text-transform: uppercase;
-            color: #71717a;
-            margin-bottom: 14px;
-            font-family: 'JetBrains Mono', monospace;
-            text-align: center;
-        }
-
-        .status-hero-headline {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 14px;
-            font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
-            font-size: 2.5rem;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            color: #ffffff;
-            margin-bottom: 8px;
-            line-height: 1.15;
-            text-align: center;
-        }
-
-        .status-hero-dot {
-            width: 14px;
-            height: 14px;
-            border-radius: 50%;
-            background: #10b981;
-            box-shadow: 0 0 16px #10b981;
-            flex-shrink: 0;
-            display: inline-block;
-        }
-
-        .status-hero-dot.outage {
-            background: #ef4444;
-            box-shadow: 0 0 16px #ef4444;
-        }
-        .status-hero-dot.degraded {
-            background: #f59e0b;
-            box-shadow: 0 0 16px #f59e0b;
-        }
-
-        .status-hero-sub {
-            font-size: 1.05rem;
-            color: #a1a1aa;
-            margin-bottom: 18px;
-            text-align: center;
-        }
-
-        .status-last-checked-row {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            font-size: 0.85rem;
-            color: #71717a;
-            margin-bottom: 42px;
-            text-align: center;
-        }
-
-        .btn-text-refresh {
-            background: transparent;
-            border: none;
-            color: #ffffff;
-            font-size: 0.85rem;
-            font-weight: 600;
-            text-decoration: underline;
-            text-underline-offset: 3px;
-            cursor: pointer;
-            padding: 0;
-            transition: color 0.2s ease;
-        }
-
-        .btn-text-refresh:hover {
-            color: var(--cherry-light, #ff4d6d);
-        }
-
-        /* Section Headings */
-        .status-sec-title {
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.18rem;
-            font-weight: 700;
-            color: #ffffff;
-            margin-bottom: 4px;
-        }
-
-        .status-sec-sub {
-            font-size: 0.86rem;
-            color: #71717a;
-            margin-bottom: 20px;
-        }
-
-        /* Active Incidents Container */
-        .incidents-block {
-            margin-bottom: 44px;
-        }
-
-        .incident-active-card {
-            display: none;
-            background: rgba(239, 68, 68, 0.08);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-            border-radius: 14px;
-            padding: 20px 24px;
-            margin-top: 14px;
-        }
-
-        .incident-active-card.visible {
-            display: block;
-        }
-
-        .incident-active-card h4 {
-            color: #ef4444;
-            font-size: 1rem;
-            font-weight: 700;
-            margin-bottom: 6px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .incident-active-card p {
-            font-size: 0.88rem;
-            color: #e4e4e7;
-            line-height: 1.5;
-        }
-
-        /* Unified System Status Panel */
-        .system-status-card {
-            background: #111114;
-            border: 1px solid rgba(255, 255, 255, 0.07);
-            border-radius: 18px;
-            overflow: hidden;
-            margin-bottom: 44px;
-        }
-
-        .subsystem-item {
-            padding: 24px 28px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            transition: background 0.2s ease;
-        }
-
-        .subsystem-item:last-child {
-            border-bottom: none;
-        }
-
-        .subsystem-item:hover {
-            background: rgba(255, 255, 255, 0.015);
-        }
-
-        .subsystem-row-top {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 14px;
-        }
-
-        .subsystem-name {
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.05rem;
-            font-weight: 700;
-            color: #ffffff;
-        }
-
-        .subsystem-right-meta {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-        }
-
-        .subsystem-uptime-text {
-            font-size: 0.84rem;
-            color: #71717a;
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .subsystem-pill-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            padding: 4px 12px;
-            border-radius: 999px;
-            font-size: 0.78rem;
-            font-weight: 600;
-            font-family: 'Outfit', sans-serif;
-            letter-spacing: 0.2px;
-        }
-
-        .subsystem-pill-badge.operational {
-            background: rgba(16, 185, 129, 0.09);
-            border: 1px solid rgba(16, 185, 129, 0.25);
-            color: #10b981;
-        }
-
-        .subsystem-pill-badge.degraded {
-            background: rgba(245, 158, 11, 0.09);
-            border: 1px solid rgba(245, 158, 11, 0.25);
-            color: #f59e0b;
-        }
-
-        .subsystem-pill-badge.outage {
-            background: rgba(239, 68, 68, 0.09);
-            border: 1px solid rgba(239, 68, 68, 0.25);
-            color: #ef4444;
-        }
-
-        .subsystem-pill-badge .dot {
-            width: 6px;
-            height: 6px;
-            border-radius: 50%;
-            background: currentColor;
-            box-shadow: 0 0 6px currentColor;
-        }
-
-        /* 90-Day Vertical Pill Bars */
-        .bars-container {
-            display: flex;
-            align-items: center;
-            gap: 3.5px;
-            height: 26px;
-            margin-bottom: 12px;
-            position: relative;
-        }
-
-        .status-v-bar {
-            flex: 1;
-            height: 100%;
-            background: #22c55e;
-            border-radius: 4px;
-            opacity: 0.9;
-            transition: all 0.15s ease;
-            cursor: pointer;
-        }
-
-        .status-v-bar:hover {
-            opacity: 1;
-            transform: scaleY(1.18);
-            box-shadow: 0 0 8px rgba(34, 197, 94, 0.8);
-            z-index: 5;
-        }
-
-        .status-v-bar.degraded {
-            background: #f59e0b;
-        }
-        .status-v-bar.degraded:hover {
-            box-shadow: 0 0 8px rgba(245, 158, 11, 0.8);
-        }
-
-        .status-v-bar.outage {
-            background: #ef4444;
-        }
-        .status-v-bar.outage:hover {
-            box-shadow: 0 0 8px rgba(239, 68, 68, 0.8);
-        }
-
-        .subsystem-desc {
-            font-size: 0.82rem;
-            color: #71717a;
-            margin: 0;
-            line-height: 1.4;
-        }
-
-        /* "All Outages" Chart Card */
-        .outages-card {
-            background: #111114;
-            border: 1px solid rgba(255, 255, 255, 0.07);
-            border-radius: 18px;
-            padding: 28px 30px;
-            margin-bottom: 50px;
-            position: relative;
-        }
-
-        .outages-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 24px;
-        }
-
-        .outages-header h3 {
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.18rem;
-            font-weight: 700;
-            color: #ffffff;
-        }
-
-        /* Time Range Selector */
-        .range-toggle-group {
-            display: inline-flex;
-            align-items: center;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            padding: 3px;
-            border: 1px solid rgba(255, 255, 255, 0.06);
-        }
-
-        .range-btn {
-            background: transparent;
-            border: none;
-            color: #a1a1aa;
-            font-family: 'Outfit', sans-serif;
-            font-size: 0.82rem;
-            font-weight: 600;
-            padding: 5px 12px;
-            border-radius: 7px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-
-        .range-btn:hover {
-            color: #ffffff;
-        }
-
-        .range-btn.active {
-            background: rgba(255, 255, 255, 0.14);
-            color: #ffffff;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
-        }
-
-        /* SVG Chart Box */
-        .chart-svg-box {
-            width: 100%;
-            height: 220px;
-            position: relative;
-        }
-
-        .chart-svg {
-            width: 100%;
-            height: 100%;
-            overflow: visible;
-        }
-
-        .grid-line {
-            stroke: rgba(255, 255, 255, 0.05);
-            stroke-dasharray: 4 4;
-            stroke-width: 1;
-        }
-
-        .axis-label {
-            font-size: 11px;
-            fill: #71717a;
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        .chart-line {
-            fill: none;
-            stroke-width: 2.5;
-            stroke-linecap: round;
-            stroke-linejoin: round;
-            transition: opacity 0.2s ease;
-        }
-
-        /* Chart Tooltip Overlay */
-        .chart-tooltip-panel {
-            position: absolute;
-            top: 15px;
-            right: 25px;
-            background: #18181b;
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            border-radius: 14px;
-            padding: 16px 20px;
-            box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6);
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.15s ease;
-            z-index: 20;
-            min-width: 210px;
-        }
-
-        .chart-tooltip-panel.visible {
-            opacity: 1;
-        }
-
-        .chart-tooltip-title {
-            font-size: 0.8rem;
-            color: #a1a1aa;
-            margin-bottom: 10px;
-            font-family: 'JetBrains Mono', monospace;
-            font-weight: 500;
-        }
-
-        .chart-tooltip-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-size: 0.8rem;
-            margin-bottom: 6px;
-            font-family: 'Poppins', sans-serif;
-        }
-
-        .chart-tooltip-row:last-child {
-            margin-bottom: 0;
-        }
-
-        .chart-tooltip-name {
-            font-weight: 500;
-        }
-
-        .chart-tooltip-val {
-            color: #a1a1aa;
-            font-family: 'JetBrains Mono', monospace;
-        }
-
-        /* Legend */
-        .outages-legend {
-            display: flex;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 14px 20px;
-            margin-top: 24px;
-            padding-top: 18px;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-        }
-
-        .legend-item {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.8rem;
-            color: #e4e4e7;
-            cursor: pointer;
-            user-select: none;
-            transition: opacity 0.2s ease;
-        }
-
-        .legend-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-
-        .outages-footnote {
-            font-size: 0.8rem;
-            color: #71717a;
-            margin-top: 16px;
-        }
-
-        /* Interactive Bar Tooltip */
-        .bar-tooltip {
-            position: fixed;
-            pointer-events: none;
-            background: #18181b;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
-            border-radius: 8px;
-            padding: 6px 12px;
-            font-size: 0.75rem;
-            font-family: 'JetBrains Mono', monospace;
-            color: #ffffff;
-            z-index: 99999;
-            transform: translate(-50%, -125%);
-            opacity: 0;
-            transition: opacity 0.15s ease;
-            white-space: nowrap;
-        }
-
-        @media (max-width: 680px) {
-            .status-hero-headline {
-                font-size: 1.85rem;
-            }
-            .subsystem-item {
-                padding: 18px 20px;
-            }
-            .outages-card {
-                padding: 20px 20px;
-            }
-            .range-toggle-group {
-                overflow-x: auto;
-            }
-            .subsystem-row-top {
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 8px;
-            }
-            .subsystem-right-meta {
-                width: 100%;
-                justify-content: space-between;
-            }
-        }
-    
     </style>
+    <link rel="stylesheet" href="/css/glass.css?v=67">
+    <link rel="stylesheet" href="/css/atmosphere.css?v=7">
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.fontshare.com">
+    <link rel="stylesheet" href="/css/i18n.css?v=3">
+    <script src="/js/i18n.js?v=15" defer></script>
 </head>
 <body>
-    <div class="status-bg-glow"></div>
-
-    <!-- NAVBAR -->
-    <nav class="navbar">
+    <div class="zr-sweep" aria-hidden="true"></div>
+    <div class="lq-veil" aria-hidden="true"></div>
+<nav class="navbar">
         <div class="container">
-            <a href="/" class="logo">
-                <img src="/assets/content.png" alt="ZYREX" class="logo-img">
-                <span class="logo-text">yrex</span>
-            </a>
+            <a href="/" class="logo"><img src="/assets/content.png" alt="ZYREX" class="logo-img"><span
+                    class="logo-text">yrex</span></a>
             <ul class="nav-links" id="navLinks">
                 <li><a href="/">Home</a></li>
-                <li><a href="/resources">Resources</a></li>
+                <li><a href="/leaks" class="active">Leaks</a></li><li><a href="/feed">Feed</a></li>
                 <li><a href="/plugins">Plugins</a></li>
                 <li><a href="/requests">Requests</a></li>
-                <li><a href="/more">More</a></li>
-                <li><a href="/#contact">Contact</a></li>
+                <li><a href="/audio">Audios</a></li>
+                
             </ul>
             <div class="nav-actions">
                 <div id="authBtn"></div>
-                <button class="hamburger" id="hamburger" aria-label="Menu">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </button>
+
+                <button class="hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
             </div>
         </div>
     </nav>
 
-    <!-- STATUS CONTENT -->
-    <main class="status-page-wrap">
-
-        <!-- HEADER SECTION -->
-        <div class="status-hero-wrap">
-            <div class="status-hero-headline">
-                <span class="status-hero-dot" id="heroStatusDot"></span>
-                <span id="heroHeadlineText">All systems operational</span>
-            </div>
-
-            <p class="status-hero-sub" id="heroSubText">All services are running normally.</p>
-
-            <div class="status-last-checked-row">
-                <span id="lastCheckedText">Last checked less than a minute ago</span>
-                <button class="btn-text-refresh" id="btnRefresh" onclick="fetchStatus(true)">Refresh</button>
-            </div>
-        </div>
-
-        <!-- ACTIVE INCIDENTS SECTION -->
-        <div class="incidents-block">
-            <h2 class="status-sec-title" id="incidentsSecTitle">No active incidents</h2>
-            <p class="status-sec-sub" id="incidentsSecSub">Incident updates will appear here when there is something you should know.</p>
-
-            <div id="activeIncidentsContainer">
-                <div class="incident-active-card" id="incidentActiveCard">
-                    <h4><i class="fas fa-triangle-exclamation"></i> <span id="incidentTitle">Remote Server Disruption</span></h4>
-                    <p id="incidentDesc">We are currently observing intermittent upstream connectivity with our dedicated remote backend server. Cloudflare edge networks and storage downloads remain fully operational while connection stability is being restored.</p>
+    <main class="st-wrap">
+        <section class="st-hero">
+            <div class="st-hero-main">
+                <span class="st-pill" id="stPill"><span class="dot"></span><span id="stPillText">Checking services</span></span>
+                <div>
+                    <h1>System status</h1>
+                    <p class="st-hero-sub" id="stSub">Live checks for the site, feed, downloads and community services.</p>
                 </div>
             </div>
-        </div>
-
-        <!-- SYSTEM STATUS (90 DAYS) -->
-        <section>
-            <h2 class="status-sec-title">System status</h2>
-            <p class="status-sec-sub">Last 90 days</p>
-
-            <div class="system-status-card" id="subsystemList">
-                <!-- Subsystem items rendered dynamically with live real telemetry -->
+            <div class="st-hero-side">
+                <span class="st-stamp" id="stStamp"></span>
+                <button class="st-refresh" id="stRefresh" type="button"><i class="fas fa-rotate"></i> Refresh</button>
             </div>
         </section>
 
-        <!-- ALL OUTAGES CHART SECTION -->
-        <section class="outages-card">
-            <div class="outages-header">
-                <h3>All outages</h3>
-                <div class="range-toggle-group">
-                    <button class="range-btn" onclick="setChartRange('1D', this)">1D</button>
-                    <button class="range-btn active" onclick="setChartRange('1W', this)">1W</button>
-                    <button class="range-btn" onclick="setChartRange('2W', this)">2W</button>
-                    <button class="range-btn" onclick="setChartRange('1M', this)">1M</button>
-                    <button class="range-btn" onclick="setChartRange('3M', this)">3M</button>
-                </div>
-            </div>
+        <div id="stError" class="st-error" hidden></div>
+        <div id="stGroups"></div>
+        <div id="stIncidents"></div>
 
-            <!-- SVG Spline Chart Container -->
-            <div class="chart-svg-box" id="chartBox">
-                <svg class="chart-svg" id="chartSvg" viewBox="0 0 800 200" preserveAspectRatio="none">
-                    <!-- Dynamic Grid Lines & Smooth Splines injected here -->
-                </svg>
+        <p class="st-note">Every row is measured on request: storage listings, the Discord mirror heartbeat, the notification outbox, the media proxy and the short-link index. Refreshes automatically every 30 seconds.</p>
+    </main>
 
-                <!-- Floating Tooltip Box (like in image 3) -->
-                <div class="chart-tooltip-panel" id="chartTooltip">
-                    <div class="chart-tooltip-title" id="chartTooltipDate">Fri 4</div>
-                    <div id="chartTooltipRows">
-                        <!-- rows inserted dynamically -->
-                    </div>
-                </div>
-            </div>
-
-            <!-- Outages Legend -->
-            <div class="outages-legend" id="chartLegend">
-                <!-- Generated dynamically -->
-            </div>
-
-            <p class="outages-footnote">Members who ran into a problem</p>
-        </section>
-
-        </main>
-
-    <!-- FLOATING BAR TOOLTIP -->
-    <div class="bar-tooltip" id="barTooltip"></div>
-
-    <!-- FOOTER -->
-    <footer class="footer">
+<footer class="footer">
         <div class="container">
             <div class="footer-content">
-                <div class="footer-brand">
+                                <div class="footer-brand">
                     <a href="/" class="hero-brand-lockup footer-brand-lockup">
-                        <img src="assets/content.png" alt="Zyrex Logo" class="hero-brand-icon">
+                        <img src="/assets/content.png" alt="Zyrex Logo" class="hero-brand-icon">
                         <div class="hero-brand-text-col">
                             <span class="hero-brand-title">Zyrex<sup>™</sup></span>
                             <span class="hero-brand-sub">EDITING</span>
                         </div>
                     </a>
-                    <p>Premium editing community &amp; resources.</p>
+                    <p>Editing leaks and stuff.</p>
                 </div>
                 <div class="footer-links">
                     <h4>Quick Links</h4>
                     <ul>
                         <li><a href="/">Home</a></li>
-                        <li><a href="/resources">Resources</a></li>
+                        <li><a href="/leaks">Leaks</a></li>
+                        <li><a href="/feed">Feed</a></li>
                         <li><a href="/plugins">Plugins</a></li>
                         <li><a href="/requests">Requests</a></li>
-                        <li><a href="/more">More</a></li>
+                        <li><a href="/audio">Audios</a></li>
                     </ul>
                 </div>
                 <div class="footer-links">
@@ -686,707 +148,106 @@
                 <div class="footer-links">
                     <h4>Community</h4>
                     <ul>
-                        <li><a href="https://discord.gg/fAydSzpafA">Discord</a></li>
-                        <li><a href="/status">System Status</a></li>
+                        <li><a href="https://discord.gg/4J3tars4QS" target="_blank" rel="noopener">Discord</a></li>
+                        <li><a href="/#contact">Contact</a></li>
                     </ul>
-                </div>
-                <div class="footer-newsletter">
-                    <h4>Newsletter</h4>
-                    <p>Stay updated with Zyrex Editing.</p>
-                    <div class="newsletter-form">
-                        <input type="email" placeholder="Your email">
-                        <button type="submit" aria-label="Subscribe"><i class="fas fa-arrow-right"></i></button>
-                    </div>
                 </div>
             </div>
             <div class="footer-bottom">
                 <p>&copy; 2026 Zyrex Editing. All rights reserved.</p>
-                <a href="/status" class="zyrex-footer-status operational" id="zyrexFooterStatus">
-                    <span class="zyrex-footer-status-dot"></span>
-                    <span class="zyrex-footer-status-text">All systems operational</span>
-                </a>
-                <div class="footer-legal-inline">
-                    <a href="/privacy">Privacy</a> &bull; <a href="/terms">Terms</a> &bull; <a href="/dmca">DMCA</a>
-                </div>
             </div>
         </div>
     </footer>
 
-    <script src="js/auth.js?v=13"></script>
-    <script src="js/script.js?v=5"></script>
-
-    <!-- 100% REAL TELEMETRY & DYNAMIC OUTAGES CHART ENGINE -->
+    <script src="/js/chunks/chunk-store.js?v=1"></script>
+    <script src="/js/auth.js?v=19"></script>
+    <script src="/js/script.js?v=92"></script>
     <script>
-    (function() {
-        var isFetching = false;
-        var barTooltip = document.getElementById('barTooltip');
-        var liveDataCache = null;
-        var currentRange = '1W';
-
-        // Helper to simplify status titles by removing everything after &
-        function simplifyName(name) {
-            if (!name || typeof name !== 'string') return name || '';
-            if (name.indexOf('&') !== -1) {
-                return name.split('&')[0].trim();
-            }
-            return name.trim();
-        }
-
-        // 9 Real Core Subsystems (Identical across System Status & Outages Chart)
-        var SUBSYSTEMS = [
-            {
-                id: 'api_gateway',
-                name: 'Api Gateway',
-                color: '#f59e0b',
-                desc: 'Handles site requests, bot integration, and live backend services.'
-            },
-            {
-                id: 'site_gate',
-                name: 'Site Gate',
-                color: '#06b6d4',
-                desc: 'Manages user logins, site access, and shield security.'
-            },
-            {
-                id: 'storage',
-                name: 'Resource Downloads',
-                color: '#ef4444',
-                desc: 'Delivers resource files and zip packages to your device.'
-            },
-            {
-                id: 'requests_system',
-                name: 'Community Requests System',
-                color: '#3b82f6',
-                desc: 'Processes user requests, upvotes, thread discussions, and fulfillment tracking.'
-            },
-            {
-                id: 'shortener_gateway',
-                name: 'Rewarded Video & Sponsored Delivery',
-                color: '#ec4899',
-                desc: 'Delivers on-site sponsor video rewards and unlocks member downloads.'
-            },
-            {
-                id: 'resource_uploads',
-                name: 'Resource Uploads',
-                color: '#a855f7',
-                desc: 'Processes and publishes creator presets and files.'
-            },
-            {
-                id: 'comments',
-                name: 'Comments System',
-                color: '#10b981',
-                desc: 'Posting comments and casting upvotes on presets.'
-            },
-            {
-                id: 'discord_auth',
-                name: 'Discord Authentication',
-                color: '#f43f5e',
-                desc: 'Keeping your Discord roles in step with your account.'
-            },
-            {
-                id: 'token_generator',
-                name: 'Download Tokens',
-                color: '#6366f1',
-                desc: 'Generates secure single-use tokens for member downloads.'
-            }
-        ];
-
-        // Format Date string YYYY-MM-DD
-        function toDateKey(d) {
-            var year = d.getFullYear();
-            var month = String(d.getMonth() + 1).padStart(2, '0');
-            var day = String(d.getDate()).padStart(2, '0');
-            return year + '-' + month + '-' + day;
-        }
-
-        // Real 90-Day Vertical Pill Bars Generator
-        function generateBarsHtml(subsystemId, currentStatus, uptimePercent, incidentsHistory) {
-            var html = '';
-            var now = new Date();
-            var totalBars = 65;
-
-            // Map incidents for this subsystem by date key
-            var incidentMap = {};
-            if (incidentsHistory && Array.isArray(incidentsHistory)) {
-                incidentsHistory.forEach(function(inc) {
-                    if (inc.subsystem === subsystemId && inc.date) {
-                        incidentMap[inc.date] = inc;
-                    }
-                });
-            }
-
-            for (var i = totalBars - 1; i >= 0; i--) {
-                var d = new Date(now.getTime() - (i * 24 * 60 * 60 * 1000));
-                var dateKey = toDateKey(d);
-                var dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-
-                var barClass = '';
-                var statusText = '100% operational';
-
-                // Real status evaluation:
-                if (i === 0) {
-                    // Today: live telemetry
-                    if (currentStatus === 'outage' || currentStatus === 'offline') {
-                        barClass = 'outage';
-                        statusText = 'Major outage today';
-                    } else if (currentStatus === 'degraded') {
-                        barClass = 'degraded';
-                        statusText = 'Degraded performance today';
-                    } else {
-                        statusText = 'Operational today';
-                    }
-                } else if (incidentMap[dateKey]) {
-                    // Actual recorded historical incident on this date
-                    var inc = incidentMap[dateKey];
-                    barClass = inc.severity === 'outage' || inc.severity === 'critical' ? 'outage' : 'degraded';
-                    statusText = (inc.title || 'Service degradation') + (inc.duration ? ' (' + inc.duration + ')' : '');
-                }
-
-                html += '<div class="status-v-bar ' + barClass + '" data-date="' + dateStr + '" data-status="' + statusText + '"></div>';
-            }
-            return html;
-        }
-
-        // Render Subsystems into Unified Card with 100% Real Telemetry
-        function renderSubsystems(subsystemsData, incidentsHistory) {
-            var container = document.getElementById('subsystemList');
-            if (!container) return;
-
-            var html = '';
-
-            SUBSYSTEMS.forEach(function(sub) {
-                var data = (subsystemsData && subsystemsData[sub.id]) ? subsystemsData[sub.id] : {
-                    status: 'operational',
-                    latency_ms: 20,
-                    uptime_percent: 99.98
-                };
-
-                var status = data.status || 'operational';
-                var badgeLabel = status === 'operational' ? 'Operational' : (status === 'degraded' ? 'Degraded' : 'Down');
-                var uptimeVal = (data.uptime_percent !== undefined) ? data.uptime_percent : 99.98;
-
-                html += '<div class="subsystem-item">' +
-                    '<div class="subsystem-row-top">' +
-                        '<div class="subsystem-name">' + simplifyName(sub.name) + '</div>' +
-                        '<div class="subsystem-right-meta">' +
-                            '<span class="subsystem-uptime-text">' + uptimeVal.toFixed(2) + '% uptime</span>' +
-                            '<span class="subsystem-pill-badge ' + status + '">' +
-                                '<span class="dot"></span>' + badgeLabel +
-                            '</span>' +
-                        '</div>' +
-                    '</div>' +
-                    '<div class="bars-container">' +
-                        generateBarsHtml(sub.id, status, uptimeVal, incidentsHistory) +
-                    '</div>' +
-                    '<p class="subsystem-desc">' + sub.desc + '</p>' +
-                '</div>';
-            });
-
-            container.innerHTML = html;
-            attachBarTooltipEvents();
-        }
-
-        function attachBarTooltipEvents() {
-            var bars = document.querySelectorAll('.status-v-bar');
-            bars.forEach(function(bar) {
-                bar.addEventListener('mouseenter', function(e) {
-                    var date = bar.getAttribute('data-date');
-                    var status = bar.getAttribute('data-status');
-                    barTooltip.innerHTML = '<strong>' + date + '</strong> &bull; ' + status;
-                    barTooltip.style.opacity = '1';
-                });
-                bar.addEventListener('mousemove', function(e) {
-                    barTooltip.style.left = e.clientX + 'px';
-                    barTooltip.style.top = (e.clientY - 10) + 'px';
-                });
-                bar.addEventListener('mouseleave', function() {
-                    barTooltip.style.opacity = '0';
-                });
-            });
-        }
-
-        // Live Status Fetch
-        window.fetchStatus = function(isManual) {
-            if (isFetching) return;
-            isFetching = true;
-
-            var btn = document.getElementById('btnRefresh');
-            if (btn) btn.innerText = 'Checking...';
-
-            fetch('/api/status?t=' + Date.now(), { cache: 'no-store' })
-                .then(function(res) {
-                    if (!res.ok) throw new Error('HTTP ' + res.status);
-                    return res.json();
-                })
-                .then(function(data) {
-                    liveDataCache = data;
-                    updateUI(data);
-                    renderDynamicChart(currentRange, data);
-                })
-                .catch(function(err) {
-                    console.warn('Status fetch error:', err);
-                    updateUIFallback();
-                })
-                .finally(function() {
-                    isFetching = false;
-                    if (btn) btn.innerText = 'Refresh';
-                });
-        };
-
-        function updateUI(data) {
-            var globalStatus = data.status || 'operational';
-            var heroDot = document.getElementById('heroStatusDot');
-            var heroHeadline = document.getElementById('heroHeadlineText');
-            var heroSub = document.getElementById('heroSubText');
-            var incidentsContainer = document.getElementById('activeIncidentsContainer');
-            var incTitle = document.getElementById('incidentsSecTitle');
-            var incSub = document.getElementById('incidentsSecSub');
-            var incidents = (data.incidents && Array.isArray(data.incidents)) ? data.incidents : [];
-
-            if (heroDot && heroHeadline && heroSub) {
-                heroDot.className = 'status-hero-dot ' + globalStatus;
-
-                if (globalStatus === 'operational') {
-                    heroHeadline.innerText = 'All systems operational';
-                    heroSub.innerText = 'All services are running normally with no disruptions.';
-                } else if (globalStatus === 'degraded') {
-                    heroHeadline.innerText = 'Partial service disruption';
-                    heroSub.innerText = 'Some services are experiencing degraded performance or latency. Storage downloads remain active.';
-                } else {
-                    heroHeadline.innerText = 'Major service outage';
-                    heroSub.innerText = 'One or more primary services are experiencing disruption. Investigation in progress.';
-                }
-
-                if (incidents.length === 0) {
-                    if (incTitle) incTitle.innerText = 'No active incidents';
-                    if (incSub) incSub.innerText = 'All systems and member services are running normally with no reported disruptions.';
-                    if (incidentsContainer) incidentsContainer.innerHTML = '';
-                } else {
-                    if (incTitle) incTitle.innerText = 'Active Incidents (' + incidents.length + ')';
-                    if (incSub) incSub.innerText = incidents.length + ' active service incident' + (incidents.length > 1 ? 's' : '') + ' currently impacting members or telemetry.';
-                    if (incidentsContainer) {
-                        var incHtml = '';
-                        incidents.forEach(function(inc) {
-                            var sev = inc.severity || 'degraded';
-                            var subObj = SUBSYSTEMS.find(function(s) { return s.id === inc.subsystem; });
-                            var subColor = subObj ? subObj.color : '#f59e0b';
-                            var subName = simplifyName(inc.subsystem_name || (subObj ? subObj.name : inc.subsystem));
-                            var countStr = inc.outages_count && inc.outages_count > 1 ? ' &bull; Affected ' + inc.outages_count + ' members' : '';
-
-                            incHtml += '<div class="incident-active-card visible ' + sev + '" style="border-left: 4px solid ' + subColor + '; margin-top: 14px;">' +
-                                '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;flex-wrap:wrap;gap:8px;">' +
-                                    '<h4 style="margin:0;display:flex;align-items:center;gap:8px;color:' + (sev === 'outage' ? '#ef4444' : '#f59e0b') + ';">' +
-                                        '<i class="fas fa-triangle-exclamation"></i> ' +
-                                        '<span>' + (inc.title || 'Service Degradation') + '</span>' +
-                                    '</h4>' +
-                                    '<div style="display:flex;align-items:center;gap:8px;">' +
-                                        '<span style="background:rgba(255,255,255,0.08);border-radius:6px;padding:3px 8px;font-size:0.75rem;font-family:\'JetBrains Mono\',monospace;color:' + subColor + '">' + subName + '</span>' +
-                                        '<span class="subsystem-pill-badge ' + sev + '">' + (inc.status || 'Investigating') + '</span>' +
-                                    '</div>' +
-                                '</div>' +
-                                '<p style="margin-bottom:8px;color:#e4e4e7;">' + (inc.message || inc.impact || 'Service degradation reported.') + '</p>' +
-                                '<div style="font-size:0.76rem;color:#71717a;font-family:\'JetBrains Mono\',monospace;">' +
-                                    (inc.timestamp ? new Date(inc.timestamp).toLocaleTimeString() : 'Live') + countStr +
-                                '</div>' +
-                            '</div>';
-                        });
-                        incidentsContainer.innerHTML = incHtml;
-                    }
-                }
-            }
-
-            var lastCheckedEl = document.getElementById('lastCheckedText');
-            if (lastCheckedEl) {
-                lastCheckedEl.innerText = 'Last checked ' + new Date().toLocaleTimeString();
-            }
-
-            renderSubsystems(data.subsystems, data.incidents_history);
-
-            // Update footer status pill
-            var footerPill = document.getElementById('zyrexFooterStatus');
-            if (footerPill) {
-                var footerText = footerPill.querySelector('.zyrex-footer-status-text');
-                footerPill.className = 'zyrex-footer-status ' + globalStatus;
-                if (footerText) {
-                    footerText.innerText = globalStatus === 'operational' ? 'All systems operational' : (globalStatus === 'degraded' ? 'Partial service disruption' : 'Major service outage');
-                }
-            }
-        }
-
-        function updateUIFallback() {
-            var heroDot = document.getElementById('heroStatusDot');
-            var heroHeadline = document.getElementById('heroHeadlineText');
-            var heroSub = document.getElementById('heroSubText');
-            var incidentCard = document.getElementById('incidentActiveCard');
-            var incTitle = document.getElementById('incidentsSecTitle');
-            var incSub = document.getElementById('incidentsSecSub');
-
-            if (heroDot && heroHeadline && heroSub) {
-                heroDot.className = 'status-hero-dot degraded';
-                heroHeadline.innerText = 'Partial service disruption';
-                heroSub.innerText = 'Remote server gateway is temporarily unavailable.';
-            }
-            if (incTitle) incTitle.innerText = 'Active Incidents';
-            if (incSub) incSub.innerText = '1 active incident currently impacting services.';
-            if (incidentCard) {
-                incidentCard.classList.add('visible');
-                var t = document.getElementById('incidentTitle');
-                var d = document.getElementById('incidentDesc');
-                if (t) t.innerText = 'Remote Server Disruption';
-                if (d) d.innerText = 'We are currently observing intermittent upstream connectivity with our dedicated remote backend server. Cloudflare edge networks and storage downloads remain fully operational while connection stability is being restored.';
-            }
-            renderSubsystems();
-        }
-
-        var activeFilterSubId = null;
-
-        window.setChartRange = function(range, btn) {
-            currentRange = range;
-            document.querySelectorAll('.range-btn').forEach(function(b) { b.classList.remove('active'); });
-            if (btn) btn.classList.add('active');
-            renderDynamicChart(currentRange, liveDataCache);
-        };
-
-        window.toggleServiceFilter = function(subId) {
-            if (activeFilterSubId === subId) {
-                activeFilterSubId = null;
-            } else {
-                activeFilterSubId = subId;
-            }
-            renderLegend();
-            renderDynamicChart(currentRange, liveDataCache);
-        };
-
-        function renderLegend() {
-            var legendEl = document.getElementById('chartLegend');
-            if (!legendEl) return;
-
-            var html = '';
-            SUBSYSTEMS.forEach(function(sub) {
-                var isFiltered = activeFilterSubId && activeFilterSubId !== sub.id;
-                var isActive = activeFilterSubId === sub.id;
-                var opacityStyle = isFiltered ? 'opacity: 0.35;' : 'opacity: 1;';
-                var borderStyle = isActive ? 'font-weight: 600; text-decoration: underline;' : '';
-
-                html += '<div class="legend-item" style="' + opacityStyle + borderStyle + ' cursor: pointer;" onclick="toggleServiceFilter(\'' + sub.id + '\')" title="Click to isolate ' + simplifyName(sub.name) + '">' +
-                    '<span class="legend-dot" style="background:' + sub.color + '"></span>' +
-                    '<span>' + simplifyName(sub.name) + '</span>' +
-                '</div>';
-            });
-            legendEl.innerHTML = html;
-        }
-
-        // Build real dynamic time slots and problem counts for range (1D, 1W, 2W, 1M, 3M)
-        function buildRealTimeSeries(range, apiData) {
-            var now = new Date();
-            var slots = [];
-            var numSlots = 7;
-            var dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-
-            var incidents = (apiData && apiData.incidents_history) ? apiData.incidents_history : [];
-
-            if (range === '1D') {
-                // Last 24 Hours: 6 slots of 4 hours
-                numSlots = 6;
-                for (var i = numSlots - 1; i >= 0; i--) {
-                    var tStart = new Date(now.getTime() - (i + 1) * 4 * 3600 * 1000);
-                    var tEnd = new Date(now.getTime() - i * 4 * 3600 * 1000);
-                    var timeLabel = tEnd.getHours() + ':00';
-                    if (i === 0) timeLabel = 'Now';
-                    slots.push({
-                        label: timeLabel,
-                        fullLabel: (i === 0 ? 'Today ' : '') + timeLabel,
-                        startMs: tStart.getTime(),
-                        endMs: tEnd.getTime(),
-                        dateKey: toDateKey(tEnd),
-                        isNow: i === 0
-                    });
-                }
-            } else if (range === '1W') {
-                // Last 7 Days
-                numSlots = 7;
-                for (var i = numSlots - 1; i >= 0; i--) {
-                    var d = new Date(now.getTime() - i * 24 * 3600 * 1000);
-                    slots.push({
-                        label: dayNames[d.getDay()] + ' ' + d.getDate(),
-                        fullLabel: d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }),
-                        dateKey: toDateKey(d),
-                        isNow: i === 0
-                    });
-                }
-            } else if (range === '2W') {
-                // Last 14 Days
-                numSlots = 14;
-                for (var i = numSlots - 1; i >= 0; i--) {
-                    var d = new Date(now.getTime() - i * 24 * 3600 * 1000);
-                    slots.push({
-                        label: (i % 2 === 0) ? (dayNames[d.getDay()] + ' ' + d.getDate()) : '',
-                        fullLabel: dayNames[d.getDay()] + ' ' + d.getDate(),
-                        dateKey: toDateKey(d),
-                        isNow: i === 0
-                    });
-                }
-            } else if (range === '1M') {
-                // Last 30 Days
-                numSlots = 30;
-                for (var i = numSlots - 1; i >= 0; i--) {
-                    var d = new Date(now.getTime() - i * 24 * 3600 * 1000);
-                    slots.push({
-                        label: (i % 5 === 0) ? ((d.getMonth() + 1) + '/' + d.getDate()) : '',
-                        fullLabel: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-                        dateKey: toDateKey(d),
-                        isNow: i === 0
-                    });
-                }
-            } else {
-                // 3M: Last 90 Days
-                numSlots = 45;
-                for (var i = numSlots - 1; i >= 0; i--) {
-                    var d = new Date(now.getTime() - i * 2 * 24 * 3600 * 1000);
-                    slots.push({
-                        label: (i % 9 === 0) ? ((d.getMonth() + 1) + '/' + d.getDate()) : '',
-                        fullLabel: d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
-                        dateKey: toDateKey(d),
-                        isNow: i === 0
-                    });
-                }
-            }
-
-            // Calculate real counts for each slot and subsystem
-            var points = slots.map(function(slot) {
-                var counts = {};
-                SUBSYSTEMS.forEach(function(sub) {
-                    counts[sub.id] = 0;
-                });
-
-                // Match historical incidents
-                incidents.forEach(function(inc) {
-                    if (range === '1D') {
-                        var incTime = inc.timestamp ? new Date(inc.timestamp).getTime() : (inc.date ? new Date(inc.date + 'T12:00:00Z').getTime() : 0);
-                        if (incTime >= slot.startMs && incTime <= slot.endMs && counts[inc.subsystem] !== undefined) {
-                            counts[inc.subsystem] += (inc.outages_count || 1);
-                        }
-                    } else {
-                        if (inc.date === slot.dateKey && counts[inc.subsystem] !== undefined) {
-                            counts[inc.subsystem] += (inc.outages_count || 1);
-                        }
-                    }
-                });
-
-                // If this slot represents today/now, verify live state
-                if (slot.isNow && apiData && apiData.subsystems) {
-                    SUBSYSTEMS.forEach(function(sub) {
-                        var liveSub = apiData.subsystems[sub.id];
-                        if (liveSub) {
-                            if (liveSub.status === 'outage') {
-                                counts[sub.id] = Math.max(counts[sub.id], 4);
-                            } else if (liveSub.status === 'degraded') {
-                                counts[sub.id] = Math.max(counts[sub.id], 1);
-                            }
-                        }
-                    });
-                }
-
-                return {
-                    label: slot.label,
-                    fullLabel: slot.fullLabel || slot.label,
-                    counts: counts
-                };
-            });
-
-            return {
-                slots: slots,
-                points: points
-            };
-        }
-
-        function renderDynamicChart(range, apiData) {
-            var svg = document.getElementById('chartSvg');
-            if (!svg) return;
-
-            var timeSeries = buildRealTimeSeries(range, apiData);
-            var points = timeSeries.points;
-            var numPoints = points.length;
-
-            var W = 800;
-            var H = 200;
-            var padL = 30;
-            var padR = 30;
-            var padT = 20;
-            var padB = 30;
-            var chartW = W - padL - padR;
-            var chartH = H - padT - padB;
-
-            // Find maximum outage count to dynamically scale Y axis (minimum 4)
-            var maxVal = 4;
-            points.forEach(function(p) {
-                Object.keys(p.counts).forEach(function(k) {
-                    if (p.counts[k] > maxVal) maxVal = p.counts[k];
-                });
-            });
-
-            var svgContent = '';
-
-            // 1. Horizontal grid lines (4, 3, 2, 1, 0)
-            for (var yVal = 0; yVal <= maxVal; yVal++) {
-                var yPos = padT + chartH - (yVal / maxVal) * chartH;
-                svgContent += '<line x1="' + padL + '" y1="' + yPos + '" x2="' + (W - padR) + '" y2="' + yPos + '" class="grid-line" />';
-                svgContent += '<text x="' + (padL - 12) + '" y="' + (yPos + 4) + '" class="axis-label" text-anchor="end">' + yVal + '</text>';
-            }
-
-            // 2. X-axis Labels
-            var xCoords = [];
-            for (var i = 0; i < numPoints; i++) {
-                var xPos = padL + (i / (numPoints - 1)) * chartW;
-                xCoords.push(xPos);
-                if (points[i].label) {
-                    svgContent += '<text x="' + xPos + '" y="' + (H - 8) + '" class="axis-label" text-anchor="middle">' + points[i].label + '</text>';
-                }
-            }
-
-            // 3. Render Baselines & Smooth Spline Bezier Paths for real services
-            SUBSYSTEMS.forEach(function(sub, sIdx) {
-                if (activeFilterSubId && activeFilterSubId !== sub.id) return;
-
-                var values = points.map(function(p) { return p.counts[sub.id] || 0; });
-                var totalOutages = values.reduce(function(a, b) { return a + b; }, 0);
-
-                var pts = [];
-                for (var i = 0; i < numPoints; i++) {
-                    var x = xCoords[i];
-                    var y = padT + chartH - (values[i] / maxVal) * chartH;
-                    pts.push({ x: x, y: y });
-                }
-
-                if (totalOutages > 0) {
-                    // Smooth spline curve with area gradient
-                    var pathD = 'M ' + pts[0].x + ' ' + pts[0].y;
-                    for (var i = 0; i < pts.length - 1; i++) {
-                        var p0 = pts[i];
-                        var p1 = pts[i + 1];
-                        var cp1x = p0.x + (p1.x - p0.x) * 0.5;
-                        var cp1y = p0.y;
-                        var cp2x = p0.x + (p1.x - p0.x) * 0.5;
-                        var cp2y = p1.y;
-                        pathD += ' C ' + cp1x + ' ' + cp1y + ', ' + cp2x + ' ' + cp2y + ', ' + p1.x + ' ' + p1.y;
-                    }
-
-                    var areaD = pathD + ' L ' + pts[pts.length - 1].x + ' ' + (padT + chartH) + ' L ' + pts[0].x + ' ' + (padT + chartH) + ' Z';
-                    var gradId = 'areaGrad_' + sub.id + '_' + range;
-
-                    svgContent += '<defs>' +
-                        '<linearGradient id="' + gradId + '" x1="0" y1="0" x2="0" y2="1">' +
-                            '<stop offset="0%" stop-color="' + sub.color + '" stop-opacity="0.28" />' +
-                            '<stop offset="100%" stop-color="' + sub.color + '" stop-opacity="0" />' +
-                        '</linearGradient>' +
-                    '</defs>';
-
-                    svgContent += '<path d="' + areaD + '" fill="url(#' + gradId + ')" />';
-                    svgContent += '<path d="' + pathD + '" stroke="' + sub.color + '" class="chart-line" stroke-width="2.5" />';
-
-                    // Marker dots at peak points
-                    pts.forEach(function(pt, ptIdx) {
-                        if (values[ptIdx] > 0) {
-                            svgContent += '<circle cx="' + pt.x + '" cy="' + pt.y + '" r="4" fill="' + sub.color + '" stroke="#111114" stroke-width="2" />';
-                        }
-                    });
-                } else if (activeFilterSubId === sub.id || sub.id === 'storage') {
-                    // Operational 0-baseline for isolated service or core storage
-                    var baselineY = padT + chartH;
-                    svgContent += '<line x1="' + padL + '" y1="' + baselineY + '" x2="' + (W - padR) + '" y2="' + baselineY + '" stroke="' + sub.color + '" stroke-width="1.8" opacity="0.65" />';
-                }
-            });
-
-            // Container for interactive hover guide line & dots
-            svgContent += '<g id="chartHoverGroup" opacity="0"></g>';
-
-            svg.innerHTML = svgContent;
-            attachChartHoverEvents(xCoords, points, padT, chartH, maxVal);
-        }
-
-        function attachChartHoverEvents(xCoords, points, padT, chartH, maxVal) {
-            var box = document.getElementById('chartBox');
-            var tooltip = document.getElementById('chartTooltip');
-            var tooltipDate = document.getElementById('chartTooltipDate');
-            var tooltipRows = document.getElementById('chartTooltipRows');
-            var hoverGroup = document.getElementById('chartHoverGroup');
-            if (!box || !tooltip) return;
-
-            box.onmousemove = function(e) {
-                var rect = box.getBoundingClientRect();
-                var mouseX = ((e.clientX - rect.left) / rect.width) * 800;
-
-                var closestIdx = 0;
-                var minDiff = 99999;
-                xCoords.forEach(function(x, idx) {
-                    var diff = Math.abs(mouseX - x);
-                    if (diff < minDiff) {
-                        minDiff = diff;
-                        closestIdx = idx;
-                    }
-                });
-
-                var p = points[closestIdx];
-                var curX = xCoords[closestIdx];
-                tooltipDate.innerText = p.fullLabel || p.label;
-
-                var rowsHtml = '';
-                var hoverSvg = '<line x1="' + curX + '" y1="' + padT + '" x2="' + curX + '" y2="' + (padT + chartH) + '" stroke="rgba(255, 255, 255, 0.3)" stroke-dasharray="3 3" stroke-width="1.5" />';
-
-                SUBSYSTEMS.forEach(function(sub) {
-                    var count = p.counts[sub.id] || 0;
-
-                    rowsHtml += '<div class="chart-tooltip-row" style="' + (count > 0 ? 'font-weight:600;' : '') + '">' +
-                        '<span class="chart-tooltip-name" style="color:' + sub.color + '">' + simplifyName(sub.name) + ' : </span>' +
-                        '<span class="chart-tooltip-val" style="' + (count > 0 ? 'color:#ffffff; font-weight:700;' : '') + '">' + count + '</span>' +
-                    '</div>';
-
-                    // Draw dot on vertical line for services
-                    if (count > 0) {
-                        var yPos = padT + chartH - (count / maxVal) * chartH;
-                        hoverSvg += '<circle cx="' + curX + '" cy="' + yPos + '" r="4.5" fill="' + sub.color + '" stroke="#18181b" stroke-width="2" />';
-                    } else if (sub.id === 'storage' || activeFilterSubId === sub.id) {
-                        hoverSvg += '<circle cx="' + curX + '" cy="' + (padT + chartH) + '" r="3.5" fill="' + sub.color + '" stroke="#18181b" stroke-width="1.5" />';
-                    }
-                });
-
-                if (hoverGroup) {
-                    hoverGroup.innerHTML = hoverSvg;
-                    hoverGroup.setAttribute('opacity', '1');
-                }
-
-                tooltipRows.innerHTML = rowsHtml;
-                tooltip.classList.add('visible');
-
-                // Dynamic left/right tooltip alignment so cursor never hides it
-                if (mouseX > 420) {
-                    tooltip.style.left = '25px';
-                    tooltip.style.right = 'auto';
-                } else {
-                    tooltip.style.right = '25px';
-                    tooltip.style.left = 'auto';
-                }
-            };
-
-            box.onmouseleave = function() {
-                tooltip.classList.remove('visible');
-                if (hoverGroup) {
-                    hoverGroup.setAttribute('opacity', '0');
-                }
-            };
-        }
-
-        // Initialize Everything
-        renderLegend();
-        renderDynamicChart(currentRange);
-        renderSubsystems();
-        fetchStatus(false);
-
-        // Auto-refresh every 15 seconds
-        setInterval(function() {
-            fetchStatus(false);
-        }, 15000);
-
-    })();
+(function () {
+    'use strict';
+    var $ = function (id) { return document.getElementById(id); };
+    var esc = function (value) {
+        return String(value == null ? '' : value).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    };
+
+    // Groups are presentation only: every row comes from a real probe in /api/status.
+    var GROUPS = [
+        { title: 'Community Feed', note: 'Posts, notifications and Discord sync', ids: ['feed_timeline', 'feed_notifications', 'feed_discord', 'feed_media', 'feed_official', 'feed_links'] },
+        { title: 'Leaks & Downloads', note: 'Files, passes and requests', ids: ['storage', 'shortener_gateway', 'token_generator', 'requests_system'] },
+        { title: 'Platform', note: 'Site, uploads and accounts', ids: ['site_gate', 'api_gateway', 'resource_uploads', 'comments', 'notifications', 'discord_auth'] }
+    ];
+
+    var stateLabel = function (status) {
+        if (status === 'outage') return 'Down';
+        if (status === 'degraded') return 'Degraded';
+        return 'Operational';
+    };
+
+    function rowHtml(id, entry) {
+        if (!entry) return '';
+        var status = entry.status || 'operational';
+        var latency = Number(entry.latency_ms);
+        var latencyText = Number.isFinite(latency) && latency >= 0 ? latency + ' ms' : '—';
+        return '<div class="st-row is-' + esc(status) + '">' +
+            '<span class="dot" aria-hidden="true"></span>' +
+            '<div><div class="st-name">' + esc(entry.name || id) + '</div>' +
+            '<p class="st-desc">' + esc(entry.description || '') + '</p></div>' +
+            '<span class="st-latency">' + esc(latencyText) + '</span>' +
+            '<span class="st-state">' + esc(stateLabel(status)) + '</span>' +
+            '</div>';
+    }
+
+    function render(payload) {
+        var subsystems = payload.subsystems || {};
+        var html = '';
+        GROUPS.forEach(function (group) {
+            var rows = group.ids.map(function (id) { return rowHtml(id, subsystems[id]); }).join('');
+            if (!rows) return;
+            html += '<section class="st-section"><div class="st-section-head"><h2>' + esc(group.title) + '</h2><span>' + esc(group.note) + '</span></div><div class="st-list">' + rows + '</div></section>';
+        });
+        $('stGroups').innerHTML = html;
+
+        var incidents = Array.isArray(payload.incidents) ? payload.incidents : [];
+        $('stIncidents').innerHTML = incidents.length
+            ? '<section class="st-incidents"><h2>Active incidents</h2>' + incidents.slice(0, 6).map(function (item) {
+                return '<div class="st-incident"><strong>' + esc(item.title || 'Service disruption') + '</strong><small>' + esc(item.message || item.impact || '') + '</small></div>';
+            }).join('') + '</section>'
+            : '';
+
+        var status = payload.status || 'operational';
+        var pill = $('stPill');
+        pill.className = 'st-pill' + (status === 'outage' ? ' is-outage' : status === 'degraded' ? ' is-degraded' : '');
+        $('stPillText').textContent = status === 'outage' ? 'Major outage' : status === 'degraded' ? 'Degraded performance' : 'All systems operational';
+        $('stSub').textContent = payload.headline || payload.lead || 'Live checks for the site, feed, downloads and community services.';
+        var checked = payload.checked_at ? new Date(payload.checked_at) : new Date();
+        $('stStamp').textContent = 'Checked ' + checked.toLocaleTimeString();
+        $('stError').hidden = true;
+    }
+
+    function load() {
+        var button = $('stRefresh');
+        button.disabled = true;
+        fetch('/api/status?t=' + Date.now(), { cache: 'no-store' })
+            .then(function (response) { return response.json().then(function (data) { return { ok: response.ok, data: data }; }); })
+            .then(function (result) {
+                if (!result.ok || !result.data || result.data.success === false) throw new Error((result.data && result.data.error) || 'Status is unavailable.');
+                render(result.data);
+            })
+            .catch(function (error) {
+                $('stError').hidden = false;
+                $('stError').textContent = error.message || 'Could not load the status right now.';
+            })
+            .finally(function () { button.disabled = false; });
+    }
+
+    $('stRefresh').addEventListener('click', load);
+    load();
+    setInterval(function () {
+        if (document.visibilityState === 'visible') load();
+    }, 30000);
+})();
     </script>
+    <script src="/js/page-motion.js?v=6"></script>
 </body>
 </html>

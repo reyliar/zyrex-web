@@ -1,0 +1,132 @@
+/* ==========================================================================
+   Zyrex — Atmosphere layer
+   Diagonal (top-left → right) page entrance motion.
+   Loaded last on every page, after css/glass.css.
+   ========================================================================== */
+
+:root {
+    --zr-sweep-ease: cubic-bezier(.16, 1, .3, 1);
+}
+
+/* --------------------------------------------------------------------------
+   2. Entrance sweep — light travels from the top-left toward the right
+   -------------------------------------------------------------------------- */
+.zr-sweep {
+    position: fixed;
+    inset: 0;
+    z-index: 10060;
+    pointer-events: none;
+    opacity: 0;
+}
+
+body.zr-sweeping .zr-sweep {
+    opacity: 1;
+}
+
+.zr-sweep::before {
+    content: '';
+    position: absolute;
+    top: -20%;
+    left: -70%;
+    width: 70%;
+    height: 140%;
+    transform: rotate(12deg);
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, .05) 34%,
+        rgba(255, 190, 205, .16) 52%,
+        rgba(var(--zr-rgb-255-77-109, 255, 77, 109), .14) 62%,
+        transparent 100%
+    );
+}
+
+body.zr-sweeping .zr-sweep::before {
+    animation: zrSweepTravel .78s var(--zr-sweep-ease) forwards;
+}
+
+@keyframes zrSweepTravel {
+    0%   { transform: translate3d(0, 0, 0) rotate(12deg); opacity: 0; }
+    18%  { opacity: 1; }
+    100% { transform: translate3d(250vw, 0, 0) rotate(12deg); opacity: 0; }
+}
+
+/* --------------------------------------------------------------------------
+   3. Element reveal — rises in from the top-left, settling down-right
+   -------------------------------------------------------------------------- */
+/* `backwards` (not `both`) so the element returns to its natural styles the
+   moment the animation ends — a forwards fill would pin the final transform and
+   block later changes (e.g. the navbar sliding away on scroll). It also means a
+   throttled or interrupted animation can never leave content invisible. */
+.zr-in {
+    animation: zrSweepIn .72s var(--zr-sweep-ease) backwards;
+    animation-delay: var(--zr-delay, 0ms);
+}
+
+@keyframes zrSweepIn {
+    from {
+        opacity: 0;
+        transform: translate3d(-24px, -16px, 0);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+/* Scroll-triggered variant (lighter, no blur on scroll for smoothness) */
+.zr-reveal {
+    opacity: 0;
+    transform: translate3d(-20px, -14px, 0);
+    transition:
+        opacity .62s var(--zr-sweep-ease),
+        transform .62s var(--zr-sweep-ease);
+    transition-delay: var(--zr-delay, 0ms);
+}
+
+.zr-reveal.zr-visible {
+    opacity: 1;
+    transform: none;
+}
+
+/* --------------------------------------------------------------------------
+   4. Float — content sits on the page rather than in front of it
+   -------------------------------------------------------------------------- */
+.zr-float {
+    animation: zrFloatBob 9s ease-in-out infinite alternate;
+}
+
+@keyframes zrFloatBob {
+    from { transform: translate3d(0, 0, 0); }
+    to   { transform: translate3d(0, -5px, 0); }
+}
+
+/* --------------------------------------------------------------------------
+   5. Perf: skip rendering work for far-off-page blocks
+   -------------------------------------------------------------------------- */
+.zr-cv {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 640px;
+}
+
+/* --------------------------------------------------------------------------
+   6. Reduced motion / low-power devices
+   -------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+    .zr-sweep,
+    .zr-sweep::before { display: none !important; }
+
+    .zr-in,
+    .zr-reveal,
+    .zr-float {
+        animation: none !important;
+        transition: none !important;
+        transform: none !important;
+        opacity: 1 !important;
+        filter: none !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .zr-float { animation: none; }
+}

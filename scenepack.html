@@ -1,770 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zyrex | Scenepacks for Edits</title>
+    <title>Scenepack | Zyrex</title>
+    <meta name="description" content="Scenepack versions, sizes and download options for this title.">
+    <meta name="theme-color" content="#0f0f11">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Zyrex">
+    <meta property="og:title" content="Scenepack | Zyrex">
+    <meta property="og:description" content="Scenepack versions, sizes and download options for this title.">
+    <meta property="og:image" content="https://zyrexediting.xyz/assets/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
     <link rel="icon" type="image/png" href="/assets/content.png">
-    <link rel="stylesheet" href="css/style.css?v=26">
+    <link rel="stylesheet" href="css/style.css?v=92">
+    <link rel="stylesheet" href="css/scenepacks.css?v=15">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --cherry: #ff2b52;
-            --cherry-light: #ff6b85;
-            --cherry-dark: #c8002a;
-            --dark-bg: #070209;
-            --card-bg: rgba(16, 9, 20, 0.7);
-            --card-border: rgba(255, 255, 255, 0.08);
-            --text-muted: rgba(255, 255, 255, 0.55);
-            --text-faint: rgba(255, 255, 255, 0.35);
-        }
-
-        body {
-            background: var(--dark-bg);
-            color: #f8f5f6;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            min-height: 100vh;
-            overflow-x: hidden;
-        }
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            z-index: 0;
-            pointer-events: none;
-            background:
-                radial-gradient(circle at 15% 10%, rgba(255, 43, 82, 0.12) 0%, transparent 45%),
-                radial-gradient(circle at 85% 60%, rgba(130, 0, 45, 0.09) 0%, transparent 40%),
-                radial-gradient(circle at 50% 100%, rgba(50, 0, 20, 0.06) 0%, transparent 50%);
-        }
-
-        .sp-wrap {
-            max-width: 1280px;
-            margin: 0 auto;
-            padding: 120px 28px 80px;
-            position: relative;
-            z-index: 1;
-        }
-
-        .sp-hero {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            gap: 28px;
-            padding: 32px 36px;
-            margin-bottom: 28px;
-            border-radius: 24px;
-            background: linear-gradient(180deg, rgba(255, 43, 82, 0.08) 0%, rgba(14, 8, 18, 0.65) 100%);
-            border: 1px solid var(--card-border);
-            backdrop-filter: blur(28px);
-            -webkit-backdrop-filter: blur(28px);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
-            position: relative;
-            overflow: hidden;
-        }
-        .sp-hero::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, transparent, rgba(255, 43, 82, 0.6), transparent);
-        }
-        .sp-hero-main {
-            flex: 1;
-            min-width: 260px;
-        }
-        .sp-micro-badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.70rem;
-            font-weight: 800;
-            letter-spacing: 1.2px;
-            text-transform: uppercase;
-            color: var(--cherry-light);
-            background: rgba(255, 43, 82, 0.12);
-            border: 1px solid rgba(255, 43, 82, 0.25);
-            padding: 4px 12px;
-            border-radius: 999px;
-            margin-bottom: 12px;
-        }
-        .sp-hero-title {
-            font-size: clamp(2.2rem, 4vw, 3.4rem);
-            font-weight: 900;
-            font-family: 'Outfit', sans-serif;
-            letter-spacing: -1px;
-            line-height: 1.1;
-            color: #ffffff;
-            margin: 0 0 10px;
-        }
-        .sp-hero-desc {
-            font-size: 0.92rem;
-            color: var(--text-muted);
-            line-height: 1.55;
-            margin: 0 0 18px;
-            max-width: 600px;
-        }
-        .sp-stats-strip {
-            display: inline-flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 0.82rem;
-            color: rgba(255, 255, 255, 0.85);
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.07);
-            padding: 8px 18px;
-            border-radius: 999px;
-        }
-        .sp-stats-strip strong {
-            color: #fff;
-            font-weight: 700;
-        }
-        .sp-stats-strip .dot {
-            color: rgba(255, 255, 255, 0.3);
-        }
-
-        .sp-control-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            margin-bottom: 24px;
-            flex-wrap: wrap;
-        }
-        .sp-tabs {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
-        .sp-tab-btn {
-            padding: 8px 18px;
-            border-radius: 999px;
-            font-size: 0.80rem;
-            font-weight: 600;
-            cursor: pointer;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            color: rgba(255, 255, 255, 0.7);
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            transition: all 0.2s ease;
-            user-select: none;
-        }
-        .sp-tab-btn:hover {
-            background: rgba(255, 255, 255, 0.08);
-            color: #fff;
-        }
-        .sp-tab-btn.active {
-            background: #ffffff;
-            border-color: #ffffff;
-            color: #000000;
-            font-weight: 700;
-        }
-
-        .sp-search-box {
-            position: relative;
-            min-width: 240px;
-            max-width: 320px;
-            flex: 1;
-        }
-        .sp-search-box i {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--text-muted);
-            font-size: 0.82rem;
-            pointer-events: none;
-        }
-        .sp-search-box input {
-            width: 100%;
-            padding: 10px 16px 10px 38px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid var(--card-border);
-            border-radius: 999px;
-            color: #fff;
-            font-size: 0.85rem;
-            font-family: inherit;
-            outline: none;
-            transition: all 0.2s ease;
-        }
-        .sp-search-box input:focus {
-            background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 43, 82, 0.5);
-            box-shadow: 0 0 0 3px rgba(255, 43, 82, 0.15);
-        }
-        .sp-search-box input::placeholder {
-            color: var(--text-faint);
-        }
-
-        .sp-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(290px, 1fr));
-            gap: 22px;
-        }
-        .sp-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 18px;
-            overflow: hidden;
-            text-decoration: none;
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-            transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            position: relative;
-        }
-        .sp-card:hover {
-            transform: translateY(-4px);
-            border-color: rgba(255, 43, 82, 0.4);
-            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6), 0 0 24px rgba(255, 43, 82, 0.15);
-        }
-
-        /* 16:9 Thumbnail Box */
-        .sp-thumb-wrap {
-            position: relative;
-            width: 100%;
-            aspect-ratio: 16 / 9;
-            background: #080309;
-            overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .sp-thumb-wrap img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .sp-card:hover .sp-thumb-wrap img {
-            transform: scale(1.04);
-        }
-
-        /* Top badges on thumbnail */
-        .sp-badge-top-left {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(10, 4, 12, 0.85);
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            color: #ffffff;
-            font-size: 0.68rem;
-            font-weight: 700;
-            padding: 3px 8px;
-            border-radius: 6px;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            backdrop-filter: blur(8px);
-            z-index: 2;
-        }
-        .sp-badge-imdb {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.85);
-            border: 1px solid rgba(245, 197, 24, 0.5);
-            color: #f5c518;
-            font-size: 0.68rem;
-            font-weight: 900;
-            padding: 3px 8px;
-            border-radius: 6px;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            backdrop-filter: blur(8px);
-            z-index: 2;
-        }
-        .sp-badge-imdb.sp-badge-game {
-            border-color: rgba(124, 58, 237, 0.6);
-            color: #c084fc;
-        }
-
-        /* Card Content */
-        .sp-card-content {
-            padding: 16px 18px 18px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            flex: 1;
-            justify-content: space-between;
-        }
-        .sp-origin-pill {
-            font-size: 0.70rem;
-            font-weight: 700;
-            color: var(--cherry-light);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: -webkit-box;
-            -webkit-line-clamp: 1;
-            line-clamp: 1;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-        .sp-card-name {
-            font-size: 0.98rem;
-            font-weight: 800;
-            font-family: 'Outfit', sans-serif;
-            color: #ffffff;
-            line-height: 1.35;
-            margin: 0;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .sp-card-footer {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding-top: 10px;
-            margin-top: 6px;
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
-            gap: 8px;
-        }
-        .sp-uploader-info {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            min-width: 0;
-        }
-        .sp-uploader-avatar {
-            width: 26px;
-            height: 26px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 1px solid rgba(255, 43, 82, 0.4);
-            background: rgba(0,0,0,0.3);
-            flex-shrink: 0;
-        }
-        .sp-uploader-name {
-            font-size: 0.78rem;
-            font-weight: 600;
-            color: rgba(255, 255, 255, 0.85);
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .sp-dl-pill {
-            font-size: 0.74rem;
-            color: var(--text-muted);
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            font-family: 'Outfit', monospace;
-            font-weight: 600;
-            flex-shrink: 0;
-        }
-
-        .hub-subtabs {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-        .hub-pill {
-            padding: 6px 14px;
-            border-radius: 999px;
-            font-size: 0.76rem;
-            font-weight: 600;
-            cursor: pointer;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            color: var(--text-muted);
-            transition: all 0.2s ease;
-        }
-        .hub-pill:hover {
-            background: rgba(255, 255, 255, 0.08);
-            color: #fff;
-        }
-        .hub-pill.active {
-            background: rgba(255, 43, 82, 0.2);
-            border-color: var(--cherry-light);
-            color: #fff;
-        }
-
-        .productions-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-            gap: 20px;
-        }
-        .prod-card {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 16px;
-            overflow: hidden;
-            cursor: pointer;
-            display: flex;
-            flex-direction: column;
-            transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
-        }
-        .prod-card:hover {
-            transform: translateY(-4px);
-            border-color: rgba(255, 43, 82, 0.4);
-            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.6);
-        }
-        .prod-poster-box {
-            position: relative;
-            aspect-ratio: 2 / 3;
-            width: 100%;
-            background: #09040c;
-            overflow: hidden;
-        }
-        .prod-poster-img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.35s ease;
-        }
-        .prod-card:hover .prod-poster-img {
-            transform: scale(1.05);
-        }
-        .prod-imdb-badge {
-            position: absolute;
-            top: 8px; right: 8px;
-            background: rgba(0, 0, 0, 0.85);
-            border: 1px solid rgba(245, 197, 24, 0.5);
-            color: #f5c518;
-            font-size: 0.68rem;
-            font-weight: 900;
-            padding: 2px 6px;
-            border-radius: 4px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .prod-count-pill {
-            position: absolute;
-            bottom: 8px; left: 8px;
-            background: rgba(255, 43, 82, 0.9);
-            color: #fff;
-            font-size: 0.65rem;
-            font-weight: 800;
-            padding: 2px 7px;
-            border-radius: 999px;
-        }
-        .prod-body {
-            padding: 12px 14px;
-        }
-        .prod-title {
-            font-size: 0.94rem;
-            font-weight: 800;
-            font-family: 'Outfit', sans-serif;
-            color: #ffffff;
-            margin: 0 0 3px;
-            display: -webkit-box;
-            -webkit-line-clamp: 1;
-            line-clamp: 1;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-        .prod-sub {
-            font-size: 0.72rem;
-            color: var(--text-muted);
-            margin: 0;
-        }
-
-        .showcase-container {
-            background: var(--card-bg);
-            border: 1px solid var(--card-border);
-            border-radius: 24px;
-            padding: 32px;
-            backdrop-filter: blur(28px);
-            margin-bottom: 30px;
-        }
-        .showcase-back-btn {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.10);
-            color: #fff;
-            padding: 8px 16px;
-            border-radius: 999px;
-            font-size: 0.80rem;
-            font-weight: 700;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 7px;
-            transition: all 0.2s ease;
-            margin-bottom: 24px;
-        }
-        .showcase-back-btn:hover {
-            background: rgba(255, 255, 255, 0.10);
-            transform: translateX(-3px);
-        }
-        .showcase-top {
-            display: grid;
-            grid-template-columns: 200px 1fr;
-            gap: 30px;
-            margin-bottom: 28px;
-        }
-        .showcase-poster {
-            aspect-ratio: 2 / 3;
-            border-radius: 14px;
-            overflow: hidden;
-            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-        }
-        .showcase-poster img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-        .showcase-info h1 {
-            font-size: clamp(1.8rem, 3vw, 2.6rem);
-            font-weight: 900;
-            font-family: 'Outfit', sans-serif;
-            color: #fff;
-            margin: 0 0 8px;
-            line-height: 1.15;
-        }
-        .showcase-meta {
-            font-size: 0.88rem;
-            color: var(--text-muted);
-            margin-bottom: 12px;
-            line-height: 1.5;
-        }
-        .showcase-stats-strip {
-            display: flex;
-            align-items: center;
-            gap: 14px;
-            font-size: 0.84rem;
-            color: rgba(255, 255, 255, 0.8);
-            margin-bottom: 16px;
-            flex-wrap: wrap;
-        }
-        .badge-imdb {
-            background: #f5c518;
-            color: #000;
-            font-weight: 900;
-            font-size: 0.76rem;
-            padding: 3px 8px;
-            border-radius: 5px;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .badge-rotten {
-            background: rgba(239, 68, 68, 0.15);
-            border: 1px solid rgba(239, 68, 68, 0.35);
-            color: #f87171;
-            font-weight: 800;
-            font-size: 0.76rem;
-            padding: 3px 8px;
-            border-radius: 5px;
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-        }
-
-        /* Showcase Table */
-        .showcase-table-wrap {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 16px;
-            overflow: hidden;
-        }
-        .showcase-table-row {
-            display: grid;
-            grid-template-columns: 2fr 120px 120px 100px;
-            gap: 16px;
-            padding: 14px 18px;
-            align-items: center;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-            transition: background 0.15s ease;
-        }
-        .showcase-table-row:last-child {
-            border-bottom: none;
-        }
-        .showcase-table-row:hover {
-            background: rgba(255, 43, 82, 0.05);
-        }
-        .showcase-row-title {
-            font-size: 0.92rem;
-            font-weight: 700;
-            color: #ffffff;
-            text-decoration: none;
-        }
-        .showcase-row-title:hover {
-            color: var(--cherry-light);
-        }
-        .btn-table-dl {
-            padding: 6px 14px;
-            border-radius: 8px;
-            background: rgba(255, 43, 82, 0.15);
-            border: 1px solid rgba(255, 43, 82, 0.35);
-            color: #fff;
-            text-decoration: none;
-            font-size: 0.78rem;
-            font-weight: 700;
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            justify-content: center;
-            transition: all 0.2s ease;
-        }
-        .btn-table-dl:hover {
-            background: #ff2b52;
-            color: #fff;
-        }
-
-        /* Empty State */
-        .sp-empty {
-            grid-column: 1 / -1;
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-muted);
-        }
-        .sp-empty i {
-            font-size: 2.6rem;
-            color: var(--cherry-light);
-            opacity: 0.3;
-            margin-bottom: 12px;
-            display: block;
-        }
-
-        /* Responsive Breakpoints */
-        @media (max-width: 900px) {
-            .sp-hero {
-                flex-direction: column;
-                padding: 24px;
-            }
-            .showcase-top {
-                grid-template-columns: 1fr;
-            }
-            .showcase-poster {
-                max-width: 180px;
-                margin: 0 auto;
-            }
-        }
-        @media (max-width: 650px) {
-            .sp-wrap {
-                padding-top: 100px;
-                padding-left: 14px;
-                padding-right: 14px;
-            }
-            .sp-hero-title {
-                font-size: 1.8rem;
-            }
-            .sp-grid {
-                grid-template-columns: 1fr;
-            }
-            .showcase-table-row {
-                grid-template-columns: 1fr;
-                gap: 8px;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,800,900&amp;display=swap">
+    <link rel="stylesheet" href="/css/page-loader.css?v=1">
+    <link rel="stylesheet" href="/css/glass.css?v=67">
+    <link rel="stylesheet" href="/css/atmosphere.css?v=7">
+    <link rel="stylesheet" href="/css/i18n.css?v=3">
+    <script src="/js/i18n.js?v=15" defer></script>
 </head>
-<body>
-    <div class="bg-aura"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
 
-    <!-- Top Navbar -->
+<body>
+    <div class="zr-sweep" aria-hidden="true"></div>
+    <div class="lq-veil" aria-hidden="true"></div>
+
     <nav class="navbar">
         <div class="container">
-            <a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a>
+            <a href="/" class="logo"><img src="/assets/content.png" alt="ZYREX" class="logo-img"><span
+                    class="logo-text">yrex</span></a>
             <ul class="nav-links" id="navLinks">
                 <li><a href="/">Home</a></li>
-                <li><a href="/resources">Resources</a></li>
+                <li><a href="/leaks">Leaks</a></li>
+                <li><a href="/feed">Feed</a></li>
                 <li><a href="/plugins">Plugins</a></li>
                 <li><a href="/requests">Requests</a></li>
-                <li><a href="/more">More</a></li>
-                <li><a href="/#contact">Contact</a></li>
+                <li><a href="/audio">Audios</a></li>
+                <li><a href="/scenepacks" class="active">Scenepacks</a></li>
             </ul>
             <div class="nav-actions">
                 <div id="authBtn"></div>
-                <button class="hamburger" id="hamburger" aria-label="Toggle navigation"><span></span><span></span><span></span></button>
+                <button class="hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
             </div>
         </div>
     </nav>
 
-    <div class="sp-wrap">
-        <!-- MINIMALIST HERO -->
-        <header class="sp-hero">
-            <div class="sp-hero-main">
-                <div class="sp-micro-badge"><i class="fas fa-clapperboard"></i> 4K &amp; 1080P Scene Archives</div>
-                <h1 class="sp-hero-title">Scenepacks for Edits</h1>
-                <p class="sp-hero-desc">Curated high-bitrate scene archives, film clips &amp; video game captures prepared for video editors.</p>
-                <div class="sp-stats-strip">
-                    <span><strong id="statTotal">--</strong> Packs</span>
-                    <span class="dot">·</span>
-                    <span><strong id="statCreators">--</strong> Creators</span>
-                    <span class="dot">·</span>
-                    <span><strong id="statDL">--</strong> Downloads</span>
-                </div>
-            </div>
-        </header>
+    <div class="sp-app">
+        <nav class="sp-breadcrumb" aria-label="Breadcrumb">
+            <a href="/"><i class="fas fa-house" aria-hidden="true"></i> Home</a>
+            <span class="sep">/</span>
+            <a href="/scenepacks"><i class="fas fa-film" aria-hidden="true"></i> Scenepacks</a>
+            <span class="sep">/</span>
+            <span class="current" id="spCrumbCurrent">Scenepack</span>
+        </nav>
 
-        <!-- CONTROLS & FILTER BAR -->
-        <div class="sp-control-bar">
-            <div class="sp-tabs" id="mainViewTabs">
-                <button type="button" class="sp-tab-btn active" data-tab="all" onclick="switchSPCategory('all')">
-                    All Packs
-                </button>
-                <button type="button" class="sp-tab-btn" data-tab="series" onclick="switchSPCategory('series')">
-                    TV Series
-                </button>
-                <button type="button" class="sp-tab-btn" data-tab="movie" onclick="switchSPCategory('movie')">
-                    Movies
-                </button>
-                <button type="button" class="sp-tab-btn" data-tab="games" onclick="switchSPCategory('games')">
-                    Video Games
-                </button>
-                <button type="button" class="sp-tab-btn" data-tab="anime" onclick="switchSPCategory('anime')">
-                    Anime
-                </button>
-                <button type="button" class="sp-tab-btn" data-tab="hub" onclick="switchSPView('hub')">
-                    <i class="fas fa-cubes"></i> Titles Index
-                </button>
-            </div>
-            <div class="sp-search-box">
-                <i class="fas fa-search"></i>
-                <input type="text" id="spSearch" placeholder="Search by title, origin, creator..." autocomplete="off">
-            </div>
-        </div>
+        <div class="sp-hero-bg" id="spHeroBg"></div>
 
-        <!-- PRODUCTIONS & GAMES SECTION (when switched to hub) -->
-        <div id="hubSection" style="display:none;">
-            <div id="productionShowcaseContainer" style="display:none;"></div>
+        <div class="sp-shell-narrow">
+            <div class="sp-loading" id="spLoading"><i class="fas fa-spinner fa-spin" aria-hidden="true"></i>Loading title…</div>
+            <div id="spFail" style="display:none"></div>
 
-            <div id="hubGridContainer">
-                <div class="hub-subtabs" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;">
-                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                        <button type="button" class="hub-pill active" onclick="filterHubCategory('all')">All Titles</button>
-                        <button type="button" class="hub-pill" onclick="filterHubCategory('movies_series')">TV &amp; Movies</button>
-                        <button type="button" class="hub-pill" onclick="filterHubCategory('games')">Video Games</button>
-                        <button type="button" class="hub-pill" onclick="filterHubCategory('anime')">Anime</button>
-                    </div>
-                    <div class="sp-search-box" style="margin:0;max-width:300px;padding:8px 14px;">
-                        <i class="fas fa-search"></i>
-                        <input type="text" placeholder="Search titles index..." oninput="filterHubTitles(this.value)">
+            <div class="sp-title-grid" id="spTitleGrid" style="display:none">
+                <div class="sp-poster-col">
+                    <div class="sp-poster-wrap">
+                        <div class="sp-title-poster" id="spTitlePoster"></div>
+                        <div class="sp-title-status" id="spTitleStatus" hidden></div>
                     </div>
                 </div>
-                <div class="productions-grid" id="hubGrid"></div>
-            </div>
-        </div>
 
-        <!-- ALL PACKS GRID SECTION -->
-        <div id="allPacksSection">
-            <div class="sp-grid" id="spGrid">
-                <div class="sp-empty">
-                    <i class="fas fa-spinner fa-spin"></i>
-                    <p>Loading scenepacks...</p>
+                <aside class="sp-title-side">
+                    <a class="sp-imdb-row" id="spImdbRow" hidden></a>
+                    <div class="sp-side-cast" id="spSideCast"></div>
+                    <div class="sp-side-tagline" id="spSideTagline"></div>
+                </aside>
+
+                <div class="sp-title-col">
+                    <div class="sp-title-head">
+                        <h1 id="spTitleName"></h1>
+                        <div class="sp-title-meta" id="spTitleMeta"></div>
+                    </div>
+
+                    <main class="sp-title-main">
+                        <div class="sp-title-stats">
+                            <div id="spTitleStats"></div>
+                            <div class="sp-view-toggle" role="group" aria-label="Pack grouping">
+                                <button type="button" data-view="characters" class="is-on" title="Group by character"
+                                    aria-label="Group by character"><i class="fas fa-list" aria-hidden="true"></i></button>
+                                <button type="button" data-view="flat" title="Flat list"
+                                    aria-label="Flat list"><i class="fas fa-user" aria-hidden="true"></i></button>
+                            </div>
+                        </div>
+
+                        <div class="sp-table-search">
+                            <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+                            <input type="search" id="spPackSearch" placeholder="Search scenepacks (name, credit)..."
+                                aria-label="Search scenepacks" autocomplete="off">
+                        </div>
+
+                        <div class="sp-table" id="spTable"></div>
+                    </main>
                 </div>
             </div>
         </div>
     </div>
 
+    <div class="sp-sheet" id="spSheet" hidden aria-hidden="true">
+        <div class="sp-sheet-veil" data-sheet-close></div>
+        <div class="sp-sheet-card" role="dialog" aria-modal="true" aria-labelledby="spSheetTitle">
+            <button type="button" class="sp-sheet-close" data-sheet-close aria-label="Close">
+                <i class="fas fa-xmark" aria-hidden="true"></i>
+            </button>
+            <div class="sp-sheet-body">
+                <h2 class="sp-sheet-title" id="spSheetTitle"></h2>
+                <div class="sp-sheet-chips" id="spSheetChips"></div>
+                <div class="sp-sheet-files" id="spSheetFiles"></div>
+                <div class="sp-sheet-actions" id="spSheetActions"></div>
+            </div>
+        </div>
+    </div>
 
-    <!-- Footer -->
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
@@ -776,16 +134,18 @@
                             <span class="hero-brand-sub">EDITING</span>
                         </div>
                     </a>
-                    <p>Premium editing community &amp; resources.</p>
+                    <p>Editing leaks and stuff.</p>
                 </div>
                 <div class="footer-links">
                     <h4>Quick Links</h4>
                     <ul>
                         <li><a href="/">Home</a></li>
-                        <li><a href="/resources">Resources</a></li>
+                        <li><a href="/leaks">Leaks</a></li>
+                        <li><a href="/feed">Feed</a></li>
                         <li><a href="/plugins">Plugins</a></li>
                         <li><a href="/requests">Requests</a></li>
-                        <li><a href="/more">More</a></li>
+                        <li><a href="/audio">Audios</a></li>
+                        <li><a href="/scenepacks">Scenepacks</a></li>
                     </ul>
                 </div>
                 <div class="footer-links">
@@ -799,17 +159,9 @@
                 <div class="footer-links">
                     <h4>Community</h4>
                     <ul>
-                        <li><a href="https://discord.gg/fAydSzpafA" target="_blank" rel="noopener">Discord</a></li>
+                        <li><a href="https://discord.gg/4J3tars4QS" target="_blank" rel="noopener">Discord</a></li>
                         <li><a href="/#contact">Contact</a></li>
                     </ul>
-                </div>
-                <div class="footer-newsletter">
-                    <h4>Newsletter</h4>
-                    <p>Stay updated with Zyrex Editing.</p>
-                    <div class="newsletter-form">
-                        <input type="email" placeholder="Your email">
-                        <button type="submit" aria-label="Subscribe"><i class="fas fa-arrow-right"></i></button>
-                    </div>
                 </div>
             </div>
             <div class="footer-bottom">
@@ -818,517 +170,12 @@
         </div>
     </footer>
 
-    <script src="/js/chunks/chunk-store.js?v=1"></script>
-    <script src="js/scenepack-imdb.js?v=2"></script>
-    <script src="js/auth.js?v=13"></script>
-    <script src="js/script.js?v=5"></script>
-    <script>
-        var allSP = [];
-        var creatorIndex = {};
-        var discordAvatarCache = {};
-        var currentCategory = 'all';
-        var currentViewMode = 'packs';
-        var currentHubCategory = 'all';
-        var currentActiveProd = null;
-
-        function escapeHtml(text) {
-            if (!text) return '';
-            return String(text).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-        }
-
-        // Fetch Discord profile photo via Zyrex VPS Bot API
-        async function fetchUploaderDiscordAvatar(uploaderId, fallbackHashOrUrl) {
-            if (uploaderId && discordAvatarCache[uploaderId]) return discordAvatarCache[uploaderId];
-
-            if (uploaderId && /^\d{17,20}$/.test(uploaderId)) {
-                try {
-                    var res = await fetch('/api/discord-user?userId=' + uploaderId);
-                    if (res.ok) {
-                        var json = await res.json();
-                        if (json && json.success && json.user) {
-                            var avUrl = json.user.avatar_url;
-                            if (!avUrl && json.user.avatar) {
-                                var ext = json.user.avatar.startsWith('a_') ? 'gif' : 'png';
-                                avUrl = 'https://cdn.discordapp.com/avatars/' + uploaderId + '/' + json.user.avatar + '.' + ext + '?size=128';
-                            }
-                            if (avUrl) {
-                                discordAvatarCache[uploaderId] = avUrl;
-                            }
-                            var liveName = json.user.display_name || json.user.global_name || json.user.username;
-                            if (liveName) {
-                                document.querySelectorAll('.sp-uploader-name[data-uploader-id="' + uploaderId + '"]').forEach(function(el) {
-                                    el.textContent = liveName;
-                                });
-                            }
-                            if (avUrl) return avUrl;
-                        }
-                    }
-                } catch(e) {}
-            }
-            
-            if (fallbackHashOrUrl && fallbackHashOrUrl.startsWith('http')) {
-                if (uploaderId) discordAvatarCache[uploaderId] = fallbackHashOrUrl;
-                return fallbackHashOrUrl;
-            }
-            if (fallbackHashOrUrl) {
-                var ext = fallbackHashOrUrl.startsWith('a_') ? 'gif' : 'png';
-                var url = 'https://cdn.discordapp.com/avatars/' + (uploaderId || '0') + '/' + fallbackHashOrUrl + '.' + ext + '?size=128';
-                if (uploaderId) discordAvatarCache[uploaderId] = url;
-                return url;
-            }
-            let defIdx = 0;
-            if (uploaderId && /^\d+$/.test(uploaderId)) {
-                try { defIdx = Number((BigInt(uploaderId) >> 22n) % 6n); } catch(e) { defIdx = parseInt(uploaderId) % 5 || 0; }
-            }
-            return 'https://cdn.discordapp.com/embed/avatars/' + defIdx + '.png';
-        }
-
-        function loadUploaderAvatars() {
-            document.querySelectorAll('img[data-uploader-id]').forEach(async function(img) {
-                var uid = img.getAttribute('data-uploader-id');
-                var fb = img.getAttribute('data-fallback') || '';
-                if (uid) {
-                    var url = await fetchUploaderDiscordAvatar(uid, fb);
-                    if (url) img.src = url;
-                }
-            });
-        }
-
-        function updateStats(items) {
-            document.getElementById('statTotal').textContent = items.length;
-            var creators = {};
-            items.forEach(function(p){
-                var c = p.creator_nickname || p.author_name;
-                if (c) creators[c] = 1;
-            });
-            document.getElementById('statCreators').textContent = Object.keys(creators).length;
-            var dl = items.reduce(function(s, x){ return s + (x.downloads || 0); }, 0);
-            document.getElementById('statDL').textContent = dl >= 1000 ? (dl / 1000).toFixed(1) + 'k' : dl;
-        }
-
-        function switchSPCategory(cat) {
-            currentCategory = cat;
-            currentViewMode = 'packs';
-
-            document.querySelectorAll('#mainViewTabs button').forEach(function(btn) {
-                btn.classList.toggle('active', btn.getAttribute('data-tab') === cat);
-            });
-
-            var hubSec = document.getElementById('hubSection');
-            var packsSec = document.getElementById('allPacksSection');
-            if (hubSec) hubSec.style.display = 'none';
-            if (packsSec) packsSec.style.display = 'block';
-
-            applyFilters();
-        }
-
-        function applyFilters() {
-            var searchInp = document.getElementById('spSearch');
-            var query = searchInp ? searchInp.value.toLowerCase().trim() : '';
-
-            var filtered = allSP.filter(function(p) {
-                var prod = typeof findProductionForScenepack === 'function' ? findProductionForScenepack(p) : null;
-                var rawCat = (p.category || '').toLowerCase().trim();
-                var pType = prod ? (prod.type || '').toLowerCase() : '';
-
-                if (currentCategory === 'series') {
-                    if (rawCat !== 'series' && pType !== 'series') return false;
-                } else if (currentCategory === 'movie') {
-                    if (rawCat !== 'movie' && pType !== 'movie') return false;
-                } else if (currentCategory === 'games') {
-                    if (rawCat !== 'games' && rawCat !== 'game' && pType !== 'game') return false;
-                } else if (currentCategory === 'anime') {
-                    if (rawCat !== 'anime' && pType !== 'anime') return false;
-                }
-
-                if (query) {
-                    var originTitle = (p.origin || (prod ? prod.title : '')).toLowerCase();
-                    var matchText = [p.name, p.creator_nickname, p.author_name, p.creator_username, p.description, p.desc, originTitle].join(' ').toLowerCase();
-                    if (matchText.indexOf(query) === -1) return false;
-                }
-
-                return true;
-            });
-
-            renderSP(filtered);
-        }
-
-        function renderSP(items) {
-            var grid = document.getElementById('spGrid');
-            if (!items || items.length === 0) {
-                grid.innerHTML = '<div class="sp-empty"><i class="fas fa-magnifying-glass"></i><p>No scenepacks found in this category or search.</p></div>';
-                return;
-            }
-
-            grid.innerHTML = items.map(function(p) {
-                var prod = typeof findProductionForScenepack === 'function' ? findProductionForScenepack(p) : null;
-                var imageSrc = (p.thumbnail && p.thumbnail !== 'assets/content.png' && p.thumbnail !== '/assets/content.png') ? p.thumbnail : (prod ? prod.poster : 'assets/content.png');
-                var idString = String(p.id);
-
-                var discordIdMatch = (p.creator_avatar || p.uploader_avatar || '').match(/\/avatars\/(\d{17,20})\//);
-                var extractedDiscordId = discordIdMatch ? discordIdMatch[1] : '';
-
-                var uploaderName = (p.uploader_name || p.creator_nickname || p.author_name || 'Zyrex Member').trim();
-                var uploaderId = (p.uploader_id || extractedDiscordId || p.author_id || '').trim();
-                var uploaderAv = (p.uploader_avatar || p.creator_avatar || p.author_avatar || '').trim();
-
-                var avHtml = '<img class="sp-uploader-avatar" data-uploader-id="' + uploaderId + '" data-fallback="' + uploaderAv + '" src="https://cdn.discordapp.com/embed/avatars/0.png" alt="">';
-                var nameHtml = '<span class="sp-uploader-name" data-uploader-id="' + uploaderId + '">' + escapeHtml(uploaderName) + '</span>';
-
-                var rawCat = (p.category || (prod && prod.category) || 'scenepack').toLowerCase();
-                var catLabel = 'Scenepack';
-                var catIcon = 'fa-clapperboard';
-
-                if (rawCat === 'games' || rawCat === 'game' || (prod && prod.type === 'Game')) {
-                    catLabel = 'Game'; catIcon = 'fa-gamepad';
-                } else if (rawCat === 'movie' || (prod && prod.type === 'Movie')) {
-                    catLabel = 'Movie'; catIcon = 'fa-film';
-                } else if (rawCat === 'series' || (prod && prod.type === 'Series')) {
-                    catLabel = 'Series'; catIcon = 'fa-tv';
-                } else if (rawCat === 'anime' || (prod && prod.type === 'Anime')) {
-                    catLabel = 'Anime'; catIcon = 'fa-fire';
-                }
-
-                var originTitle = (p.origin || '').trim() || (prod ? prod.title : '');
-                var originHtml = originTitle ? '<div class="sp-origin-pill">' + escapeHtml(originTitle) + '</div>' : '';
-
-                var ratingVal = (p.rating || p.imdb_rating || (prod ? prod.rating : '') || '').toString().trim().replace(/\/10$/, '');
-                var isG = (rawCat === 'games' || rawCat === 'game' || (prod && prod.category === 'game'));
-                var badgeClass = isG ? 'sp-badge-imdb sp-badge-game' : 'sp-badge-imdb';
-                var badgeIcon = isG ? 'fas fa-gamepad' : 'fab fa-imdb';
-                var ratingHtml = ratingVal ? '<div class="' + badgeClass + '"><i class="' + badgeIcon + '"></i> ' + escapeHtml(ratingVal) + '</div>' : '';
-
-                return '<a class="sp-card" href="/product-scenepack?id=' + idString + '">' +
-                    '<div class="sp-thumb-wrap">' +
-                        '<img src="' + imageSrc + '" alt="" onerror="this.src=\'assets/content.png\'">' +
-                        '<div class="sp-badge-top-left"><i class="fas ' + catIcon + '"></i> ' + catLabel + '</div>' +
-                        ratingHtml +
-                    '</div>' +
-                    '<div class="sp-card-content">' +
-                        '<div>' +
-                            originHtml +
-                            '<h3 class="sp-card-name">' + escapeHtml(p.name) + '</h3>' +
-                        '</div>' +
-                        '<div class="sp-card-footer">' +
-                            '<div class="sp-uploader-info">' +
-                                avHtml +
-                                nameHtml +
-                            '</div>' +
-                            '<span class="sp-dl-pill"><i class="fas fa-download" style="color:var(--cherry-light)"></i> ' + (p.downloads || 0) + '</span>' +
-                        '</div>' +
-                    '</div>' +
-                '</a>';
-            }).join('');
-
-            loadUploaderAvatars();
-        }
-
-        function switchSPView(mode) {
-            if (mode === 'hub') {
-                currentViewMode = 'hub';
-                document.querySelectorAll('#mainViewTabs button').forEach(function(btn) {
-                    btn.classList.toggle('active', btn.getAttribute('data-tab') === 'hub');
-                });
-                var hubSec = document.getElementById('hubSection');
-                var packsSec = document.getElementById('allPacksSection');
-                if (packsSec) packsSec.style.display = 'none';
-                if (hubSec) hubSec.style.display = 'block';
-                closeProductionView();
-                renderHubGrid();
-            } else {
-                switchSPCategory('all');
-            }
-        }
-
-        function filterHubCategory(subCat) {
-            currentHubCategory = subCat;
-            document.querySelectorAll('.hub-pill').forEach(function(btn) {
-                var txt = btn.textContent.toLowerCase();
-                if (subCat === 'all' && txt.includes('all')) btn.classList.add('active');
-                else if (subCat === 'movies_series' && txt.includes('tv')) btn.classList.add('active');
-                else if (subCat === 'games' && txt.includes('game')) btn.classList.add('active');
-                else if (subCat === 'anime' && txt.includes('anime')) btn.classList.add('active');
-                else btn.classList.remove('active');
-            });
-            renderHubGrid();
-        }
-
-        function renderHubGrid() {
-            var grid = document.getElementById('hubGrid');
-            if (!grid) return;
-
-            var allKnown = (typeof getAllProductions === 'function') ? getAllProductions() : [];
-            var prodMap = {};
-
-            allKnown.forEach(function(pr) {
-                prodMap[pr.id] = Object.assign({}, pr);
-            });
-
-            allSP.forEach(function(p) {
-                var match = (typeof findProductionForScenepack === 'function') ? findProductionForScenepack(p) : null;
-                if (match && !prodMap[match.id]) {
-                    prodMap[match.id] = match;
-                }
-            });
-
-            var activeList = [];
-            for (var k in prodMap) {
-                var pr = prodMap[k];
-                var matchingPacks = allSP.filter(function(p) {
-                    var match = (typeof findProductionForScenepack === 'function') ? findProductionForScenepack(p) : null;
-                    return match && (match.id === pr.id || slugifyText(match.title) === pr.id);
-                });
-
-                if (matchingPacks.length > 0) {
-                    var isGame = (pr.type === 'Game' || pr.category === 'game');
-                    var isMovie = (pr.type === 'Movie' || pr.category === 'movie');
-                    var isSeries = (pr.type === 'Series' || pr.category === 'series');
-                    var isAnime = (pr.type === 'Anime' || pr.category === 'anime');
-
-                    if (currentHubCategory === 'movies_series' && !isMovie && !isSeries) continue;
-                    if (currentHubCategory === 'games' && !isGame) continue;
-                    if (currentHubCategory === 'anime' && !isAnime) continue;
-
-                    activeList.push({
-                        prod: pr,
-                        packs: matchingPacks
-                    });
-                }
-            }
-
-            var hubQuery = (window._hubSearchQuery || '').toLowerCase().trim();
-            if (hubQuery) {
-                activeList = activeList.filter(function(item) {
-                    var p = item.prod;
-                    var text = [p.title, p.genres, p.directors, p.cast, p.year].join(' ').toLowerCase();
-                    return text.indexOf(hubQuery) !== -1;
-                });
-            }
-
-            if (activeList.length === 0) {
-                grid.innerHTML = '<div class="sp-empty"><i class="fas fa-cubes"></i><p>No titles found in this category or search.</p></div>';
-                return;
-            }
-
-            grid.innerHTML = activeList.map(function(item) {
-                var pr = item.prod;
-                var matchingCount = item.packs.length;
-                var firstThumb = item.packs.find(function(p){ return p.thumbnail && p.thumbnail !== 'assets/content.png' && p.thumbnail !== '/assets/content.png'; });
-                var posterImg = (firstThumb && firstThumb.thumbnail) ? firstThumb.thumbnail : (pr.poster || '/assets/content.png');
-                var isGame = (pr.type === 'Game' || pr.category === 'game');
-                var badgeStyle = isGame ? 'background:#7c3aed;color:#fff' : 'background:rgba(0,0,0,0.85);color:#f5c518;border:1px solid rgba(245,197,24,0.5)';
-                var badgeIcon = isGame ? 'fas fa-gamepad' : 'fab fa-imdb';
-                var ratingVal = (pr.rating || '').toString().trim().replace(/\/10$/, '');
-                var badgeMarkup = ratingVal ? ('<div class="prod-imdb-badge" style="' + badgeStyle + '"><i class="' + badgeIcon + '"></i> ' + escapeHtml(ratingVal) + '</div>') : '';
-
-                return '<div class="prod-card" onclick="openProductionView(\'' + pr.id + '\')">' +
-                    '<div class="prod-poster-box">' +
-                        '<img src="' + posterImg + '" alt="' + escapeHtml(pr.title) + '" class="prod-poster-img" onerror="this.src=\'assets/content.png\'">' +
-                        badgeMarkup +
-                        '<div class="prod-count-pill">' + matchingCount + ' pack' + (matchingCount !== 1 ? 's' : '') + '</div>' +
-                    '</div>' +
-                    '<div class="prod-body">' +
-                        '<h4 class="prod-title">' + escapeHtml(pr.title) + '</h4>' +
-                        '<p class="prod-sub">' + escapeHtml(pr.year || '') + (pr.type ? ' · ' + escapeHtml(pr.type) : '') + '</p>' +
-                    '</div>' +
-                '</div>';
-            }).join('');
-        }
-
-        window.filterHubTitles = function(query) {
-            window._hubSearchQuery = query;
-            renderHubGrid();
-        };
-
-        function openProductionView(prodId) {
-            var pr = (typeof getProductionById === 'function') ? getProductionById(prodId, allSP) : null;
-            if (!pr) return;
-
-            currentActiveProd = pr;
-            var isGame = (pr.type === 'Game' || pr.category === 'game');
-
-            var hubGridBox = document.getElementById('hubGridContainer');
-            if (hubGridBox) hubGridBox.style.display = 'none';
-
-            var container = document.getElementById('productionShowcaseContainer');
-            if (!container) return;
-            container.style.display = 'block';
-
-            var matchingPacks = allSP.filter(function(p){
-                var match = (typeof findProductionForScenepack === 'function') ? findProductionForScenepack(p) : null;
-                return match && (match.id === pr.id || slugifyText(match.title) === pr.id);
-            });
-
-            var totalDL = matchingPacks.reduce(function(acc, x){ return acc + (x.downloads || 0); }, 0);
-            var firstThumb = matchingPacks.find(function(p){ return p.thumbnail && p.thumbnail !== 'assets/content.png' && p.thumbnail !== '/assets/content.png'; });
-            var posterSrc = (firstThumb && firstThumb.thumbnail) ? firstThumb.thumbnail : (pr.poster || '/assets/content.png');
-
-            var backBtnHtml = '<button class="showcase-back-btn" onclick="closeProductionView()"><i class="fas fa-arrow-left"></i> Back to All Titles</button>';
-
-            var ratingClean = (pr.rating || '').toString().trim().replace(/\/10$/, '');
-            var badgeHtml = '';
-            if (ratingClean) {
-                badgeHtml = isGame
-                    ? '<span class="badge-imdb" style="background:#7c3aed;color:#fff"><i class="fas fa-gamepad"></i> ' + escapeHtml(ratingClean) + '/10</span>'
-                    : '<span class="badge-imdb"><i class="fab fa-imdb"></i> ' + escapeHtml(ratingClean) + '/10</span>';
-            }
-
-            var metaParts = [];
-            if (pr.year) metaParts.push(escapeHtml(pr.year));
-            if (isGame) {
-                if (pr.directors) metaParts.push('Developer: ' + escapeHtml(pr.directors));
-                if (pr.genres) metaParts.push(escapeHtml(pr.genres));
-                else metaParts.push('Video Game');
-            } else {
-                if (pr.directors) metaParts.push('Directed by ' + escapeHtml(pr.directors));
-                if (pr.genres) metaParts.push(escapeHtml(pr.genres));
-                else if (pr.type) metaParts.push(escapeHtml(pr.type));
-            }
-            var metaDesc = metaParts.join(' · ');
-
-            var metaBadges = [];
-            if (pr.runtime) metaBadges.push('<span><i class="far fa-clock"></i> ' + escapeHtml(pr.runtime) + '</span>');
-            if (pr.votes) metaBadges.push('<span><i class="fas fa-users"></i> ' + escapeHtml(pr.votes) + ' votes</span>');
-            if (pr.metacritic) metaBadges.push('<span><i class="fas fa-chart-line" style="color:#10b981"></i> Metacritic ' + escapeHtml(pr.metacritic) + '</span>');
-            if (pr.platforms) metaBadges.push('<span><i class="fas fa-desktop"></i> ' + escapeHtml(pr.platforms) + '</span>');
-            if (pr.awards && pr.awards !== 'N/A') metaBadges.push('<span><i class="fas fa-trophy" style="color:#f59e0b"></i> ' + escapeHtml(pr.awards) + '</span>');
-            var metaBadgesHtml = metaBadges.length > 0 ? ('<div style="display:flex;flex-wrap:wrap;gap:12px;font-size:0.8rem;color:var(--text-muted);margin:8px 0 10px 0">' + metaBadges.join('') + '</div>') : '';
-
-            var plotHtml = pr.plot ? ('<p style="font-size:0.88rem;color:#d4d4d8;line-height:1.55;margin:8px 0 14px 0;max-width:800px;">' + escapeHtml(pr.plot) + '</p>') : '';
-
-            container.innerHTML = `
-                ${backBtnHtml}
-                <div class="showcase-container">
-                    <div class="showcase-top">
-                        <div class="showcase-poster">
-                            <img src="${posterSrc}" alt="${escapeHtml(pr.title)}" onerror="this.src='assets/content.png'">
-                        </div>
-                        <div class="showcase-info">
-                            <h1>${escapeHtml(pr.title)}</h1>
-                            <div class="showcase-meta">${metaDesc}</div>
-                            ${metaBadgesHtml}
-                            <div class="showcase-stats-strip">
-                                <span><strong>${matchingPacks.length}</strong> scenepacks</span>
-                                <span>·</span>
-                                <span><strong>${totalDL.toLocaleString()}</strong> downloads</span>
-                                <div style="margin-left:auto; display:flex; gap:8px;">
-                                    ${badgeHtml}
-                                </div>
-                            </div>
-                            ${plotHtml}
-                            ${pr.cast ? `<div style="font-size:0.82rem; color:var(--text-muted); margin-bottom:16px;"><strong>Cast:</strong> ${escapeHtml(pr.cast)}</div>` : ''}
-                            
-                            <div class="sp-search-box" style="max-width:100%; margin-top:14px;">
-                                <i class="fas fa-search"></i>
-                                <input type="text" placeholder="Filter packs in ${escapeHtml(pr.title)}..." oninput="filterShowcaseTable(this.value)">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="showcase-table-wrap" id="showcaseTableBody">
-                        ${renderShowcaseRows(matchingPacks)}
-                    </div>
-                </div>
-            `;
-            window.scrollTo({ top: 260, behavior: 'smooth' });
-        }
-
-        function renderShowcaseRows(packs) {
-            if (!packs || packs.length === 0) {
-                return '<div style="padding: 30px; text-align: center; color: var(--text-muted);"><i class="fas fa-film" style="font-size: 1.5rem; margin-bottom: 8px; display:block"></i>No scenepacks found for this title.</div>';
-            }
-            return packs.map(function(p) {
-                var creator = p.creator_nickname || p.author_name || 'Zyrex Creator';
-                var size = p.file_size || p.size || (p.quality ? (p.quality + ' Clip') : 'HD Pack');
-                var downloads = (p.downloads || 0).toLocaleString();
-
-                return '<div class="showcase-table-row">' +
-                    '<div>' +
-                        '<a href="/product-scenepack?id=' + p.id + '" class="showcase-row-title">' + escapeHtml(p.name) + '</a>' +
-                        '<div style="font-size:0.75rem; color:var(--text-muted); margin-top:2px;"><i class="fas fa-user-pen" style="color:var(--cherry-light)"></i> ' + escapeHtml(creator) + '</div>' +
-                    '</div>' +
-                    '<div style="font-size:0.82rem; color:var(--text-muted);">' + escapeHtml(size) + '</div>' +
-                    '<div style="font-size:0.82rem; color:var(--text-muted); font-family:\'Outfit\', monospace;">' + downloads + ' dls</div>' +
-                    '<div style="text-align:right;">' +
-                        '<a href="/product-scenepack?id=' + p.id + '" class="btn-table-dl"><i class="fas fa-download"></i> Get</a>' +
-                    '</div>' +
-                '</div>';
-            }).join('');
-        }
-
-        function filterShowcaseTable(query) {
-            if (!currentActiveProd) return;
-            var q = (query || '').toLowerCase().trim();
-            var packs = allSP.filter(function(p){
-                var match = (typeof findProductionForScenepack === 'function') ? findProductionForScenepack(p) : null;
-                return match && (match.id === currentActiveProd.id || slugifyText(match.title) === currentActiveProd.id);
-            });
-            if (q) {
-                packs = packs.filter(function(p){
-                    var txt = [p.name, p.creator_nickname, p.author_name, p.description].join(' ').toLowerCase();
-                    return txt.indexOf(q) !== -1;
-                });
-            }
-            document.getElementById('showcaseTableBody').innerHTML = renderShowcaseRows(packs);
-        }
-
-        function closeProductionView() {
-            currentActiveProd = null;
-            var prodShowcase = document.getElementById('productionShowcaseContainer');
-            var hubGrid = document.getElementById('hubGridContainer');
-
-            if (prodShowcase) prodShowcase.style.display = 'none';
-            if (hubGrid) hubGrid.style.display = 'block';
-        }
-
-        // Fetch Creator Index & Scenepacks
-        fetch('/api/search/creator-index').then(function(r){ return r.json(); }).then(function(d){
-            if (d && d.success && d.index) creatorIndex = d.index;
-        }).catch(function(){});
-
-        (async function(){
-            try {
-                var r = await fetch('/api/products?type=scenepack');
-                var data = await r.json();
-                if (Array.isArray(data) && data.length) {
-                    try {
-                        var editedKey = 'zyrex_edited_products';
-                        var editedMap = JSON.parse(localStorage.getItem(editedKey) || '{}');
-                        data = data.map(function(p){
-                            return editedMap[p.id] ? Object.assign({}, p, editedMap[p.id]) : p;
-                        });
-                    } catch(e) {}
-
-                    allSP = data;
-                    updateStats(data);
-                    applyFilters();
-
-                    var urlParams = new URLSearchParams(window.location.search);
-                    var catParam = urlParams.get('category');
-                    var prodParam = urlParams.get('production') || urlParams.get('game');
-                    var hubParam = urlParams.get('hub');
-
-                    if (prodParam) {
-                        switchSPView('hub');
-                        openProductionView(prodParam);
-                    } else if (hubParam) {
-                        switchSPView('hub');
-                    } else if (catParam) {
-                        switchSPCategory(catParam);
-                    }
-                } else {
-                    document.getElementById('spGrid').innerHTML = '<div class="sp-empty"><i class="fas fa-film"></i><p>No scenepacks yet. Check back soon!</p></div>';
-                }
-            } catch(e) {
-                console.error("Scenepack fetch error:", e);
-            }
-        })();
-
-        document.addEventListener('input', function(e) {
-            if (e.target.id === 'spSearch') {
-                applyFilters();
-            }
-        });
-    </script>
+    <script src="js/auth.js?v=19"></script>
+    <script src="js/script.js?v=92"></script>
+    <script src="/js/safe-dom.js?v=2"></script>
+    <script src="/js/scenepacks-common.js?v=7"></script>
+    <script src="/js/scenepack.js?v=12"></script>
+    <script src="/js/page-motion.js?v=6"></script>
 </body>
+
 </html>

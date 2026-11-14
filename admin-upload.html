@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -7,14 +7,14 @@
     <title>Zyrex | Admin — Add Plugin</title>
     <link rel="icon" type="image/png" href="/assets/content.png">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,800,900&amp;display=swap">
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         :root {
-            --cherry-light: #ff2b52;
-            --glass-bg: rgba(14,10,18,0.82);
-            --glass-border: rgba(255,255,255,0.12);
-            --text-muted: rgba(255,255,255,0.5);
+            --cherry-light: var(--zr-accent, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1));
+            --glass-bg: rgba(14, 10, 18, 0.82);
+            --glass-border: rgba(255, 255, 255, 0.12);
+            --text-muted: rgba(255, 255, 255, 0.5);
             --ok: #34d399;
             --warn: #fbbf24;
             --danger: #f87171;
@@ -22,7 +22,7 @@
         body {
             background: #070209;
             color: #f8f5f6;
-            font-family: 'Inter', sans-serif;
+            font-family: 'Satoshi', sans-serif;
             min-height: 100vh;
             padding-top: 80px;
         }
@@ -32,9 +32,9 @@
             inset: 0;
             z-index: -1;
             background:
-                radial-gradient(circle at 15% 0%, rgba(255,43,82,0.16) 0%, transparent 40%),
-                radial-gradient(circle at 85% 20%, rgba(120,0,40,0.1) 0%, transparent 35%),
-                radial-gradient(circle at 50% 100%, rgba(60,0,20,0.08) 0%, transparent 50%);
+                radial-gradient(circle at 15% 0%, rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.16) 0%, transparent 40%),
+                radial-gradient(circle at 85% 20%, rgba(var(--zr-rgb-120-0-40, 120, 0, 40),0.1) 0%, transparent 35%),
+                radial-gradient(circle at 50% 100%, rgba(60, 0, 20, 0.08) 0%, transparent 50%);
         }
 
         /* ── TOPBAR ── */
@@ -42,16 +42,16 @@
             position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
             display: flex; align-items: center; justify-content: space-between;
             padding: 0 clamp(18px, 4vw, 48px); height: 68px;
-            background: rgba(7,2,9,0.88);
+            background: rgba(7, 2, 9, 0.88);
             backdrop-filter: blur(28px) saturate(200%);
-            border-bottom: 1px solid rgba(255,255,255,0.08);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
         }
-        .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: #fff; font-family: 'Outfit', sans-serif; font-weight: 800; }
+        .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: #fff; font-family: 'Satoshi', sans-serif; font-weight: 800; }
         .brand img { height: 32px; }
-        .brand-badge { font-size: 0.58rem; font-weight: 800; background: linear-gradient(135deg, #ff2b52, #c8002a); color: #fff; padding: 3px 9px; border-radius: 999px; letter-spacing: 1.2px; text-transform: uppercase; }
+        .brand-badge { font-size: 0.58rem; font-weight: 800; background: linear-gradient(135deg, var(--zr-accent, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1)), rgba(var(--zr-rgb-200-0-42, 200, 0, 42), 1)); color: #fff; padding: 3px 9px; border-radius: 999px; letter-spacing: 1.2px; text-transform: uppercase; }
         .top-nav { display: flex; align-items: center; gap: 10px; }
-        .top-nav a { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border: 1px solid rgba(255,255,255,0.12); border-radius: 999px; background: rgba(255,255,255,0.06); color: rgba(255,255,255,0.8); text-decoration: none; font-size: 0.8rem; font-weight: 600; transition: all 0.2s ease; }
-        .top-nav a:hover { background: rgba(255,255,255,0.12); }
+        .top-nav a { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 999px; background: rgba(255, 255, 255, 0.06); color: rgba(255, 255, 255, 0.8); text-decoration: none; font-size: 0.8rem; font-weight: 600; transition: all 0.2s ease; }
+        .top-nav a:hover { background: rgba(255, 255, 255, 0.12); }
 
         /* ── SHELL ── */
         .shell { width: min(960px, calc(100% - 40px)); margin: 40px auto 90px; display: flex; flex-direction: column; gap: 20px; }
@@ -63,13 +63,13 @@
             border-radius: 28px;
             padding: 36px 40px;
             backdrop-filter: blur(32px) saturate(210%);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.12);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.12);
         }
 
         /* ── HERO HEADER ── */
-        .panel-hero { display: flex; align-items: center; gap: 18px; margin-bottom: 30px; padding-bottom: 24px; border-bottom: 1px solid rgba(255,255,255,0.07); }
+        .panel-hero { display: flex; align-items: center; gap: 18px; margin-bottom: 30px; padding-bottom: 24px; border-bottom: 1px solid rgba(255, 255, 255, 0.07); }
         .panel-icon { width: 54px; height: 54px; border-radius: 17px; display: flex; align-items: center; justify-content: center; font-size: 1.35rem; flex-shrink: 0; }
-        .panel-hero h2 { font-family: 'Outfit', sans-serif; font-size: 1.4rem; font-weight: 900; color: #fff; letter-spacing: -0.3px; margin-bottom: 4px; }
+        .panel-hero h2 { font-family: 'Satoshi', sans-serif; font-size: 1.4rem; font-weight: 900; color: #fff; letter-spacing: -0.3px; margin-bottom: 4px; }
         .panel-hero p { font-size: 0.83rem; color: var(--text-muted); }
 
         /* ── FORM ── */
@@ -87,17 +87,17 @@
         .form-group input, .form-group select, .form-group textarea {
             width: 100%;
             padding: 13px 16px;
-            border: 1px solid rgba(255,255,255,0.1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 14px;
-            background: rgba(0,0,0,0.4);
+            background: rgba(0, 0, 0, 0.4);
             color: #fff;
             font: 500 0.85rem 'Inter', sans-serif;
             outline: none;
             transition: all 0.2s ease;
         }
         .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
-            border-color: rgba(255,43,82,0.45);
-            box-shadow: 0 0 0 3px rgba(255,43,82,0.1);
+            border-color: rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.45);
+            box-shadow: 0 0 0 3px rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.1);
         }
         .form-group textarea { min-height: 90px; resize: vertical; }
         .form-group select { appearance: none; cursor: pointer; }
@@ -116,15 +116,15 @@
             color: var(--danger);
         }
         .alert.show { display: block; }
-        .alert.alert-success { border-color: rgba(52,211,153,0.3); background: rgba(52,211,153,0.1); color: var(--ok); }
+        .alert.alert-success { border-color: rgba(52, 211, 153, 0.3); background: rgba(52, 211, 153, 0.1); color: var(--ok); }
 
         /* ── PREVIEW CARD ── */
         .preview-card {
-            border: 1px solid rgba(255,255,255,0.08);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 18px;
             padding: 22px 24px;
             margin-top: 24px;
-            background: rgba(0,0,0,0.25);
+            background: rgba(0, 0, 0, 0.25);
         }
         .preview-card h4 {
             font-size: 0.7rem;
@@ -140,8 +140,8 @@
 
         /* ── CODE OUTPUT ── */
         .code-output {
-            background: rgba(0,0,0,0.6);
-            border: 1px solid rgba(255,255,255,0.08);
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 16px;
             padding: 20px 22px;
             margin-top: 20px;
@@ -157,14 +157,14 @@
         .code-output.show { display: block; }
 
         /* ── BUTTONS ── */
-        .btn-row { display: flex; gap: 10px; margin-top: 28px; padding-top: 22px; border-top: 1px solid rgba(255,255,255,0.07); flex-wrap: wrap; }
+        .btn-row { display: flex; gap: 10px; margin-top: 28px; padding-top: 22px; border-top: 1px solid rgba(255, 255, 255, 0.07); flex-wrap: wrap; }
         .btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 22px; border-radius: 999px; font: 700 0.84rem 'Inter', sans-serif; cursor: pointer; border: none; text-decoration: none; transition: all 0.3s cubic-bezier(0.16,1,0.3,1); }
-        .btn-primary { background: linear-gradient(135deg, #ff2b52, #c8002a); color: #fff; box-shadow: 0 8px 20px rgba(255,43,82,0.35); }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(255,43,82,0.5); }
-        .btn-secondary { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.8); border: 1px solid rgba(255,255,255,0.13); }
-        .btn-secondary:hover { background: rgba(255,255,255,0.13); }
-        .btn-success { background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; box-shadow: 0 8px 20px rgba(34,197,94,0.3); }
-        .btn-success:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(34,197,94,0.45); }
+        .btn-primary { background: linear-gradient(135deg, var(--zr-accent, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1)), rgba(var(--zr-rgb-200-0-42, 200, 0, 42), 1)); color: #fff; box-shadow: 0 8px 20px rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.35); }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.5); }
+        .btn-secondary { background: rgba(255, 255, 255, 0.07); color: rgba(255, 255, 255, 0.8); border: 1px solid rgba(255, 255, 255, 0.13); }
+        .btn-secondary:hover { background: rgba(255, 255, 255, 0.13); }
+        .btn-success { background: linear-gradient(135deg, #22c55e, #16a34a); color: #fff; box-shadow: 0 8px 20px rgba(34, 197, 94, 0.3); }
+        .btn-success:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(34, 197, 94, 0.45); }
 
         @media (max-width: 640px) {
             .form-row { grid-template-columns: 1fr; }
@@ -173,8 +173,17 @@
             .btn { justify-content: center; }
         }
     </style>
+    <link rel="stylesheet" href="/css/glass.css?v=67">
+    <link rel="stylesheet" href="/css/atmosphere.css?v=7">
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.fontshare.com">
+    <link rel="stylesheet" href="/css/i18n.css?v=3">
+    <script src="/js/i18n.js?v=15" defer></script>
 </head>
 <body>
+    <div class="zr-sweep" aria-hidden="true"></div>
+    <div class="lq-veil" aria-hidden="true"></div>
     <header class="topbar">
         <a class="brand" href="/">
             <img src="/assets/content.png" alt="Zyrex">
@@ -190,12 +199,12 @@
     <main class="shell">
         <div class="panel">
             <div class="panel-hero">
-                <div class="panel-icon" style="background:linear-gradient(135deg,rgba(99,102,241,0.25),rgba(60,60,200,0.12));color:#818cf8;box-shadow:0 8px 20px rgba(99,102,241,0.2)">
+                <div class="panel-icon" style="background:linear-gradient(135deg,rgba(99, 102, 241, 0.25),rgba(60, 60, 200, 0.12));color:#818cf8;box-shadow:0 8px 20px rgba(99, 102, 241, 0.2)">
                     <i class="fas fa-puzzle-piece"></i>
                 </div>
                 <div>
                     <h2>Add Plugin / Software</h2>
-                    <p>Generate a new entry for <code style="background:rgba(255,255,255,0.07);padding:2px 7px;border-radius:6px;font-size:0.8rem">plugins-data.js</code> or publish dynamically. Fill the form to get started.</p>
+                    <p>Generate a new entry for <code style="background:rgba(255, 255, 255, 0.07);padding:2px 7px;border-radius:6px;font-size:0.8rem">plugins-data.js</code> or publish dynamically. Fill the form to get started.</p>
                 </div>
             </div>
 
@@ -259,7 +268,7 @@
             <!-- PREVIEW -->
             <div class="preview-card" id="previewCard">
                 <h4><i class="fas fa-eye" style="color:var(--cherry-light)"></i> Live Preview</h4>
-                <div id="previewContent" style="font-family:Consolas,monospace;font-size:0.79rem;color:rgba(255,255,255,0.5);line-height:1.7"></div>
+                <div id="previewContent" style="font-family:Consolas,monospace;font-size:0.79rem;color:rgba(255, 255, 255, 0.5);line-height:1.7"></div>
             </div>
 
             <!-- CODE OUTPUT -->
@@ -275,7 +284,7 @@
         </div>
     </main>
 
-    <script src="js/auth.js?v=13"></script>
+    <script src="js/auth.js?v=19"></script>
     <script>
         // Auth check — admin only
         document.addEventListener('DOMContentLoaded', async () => {
@@ -284,7 +293,7 @@
                 if (!resp.ok) { redirectToLogin(); return; }
                 const user = await resp.json();
                 if (!user.is_admin) {
-                    document.body.innerHTML = `<div style="text-align:center;padding:150px 20px;color:rgba(255,255,255,0.5)"><i class="fas fa-lock" style="font-size:4rem;color:#ff2b52;opacity:.3;display:block;margin-bottom:20px"></i><h2 style="font-family:Outfit,sans-serif;color:#fff">Access Denied</h2><p style="margin-top:10px">Admin only.</p><a href="/" style="color:#ff2b52;margin-top:20px;display:inline-block">Go Home</a></div>`;
+                    document.body.innerHTML = `<div style="text-align:center;padding:150px 20px;color:rgba(255, 255, 255, 0.5)"><i class="fas fa-lock" style="font-size:4rem;color:var(--zr-accent, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1));opacity:.3;display:block;margin-bottom:20px"></i><h2 style="font-family:'Satoshi', sans-serif;color:#fff">Access Denied</h2><p style="margin-top:10px">Admin only.</p><a href="/" style="color:var(--zr-accent, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1));margin-top:20px;display:inline-block">Go Home</a></div>`;
                 }
             } catch(e) { redirectToLogin(); }
         });
@@ -390,7 +399,7 @@
                 links: [{ url: u, label: l }], type: 'plugin'
             };
 
-            showAlert('<i class="fas fa-shield-halved fa-spin" style="color:#ff2b52;margin-right:6px"></i> Scanning download link with VirusTotal & publishing...', false);
+            showAlert('<i class="fas fa-shield-halved fa-spin" style="color:var(--zr-accent, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1));margin-right:6px"></i> Scanning download link with VirusTotal & publishing...', false);
             try {
                 const resp = await fetch('/api/products/submit', {
                     method: 'POST',
@@ -425,5 +434,6 @@
 
         updatePreview();
     </script>
+    <script src="/js/page-motion.js?v=6"></script>
 </body>
 </html>

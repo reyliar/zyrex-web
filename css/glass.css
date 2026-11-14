@@ -1,0 +1,2014 @@
+/* ==========================================================================
+   Zyrex — sitewide liquid-glass layer
+   Loaded last on every page. Legal pages (css/legal.css) opt out via
+   html body:not(.legal-page) guards so their own tuned glass stays intact.
+   ========================================================================== */
+
+:root,
+html[data-zyrex-theme] {
+    --lq-accent: var(--zr-accent-soft, rgba(var(--zr-rgb-255-77-109, 255, 77, 109), 1));
+    --lq-fill: linear-gradient(152deg, rgba(255, 255, 255, .10) 0%, rgba(255, 255, 255, .032) 46%, rgba(255, 255, 255, .068) 100%);
+    --lq-fill-soft: linear-gradient(152deg, rgba(255, 255, 255, .07) 0%, rgba(255, 255, 255, .022) 50%, rgba(255, 255, 255, .05) 100%);
+    --lq-edge: rgba(255, 255, 255, .16);
+    --lq-edge-soft: rgba(255, 255, 255, .11);
+    --lq-highlight: inset 0 1px 0 rgba(255, 255, 255, .26);
+    --lq-shadow: 0 18px 42px rgba(0, 0, 0, .42);
+    --lq-blur: blur(14px) saturate(160%);
+    --lq-blur-heavy: blur(20px) saturate(170%);
+    --lq-grid: rgba(255, 255, 255, .016);
+    --lq-radius: 22px;
+
+    /* Pull the shared theme tokens into translucent territory so palette
+       driven components inherit glass instead of flat surfaces. The theme
+       script writes these inline on <html>, so the overrides are important. */
+    --glass-bg: rgba(255, 255, 255, .055) !important;
+    --glass-border: rgba(255, 255, 255, .14) !important;
+    --glass-blur: 24px !important;
+    --glass-shadow: 0 22px 55px rgba(0, 0, 0, .40) !important;
+    --site-surface: rgba(255, 255, 255, .055) !important;
+    --site-surface-2: rgba(255, 255, 255, .085) !important;
+    --site-border: rgba(255, 255, 255, .14) !important;
+    --site-input: rgba(255, 255, 255, .065) !important;
+}
+
+/* --------------------------------------------------------------------------
+   1. Scene — theme driven sheet with drifting elliptical light
+   -------------------------------------------------------------------------- */
+html body:not(.legal-page) {
+    background-color: var(--site-bg, #060409) !important;
+    background-image:
+        radial-gradient(ellipse 130% 72% at 50% -14%, var(--site-bg-glow, rgba(var(--zr-rgb-122-16-40, 122, 16, 40), .52)) 0%, transparent 70%),
+        linear-gradient(180deg, var(--site-bg, #080510) 0%, var(--site-bg, #04030a) 100%) !important;
+    background-repeat: no-repeat !important;
+}
+
+/* Ambient light: two broad washes anchored outside the viewport. Isolated
+   circular blobs read as smudges behind the glass, so the light only ever
+   enters as an edge-to-edge gradient. */
+html body:not(.legal-page)::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background:
+        radial-gradient(150% 100% at 50% -34%, var(--site-bg-glow, rgba(var(--zr-rgb-122-16-40, 122, 16, 40), .42)), transparent 80%),
+        radial-gradient(130% 90% at 50% 132%, var(--site-bg-glow, rgba(72, 20, 62, .20)), transparent 72%);
+}
+
+/* Faint elliptical grid veil, matching the legal pages. */
+html body:not(.legal-page):not(.pf-social-page) > .lq-veil {
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+    background-image:
+        linear-gradient(var(--lq-grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--lq-grid) 1px, transparent 1px);
+    background-size: 72px 72px;
+    mask-image: radial-gradient(ellipse 88% 58% at 50% 0%, #000 8%, transparent 74%);
+    -webkit-mask-image: radial-gradient(ellipse 88% 58% at 50% 0%, #000 8%, transparent 74%);
+}
+
+/* Feed and permalink pages keep their ambient wash in the scrolling document
+   layer, avoiding fixed-layer tearing during long post scrolls. */
+html body.pf-social-page { position:relative; width:100%; max-width:none; margin:0; background-attachment:scroll !important; }
+html body.pf-social-page::before {
+    position:absolute !important;
+    inset:0 0 auto !important;
+    height:100%;
+    min-height:100vh;
+}
+
+/* --------------------------------------------------------------------------
+   2. Large glass surfaces — panels, cards, decks, sheets
+   -------------------------------------------------------------------------- */
+/* Avoid backdrop-filter repaint artifacts when hovering controls inside the
+   fixed notification panel (especially over scrolling feed/post content). */
+html body:not(.legal-page) .global-notif-panel {
+    background: rgba(12, 8, 16, .97) !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+}
+html body:not(.legal-page) .global-notif-panel .notif-header-act-btn,
+html body:not(.legal-page) .global-notif-panel .notif-header-act-btn:hover {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    transform: none !important;
+    transition: color .18s ease, background-color .18s ease, border-color .18s ease, box-shadow .18s ease !important;
+}
+html body:not(.legal-page) :is(
+    .card, .card-box, .panel, .panel-box, .glass-box, .glass-card, .glass-card-enhanced,
+    .glass-panel, .about-general-info, .about-intro-card, .about-unified-card,
+    .access-card, .activity-card, .audio-hero-card, .audio-player-deck, .audio-preview-panel,
+    .audio-spec-box, .bm-card, .bm-hero-modern, .bm-hero-stat-card, .bm-state-card,
+    .cat-card, .cat-spotlight, .contact-community-aside, .contact-cta,
+    .danger-box, .dash-header, .dash-sidebar, .desc-block, .diag-card,
+    .diag-note, .dl-card, .drawer-inner, .duo-card, .fd-card, .file-preview-panel,
+    .free-notice-card, .info-banner, .legal-card-body, .live-card, .lock-card,
+    .login-modal-card, .lookup-preview-panel, .member-card, .modal-box, .modal-content,
+    .modal-quota-card, .mod-info-audit-card, .mod-info-card, .mod-stat-card,
+    .mod-voice-status-card, .model-card, .more-resource-card, .mv-clean-card, .notes-callout,
+    .notice, .pf-card, .pf-composer, .pf-feed-shell, .pf-hero, .pf-link-card, .pf-notice,
+    .pf-post-detail, .pf-post-pinned, .pf-post-quoted, .pf-social-thread, .pf-state,
+    .pillar-box, .presence-box, .preset-action-deck, .preset-comments-deck, .preset-details-deck,
+    .preset-source-card, .preset-stage-card, .preview-card, .profile-card, .profile-header-banner,
+    .pw-box, .rc, .req-card, .req-detail-section, .req-hero, .req-info-panel, .req-price-block,
+    .req-stage-card, .req-stat-card, .req-submitter-card, .res-card, .resource-card,
+    .review-summary, .sc, .scanner-modal, .settings-card-panel, .settings-profile-header,
+    .social-modal-card, .software-header-card, .sp-table-container, .stat-box, .stats-card,
+    .st-hero, .st-incidents, .st-list, .studio-header, .studio-sidebar, .team-card, .tel-card,
+    .theme-card, .transfer-progress-box, .uploader-card, .uploader-row, .user-profile,
+    .verification-card, .wiz-manual-section, .wiz-platform-card, .wiz-product-card,
+    .zyrex-access-dialog, .zyrex-ad-container, .zyrex-ad-unit, .zyrex-rw-card,
+    .file-browser, .explorer-container, .notif-item, .tree-node, .matrix-cell,
+    .ban-reason-callout, .quota-alert-box, .dup-warning-box, .media-protect-box,
+    .adblock-warning-notice, .legal-alert-box, .reply-box-inline, .req-detail-section,
+    .cookie-banner, .turnstile-box-clean, .console-container, .code-output, .diag-code,
+    .discord-code-block, .notif-code-block, .info-banner, .wiz-manual-section,
+    /* Scenepack catalogue: the browse rails, title table and staff upload form
+       are the same glass as every other page's cards. */
+    .sp-table, .sp-step, .sp-sideblock, .sp-note, .sp-empty-rail, .sp-suggest-list,
+    .sp-imdb-result, .sp-picked, .sp-version, .sp-dropzone, .sp-table-search,
+    .sp-group-head, .sp-table-empty
+) {
+    background: var(--lq-fill) !important;
+    border-color: var(--lq-edge) !important;
+    border-radius: var(--lq-radius);
+    backdrop-filter: var(--lq-blur);
+    -webkit-backdrop-filter: var(--lq-blur);
+    box-shadow: var(--lq-highlight), var(--lq-shadow);
+}
+
+/* Scenepack pill controls (search field, filter button, ghost buttons) keep
+   their capsule shape, so they take the glass fill without the card radius. */
+html body:not(.legal-page) :is(.sp-search-field, .sp-icon-btn, .sp-btn-ghost) {
+    background: var(--lq-fill-soft) !important;
+    border-color: var(--lq-edge) !important;
+    box-shadow: var(--lq-highlight);
+}
+
+html body:not(.legal-page) :is(.sp-search-field, .sp-icon-btn, .sp-btn-ghost):hover {
+    background: var(--lq-fill) !important;
+}
+
+/* Poster tiles and thumbnails stay image-first: only the frame is glass. */
+html body:not(.legal-page) :is(.sp-tile, .sp-cat-thumb, .sp-title-poster) {
+    border-color: var(--lq-edge) !important;
+    box-shadow: var(--lq-highlight), var(--lq-shadow);
+}
+
+html body:not(.legal-page) .sp-tile:hover {
+    border-color: rgba(255, 255, 255, .34) !important;
+    box-shadow: var(--lq-highlight), 0 22px 48px rgba(0, 0, 0, .5);
+}
+
+html[data-zyrex-theme="light"] body:not(.legal-page) .sp-tile:hover {
+    border-color: rgba(15, 20, 40, .3) !important;
+    box-shadow: var(--lq-highlight), 0 20px 40px rgba(30, 40, 70, .18);
+}
+
+/* With the field hairline gone, a bright theme needs a solid fill and a soft
+   inner shadow so a text box still reads as an editable surface. */
+html[data-zyrex-theme="light"] body:not(.legal-page) :is(
+    input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]):not([type="submit"]):not([type="button"]),
+    textarea:not(.comment-textarea),
+    select
+) {
+    background: var(--site-input, rgba(255, 255, 255, .95)) !important;
+    box-shadow: inset 0 1px 2px rgba(30, 40, 70, .07), inset 0 1px 0 rgba(255, 255, 255, .9) !important;
+}
+
+/* Floating pill navigation */
+html body:not(.legal-page) .navbar .container {
+    background:
+        radial-gradient(ellipse 60% 120% at 20% -30%, rgba(255, 255, 255, .18), transparent 62%),
+        linear-gradient(150deg, rgba(255, 255, 255, .10), rgba(255, 255, 255, .035)) !important;
+    border: 1px solid var(--lq-edge) !important;
+    border-radius: 999px !important;
+    backdrop-filter: var(--lq-blur-heavy) !important;
+    -webkit-backdrop-filter: var(--lq-blur-heavy) !important;
+    box-shadow: var(--lq-highlight), 0 18px 44px rgba(0, 0, 0, .42) !important;
+}
+
+/* Legal documents keep their own reading sheet, but the navigation capsule is
+   global: it must look identical to the rest of the site. */
+html body.legal-page .navbar .container {
+    background:
+        radial-gradient(ellipse 60% 120% at 20% -30%, rgba(var(--lp-white-rgb, 255, 255, 255), .18), transparent 62%),
+        linear-gradient(150deg, rgba(var(--lp-white-rgb, 255, 255, 255), .10), rgba(var(--lp-white-rgb, 255, 255, 255), .035)) !important;
+    border: 1px solid var(--lq-edge) !important;
+    border-radius: 999px !important;
+    backdrop-filter: var(--lq-blur-heavy) !important;
+    -webkit-backdrop-filter: var(--lq-blur-heavy) !important;
+    box-shadow: var(--lq-highlight), 0 18px 44px rgba(0, 0, 0, .42) !important;
+}
+
+html[data-zyrex-theme="light"] body.legal-page .navbar .container {
+    background:
+        radial-gradient(ellipse 60% 120% at 20% -30%, rgba(255, 255, 255, .95), transparent 62%),
+        linear-gradient(150deg, rgba(255, 255, 255, .92), rgba(240, 243, 248, .82)) !important;
+    border-color: rgba(15, 20, 40, .12) !important;
+    box-shadow: 0 14px 30px rgba(35, 52, 76, .14), inset 0 1px 0 rgba(255, 255, 255, .9) !important;
+}
+
+html body:not(.legal-page) :is(.auth-dropdown, .dropdown-menu, .auth-menu-head, .popover-item, .mobile-trigger, .nav-links) {
+    background:
+        linear-gradient(152deg, rgba(255, 255, 255, .10), rgba(255, 255, 255, .04)) !important;
+    border-color: var(--lq-edge) !important;
+    backdrop-filter: var(--lq-blur-heavy);
+    -webkit-backdrop-filter: var(--lq-blur-heavy);
+    box-shadow: var(--lq-highlight), 0 24px 60px rgba(0, 0, 0, .5);
+}
+
+/* Footers sit on the glass sheet rather than a flat block. */
+html body:not(.legal-page) .footer {
+    /* The fill has to start at zero alpha: anything visible at the panel's top
+       edge paints a hard band where the page background ends. */
+    background:
+        radial-gradient(ellipse 70% 150% at 50% 0%, rgba(var(--zr-rgb-255-77-109, 255, 77, 109), 0) 0%, rgba(var(--zr-rgb-255-77-109, 255, 77, 109), .12) 28%, transparent 64%),
+        linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, .035) 12%, rgba(255, 255, 255, .012) 100%) !important;
+    border-top: 1px solid var(--lq-edge-soft) !important;
+}
+
+/* The copyright strip is part of the footer, not a card of its own: the light
+   theme's white surface turned it into a slab with a visible box edge around
+   the row. It inherits the footer surface instead. */
+html[data-zyrex-theme="light"] body .footer-bottom {
+    background: none !important;
+    background-color: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+}
+
+/* Hero search / stats strips */
+html body:not(.legal-page) :is(.hero-search-form, .bm-search-bar, .search-wrap, .uploader-search-box, .wiz-search-wrap, .detail-search) {
+    background: var(--lq-fill-soft) !important;
+    border: 1px solid var(--lq-edge) !important;
+    border-radius: 999px !important;
+    backdrop-filter: var(--lq-blur);
+    -webkit-backdrop-filter: var(--lq-blur);
+    box-shadow: var(--lq-highlight), 0 14px 34px rgba(0, 0, 0, .32);
+}
+
+/* --------------------------------------------------------------------------
+   2b. Section backgrounds stay transparent
+   The body paints one page-wide gradient; any section with its own opaque
+   fill cuts a hard seam into it (visible as a black band starting at
+   "Meet the Team"). These sections only add light, never a flat colour.
+   -------------------------------------------------------------------------- */
+html body:not(.legal-page) :is(
+    .hero, .about-intro, .resources, .team, .contact, .mv-clean-section,
+    .section-padding, .brand-showcase
+) {
+    background-color: transparent !important;
+}
+
+html body:not(.legal-page) :is(.resources, .team, .contact, .about-intro, .mv-clean-section) {
+    background-image: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   3. Inputs — frosted fields
+   -------------------------------------------------------------------------- */
+html body:not(.legal-page) :is(
+    .form-input, .form-select, .form-textarea, .mod-input, .mod-select, .mod-textarea,
+    .comment-input-glass, .cmt-composer-field, .popover-search-input,
+    .req-search-input, .req-sort-select, .pl-password, .pf-feed-gif-search,
+    .social-input-wrap, .social-input-row
+),
+html body:not(.legal-page) input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]):not([type="submit"]):not([type="button"]),
+html body:not(.legal-page) textarea:not(.comment-textarea),
+html body:not(.legal-page) select {
+    background: rgba(255, 255, 255, .06) !important;
+    /* A field is its frosted fill plus the top highlight — never a hairline of
+       its own, which would read as a second box inside the field. */
+    border-color: transparent !important;
+    border-radius: 14px;
+    backdrop-filter: blur(16px) saturate(160%);
+    -webkit-backdrop-filter: blur(16px) saturate(160%);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .16);
+}
+
+/* Wrapper fields already paint their own pill; a second frosted box inside them
+   reads as a nested control, so the inner input stays flat. The :not() chain
+   mirrors the generic input rule so it wins on specificity, not just order. */
+html body:not(.legal-page) .catalog-toolbar .search-wrap,
+html body:not(.legal-page) .catalog-toolbar .search-wrap:focus-within {
+    background: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+html body:not(.legal-page) :is(
+    .search-wrap, .hero-search-form, .bm-search-bar, .uploader-search-box,
+    .wiz-search-wrap, .detail-search, .req-search, .pf-feed-search, .pv-search,
+    .sp-search-field, .sp-table-search
+) input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]):not([type="submit"]):not([type="button"]),
+html body:not(.legal-page) :is(
+    .search-wrap, .hero-search-form, .bm-search-bar, .uploader-search-box,
+    .wiz-search-wrap, .detail-search, .req-search, .pf-feed-search, .pv-search,
+    .sp-search-field, .sp-table-search
+) input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]):not([type="submit"]):not([type="button"]):focus {
+    background: transparent !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+}
+
+html body:not(.legal-page) :is(.form-input, .mod-input, .comment-input-glass, .cmt-composer-field):focus,
+html body:not(.legal-page) input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):focus,
+html body:not(.legal-page) textarea:focus,
+html body:not(.legal-page) select:focus {
+    border-color: transparent !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .2), 0 0 0 3px rgba(var(--zr-rgb-255-77-109, 255, 77, 109), .22) !important;
+}
+
+/* Every wrapper that paints a text field's shell (search bars, pill inputs,
+   inline editors) loses its hairline too, so the field reads as one frosted
+   surface from the outside inward. */
+html body:not(.legal-page) :is(
+    .sp-search-field, .sp-table-search, .sp-suggest-list,
+    .search-wrap, .hero-search-form, .bm-search-bar, .uploader-search-box,
+    .wiz-search-wrap, .detail-search, .req-search, .pf-feed-search, .pv-search,
+    .social-input-wrap, .social-input-row, .comment-input-glass, .cmt-composer-field
+) {
+    border-color: transparent !important;
+}
+
+html body:not(.legal-page) :is(
+    .sp-search-field, .sp-table-search,
+    .search-wrap, .hero-search-form, .bm-search-bar, .uploader-search-box,
+    .wiz-search-wrap, .detail-search, .req-search, .pf-feed-search, .pv-search
+):focus-within {
+    border-color: transparent !important;
+    box-shadow: 0 0 0 3px rgba(var(--zr-rgb-255-77-109, 255, 77, 109), .2) !important;
+}
+
+html body:not(.legal-page) :is(.audio-badge,.auth-admin-badge,.bm-badge,.bm-pill-badge,.brand-badge,.comments-badge,.diag-tag,.duration-chip,.eyebrow,.hero-badge,.hero-pill-badge,.hero-tag-pill,.mention-tag,.mod-chip,.mod-id-pill,.notice-badge,.notif-header-unread-pill,.req-hero-allowance-pill,.req-hero-badge,.req-pill-badge,.req-price-badge,.role-badge,.role-pill,.sp-genre-pill,.sp-pill,.stage-pill,.stats-badge,.st-pill,.subcat-pill,.tag-preset,.tag-project-file,.tag-setting-preset,.template-chip,.tier-label,.uploader-type-pill,.zyrex-rw-badge,.zyrex-rw-timer-badge,.pl-chip,.pf-tag,.ffx-effect-chip,.cat-chip,.mirror-pill,.mirror-link-pill,.discord-channel-pill,.notice-discord-pill,.notif-discord-channel-pill,.pf-feed-link-chip,.pf-feed-video-chip,.source-pill-dc,.action-pill-btn,.req-action-pill,.wiz-count-badge,.wiz-step-circle,.step-dot,.wiz-check-circle,.bm-tab-count,.cc-count,.pf-feed-page-btn,.pl-inline-btn,.notif-header-act-btn,.subcat-btn,.tab,.tab-btn,.bm-tab-btn,.mod-tab-btn,.details-tab-btn,.pf-tab,.pf-feed-tagfilter,.req-status-tabs,.select-all-btn,.icon-link-btn,.mini-action,.psc-action-btn ) {
+    background:linear-gradient(150deg,rgba(255,255,255,.12),rgba(255,255,255,.04)) !important;
+    border-color:var(--lq-edge-soft) !important;
+    border-radius:999px !important;
+    backdrop-filter:blur(18px) saturate(170%);
+    -webkit-backdrop-filter:blur(18px) saturate(170%);
+    box-shadow:var(--lq-highlight);
+}
+
+html body:not(.legal-page) :is(.tab, .tab-btn, .bm-tab-btn, .mod-tab-btn, .details-tab-btn, .pf-tab, .subcat-btn, .pf-feed-tagfilter, .req-status-tabs) {
+    border-radius: 999px !important;
+}
+
+html body:not(.legal-page) :is(.tab.active, .tab-btn.active, .bm-tab-btn.active, .mod-tab-btn.active,
+    .details-tab-btn.active, .pf-tab.active, .subcat-btn.active, .category-tab.active,
+    .sort-btn.active, .filter-btn.active) {
+    background: linear-gradient(140deg, rgba(var(--zr-rgb-255-77-109, 255, 77, 109), .5), rgba(var(--zr-rgb-184-20-50, 184, 20, 50), .32)) !important;
+    border-color: rgba(255, 255, 255, .26) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .38), 0 8px 22px rgba(var(--zr-rgb-255-77-109, 255, 77, 109), .28);
+}
+
+/* Buttons become pills and pick up a glass rim. */
+html body:not(.legal-page) :is(
+    .btn, .btn-primary, .btn-secondary, .btn-ghost, .btn-ghost-sm, .btn-home, .btn-discord,
+    .btn-discord-login, .btn-discord-req, .btn-primary-sm, .btn-liquid-glass, .btn-liquid-cherry,
+    .btn-primary-glow, .btn-card-action, .btn-card-unban, .btn-danger-outline, .btn-danger-solid,
+    .btn-scan, .btn-publish, .btn-tbl, .btn-info-action, .btn-admin-tracking, .btn-cherry-sm,
+    .btn-launch-download, .btn-submit-req, .btn-spotify-play, .btn-deck-play, .ap-btn, .os-btn,
+    .pf-btn, .pf-post-action, .pf-post-back, .dl-btn, .dl-main-btn, .dl-audio-btn,
+    .auth-login-btn, .login-discord-btn, .login-prompt-btn, .logout-btn, .hamburger,
+    .floating-hub-btn, .req-pill-btn, .req-status-btn, .req-detail-upvote-btn,
+    .req-product-link-btn, .sp-row-action-btn, .pl-inline-link, .wiz-page-btn, .wiz-btn-scan,
+    .social-lookup-btn, .social-scan-btn, .social-fetch-btn, .comment-btn-submit,
+    .credited-remove-btn, .modal-close, .modal-close-btn, .social-modal-close-btn,
+    .pf-media-modal-close, .wiz-close-btn, .zyrex-rw-close, .zyrex-rw-claim-btn,
+    .zyrex-rw-sponsor-btn, .zyrex-rw-mute-btn, .pw-copy-btn, .notif-footer-btn,
+    .lk-cmt-guest-btn, .lk-cmt-refresh, .st-refresh, .pf-feed-page-btn, .ov-btn-primary,
+    .ov-btn-ghost, .ov-btn-indigo, .pl-btn, .lp-btn, .notif-ios-btn
+) {
+    border-radius: 999px !important;
+    box-shadow: var(--lq-highlight);
+}
+
+/* --------------------------------------------------------------------------
+   5. Elliptical icon medallions
+   -------------------------------------------------------------------------- */
+html body:not(.legal-page) :is(.btn-ghost,.btn-ghost-sm,.btn-secondary,.pf-btn,.pf-post-action,.pf-post-back,.dl-btn,.pl-btn,.ov-btn-ghost,.icon-link-btn,.mini-action) {
+    background:linear-gradient(150deg,rgba(255,255,255,.13),rgba(255,255,255,.04)) !important;
+    border-color:var(--lq-edge) !important;
+    backdrop-filter:blur(18px) saturate(170%);
+    -webkit-backdrop-filter:blur(18px) saturate(170%);
+}
+
+html body:not(.legal-page) :is(
+    .access-card-icon, .activity-icon-wrapper, .about-intro-icon, .bm-hero-stat-icon,
+    .bm-state-icon-wrap, .danger-icon, .diag-icon, .hero-icon, .notif-empty-icon-wrap,
+    .notif-panel-pill-icon, .pane-hero-icon, .pf-ach-icon, .pf-event-icon, .pillar-icon,
+    .psc-icon-badge, .related-card-icon, .resource-icon, .social-modal-icon-badge,
+    .software-icon-box, .spotlight-icon, .stats-icon, .state-icon, .timeline-icon, .trust-icon,
+    .wiz-header-icon, .wiz-plat-icon, .zyrex-access-icon, .cc-icon, .mod-info-icon,
+    .cat-svg-icon, .discord-server-icon, .folder-icon, .lock-icon, .sp-cover-box
+) {
+    border-radius: 50% !important;
+    background:
+        radial-gradient(ellipse at 32% 14%, rgba(255, 255, 255, .34), transparent 60%),
+        linear-gradient(150deg, rgba(var(--zr-rgb-255-77-109, 255, 77, 109), .26), rgba(255, 255, 255, .06)) !important;
+    border: 1px solid rgba(255, 255, 255, .18) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .34), 0 8px 20px rgba(var(--zr-rgb-255-77-109, 255, 77, 109), .16);
+}
+
+/* --------------------------------------------------------------------------
+   6. Tables, dividers and misc chrome
+   -------------------------------------------------------------------------- */
+html body:not(.legal-page) :is(table, .table-wrap, .matrix, .uploader-table) {
+    border-radius: 18px;
+    border-color: var(--lq-edge-soft);
+}
+
+html body:not(.legal-page) :is(thead, .table-head) {
+    background: rgba(255, 255, 255, .05) !important;
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+}
+
+html body:not(.legal-page) .section-divider {
+    width: 132px;
+    height: 5px;
+    border-radius: 50%;
+    background: linear-gradient(90deg, transparent, rgba(var(--zr-rgb-255-77-109, 255, 77, 109), .75), transparent);
+    box-shadow: 0 0 22px rgba(var(--zr-rgb-255-77-109, 255, 77, 109), .5);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+html body:not(.legal-page) :is(.prog-bar-wrap, .prog-bar-fill, .progress-bar, .loader-bar-wrap,
+    .pf-bar-track, .pf-bar-fill, .pf-ach-bar, .zyrex-rw-progress-bar, .zyrex-rw-progress-wrap,
+    .sp-scrubber-track, .waveform-track, .waveform-fill, .req-stat-bar, .tpb-bar-bg, .tpb-bar-fill) {
+    border-radius: 999px !important;
+}
+
+html body:not(.legal-page) :is(.quota-pip, .presence-dot, .discord-presence-dot, .bm-pill-dot,
+    .zyrex-footer-status-dot, .scanning-dot, .hero-pill-dot) {
+    border-radius: 50% !important;
+}
+
+/* Section headers get a soft elliptical wash behind the title block. */
+html body:not(.legal-page) .section-header {
+    position: relative;
+}
+
+html body:not(.legal-page) .section-header::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 40%;
+    width: min(560px, 82%);
+    height: 210px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    background: radial-gradient(ellipse at 50% 50%, rgba(var(--zr-rgb-255-77-109, 255, 77, 109), .16), transparent 70%);
+    filter: blur(26px);
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* Keep the leak comments composer on one rounded glass layer. Nested blur and
+   the global rectangular textarea focus shadow can produce square repaint
+   artifacts when the pointer enters or the textarea receives focus. */
+html body:not(.legal-page) .preset-comments-deck .cmt-composer-field,
+html body:not(.legal-page) .preset-comments-deck .comment-input-glass {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    isolation: isolate;
+}
+
+html body:not(.legal-page) .preset-comments-deck textarea.comment-textarea,
+html body:not(.legal-page) .preset-comments-deck textarea.comment-textarea:focus,
+html body:not(.legal-page) .preset-comments-deck textarea.comment-textarea:focus-visible {
+    border: 0 !important;
+    border-radius: 0 !important;
+    outline: none !important;
+    box-shadow: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+}
+
+html body:not(.legal-page) .preset-comments-deck .cmt-composer-field:focus-within {
+    border-radius: 16px !important;
+    box-shadow: 0 0 0 3px rgba(var(--zr-rgb-255-43-82, 255, 43, 82), .12) !important;
+}
+
+/* --------------------------------------------------------------------------
+   9. Light theme token inversion
+   The palette script only writes colours; the glass layer keeps its own white
+   overlays, so a bright theme needs dark-tinted fills and edges to stay legible.
+   -------------------------------------------------------------------------- */
+html[data-zyrex-theme="light"] {
+    --lq-fill: linear-gradient(152deg, rgba(15, 20, 40, .055) 0%, rgba(15, 20, 40, .018) 46%, rgba(15, 20, 40, .04) 100%);
+    --lq-fill-soft: linear-gradient(152deg, rgba(15, 20, 40, .04) 0%, rgba(15, 20, 40, .014) 50%, rgba(15, 20, 40, .03) 100%);
+    --lq-edge: rgba(15, 20, 40, .16);
+    --lq-edge-soft: rgba(15, 20, 40, .10);
+    --lq-highlight: inset 0 1px 0 rgba(255, 255, 255, .8);
+    --lq-shadow: 0 18px 42px rgba(30, 40, 70, .14);
+    --lq-grid: rgba(15, 20, 40, .05);
+    --glass-bg: rgba(255, 255, 255, .92) !important;
+    --glass-border: rgba(15, 20, 40, .14) !important;
+    --site-surface: rgba(255, 255, 255, .92) !important;
+    --site-surface-2: rgba(240, 243, 248, .96) !important;
+    --site-border: rgba(15, 20, 40, .12) !important;
+    --site-input: rgba(255, 255, 255, .95) !important;
+}
+
+html[data-zyrex-theme="light"] body:not(.legal-page) .navbar .container {
+    background:
+        radial-gradient(ellipse 60% 120% at 20% -30%, rgba(255, 255, 255, .9), transparent 62%),
+        linear-gradient(150deg, rgba(255, 255, 255, .95), rgba(240, 243, 248, .9)) !important;
+    border-color: rgba(15, 20, 40, .12) !important;
+    box-shadow: 0 14px 30px rgba(35, 52, 76, .14), inset 0 1px 0 rgba(255, 255, 255, .9) !important;
+}
+
+/* --------------------------------------------------------------------------
+   10. Backdrop blur is reserved for the floating chrome
+   Blurring dozens of large in-page surfaces makes Chromium capture a partial
+   backdrop snapshot, which leaves a hard hairline seam across the page (the
+   "glitch" seen on wide screens) and costs a full-screen blur pass per layer.
+   Only the navigation capsule, dropdowns, dialogs and the notification panel
+   still blur what is behind them.
+   -------------------------------------------------------------------------- */
+html body *:not(.navbar):not(.navbar *):not(.auth-dropdown):not(.auth-dropdown *):not(.auth-menu-head):not(.global-notif-panel):not(.global-notif-panel *):not(.zyrex-access-dialog):not(.zyrex-access-dialog *):not(.mobile-trigger):not(.mobile-trigger *):not(.cookie-banner):not(.zr-lang):not(.zr-lang *):not(.modal-box):not(.modal-content):not(.modal-quota-card):not(.login-modal-card):not(.social-modal-card):not(.scanner-modal):not(.zyrex-access-modal):not(.zyrex-rw-modal):not(.pf-follow-modal-dialog):not(.pf-media-modal-dialog):not(.sp-sheet-card):not(.drawer-inner):not(.confirm-card):not(.popover-card):not(.mention-autocomplete-popup):not(.pf-hero-body):not(.pf-hero-strip) {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+}
+
+html[data-zyrex-theme="light"] body .hamburger {
+    background: rgba(15, 20, 40, .05) !important;
+    border-color: rgba(15, 20, 40, .14) !important;
+}
+
+html[data-zyrex-theme="light"] body .hamburger span {
+    background-color: var(--site-text, #0b0b12) !important;
+}
+
+html[data-zyrex-theme="light"] body .auth-btn,
+html[data-zyrex-theme="light"] body .auth-user {
+    color: var(--site-text) !important;
+}
+
+/* The active settings tab is the one pill that must stay solid: the shared
+   glass rule above paints every .tab with a translucent gradient, which reads
+   as a washed-out chip (and low contrast in the light theme). */
+html body .settings-tabs .tab.active {
+    background: var(--accent, var(--zr-accent, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1))) !important;
+    border-color: transparent !important;
+    color: #ffffff !important;
+    box-shadow: 0 10px 24px color-mix(in srgb, var(--accent, var(--zr-accent, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1))) 30%, transparent) !important;
+}
+
+/* Dark mode is monochrome: every red accent token resolves to a neutral
+   white/grey so reds never appear on the black surfaces. */
+html[data-zyrex-theme="dark"] {
+    --zr-rgb-120-0-40: 90, 90, 90; --zr-rgb-122-8-30: 90, 90, 90; --zr-rgb-122-10-30: 90, 90, 90; --zr-rgb-122-15-34: 90, 90, 90;
+    --zr-rgb-122-16-40: 90, 90, 90; --zr-rgb-130-0-45: 90, 90, 90; --zr-rgb-138-13-34: 90, 90, 90; --zr-rgb-138-14-46: 90, 90, 90;
+    --zr-rgb-138-21-48: 90, 90, 90; --zr-rgb-139-0-0: 90, 90, 90; --zr-rgb-139-0-40: 90, 90, 90; --zr-rgb-139-8-37: 90, 90, 90;
+    --zr-rgb-140-14-45: 90, 90, 90; --zr-rgb-142-21-48: 90, 90, 90; --zr-rgb-154-18-48: 165, 165, 165; --zr-rgb-156-26-28: 165, 165, 165;
+    --zr-rgb-158-15-53: 165, 165, 165; --zr-rgb-159-18-48: 165, 165, 165; --zr-rgb-160-20-60: 165, 165, 165; --zr-rgb-160-128-138: 165, 165, 165;
+    --zr-rgb-163-23-58: 165, 165, 165; --zr-rgb-164-13-60: 165, 165, 165; --zr-rgb-168-15-45: 165, 165, 165; --zr-rgb-168-18-40: 165, 165, 165;
+    --zr-rgb-168-18-56: 165, 165, 165; --zr-rgb-168-18-58: 165, 165, 165; --zr-rgb-168-23-55: 165, 165, 165; --zr-rgb-180-0-40: 165, 165, 165;
+    --zr-rgb-180-40-75: 165, 165, 165; --zr-rgb-184-13-39: 165, 165, 165; --zr-rgb-184-13-45: 165, 165, 165; --zr-rgb-184-20-50: 165, 165, 165;
+    --zr-rgb-185-30-70: 165, 165, 165; --zr-rgb-194-24-60: 165, 165, 165; --zr-rgb-196-16-53: 165, 165, 165; --zr-rgb-196-24-71: 165, 165, 165;
+    --zr-rgb-200-0-0: 235, 235, 235; --zr-rgb-200-0-42: 235, 235, 235; --zr-rgb-201-29-72: 235, 235, 235; --zr-rgb-212-20-58: 235, 235, 235;
+    --zr-rgb-213-27-61: 235, 235, 235; --zr-rgb-213-29-67: 235, 235, 235; --zr-rgb-217-31-73: 235, 235, 235; --zr-rgb-220-20-60: 235, 235, 235;
+    --zr-rgb-221-36-82: 235, 235, 235; --zr-rgb-224-0-50: 235, 235, 235; --zr-rgb-224-69-98: 235, 235, 235; --zr-rgb-225-29-72: 235, 235, 235;
+    --zr-rgb-225-48-108: 235, 235, 235; --zr-rgb-226-35-78: 235, 235, 235; --zr-rgb-230-21-54: 255, 255, 255; --zr-rgb-230-35-71: 255, 255, 255;
+    --zr-rgb-241-43-82: 255, 255, 255; --zr-rgb-242-82-110: 255, 255, 255; --zr-rgb-251-113-133: 255, 255, 255; --zr-rgb-255-0-0: 255, 255, 255;
+    --zr-rgb-255-0-80: 255, 255, 255; --zr-rgb-255-0-85: 255, 255, 255; --zr-rgb-255-35-65: 255, 255, 255; --zr-rgb-255-36-77: 255, 255, 255;
+    --zr-rgb-255-42-109: 255, 255, 255; --zr-rgb-255-43-82: 255, 255, 255; --zr-rgb-255-49-88: 255, 255, 255; --zr-rgb-255-51-85: 255, 255, 255;
+    --zr-rgb-255-51-102: 255, 255, 255; --zr-rgb-255-54-92: 255, 255, 255; --zr-rgb-255-56-92: 255, 255, 255; --zr-rgb-255-56-96: 255, 255, 255;
+    --zr-rgb-255-59-96: 255, 255, 255; --zr-rgb-255-65-85: 255, 255, 255; --zr-rgb-255-66-100: 255, 255, 255; --zr-rgb-255-69-106: 255, 255, 255;
+    --zr-rgb-255-70-90: 255, 255, 255; --zr-rgb-255-73-107: 255, 255, 255; --zr-rgb-255-77-109: 255, 255, 255; --zr-rgb-255-80-110: 255, 255, 255;
+    --zr-rgb-255-82-107: 255, 255, 255; --zr-rgb-255-82-119: 255, 255, 255; --zr-rgb-255-85-119: 255, 255, 255; --zr-rgb-255-85-128: 255, 255, 255;
+    --zr-rgb-255-90-90: 255, 255, 255; --zr-rgb-255-90-120: 255, 255, 255; --zr-rgb-255-91-122: 255, 255, 255; --zr-rgb-255-92-117: 255, 255, 255;
+    --zr-rgb-255-92-122: 255, 255, 255; --zr-rgb-255-92-124: 255, 255, 255; --zr-rgb-255-93-125: 255, 255, 255; --zr-rgb-255-96-118: 255, 255, 255;
+    --zr-rgb-255-101-132: 255, 255, 255; --zr-rgb-255-102-133: 255, 255, 255; --zr-rgb-255-107-107: 255, 255, 255; --zr-rgb-255-107-131: 255, 255, 255;
+    --zr-rgb-255-107-133: 255, 255, 255; --zr-rgb-255-107-135: 255, 255, 255; --zr-rgb-255-107-139: 255, 255, 255; --zr-rgb-255-110-140: 255, 255, 255;
+    --zr-rgb-255-111-140: 255, 255, 255; --zr-rgb-255-113-130: 255, 255, 255; --zr-rgb-255-113-136: 255, 255, 255; --zr-rgb-255-113-144: 255, 255, 255;
+    --zr-rgb-255-117-140: 255, 255, 255; --zr-rgb-255-117-143: 255, 255, 255; --zr-rgb-255-118-151: 255, 255, 255; --zr-rgb-255-120-140: 255, 255, 255;
+    --zr-rgb-255-120-150: 255, 255, 255; --zr-rgb-255-123-143: 255, 255, 255; --zr-rgb-255-128-128: 255, 255, 255; --zr-rgb-255-128-149: 255, 255, 255;
+    --zr-rgb-255-128-152: 255, 255, 255; --zr-rgb-255-130-145: 255, 255, 255; --zr-rgb-255-130-150: 255, 255, 255; --zr-rgb-255-131-151: 255, 255, 255;
+    --zr-rgb-255-133-157: 255, 255, 255; --zr-rgb-255-135-152: 255, 255, 255; --zr-rgb-255-154-176: 255, 255, 255; --zr-rgb-255-255-255: 255, 255, 255;
+}
+/* Light mode is blue: the same helper tokens resolve to navy so the reds
+   baked into page CSS never reach the white sheet. */
+html[data-zyrex-theme="light"] {
+    --zr-rgb-120-0-40: 16, 50, 110; --zr-rgb-122-8-30: 16, 50, 110; --zr-rgb-122-10-30: 16, 50, 110; --zr-rgb-122-15-34: 16, 50, 110;
+    --zr-rgb-122-16-40: 16, 50, 110; --zr-rgb-130-0-45: 16, 50, 110; --zr-rgb-138-13-34: 16, 50, 110; --zr-rgb-138-14-46: 16, 50, 110;
+    --zr-rgb-138-21-48: 16, 50, 110; --zr-rgb-139-0-0: 16, 50, 110; --zr-rgb-139-0-40: 16, 50, 110; --zr-rgb-139-8-37: 16, 50, 110;
+    --zr-rgb-140-14-45: 16, 50, 110; --zr-rgb-142-21-48: 16, 50, 110; --zr-rgb-154-18-48: 16, 50, 110; --zr-rgb-156-26-28: 16, 50, 110;
+    --zr-rgb-158-15-53: 16, 50, 110; --zr-rgb-159-18-48: 16, 50, 110; --zr-rgb-160-20-60: 16, 50, 110; --zr-rgb-160-128-138: 16, 50, 110;
+    --zr-rgb-163-23-58: 16, 50, 110; --zr-rgb-164-13-60: 16, 50, 110; --zr-rgb-168-15-45: 16, 50, 110; --zr-rgb-168-18-40: 16, 50, 110;
+    --zr-rgb-168-18-56: 16, 50, 110; --zr-rgb-168-18-58: 16, 50, 110; --zr-rgb-168-23-55: 16, 50, 110; --zr-rgb-180-0-40: 27, 79, 168;
+    --zr-rgb-180-40-75: 27, 79, 168; --zr-rgb-184-13-39: 27, 79, 168; --zr-rgb-184-13-45: 27, 79, 168; --zr-rgb-184-20-50: 27, 79, 168;
+    --zr-rgb-185-30-70: 27, 79, 168; --zr-rgb-194-24-60: 27, 79, 168; --zr-rgb-196-16-53: 27, 79, 168; --zr-rgb-196-24-71: 27, 79, 168;
+    --zr-rgb-200-0-0: 27, 79, 168; --zr-rgb-200-0-42: 27, 79, 168; --zr-rgb-201-29-72: 27, 79, 168; --zr-rgb-212-20-58: 27, 79, 168;
+    --zr-rgb-213-27-61: 27, 79, 168; --zr-rgb-213-29-67: 27, 79, 168; --zr-rgb-217-31-73: 27, 79, 168; --zr-rgb-220-20-60: 27, 79, 168;
+    --zr-rgb-221-36-82: 27, 79, 168; --zr-rgb-224-0-50: 27, 79, 168; --zr-rgb-224-69-98: 27, 79, 168; --zr-rgb-225-29-72: 27, 79, 168;
+    --zr-rgb-225-48-108: 27, 79, 168; --zr-rgb-226-35-78: 27, 79, 168; --zr-rgb-230-21-54: 27, 79, 168; --zr-rgb-230-35-71: 27, 79, 168;
+    --zr-rgb-241-43-82: 27, 79, 168; --zr-rgb-242-82-110: 27, 79, 168; --zr-rgb-251-113-133: 27, 79, 168; --zr-rgb-255-0-0: 27, 79, 168;
+    --zr-rgb-255-0-80: 27, 79, 168; --zr-rgb-255-0-85: 27, 79, 168; --zr-rgb-255-35-65: 27, 79, 168; --zr-rgb-255-36-77: 27, 79, 168;
+    --zr-rgb-255-42-109: 27, 79, 168; --zr-rgb-255-43-82: 27, 79, 168; --zr-rgb-255-49-88: 27, 79, 168; --zr-rgb-255-51-85: 27, 79, 168;
+    --zr-rgb-255-51-102: 27, 79, 168; --zr-rgb-255-54-92: 27, 79, 168; --zr-rgb-255-56-92: 27, 79, 168; --zr-rgb-255-56-96: 27, 79, 168;
+    --zr-rgb-255-59-96: 27, 79, 168; --zr-rgb-255-65-85: 27, 79, 168; --zr-rgb-255-66-100: 27, 79, 168; --zr-rgb-255-69-106: 27, 79, 168;
+    --zr-rgb-255-70-90: 27, 79, 168; --zr-rgb-255-73-107: 27, 79, 168; --zr-rgb-255-77-109: 27, 79, 168; --zr-rgb-255-80-110: 27, 79, 168;
+    --zr-rgb-255-82-107: 27, 79, 168; --zr-rgb-255-82-119: 27, 79, 168; --zr-rgb-255-85-119: 27, 79, 168; --zr-rgb-255-85-128: 27, 79, 168;
+    --zr-rgb-255-90-90: 27, 79, 168; --zr-rgb-255-90-120: 27, 79, 168; --zr-rgb-255-91-122: 27, 79, 168; --zr-rgb-255-92-117: 27, 79, 168;
+    --zr-rgb-255-92-122: 27, 79, 168; --zr-rgb-255-92-124: 27, 79, 168; --zr-rgb-255-93-125: 27, 79, 168; --zr-rgb-255-96-118: 27, 79, 168;
+    --zr-rgb-255-101-132: 27, 79, 168; --zr-rgb-255-102-133: 27, 79, 168; --zr-rgb-255-107-107: 27, 79, 168; --zr-rgb-255-107-131: 27, 79, 168;
+    --zr-rgb-255-107-133: 27, 79, 168; --zr-rgb-255-107-135: 27, 79, 168; --zr-rgb-255-107-139: 27, 79, 168; --zr-rgb-255-110-140: 27, 79, 168;
+    --zr-rgb-255-111-140: 27, 79, 168; --zr-rgb-255-113-130: 27, 79, 168; --zr-rgb-255-113-136: 27, 79, 168; --zr-rgb-255-113-144: 27, 79, 168;
+    --zr-rgb-255-117-140: 27, 79, 168; --zr-rgb-255-117-143: 27, 79, 168; --zr-rgb-255-118-151: 27, 79, 168; --zr-rgb-255-120-140: 27, 79, 168;
+    --zr-rgb-255-120-150: 27, 79, 168; --zr-rgb-255-123-143: 27, 79, 168; --zr-rgb-255-128-128: 27, 79, 168; --zr-rgb-255-128-149: 27, 79, 168;
+    --zr-rgb-255-128-152: 27, 79, 168; --zr-rgb-255-130-145: 27, 79, 168; --zr-rgb-255-130-150: 27, 79, 168; --zr-rgb-255-131-151: 27, 79, 168;
+    --zr-rgb-255-133-157: 27, 79, 168; --zr-rgb-255-135-152: 27, 79, 168; --zr-rgb-255-154-176: 27, 79, 168; --zr-rgb-255-255-255: 27, 79, 168;
+}
+
+
+/* --------------------------------------------------------------------------
+   11. Dark mode ink on light surfaces
+   Dark mode turns every accent into white, so anything that paints an accent
+   fill needs dark ink to stay readable.
+   -------------------------------------------------------------------------- */
+html[data-zyrex-theme="dark"] body :is(
+    .btn.primary, .btn-primary, .btn-action-primary, .btn-primary-sm, .ov-btn-primary,
+    .btn-discord, .btn-cookie-primary, .zyrex-access-primary,
+    .access-button:not(.secondary), .dl-main-btn, .btn-launch-download, .dl-audio-btn,
+    .settings-tabs .tab.active, .profile-edit, .subcat-btn.active, .tab.active,
+    .pf-tab.active, .bm-tab-btn.active, .mod-tab-btn.active, .details-tab-btn.active,
+    .req-action-pill, .action-pill-btn,
+    .btn-liquid-cherry, .btn-submit-req, .social-scan-btn, .social-lookup-btn,
+    .social-fetch-btn, .wiz-btn-scan, .comment-btn-submit, .pl-download,
+    .btn-spotify-play, .vf-btn.primary, .diag-button, .pf-social-reply-form button[type="submit"]
+) {
+    color: #0a0a0a !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+
+html[data-zyrex-theme="dark"] body :is(
+    .btn.primary, .btn-primary, .btn-action-primary, .btn-primary-sm, .ov-btn-primary,
+    .btn-discord, .zyrex-access-primary, .access-button:not(.secondary), .dl-main-btn,
+    .btn-liquid-cherry, .btn-submit-req, .social-scan-btn, .social-lookup-btn,
+    .social-fetch-btn, .wiz-btn-scan, .comment-btn-submit, .pl-download,
+    .btn-spotify-play, .vf-btn.primary, .diag-button, .pf-social-reply-form button[type="submit"]
+) :is(i, svg, span, strong) {
+    color: inherit !important;
+}
+
+/* Accent fills outside that list: unread counters, accent-filled hover states
+   and inline highlight marks. Without this they render white-on-white. */
+html[data-zyrex-theme="dark"] body :is(
+    .notif-bubble-badge, .notif-header-unread-pill,
+    .resource-desc mark, .software-desc mark, .audio-desc mark, .scene-desc-body mark,
+    .nav-links a:hover, .nav-links a.active, .hero-tag-pill:hover,
+    .settings-nav-item:hover, .settings-nav-item.active, .tb-v button:hover, .tb-v button.active,
+    .notif-header-act-btn:hover, .notif-ios-btn.mark-read:hover,
+    .notif-discord-channel-pill.forum:hover, .notif-footer-btn:hover,
+    .mention-tag:hover, .zyrex-rw-close:hover, .zyrex-rw-sponsor-btn:hover
+) {
+    color: #0a0a0a !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+/* The glass pill rule above keeps this one translucent, so it needs its own
+   solid fill to match the counter on the bell. */
+html[data-zyrex-theme="dark"] body .notif-header-unread-pill {
+    background: #ffffff !important;
+    box-shadow: 0 2px 10px rgba(255, 255, 255, .35) !important;
+}
+
+/* The logo lockup is an accent gradient; keep it white on black. */
+html[data-zyrex-theme="dark"] body .navbar .logo-text {
+    background: linear-gradient(90deg, #ffffff, #d6d6d6, #ffffff) !important;
+    background-size: 200% 100% !important;
+    -webkit-background-clip: text !important;
+    background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+}
+
+/* --------------------------------------------------------------------------
+   12. Light mode ink
+   Light mode is the inverted theme, so body copy, headings and muted labels
+   all render in a blue-navy ink instead of near-black.
+   -------------------------------------------------------------------------- */
+html[data-zyrex-theme="light"] body :is(h1, h2, h3, h4, h5, h6, .hero-title, .section-title, .page-title, strong, b):not(.zdc-drawer *) {
+    color: var(--site-text, #122a52);
+    -webkit-text-fill-color: currentColor;
+}
+
+html[data-zyrex-theme="light"] body :is(p, small, label, li, dd, dt, .hint, .muted, .text-muted, .row-sub, .stat small):not(.zdc-drawer *) {
+    color: var(--site-muted, #46618f);
+    -webkit-text-fill-color: currentColor;
+}
+
+/* The Discord thread drawer stays a dark sheet in every theme, so the light
+   ink pass must not reach inside it. */
+html[data-zyrex-theme="light"] body .zdc-drawer :is(h1, h2, h3, h4, h5, h6, strong, b) {
+    color: #f8f7fb !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+html[data-zyrex-theme="light"] body .zdc-drawer :is(p, small, span, .zdc-thread-meta) {
+    color: rgba(232, 230, 240, .82) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+html[data-zyrex-theme="light"] body .zdc-drawer .zdc-header-title { color: #ffffff !important; }
+
+/* Audio header meta row. */
+html[data-zyrex-theme="light"] body .sp-header-meta :is(span, strong, small) {
+    color: var(--site-muted, #46618f) !important;
+}
+
+html[data-zyrex-theme="light"] body:not(.legal-page) a:not(.btn):not(.nav-link):not(.auth-menu-link):not(.btn-liquid-cherry):not(.btn-liquid-glass):not(.zset-btn):not(.sp-player-title):not(.err-home):not(.lk-cmt-guest-btn):not(.pf-btn):not(.btn-cookie-link):not(.staff-btn) {
+    color: var(--primary-light, #1b4fa8);
+}
+
+/* Light mode keeps accent fills: those surfaces still need white labels even
+   though every other piece of text switched to blue ink. */
+html[data-zyrex-theme="light"] body :is(
+    .btn.primary, .btn-primary, .btn-action-primary, .btn-primary-sm, .ov-btn-primary,
+    .btn-discord, .btn-cookie-primary, .zyrex-access-primary,
+    .access-button:not(.secondary), .dl-main-btn, .btn-launch-download, .dl-audio-btn,
+    .profile-edit, .settings-tabs .tab.active, .subcat-btn.active, .tab.active,
+    .pf-tab.active, .bm-tab-btn.active, .mod-tab-btn.active, .details-tab-btn.active,
+    .req-action-pill, .action-pill-btn
+) {
+    color: #ffffff !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+/* Brand marks are red PNGs; in the monochrome theme they render white so no
+   red survives anywhere on the page. Content thumbnails are untouched. */
+html[data-zyrex-theme="dark"] body :is(
+    img.logo-img, img[alt="ZYREX"], img[alt="Zyrex"], img[alt="Zyrex Logo"],
+    .loader-logo-img, .brand-logo img, .footer-brand img
+) {
+    /* !important because several pages set an inline red drop-shadow filter
+       on the same mark. */
+    filter: grayscale(1) brightness(0) invert(1) !important;
+}
+
+/* --------------------------------------------------------------------------
+   13. Light-mode contrast pass
+   These page-level components were authored white-on-dark. In the light theme
+   they inherit a white canvas, so their ink and their decorative glows have to
+   be re-pointed at the blue ink ladder instead of staying white/red.
+   -------------------------------------------------------------------------- */
+html[data-zyrex-theme="light"] body :is(
+    .hero-brand-title, .hero-sub-clean, .brand, .num, .stat-num, .req-stat-num,
+    .sp-num-text, .sp-uploader-name, .notice-text, .cc-desc, .os-btn,
+    .spotlight-cta, .req-price-val
+) {
+    color: var(--site-text, #122a52) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-zyrex-theme="light"] body :is(
+    .stat-label, .cc-count, .spotlight-eyebrow, .notice-badge, .sp-pill, .req-pill-badge
+) {
+    color: var(--site-muted, #46618f) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-zyrex-theme="light"] body .hero-headline-massive .cherry-text {
+    background: linear-gradient(135deg, #133a80 0%, #133a80 60%, #0d2a5c 100%);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    text-shadow: none !important;
+}
+
+html[data-zyrex-theme="light"] body .hero-brand-sub { color: #133a80 !important; }
+
+/* Decorative lighting: red halos read as smudges on a white sheet, so they
+   become faint blue washes with no red left in them. */
+html[data-zyrex-theme="light"] body .section-header::after,
+html[data-zyrex-theme="light"] body .brand-showcase::after {
+    background: radial-gradient(rgba(27, 79, 168, .12), transparent 70%) !important;
+    opacity: .7 !important;
+}
+
+html[data-zyrex-theme="light"] body .team-card::before {
+    background: linear-gradient(90deg, rgba(27, 79, 168, 0), rgba(27, 79, 168, .10)) !important;
+    opacity: .5 !important;
+}
+
+html[data-zyrex-theme="light"] body .team-card::after {
+    background: linear-gradient(105deg, transparent 40%, rgba(27, 79, 168, .08) 48%, transparent 56%) !important;
+}
+
+/* Semantic chips keep their colour but at a readable depth on white. */
+html[data-zyrex-theme="light"] body .discord-server-presence {
+    color: #047857 !important;
+    border-color: rgba(4, 120, 87, .25) !important;
+    background: rgba(16, 185, 129, .10) !important;
+}
+
+html[data-zyrex-theme="light"] body .req-pill-btn { color: var(--site-muted, #46618f) !important; }
+
+html[data-zyrex-theme="light"] body .req-pill-btn.active,
+html[data-zyrex-theme="light"] body .pf-feed-tab.is-active {
+    background: var(--accent, #1b4fa8) !important;
+    border-color: transparent !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-zyrex-theme="light"] body :is(.req-price-label, .req-price-val) { color: #0f7a53 !important; }
+
+html[data-zyrex-theme="light"] body .req-status-pill.status-pending { color: #b45309 !important; }
+html[data-zyrex-theme="light"] body .req-status-pill.status-completed { color: #047857 !important; }
+html[data-zyrex-theme="light"] body .req-status-pill.status-rejected { color: #b91c1c !important; }
+
+/* Hero wash: the red radial light behind the masthead is invisible on black but
+   turns into a pink smear on white, so light mode swaps it for a cool wash. */
+html[data-zyrex-theme="light"] body .hero-helix {
+    background: radial-gradient(circle at 50% 22%, rgba(37, 84, 168, .13) 0%, rgba(245, 247, 252, .0) 48%, transparent 74%) !important;
+}
+
+/* Audio library header + rows keep a dark sheet by design; in light mode the
+   sheet flips to white and its ink has to follow. */
+html[data-zyrex-theme="light"] body .sp-header {
+    background: linear-gradient(180deg, rgba(27, 79, 168, .10) 0%, rgba(255, 255, 255, .92) 100%) !important;
+    border-color: rgba(21, 45, 90, .14) !important;
+    box-shadow: 0 18px 42px rgba(30, 40, 70, .10) !important;
+}
+html[data-zyrex-theme="light"] body :is(.sp-header-title, .sp-header-meta .brand, .sp-header-meta span.num) {
+    color: var(--site-text, #122a52) !important;
+}
+html[data-zyrex-theme="light"] body .sp-header-tag { color: #133a80 !important; }
+html[data-zyrex-theme="light"] body .sp-header-desc { color: var(--site-muted, #46618f) !important; }
+
+/* Request cards: author chips and the active-tab counter. */
+html[data-zyrex-theme="light"] body .req-pill-btn.active .req-pill-badge { color: #ffffff !important; }
+html[data-zyrex-theme="light"] body :is(.req-requester-user, .req-requester-user span, .req-avatar-anon) {
+    color: var(--site-muted, #46618f) !important;
+}
+html[data-zyrex-theme="light"] body :is(.req-avatar-anon, .req-avatar-img) {
+    background: rgba(21, 45, 90, .08);
+    border-color: rgba(21, 45, 90, .16);
+}
+
+/* Feed post bodies and pagination buttons. */
+html[data-zyrex-theme="light"] body .pf-post-text { color: var(--site-text, #122a52) !important; }
+html[data-zyrex-theme="light"] body .pf-feed-page-btn { color: var(--site-muted, #46618f) !important; }
+
+/* Page-scoped palettes (plugins catalogue, audio library) are authored for the
+   dark sheet. Light mode re-points those variables once instead of patching
+   every component that consumes them. */
+html[data-zyrex-theme="light"] body {
+    --faint: #5d7699;
+    --pv-surface: rgba(255, 255, 255, .92);
+    --pv-hairline: rgba(21, 45, 90, .14);
+    --pv-hairline-strong: rgba(21, 45, 90, .22);
+    --pv-text: #122a52;
+    --pv-muted: #46618f;
+    --pv-faint: #5d7699;
+
+    --sp-card-bg: rgba(255, 255, 255, .92);
+    --sp-row-hover: rgba(21, 45, 90, .05);
+    --sp-row-active: rgba(27, 79, 168, .10);
+    --sp-border: rgba(21, 45, 90, .14);
+    --text-muted: #46618f;
+}
+
+html[data-zyrex-theme="light"] body .pv-search { box-shadow: 0 16px 40px rgba(30, 40, 70, .10), inset 0 1px 0 rgba(255, 255, 255, .9); }
+html[data-zyrex-theme="light"] body .pv-search:focus-within { background: #ffffff !important; }
+
+html[data-zyrex-theme="light"] body :is(.req-toolbar, .req-card-media, .req-pill-btn) {
+    background: rgba(255, 255, 255, .9) !important;
+    border-color: rgba(21, 45, 90, .14) !important;
+}
+
+html[data-zyrex-theme="light"] body .sp-tracklist thead tr { border-bottom-color: rgba(21, 45, 90, .14) !important; }
+html[data-zyrex-theme="light"] body .sp-tracklist th { color: #46618f !important; }
+
+
+/* Hero CTAs. The cherry pill keeps white type on its accent fill; the glass
+   pills switch to blue ink so they stay readable on the light sheet. */
+html[data-zyrex-theme="light"] body .btn-liquid-cherry,
+html[data-zyrex-theme="light"] body .btn-liquid-cherry :is(span, i) {
+    color: #ffffff !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-zyrex-theme="light"] body .btn-liquid-glass {
+    background: rgba(255, 255, 255, .78) !important;
+    border-color: rgba(21, 45, 90, .16) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), 0 8px 20px rgba(30, 40, 70, .10) !important;
+    color: var(--site-text, #122a52) !important;
+}
+
+html[data-zyrex-theme="light"] body .btn-liquid-glass :is(span, i) {
+    color: inherit !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-zyrex-theme="light"] body .btn-liquid-glass:hover {
+    background: rgba(255, 255, 255, .95) !important;
+    color: var(--site-text, #122a52) !important;
+}
+
+/* Brand marquee: black drop shadows under the medallions turn into a dirty
+   smudge on white, so they become a soft neutral lift. */
+html[data-zyrex-theme="light"] body .brand-showcase {
+    background: transparent !important;
+    box-shadow: inset 0 1px 0 rgba(21, 45, 90, .08), inset 0 -1px 0 rgba(21, 45, 90, .06) !important;
+}
+
+html[data-zyrex-theme="light"] body .brand-showcase::before {
+    background-image:
+        linear-gradient(rgba(21, 45, 90, .05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(21, 45, 90, .05) 1px, transparent 1px) !important;
+}
+
+html[data-zyrex-theme="light"] body .brand-item {
+    background: rgba(255, 255, 255, .92) !important;
+    border-color: rgba(21, 45, 90, .12) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), 0 6px 16px rgba(30, 40, 70, .10) !important;
+}
+
+html[data-zyrex-theme="light"] body .brand-item::after {
+    border-color: rgba(21, 45, 90, .08) !important;
+}
+
+html[data-zyrex-theme="light"] body .brand-item img {
+    filter: none !important;
+}
+
+
+/* --------------------------------------------------------------------------
+   14. Light-mode rework
+   Feed, profile, requests, leaks and catalogue components were authored
+   against the dark sheet: literal rgba(255, 255, 255, .x) ink on white glass
+   fills. On the light canvas that reads as invisible labels floating inside
+   blank white blobs. Every neutral surface is re-pointed at the light token
+   ladder, and every white-ink label is re-inked.
+   -------------------------------------------------------------------------- */
+
+/* Neutral surfaces: dark slabs and white-on-white plates. */
+html[data-zyrex-theme="light"] body :is(
+    .stats-row, .catalog-toolbar, .pl-row, .req-media-placeholder,
+    .req-toolbar, .pf-feed-tools
+) {
+    background: var(--site-surface, rgba(255, 255, 255, .94)) !important;
+    background-image: none !important;
+    border-color: var(--site-border, rgba(21, 45, 90, .14)) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), 0 10px 26px rgba(30, 40, 70, .08) !important;
+}
+
+/* Catalogue palette: rows, hairlines and ink come from the light ladder. */
+html[data-zyrex-theme="light"] body {
+    --pl-row-bg: rgba(255, 255, 255, .92);
+    --pl-row-hover: rgba(21, 45, 90, .05);
+    --pl-hairline: rgba(21, 45, 90, .12);
+    --pl-text: #122a52;
+    --pl-muted: #46618f;
+    --pl-faint: #5d7699;
+    --pl-cherry: #133a80;
+}
+
+/* Neutral chips and glass buttons get a real plate so their hairline reads. */
+html[data-zyrex-theme="light"] body :is(
+    .pf-feed-tool, .pf-post-action, .pf-btn, .pf-tab,
+    .sp-btn.sp-btn-ghost, .st-refresh, .req-status-btn, .subcat-btn,
+    .pf-feed-page-btn
+) {
+    background: rgba(255, 255, 255, .92) !important;
+    background-image: none !important;
+    border-color: rgba(21, 45, 90, .16) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), 0 4px 12px rgba(30, 40, 70, .06) !important;
+}
+
+html[data-zyrex-theme="light"] body :is(
+    .pf-feed-tool, .pf-post-action, .pf-btn, .pf-tab,
+    .sp-btn.sp-btn-ghost, .st-refresh, .req-status-btn, .subcat-btn,
+    .pf-feed-page-btn
+):hover {
+    background: #ffffff !important;
+    border-color: rgba(21, 45, 90, .28) !important;
+}
+
+/* Primary ink. */
+html[data-zyrex-theme="light"] body :is(
+    .req-status-btn, .pf-btn, .pf-tag, .pf-tag-label, .pf-strip-value,
+    .pf-stat-value, .pf-person-name, .pf-event-title, .pf-tab, .st-refresh,
+    .subcat-btn, .sp-btn.sp-btn-ghost, .rname, .current, .req-stat-num
+) {
+    color: var(--site-text, #122a52) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+/* Secondary ink. */
+html[data-zyrex-theme="light"] body :is(
+    .req-stat-label, .pf-feed-kicker, .pf-feed-page-count, .pf-feed-page-btn,
+    .creator-marquee-label, .rc-desc, .rname, .pf-handle, .pf-muted,
+    .pf-strip-label, .pf-tag-handle, .pf-tag-detail, .pf-stat-label,
+    .pf-person-sub, .pf-event-sub, .pf-ach-label, .pf-feed-tool,
+    .pf-post-action, .pf-feed-tab, .tag-topaz-labs, .tag-others
+) {
+    color: var(--site-muted, #46618f) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+/* Accent-filled pills keep white labels, so the fill has to be the real
+   accent instead of a translucent tint over white. `.current` belongs to the
+   breadcrumb's page label (plain text), so it is not part of this group. */
+html[data-zyrex-theme="light"] body :is(
+    .subcat-btn.active, .req-status-btn.active, .pf-tab.active,
+    .pf-btn.is-primary
+) {
+    background: var(--accent, #1b4fa8) !important;
+    background-image: none !important;
+    border-color: transparent !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: currentColor !important;
+    box-shadow: 0 10px 24px rgba(27, 79, 168, .22) !important;
+}
+
+html[data-zyrex-theme="light"] body :is(
+    .subcat-btn.active, .req-status-btn.active, .pf-tab.active,
+    .pf-btn.is-primary
+) :is(span, i, b, strong, svg) {
+    color: inherit !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+/* Breadcrumb page label: text only. The generic `.current` styling above used
+   to paint it as a solid accent chip with a shadow. */
+html body .breadcrumb-bar :is(.current, span.current) {
+    background: none !important;
+    background-image: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
+
+html[data-zyrex-theme="light"] body .breadcrumb-bar :is(.current, span.current) {
+    color: var(--site-text, #122a52) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+/* Counters sit inside both accent and neutral pills. */
+html[data-zyrex-theme="light"] body :is(.cp .cnt, .subcat-btn .cnt, .cnt) {
+    background: rgba(21, 45, 90, .08) !important;
+    color: var(--site-muted, #46618f) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-zyrex-theme="light"] body :is(.cp button.active .cnt, .subcat-btn.active .cnt) {
+    background: rgba(255, 255, 255, .22) !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+/* Semantic tags keep their hue at a readable depth on white. The Free label
+   stays green like the leak page's own Free pill instead of turning into a
+   dark thumbnail plate, so the pale plate has to be opaque enough to read
+   over any cover art. */
+html[data-zyrex-theme="light"] body .tag-free {
+    background: rgba(236, 253, 245, .94) !important;
+    border-color: rgba(4, 120, 87, .32) !important;
+    color: #04624a !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+/* Audio-library toggle in its "on" state. */
+html[data-zyrex-theme="light"] body .sp-btn.sp-btn-ghost.is-on {
+    background: rgba(27, 79, 168, .10) !important;
+    background-image: none !important;
+    border-color: rgba(27, 79, 168, .30) !important;
+    color: #133a80 !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+/* Gradient uploader names assume a dark plate; on white they lighten into the
+   background, so light mode runs the same trick with navy ink. */
+html[data-zyrex-theme="light"] body .preset-card-name {
+    background: linear-gradient(135deg, #122a52 0%, #1b4fa8 55%, #133a80 100%) !important;
+    background-clip: text !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+}
+
+/* Achievement medallions and progress rings use white overlays that vanish on
+   white; they get a hairline lift instead. */
+html[data-zyrex-theme="light"] body :is(.pf-ach-icon, .pf-ring) {
+    box-shadow: inset 0 0 0 1px rgba(21, 45, 90, .14), 0 6px 16px rgba(30, 40, 70, .10) !important;
+}
+
+/* Empty-state placeholders. */
+html[data-zyrex-theme="light"] body .req-media-placeholder {
+    color: var(--site-muted, #46618f) !important;
+}
+
+/* --------------------------------------------------------------------------
+   15. Light-mode rework — navigation, social bars, leak detail, legal docs
+   Same story as section 14, one layer deeper: the floating chrome (account
+   button, notification bubble, footer status chip), the social action bars,
+   the leak detail pills and the legal document chrome still carried white ink
+   from the dark sheet.
+   -------------------------------------------------------------------------- */
+
+/* Account button: the label inherited the sheet's white ink and disappeared. */
+html[data-zyrex-theme="light"] body .auth-login-btn span {
+    color: var(--site-text, #122a52) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+/* Notification bubble counts sit on the accent fill. */
+html[data-zyrex-theme="light"] body .notif-bubble-badge {
+    background: var(--accent, #1b4fa8) !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: currentColor !important;
+    box-shadow: 0 0 0 2px rgba(255, 255, 255, .9) !important;
+}
+
+/* Footer status chip. */
+html[data-zyrex-theme="light"] body .zyrex-footer-status {
+    background: rgba(255, 255, 255, .92) !important;
+    border-color: rgba(21, 45, 90, .16) !important;
+    color: var(--site-muted, #46618f) !important;
+}
+
+html[data-zyrex-theme="light"] body :is(.zyrex-footer-status-text, .zyrex-footer-status span, .zyrex-footer-status i) {
+    color: inherit !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+/* Social action bars (feed, profile, post pages). */
+html[data-zyrex-theme="light"] body :is(
+    .pf-post-actions, .pf-post-actions *, .pf-post-repost-label, .pf-post-repost-label *,
+    [data-social-like], [data-social-like] *, [data-social-comments], [data-social-comments] *,
+    [data-social-repost], [data-social-repost] *, [data-social-share], [data-social-share] *,
+    .pf-item-meta, .pf-item-meta *, .pf-notice-info, .pf-social-reply-attach,
+    .pf-social-reply-bar, .pf-social-reply-bar *, .pf-social-reply-form button[type="submit"]
+) {
+    color: var(--site-muted, #46618f) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-zyrex-theme="light"] body .pf-social-reply-form button[type="submit"] {
+    background: var(--accent, #1b4fa8) !important;
+    color: #ffffff !important;
+}
+
+html[data-zyrex-theme="light"] body :is(.pf-item-name, .pf-item-name *, .pf-notice-title) {
+    color: var(--site-text, #122a52) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-zyrex-theme="light"] body :is(.pf-social-reply-bar, .pf-social-reply-attach) {
+    background: rgba(255, 255, 255, .92) !important;
+    border-color: rgba(21, 45, 90, .16) !important;
+}
+
+/* Leak detail: stage pills, reactions and the tab strip. */
+html[data-zyrex-theme="light"] body :is(.stage-pill, .details-tab-btn) {
+    background: rgba(255, 255, 255, .92) !important;
+    background-image: none !important;
+    border-color: rgba(21, 45, 90, .16) !important;
+    color: #133a80 !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-zyrex-theme="light"] body .details-tab-btn.active {
+    background: var(--accent, #1b4fa8) !important;
+    border-color: transparent !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-zyrex-theme="light"] body .stage-pill.stage-pill-free {
+    background: rgba(4, 120, 87, .12) !important;
+    border-color: rgba(4, 120, 87, .30) !important;
+    color: #04624a !important;
+}
+
+html[data-zyrex-theme="light"] body .react-btn {
+    background: rgba(255, 255, 255, .92) !important;
+    border-color: rgba(21, 45, 90, .16) !important;
+}
+
+html[data-zyrex-theme="light"] body :is(
+    .react-btn, .react-btn *, .psc-label, .more-resource-category, .lk-cmt-empty,
+    .lk-cmt-empty *, .lk-cmt-guest-copy, .lk-cmt-guest-copy *
+) {
+    color: var(--site-muted, #46618f) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-zyrex-theme="light"] body :is(.more-resource-name, .more-resource-name *) {
+    color: var(--site-text, #122a52) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+/* Comment CTA + reaction counts keep the accent fill, so their label stays white. */
+html[data-zyrex-theme="light"] body :is(.lk-cmt-guest-btn, .lk-cmt-guest-btn *) {
+    color: #ffffff !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+/* Resource cards on /leaks and /presets. */
+html[data-zyrex-theme="light"] body :is(.rc-actions, .rc-actions *) { color: var(--site-muted, #46618f) !important; }
+html[data-zyrex-theme="light"] body :is(.tag-topaz-labs, .tag-others) { color: var(--site-text, #122a52) !important; }
+
+html[data-zyrex-theme="light"] body :is(.cp button.active .cnt, .subcat-btn.active .cnt) {
+    background: rgba(0, 0, 0, .20) !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+/* Request cards: the media type badge sits on top of a thumbnail. */
+html[data-zyrex-theme="light"] body .req-media-badge {
+    background: rgba(12, 16, 26, .78) !important;
+    border-color: transparent !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-zyrex-theme="light"] body :is(.req-time-ago, .req-stat-btn, .req-stat-item) {
+    color: #56657c !important;
+}
+
+html[data-zyrex-theme="light"] body :is(.req-stat-btn, .req-stat-item) :is(span, i, b, strong) {
+    color: inherit !important;
+}
+
+/* Product detail: section headings written for the dark sheet. */
+html[data-zyrex-theme="light"] body :is(.box-title, .matrix-cell .cell-title) {
+    color: var(--site-muted, #46618f) !important;
+}
+
+/* Legal documents: numbered steps and the active document switcher are the
+   only pieces that reuse the accent fill; the rest is already tokenised. */
+html[data-zyrex-theme="light"] body.legal-page .lp-num {
+    background: var(--accent, #1b4fa8) !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-zyrex-theme="light"] body.legal-page .lp-switch a[aria-current="page"] {
+    background: var(--accent, #1b4fa8) !important;
+    background-image: none !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-zyrex-theme="light"] body.legal-page .lp-doc em { color: #133a80 !important; }
+
+/* --------------------------------------------------------------------------
+   16. Light-mode rework — final pass
+   The last components that still assumed a dark sheet: the account pill, the
+   thumbnail badges, the leak description pane, the status rows, the audio bar
+   and a few tinted-strip labels.
+   -------------------------------------------------------------------------- */
+
+/* Account pill: a charcoal button on a white navbar. It becomes a white plate
+   so the label, its hover state and the shadow all read as one system. */
+html[data-zyrex-theme="light"] body .auth-login-btn {
+    background: rgba(255, 255, 255, .94) !important;
+    border: 1px solid rgba(21, 45, 90, .16) !important;
+    color: var(--site-text, #122a52) !important;
+    box-shadow: 0 8px 20px rgba(30, 40, 70, .10) !important;
+}
+
+html[data-zyrex-theme="light"] body .auth-login-btn:hover {
+    background: #ffffff !important;
+}
+
+html[data-zyrex-theme="light"] body :is(.auth-login-btn span, .auth-login-btn b) {
+    color: inherit !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+/* Thumbnail badges sit on top of artwork, so they keep the dark plate they
+   were designed with: that reads on every cover in both themes. The Free
+   label is the exception above — it keeps the green of the leak page's Free
+   pill on its own pale plate. */
+html[data-zyrex-theme="light"] body :is(.tag-topaz-labs, .tag-others, .tag-video-star) {
+    background: rgba(12, 16, 26, .78) !important;
+    border-color: transparent !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+/* Leak detail: the description pane and the counter row above the deck. */
+html[data-zyrex-theme="light"] body .tab-pane-view {
+    background: rgba(255, 255, 255, .92) !important;
+    border-color: rgba(21, 45, 90, .14) !important;
+}
+
+html[data-zyrex-theme="light"] body :is(.action-top-info, .action-top-info *, .resource-label) {
+    color: var(--site-muted, #46618f) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+/* Feed composer notice. */
+html[data-zyrex-theme="light"] body :is(.pf-notice-info, .pf-notice-info *) {
+    color: var(--site-muted, #46618f) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+/* Status page: white hairlines and white ink on a white sheet. */
+html[data-zyrex-theme="light"] body {
+    --st-ok: #047857;
+    --st-warn: #b45309;
+    --st-down: #b91c1c;
+    --st-line: rgba(21, 45, 90, .12);
+}
+
+html[data-zyrex-theme="light"] body :is(.st-stamp, .st-latency, .st-section-head span, .st-section-head h2) {
+    color: var(--site-muted, #46618f) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+/* The audio bar keeps its dark sheet while a track plays, so its secondary ink
+   has to stay light instead of following the muted token. */
+html[data-zyrex-theme="light"] body :is(.sp-player-sub, .sp-time-text, .sp-player-link-btn) {
+    color: rgba(255, 255, 255, .74) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+/* Small print on tinted strips needs one more step of depth. */
+html[data-zyrex-theme="light"] body .pf-strip-label { color: #3a5378 !important; }
+html[data-zyrex-theme="light"] body .req-status-pill.status-pending { color: #97450a !important; }
+
+/* Post detail: the reply toggle joins the social action bar. */
+html[data-zyrex-theme="light"] body :is(
+    .pf-social-actions, .pf-social-actions *, [data-social-reply-toggle], [data-social-reply-toggle] *
+) {
+    color: var(--site-muted, #46618f) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+/* Leak description panel: its translucent black wash turns grey on white. */
+html[data-zyrex-theme="light"] body .resource-desc {
+    background: rgba(255, 255, 255, .92) !important;
+    border-color: rgba(21, 45, 90, .14) !important;
+    color: var(--site-text, #122a52) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+/* Feed shell + composer card: a dark wash over the white sheet reads as a
+   dirty grey band, so the whole column becomes a white plate. */
+html[data-zyrex-theme="light"] body :is(.pf-feed-shell, .pf-feed-composer-card) {
+    background: rgba(255, 255, 255, .94) !important;
+    background-image: none !important;
+    border-color: rgba(21, 45, 90, .14) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), 0 12px 30px rgba(30, 40, 70, .08) !important;
+}
+
+html[data-zyrex-theme="light"] body .pf-feed-composer-card {
+    background: rgba(255, 255, 255, .98) !important;
+}
+
+/* Profile hero: the shell and the stats strip were dark washes, which turn into
+   grey bands on the white sheet. */
+html[data-zyrex-theme="light"] body :is(.pf-hero, .pf-hero-strip) {
+    background: rgba(255, 255, 255, .94) !important;
+    background-image: none !important;
+    border-color: rgba(21, 45, 90, .14) !important;
+}
+
+/* Feed tabs are underline tabs, not pills: a plate turned them into hard-edged
+   boxes. Light mode keeps the underline language and only re-inks it. */
+html[data-zyrex-theme="light"] body .pf-feed-tab {
+    background: transparent !important;
+    background-image: none !important;
+    border-color: transparent !important;
+    box-shadow: none !important;
+    color: var(--site-muted, #46618f) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-zyrex-theme="light"] body .pf-feed-tab:hover {
+    color: var(--site-text, #122a52) !important;
+}
+
+html[data-zyrex-theme="light"] body .pf-feed-tab.is-active {
+    background: transparent !important;
+    background-image: none !important;
+    border-color: transparent !important;
+    border-bottom-color: var(--accent, #1b4fa8) !important;
+    box-shadow: none !important;
+    color: var(--accent, #1b4fa8) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+/* --------------------------------------------------------------------------
+   17. Light-mode rework ? comment system and post stat links
+   The comments deck on leak/preset pages was authored as dark glass: a nearly
+   transparent composer, white placeholder copy, pale tool pills and a submit
+   gradient that turns pink on the white sheet.
+   -------------------------------------------------------------------------- */
+
+html[data-zyrex-theme="light"] body :is(.comment-input-glass, .cmt-composer-field) {
+    background: rgba(255, 255, 255, .94) !important;
+    background-image: none !important;
+    border-color: rgba(21, 45, 90, .16) !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), 0 10px 24px rgba(30, 40, 70, .07) !important;
+}
+
+html[data-zyrex-theme="light"] body .comment-input-glass:focus-within {
+    background: #ffffff !important;
+    border-color: rgba(27, 79, 168, .45) !important;
+    box-shadow: 0 0 0 3px rgba(27, 79, 168, .12) !important;
+}
+
+html[data-zyrex-theme="light"] body :is(.comment-textarea, .comment-textarea:focus) {
+    background: transparent !important;
+    border-color: transparent !important;
+    color: var(--site-text, #122a52) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-zyrex-theme="light"] body .comment-textarea::placeholder {
+    color: var(--site-muted, #46618f) !important;
+}
+
+html[data-zyrex-theme="light"] body .comment-tools-row {
+    border-top-color: rgba(21, 45, 90, .12) !important;
+}
+
+html[data-zyrex-theme="light"] body .comment-tool-btn {
+    background: rgba(255, 255, 255, .92) !important;
+    background-image: none !important;
+    border-color: rgba(21, 45, 90, .16) !important;
+    color: var(--site-muted, #46618f) !important;
+    -webkit-text-fill-color: currentColor !important;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95) !important;
+}
+
+html[data-zyrex-theme="light"] body :is(.comment-tool-btn:hover, .comment-tool-btn.active) {
+    background: rgba(27, 79, 168, .10) !important;
+    border-color: rgba(27, 79, 168, .34) !important;
+    color: #133a80 !important;
+}
+
+html[data-zyrex-theme="light"] body .comment-btn-submit {
+    background: var(--accent, #1b4fa8) !important;
+    background-image: none !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: currentColor !important;
+    box-shadow: 0 6px 18px rgba(27, 79, 168, .24) !important;
+}
+
+html[data-zyrex-theme="light"] body .comment-btn-submit:disabled {
+    background: rgba(21, 45, 90, .18) !important;
+    box-shadow: none !important;
+    opacity: 1 !important;
+}
+
+html[data-zyrex-theme="light"] body :is(.comment-avatar, .cmt-composer-avatar) {
+    background: rgba(21, 45, 90, .06) !important;
+    border-color: rgba(21, 45, 90, .14) !important;
+}
+
+html[data-zyrex-theme="light"] body :is(.comment-user-title, .cmt-name) {
+    color: var(--site-text, #122a52) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-zyrex-theme="light"] body :is(.comment-content, .comment-body-wrap) {
+    color: var(--site-text, #122a52) !important;
+}
+
+html[data-zyrex-theme="light"] body :is(.comment-time, .comment-act-btn, .cmt-counter) {
+    color: var(--site-muted, #46618f) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-zyrex-theme="light"] body :is(.cmt-badge-staff, .cmt-edit-hint) {
+    color: #133a80 !important;
+}
+
+html[data-zyrex-theme="light"] body .popover-card {
+    background: rgba(255, 255, 255, .98) !important;
+    border-color: rgba(21, 45, 90, .16) !important;
+    box-shadow: 0 20px 45px rgba(30, 40, 70, .18) !important;
+}
+
+/* Comment counter + refresh control in the deck header. */
+html[data-zyrex-theme="light"] body .lk-cmt-count {
+    background: rgba(27, 79, 168, .12) !important;
+    color: #133a80 !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-zyrex-theme="light"] body .lk-cmt-refresh {
+    background: rgba(255, 255, 255, .92) !important;
+    border-color: rgba(21, 45, 90, .16) !important;
+    color: var(--site-muted, #46618f) !important;
+}
+
+html[data-zyrex-theme="light"] body .lk-cmt-refresh:hover {
+    background: #ffffff !important;
+    color: var(--site-text, #122a52) !important;
+}
+
+/* Product action pills on the same page. */
+html[data-zyrex-theme="light"] body .psc-action-btn {
+    background: rgba(255, 255, 255, .92) !important;
+    border-color: rgba(21, 45, 90, .16) !important;
+    color: var(--site-text, #122a52) !important;
+}
+
+/* The reply stat is an anchor, so the palette link colour repainted it blue
+   next to the muted like/share buttons. */
+html[data-zyrex-theme="light"] body :is(.pf-social-stat, .pf-social-stat *) {
+    color: var(--site-muted, #46618f) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+/* These three used to live inside @media wrappers that a maintenance pass
+   flattened; the conditions are restored here. */
+@media (min-width: 1101px) {
+    html body:not(.legal-page) .navbar .nav-links,
+    html body.legal-page .navbar .nav-links {
+        background: transparent !important;
+        border: 0 !important;
+        box-shadow: none !important;
+        -webkit-backdrop-filter: none !important;
+        backdrop-filter: none !important;
+    }
+}
+
+@media (max-width: 1100px) {
+    html body:not(.legal-page) .navbar .nav-links.open,
+    html body:not(.legal-page) .navbar .nav-links.active,
+    html body.legal-page .navbar .nav-links.open,
+    html body.legal-page .navbar .nav-links.active {
+        background: rgba(10, 8, 13, .985) !important;
+        border-color: rgba(255, 255, 255, .16) !important;
+    }
+}
+
+@media (max-width: 768px) {
+    html body:not(.legal-page) :is(.card, .panel, .modal-content, .pf-card, .resource-card, .req-card, .bm-card) {
+        -webkit-backdrop-filter: blur(18px) saturate(170%);
+        backdrop-filter: blur(18px) saturate(170%);
+    }
+}
+
+/* --------------------------------------------------------------------------
+   18. Profile hero identity plate
+   The hero body floats over the banner artwork, so its ink is light in every
+   theme; this lives in the glass layer because that sheet loads last.
+   -------------------------------------------------------------------------- */
+html[data-zyrex-theme="light"] body .pf-hero-body .pf-name {
+    color: #ffffff !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-zyrex-theme="light"] body .pf-hero-body .pf-handle {
+    color: rgba(255, 255, 255, .82) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-zyrex-theme="light"] body .pf-hero-body .pf-tag {
+    color: #ffffff !important;
+    background: rgba(8, 7, 14, .5) !important;
+    border-color: rgba(255, 255, 255, .28) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-zyrex-theme="light"] body .pf-hero-body .pf-tag.is-tier {
+    color: #ffffff !important;
+    background: var(--accent, #1b4fa8) !important;
+    border-color: transparent !important;
+}
+
+/* Legal documents: the eyebrow chip was a translucent wash, so its 74% ink
+   fell under 3:1 on the tinted background. */
+html[data-zyrex-theme="light"] body.legal-page .lp-eyebrow {
+    background: rgba(255, 255, 255, .92) !important;
+    background-image: none !important;
+    border-color: rgba(21, 45, 90, .16) !important;
+    color: var(--site-text, #122a52) !important;
+}
+
+/* Primary call to action on profile cards and the hero plate: the glass layer
+   paints every .pf-btn with a translucent gradient, which left the solid
+   variant with near-black ink on a dark plate. */
+html body .pf-btn.is-primary {
+    background: var(--accent, var(--zr-accent, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1))) !important;
+    background-image: none !important;
+    border-color: transparent !important;
+    color: #ffffff !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-zyrex-theme="dark"] body .pf-btn.is-primary {
+    color: #0b0910 !important;
+}
+
+html body .pf-btn.is-primary:hover {
+    filter: brightness(1.06);
+}
+
+/* The brand marks are red PNGs; light mode shifts their hue into the blue
+   range so no red survives on the white sheet (the dark theme does the same
+   trick with a monochrome filter). */
+html[data-zyrex-theme="light"] body :is(
+    img.logo-img, img[alt="ZYREX"], img[alt="Zyrex"], img[alt="Zyrex Logo"],
+    .loader-logo-img, .brand-logo img, .footer-brand img, .hero-brand-icon
+) {
+    filter: hue-rotate(215deg) saturate(1.15) brightness(.95) !important;
+}
+
+/* --------------------------------------------------------------------------
+   19. Light-mode borders
+   The white hairlines that read as "hairlines" on the dark sheet are invisible
+   on white, so borders looked missing and images looked uncropped. Every
+   component that draws a white hairline gets the navy one instead.
+   -------------------------------------------------------------------------- */
+
+/* Images and media keep a real edge on the white sheet. */
+html[data-zyrex-theme="light"] body :is(
+    img, video, .pf-post-media, .pf-notice-thumb, .lookup-preview-img, .sp-cover-box,
+    .pf-feed-composer-avatar, .pf-follow-modal-avatar, .pf-media-modal-dialog,
+    .pf-media-modal-close, .pf-notice-resource
+) {
+    border-color: rgba(21, 45, 90, .16) !important;
+}
+
+/* Chrome and cards. */
+html[data-zyrex-theme="light"] body :is(
+    .pf-feed-tabs, .pf-feed-mention-suggestions, .pf-social-stat, .pf-stat, .pf-item,
+    .pf-event-icon, .pf-ach-icon, .pf-ach, .pf-follow-modal-dialog,
+    .req-requester-row, .req-stat-bar, .toggle-anon-row, .switch,
+    .modal-close-btn, .wiz-close-btn, .wiz-header-icon, .social-scan-btn,
+    .rh, .sb, .creator-marquee-badge, .cat-svg-icon,
+    .psc-icon-badge, .reaction-action-bar, .lk-cmt-guest, .lk-cmt-empty-ring,
+    .pl-empty, .cc-icon, .spotlight-icon, .zdc-footer,
+    .notif-panel-pill-icon, .notif-ios-btn, .notif-panel-footer, .notif-footer-btn,
+    .btn-cookie-primary, .btn-cookie-secondary
+) {
+    border-color: rgba(21, 45, 90, .16) !important;
+}
+
+/* Post rows inside the rounded posts card: a white slab with square corners
+   read as a cut-off block, so they go transparent with hairline dividers. */
+html[data-zyrex-theme="light"] body .pf-post {
+    background: transparent !important;
+    border-bottom-color: rgba(21, 45, 90, .12) !important;
+}
+
+/* Brand strip: the Topaz mark is drawn in colour, request asked for black. */
+html[data-zyrex-theme="light"] body .brand-item img[src*="topaz"],
+html[data-zyrex-theme="light"] body .brand-showcase img[src*="topaz"] {
+    filter: brightness(0) saturate(100%) !important;
+}
+
+/* --------------------------------------------------------------------------
+   20. Light-mode token layer
+   Standalone pages (upload, creator studio, admin, settings, product, verify…)
+   ship their own palette on :root with dark-sheet values. Rather than patching
+   each page, the theme layer re-points those generic token names once, so every
+   page that consumes them re-skins itself and new pages inherit it for free.
+   -------------------------------------------------------------------------- */
+html[data-zyrex-theme="light"] body {
+    /* ink ladder */
+    --text: var(--site-text, #122a52);
+    --text-main: var(--site-text, #122a52);
+    --text-primary: var(--site-text, #122a52);
+    --text-secondary: var(--site-muted, #46618f);
+    --text-muted: var(--site-muted, #46618f);
+    --text-sub: var(--site-muted, #46618f);
+    --text-faint: #6d84a8;
+    --muted: var(--site-muted, #46618f);
+    --muted-dark: #6d84a8;
+    --faint: #5d7699;
+    --gray: var(--site-muted, #46618f);
+    --gray-dark: #50699a;
+    --light: var(--site-text, #122a52);
+    --warm-light: #1c3a6b;
+
+    /* surfaces */
+    --dark: var(--site-bg, #f5f7fc);
+    --dark-bg: var(--site-bg, #f5f7fc);
+    --bg-main: var(--site-bg, #f5f7fc);
+    --dark-2: rgba(255, 255, 255, .96);
+    --dark-3: rgba(233, 238, 248, .96);
+    --dark-panel: var(--site-surface, rgba(255, 255, 255, .94));
+    --surface: var(--site-surface, rgba(255, 255, 255, .94));
+    --card-bg: var(--site-surface, rgba(255, 255, 255, .94));
+    --card-glass: var(--site-surface, rgba(255, 255, 255, .94));
+    --glass: var(--site-surface, rgba(255, 255, 255, .94));
+    --glass-bg: var(--site-surface, rgba(255, 255, 255, .94));
+    --req-surface: var(--site-surface, rgba(255, 255, 255, .94));
+    --set-glass: rgba(255, 255, 255, .92);
+    --set-glass-deep: rgba(255, 255, 255, .96);
+
+    /* hairlines */
+    --border: rgba(21, 45, 90, .16);
+    --border-hover: rgba(27, 79, 168, .38);
+    --card-border: rgba(21, 45, 90, .14);
+    --card-hover-border: rgba(27, 79, 168, .34);
+    --hairline: rgba(21, 45, 90, .14);
+    --hairline-strong: rgba(21, 45, 90, .22);
+    --set-line: rgba(21, 45, 90, .14);
+    --req-card-border: rgba(21, 45, 90, .14);
+    --glass-border: rgba(21, 45, 90, .16);
+    --glass-border-hover: rgba(27, 79, 168, .34);
+
+    /* accents and semantic states */
+    --accent-color: #1b4fa8;
+    --accent-glow: rgba(27, 79, 168, .28);
+    --neon-1: #2563c9;
+    --neon-2: #4a86dd;
+    --neon-3: #12396f;
+    --purple-glow: rgba(70, 110, 190, .28);
+    --rose-soft: #eef3fc;
+    --star-color-2: rgba(21, 45, 90, .55);
+    --ok: #047857;
+    --warn: #b45309;
+    --danger: #b91c1c;
+}
+
+/* Loading screen: white sheet, navy ink, blue progress. */
+html[data-zyrex-theme="light"] body .resources-loader-overlay {
+    background: var(--site-bg, #f5f7fc) !important;
+}
+
+html[data-zyrex-theme="light"] body :is(.loader-title, .loader-logo-text) {
+    color: var(--site-text, #122a52) !important;
+}
+
+html[data-zyrex-theme="light"] body .loader-subtitle {
+    color: var(--site-muted, #46618f) !important;
+}
+
+html[data-zyrex-theme="light"] body .loader-bar-wrap {
+    background: rgba(21, 45, 90, .12) !important;
+}
+
+/* --------------------------------------------------------------------------
+   21. Light-mode creator/admin chrome
+   The studio and admin pages share one set of chrome classes (sidebar, panel
+   headings, wizard, cards). They are written white-on-dark, so the theme layer
+   re-inks the shared selectors once instead of patching each page.
+   -------------------------------------------------------------------------- */
+html[data-zyrex-theme="light"] body :is(
+    .sidebar-brand span, .menu-title, .menu-item a,
+    .menu-item .locked-item, .menu-item a i, .menu-item .locked-item i,
+    .user-info .name, .footer-nav a, .footer-nav-link,
+    .footer-nav a i, .footer-nav-link i, .studio-header h1,
+    .field input, .field textarea, .field select,
+    .subcat-pill, .lc-details h4, .panel-box h3,
+    .res-card .rc-info strong, .tpb-title, .lock-card h2,
+    .info-banner h4, .rs-row strong, .mobile-trigger,
+    .sidebar-mobile-close button, .wiz-header-text h3, .wiz-step-circle,
+    .wiz-step-label, .wiz-plat-icon.x, .wiz-plat-info strong,
+    .wiz-status h4, .wiz-status strong, .wiz-cc-name,
+    .wiz-product-img-placeholder, .wiz-product-title, .wiz-search-wrap input,
+    .wiz-input-row input, .wiz-section-title, .uploader-search-box input,
+    .uploader-member-name
+) {
+color: var(--site-text, #122a52) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-zyrex-theme="light"] body :is(
+    .user-profile, .studio-header, .field input,
+    .field textarea, .field select, .social-input-wrap,
+    .subcat-pill, .lc-media, .btn-ghost,
+    .glass-panel, .panel-box, .tpb-bar-bg, .review-summary,
+    .sidebar-overlay, .sidebar-mobile-close button, .studio-sidebar,
+    .scanner-modal, .wiz-close-btn, .wiz-step-circle,
+    .wiz-step-line, .wiz-platform-card, .wiz-plat-icon,
+    .wiz-product-card, .wiz-product-img-wrap, .wiz-search-wrap,
+    .wiz-page-btn, .wiz-input-row input, .wiz-btn-ghost,
+    .wiz-count-badge, .uploader-search-box, .uploader-suggestions,
+    .uploader-member-avatar, .social-modal-card, .social-modal-close-btn,
+    .plat-select-btn, .social-input-row, .top-actions a,
+    .search input, .empty, .top-nav a,
+    .form-group input
+) {
+background: rgba(255, 255, 255, .94) !important;
+    background-image: none !important;
+    border-color: rgba(21, 45, 90, .14) !important;
+}
+
+html[data-zyrex-theme="light"] body :is(
+    .studio-sidebar, .sidebar-brand, .sidebar-footer,
+    .user-profile, .studio-header, .subcat-pill,
+    .lc-meta, .btn-primary, .btn-ghost,
+    .form-actions, .rs-row, .sidebar-mobile-close,
+    .sidebar-mobile-close button, .scanner-modal, .wiz-close-btn,
+    .wiz-step-circle, .wiz-platform-card, .wiz-product-card,
+    .wiz-product-select-bar, .wiz-search-wrap, .wiz-pagination,
+    .wiz-page-btn, .wiz-input-row input, .wiz-btn-ghost,
+    .wiz-manual-section, .wiz-count-badge, .uploader-member-item,
+    .social-modal-card, .social-modal-close-btn, .plat-select-btn,
+    .social-input-row, .social-fetch-btn, .top-actions a,
+    .btn-scan, .search input, .empty,
+    .field input, .field select, .field textarea,
+    .top-nav a
+) {
+border-color: rgba(21, 45, 90, .16) !important;
+}
+
+/* Conversation thread surfaced by the shared social layer. */
+html[data-zyrex-theme="light"] body :is(
+    .pf-social-thread, .pf-social-reply-author img, .pf-social-reply-cta,
+    .pf-social-thread-more, .pf-social-thread-reply, .pf-social-reply-form.is-nested
+) {
+    border-color: rgba(21, 45, 90, .16) !important;
+}
+
+html[data-zyrex-theme="light"] body :is(.pf-social-thread, .pf-social-reply-form.is-nested) {
+    background: rgba(255, 255, 255, .92) !important;
+    background-image: none !important;
+}
+
+html[data-zyrex-theme="light"] body .pf-social-reply-cta {
+    background: rgba(255, 255, 255, .92) !important;
+    color: var(--site-muted, #46618f) !important;
+}
+
+html[data-zyrex-theme="light"] body :is(.pf-social-thread-more, .pf-social-thread-reply) {
+    background: rgba(255, 255, 255, .9) !important;
+    color: var(--site-muted, #46618f) !important;
+}
+
+html[data-zyrex-theme="light"] body :is(
+    .pf-social-reply-author strong, .pf-social-reply > p, .pf-social-reply-target
+) {
+    color: var(--site-text, #122a52) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-zyrex-theme="light"] body :is(
+    .pf-social-reply-author small, .pf-social-reply-actions button,
+    .pf-social-thread-head, .pf-social-empty, .pf-social-reply-replying
+) {
+    color: var(--site-muted, #46618f) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-zyrex-theme="light"] body :is(.pf-social-reply.is-child) {
+    border-left-color: rgba(21, 45, 90, .16) !important;
+}
+
+html[data-zyrex-theme="light"] body .pf-social-reply-replying button {
+    background: rgba(21, 45, 90, .08) !important;
+    color: var(--site-muted, #46618f) !important;
+}
+
+html[data-zyrex-theme="light"] body .pf-social-reply-replying button:hover {
+    background: rgba(21, 45, 90, .16) !important;
+    color: var(--site-text, #122a52) !important;
+}
+
+html[data-zyrex-theme="light"] body :is(.pf-social-reply-thumb, .pf-social-reply-media) {
+    border-color: rgba(21, 45, 90, .16) !important;
+}
+
+/* --------------------------------------------------------------------------
+   22. Overlay surfaces — consent banner, dialogs, menus, profile plate
+   Floating layers sit on top of live content, so the light card glass (10% white)
+   read as washed out. Overlays get a near-opaque fill plus a heavier blur, and
+   the consent banner keeps its dark surface in every theme because its copy is
+   white.
+   -------------------------------------------------------------------------- */
+:root,
+html[data-zyrex-theme] {
+    --lq-overlay-fill: linear-gradient(160deg, rgba(26, 27, 36, .90) 0%, rgba(10, 11, 16, .95) 100%);
+    --lq-overlay-blur: blur(26px) saturate(170%);
+    --lq-overlay-edge: rgba(255, 255, 255, .18);
+    --lq-overlay-shadow: 0 26px 60px rgba(0, 0, 0, .55);
+    --lq-plate-fill: rgba(14, 15, 21, .82);
+}
+
+html[data-zyrex-theme="light"] {
+    --lq-overlay-fill: linear-gradient(160deg, rgba(255, 255, 255, .96) 0%, rgba(242, 245, 251, .98) 100%);
+    --lq-overlay-edge: rgba(15, 20, 40, .14);
+    --lq-overlay-shadow: 0 26px 60px rgba(30, 40, 70, .22);
+    --lq-plate-fill: rgba(255, 255, 255, .88);
+}
+
+html body:not(.legal-page) :is(
+    .modal-box, .modal-content, .modal-quota-card, .login-modal-card, .social-modal-card,
+    .scanner-modal, .zyrex-access-dialog, .zyrex-access-modal, .zyrex-rw-modal,
+    .pf-follow-modal-dialog, .pf-media-modal-dialog, .sp-sheet-card, .drawer-inner,
+    .confirm-card, .popover-card, .mention-autocomplete-popup, .cookie-banner,
+    .auth-dropdown, .dropdown-menu
+) {
+    background: var(--lq-overlay-fill) !important;
+    border-color: var(--lq-overlay-edge) !important;
+    -webkit-backdrop-filter: var(--lq-overlay-blur) !important;
+    backdrop-filter: var(--lq-overlay-blur) !important;
+    box-shadow: var(--lq-overlay-shadow) !important;
+}
+
+/* The profile menu's identity header and its rows are nested plates; on the
+   opaque overlay they need their own contrast instead of the card-free wash. */
+html body:not(.legal-page) .auth-dropdown .auth-menu-head {
+    background: rgba(255, 255, 255, .07) !important;
+    border: 1px solid rgba(255, 255, 255, .08) !important;
+}
+
+html body:not(.legal-page) .auth-dropdown .auth-menu-link:hover {
+    background: rgba(255, 255, 255, .08) !important;
+}
+
+html[data-zyrex-theme="light"] body:not(.legal-page) .auth-dropdown .auth-menu-head {
+    background: rgba(21, 45, 90, .05) !important;
+    border-color: rgba(21, 45, 90, .1) !important;
+}
+
+html[data-zyrex-theme="light"] body:not(.legal-page) .auth-dropdown .auth-menu-link:hover {
+    background: rgba(21, 45, 90, .07) !important;
+}
+
+/* Row ink needs its own value per theme: the shared #b8b8c8 row colour
+   disappears on the light overlay, and the handle was faint in both. */
+html body:not(.legal-page) .auth-dropdown .auth-menu-copy span {
+    color: rgba(255, 255, 255, .62) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-zyrex-theme="light"] body:not(.legal-page) .auth-dropdown .auth-menu-link {
+    color: var(--site-text, #122a52) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-zyrex-theme="light"] body:not(.legal-page) .auth-dropdown .auth-menu-link:hover {
+    color: var(--accent, #1b4fa8) !important;
+}
+
+html[data-zyrex-theme="light"] body:not(.legal-page) .auth-dropdown .auth-menu-copy span {
+    color: var(--site-muted, #46618f) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+/* Logout keeps the accent tint instead of the plain row ink. */
+html body:not(.legal-page) .auth-dropdown .auth-menu-link-danger,
+html body:not(.legal-page) .auth-dropdown .auth-menu-link-danger i {
+    color: rgba(var(--zr-rgb-255-135-152, 255, 135, 152), 1) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-zyrex-theme="light"] body:not(.legal-page) .auth-dropdown .auth-menu-link-danger,
+html[data-zyrex-theme="light"] body:not(.legal-page) .auth-dropdown .auth-menu-link-danger i {
+    color: var(--accent, #1b4fa8) !important;
+}
+
+/* The consent bar keeps white copy, so it stays on a dark surface in both themes. */
+html body:not(.legal-page) .cookie-banner {
+    background: linear-gradient(160deg, rgba(22, 14, 26, .95) 0%, rgba(9, 7, 13, .97) 100%) !important;
+    border-color: rgba(var(--zr-rgb-255-43-82, 255, 43, 82), .3) !important;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, .62), 0 0 30px rgba(var(--zr-rgb-255-43-82, 255, 43, 82), .12) !important;
+}
+
+/* …and its copy stays white in the light theme too, where the generic ink rules
+   would otherwise paint it dark on that dark surface. */
+html[data-zyrex-theme="light"] body .cookie-banner h3 {
+    color: #fff !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-zyrex-theme="light"] body .cookie-banner p {
+    color: rgba(255, 255, 255, .74) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-zyrex-theme="light"] body .cookie-banner .btn-cookie-link {
+    color: rgba(255, 255, 255, .72) !important;
+    -webkit-text-fill-color: currentColor !important;
+}
+
+html[data-zyrex-theme="light"] body .cookie-banner .btn-cookie-link:hover {
+    color: #fff !important;
+}
+
+/* The profile hero plate and its stat strip float over the banner photo. */
+html body:not(.legal-page) :is(.pf-hero-body, .pf-hero-strip) {
+    -webkit-backdrop-filter: var(--lq-overlay-blur) !important;
+    backdrop-filter: var(--lq-overlay-blur) !important;
+}
+
+/* The identity plate keeps its light ink in every theme, so it stays a dark
+   sheet over the artwork instead of turning into a white slab. */
+html body:not(.legal-page) .pf-hero-body {
+    background: rgba(10, 11, 16, .74) !important;
+}
+
+html body:not(.legal-page) .pf-hero-strip {
+    background: var(--lq-plate-fill) !important;
+}
+
+/* The hero frame has to stay clear so the banner photo is not washed out. */
+html body:not(.legal-page) .pf-hero {
+    background: none !important;
+}

@@ -1,0 +1,1131 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zyrex | Profile</title>
+    <meta name="description" content="Member profile with posts, uploads and stats.">
+    <meta property="og:type" content="profile">
+    <meta property="og:site_name" content="Zyrex">
+    <meta property="og:title" content="Zyrex | Profile">
+    <meta property="og:description" content="Member profile with posts, uploads and stats.">
+    <meta property="og:image" content="https://zyrexediting.xyz/assets/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="https://zyrexediting.xyz/assets/og-image.png">
+    <link rel="icon" type="image/png" href="/assets/content.png">
+    <link rel="stylesheet" href="/css/style.css?v=92">
+    <link rel="stylesheet" href="/css/profile-system.css?v=20">
+    <link rel="stylesheet" href="/css/social-pages.css?v=44">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,800,900&amp;display=swap">
+    <link rel="stylesheet" href="/css/page-loader.css?v=1">
+    <link rel="stylesheet" href="/css/glass.css?v=67">
+    <link rel="stylesheet" href="/css/atmosphere.css?v=7">
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.fontshare.com">
+    <link rel="stylesheet" href="/css/i18n.css?v=3">
+    <script src="/js/i18n.js?v=15" defer></script>
+</head>
+
+<body>
+    <div class="zr-sweep" aria-hidden="true"></div>
+    <div class="lq-veil" aria-hidden="true"></div>
+
+<!-- Same fullscreen loader as /leaks: logo and pulse ring, no text. -->
+<div id="pageLoader" class="resources-loader-overlay">
+    <div class="resources-loader-content">
+        <div class="loader-logo-container">
+            <img src="/assets/content.png" alt="Zyrex" class="loader-logo-img">
+            <div class="loader-pulse-ring"></div>
+        </div>
+    </div>
+</div>
+<script>
+    function hidePageLoader() {
+        var loader = document.getElementById('pageLoader');
+        if (!loader || loader.classList.contains('fade-out')) return;
+        loader.classList.add('fade-out');
+        setTimeout(function () { if (loader && loader.parentNode) loader.parentNode.removeChild(loader); }, 600);
+    }
+    // Never trap the page behind the loader if a request hangs.
+    setTimeout(hidePageLoader, 12000);
+</script>
+
+<nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo"><img src="/assets/content.png" alt="ZYREX" class="logo-img"><span
+                    class="logo-text">yrex</span></a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="/">Home</a></li>
+                <li><a href="/leaks" class="active">Leaks</a></li><li><a href="/feed">Feed</a></li>
+                <li><a href="/plugins">Plugins</a></li>
+                <li><a href="/requests">Requests</a></li>
+                <li><a href="/audio">Audios</a></li>
+                
+            </ul>
+            <div class="nav-actions">
+                <div id="authBtn"></div>
+
+                <button class="hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="profile-page" id="profilePage" style="--pf-accent:var(--zr-accent, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1))">
+
+        <div class="pf-state" id="pfError" hidden>
+            <i class="fas fa-user-slash"></i>
+            <h2 id="pfErrorTitle">Profile not found</h2>
+            <p id="pfErrorMessage">That handle does not belong to anybody yet.</p>
+            <a class="pf-btn" href="/leaks"><i class="fas fa-arrow-left"></i> Browse leaks</a>
+        </div>
+
+        <div id="pfContent" hidden>
+            <section class="pf-hero">
+                <div class="pf-banner" id="pfBanner"><img class="pf-banner-img" id="pfBannerImg" alt="" hidden></div>
+                <div class="pf-hero-body">
+                    <div class="pf-avatar-wrap">
+                        <img class="pf-avatar" id="pfAvatar" src="/assets/default-avatar.png" alt="">
+                        <span class="pf-tier-pip" id="pfTierPip"><i class="fas fa-user"></i></span>
+                    </div>
+                    <div class="pf-identity">
+                        <h1 class="pf-name" id="pfName">Member</h1>
+                        <div class="pf-handle" id="pfHandle">@handle</div>
+                        <div class="pf-tags" id="pfTags"></div>
+                    </div>
+                    <div class="pf-hero-actions" id="pfActions"></div>
+                </div>
+                <div class="pf-hero-strip" id="pfStrip"></div>
+            </section>
+
+            <div class="pf-layout">
+                <div class="pf-col">
+                    <section class="pf-card" id="pfAboutCard" hidden>
+                        <div class="pf-card-heading-row">
+                            <h2 class="pf-card-title"><i class="fas fa-quote-left"></i> About</h2>
+                            <button class="pf-subtle-link pf-bio-trigger" id="pfBioEdit" type="button" hidden><i class="fas fa-pen"></i> Edit bio</button>
+                        </div>
+                        <p class="pf-muted" id="pfBio" style="color:rgba(255, 255, 255, .78);font-size:.92rem;line-height:1.7"></p>
+                        <div class="pf-bio-editor" id="pfBioEditor" hidden>
+                            <textarea id="pfBioInput" maxlength="400" rows="4" placeholder="A little about you: what you edit, what you use, what you are into." aria-label="Your bio"></textarea>
+                            <div class="pf-bio-editor-actions">
+                                <span id="pfBioNote" aria-live="polite"></span>
+                                <button class="pf-btn" id="pfBioCancel" type="button">Cancel</button>
+                                <button class="pf-btn is-primary" id="pfBioSave" type="button"><i class="fas fa-floppy-disk"></i> Save bio</button>
+                            </div>
+                        </div>
+                        <div class="pf-tags" id="pfLinks" style="margin-top:14px"></div>
+                    </section>
+
+                    <section class="pf-card">
+                        <h2 class="pf-card-title"><i class="fas fa-chart-simple"></i> Signature numbers</h2>
+                        <div class="pf-stats" id="pfStats"></div>
+                    </section>
+
+                    <section class="pf-card" id="pfHighlightsCard" hidden>
+                        <h2 class="pf-card-title"><i class="fas fa-crown"></i> Highlights</h2>
+                        <div id="pfHighlights"></div>
+                    </section>
+
+                    <section class="pf-card pf-posts-card">
+                        <div class="pf-card-heading-row">
+                            <h2 class="pf-card-title"><i class="fas fa-align-left"></i> Posts</h2>
+                            <a class="pf-subtle-link" href="/feed"><i class="fas fa-house"></i> Following feed</a>
+                        </div>
+                        <div class="pf-post-list" id="pfPostList"></div>
+                        <p class="pf-muted pf-empty-inline" id="pfPostEmpty" hidden>No posts yet.</p>
+                        <button class="pf-btn pf-load-more" id="pfPostMore" hidden><i class="fas fa-chevron-down"></i> Load more</button>
+                    </section>
+
+                    <section class="pf-card" id="pfResourcesCard" hidden>
+                        <h2 class="pf-card-title"><i class="fas fa-layer-group"></i> Leaks</h2>
+                        <div class="pf-tabs" id="pfTabs"></div>
+                        <div class="pf-grid" id="pfGrid"></div>
+                        <p class="pf-muted" id="pfGridEmpty" hidden>No public leaks yet.</p>
+                        <div style="margin-top:16px">
+                            <button class="pf-btn" id="pfMore" hidden><i class="fas fa-chevron-down"></i> Load more</button>
+                        </div>
+                    </section>
+
+                    <section class="pf-card" id="pfActivityCard" hidden>
+                        <h2 class="pf-card-title"><i class="fas fa-clock-rotate-left"></i> Recent activity</h2>
+                        <div class="pf-timeline" id="pfActivity"></div>
+                    </section>
+
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+<footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                                <div class="footer-brand">
+                    <a href="/" class="hero-brand-lockup footer-brand-lockup">
+                        <img src="/assets/content.png" alt="Zyrex Logo" class="hero-brand-icon">
+                        <div class="hero-brand-text-col">
+                            <span class="hero-brand-title">Zyrex<sup>™</sup></span>
+                            <span class="hero-brand-sub">EDITING</span>
+                        </div>
+                    </a>
+                    <p>Editing leaks and stuff.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/leaks">Leaks</a></li>
+                        <li><a href="/feed">Feed</a></li>
+                        <li><a href="/plugins">Plugins</a></li>
+                        <li><a href="/requests">Requests</a></li>
+                        <li><a href="/audio">Audios</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="/terms">Terms of Service</a></li>
+                        <li><a href="/privacy">Privacy Policy</a></li>
+                        <li><a href="/dmca">DMCA</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="https://discord.gg/4J3tars4QS" target="_blank" rel="noopener">Discord</a></li>
+                        <li><a href="/#contact">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Zyrex Editing. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <div class="pf-connections-modal" id="pfConnectionsModal" hidden>
+        <div class="pf-connections-backdrop" data-connections-close></div>
+        <section class="pf-connections-dialog" role="dialog" aria-modal="true" aria-labelledby="pfConnectionsTitle">
+            <header class="pf-connections-head">
+                <div class="pf-connections-heading">
+                    <span class="pf-connections-icon"><i class="fas fa-user-group"></i></span>
+                    <div><h2 id="pfConnectionsTitle" data-i18n="Followers">Followers</h2></div>
+                </div>
+                <button class="pf-connections-close" type="button" aria-label="Close" data-connections-close><i class="fas fa-xmark"></i></button>
+            </header>
+            <div class="pf-connections-list pf-people" id="pfConnectionsList" aria-live="polite"></div>
+            <footer class="pf-connections-footer">
+                <button class="pf-btn" id="pfConnectionsMore" type="button" hidden><i class="fas fa-chevron-down"></i> <span data-i18n="Load more">Load more</span></button>
+            </footer>
+        </section>
+    </div>
+
+    <div class="pf-follow-modal" id="pfFollowModal" hidden>
+        <div class="pf-follow-modal-backdrop" data-follow-close></div>
+        <div class="pf-follow-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="pfFollowModalTitle">
+            <img class="pf-follow-modal-avatar" id="pfFollowModalAvatar" src="/assets/default-avatar.png" alt="">
+            <h3 id="pfFollowModalTitle">Get notified about new posts?</h3>
+            <p>You can choose site notifications and Discord DMs for this account, and change it any time in settings.</p>
+            <label class="pf-follow-modal-toggle"><input type="checkbox" id="pfFollowModalNotify" checked> <span>Notify me when <b id="pfFollowModalName">this member</b> posts</span></label>
+            <div class="pf-follow-modal-actions">
+                <button type="button" class="pf-btn" id="pfFollowModalSkip">Not now</button>
+                <button type="button" class="pf-btn is-primary" id="pfFollowModalSave"><i class="fas fa-bell"></i> Save</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/chunks/chunk-store.js?v=1"></script>
+    <script src="/js/auth.js?v=19"></script>
+    <script src="/js/script.js?v=92"></script>
+    <script src="/js/social-interactions.js?v=6"></script>
+    <script src="/js/post-markdown.js?v=2"></script>
+    <script>
+        (function () {
+            'use strict';
+
+            var state = { profile: null, handle: '', type: 'all', sort: 'recent', page: 1, pages: 1, connections: 'followers', connectionPage: 0, connectionPages: 1, viewerId: '', postPage: 1, postPages: 1, reposts: [] };
+            var $ = function (id) { return document.getElementById(id); };
+            var tr = function (text) { return window.ZyrexI18n && typeof window.ZyrexI18n.t === 'function' ? window.ZyrexI18n.t(text) : text; };
+            var esc = function (value) {
+                return String(value == null ? '' : value)
+                    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            };
+            var num = function (value) {
+                var n = Number(value) || 0;
+                if (n >= 1000000) return (Math.round(n / 100000) / 10) + 'M';
+                if (n >= 1000) return (Math.round(n / 100) / 10) + 'K';
+                return String(n);
+            };
+            var when = function (iso) {
+                if (!iso) return '';
+                var then = new Date(iso).getTime();
+                if (!then) return String(iso).slice(0, 10);
+                var days = Math.floor((Date.now() - then) / 86400000);
+                if (days <= 0) return 'today';
+                if (days === 1) return 'yesterday';
+                if (days < 30) return days + ' days ago';
+                if (days < 365) return Math.floor(days / 30) + ' months ago';
+                var years = Math.floor(days / 365);
+                return years + (years === 1 ? ' year ago' : ' years ago');
+            };
+
+            // /@handle is the public URL; ?id= and the session are fallbacks for
+            // previewing your own page from settings.
+            function targetHandle() {
+                var match = /^\/@([A-Za-z0-9._-]{1,32})\/?$/.exec(location.pathname);
+                if (match) return match[1].toLowerCase();
+                return '';
+            }
+
+            function showError(title, message) {
+                hidePageLoader();
+                $('pfContent').hidden = true;
+                $('pfError').hidden = false;
+                $('pfErrorTitle').textContent = title;
+                // The API's own message is often the title again ("Profile not found"),
+                // which reads as a stutter under the heading.
+                var text = String(message || '').trim();
+                if (!text || text.toLowerCase() === String(title).toLowerCase()) {
+                    text = 'That handle does not belong to anybody yet.';
+                }
+                $('pfErrorMessage').textContent = text;
+            }
+
+            function renderHero(profile) {
+                document.title = profile.handle ? (profile.name + ' (@' + profile.handle + ') | Zyrex') : (profile.name + ' | Zyrex');
+                var isFounder = String(profile.id || '') === '1421177012814614548';
+                var isStaffTeam = Boolean(profile.has_staff_team_role && !isFounder);
+                document.body.classList.toggle('is-founder-profile', isFounder);
+                var profileAccent = isFounder ? '#1c3768' : (profile.accent || 'var(--zr-accent, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1))');
+                document.documentElement.style.setProperty('--pf-accent', profileAccent);
+                $('profilePage').style.setProperty('--pf-accent', profileAccent);
+
+                var avatar = $('pfAvatar');
+                avatar.src = profile.avatar || '/assets/default-avatar.png';
+                avatar.alt = profile.name + ' avatar';
+                avatar.onerror = function () { this.onerror = null; this.src = '/assets/default-avatar.png'; };
+
+                if (profile.banner && (/^https?:\/\//.test(profile.banner) || profile.banner.indexOf('/api/banner/') === 0)) {
+                    paintBanner(profile.banner);
+                }
+
+                // Admins are marked by this tick instead of a badge chip.
+                var adminTick = (profile.is_admin || profile.is_official) ? ' <i class="fas fa-circle-check is-admin-check" aria-label="Admin"></i>' : '';
+                $('pfName').innerHTML = esc(profile.name) + adminTick;
+                $('pfName').classList.toggle('founder-name', isFounder);
+                $('pfHandle').textContent = profile.handle ? '@' + profile.handle : 'Member profile';
+                $('pfTierPip').classList.toggle('is-staff-team', isStaffTeam);
+                $('pfTierPip').innerHTML = '<i class="fas ' + (isStaffTeam ? 'fa-shield-halved' : esc(profile.tier_icon || 'fa-user')) + '"' + (isStaffTeam ? ' aria-label="Staff Team" title="Staff Team"' : '') + '></i>';
+
+                var tags = [];
+                if (profile.has_staff_team_role && !isFounder) {
+                    tags.push('<span class="pf-tag is-staff-team"><i class="fas fa-shield-halved"></i> <span data-i18n="Staff Team">Staff Team</span></span>');
+                }
+                tags.push('<span class="pf-tag is-tier"><i class="fas ' + esc(profile.tier_icon) + '"></i> ' + esc(profile.tier_label) + '</span>');
+                (profile.badges || []).forEach(function (badge) {
+                    if (badge.key === profile.tier) return;
+                    // Ad-free is an access perk, not a profile badge.
+                    if (badge.key === 'ad_free' || badge.key === 'ad-free') return;
+                    // The admin tick is the one badge that carries its own colour.
+                    tags.push('<span class="pf-tag' + (badge.tone === 'admin' ? ' is-admin' : '') + '"><i class="fas ' + esc(badge.icon) + '"></i> ' + esc(badge.label) + '</span>');
+                });
+                $('pfTags').innerHTML = tags.join('');
+
+                var actions = [];
+                if (profile.is_self && profile.can_edit !== false) {
+                    actions.push('<a class="pf-btn is-primary" href="/profile-edit"><i class="fas fa-pen"></i> Edit profile</a>');
+                } else {
+                    actions.push('<button class="pf-btn' + (profile.is_following ? ' is-following' : ' is-primary') + '" id="pfFollow">' +
+                        '<i class="fas ' + (profile.is_following ? 'fa-check' : 'fa-plus') + '"></i> ' +
+                        (profile.is_following ? 'Following' : 'Follow') + '</button>');
+                }
+                actions.push('<button class="pf-btn" id="pfCopy"><i class="fas fa-link"></i> Copy link</button>');
+                actions.push('<button class="pf-btn" id="pfShare"><i class="fas fa-share-nodes"></i> Share</button>');
+                $('pfActions').innerHTML = actions.join('');
+
+                if ($('pfFollow')) {
+                    $('pfFollow').addEventListener('click', function () { toggleFollow(this); });
+                }
+                var link = location.origin + (profile.url || (location.pathname + location.search));
+                $('pfCopy').addEventListener('click', function () {
+                    var button = this;
+                    var done = function () { button.innerHTML = '<i class="fas fa-check"></i> Copied'; setTimeout(function () { button.innerHTML = '<i class="fas fa-link"></i> Copy link'; }, 1600); };
+                    if (navigator.clipboard) navigator.clipboard.writeText(link).then(done, function () { window.prompt('Copy this link', link); });
+                    else window.prompt('Copy this link', link);
+                });
+                $('pfShare').addEventListener('click', function () {
+                    if (navigator.share) navigator.share({ title: profile.name + ' on Zyrex', url: link }).catch(function () {});
+                    else if (navigator.clipboard) navigator.clipboard.writeText(link);
+                });
+
+                renderStrip(profile);
+            }
+
+            function renderStrip(profile) {
+                var counts = profile.counts || {};
+                var resourceTotal = Number(counts.resources) || 0;
+                var strip = [];
+                // Members who never uploaded must not advertise a resource count, and
+                // uploaders see their exact number rather than a rounded abbreviation.
+                if (resourceTotal > 0) strip.push(['Leaks', String(resourceTotal)]);
+                strip.push(['Followers', num(counts.followers)]);
+                strip.push(['Following', num(counts.following)]);
+                $('pfStrip').innerHTML = strip.map(function (pair) {
+                    return '<div class="pf-strip-item"><span class="pf-strip-value">' + esc(pair[1]) + '</span><span class="pf-strip-label">' + esc(pair[0]) + '</span></div>';
+                }).join('');
+            }
+            // Social tags name the platform and show the account photo before the handle.
+            // Game accounts have no page to open, so they render as plain tags with a rank.
+            function socialTag(item) {
+                var isGame = ['valorant', 'league', 'roblox'].indexOf(String(item.platform || '')) !== -1;
+                // Games ship their own logo, stored as an asset path; socials keep the brand font icon.
+                var iconHtml = item.icon && item.icon.charAt(0) === '/'
+                    ? '<img class="pf-tag-game-icon" src="' + esc(item.icon) + '" alt="" loading="lazy">'
+                    : '<i class="' + esc(item.icon ? (isGame ? 'fas ' : 'fab ') + item.icon : 'fas fa-link') + '"></i>';
+                var label = item.label || 'Link';
+                var photo = item.avatar ? '<img class="pf-tag-avatar" src="' + esc(item.avatar) + '" alt="" loading="lazy" onerror="this.remove()">' : '';
+                var account = item.handle ? (isGame ? esc(item.handle) : '@' + esc(item.handle)) : '';
+                var detail = item.detail ? '<span class="pf-tag-detail">' + esc(item.detail) + '</span>' : '';
+                var tail = (account || detail)
+                    ? '<span class="pf-tag-handle">' + photo + account + (account && detail ? ' · ' : '') + detail + '</span>'
+                    : '';
+                var cls = 'pf-tag pf-tag-social' + (isGame ? ' pf-tag-game' : '');
+                var body = iconHtml + '<span class="pf-tag-label">' + esc(label) + '</span>' + tail;
+                if (!item.url) return '<span class="' + cls + '">' + body + '</span>';
+                return '<a class="' + cls + '" href="' + esc(item.url) + '" target="_blank" rel="noopener noreferrer nofollow" title="' + esc(item.url) + '">' + body + '</a>';
+            }
+
+            // The banner is an <img> so the artwork always fills its 16:9 box.
+            function paintBanner(value) {
+                var image = $('pfBannerImg');
+                var box = $('pfBanner');
+                if (!box) return;
+                var url = String(value || '').replace(/"/g, '').replace('size=600', 'size=1024');
+                box.style.backgroundImage = url ? 'url("' + url + '")' : '';
+                if (!image) return;
+                if (!url) { image.hidden = true; image.removeAttribute('src'); box.style.removeProperty('aspect-ratio'); return; }
+                image.hidden = false;
+                image.onerror = function () { image.hidden = true; };
+                image.onload = function () {
+                    var w = image.naturalWidth, h = image.naturalHeight;
+                    if (!w || !h) return;
+                    // Keep the file's own shape, but never let it grow into a wall of art.
+                    var ratio = Math.min(Math.max(w / h, 1.5), 3.2);
+                    box.style.aspectRatio = String(Math.round(ratio * 1000) / 1000);
+                };
+                image.src = url;
+            }
+
+            function renderAbout(profile) {
+                var bio = String(profile.bio || "").trim();
+                var links = profile.links || [];
+                var isSelf = Boolean(profile.is_self);
+                // Owners always get the card, even when empty, so a bio can be written in place.
+                if (!bio && !links.length && !isSelf) {
+                    $('pfAboutCard').hidden = true;
+                    return;
+                }
+                var bioNode = $('pfBio');
+                bioNode.textContent = bio || (isSelf ? 'No bio yet. Add one so visitors know who you are.' : '');
+                bioNode.hidden = !bio && !isSelf;
+                bioNode.style.color = bio ? 'rgba(255, 255, 255, .78)' : 'rgba(255, 255, 255, .45)';
+                // Scrapin resolves the platform and handle, so the tag names the profile
+                // the link really points at.
+                $('pfLinks').innerHTML = links.map(function (item) {
+                    var icon = item.icon ? 'fab ' + item.icon : 'fas fa-link';
+                    var label = item.label || 'Link';
+                    if (item.handle && String(item.handle).toLowerCase() !== label.toLowerCase()) label += ' · @' + item.handle;
+                    return socialTag(item);
+                }).join('');
+                $('pfBioEdit').hidden = !isSelf;
+                $('pfAboutCard').hidden = false;
+            }
+
+            function setupBio() {
+                var trigger = $('pfBioEdit');
+                var editor = $('pfBioEditor');
+                var input = $('pfBioInput');
+                var save = $('pfBioSave');
+                if (!trigger || !editor || !input || !save) return;
+
+                function note(message, isError) {
+                    var node = $('pfBioNote');
+                    node.textContent = message || '';
+                    node.classList.toggle('is-error', Boolean(isError));
+                }
+                function close() {
+                    editor.hidden = true;
+                    note('');
+                    trigger.hidden = !(state.profile && state.profile.is_self && state.profile.can_edit !== false);
+                }
+
+                trigger.addEventListener('click', function () {
+                    if (!state.profile) return;
+                    input.value = String(state.profile.bio || '');
+                    editor.hidden = false;
+                    trigger.hidden = true;
+                    note('');
+                    input.focus();
+                });
+                $('pfBioCancel').addEventListener('click', close);
+                input.addEventListener('input', function () {
+                    note(this.value.length >= 400 ? '400 character limit reached.' : '');
+                });
+                save.addEventListener('click', function () {
+                    var value = input.value.trim();
+                    if (value.length > 400) { note('Bios are limited to 400 characters.', true); return; }
+                    save.disabled = true;
+                    note('Saving…');
+                    fetch('/api/profile/settings', {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ bio: value })
+                    }).then(function (response) {
+                        return response.json().catch(function () { return {}; }).then(function (data) {
+                            if (!response.ok || !data.success) throw new Error(data.error || 'Could not save your bio.');
+                            return data;
+                        });
+                    }).then(function () {
+                        if (state.profile) state.profile.bio = value;
+                        renderAbout(state.profile || {});
+                        close();
+                    }).catch(function (error) {
+                        note(error.message || 'Could not save your bio.', true);
+                    }).finally(function () { save.disabled = false; });
+                });
+            }
+
+            function renderStats(profile) {
+                var stats = profile.stats || {};
+                var counts = profile.counts || {};
+                var rows = [
+                    { label: 'Followers', value: counts.followers || 0, connections: 'followers' },
+                    { label: 'Following', value: counts.following || 0, connections: 'following' },
+                    { label: 'Views', value: stats.views },
+                    { label: 'Comments', value: stats.comments },
+                    { label: 'Requests filled', value: stats.requests_fulfilled }
+                ];
+                if (typeof stats.downloads === 'number') rows.splice(4, 0, { label: 'Downloads', value: stats.downloads });
+                if (typeof stats.avg_downloads === 'number' && Number(stats.resources) > 0) rows.push({ label: 'Avg / leak', value: stats.avg_downloads });
+                if (typeof stats.downloads_made === 'number') rows.push({ label: 'Downloads made', value: stats.downloads_made });
+                if (stats.active_months) rows.push({ label: 'Active months', value: stats.active_months });
+
+                $('pfStats').innerHTML = rows.filter(function (row) {
+                    return row.value !== undefined && row.value !== null;
+                }).map(function (row) {
+                    var label = '<div class="pf-stat-label" data-i18n="' + esc(row.label) + '">' + esc(tr(row.label)) + '</div>';
+                    var content = '<div class="pf-stat-value">' + esc(num(row.value)) + '</div>' + label;
+                    return row.connections
+                        ? '<button class="pf-stat pf-stat-button" type="button" data-connections="' + row.connections + '" aria-label="' + esc(tr(row.label)) + '">' + content + '</button>'
+                        : '<div class="pf-stat">' + content + '</div>';
+                }).join('');
+            }
+
+            function renderHighlights(profile) {
+                var stats = profile.stats || {};
+                var cards = [];
+                if (stats.best_resource && stats.best_resource.name) {
+                    cards.push('<div class="pf-person"><i class="fas fa-trophy" style="color:var(--pf-accent);width:32px;text-align:center"></i>' +
+                        '<div><div class="pf-person-name">' + esc(stats.best_resource.name) + '</div>' +
+                        '<div class="pf-person-sub">Best leak · ' + num(stats.best_resource.downloads) + ' downloads</div></div></div>');
+                }
+                if (stats.category_focus) {
+                    cards.push('<div class="pf-person"><i class="fas fa-bullseye" style="color:var(--pf-accent);width:32px;text-align:center"></i>' +
+                        '<div><div class="pf-person-name">' + esc(String(stats.category_focus).replace(/-/g, ' ')) + '</div>' +
+                        '<div class="pf-person-sub">Known for</div></div></div>');
+                }
+                if (stats.first_upload_at) {
+                    cards.push('<div class="pf-person"><i class="fas fa-flag" style="color:var(--pf-accent);width:32px;text-align:center"></i>' +
+                        '<div><div class="pf-person-name">' + esc(when(stats.first_upload_at)) + '</div>' +
+                        '<div class="pf-person-sub">First upload</div></div></div>');
+                }
+                if (!cards.length) return;
+                $('pfHighlights').innerHTML = cards.join('');
+                $('pfHighlightsCard').hidden = false;
+            }
+
+            function renderAchievements(profile) {
+                var list = profile.achievements || [];
+                if (!list.length) {
+                    $('pfAchievements').innerHTML = '<p class="pf-muted">No achievements yet.</p>';
+                    return;
+                }
+                $('pfAchievements').innerHTML = list.map(function (item) {
+                    var title = esc(item.description) + (item.earned
+                        ? (item.unlocked_at ? ' · unlocked ' + esc(when(item.unlocked_at)) : '')
+                        : ' · ' + esc(item.value) + ' / ' + esc(item.target));
+                    var rarity = item.holders ? ' · ' + item.rarity + '% of members' : '';
+                    return '<div class="pf-ach ' + (item.earned ? 'is-earned' : 'is-locked') + '" title="' + title + rarity + '">' +
+                        '<div class="pf-ach-icon"><i class="fas ' + esc(item.icon) + '"></i></div>' +
+                        '<div class="pf-ach-label">' + esc(item.label) + '</div>' +
+                        (item.earned ? '' : '<div class="pf-ach-bar"><span style="width:' + Math.round((item.progress || 0) * 100) + '%"></span></div>') +
+                        '</div>';
+                }).join('');
+            }
+
+            function renderActivity(profile) {
+                var items = profile.activity || [];
+                if (!items.length) return;
+                $('pfActivity').innerHTML = items.map(function (item) {
+                    var icon = item.type === 'achievement' ? 'fa-medal' : 'fa-cloud-arrow-up';
+                    var inner = '<div class="pf-event-title">' + esc(item.title) + '</div>' +
+                        '<div class="pf-event-sub">' + esc(item.detail || '') + ' · ' + esc(when(item.at)) + '</div>';
+                    var body = item.url
+                        ? '<a class="pf-event-title" style="text-decoration:none;color:inherit" href="' + esc(item.url) + '">' + esc(item.title) + '</a>' +
+                          '<div class="pf-event-sub">' + esc(item.detail || '') + ' · ' + esc(when(item.at)) + '</div>'
+                        : inner;
+                    return '<div class="pf-event"><div class="pf-event-icon"><i class="fas ' + icon + '"></i></div><div style="min-width:0">' + body + '</div></div>';
+                }).join('');
+                $('pfActivityCard').hidden = false;
+            }
+
+            function renderPost(post) {
+                var profile = state.profile;
+                var author = profile;
+                function linkCards(links) {
+                    return (Array.isArray(links) ? links : []).slice(0, 2).map(function (link) {
+                        if (!link || !link.url) return '';
+                        var host = '';
+                        try { host = new URL(link.url).hostname.replace(/^www\./, ''); } catch (_) {}
+                        var thumb = link.image ? '<span class="pf-link-card-thumb"><img src="' + esc(link.image) + '" alt="" decoding="async" onerror="this.parentNode.remove()"></span>' : '';
+                        return '<a class="pf-link-card" href="' + esc(link.url) + '" target="_blank" rel="noopener nofollow ugc">' + thumb + '<span class="pf-link-card-body"><small>' + esc(link.site || host) + '</small><strong>' + esc(link.title || link.url) + '</strong>' + (link.description ? '<span>' + esc(link.description) + '</span>' : '') + '</span></a>';
+                    }).join('');
+                }
+                var postVideo = function (video) {
+                    if (!video || !video.url) return '';
+                    return '<video class="pf-post-media pf-post-video" src="' + esc(video.url) + '"' + (video.poster ? ' poster="' + esc(video.poster) + '"' : '') + ' controls playsinline preload="metadata"></video>';
+                };
+                var postMedia = function (src) {
+                    var url = String(src || '');
+                    var small = /\/stickers\//i.test(url) || /(?:giphy|tenor)\.(?:com|co)\//i.test(url);
+                    return '<img class="pf-post-media' + (small ? ' is-sticker' : '') + '" src="' + esc(window.ZyrexMedia ? window.ZyrexMedia.src(url) : url) + '" alt="" decoding="async">';
+                };
+                var avatar = author.avatar || '/assets/default-avatar.png';
+                var handle = author.handle || author.name || 'Zyrex Member';
+                var url = author.url || (author.handle ? '/@' + encodeURIComponent(author.handle) : '#');
+                var repostLabel = post.repost_of ? '<div class="pf-post-repost-label"><i class="fas fa-retweet"></i> ' + esc(profile.name) + ' reposted</div>' : '';
+                var original = post.repost_of
+                    ? (post.original
+                        ? '<div class="pf-post-quoted">' +
+                            '<a class="pf-post-author" href="' + esc(post.original.author.url || '#') + '"><img src="' + esc(post.original.author.avatar || '/assets/default-avatar.png') + '" alt="" loading="lazy"><span><strong>' + esc(post.original.author.name) + (post.original.author.is_admin ? ' <i class="fas fa-circle-check is-admin-check" aria-label="Admin"></i>' : '') + '</strong><small>' + esc(post.original.author.handle ? '@' + post.original.author.handle : '') + ' · ' + esc(when(post.original.created_at)) + '</small></span></a>' +
+                            (post.original.text ? '<div class="pf-post-text">' + renderPostText(post.original.text, post.original.mentions) + '</div>' : '') +
+                            (post.original.media || []).map(function (src) { return postMedia(src); }).join('') + postVideo(post.original.video) + linkCards(post.original.links) +
+                          '</div>'
+                        : '<div class="pf-post-quoted pf-muted">Original post unavailable.</div>')
+                    : '';
+                var text = post.repost_of ? '' : (post.text ? '<div class="pf-post-text">' + renderPostText(post.text, post.mentions) + '</div>' : '');
+                var media = post.repost_of ? '' : (post.media || []).map(function (src) { return postMedia(src); }).join('') + postVideo(post.video) + linkCards(post.links);
+                var key = post.repost_of ? post.repost_of.author_id + ':' + post.repost_of.post_id : post.author_id + ':' + post.id;
+                var reposted = state.reposts.indexOf(key) !== -1;
+                var canDelete = Boolean(state.viewerId) && String(post.author_id || '') === String(state.viewerId);
+                var deleteButton = canDelete
+                    ? '<button type="button" class="pf-post-action is-danger" data-delete-post="' + esc(post.id) + '"><i class="fas fa-trash-can"></i> Delete</button>'
+                    : '';
+                // One post can be pinned above the rest of the profile.
+                var isPinned = Boolean(state.profile) && String(state.profile.pinned_post_id || '') === String(post.id);
+                var pinButton = canDelete && !post.repost_of
+                    ? '<button type="button" class="pf-post-action' + (isPinned ? ' is-pinned' : '') + '" data-pin-post="' + esc(post.id) + '" data-pinned="' + (isPinned ? '1' : '0') + '"><i class="fas fa-thumbtack"></i> ' + (isPinned ? 'Unpin' : 'Pin') + '</button>'
+                    : '';
+                var postLink = post.repost_of
+                    ? '/post/' + esc(post.repost_of.post_id)
+                    : (Number(post.seq) > 0 ? '/feed/post/' + Number(post.seq) : '/post/' + esc(post.id));
+                var shareButton = '<button type="button" class="pf-post-action" data-share-post="' + esc(post.id) + '" data-share-link="' + esc(postLink) + '"><i class="fas fa-share-nodes"></i> Share</button>';
+                var pinnedBadge = isPinned ? '<div class="pf-post-pinned"><i class="fas fa-thumbtack"></i> Pinned</div>' : '';
+                var canRepostHere = Boolean(state.viewerId) && !(state.profile && state.profile.is_official);
+                return '<article class="pf-post" data-post-open="' + esc(postLink) + '">' + pinnedBadge + repostLabel +
+                    '<div class="pf-post-top"><a class="pf-post-author" href="' + esc(url) + '"><img src="' + esc(avatar) + '" alt="" loading="lazy" onerror="this.src=\'/assets/default-avatar.png\'"><span><strong>' + esc(author.name || 'Zyrex Member') + (author.is_admin ? ' <i class="fas fa-circle-check is-admin-check" aria-label="Admin"></i>' : '') + '</strong><small>' + esc(author.handle ? '@' + author.handle : '') + (post.repost_of ? '' : ' · ' + esc(when(post.created_at))) + '</small></span></a></div>' +
+                    text + media + original +
+                    '<div class="pf-post-actions">' + (canRepostHere ? '<button type="button" class="pf-post-action' + (reposted ? ' is-reposted' : '') + '" data-repost-author="' + esc(post.repost_of ? post.repost_of.author_id : post.author_id) + '" data-repost-id="' + esc(post.repost_of ? post.repost_of.post_id : post.id) + '"><i class="fas fa-retweet"></i> ' + (reposted ? 'Reposted' : 'Repost') + '</button>' : '') + shareButton + pinButton + deleteButton + (post.repost_of ? '<span>' + esc(when(post.created_at)) + '</span>' : '') + '</div>' +
+                    '</article>';
+            }
+
+            function renderPostText(value, mentions) {
+                var raw = String(value || ''), out = '', cursor = 0;
+                var mediaPattern = /!\[(sticker:([^\]]*)|gif)\]\((https:\/\/[^\s)]+)\)/gi;
+                                function decorate(part) {
+                    var html = part;
+                    (Array.isArray(mentions) ? mentions : []).forEach(function (mention) {
+                        var id = String(mention.id || ''), username = String(mention.username || '');
+                        if (!/^\d{17,20}$/.test(id) || !/^[a-zA-Z0-9_.-]{1,32}$/.test(username)) return;
+                        var safeToken = ('@' + username).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                        html = html.replace(new RegExp('(^|[^a-zA-Z0-9_.-])(' + safeToken + ')(?![a-zA-Z0-9_.-])', 'gi'), '$1<a class="pf-mention-link" href="/profile?id=' + encodeURIComponent(id) + '">$2</a>');
+                    });
+                    return html;
+                }
+                function renderTextPart(part) {
+                    return window.ZyrexPostFormat ? window.ZyrexPostFormat.blocks(part, decorate) : esc(part).replace(/\n/g, '<br>');
+                }
+                function mediaUrlAllowed(value) {
+                    try {
+                        var url = new URL(value);
+                        return url.protocol === 'https:' && (/^(cdn\.discordapp\.com|media\.discordapp\.net)$/.test(url.hostname) || /^(media\d*\.giphy\.com|i\.giphy\.com)$/.test(url.hostname) || /^(media\.tenor\.com|tenor\.com)$/.test(url.hostname));
+                    } catch (_) { return false; }
+                }
+                raw.replace(mediaPattern, function (match, kind, name, url, offset) {
+                    out += renderTextPart(raw.slice(cursor, offset));
+                    if (mediaUrlAllowed(url)) out += '<span class="pf-post-embed"><img src="' + esc(window.ZyrexMedia ? window.ZyrexMedia.src(url) : url) + '" alt="' + esc(name || (kind === 'gif' ? 'GIF' : 'Discord sticker')) + '" loading="lazy"></span>';
+                    else out += renderTextPart(match);
+                    cursor = offset + match.length;
+                    return match;
+                });
+                out += renderTextPart(raw.slice(cursor));
+                return out;
+            }
+
+            var renderPostWithSocial = renderPost;
+            renderPost = function (post) {
+                var html = renderPostWithSocial(post);
+                var type = 'post';
+                // Replying is a conversation with its own page, so the card links out to it.
+                // A repost points at the original post, which is the page that can be opened.
+                var socialPostLink = post.repost_of
+                    ? '/post/' + esc(post.repost_of.post_id)
+                    : (Number(post.seq) > 0 ? '/feed/post/' + Number(post.seq) : '/post/' + esc(post.id));
+                var controls = '<div class="pf-social-interactions"><div class="pf-social-actions"><button type="button" data-social-like><i class="far fa-heart"></i><span data-like-label>Like</span><b data-social-likes>0</b></button><span class="pf-social-stat"><i class="far fa-eye"></i><b data-social-views>0</b></span><a class="pf-social-stat is-replies" href="' + esc(socialPostLink) + '#replies" title="Open this post to reply"><i class="far fa-comment"></i><span>Reply</span><b data-social-replies>0</b></a></div></div>';
+                html = html.replace('<article class="pf-post"', '<article class="pf-post" data-social-type="' + type + '" data-social-author="' + esc(post.author_id) + '" data-social-id="' + esc(post.id) + '"');
+                // Likes and views sit above the action row, so the buttons read as a footer.
+                return html.replace('<div class="pf-post-actions">', controls + '<div class="pf-post-actions">');
+            };
+
+            // The official account's profile also lists the upload announcements.
+            function renderNotice(notice) {
+                var resource = notice.resource || {};
+                var uploader = notice.uploader || {};
+                var thumb = resource.thumbnail
+                    ? '<img src="' + esc(resource.thumbnail) + '" alt="' + esc(resource.name) + '" loading="lazy" onerror="this.closest(\'.pf-notice-thumb\').classList.add(\'is-empty\');this.remove()">'
+                    : '';
+                var label = uploader.handle ? '@' + uploader.handle : (uploader.name || 'Zyrex member');
+                return '<div class="pf-notice"' + (notice.post_url ? ' data-post-open="' + esc(notice.post_url) + '"' : '') + '>' +
+                    '<header class="pf-notice-head"><a class="pf-notice-author" href="/@zyrex">' +
+                    '<img src="/assets/content.png" alt="Zyrex" onerror="this.src=\'/assets/content.png\'">' +
+                    '<span><strong>Zyrex <i class="fas fa-circle-check is-admin-check" aria-label="Official"></i></strong><small>@zyrex · ' + esc(when(notice.created_at)) + '</small></span>' +
+                    '</a>' + (notice.post_url ? '<a class="pf-notice-stamp" href="' + esc(notice.post_url) + '" title="Open this post">#' + esc(String(notice.seq || '')) + '</a>' : '') + '</header>' +
+                    '<p class="pf-notice-text"><a class="pf-mention-link" href="' + esc(uploader.url || '#') + '">' + esc(label) + '</a> uploaded a new leak!</p>' +
+                    '<div class="pf-notice-resource">' +
+                    '<a class="pf-notice-thumb" href="' + esc(resource.url || '/leaks') + '">' + thumb + '</a>' +
+                    '<span class="pf-notice-info"><strong><a class="pf-notice-title" href="' + esc(resource.url || '/leaks') + '">' + esc(resource.name || 'New leak') + '</a></strong>' +
+                    '<span><i class="fas fa-layer-group"></i> ' + esc(Array.isArray(resource.category_labels) && resource.category_labels.length ? resource.category_labels.join(' · ') : (resource.category || resource.type || 'Leak')) + ' <i class="fas fa-arrow-up-right-from-square"></i></span></span>' +
+                    '</div></div>';
+            }
+
+            function loadPosts(reset) {
+                var page = reset ? 1 : state.postPage + 1;
+                return fetch('/api/profile/posts?handle=' + encodeURIComponent(state.handle) + '&page=' + page, { credentials: 'include' })
+                    .then(function (response) { return response.json().then(function (data) { return { ok: response.ok, data: data }; }); })
+                    .then(function (result) {
+                        var data = result.data || {};
+                        if (!result.ok || !data.success) throw new Error(data.error || 'Could not load posts.');
+                        state.postPage = data.page;
+                        state.postPages = data.pages;
+                        state.reposts = data.reposts || [];
+                        if (reset) $('pfPostList').innerHTML = '';
+                        var rows = (data.items || []).slice();
+                        // The pinned post always sits at the top of the first page.
+                        var pinnedId = state.profile && state.profile.pinned_post_id;
+                        if (reset && pinnedId) {
+                            rows.sort(function (a, b) {
+                                return (String(a.id) === String(pinnedId) ? 0 : 1) - (String(b.id) === String(pinnedId) ? 0 : 1);
+                            });
+                        }
+                        var notices = reset && Array.isArray(data.notices) ? data.notices : [];
+                        $('pfPostList').insertAdjacentHTML('beforeend', notices.map(renderNotice).join('') + rows.map(renderPost).join(''));
+                        $('pfPostEmpty').hidden = data.total > 0;
+                        $('pfPostMore').hidden = data.page >= data.pages;
+                    }).catch(function (error) {
+                        $('pfPostEmpty').hidden = false;
+                        $('pfPostEmpty').textContent = error.message || 'Could not load posts.';
+                    });
+            }
+
+            function setPostNote(message, error) {
+                var note = $('pfPostNote');
+                if (!note) return;
+                note.textContent = message || '';
+                note.classList.toggle('is-error', !!error);
+            }
+
+
+            function sharePostLink(postId, button) {
+                var url = (button && button.getAttribute('data-share-link'))
+                    ? location.origin + button.getAttribute('data-share-link')
+                    : location.origin + '/post/' + postId;
+                if (navigator.share) { navigator.share({ title: 'Zyrex post', url: url }).catch(function () {}); return; }
+                var done = function () {
+                    if (!button) return;
+                    var previous = button.innerHTML;
+                    button.innerHTML = '<i class="fas fa-check"></i> Copied';
+                    setTimeout(function () { button.innerHTML = previous; }, 1600);
+                };
+                if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(url).then(done).catch(function () { window.prompt('Copy this link', url); });
+                else window.prompt('Copy this link', url);
+            }
+
+            function setupPosts() {
+                $('pfPostList').addEventListener('click', function (event) {
+                    var shareButton = event.target.closest('[data-share-post]');
+                    if (shareButton) { sharePostLink(shareButton.getAttribute('data-share-post'), shareButton); return; }
+                    var pinButton = event.target.closest('[data-pin-post]');
+                    if (pinButton) {
+                        var unpin = pinButton.getAttribute('data-pinned') === '1';
+                        pinButton.disabled = true;
+                        fetch('/api/profile/posts/pin', {
+                            method: 'POST',
+                            credentials: 'include',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ id: unpin ? '' : pinButton.getAttribute('data-pin-post') })
+                        }).then(function (response) { return response.json().then(function (data) { return { ok: response.ok, data: data }; }); })
+                            .then(function (result) {
+                                if (!result.ok || !result.data.success) {
+                                    setPostNote(result.data.error || 'Could not update your pinned post.', true);
+                                    return;
+                                }
+                                if (state.profile) state.profile.pinned_post_id = result.data.pinned_post_id || '';
+                                setPostNote(unpin ? 'Post unpinned.' : 'Post pinned to your profile.');
+                                return loadPosts(true);
+                            })
+                            .catch(function () { setPostNote('Could not update your pinned post.', true); })
+                            .finally(function () { pinButton.disabled = false; });
+                        return;
+                    }
+                    var deleteButton = event.target.closest('[data-delete-post]');
+                    if (deleteButton) {
+                        if (!window.confirm('Delete this post? This cannot be undone.')) return;
+                        deleteButton.disabled = true;
+                        fetch('/api/profile/posts?id=' + encodeURIComponent(deleteButton.dataset.deletePost), { method: 'DELETE', credentials: 'include' })
+                            .then(function (response) { return response.json().then(function (data) { if (!response.ok || !data.success) throw new Error(data.error || 'Could not delete the post.'); return data; }); })
+                            .then(function () { return loadPosts(true); })
+                            .catch(function (error) { deleteButton.disabled = false; setPostNote(error.message, true); });
+                        return;
+                    }
+                    var button = event.target.closest('[data-repost-author]');
+                    if (!button) return;
+                    if (!state.viewerId) { location.href = '/api/login?redirect=' + encodeURIComponent(location.pathname); return; }
+                    button.disabled = true;
+                    fetch('/api/profile/posts', {
+                        method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ repost_of: { author_id: button.dataset.repostAuthor, post_id: button.dataset.repostId } })
+                    }).then(function (response) { return response.json().then(function (data) { if (!response.ok || !data.success) throw new Error(data.error || 'Could not repost.'); return data; }); })
+                        .then(function () { return loadPosts(true); })
+                        .catch(function (error) { button.disabled = false; button.title = error.message; });
+                });
+                // The whole card opens the post, but only when the click did not land on a control.
+                $('pfPostList').addEventListener('click', function (event) {
+                    if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+                    var target = event.target && event.target.closest ? event.target : (event.target && event.target.parentElement);
+                    if (!target || !target.closest) return;
+                    var entry = target.closest('[data-post-open]');
+                    if (!entry) return;
+                    if (target.closest('a,button,video,audio,input,textarea,select,label,.pf-social-interactions,.pf-post-actions')) return;
+                    var selection = window.getSelection ? window.getSelection() : null;
+                    if (selection && !selection.isCollapsed && entry.contains(selection.anchorNode)) return;
+                    location.href = entry.getAttribute('data-post-open');
+                });
+                $('pfPostMore').addEventListener('click', function () { this.disabled = true; loadPosts(false).finally(() => { this.disabled = false; }); });
+                loadPosts(true);
+            }
+
+            function renderMeta(profile) {
+                var rows = [];
+                if (profile.joined_at) rows.push(['Member since', new Date(profile.joined_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })]);
+                else if (profile.member_days) rows.push(['On Zyrex for', profile.member_days + ' days']);
+                if (profile.stats && profile.stats.last_upload_at) rows.push(['Last upload', when(profile.stats.last_upload_at)]);
+                rows.push(['Profile views', num(profile.counts.profile_views)]);
+                if (profile.username) rows.push(['Discord', '@' + profile.username]);
+                if (profile.handle) rows.push(['Profile', '@' + profile.handle]);
+                $('pfMeta').innerHTML = rows.map(function (row) {
+                    return '<div class="pf-meta-row"><span>' + esc(row[0]) + '</span><span>' + esc(row[1]) + '</span></div>';
+                }).join('');
+            }
+
+            function renderResources(payload) {
+                var hasResources = Number(payload.total || 0) > 0;
+                $('pfResourcesCard').hidden = !hasResources;
+                $('pfGridEmpty').hidden = payload.items.length > 0;
+                $('pfGrid').innerHTML += payload.items.map(function (item) {
+                    var thumb = item.thumbnail
+                        ? '<img src="' + esc(item.thumbnail) + '" alt="" loading="lazy" onerror="this.style.display=\'none\'">'
+                        : '';
+                    return '<a class="pf-item" href="' + esc(item.url) + '">' +
+                        '<span class="pf-item-thumb">' + thumb +
+                        (item.is_anonymous && state.profile && state.profile.is_self ? '<span class="pf-item-flag">Anon</span>' : '') +
+                        '</span>' +
+                        '<span class="pf-item-body">' +
+                        '<span class="pf-item-name">' + esc(item.name) + '</span>' +
+                        '<span class="pf-item-meta">' +
+                        '<span><i class="fas fa-download"></i> ' + num(item.downloads) + '</span>' +
+                        '<span><i class="fas fa-eye"></i> ' + num(item.views) + '</span>' +
+                        '<span>' + esc(when(item.created_at)) + '</span>' +
+                        '</span></span></a>';
+                }).join('');
+                state.page = payload.page;
+                state.pages = payload.pages;
+                $('pfMore').hidden = payload.page >= payload.pages;
+            }
+
+            function loadResources(reset) {
+                var query = '/api/profile/resources?handle=' + encodeURIComponent(state.handle) +
+                    '&sort=' + encodeURIComponent(state.sort) +
+                    '&page=' + (reset ? 1 : state.page + 1);
+                if (reset) { $('pfGrid').innerHTML = ''; state.page = 0; }
+                return fetch(query, { credentials: 'include' })
+                    .then(function (response) { return response.json(); })
+                    .then(function (payload) { if (payload && payload.success) renderResources(payload); })
+                    .catch(function () {});
+            }
+
+            // Every row carries the member's display name and photo, never a bare id.
+            function peopleHtml(items) {
+                return (items || []).map(function (person) {
+                    var name = person.name || 'Zyrex member';
+                    var inner = '<img src="' + esc(person.avatar || '/assets/default-avatar.png') + '" alt="" loading="lazy" onerror="this.onerror=null;this.src=\'/assets/default-avatar.png\'">' +
+                        '<div><div class="pf-person-name">' + esc(name) + (person.is_official ? ' <i class="fas fa-circle-check is-admin-check" aria-label="Official"></i>' : '') + '</div>' +
+                        '<div class="pf-person-sub">' + (person.handle ? '@' + esc(person.handle) : '') +
+                        (person.resources ? ' · ' + num(person.resources) + ' leaks' : '') + '</div></div>';
+                    return person.url
+                        ? '<a class="pf-person" href="' + esc(person.url) + '">' + inner + '</a>'
+                        : '<div class="pf-person">' + inner + '</div>';
+                }).join('');
+            }
+
+            function closeConnectionsModal() {
+                var modal = $('pfConnectionsModal');
+                if (!modal) return;
+                modal.hidden = true;
+                document.body.classList.remove('pf-modal-open');
+            }
+
+            function loadConnectionPage(kind, page) {
+                var list = $('pfConnectionsList');
+                var more = $('pfConnectionsMore');
+                if (!list || !state.profile) return;
+                if (page === 1) list.innerHTML = '<p class="pf-muted pf-connections-state" data-i18n="Loading…">' + esc(tr('Loading…')) + '</p>';
+                if (more) more.disabled = true;
+                return fetch('/api/profile/connections?id=' + encodeURIComponent(state.profile.id) + '&type=' + encodeURIComponent(kind) + '&page=' + page, { credentials: 'include', cache: 'no-store' })
+                    .then(function (response) { return response.json().then(function (payload) { return { ok: response.ok, payload: payload }; }); })
+                    .then(function (result) {
+                        var payload = result.payload;
+                        if (!result.ok || !payload || !payload.success) throw new Error((payload && payload.error) || 'Could not load the list.');
+                        if (payload.hidden) {
+                            list.innerHTML = '<p class="pf-muted pf-connections-state" data-i18n="This member keeps their connections private.">' + esc(tr('This member keeps their connections private.')) + '</p>';
+                            if (more) more.hidden = true;
+                            return;
+                        }
+                        if (page === 1) list.innerHTML = '';
+                        if (payload.items && payload.items.length) list.insertAdjacentHTML('beforeend', peopleHtml(payload.items));
+                        if (page === 1 && (!payload.items || !payload.items.length)) {
+                            list.innerHTML = '<p class="pf-muted pf-connections-state" data-i18n="Nobody here yet.">' + esc(tr('Nobody here yet.')) + '</p>';
+                        }
+                        state.connectionPage = Number(payload.page) || page;
+                        state.connectionPages = Number(payload.pages) || 1;
+                        if (more) {
+                            more.hidden = state.connectionPage >= state.connectionPages;
+                            more.disabled = false;
+                        }
+                    })
+                    .catch(function () {
+                        if (page === 1) list.innerHTML = '<p class="pf-muted pf-connections-state" data-i18n="Could not load the list.">' + esc(tr('Could not load the list.')) + '</p>';
+                        if (more) more.disabled = false;
+                    });
+            }
+
+            function openConnectionsModal(kind) {
+                var modal = $('pfConnectionsModal');
+                if (!modal) return;
+                state.connections = kind === 'following' ? 'following' : 'followers';
+                state.connectionPage = 0;
+                var title = $('pfConnectionsTitle');
+                var titleKey = state.connections === 'following' ? 'Following' : 'Followers';
+                title.setAttribute('data-i18n', titleKey);
+                title.textContent = tr(titleKey);
+                $('pfConnectionsList').innerHTML = '';
+                $('pfConnectionsMore').hidden = true;
+                modal.hidden = false;
+                document.body.classList.add('pf-modal-open');
+                loadConnectionPage(state.connections, 1);
+            }
+
+            // Asking right after a follow keeps the decision next to the action, and the
+            // answer is stored in the same preferences the fan-out reads.
+            function openFollowNotifyModal(profile, notifyDefault) {
+                var modal = $('pfFollowModal');
+                if (!modal || !profile) return;
+                $('pfFollowModalAvatar').src = profile.avatar || '/assets/default-avatar.png';
+                $('pfFollowModalName').textContent = profile.name || 'this member';
+                $('pfFollowModalNotify').checked = notifyDefault !== false;
+                modal.hidden = false;
+                document.body.classList.add('pf-modal-open');
+            }
+
+            function closeFollowNotifyModal() {
+                var modal = $('pfFollowModal');
+                if (!modal) return;
+                modal.hidden = true;
+                document.body.classList.remove('pf-modal-open');
+            }
+
+            function saveFollowNotify() {
+                if (!state.profile) return closeFollowNotifyModal();
+                var notify = Boolean($('pfFollowModalNotify').checked);
+                var save = $('pfFollowModalSave');
+                if (save) save.disabled = true;
+                fetch('/api/profile/follow/prefs', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ author_id: state.profile.id, notify: notify })
+                }).then(function (response) { return response.json().then(function (data) { return { ok: response.ok, data: data }; }); })
+                    .then(function (result) {
+                        if (result.ok && result.data && result.data.success) closeFollowNotifyModal();
+                    })
+                    .catch(function () {})
+                    .finally(function () { if (save) save.disabled = false; });
+            }
+
+            function toggleFollow(button) {
+                var following = button.classList.contains('is-following');
+                button.disabled = true;
+                fetch('/api/profile/follow', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id: state.profile.id, action: following ? 'unfollow' : 'follow' })
+                }).then(function (response) { return response.json().then(function (data) { return { ok: response.ok, data: data }; }); })
+                    .then(function (result) {
+                        button.disabled = false;
+                        if (!result.ok) {
+                            if (result.data && result.data.code === 'NOT_LOGGED_IN') {
+                                location.href = '/api/login?redirect=' + encodeURIComponent(location.pathname);
+                            }
+                            return;
+                        }
+                        button.classList.toggle('is-following', !following);
+                        button.classList.toggle('is-primary', following);
+                        button.innerHTML = '<i class="fas ' + (following ? 'fa-plus' : 'fa-check') + '"></i> ' + (following ? 'Follow' : 'Following');
+                        state.profile.is_following = !following;
+                        state.profile.counts.followers = result.data.followers;
+                        renderStrip(state.profile);
+                        renderStats(state.profile);
+                        if (!$('pfConnectionsModal').hidden) loadConnectionPage(state.connections, 1);
+                        if (!following) openFollowNotifyModal(state.profile, result.data.notify);
+                    })
+                    .catch(function () { button.disabled = false; });
+            }
+
+            (function wireFollowModal() {
+                var modal = $('pfFollowModal');
+                if (!modal) return;
+                modal.addEventListener('click', function (event) {
+                    if (event.target.closest('[data-follow-close]')) closeFollowNotifyModal();
+                });
+                var save = $('pfFollowModalSave');
+                if (save) save.addEventListener('click', saveFollowNotify);
+                var skip = $('pfFollowModalSkip');
+                if (skip) skip.addEventListener('click', closeFollowNotifyModal);
+                document.addEventListener('keydown', function (event) {
+                    if (event.key === 'Escape') closeFollowNotifyModal();
+                });
+            })();
+
+            function boot(profile) {
+                state.profile = profile;
+                state.handle = profile.handle;
+                hidePageLoader();
+                $('pfContent').hidden = false;
+
+                renderHero(profile);
+                // Refresh profile media from Discord's API so avatar/banner stay
+                // consistent with the account on resource and profile pages.
+                fetch('/api/discord-user?userId=' + encodeURIComponent(profile.id))
+                    .then(function (response) { return response.ok ? response.json() : null; })
+                    .then(function (result) {
+                        var user = result && result.success && result.user;
+                        if (!user) return;
+                        var avatarUrl = user.avatar_url || '';
+                        var bannerUrl = user.banner_url || '';
+                        if (avatarUrl) {
+                            profile.avatar = avatarUrl;
+                            $('pfAvatar').src = avatarUrl;
+                            document.querySelectorAll('.pf-post[data-social-author="' + profile.id + '"] > .pf-post-top .pf-post-author img').forEach(function (image) { image.src = avatarUrl; });
+                        }
+                        profile.banner = bannerUrl;
+                        paintBanner(bannerUrl);
+                    }).catch(function () {});
+                renderAbout(profile);
+                setupBio();
+                renderStats(profile);
+                $('pfStats').addEventListener('click', function (event) {
+                    var trigger = event.target.closest('[data-connections]');
+                    if (trigger) openConnectionsModal(trigger.getAttribute('data-connections'));
+                });
+                renderHighlights(profile);
+                setupPosts();
+
+                $('pfTabs').hidden = true;
+                $('pfMore').addEventListener('click', function () { loadResources(false); });
+                loadResources(true);
+                $('pfConnectionsMore').addEventListener('click', function () {
+                    if (state.connectionPage < state.connectionPages) loadConnectionPage(state.connections, state.connectionPage + 1);
+                });
+                $('pfConnectionsModal').addEventListener('click', function (event) {
+                    if (event.target.closest('[data-connections-close]')) closeConnectionsModal();
+                });
+                document.addEventListener('keydown', function (event) {
+                    if (event.key === 'Escape') closeConnectionsModal();
+                });
+            }
+
+            function start() {
+                var handle = targetHandle();
+                var id = new URLSearchParams(location.search).get('id') || '';
+                var query = handle ? ('handle=' + encodeURIComponent(handle)) : (id ? ('id=' + encodeURIComponent(id)) : '');
+
+                fetch('/api/me', { credentials: 'include' })
+                    .then(function (response) { return response.ok ? response.json() : null; })
+                    .then(function (me) { state.viewerId = String((me && (me.id || me.userId)) || ''); })
+                    .catch(function () {})
+                    .then(function () {
+                        if (!query) {
+                            // No handle in the path: fall back to the signed-in member.
+                            if (!state.viewerId) {
+                                location.href = '/api/login?redirect=' + encodeURIComponent(location.pathname || '/profile');
+                                return;
+                            }
+                            query = 'id=' + encodeURIComponent(state.viewerId);
+                        }
+                        return fetch('/api/profile?' + query, { credentials: 'include', cache: 'no-store' })
+                            .then(function (response) { return response.json().then(function (data) { return { ok: response.ok, data: data }; }); })
+                            .then(function (result) {
+                                var data = result.data || {};
+                                if (!result.ok || !data.success) {
+                                    if (data.code === 'NOT_IN_GUILD') {
+                                        location.replace('/error?code=404');
+                                        return;
+                                    }
+                                    showError('Profile not found', data.error || 'That handle does not belong to anybody yet.');
+                                    return;
+                                }
+                                if (data.profile && data.profile.private && !data.profile.is_self) {
+                                    showError('This profile is private', data.profile.name + ' has turned their profile off.');
+                                    return;
+                                }
+                                boot(data.profile);
+                            });
+                    })
+                    .catch(function () {
+                        showError('Could not load profile', 'Please try again in a moment.');
+                    });
+            }
+
+            if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+            else start();
+        })();
+    </script>
+    <script src="/js/page-motion.js?v=6"></script>
+</body>
+
+</html>

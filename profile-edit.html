@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="robots" content="noindex,nofollow">
+    <meta name="description" content="Change your profile photo, banner and details.">
+    <title>Edit profile · Zyrex</title>
+    <link rel="icon" type="image/png" href="/assets/content.png">
+    <link rel="stylesheet" href="/css/style.css?v=92">
+    <link rel="stylesheet" href="/css/profile-system.css?v=21">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,800,900&amp;display=swap">
+    <link rel="stylesheet" href="/css/glass.css?v=67">
+    <link rel="stylesheet" href="/css/atmosphere.css?v=7">
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.fontshare.com">
+    <link rel="stylesheet" href="/css/i18n.css?v=3">
+    <script src="/js/i18n.js?v=15" defer></script>
+</head>
+<body>
+    <div class="zr-sweep" aria-hidden="true"></div>
+    <div class="lq-veil" aria-hidden="true"></div>
+    <nav class="navbar"><div class="container">
+        <a href="/" class="logo"><img src="/assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a>
+        <ul class="nav-links" id="navLinks">
+            <li><a href="/">Home</a></li>
+            <li><a href="/leaks">Leaks</a></li>
+            <li><a href="/feed">Feed</a></li>
+            <li><a href="/plugins">Plugins</a></li>
+            <li><a href="/requests">Requests</a></li>
+            <li><a href="/audio">Audios</a></li>
+            
+</ul>
+        <div class="nav-actions"><div id="authBtn"></div><button class="hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button></div>
+    </div></nav>
+    <main class="profile-page pf-editor-page">
+        <header class="pf-editor-heading"><a class="pf-subtle-link" href="/profile"><i class="fas fa-arrow-left"></i> Back to profile</a><h1>Edit your profile</h1><p>Make your Zyrex page feel like yours.</p></header>
+        <div class="pf-editor-layout">
+            <section class="pf-card pf-editor-card">
+                <h2 class="pf-card-title"><i class="fas fa-user-pen"></i> Profile identity</h2>
+                <div class="pf-editor-images">
+                    <div class="pf-editor-banner-preview" id="editorBannerPreview"><span>Profile banner</span></div>
+                    <div class="pf-editor-avatar-row"><img id="editorAvatarPreview" src="/assets/default-avatar.png" alt=""><div><strong>Discord profile photo</strong><p>Your profile photo and banner sync from Discord and cannot be changed here.</p></div></div>
+                </div>
+                <div class="pf-editor-field"><label for="editorHandle">Profile handle</label><div class="pf-handle-row"><span>@</span><input id="editorHandle" maxlength="24" autocomplete="off" placeholder="yourname"><button class="pf-btn" id="saveHandle" type="button">Save handle</button></div><small>Handle changes are limited to once every 7 days.</small></div>
+                <div class="pf-editor-field"><label for="editorBio">Bio</label><textarea id="editorBio" maxlength="400" rows="4" placeholder="A little about you…"></textarea><small id="editorBioCount">0 / 400</small></div>
+                <div class="pf-editor-field">
+                    <label>Social links</label>
+                    <div class="pf-editor-social-adder">
+                        <select id="socialPlatform" aria-label="Pick a platform">
+                            <option value="tiktok">TikTok</option>
+                            <option value="instagram">Instagram</option>
+                            <option value="youtube">YouTube</option>
+                            <option value="twitter">X (Twitter)</option>
+                            <option value="linkedin">LinkedIn</option>
+                            <option value="steam">Steam</option>
+                            <optgroup label="Games">
+                                <option value="valorant">Valorant</option>
+                                <option value="league">League of Legends</option>
+                                <option value="roblox">Roblox</option>
+                            </optgroup>
+                            <option value="custom">Other link</option>
+                        </select>
+                        <input id="socialUsername" maxlength="60" autocomplete="off" placeholder="username" aria-label="Username">
+                        <button class="pf-btn" id="socialAdd" type="button"><i class="fas fa-plus"></i> Add social</button>
+                    </div>
+                    <div class="pf-editor-links" id="editorLinks"></div>
+                    <small id="socialNote" aria-live="polite">Add or refresh a linked account to update its available name, rank, and profile photo. Up to 8 links.</small>
+                </div>
+                <div class="pf-editor-field pf-editor-options"><label for="editorAccent">Accent color</label><input id="editorAccent" type="color" value="var(--zr-accent, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1))"><label class="pf-switch-label"><input id="editorPublic" type="checkbox"> Public profile</label></div>
+                <div class="pf-editor-actions"><button class="pf-btn is-primary pf-save-profile" id="saveProfile" type="button"><i class="fas fa-floppy-disk"></i> Save profile</button></div>
+            </section>
+        </div>
+    </main>
+    <script src="/js/chunks/chunk-store.js?v=1"></script><script src="/js/auth.js?v=19"></script><script src="/js/script.js?v=92"></script>
+    <script>
+    (function(){
+        'use strict';
+        var state={settings:{},url:'',id:''};
+        var $=function(id){return document.getElementById(id);};
+        function note(message,error){if(message&&window.showStatusAlert&&!/^Saving/i.test(message))window.showStatusAlert(message,!!error);}
+        function esc(value){return String(value||'').replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+        var LINK_LIMIT=8;
+        // Game accounts carry a rank instead of a profile page, so they are handled apart.
+        var GAME_KEYS=['valorant','league','roblox'];
+        function socialNote(message,error){var el=$('socialNote');if(!el)return;el.textContent=message||'Pick a platform, type the username, and the link is filled in for you. Up to 8 links.';el.classList.toggle('is-error',!!error);if(message&&window.showStatusAlert&&!/^(Looking that account up|Refreshing saved)/i.test(message))window.showStatusAlert(message,!!error);}
+        // The editor shows the platform photo the moment Scrapin answers, before saving.
+        function paintLinkAvatar(row){
+            var slot=row.querySelector('[data-link-avatar]');
+            if(!slot)return;
+            var avatar=row.dataset.avatar||'';
+            slot.textContent='';
+            // A game row falls back to its own logo instead of a generic link icon.
+            var fallback=function(){
+                slot.textContent='';
+                var icon=row.dataset.icon||'';
+                if(icon.charAt(0)==='/'){
+                    var logo=document.createElement('img');
+                    logo.alt='';
+                    logo.src=icon;
+                    slot.appendChild(logo);
+                    return;
+                }
+                slot.appendChild(linkIcon());
+            };
+            if(!avatar){fallback();return;}
+            var image=document.createElement('img');
+            image.alt='';
+            image.loading='lazy';
+            image.onerror=fallback;
+            image.src=avatar;
+            slot.appendChild(image);
+        }
+        function linkIcon(){
+            var icon=document.createElement('i');
+            icon.className='fas fa-link';
+            return icon;
+        }
+        function addLinkRow(row){
+            var item=document.createElement('div');
+            item.className='pf-editor-link-row';
+            item.innerHTML='<span class="pf-editor-link-avatar" data-link-avatar><i class="fas fa-link"></i></span><input type="text" maxlength="24" placeholder="Label" aria-label="Link label" data-link-label><input type="url" maxlength="300" placeholder="https://example.com" aria-label="Link URL" data-link-url><button type="button" class="pf-editor-link-refresh" data-link-refresh aria-label="Refresh linked profile data" title="Refresh profile data"><i class="fas fa-rotate"></i></button><button type="button" class="pf-editor-link-remove" data-link-remove aria-label="Remove link"><i class="fas fa-xmark"></i></button>';
+            item.querySelector('[data-link-label]').value=row.label||'';
+            item.querySelector('[data-link-url]').value=row.url||'';
+            item.dataset.platform=row.platform||'';
+            item.dataset.handle=row.handle||'';
+            item.dataset.name=row.name||'';
+            item.dataset.detail=row.detail||'';
+            item.dataset.icon=row.icon||'';
+            item.dataset.avatar=row.avatar||'';
+            // A game with no page URL shows its rank where the link would go.
+            if(GAME_KEYS.indexOf(item.dataset.platform)!==-1&&!row.url){
+                var urlInput=item.querySelector('[data-link-url]');
+                urlInput.readOnly=true;
+                urlInput.placeholder=row.detail||'No profile link';
+                urlInput.value='';
+            }
+            paintLinkAvatar(item);
+            $('editorLinks').appendChild(item);
+            return item;
+        }
+        function renderLinks(links){
+            var rows=Array.isArray(links)?links.slice(0,LINK_LIMIT):[];
+            $('editorLinks').innerHTML='';
+            if(!rows.length){addLinkRow({label:'',url:''});return;}
+            rows.forEach(addLinkRow);
+        }
+        function load(){fetch('/api/profile/settings',{credentials:'include'}).then(function(r){if(r.status===401){location.href='/api/login?redirect='+encodeURIComponent('/profile-edit');throw new Error('Sign in to edit your profile.');}return r.json();}).then(function(data){if(!data.success)throw new Error(data.error||'Could not load profile settings.');state.settings=data.settings||{};state.url=data.url||'';state.id=data.id||'';$('editorHandle').value=state.settings.handle||'';$('editorBio').value=state.settings.bio||'';$('editorBioCount').textContent=$('editorBio').value.length+' / 400';$('editorAccent').value=/^#[0-9a-f]{6}$/i.test(state.settings.accent||'')?state.settings.accent:'var(--zr-accent, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1))';$('editorPublic').checked=state.settings.public!==false;$('editorAvatarPreview').src=data.default_avatar||'/assets/default-avatar.png';var banner=data.default_banner||'';if(banner){$('editorBannerPreview').style.backgroundImage='url("'+banner.replace(/"/g,'').replace('size=600','size=1024')+'")';$('editorBannerPreview').classList.add('has-image');}$('editorBannerPreview').style.setProperty('--pf-accent',$('editorAccent').value);renderLinks(state.settings.links);}).catch(function(error){note(error.message||'Could not load your profile settings.',true);});}
+        function links(){return Array.prototype.map.call($('editorLinks').children,function(row){var label=row.querySelector('[data-link-label]').value.trim(),url=row.querySelector('[data-link-url]').value.trim(),platform=row.dataset.platform||'',isGame=GAME_KEYS.indexOf(platform)!==-1;if(!url&&!isGame)return null;if(url&&!/^https?:\/\//i.test(url))url='https://'+url;return{label:label||(isGame?platform:url.replace(/^https?:\/\/(www\.)?/i,'').split('/')[0]),url:url,platform:platform,handle:row.dataset.handle||'',name:row.dataset.name||'',detail:row.dataset.detail||'',avatar:row.dataset.avatar||''};}).filter(Boolean);}
+        // "Add social" turns a platform and a username into a ready link, and Scrapin
+        // fills in the account name and photo when the key is available.
+        $('socialAdd').addEventListener('click',function(){
+            var button=this,platform=$('socialPlatform').value,username=$('socialUsername').value.trim().replace(/^@+/,'');
+            if(!username){socialNote('Type a username first.',true);return;}
+            if($('editorLinks').children.length>=LINK_LIMIT){socialNote('You can keep up to '+LINK_LIMIT+' links.',true);return;}
+            if(platform==='custom'){
+                addLinkRow({label:username.slice(0,24),url:'https://'+username});
+                $('socialUsername').value='';
+                socialNote('Custom link added. Edit the URL if needed.');
+                return;
+            }
+            button.disabled=true;
+            socialNote('Looking that account up...');
+            fetch('/api/profile/social/lookup?platform='+encodeURIComponent(platform)+'&username='+encodeURIComponent(username),{credentials:'include'})
+                .then(function(r){return r.json().then(function(d){if(!r.ok||!d.success)throw new Error(d.error||'Could not find that account.');return d;});})
+                .then(function(data){
+                    addLinkRow({label:data.label||platform,url:data.url||'',platform:data.platform||platform,handle:data.handle||username.toLowerCase(),name:data.name||'',detail:data.detail||'',icon:data.icon||'',avatar:data.avatar||''});
+                    $('socialUsername').value='';
+                    if(GAME_KEYS.indexOf(platform)!==-1){
+                        socialNote('Added '+(data.label||platform)+' · '+(data.handle||username)+(data.detail?' · '+data.detail:''),false);
+                        return;
+                    }
+                    var found=data.verified&&data.name;
+                    socialNote(found?('Found '+(data.name||username)+' · @'+(data.handle||username)):(data.scrapin===false?'Link added. Add the Scrapin key to fetch photo and name.':'Link added. Save your profile to publish it.'),false);
+                })
+                .catch(function(error){socialNote(error.message||'Could not find that account.',true);})
+                .finally(function(){button.disabled=false;});
+        });
+        $('socialPlatform').addEventListener('change',function(){
+            var game=GAME_KEYS.indexOf(this.value)!==-1;
+            $('socialUsername').placeholder=this.value==='valorant'||this.value==='league'?'name#tag':this.value==='steam'?'vanity or SteamID64':game?'username':'username';
+        });
+        $('editorLinks').addEventListener('click',function(event){
+            var refresh=event.target.closest('[data-link-refresh]');
+            if(refresh){
+                var refreshRow=refresh.closest('.pf-editor-link-row');
+                if(!refreshRow||refresh.disabled)return;
+                var original=refresh.innerHTML;
+                refresh.disabled=true;
+                refresh.innerHTML='<i class="fas fa-spinner fa-spin" aria-hidden="true"></i>';
+                var rowIndex=Array.prototype.indexOf.call($('editorLinks').children,refreshRow);
+                var rowUrl=refreshRow.querySelector('[data-link-url]').value.trim();
+                fetch('/api/profile/social/refresh',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({index:rowIndex,platform:refreshRow.dataset.platform||'',handle:refreshRow.dataset.handle||'',url:rowUrl})})
+                    .then(function(response){return response.json().then(function(data){if(!response.ok||!data.success)throw new Error(data.error||'Could not refresh this profile link.');return data;});})
+                    .then(function(data){
+                        var link=data.link||{};
+                        ['platform','handle','name','detail','icon','avatar'].forEach(function(key){if(link[key])refreshRow.dataset[key]=link[key];else if(key!=='platform'&&key!=='handle')refreshRow.dataset[key]='';});
+                        var urlInput=refreshRow.querySelector('[data-link-url]');
+                        if(urlInput&&!urlInput.readOnly&&link.url)urlInput.value=link.url;
+                        var labelInput=refreshRow.querySelector('[data-link-label]');
+                        if(labelInput&&!labelInput.value.trim()&&link.label)labelInput.value=link.label;
+                        paintLinkAvatar(refreshRow);
+                        if(GAME_KEYS.indexOf(refreshRow.dataset.platform)!==-1){if(urlInput&&urlInput.readOnly)urlInput.placeholder=refreshRow.dataset.detail||'No profile link';}
+                        if(Array.isArray(state.settings.links)&&state.settings.links[data.index])state.settings.links[data.index]=link;
+                        if(window.showStatusAlert)window.showStatusAlert('Linked profile data refreshed.',false);
+                    })
+                    .catch(function(error){if(window.showStatusAlert)window.showStatusAlert(error.message||'Could not refresh this profile link.',true);else socialNote(error.message||'Could not refresh this profile link.',true);})
+                    .finally(function(){refresh.disabled=false;refresh.innerHTML=original;});
+                return;
+            }
+            var remove=event.target.closest('[data-link-remove]');
+            if(!remove)return;
+            var row=remove.closest('.pf-editor-link-row');
+            if(!row)return;
+            row.remove();
+            if(!$('editorLinks').children.length)addLinkRow({label:'',url:''});
+        });
+        $('editorBio').addEventListener('input',function(){$('editorBioCount').textContent=this.value.length+' / 400';});
+        $('editorAccent').addEventListener('input',function(){$('editorBannerPreview').style.setProperty('--pf-accent',this.value);});
+        $('saveHandle').addEventListener('click',function(){var button=this;button.disabled=true;fetch('/api/profile/handle',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify({handle:$('editorHandle').value.trim()})}).then(function(r){return r.json().then(function(d){if(!r.ok||!d.success)throw new Error(d.error||'Could not save this handle.');return d;});}).then(function(d){state.url=d.url;$('editorHandle').value=d.handle;note('Handle saved. The new address is '+d.url+'.');}).catch(function(e){note(e.message,true);}).finally(function(){button.disabled=false;});});
+        $('saveProfile').addEventListener('click',function(){var button=this;button.disabled=true;note('Saving…');var body={bio:$('editorBio').value,links:links(),public:$('editorPublic').checked,accent:$('editorAccent').value};fetch('/api/profile/settings',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)}).then(function(r){return r.json().then(function(d){if(!r.ok||!d.success)throw new Error(d.error||'Could not save your profile.');return d;});}).then(function(data){state.settings=data.settings||{};note('Profile saved.');}).catch(function(error){note(error.message||'Could not save your profile.',true);}).finally(function(){button.disabled=false;});});
+        load();
+    })();
+    </script>
+
+<footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <a href="/" class="hero-brand-lockup footer-brand-lockup">
+                        <img src="/assets/content.png" alt="Zyrex Logo" class="hero-brand-icon">
+                        <div class="hero-brand-text-col">
+                            <span class="hero-brand-title">Zyrex<sup>™</sup></span>
+                            <span class="hero-brand-sub">EDITING</span>
+                        </div>
+                    </a>
+                    <p>Editing leaks and stuff.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/leaks">Leaks</a></li>
+                <li><a href="/feed">Feed</a></li>
+                        <li><a href="/plugins">Plugins</a></li>
+                        <li><a href="/requests">Requests</a></li>
+                        <li><a href="/audio">Audios</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="/terms">Terms of Service</a></li>
+                        <li><a href="/privacy">Privacy Policy</a></li>
+                        <li><a href="/dmca">DMCA</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="https://discord.gg/4J3tars4QS" target="_blank" rel="noopener">Discord</a></li>
+                        <li><a href="/#contact">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Zyrex Editing. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+    <script src="/js/page-motion.js?v=6"></script>
+</body>
+</html>

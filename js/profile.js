@@ -141,7 +141,7 @@
     let height = (canvas.height = window.innerHeight);
 
     const isBordo = document.body.classList.contains('theme-bordo');
-    const dotGlowColor = isBordo ? '#ff2a6d' : '#60a5fa';
+    const dotGlowColor = isBordo ? 'rgba(var(--zr-rgb-255-42-109, 255, 42, 109), 1)' : '#60a5fa';
 
     // Pre-calculated normalized star shapes for speed
     const baseOuterVertices = [];
@@ -207,13 +207,13 @@
         const dotSpacing = Math.max(4.5, outerRadius * 0.1);
         const dotSize = Math.max(1.8, Math.min(3.4, outerRadius * 0.048));
 
-        ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+        ctx.fillStyle = `rgba(var(--zr-rgb-255-255-255, 255, 255, 255), ${alpha})`;
         const dotsOuter = getTrackDotPositions(verticesOuter, dotSpacing);
         for (let i = 0; i < dotsOuter.length; i++) {
             ctx.fillRect(dotsOuter[i].x - dotSize / 2, dotsOuter[i].y - dotSize / 2, dotSize, dotSize);
         }
 
-        ctx.fillStyle = `rgba(255, 255, 255, ${alpha * 0.82})`;
+        ctx.fillStyle = `rgba(var(--zr-rgb-255-255-255, 255, 255, 255), ${alpha * 0.82})`;
         const dotsInner = getTrackDotPositions(verticesInner, dotSpacing);
         for (let i = 0; i < dotsInner.length; i++) {
             ctx.fillRect(dotsInner[i].x - dotSize / 2, dotsInner[i].y - dotSize / 2, dotSize * 0.9, dotSize * 0.9);
@@ -244,7 +244,7 @@
 
         draw() {
             if (this.alpha > 0.01) {
-                ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha})`;
+                ctx.fillStyle = `rgba(var(--zr-rgb-255-255-255, 255, 255, 255), ${this.alpha})`;
                 ctx.fillRect(this.x - this.size / 2, this.y - this.size / 2, this.size, this.size);
             }
         }
@@ -366,8 +366,8 @@
 
     let lastFrameTime = performance.now();
     function animate(now) {
-        // Frame cap to max 60fps / prevent heavy delta loops
-        if (now - lastFrameTime < 14) {
+        // Frame cap to max 30fps / prevent heavy delta loops
+        if (document.hidden || now - lastFrameTime < 32) {
             requestAnimationFrame(animate);
             return;
         }
@@ -390,7 +390,8 @@
         }
         requestAnimationFrame(animate);
     }
-    requestAnimationFrame(animate);
+    const prefersReducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!prefersReducedMotion) requestAnimationFrame(animate);
 
     window.addEventListener('resize', () => {
         width = canvas.width = window.innerWidth;
@@ -437,7 +438,10 @@
 
     // Live 1-second Ticking Timer for Elapsed Activity Time
     setInterval(() => {
-        document.querySelectorAll('.activity-timer').forEach(timerEl => {
+        if (document.hidden) return;
+        const timers = document.querySelectorAll('.activity-timer');
+        if (!timers.length) return;
+        timers.forEach(timerEl => {
             const startMs = parseInt(timerEl.getAttribute('data-start'));
             const textEl = timerEl.querySelector('.timer-text');
             if (startMs && textEl) {
@@ -649,7 +653,12 @@
     }
 
     fetchNativePresenceData();
-    setInterval(fetchNativePresenceData, 4000);
+    // The Lanyard socket below already streams live presence, so this poll is
+    // only a safety net for a closed socket — a slow one keeps the page quiet.
+    setInterval(function () {
+        if (document.hidden) return;
+        fetchNativePresenceData();
+    }, 45000);
 
     function connectLanyardWS() {
         let ws;

@@ -1,156 +1,1209 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex,nofollow">
   <meta name="theme-color" content="#100911">
-  <title>Ayarlar | Zyrex</title>
+  <meta name="description" content="Manage your account, downloads, theme and privacy.">
+  <title>Settings | Zyrex</title>
   <link rel="icon" type="image/png" href="/assets/content.png">
-  <link rel="stylesheet" href="/css/style.css?v=71">
+  <link rel="stylesheet" href="/css/style.css?v=92">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,800,900&display=swap">
+  <link rel="stylesheet" href="/css/glass.css?v=67">
+  <link rel="stylesheet" href="/css/atmosphere.css?v=7">
+  <link rel="stylesheet" href="/css/settings.css?v=11">
+  <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  <link rel="dns-prefetch" href="https://cdn.fontshare.com">
+    <link rel="stylesheet" href="/css/i18n.css?v=3">
+    <script src="/js/i18n.js?v=18" defer></script>
 </head>
 <body class="settings-page">
+  <div class="zr-sweep" aria-hidden="true"></div>
+  <div class="lq-veil" aria-hidden="true"></div>
+
   <nav class="navbar"><div class="container"><a href="/" class="logo"><img src="/assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><ul class="nav-links" id="navLinks"><li><a href="/">Home</a></li><li><a href="/leaks">Leaks</a></li><li><a href="/feed">Feed</a></li><li><a href="/plugins">Plugins</a></li><li><a href="/requests">Requests</a></li><li><a href="/audio">Audios</a></li></ul><div class="nav-actions"><div id="authBtn"></div><button class="hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button></div></div></nav>
 
-  <main class="settings-wrap">
-    <header class="settings-head">
-      <div class="head-copy">
-        <div class="eyebrow"><i class="fa-solid fa-gear"></i><span>Hesap Ayarları</span></div>
-        <h1>Hesabınızı Yönetin</h1>
-        <p>Profiliniz, tema ve bildirim tercihlerinizi burada düzenleyebilirsiniz.</p>
-      </div>
-    </header>
+  <main class="zset-shell">
+    <h1 class="zset-sr-only">Account settings</h1>
 
-    <div id="signedOut" class="card signed-out-card" hidden>
-      <h2><i class="fa-solid fa-circle-info"></i> Giriş Yapın</h2>
-      <p class="hint">Ayarlarınızı görmek ve değiştirmek için Discord hesabınızla giriş yapmalısınız.</p>
-      <a class="btn primary" href="/api/login?redirect=%2Fsettings">Discord ile Giriş Yap</a>
-    </div>
+    <div id="app" class="zset-layout">
+      <aside class="zset-rail">
+        <span class="zset-rail-label">Settings</span>
+        <nav class="zset-nav" id="settingsNav" aria-label="Settings sections">
+          <button class="zset-nav-btn active" type="button" data-section="account"><i class="fa-regular fa-user"></i><span>Account</span></button>
+          <button class="zset-nav-btn" type="button" data-section="access"><i class="fa-solid fa-key"></i><span>Download access</span></button>
+          <button class="zset-nav-btn" type="button" data-section="appearance"><i class="fa-solid fa-palette"></i><span>Appearance</span></button>
+          <button class="zset-nav-btn" type="button" data-section="language"><i class="fa-solid fa-globe"></i><span>Language</span></button>
+          <button class="zset-nav-btn" type="button" data-section="notifications"><i class="fa-regular fa-bell"></i><span>Notifications</span></button>
+          <button class="zset-nav-btn" type="button" data-section="privacy"><i class="fa-solid fa-lock"></i><span>Privacy &amp; cookies</span></button>
+          <button class="zset-nav-btn" type="button" data-section="staff"><i class="fa-solid fa-user-shield"></i><span>Staff application</span></button>
+          <button class="zset-nav-btn" type="button" data-section="admin" id="navAdmin" hidden><i class="fa-solid fa-screwdriver-wrench"></i><span>Admin</span></button>
+        </nav>
+        <a class="zset-rail-home" id="railHome" href="/"><i class="fa-solid fa-arrow-left"></i> <span id="railHomeLabel">Back to Zyrex</span></a>
+      </aside>
 
-    <div id="app" hidden>
-      <div class="settings-page-heading">
-        <div>
-          <span class="page-kicker" id="pageKicker">HESAP</span>
-          <h2 id="pageTitle">Profil &amp; Erişim</h2>
-          <p id="pageDescription">Discord kimliğiniz, indirme erişiminiz ve son etkinliğiniz.</p>
-        </div>
-      </div>
-
-      <section class="panel active" id="panel-account">
-        <!-- Profil kartı -->
-        <div class="card profile-summary-card">
-          <div class="profile-summary">
-            <div class="profile-avatar-wrap">
-              <img id="accountAvatar" alt="Discord avatar" hidden>
-              <span id="accountInitials">ZY</span>
-            </div>
-            <div class="profile-summary-copy">
-              <span class="profile-kicker">Discord Hesabı</span>
-              <h3 id="identityName">Zyrex hesabınız</h3>
-              <p id="identitySub">Discord kimliğinizle bağlanmış</p>
-              <div class="identity-meta">
-                <span id="joinedDate">Sunucu katılış tarihi yükleniyor</span>
-                <span id="rolesList" class="role-chips"></span>
+      <div class="zset-panels">
+        <!-- ---------------------------------------------------------- account -->
+        <section class="zset-panel active" id="panel-account" aria-labelledby="panel-account-title">
+          <div class="zset-card">
+            <div class="zset-card-head">
+              <span class="zset-card-icon"><i class="fa-solid fa-id-badge"></i></span>
+              <div>
+                <h2 id="panel-account-title">Discord account</h2>
+                <p>The identity your Zyrex profile, pass and downloads are linked to.</p>
               </div>
             </div>
-            <a class="btn primary profile-edit" href="/profile-edit"><i class="fa-solid fa-pen-to-square"></i> Profili Düzenle</a>
+            <div class="zset-card-body">
+              <div class="zset-profile">
+                <span class="zset-profile-avatar"><img id="accountAvatar" alt="" hidden><span id="accountInitials">ZY</span></span>
+                <div class="zset-profile-copy">
+                  <h3 id="identityName">Your Zyrex account</h3>
+                  <p id="identitySub">Connected to your Discord identity</p>
+                  <div class="zset-chips" id="rolesList"></div>
+                </div>
+                <div class="zset-actions">
+                  <a class="zset-btn" href="/profile" id="viewProfileLink"><i class="fa-regular fa-address-card"></i> View profile</a>
+                  <a class="zset-btn is-primary" href="/profile-edit"><i class="fa-solid fa-pen-to-square"></i> Edit profile</a>
+                </div>
+              </div>
+              <div class="zset-stats" style="margin-top:18px">
+                <div class="zset-stat"><small>Discord ID</small><strong id="accountId">—</strong></div>
+                <div class="zset-stat"><small>Server join date</small><strong id="joinedDate">—</strong></div>
+                <div class="zset-stat"><small>Access</small><strong id="accountAccess">—</strong></div>
+              </div>
+            </div>
           </div>
-        </div>
+        </section>
 
-        <!-- İndirme Erişim Kartı -->
-        <div class="card">
-          <div class="card-head"><h2><i class="fa-solid fa-key"></i> İndirme Erişim Geçmişi</h2></div>
-          <p class="hint">İndirme erişim geçmişiniz ve geçmiş talepleriniz burada gösterilir.</p>
-          <div class="grid" id="passStats">
-            <div class="stat"><small>Durum</small><strong id="passStatus">Yükleniyor…</strong></div>
-            <div class="stat"><small>Başlangıç</small><strong id="passStarted">—</strong></div>
-            <div class="stat"><small>Bitiş</small><strong id="passExpires">—</strong></div>
-            <div class="stat"><small>Süre</small><strong id="passDuration">7 gün</strong></div>
+        <!-- ----------------------------------------------------------- access -->
+        <section class="zset-panel" id="panel-access" aria-labelledby="panel-access-title">
+          <div class="zset-card">
+            <div class="zset-card-head">
+              <span class="zset-card-icon"><i class="fa-solid fa-key"></i></span>
+              <div>
+                <h2 id="panel-access-title">Download access</h2>
+                <p>Your 7-day pass unlocks leak downloads for this Discord account.</p>
+              </div>
+            </div>
+            <div class="zset-card-body">
+              <div class="zset-stats">
+                <div class="zset-stat"><small>Status</small><strong id="passStatus">Loading…</strong></div>
+                <div class="zset-stat"><small>Started</small><strong id="passStarted">—</strong></div>
+                <div class="zset-stat"><small>Expires</small><strong id="passExpires">—</strong></div>
+                <div class="zset-stat"><small>Time left</small><strong id="passDuration">—</strong></div>
+              </div>
+              <div class="zset-progress" aria-hidden="true"><span id="passProgress" style="width:0%"></span></div>
+              <div class="zset-actions" style="margin-top:16px">
+                <a class="zset-btn is-primary" href="/access"><i class="fa-solid fa-unlock-keyhole"></i> Manage access pass</a>
+                <a class="zset-btn" href="/leaks"><i class="fa-solid fa-layer-group"></i> Browse leaks</a>
+              </div>
+            </div>
           </div>
-          <div id="claimsList" class="empty">Henüz erişim geçmişi yok.</div>
-        </div>
 
-        <!-- İndirilen Sızdırmalar -->
-        <div class="card">
-          <div class="card-head"><h2><i class="fa-solid fa-cloud-arrow-down"></i> İndirilen İçerikler</h2></div>
-          <p class="hint">Erişim geçmişiyle birlikte indirdiğiniz sızdırma içeriğinin listesi.</p>
-          <div id="downloadsList" class="download-grid empty">Yükleniyor…</div>
-        </div>
-      </section>
+          <div class="zset-card">
+            <div class="zset-card-head">
+              <span class="zset-card-icon"><i class="fa-solid fa-clock-rotate-left"></i></span>
+              <div>
+                <h2>Pass history</h2>
+                <p>Offers you completed to activate a download pass.</p>
+              </div>
+            </div>
+            <div class="zset-card-body">
+              <div class="zset-rows" id="claimsList"><div class="zset-empty">No access history yet.</div></div>
+            </div>
+          </div>
 
-      <section class="panel" id="panel-appearance">
-        <!-- Tema seçimi -->
-        <div class="card">
-          <div class="card-head"><h2><i class="fa-solid fa-palette"></i> Site Teması</h2></div>
-          <p class="hint">Site genelinde kullanılacak renk ve yazı stilini seçin. Seçiminiz bu cihazda hatırlanır.</p>
-          <div class="theme-current"><i class="fa-solid fa-circle-half-stroke"></i><span id="activeThemeName">Tema yükleniyor</span></div>
-          <div class="theme-grid" id="themeGrid" aria-live="polite"></div>
-          <div class="theme-note"><i class="fa-solid fa-droplet"></i><span>Seçiminiz site paletini ve yazı tipini günceller, bu cihazda hatırlanır.</span></div>
-        </div>
+          <div class="zset-card">
+            <div class="zset-card-head">
+              <span class="zset-card-icon"><i class="fa-solid fa-cloud-arrow-down"></i></span>
+              <div>
+                <h2>Downloaded content</h2>
+                <p>Leaks you unlocked with an active pass.</p>
+              </div>
+            </div>
+            <div class="zset-card-body">
+              <div class="zset-downloads" id="downloadsList"><div class="zset-empty" style="grid-column:1/-1">Loading…</div></div>
+            </div>
+          </div>
+        </section>
 
-        <!-- Bildirimler -->
-        <div class="card">
-          <div class="card-head"><h2><i class="fa-regular fa-bell"></i> Bildirimler</h2></div>
-          <p class="hint">Hangi güncellemelerin Zyrex bildirimlerinizde görünmesini istediğinizi seçin.</p>
-          <div class="setting-row"><span><strong>Rahatsız Etmeyin</strong><small>Tüm web sitesi bildirimlerini duraklatır</small></span><input class="switch" id="prefDnd" type="checkbox"></div>
-          <div class="setting-row"><span><strong>Yeni Sızdırmalar</strong><small>Yeni yayınlanan sızdırmalar ve ön ayarlar</small></span><input class="switch" data-notif-pref="leaks" type="checkbox"></div>
-          <div class="setting-row"><span><strong>Yeni Eklentiler ve Yazılımlar</strong><small>Kataloga eklenen yeni araçlar</small></span><input class="switch" data-notif-pref="plugins" type="checkbox"></div>
-          <div class="setting-row"><span><strong>Yeni Ses İçerikleri</strong><small>Yeni parçalar ve ses paketleri</small></span><input class="switch" data-notif-pref="audio" type="checkbox"></div>
-          <div class="setting-row"><span><strong>Takip Ettiklerinizin Feed Gönderileri</strong><small>Web sitesi bildirimlerinizde etkinlik</small></span><input class="switch" id="followSitePref" type="checkbox"></div>
-          <div class="setting-row"><span><strong>Takip Ettiklerinizin Discord Mesajları</strong><small>Takip ettiğiniz hesaplar paylaştığında doğrudan mesaj</small></span><input class="switch" id="followDmPref" type="checkbox"></div>
-          <div class="setting-row"><span><strong>Yanıtlar ve Önerme</strong><small>Sizinle ilgili yanıt veya önerme olduğunda</small></span><input class="switch" data-notif-pref="replies" type="checkbox"></div>
-          <div class="setting-row"><span><strong>Site Duyuruları</strong><small>Zyrex'tan genel güncellemeler</small></span><input class="switch" data-notif-pref="announcements" type="checkbox"></div>
-          <div class="toolrow"><button class="btn primary" id="saveNotificationPrefs">Bildirim Tercihlerini Kaydet</button><span id="notificationStatus" class="status" aria-live="polite"></span></div>
-        </div>
-      </section>
+        <!-- ------------------------------------------------------- appearance -->
+        <section class="zset-panel" id="panel-appearance" aria-labelledby="panel-appearance-title">
+          <div class="zset-card">
+            <div class="zset-card-head">
+              <span class="zset-card-icon"><i class="fa-solid fa-palette"></i></span>
+              <div>
+                <h2 id="panel-appearance-title">Site theme</h2>
+                <p>Pick the palette used across Zyrex. The choice is saved in this browser.</p>
+              </div>
+            </div>
+            <div class="zset-card-body">
+              <div class="zset-themes" id="themeGrid" aria-live="polite"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- --------------------------------------------------------- language -->
+        <section class="zset-panel" id="panel-language" aria-labelledby="panel-language-title">
+          <div class="zset-card">
+            <div class="zset-card-head">
+              <span class="zset-card-icon"><i class="fa-solid fa-globe"></i></span>
+              <div>
+                <h2 id="panel-language-title">Language</h2>
+                <p>Choose the language used across Zyrex. Saved in this browser and on your Discord account.</p>
+              </div>
+            </div>
+            <div class="zset-card-body">
+              <div class="zset-langs" id="languageGrid" role="group" aria-label="Language"></div>
+              <p class="zset-status" id="languageStatus" role="status" aria-live="polite"></p>
+            </div>
+          </div>
+        </section>
+
+        <!-- ---------------------------------------------------- notifications -->
+        <section class="zset-panel" id="panel-notifications" aria-labelledby="panel-notifications-title">
+          <div class="zset-card">
+            <div class="zset-card-head">
+              <span class="zset-card-icon"><i class="fa-regular fa-bell"></i></span>
+              <div>
+                <h2 id="panel-notifications-title">Notification preferences</h2>
+                <p>Choose which Zyrex updates reach your notification centre.</p>
+              </div>
+            </div>
+            <div class="zset-card-body">
+              <div class="zset-rows">
+                <div class="zset-row">
+                  <div><span class="zset-row-title">Do not disturb</span><span class="zset-row-sub">Pause every website notification</span></div>
+                  <label class="zset-switch"><input type="checkbox" id="prefDnd"><span></span></label>
+                </div>
+                <div class="zset-row">
+                  <div><span class="zset-row-title">New leaks</span><span class="zset-row-sub">Freshly published leaks</span></div>
+                  <label class="zset-switch"><input type="checkbox" data-notif-pref="leaks"><span></span></label>
+                </div>
+                <div class="zset-row">
+                  <div><span class="zset-row-title">Plugins and software</span><span class="zset-row-sub">New tools added to the catalogue</span></div>
+                  <label class="zset-switch"><input type="checkbox" data-notif-pref="plugins"><span></span></label>
+                </div>
+                <div class="zset-row">
+                  <div><span class="zset-row-title">Audio releases</span><span class="zset-row-sub">New tracks and audio packs</span></div>
+                  <label class="zset-switch"><input type="checkbox" data-notif-pref="audio"><span></span></label>
+                </div>
+                <div class="zset-row">
+                  <div><span class="zset-row-title">Feed activity</span><span class="zset-row-sub">New posts from the community feed</span></div>
+                  <label class="zset-switch"><input type="checkbox" data-notif-pref="feed"><span></span></label>
+                </div>
+                <div class="zset-row">
+                  <div><span class="zset-row-title">Replies and mentions</span><span class="zset-row-sub">When someone replies to or mentions you</span></div>
+                  <label class="zset-switch"><input type="checkbox" data-notif-pref="replies"><span></span></label>
+                </div>
+                <div class="zset-row">
+                  <div><span class="zset-row-title">Site announcements</span><span class="zset-row-sub">General updates from Zyrex</span></div>
+                  <label class="zset-switch"><input type="checkbox" data-notif-pref="announcements"><span></span></label>
+                </div>
+              </div>
+              <div class="zset-actions" style="margin-top:16px">
+                <button class="zset-btn is-primary" type="button" id="saveNotificationPrefs"><i class="fa-solid fa-floppy-disk"></i> Save preferences</button>
+              </div>
+              <div class="zset-status" id="notificationStatus" aria-live="polite"></div>
+            </div>
+          </div>
+
+          <div class="zset-card">
+            <div class="zset-card-head">
+              <span class="zset-card-icon"><i class="fa-solid fa-user-group"></i></span>
+              <div>
+                <h2>People you follow</h2>
+                <p>Control the alerts you get when a followed profile posts.</p>
+              </div>
+            </div>
+            <div class="zset-card-body">
+              <div class="zset-rows">
+                <div class="zset-row">
+                  <div><span class="zset-row-title">Feed posts on the website</span><span class="zset-row-sub">Show their activity in your Zyrex notifications</span></div>
+                  <label class="zset-switch"><input type="checkbox" id="followSitePref"><span></span></label>
+                </div>
+                <div class="zset-row">
+                  <div><span class="zset-row-title">Discord direct messages</span><span class="zset-row-sub">Message you when a followed account posts</span></div>
+                  <label class="zset-switch"><input type="checkbox" id="followDmPref"><span></span></label>
+                </div>
+              </div>
+              <div class="zset-follows" id="followList" style="margin-top:14px"><div class="zset-empty">Loading followed profiles…</div></div>
+              <div class="zset-note"><i class="fa-solid fa-circle-info"></i><span>Per-profile alerts are saved instantly. Follow new creators from their profile page.</span></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ---------------------------------------------------------- privacy -->
+        <section class="zset-panel" id="panel-privacy" aria-labelledby="panel-privacy-title">
+          <div class="zset-card">
+            <div class="zset-card-head">
+              <span class="zset-card-icon"><i class="fa-solid fa-user-shield"></i></span>
+              <div>
+                <h2 id="panel-privacy-title">Profile visibility</h2>
+                <p>Decide whether your profile page can be seen by other members.</p>
+              </div>
+            </div>
+            <div class="zset-card-body">
+              <div class="zset-rows">
+                <div class="zset-row">
+                  <div><span class="zset-row-title">Public profile</span><span class="zset-row-sub">Off keeps your profile hidden from other members</span></div>
+                  <label class="zset-switch"><input type="checkbox" id="privacyPublic"><span></span></label>
+                </div>
+              </div>
+              <div class="zset-status" id="privacyStatus" aria-live="polite"></div>
+            </div>
+          </div>
+
+          <div class="zset-card">
+            <div class="zset-card-head">
+              <span class="zset-card-icon"><i class="fa-solid fa-cookie-bite"></i></span>
+              <div>
+                <h2>Cookie settings</h2>
+                <p>Essential cookies keep sign-in and downloads working. Everything else is optional.</p>
+              </div>
+            </div>
+            <div class="zset-card-body">
+              <div class="zset-rows">
+                <div class="zset-row">
+                  <div><span class="zset-row-title">Essential cookies</span><span class="zset-row-sub">Login session, security and download hand-off</span></div>
+                  <label class="zset-switch"><input type="checkbox" checked disabled><span></span></label>
+                </div>
+                <div class="zset-row">
+                  <div><span class="zset-row-title">Analytics</span><span class="zset-row-sub">Anonymous usage data that tells us what to improve</span></div>
+                  <label class="zset-switch"><input type="checkbox" id="cookieAnalytics"><span></span></label>
+                </div>
+                <div class="zset-row">
+                  <div><span class="zset-row-title">Personalization</span><span class="zset-row-sub">Remember appearance and browsing preferences</span></div>
+                  <label class="zset-switch"><input type="checkbox" id="cookiePersonalization"><span></span></label>
+                </div>
+              </div>
+              <div class="zset-actions" style="margin-top:16px">
+                <button class="zset-btn is-primary" type="button" id="saveCookies"><i class="fa-solid fa-floppy-disk"></i> Save cookie choices</button>
+                <a class="zset-btn" href="/privacy"><i class="fa-solid fa-shield-halved"></i> Privacy policy</a>
+              </div>
+              <div class="zset-status" id="cookieStatus" aria-live="polite"></div>
+            </div>
+          </div>
+
+          <div class="zset-card">
+            <div class="zset-card-head">
+              <span class="zset-card-icon"><i class="fa-solid fa-file-export"></i></span>
+              <div>
+                <h2>Your data</h2>
+                <p>Request a copy of your account data. An admin reviews it within three days.</p>
+              </div>
+            </div>
+            <div class="zset-card-body">
+              <div class="zset-rows" id="dataRequestList"><div class="zset-empty">No export requests yet.</div></div>
+              <label class="zset-field">
+                <span>Why do you need this export?</span>
+                <textarea id="dataRequestReason" rows="3" placeholder="Tell the team what you need it for (at least 10 characters)."></textarea>
+              </label>
+              <div class="zset-actions" style="margin-top:14px">
+                <button class="zset-btn is-primary" type="button" id="requestExport"><i class="fa-solid fa-paper-plane"></i> Request export</button>
+              </div>
+              <div class="zset-status" id="dataStatus" aria-live="polite"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ------------------------------------------------------------ staff -->
+        <section class="zset-panel" id="panel-staff" aria-labelledby="panel-staff-title">
+          <div class="zset-card">
+            <div class="zset-card-head">
+              <span class="zset-card-icon"><i class="fa-solid fa-user-shield"></i></span>
+              <div>
+                <h2 id="panel-staff-title">Staff application</h2>
+                <p>Apply for the Zyrex team. The founder reviews every application and answers by Discord DM.</p>
+              </div>
+            </div>
+            <div class="zset-card-body">
+              <div class="zset-staff-roles">
+                <a class="zset-staff-role" href="/apply-uploader">
+                  <span class="zset-staff-role-icon"><i class="fa-solid fa-cloud-arrow-up"></i></span>
+                  <div class="zset-staff-role-copy">
+                    <strong>Leak Uploader</strong>
+                    <small>Find, check and publish editing leaks and stuff.</small>
+                  </div>
+                  <span class="zset-staff-chip" data-intake="leak-uploader" hidden>Open</span>
+                </a>
+                <a class="zset-staff-role" href="/apply-moderator">
+                  <span class="zset-staff-role-icon"><i class="fa-solid fa-shield-halved"></i></span>
+                  <div class="zset-staff-role-copy">
+                    <strong>Moderator</strong>
+                    <small>Keep the feed, comments and Discord calm and on-topic.</small>
+                  </div>
+                  <span class="zset-staff-chip" data-intake="moderator" hidden>Open</span>
+                </a>
+              </div>
+              <div class="zset-rows" id="staffApplicationList"><div class="zset-empty">No applications yet.</div></div>
+              <div class="zset-actions" style="margin-top:14px">
+                <a class="zset-btn is-primary" href="/apply" id="staffApplyLink"><i class="fa-solid fa-list-check"></i> All staff roles</a>
+                <a class="zset-btn" href="/admin-applications" id="staffReviewLink" hidden><i class="fa-solid fa-clipboard-check"></i> Review applications</a>
+              </div>
+              <div class="zset-status" id="staffStatus" aria-live="polite"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ------------------------------------------------------------ admin -->
+        <section class="zset-panel" id="panel-admin" aria-labelledby="panel-admin-title">
+          <div class="zset-card">
+            <div class="zset-card-head">
+              <span class="zset-card-icon"><i class="fa-solid fa-screwdriver-wrench"></i></span>
+              <div>
+                <h2 id="panel-admin-title">Admin panels</h2>
+                <p>Staff tools that run on their own APIs. Each one opens in its dedicated workspace.</p>
+              </div>
+            </div>
+            <div class="zset-card-body">
+              <div class="zset-admin-grid">
+                <a class="zset-admin-card" href="/admin-publish">
+                  <span class="zset-admin-icon"><i class="fa-solid fa-rocket"></i></span>
+                  <span><strong>Publish hub</strong><small>Review uploads, publish to the catalogue and schedule releases.</small></span>
+                  <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </a>
+                <a class="zset-admin-card" href="/admin-upload">
+                  <span class="zset-admin-icon"><i class="fa-solid fa-cloud-arrow-up"></i></span>
+                  <span><strong>Upload studio</strong><small>Push leak files and attach them to catalogue entries.</small></span>
+                  <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </a>
+                <a class="zset-admin-card" href="/admin-vt-scan">
+                  <span class="zset-admin-icon"><i class="fa-solid fa-shield-virus"></i></span>
+                  <span><strong>VirusTotal scanner</strong><small>Scan pending uploads before they go live.</small></span>
+                  <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </a>
+                <a class="zset-admin-card" href="/admin-feed">
+                  <span class="zset-admin-icon"><i class="fa-solid fa-newspaper"></i></span>
+                  <span><strong>Feed moderation</strong><small>Posts, announcements, detections and posting blocks.</small></span>
+                  <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </a>
+                <a class="zset-admin-card" href="/admin-applications">
+                  <span class="zset-admin-icon"><i class="fa-solid fa-user-shield"></i></span>
+                  <span><strong>Staff applications</strong><small>Review leak uploader and moderator applications; decisions go out by Discord DM.</small></span>
+                  <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </a>
+                <a class="zset-admin-card" href="/admin-plugins">
+                  <span class="zset-admin-icon"><i class="fa-solid fa-cubes"></i></span>
+                  <span><strong>Plugin admin</strong><small>Change log and Discord verification for the plugin catalogue.</small></span>
+                  <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </a>
+                <a class="zset-admin-card" href="/access-diagnostics">
+                  <span class="zset-admin-icon"><i class="fa-solid fa-stethoscope"></i></span>
+                  <span><strong>Access diagnostics</strong><small>Inspect download-access reports sent by members.</small></span>
+                  <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                </a>
+              </div>
+
+              <div class="zset-invite" id="inviteWatch" hidden>
+                <div class="zset-invite-head">
+                  <span class="zset-invite-icon"><i class="fa-brands fa-discord"></i></span>
+                  <div class="zset-invite-copy">
+                    <strong>Discord invite</strong>
+                    <small id="inviteWatchMeta">Checking the live link…</small>
+                  </div>
+                  <span class="zset-invite-chip" id="inviteWatchChip" hidden>Open</span>
+                </div>
+                <div class="zset-invite-actions">
+                  <a class="zset-btn" id="inviteWatchLink" href="https://discord.gg/4J3tars4QS" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open invite</a>
+                  <button class="zset-btn is-primary" type="button" id="inviteRotate"><i class="fa-solid fa-rotate"></i> Rotate link</button>
+                </div>
+                <div class="zset-status" id="inviteWatchStatus" aria-live="polite"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
   </main>
 
-  <script src="/js/script.js?v=76"></script>
-  <script src="/js/auth.js?v=18"></script>
-  <script src="/js/plugins-data.js?v=5"></script>
-  <script src="/js/product-overrides.js?v=2"></script>
+  <script src="/js/script.js?v=92"></script>
+  <script src="/js/auth.js?v=19"></script>
   <script>
-  (function(){
-    const $=id=>document.getElementById(id), esc=v=>String(v==null?'':v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-    async function api(path,options){const response=await fetch(path,Object.assign({credentials:'include',cache:'no-store'},options||{}));const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||('Request failed ('+response.status+')'));return data;}
-    function showStatus(id,message,error){const el=$(id);if(!el)return;el.textContent=message||'';el.className='status '+(error?'bad':'ok');}
-    const themeOptions=[
-      {key:'cherry',name:'Kırmızı & Grafit',label:'Grafit',desc:'Koyu nötr bir yüzey, açık kırmızı vuruşlu.'},
-      {key:'cyberpunk',name:'Mavi & Mor',label:'Mavi',desc:'Soğuk mavi ve mor vuruşlu koyu arayüz.'},
-      {key:'emerald',name:'Yeşil & Karakol',label:'Yeşil',desc:'Sakin karakol paleti, yeşil vuruşlu.'},
-      {key:'cosmic',name:'Mavi & İndigo',label:'İndigo',desc:'Derin mavi paleti, yumuşak İndigo vuruşlu.'},
-      {key:'hyperborea',name:'Açık & Mavi',label:'Açık',desc:'Parlak yüzey, temiz mavi vuruşlu.'}
-    ];
-    const state={catalog:[],plugins:[],overrides:{},editing:null,settings:{},cloudPath:'/',cloudLoaded:false,followPrefs:{}};
-    function openTab(tab,sourceButton){
-      document.querySelectorAll('.tab[data-tab]').forEach(b=>b.classList.toggle('active',sourceButton?b===sourceButton:(b.dataset.tab===tab&&!b.dataset.scroll)));
-      document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id==='panel-'+tab));
-      const meta={account:['HESAP','Hesap','Discord profiliniz, sunucu rolleri, erişim, indirmeler, gizlilik ve veri.'],appearance:['TERCİHLER','Tercihler','Site temasını seçin ve besleme ve katalog bildirimlerini yönetin.']}[tab]||['AYARLAR','Ayarlar','Zyrex hesabınızı yönetin.'];
-      $('pageKicker').textContent=meta[0];$('pageTitle').textContent=meta[1];$('pageDescription').textContent=meta[2];
-      document.querySelector('.breadcrumb strong')&&(document.querySelector('.breadcrumb strong').textContent=meta[1]);
-      history.replaceState(null,'','#'+tab);
-      filterCards();
-      if(sourceButton&&sourceButton.dataset.scroll){const target=$(sourceButton.dataset.scroll);if(target)setTimeout(()=>target.scrollIntoView({behavior:'smooth',block:'start'}),40);}
+  (function () {
+    'use strict';
+
+    const $ = id => document.getElementById(id);
+    const SECTIONS = ['account', 'access', 'appearance', 'language', 'notifications', 'privacy', 'staff', 'admin'];
+
+    const esc = value => String(value == null ? '' : value).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+
+    async function api(path, options) {
+      const response = await fetch(path, Object.assign({ credentials: 'include', cache: 'no-store' }, options || {}));
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || ('Request failed (' + response.status + ')'));
+      return data;
     }
-    document.querySelectorAll('.tab[data-tab]').forEach(b=>b.addEventListener('click',()=>openTab(b.dataset.tab,b)));
-    $('settingSearch')&&$('settingSearch').addEventListener('input',filterCards);
-    $('themeGrid')&&$('themeGrid').addEventListener('click',e=>{const b=e.target.closest('[data-theme]');if(!b||typeof window.applyGlobalTheme!=='function')return;window.applyGlobalTheme(b.dataset.theme);renderThemes();});
-    if($('hamburger'))$('hamburger').addEventListener('click',()=>{$('hamburger').classList.toggle('active');$('navLinks').classList.toggle('active');});
-    function renderThemes(){let current=localStorage.getItem('zyrex_theme')||'cherry';if(current==='amethyst')current='cosmic';if(current==='solar')current='cherry';if(!themeOptions.some(t=>t.key===current)){current='cherry';}if(localStorage.getItem('zyrex_theme')!==current&&window.applyGlobalTheme)window.applyGlobalTheme(current);const active=themeOptions.find(t=>t.key===current);$('activeThemeName')&&($('activeThemeName').textContent=active?active.name:'Kırmızı & Grafit');$('themeGrid')&&($('themeGrid').innerHTML=themeOptions.map(option=>{const t=(window.ZYREX_THEMES||{})[option.key]||{};const colors=Array.isArray(t.colors)?t.colors:['#ff3158','#221824','#0a0810'];const font=(t.fontName||'Satoshi');return '<button type="button" class="theme-card '+(option.key===current?'active':'')+'" data-theme="'+esc(option.key)+'" style="--swatch-a:'+esc(colors[0])+';--swatch-b:'+esc(colors[1]||colors[0])+'" aria-pressed="'+(option.key===current)+'"><div class="theme-card-top"><span class="theme-swatches">'+colors.slice(0,4).map(c=>'<span style="background:'+esc(c)+'"></span>').join('')+'</span><span class="theme-badge">'+esc(option.label)+'</span></div><h3>'+esc(option.name)+'</h3><p>'+esc(option.desc)+' | '+esc(font)+'</p><i class="fa-solid fa-circle-check theme-selected"></i></button>';}).join(''));if($('themeGrid')&&$('themeGrid').children.length>0){$('themeGrid').children[0].scrollIntoView({behavior:'smooth',block:'nearest',inline:'nearest'});}}
-    function renderIdentity(user){const name=user.global_name||user.display_name||user.username||'Discord üyesi';const username=user.username?'@'+user.username:'Discord hesabı';$('identityName')&&($('identityName').textContent=name);$('identitySub')&&($('identitySub').textContent=username+' | ID '+(user.id||''));$('toolbarName')&&($('toolbarName').textContent=name);const initials=String(name).trim().split(/\s+/).slice(0,2).map(x=>x[0]||'').join('').toUpperCase()||'ZY';$('accountInitials')&&($('accountInitials').textContent=initials);$('toolbarInitials')&&($('toolbarInitials').textContent=initials);if(user.avatar_url){$('accountAvatar')&&($('accountAvatar').src=user.avatar_url,$('accountAvatar').hidden=false,$('accountInitials').hidden=true);$('toolbarAvatar')&&($('toolbarAvatar').src=user.avatar_url,$('toolbarAvatar').hidden=false,$('toolbarInitials').hidden=true);}}
-    function filterCards(){const query=($('settingSearch')?.value||'').trim().toLowerCase();document.querySelectorAll('.panel.active .card').forEach(card=>{card.hidden=!!query&&!card.innerText.toLowerCase().includes(query);});}
-    function date(v){if(!v)return 'Kullanılamıyor';const n=Number(v);const d=new Date(Number.isFinite(n)&&n>0?n:v);return Number.isNaN(d.getTime())?'Kullanılamıyor':d.toLocaleString();}
-    function renderUserData(data){const pass=data.pass;const active=pass&&pass.active;const stateLabel=data.ad_free?'Reklamsız erişim':active?'Aktif':pass?'Süresi dolmuş':'Geçmiş yok';const passStatusEl=$('passStatus');if(passStatusEl)passStatusEl.innerHTML='<strong class="'+(data.ad_free||active?'ok':'bad')+'">'+stateLabel+'</strong>';const passStartedEl=$('passStarted');if(passStartedEl)passStartedEl.textContent=pass?date(pass.started_at):'Kullanılamıyor';const passExpiresEl=$('passExpires');if(passExpiresEl)passExpiresEl.textContent=pass?date(pass.expires_at):data.ad_free?'Süresi yok':'Kullanılamıyor';const passDurationEl=$('passDuration');if(passDurationEl)passDurationEl.textContent=data.duration_days?data.duration_days+' gün':'7 gün';$('joinedDate')&&($('joinedDate').textContent=data.joined_at?'Sunucuya '+date(data.joined_at)+' tarihinde katıldınız':'Sunucu katılış tarihi mevcut değil');$('rolesList')&&($('rolesList').innerHTML=(data.roles||[]).map(role=>'<span class="role-chip">'+esc(role)+'</span>').join(''));const claims=Array.isArray(data.offer_claims)?data.offer_claims:[];$('claimsList')&&($('claimsList').innerHTML=claims.length?claims.map((x,i)=>'<div class="row"><div><span class="row-title">Erişim Geçmişi '+(claims.length-i)+'</span><span class="row-sub">Tamamlandı '+esc(date(x.completed_at))+'</span></div><span class="row-sub">Etkinleştirildi '+esc(date(x.claimed_at))+'</span></div>').join(''):'<div class="empty">Erişim geçmişi mevcut değil.</div>');const downloads=Array.isArray(data.downloads)?data.downloads.slice(0,6):[];$('downloadsList')&&($('downloadsList').innerHTML=downloads.length?downloads.map(x=>'<a class="download-card" href="/leak?id='+encodeURIComponent(x.product_id||'')+'"><span class="download-thumb">'+(x.thumbnail?'<img src="'+esc(x.thumbnail)+'" alt="" loading="lazy">':'<i class="fa-solid fa-photo-film"></i>')+'</span><span class="download-info"><strong>'+esc(x.product_name||x.product_id||'İçerik')+'</strong><small>'+esc(date(x.created_at))+'</small></span></a>').join(''):'<div class="empty">Erişim tabanlı sızdırma indirimi bulunamadı.</div>');}
-    async function loadAccount(){const data=await api('/api/account/settings-data');renderUserData(data);}
-    async function loadNotificationPrefs(){const [product,follow]=await Promise.all([api('/api/profile/notif/prefs'),api('/api/profile/follow/prefs')]);$('prefDnd')&&($('prefDnd').checked=product.dnd===true);document.querySelectorAll('[data-notif-pref]').forEach(input=>input.checked=product[input.dataset.notifPref]!==false);$('followSitePref')&&($('followSitePref').checked=follow.site!==false);$('followDmPref')&&($('followDmPref').checked=follow.dm!==false);state.followPrefs=follow;renderFollowPrefs(follow.following||[]);}
-    function renderFollowPrefs(rows){const el=$('followPrefsList');if(!el)return;if(!rows.length){el.innerHTML='<div class="empty">Bir profili takip ederek burada bildirimlerini yönetebilirsiniz.</div>';return;}el.innerHTML=rows.map(person=>'<div class="follow-pref-row">'+(person.avatar?'<img src="'+esc(person.avatar)+'" alt="" loading="lazy">':'<span class="follow-pref-fallback"><i class="fa-regular fa-user"></i></span>')+'<span class="follow-pref-copy"><strong>'+esc(person.name)+'</strong><small>'+(person.handle?'@'+esc(person.handle):'Takip edilen profil')+'</small></span><input class="switch" type="checkbox" data-follow-notify="'+esc(person.id)+'" '+(person.notify?'checked':'')+' aria-label="'+esc(person.name)+' tarafından bildirimler"></div>').join('');}
-    $('followPrefsList')&&$('followPrefsList').addEventListener('change',async e=>{const input=e.target.closest('[data-follow-notify]');if(!input)return;input.disabled=true;try{await api('/api/profile/follow/prefs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({author_id:input.dataset.followNotify,notify:input.checked})});showStatus('notificationStatus','Takip edilen profil tercihi kaydedildi.');}catch(err){input.checked=!input.checked;showStatus('notificationStatus',err.message,true);}finally{input.disabled=false;}});
-    $('saveNotificationPrefs')&&$('saveNotificationPrefs').addEventListener('click',async()=>{const button=$('saveNotificationPrefs');button.disabled=true;showStatus('notificationStatus','Kaydediliyor');try{const prefs={dnd:$('prefDnd').checked};document.querySelectorAll('[data-notif-pref]').forEach(input=>prefs[input.dataset.notifPref]=input.checked);await Promise.all([api('/api/profile/notif/prefs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(prefs)}),api('/api/profile/follow/prefs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({site:$('followSitePref').checked,dm:$('followDmPref').checked})})]);showStatus('notificationStatus','Bildirim tercihleri kaydedildi.');}catch(err){showStatus('notificationStatus',err.message,true);}finally{button.disabled=false;}});
-    async function init(){try{const me=await api('/api/me');const user=me.user||me;if(!user.id){$('signedOut')&&($('signedOut').hidden=false);return;}renderIdentity(user);$('app')&&($('app').hidden=false);await Promise.all([loadAccount(),loadNotificationPrefs().catch(err=>showStatus('notificationStatus',err.message,true))]);renderThemes();const requested=location.hash.replace('#','');if(requested==='notifications')openTab('appearance',$('[data-scroll="notification-settings"]'));else if(['account','appearance'].includes(requested))openTab(requested);else openTab('account');}catch(err){if(err.message.includes('Sign in')||err.message.includes('Not logged')){$('signedOut')&&($('signedOut').hidden=false);}else{$('app')&&($('app').hidden=false);$('passStats')&&($('passStats').innerHTML='<div class="notice">'+esc(err.message)+'</div>');}}}if(!document.body.classList.contains('maintenance-mode'))init();
+
+    function setStatus(id, message, kind) {
+      const el = $(id);
+      if (!el) return;
+      el.textContent = message || '';
+      el.className = 'zset-status' + (kind ? ' ' + kind : '');
+    }
+
+    function formatDate(value) {
+      if (!value) return '—';
+      const numeric = Number(value);
+      const date = new Date(Number.isFinite(numeric) && numeric > 0 ? numeric : value);
+      if (Number.isNaN(date.getTime())) return '—';
+      return date.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    function formatDateTime(value) {
+      if (!value) return '—';
+      const numeric = Number(value);
+      const date = new Date(Number.isFinite(numeric) && numeric > 0 ? numeric : value);
+      if (Number.isNaN(date.getTime())) return '—';
+      return date.toLocaleString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
+    const THEMES = [
+      { key: 'zyrex', name: 'Zyrex', colors: ['#ff2b52', '#b81432', '#21131d', '#09070c'] },
+      { key: 'dark', name: 'Dark', colors: ['#ffffff', '#d4d4d4', '#161616', '#000000'] },
+      { key: 'light', name: 'Light', colors: ['#122a52', '#1b4fa8', '#e6ebf5', '#f5f7fc'] }
+    ];
+
+    /* ------------------------------------------------------------- routing */
+    const LEGACY_TABS = {
+      general: 'account', account: 'account', profile: 'account',
+      preferences: 'appearance', appearance: 'appearance', theme: 'appearance', themes: 'appearance',
+      language: 'language', languages: 'language', lang: 'language', locale: 'language',
+      notifications: 'notifications', privacy: 'privacy', cookies: 'privacy', admin: 'admin'
+    };
+
+    function requestedSection() {
+      const hash = (location.hash || '').replace('#', '');
+      if (SECTIONS.indexOf(hash) !== -1) return hash;
+      const tab = (new URLSearchParams(location.search).get('tab') || '').toLowerCase();
+      return LEGACY_TABS[tab] || '';
+    }
+
+    /* --------------------------------------------------------- back target
+       "Back to Zyrex" returns the visitor to the last in-site page instead of
+       always landing on the home page. The referrer is the freshest signal;
+       the session record covers direct visits and stripped referrers. */
+    const PAGE_NAMES = {
+      '/': 'Home', '/leaks': 'Leaks', '/feed': 'Feed', '/plugins': 'Plugins',
+      '/requests': 'Requests', '/audio': 'Audios', '/access': 'Access',
+      '/presets': 'Presets', '/profile': 'Profile', '/leak': 'Leaks'
+    };
+
+    function inSitePath(value) {
+      if (!value) return '';
+      try {
+        const url = new URL(value, location.origin);
+        if (url.origin !== location.origin) return '';
+        const path = url.pathname.replace(/\/+$/, '') || '/';
+        if (path === '/settings') return '';
+        if (/^\/(api|cdn-cgi)\b/.test(path)) return '';
+        return path + url.search + url.hash;
+      } catch (error) {
+        return '';
+      }
+    }
+
+    function backTarget() {
+      const fromReferrer = inSitePath(document.referrer);
+      if (fromReferrer) return fromReferrer;
+      const stored = window.ZyrexHistory && typeof window.ZyrexHistory.previous === 'function'
+        ? window.ZyrexHistory.previous()
+        : '';
+      return inSitePath(stored) || '/';
+    }
+
+    function renderBackLink() {
+      const link = $('railHome');
+      if (!link) return;
+      const target = backTarget();
+      const path = target.split('?')[0].split('#')[0].replace(/\/+$/, '') || '/';
+      const label = path === '/' ? 'Home' : (PAGE_NAMES[path] || path.replace(/^\//, ''));
+      link.href = target;
+      link.title = 'Back to ' + label;
+      link.setAttribute('aria-label', 'Back to ' + label);
+      const text = $('railHomeLabel');
+      if (text) text.textContent = 'Back to Zyrex';
+    }
+
+    function showSection(name, options) {
+      const settings = options || {};
+      if (SECTIONS.indexOf(name) === -1) name = 'account';
+      const adminNav = $('navAdmin');
+      if (name === 'admin' && adminNav && adminNav.hidden) name = 'account';
+      document.querySelectorAll('.zset-nav-btn').forEach(btn => {
+        const active = btn.dataset.section === name;
+        btn.classList.toggle('active', active);
+        btn.setAttribute('aria-current', active ? 'true' : 'false');
+      });
+      document.querySelectorAll('.zset-panel').forEach(panel => {
+        panel.classList.toggle('active', panel.id === 'panel-' + name);
+      });
+      if (settings.push !== false) history.replaceState(null, '', '#' + name);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    document.querySelectorAll('.zset-nav-btn').forEach(btn => {
+      btn.addEventListener('click', () => showSection(btn.dataset.section));
+    });
+
+    /* -------------------------------------------------------------- themes */
+    function currentTheme() {
+      const saved = localStorage.getItem('zyrex_theme') || 'zyrex';
+      return THEMES.some(t => t.key === saved) ? saved : 'zyrex';
+    }
+
+    function renderThemes() {
+      const grid = $('themeGrid');
+      if (!grid) return;
+      const active = currentTheme();
+      grid.innerHTML = THEMES.map(theme => {
+        const swatches = theme.colors.map(color => '<i style="background:' + esc(color) + '"></i>').join('');
+        return '<button type="button" class="zset-theme' + (theme.key === active ? ' active' : '') + '" data-theme="' + esc(theme.key) + '" aria-pressed="' + (theme.key === active) + '">' +
+          '<span class="zset-theme-check"><i class="fa-solid fa-circle-check"></i></span>' +
+          '<span class="zset-theme-swatches">' + swatches + '</span>' +
+          '<strong>' + esc(theme.name) + '</strong>' +
+          '</button>';
+      }).join('');
+    }
+
+    const themeGrid = $('themeGrid');
+    if (themeGrid) {
+      themeGrid.addEventListener('click', event => {
+        const button = event.target.closest('[data-theme]');
+        if (!button) return;
+        if (typeof window.applyGlobalTheme === 'function') window.applyGlobalTheme(button.dataset.theme);
+        renderThemes();
+      });
+    }
+
+    /* ----------------------------------------------------------- language */
+    const FALLBACK_LANGUAGES = [
+      { code: 'en', name: 'English', native: 'English' },
+      { code: 'tr', name: 'Turkish', native: 'Türkçe' },
+      { code: 'pt', name: 'Portuguese', native: 'Português' },
+      { code: 'es', name: 'Spanish', native: 'Español' },
+      { code: 'ko', name: 'Korean', native: '한국어' },
+      { code: 'zh', name: 'Chinese', native: '中文' },
+      { code: 'ar', name: 'Arabic', native: 'العربية' },
+      { code: 'ru', name: 'Russian', native: 'Русский' }
+    ];
+
+    function languageList() {
+      const api = window.ZyrexI18n;
+      return api && Array.isArray(api.languages) && api.languages.length ? api.languages : FALLBACK_LANGUAGES;
+    }
+
+    function activeLanguage() {
+      const api = window.ZyrexI18n;
+      if (api && typeof api.getLanguage === 'function') {
+        try { return api.getLanguage(); } catch (error) {}
+      }
+      try { return localStorage.getItem('zyrex_lang') || 'en'; } catch (error) { return 'en'; }
+    }
+
+    function renderLanguages() {
+      const grid = $('languageGrid');
+      if (!grid) return;
+      const active = activeLanguage();
+      grid.innerHTML = languageList().map(lang => {
+        const code = String(lang.code || '').toLowerCase();
+        const secondary = lang.native && lang.native !== lang.name
+          ? '<em>' + esc(lang.name) + '</em>'
+          : '';
+        return '<button type="button" class="zset-lang' + (code === active ? ' active' : '') + '" data-language="' + esc(code) + '" aria-pressed="' + (code === active) + '">' +
+          '<span class="zset-lang-badge">' + esc(code.toUpperCase()) + '</span>' +
+          '<span class="zset-lang-copy"><strong>' + esc(lang.native || lang.name) + '</strong>' + secondary + '</span>' +
+          '<span class="zset-lang-check"><i class="fa-solid fa-circle-check"></i></span>' +
+          '</button>';
+      }).join('');
+    }
+
+    function setLanguageStatus(message, kind) {
+      const el = $('languageStatus');
+      if (!el) return;
+      el.textContent = message || '';
+      el.className = 'zset-status' + (kind ? ' ' + kind : '');
+    }
+
+    const languageGrid = $('languageGrid');
+    if (languageGrid) {
+      languageGrid.addEventListener('click', async event => {
+        const button = event.target.closest('[data-language]');
+        if (!button) return;
+        const api = window.ZyrexI18n;
+        if (!api || typeof api.setLanguage !== 'function') return;
+        button.disabled = true;
+        try {
+          await api.setLanguage(button.dataset.language, { syncAccount: true });
+          renderLanguages();
+          setLanguageStatus(api.translate('Saved'), 'ok');
+        } catch (error) {
+          setLanguageStatus(api.translate('Something went wrong.'), 'bad');
+        } finally {
+          button.disabled = false;
+        }
+      });
+    }
+
+    document.addEventListener('zyrex:languagechange', renderLanguages);
+
+    /* ------------------------------------------------------------- account */
+    function renderIdentity(user) {
+      const name = user.global_name || user.display_name || user.username || 'Discord member';
+      const handle = user.username ? '@' + user.username : 'Discord account';
+      const initials = String(name).trim().split(/\s+/).slice(0, 2).map(part => part[0] || '').join('').toUpperCase() || 'ZY';
+
+      if ($('identityName')) $('identityName').textContent = name;
+      if ($('identitySub')) $('identitySub').textContent = handle;
+      if ($('accountId')) $('accountId').textContent = user.id || '—';
+      if ($('accountInitials')) $('accountInitials').textContent = initials;
+
+      const avatar = user.avatar_url || '';
+      const avatarImage = $('accountAvatar');
+      if (avatarImage && avatar) {
+        avatarImage.src = avatar;
+        avatarImage.hidden = false;
+        if ($('accountInitials')) $('accountInitials').hidden = true;
+      }
+
+      const profileLink = $('viewProfileLink');
+      if (profileLink) profileLink.href = user.username ? '/@' + encodeURIComponent(user.username) : '/profile';
+    }
+
+    function renderRoles(roles) {
+      const list = $('rolesList');
+      if (!list) return;
+      const values = Array.isArray(roles) && roles.length ? roles : ['Member'];
+      list.innerHTML = values.map(role => {
+        const accent = /admin|founder|staff/i.test(role) ? ' is-accent' : '';
+        return '<span class="zset-chip' + accent + '"><i class="fa-solid fa-circle"></i>' + esc(role) + '</span>';
+      }).join('');
+    }
+
+    function renderAccess(data) {
+      const pass = data.pass;
+      const active = Boolean(pass && pass.active);
+      const adFree = Boolean(data.ad_free);
+      const durationDays = 7;
+      let label = 'No pass yet';
+      if (adFree) label = 'Ad-free access';
+      else if (active) label = 'Active';
+      else if (pass) label = 'Expired';
+
+      if ($('passStatus')) $('passStatus').textContent = label;
+      if ($('accountAccess')) $('accountAccess').textContent = label;
+      if ($('passStarted')) $('passStarted').textContent = pass ? formatDateTime(pass.started_at) : '—';
+      if ($('passExpires')) $('passExpires').textContent = adFree ? 'Never' : pass ? formatDateTime(pass.expires_at) : '—';
+
+      const progress = $('passProgress');
+      if (pass && pass.expires_at && active) {
+        const remaining = Math.max(0, pass.expires_at - Date.now());
+        const days = Math.ceil(remaining / 86400000);
+        if ($('passDuration')) $('passDuration').textContent = days + (days === 1 ? ' day' : ' days');
+        const span = Math.max(1, (pass.expires_at - (pass.started_at || pass.expires_at - durationDays * 86400000)));
+        const percent = Math.min(100, Math.max(0, Math.round((remaining / span) * 100)));
+        if (progress) progress.style.width = percent + '%';
+      } else if (adFree) {
+        if ($('passDuration')) $('passDuration').textContent = 'Unlimited';
+        if (progress) progress.style.width = '100%';
+      } else {
+        if ($('passDuration')) $('passDuration').textContent = '—';
+        if (progress) progress.style.width = '0%';
+      }
+
+      if ($('joinedDate')) $('joinedDate').textContent = data.joined_at ? formatDate(data.joined_at) : '—';
+    }
+
+    function renderClaims(claims) {
+      const host = $('claimsList');
+      if (!host) return;
+      if (!Array.isArray(claims) || !claims.length) {
+        host.innerHTML = '<div class="zset-empty">No access history yet.</div>';
+        return;
+      }
+      host.innerHTML = claims.slice(0, 12).map((claim, index) => {
+        const title = 'Access claim ' + (claims.length - index);
+        return '<div class="zset-row">' +
+          '<div><span class="zset-row-title">' + esc(title) + '</span>' +
+          '<span class="zset-row-sub">Completed ' + esc(formatDateTime(claim.completed_at)) + '</span></div>' +
+          '<span class="zset-row-sub">Activated ' + esc(formatDateTime(claim.claimed_at)) + '</span>' +
+          '</div>';
+      }).join('');
+    }
+
+    function renderDownloads(downloads) {
+      const host = $('downloadsList');
+      if (!host) return;
+      if (!Array.isArray(downloads) || !downloads.length) {
+        host.innerHTML = '<div class="zset-empty" style="grid-column:1/-1">No pass-based leak downloads yet.</div>';
+        return;
+      }
+      host.innerHTML = downloads.slice(0, 18).map(item => {
+        const thumb = item.thumbnail
+          ? '<img src="' + esc(item.thumbnail) + '" alt="" loading="lazy">'
+          : '<i class="fa-solid fa-photo-film"></i>';
+        return '<a class="zset-download" href="/leak?id=' + encodeURIComponent(item.product_id || '') + '">' +
+          '<span class="zset-download-thumb">' + thumb + '</span>' +
+          '<span class="zset-download-meta"><strong>' + esc(item.product_name || item.product_id || 'Content') + '</strong>' +
+          '<small>' + esc(formatDate(item.created_at)) + '</small></span>' +
+          '</a>';
+      }).join('');
+    }
+
+    /* ------------------------------------------------------- notifications */
+    function renderFollows(following) {
+      const host = $('followList');
+      if (!host) return;
+      if (!Array.isArray(following) || !following.length) {
+        host.innerHTML = '<div class="zset-empty">Follow a profile and its alerts will appear here.</div>';
+        return;
+      }
+      host.innerHTML = following.map(person => {
+        const name = esc(person.name || 'Zyrex member');
+        const handle = person.handle ? '@' + esc(person.handle) : 'Followed profile';
+        const initials = String(person.name || 'ZY').trim().slice(0, 2).toUpperCase();
+        const avatar = person.avatar
+          ? '<span class="zset-follow-avatar"><img src="' + esc(person.avatar) + '" alt="" loading="lazy"></span>'
+          : '<span class="zset-follow-avatar">' + esc(initials) + '</span>';
+        return '<div class="zset-follow">' + avatar +
+          '<span class="zset-follow-copy"><strong>' + name + '</strong><small>' + handle + '</small></span>' +
+          '<label class="zset-switch"><input type="checkbox" data-follow-id="' + esc(person.id) + '"' + (person.notify ? ' checked' : '') + ' aria-label="Alerts for ' + name + '"><span></span></label>' +
+          '</div>';
+      }).join('');
+    }
+
+    async function loadNotifications() {
+      try {
+        const [product, follow] = await Promise.all([
+          api('/api/profile/notif/prefs'),
+          api('/api/profile/follow/prefs')
+        ]);
+        if ($('prefDnd')) $('prefDnd').checked = product.dnd === true;
+        document.querySelectorAll('[data-notif-pref]').forEach(input => {
+          input.checked = product[input.dataset.notifPref] !== false;
+        });
+        if ($('followSitePref')) $('followSitePref').checked = follow.site !== false;
+        if ($('followDmPref')) $('followDmPref').checked = follow.dm !== false;
+        renderFollows(follow.following || []);
+      } catch (error) {
+        setStatus('notificationStatus', error.message, 'bad');
+        renderFollows([]);
+      }
+    }
+
+    const followList = $('followList');
+    if (followList) {
+      followList.addEventListener('change', async event => {
+        const input = event.target.closest('[data-follow-id]');
+        if (!input) return;
+        input.disabled = true;
+        try {
+          await api('/api/profile/follow/prefs', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ author_id: input.dataset.followId, notify: input.checked })
+          });
+          setStatus('notificationStatus', 'Followed profile alerts updated.', 'ok');
+        } catch (error) {
+          input.checked = !input.checked;
+          setStatus('notificationStatus', error.message, 'bad');
+        } finally {
+          input.disabled = false;
+        }
+      });
+    }
+
+    const saveNotificationPrefs = $('saveNotificationPrefs');
+    if (saveNotificationPrefs) {
+      saveNotificationPrefs.addEventListener('click', async () => {
+        saveNotificationPrefs.disabled = true;
+        setStatus('notificationStatus', 'Saving…');
+        try {
+          const prefs = { dnd: Boolean($('prefDnd') && $('prefDnd').checked) };
+          document.querySelectorAll('[data-notif-pref]').forEach(input => { prefs[input.dataset.notifPref] = input.checked; });
+          await Promise.all([
+            api('/api/profile/notif/prefs', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(prefs)
+            }),
+            api('/api/profile/follow/prefs', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ site: Boolean($('followSitePref') && $('followSitePref').checked), dm: Boolean($('followDmPref') && $('followDmPref').checked) })
+            })
+          ]);
+          setStatus('notificationStatus', 'Notification preferences saved.', 'ok');
+        } catch (error) {
+          setStatus('notificationStatus', error.message, 'bad');
+        } finally {
+          saveNotificationPrefs.disabled = false;
+        }
+      });
+    }
+
+    /* ------------------------------------------------------------- privacy */
+    function readConsent() {
+      try {
+        const raw = localStorage.getItem('zyrex_cookie_consent');
+        return raw ? JSON.parse(raw) : null;
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function loadCookies() {
+      const consent = readConsent();
+      if ($('cookieAnalytics')) $('cookieAnalytics').checked = Boolean(consent && consent.analytics);
+      if ($('cookiePersonalization')) $('cookiePersonalization').checked = Boolean(consent && consent.personalization);
+    }
+
+    const saveCookies = $('saveCookies');
+    if (saveCookies) {
+      saveCookies.addEventListener('click', () => {
+        const preferences = {
+          essential: true,
+          analytics: Boolean($('cookieAnalytics') && $('cookieAnalytics').checked),
+          personalization: Boolean($('cookiePersonalization') && $('cookiePersonalization').checked),
+          timestamp: Date.now()
+        };
+        try {
+          localStorage.setItem('zyrex_cookie_consent', JSON.stringify(preferences));
+          document.dispatchEvent(new CustomEvent('zyrex:cookie-consent', { detail: preferences }));
+          const banner = document.getElementById('cookieConsentBanner');
+          if (banner) {
+            banner.classList.remove('show');
+            setTimeout(() => banner.classList.add('hidden'), 300);
+          }
+          setStatus('cookieStatus', 'Cookie choices saved.', 'ok');
+        } catch (error) {
+          setStatus('cookieStatus', 'Could not save your cookie choices in this browser.', 'bad');
+        }
+      });
+    }
+
+    async function loadPrivacy() {
+      try {
+        const data = await api('/api/profile/privacy');
+        if ($('privacyPublic')) $('privacyPublic').checked = data.visibility !== 'private';
+      } catch (error) {
+        setStatus('privacyStatus', error.message, 'bad');
+      }
+    }
+
+    const privacyPublic = $('privacyPublic');
+    if (privacyPublic) {
+      privacyPublic.addEventListener('change', async () => {
+        privacyPublic.disabled = true;
+        setStatus('privacyStatus', 'Saving…');
+        try {
+          await api('/api/profile/privacy', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ visibility: privacyPublic.checked ? 'public' : 'private' })
+          });
+          setStatus('privacyStatus', privacyPublic.checked ? 'Your profile is public.' : 'Your profile is private.', 'ok');
+        } catch (error) {
+          privacyPublic.checked = !privacyPublic.checked;
+          setStatus('privacyStatus', error.message, 'bad');
+        } finally {
+          privacyPublic.disabled = false;
+        }
+      });
+    }
+
+    function renderDataRequests(requests) {
+      const host = $('dataRequestList');
+      if (!host) return;
+      if (!Array.isArray(requests) || !requests.length) {
+        host.innerHTML = '<div class="zset-empty">No export requests yet.</div>';
+        return;
+      }
+      host.innerHTML = requests.map(item => {
+        const state = esc(item.status || 'pending');
+        return '<div class="zset-row">' +
+          '<div><span class="zset-row-title">Export request · ' + state + '</span>' +
+          '<span class="zset-row-sub">Requested ' + esc(formatDateTime(item.created_at)) + '</span></div>' +
+          '<span class="zset-row-sub">' + (item.review_due_at ? 'Review by ' + esc(formatDate(item.review_due_at)) : 'In review') + '</span>' +
+          '</div>';
+      }).join('');
+    }
+
+    async function loadDataRequests() {
+      try {
+        const data = await api('/api/account/data-request');
+        renderDataRequests(data.requests || []);
+      } catch (error) {
+        renderDataRequests([]);
+      }
+    }
+
+    /* --------------------------------------------------------------- staff */
+    const STAFF_STATUS_COPY = {
+      pending: { label: 'Under review', kind: '' },
+      accepted: { label: 'Accepted', kind: 'ok' },
+      rejected: { label: 'Not accepted', kind: 'bad' },
+      withdrawn: { label: 'Withdrawn', kind: 'bad' }
+    };
+
+    function renderStaffApplications(rows) {
+      const host = $('staffApplicationList');
+      if (!host) return;
+      if (!rows || !rows.length) {
+        host.innerHTML = '<div class="zset-empty">No applications yet.</div>';
+        return;
+      }
+      host.innerHTML = rows.map(row => {
+        const copy = STAFF_STATUS_COPY[row.status] || { label: row.status, kind: '' };
+        const when = row.created_at ? formatDateTime(row.created_at) : '';
+        return '<div class="zset-row zset-staff-row">' +
+          '<span class="zset-staff-chip is-' + esc(row.status) + '">' + esc(copy.label) + '</span>' +
+          '<span class="zset-row-main"><strong>' + esc(row.role_label || 'Staff') + '</strong>' +
+          '<span class="zset-row-sub">Applied ' + esc(when) + '</span></span>' +
+          (row.decision_note ? '<span class="zset-row-sub zset-staff-note">' + esc(row.decision_note) + '</span>' : '') +
+          '</div>';
+      }).join('');
+    }
+
+    async function loadStaffApplications() {
+      const host = $('staffApplicationList');
+      if (!host) return;
+      if (!window.currentUser) {
+        host.innerHTML = '<div class="zset-empty">Sign in to apply for a staff role.</div>';
+        return;
+      }
+      try {
+        const data = await api('/api/staff/apply');
+        renderStaffApplications(data.applications || []);
+      } catch (error) {
+        host.innerHTML = '<div class="zset-empty">Applications could not be loaded.</div>';
+      }
+    }
+
+    // The intake switches live on the founder board; members only see the state.
+    async function loadStaffIntake() {
+      const chips = document.querySelectorAll('[data-intake]');
+      if (!chips.length) return;
+      try {
+        const data = await api('/api/staff/settings');
+        (data.roles || []).forEach(role => {
+          const chip = document.querySelector('[data-intake="' + role.value + '"]');
+          if (!chip) return;
+          const open = role.open !== false;
+          chip.hidden = false;
+          chip.textContent = open ? 'Open' : 'Closed';
+          chip.classList.toggle('is-accepted', open);
+          chip.classList.toggle('is-rejected', !open);
+        });
+      } catch (error) {
+        chips.forEach(chip => { chip.hidden = true; });
+      }
+    }
+
+    // Invite watch: the API owns the live link, this panel only shows it and lets the
+    // founder rotate it by hand.
+    let inviteIsAdmin = false;
+    let inviteSnapshot = null;
+
+    function inviteRelativeTime(iso) {
+      if (!iso) return '';
+      const then = Date.parse(iso);
+      if (!Number.isFinite(then)) return '';
+      const minutes = Math.round((Date.now() - then) / 60000);
+      if (minutes < 1) return 'just now';
+      if (minutes < 60) return minutes + ' min ago';
+      const hours = Math.round(minutes / 60);
+      if (hours < 24) return hours + ' h ago';
+      return Math.round(hours / 24) + ' d ago';
+    }
+
+    function renderInviteWatch(data) {
+      const card = $('inviteWatch');
+      if (!card) return;
+      inviteSnapshot = data;
+      card.hidden = false;
+      const link = $('inviteWatchLink');
+      if (link && data.url) link.href = data.url;
+      const chip = $('inviteWatchChip');
+      if (chip) {
+        const state = data.status || 'unknown';
+        chip.hidden = false;
+        chip.textContent = state === 'ok' ? 'Live' : state === 'invalid' ? 'Broken' : 'Rotated';
+        chip.classList.toggle('is-accepted', state === 'ok');
+        chip.classList.toggle('is-rejected', state === 'invalid');
+      }
+      const meta = $('inviteWatchMeta');
+      if (meta) {
+        const bits = [];
+        if (data.code) bits.push('/' + data.code);
+        if (data.members && data.members.total) bits.push(data.members.total + ' members');
+        if (data.raid && data.raid.suspected) bits.push('raid pattern');
+        if (data.checked_at) bits.push('checked ' + inviteRelativeTime(data.checked_at));
+        meta.textContent = bits.join(' · ') || 'No invite state yet.';
+      }
+      const rotate = $('inviteRotate');
+      if (rotate) rotate.hidden = !inviteIsAdmin;
+    }
+
+    async function loadInviteWatch() {
+      const card = $('inviteWatch');
+      if (!card) return;
+      try {
+        renderInviteWatch(await api('/api/discord/invite'));
+      } catch (error) {
+        card.hidden = true;
+      }
+    }
+
+    const inviteRotate = $('inviteRotate');
+    if (inviteRotate) {
+      inviteRotate.addEventListener('click', async () => {
+        inviteRotate.disabled = true;
+        setStatus('inviteWatchStatus', 'Creating a new invite…');
+        try {
+          const data = await api('/api/discord/invite', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'rotate' }) });
+          renderInviteWatch(data);
+          setStatus('inviteWatchStatus', 'Rotated. Every page serves the new link now.');
+        } catch (error) {
+          setStatus('inviteWatchStatus', error.message, 'bad');
+        } finally {
+          inviteRotate.disabled = false;
+        }
+      });
+    }
+
+    const requestExport = $('requestExport');
+    if (requestExport) {
+      requestExport.addEventListener('click', async () => {
+        const reason = (($('dataRequestReason') && $('dataRequestReason').value) || '').trim();
+        if (reason.length < 10) {
+          setStatus('dataStatus', 'Please explain why you need the export (at least 10 characters).', 'bad');
+          return;
+        }
+        requestExport.disabled = true;
+        setStatus('dataStatus', 'Submitting…');
+        try {
+          await api('/api/account/data-request', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reason })
+          });
+          if ($('dataRequestReason')) $('dataRequestReason').value = '';
+          setStatus('dataStatus', 'Request submitted. An admin reviews it within three days.', 'ok');
+          await loadDataRequests();
+        } catch (error) {
+          setStatus('dataStatus', error.message, 'bad');
+        } finally {
+          requestExport.disabled = false;
+        }
+      });
+    }
+
+    /* --------------------------------------------------------------- admin */
+    function applyAdminVisibility(isAdmin) {
+      const nav = $('navAdmin');
+      if (nav) nav.hidden = !isAdmin;
+      inviteIsAdmin = Boolean(isAdmin);
+      if (inviteSnapshot) renderInviteWatch(inviteSnapshot);
+      const panelAdmin = document.getElementById('panel-admin');
+      if (!isAdmin && panelAdmin && (location.hash === '#admin' || panelAdmin.classList.contains('active'))) {
+        showSection('account', { push: false });
+      }
+    }
+
+    /* --------------------------------------------------- signed-out gating */
+    const AUTH_SECTIONS = ['account', 'access', 'notifications', 'admin'];
+    const LOCK_COPY = {
+      account: ['Your profile lives here', 'Sign in with Discord to see your identity, roles and join date.'],
+      access: ['Download access needs a login', 'Sign in to check your access pass, expiry date and past downloads.'],
+      notifications: ['Notifications need a login', 'Sign in to choose your alert categories and which followed profiles can ping you.'],
+      admin: ['Staff tools need a login', 'Sign in with an administrator account to reach the publishing and moderation panels.']
+    };
+
+    function applyAuthState(signedIn) {
+      document.body.classList.toggle('is-guest', !signedIn);
+      AUTH_SECTIONS.forEach(name => {
+        const panel = $('panel-' + name);
+        if (!panel) return;
+        panel.classList.toggle('is-locked', !signedIn);
+        let lock = panel.querySelector('.zset-lock');
+        if (!signedIn && !lock) {
+          const copy = LOCK_COPY[name] || LOCK_COPY.account;
+          lock = document.createElement('div');
+          lock.className = 'zset-card zset-lock';
+          lock.innerHTML =
+            '<span class="zset-lock-icon"><i class="fa-solid fa-lock"></i></span>' +
+            '<div class="zset-lock-copy"><h2>' + esc(copy[0]) + '</h2><p>' + esc(copy[1]) + '</p></div>' +
+            '<a class="zset-btn is-primary" href="/api/login?redirect=%2Fsettings"><i class="fa-brands fa-discord"></i> Login with Discord</a>';
+          panel.appendChild(lock);
+        } else if (signedIn && lock) {
+          lock.remove();
+        }
+      });
+    }
+
+    /* ---------------------------------------------------------------- init */
+    async function init() {
+      renderThemes();
+      renderLanguages();
+      renderBackLink();
+      loadCookies();
+
+      let user = null;
+      try {
+        const me = await api('/api/me');
+        user = me.user || me;
+      } catch (error) {
+        user = null;
+      }
+
+      const wanted = requestedSection();
+
+      if (!user || !user.id) {
+        applyAuthState(false);
+        showSection(wanted && AUTH_SECTIONS.indexOf(wanted) === -1 ? wanted : 'appearance', { push: false });
+        return;
+      }
+
+      renderIdentity(user);
+      applyAuthState(true);
+      showSection(wanted || 'account', { push: false });
+
+      loadNotifications();
+      loadPrivacy();
+      loadDataRequests();
+      loadStaffApplications();
+      loadStaffIntake();
+      loadInviteWatch();
+
+      try {
+        const data = await api('/api/account/settings-data');
+        renderRoles(data.roles);
+        renderAccess(data);
+        renderClaims(data.offer_claims);
+        renderDownloads(data.downloads);
+        applyAdminVisibility(Boolean(data.is_admin) || Boolean(user.is_admin));
+        const reviewLink = $('staffReviewLink');
+        if (reviewLink) reviewLink.hidden = !(Boolean(data.is_admin) || Boolean(user.is_admin));
+        if (Array.isArray(data.data_requests) && data.data_requests.length) renderDataRequests(data.data_requests);
+      } catch (error) {
+        setStatus('passStatus', error.message, 'bad');
+      }
+    }
+
+    window.addEventListener('hashchange', () => {
+      const hash = (location.hash || '').replace('#', '');
+      if (SECTIONS.indexOf(hash) !== -1) showSection(hash, { push: false });
+    });
+
+    window.addEventListener('zyrex:auth', () => loadStaffApplications());
+
+    init();
   })();
   </script>
+  <script src="/js/page-motion.js?v=6"></script>
 </body>
 </html>

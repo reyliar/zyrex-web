@@ -3,24 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Upload an audio pack to the catalogue.">
     <title>Creator Studio — Zyrex</title>
     <link rel="icon" type="image/png" href="/assets/content.png">
-    <link rel="stylesheet" href="css/style.css?v=46">
+    <link rel="stylesheet" href="css/style.css?v=92">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,800,900&amp;display=swap">
     <style>
         :root {
-            --cherry: #ff2b52;
+            --cherry: var(--zr-accent, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1));
             --cherry-rgb: 255, 43, 82;
-            --cherry-light: #ff6b85;
-            --cherry-dark: #c8002a;
+            --cherry-light: rgba(var(--zr-rgb-255-107-133, 255, 107, 133), 1);
+            --cherry-dark: rgba(var(--zr-rgb-200-0-42, 200, 0, 42), 1);
             --dark: #070209;
             --dark-panel: rgba(14, 10, 18, 0.85);
             --border: rgba(255, 255, 255, 0.11);
-            --border-hover: rgba(255, 43, 82, 0.35);
+            --border-hover: rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.35);
             --text: #f8f5f6;
-            --muted: rgba(255,255,255,0.45);
-            --muted-dark: rgba(255,255,255,0.25);
+            --muted: rgba(255, 255, 255, 0.80);
+            --muted-dark: rgba(255, 255, 255, 0.25);
             --radius-lg: 28px;
             --radius-md: 16px;
             --transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -30,9 +31,12 @@
         body {
             background: var(--dark);
             color: var(--text);
-            font-family: 'Inter', 'Poppins', sans-serif;
+            font-family: 'Satoshi', sans-serif;
             min-height: 100vh;
+            /* The studio container and the site footer are siblings: lay them out in
+               a column, otherwise flex puts the footer beside the uploader. */
             display: flex;
+            flex-direction: column;
             overflow-x: hidden;
         }
         body::before {
@@ -42,21 +46,21 @@
             z-index: 0;
             pointer-events: none;
             background:
-                radial-gradient(circle at 10% 0%, rgba(255,43,82,0.16) 0%, transparent 40%),
-                radial-gradient(circle at 88% 18%, rgba(120,0,40,0.10) 0%, transparent 35%),
-                radial-gradient(circle at 50% 100%, rgba(60,0,20,0.08) 0%, transparent 50%);
+                radial-gradient(circle at 10% 0%, rgba(var(--zr-rgb-255-43-82, 255, 43, 82),0.16) 0%, transparent 40%),
+                radial-gradient(circle at 88% 18%, rgba(var(--zr-rgb-120-0-40, 120, 0, 40),0.10) 0%, transparent 35%),
+                radial-gradient(circle at 50% 100%, rgba(60, 0, 20, 0.08) 0%, transparent 50%);
         }
 
         .bg-aura { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
-        .bg-aura .orb { position: absolute; border-radius: 50%; filter: blur(120px); opacity: .07; }
-        .orb-1 { width: 500px; height: 500px; background: var(--cherry); top: -10%; left: -10%; }
-        .orb-2 { width: 400px; height: 400px; background: #5865F2; bottom: -5%; right: -5%; opacity: .04; }
-        .orb-3 { width: 300px; height: 300px; background: var(--cherry-light); top: 50%; left: 30%; opacity: .03; }
+        .bg-aura .orb { position: absolute; border-radius: 50%; opacity: .07; }
+        .orb-1 { width: 500px; height: 500px; background: radial-gradient(circle, var(--cherry), transparent 70%); top: -10%; left: -10%; }
+        .orb-2 { width: 400px; height: 400px; background: radial-gradient(circle, #5865F2, transparent 70%); bottom: -5%; right: -5%; opacity: .04; }
+        .orb-3 { width: 300px; height: 300px; background: radial-gradient(circle, var(--cherry-light), transparent 70%); top: 50%; left: 30%; opacity: .03; }
         
         .grid-bg {
             position: fixed; inset: 0; pointer-events: none; z-index: 0;
-            background-image: linear-gradient(rgba(230, 21, 54, 0.015) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(230, 21, 54, 0.015) 1px, transparent 1px);
+            background-image: linear-gradient(rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.015) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.015) 1px, transparent 1px);
             background-size: 50px 50px;
             mask-image: radial-gradient(ellipse at 50% 30%, black 40%, transparent 80%);
             -webkit-mask-image: radial-gradient(ellipse at 50% 30%, black 40%, transparent 80%);
@@ -115,21 +119,21 @@
         .sidebar-brand img {
             height: 30px;
             width: auto;
-            filter: drop-shadow(0 0 10px rgba(255, 43, 82, 0.35));
+            filter: drop-shadow(0 0 10px rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.35));
             transition: transform 0.25s ease;
         }
         .sidebar-brand:hover img {
             transform: scale(1.06);
         }
         .sidebar-brand span {
-            font-family: 'Outfit', sans-serif;
+            font-family: 'Satoshi', sans-serif;
             font-weight: 800;
             font-size: 1.15rem;
             letter-spacing: -0.2px;
             color: #ffffff;
         }
         .sidebar-brand span b {
-            background: linear-gradient(135deg, #ff2b52, #ff6b85);
+            background: linear-gradient(135deg, var(--zr-accent, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1)), rgba(var(--zr-rgb-255-107-133, 255, 107, 133), 1));
             -webkit-background-clip: text;
             background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -187,13 +191,13 @@
         .menu-item.active a {
             color: #ffffff;
             font-weight: 700;
-            background: linear-gradient(135deg, rgba(255, 43, 82, 0.18), rgba(255, 43, 82, 0.08));
-            border-color: rgba(255, 43, 82, 0.32);
-            box-shadow: 0 4px 18px rgba(255, 43, 82, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+            background: linear-gradient(135deg, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.18), rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.08));
+            border-color: rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.32);
+            box-shadow: 0 4px 18px rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.12);
         }
         .menu-item.active a i {
-            color: var(--cherry-light, #ff3b60);
-            text-shadow: 0 0 10px rgba(255, 43, 82, 0.5);
+            color: var(--cherry-light, rgba(var(--zr-rgb-255-59-96, 255, 59, 96), 1));
+            text-shadow: 0 0 10px rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.5);
         }
         .menu-item .locked-item {
             opacity: 0.4;
@@ -209,11 +213,11 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            background: rgba(255, 43, 82, 0.12);
-            color: var(--cherry-light, #ff3b60);
+            background: rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.12);
+            color: var(--cherry-light, rgba(var(--zr-rgb-255-59-96, 255, 59, 96), 1));
             padding: 2px 7px;
             border-radius: 999px;
-            border: 1px solid rgba(255, 43, 82, 0.25);
+            border: 1px solid rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.25);
             margin-left: auto;
         }
 
@@ -244,8 +248,8 @@
             width: 36px;
             height: 36px;
             border-radius: 50%;
-            border: 2px solid rgba(255, 43, 82, 0.55);
-            box-shadow: 0 0 12px rgba(255, 43, 82, 0.25);
+            border: 2px solid rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.55);
+            box-shadow: 0 0 12px rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.25);
             object-fit: cover;
             display: block;
             flex-shrink: 0;
@@ -263,7 +267,7 @@
             text-overflow: ellipsis;
             overflow: hidden;
             white-space: nowrap;
-            font-family: 'Outfit', sans-serif;
+            font-family: 'Satoshi', sans-serif;
         }
 
         .footer-nav {
@@ -295,14 +299,14 @@
             background: rgba(255, 255, 255, 0.05);
         }
         .footer-nav a:hover i, .footer-nav-link:hover i {
-            color: var(--cherry-light, #ff3b60);
+            color: var(--cherry-light, rgba(var(--zr-rgb-255-59-96, 255, 59, 96), 1));
         }
         .footer-nav a.link-logout:hover {
-            color: #ff5c75;
+            color: rgba(var(--zr-rgb-255-92-117, 255, 92, 117), 1);
             background: rgba(255, 68, 68, 0.08);
         }
         .footer-nav a.link-logout:hover i {
-            color: #ff5c75;
+            color: rgba(var(--zr-rgb-255-92-117, 255, 92, 117), 1);
         }
 
         .studio-main {
@@ -320,7 +324,7 @@
             margin-bottom: 32px;
         }
         .studio-header h1 {
-            font-family: 'Outfit', sans-serif;
+            font-family: 'Satoshi', sans-serif;
             font-size: 1.8rem;
             font-weight: 900;
             letter-spacing: -0.5px;
@@ -337,7 +341,7 @@
             padding: 36px;
             backdrop-filter: blur(25px) saturate(220%);
             -webkit-backdrop-filter: blur(25px) saturate(220%);
-            box-shadow: 0 25px 70px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.03);
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6), inset 0 1px 2px rgba(255, 255, 255, 0.03);
             position: relative;
             overflow: hidden;
             max-width: 760px;
@@ -370,8 +374,8 @@
         }
         .field input:focus, .field textarea:focus, .field select:focus {
             border-color: var(--cherry-light);
-            background: rgba(230, 21, 54, 0.02);
-            box-shadow: 0 0 0 3px rgba(230, 21, 54, 0.08);
+            background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.02);
+            box-shadow: 0 0 0 3px rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.08);
         }
         .field textarea { min-height: 100px; resize: vertical; }
 
@@ -386,14 +390,14 @@
         .cat-chip {
             display: inline-flex; align-items: center; gap: 6px;
             padding: 8px 18px; border-radius: 50px;
-            border: 1px solid var(--border); background: rgba(230, 21, 54, 0.03);
+            border: 1px solid var(--border); background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.03);
             font-size: 0.75rem; color: var(--muted); cursor: pointer; transition: var(--transition);
             user-select: none; font-weight: 600;
         }
         .cat-chip:hover { border-color: var(--border-hover); color: #fff; }
         .cat-chip:has(input:checked) {
-            background: rgba(230, 21, 54, 0.15); border-color: var(--cherry-light); color: var(--cherry-light);
-            box-shadow: 0 0 12px rgba(230, 21, 54, 0.1);
+            background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.15); border-color: var(--cherry-light); color: var(--cherry-light);
+            box-shadow: 0 0 12px rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.1);
         }
         .cat-chip input { display: none; }
 
@@ -403,7 +407,7 @@
             padding: 40px; text-align: center; cursor: pointer; transition: var(--transition);
             background: rgba(0, 0, 0, 0.25);
         }
-        .file-upload-area:hover { border-color: var(--cherry-light); background: rgba(230, 21, 54, 0.02); }
+        .file-upload-area:hover { border-color: var(--cherry-light); background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.02); }
         .file-upload-area.has-file { border-color: rgba(0, 200, 100, 0.35); background: rgba(0, 200, 100, 0.03); }
         .file-upload-area .fu-icon { font-size: 2.8rem; color: var(--cherry); opacity: 0.3; margin-bottom: 12px; transition: var(--transition); }
         .file-upload-area:hover .fu-icon { opacity: 0.6; transform: translateY(-2px); }
@@ -417,9 +421,9 @@
         }
         .social-input-wrap input { border: none; background: transparent; flex: 1; }
         .social-lookup-btn {
-            width: 48px; border: none; background: rgba(230, 21, 54, 0.08); color: var(--cherry-light); cursor: pointer; transition: var(--transition);
+            width: 48px; border: none; background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.08); color: var(--cherry-light); cursor: pointer; transition: var(--transition);
         }
-        .social-lookup-btn:hover { background: rgba(230, 21, 54, 0.15); color: #fff; }
+        .social-lookup-btn:hover { background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.15); color: #fff; }
 
         /* Uploader Credit Search & Badge */
         .uploader-credit-wrap {
@@ -439,7 +443,7 @@
         }
         .uploader-search-box:focus-within {
             border-color: var(--cherry-light);
-            box-shadow: 0 0 16px rgba(230, 21, 54, 0.15);
+            box-shadow: 0 0 16px rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.15);
         }
         .uploader-search-box .search-icon {
             margin-left: 14px;
@@ -475,11 +479,11 @@
             right: 0;
             margin-top: 6px;
             background: rgba(14, 5, 10, 0.98);
-            border: 1px solid rgba(255, 43, 82, 0.3);
+            border: 1px solid rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.3);
             border-radius: var(--radius-md);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
-            box-shadow: 0 16px 36px rgba(0,0,0,0.7);
+            box-shadow: 0 16px 36px rgba(0, 0, 0, 0.7);
             max-height: 250px;
             overflow-y: auto;
             z-index: 1000;
@@ -491,20 +495,20 @@
             padding: 10px 14px;
             cursor: pointer;
             transition: background 0.15s ease;
-            border-bottom: 1px solid rgba(255,255,255,0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
         }
         .uploader-member-item:last-child {
             border-bottom: none;
         }
         .uploader-member-item:hover, .uploader-member-item.selected {
-            background: rgba(230, 21, 54, 0.15);
+            background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.15);
         }
         .uploader-member-avatar {
             width: 34px;
             height: 34px;
             border-radius: 50%;
             object-fit: cover;
-            border: 1px solid rgba(255, 43, 82, 0.3);
+            border: 1px solid rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.3);
             background: #11050b;
         }
         .uploader-member-info {
@@ -538,8 +542,8 @@
             align-items: center;
             gap: 12px;
             padding: 10px 16px;
-            background: rgba(230, 21, 54, 0.10);
-            border: 1px solid rgba(230, 21, 54, 0.35);
+            background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.10);
+            border: 1px solid rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.35);
             border-radius: var(--radius-md);
             margin-top: 4px;
         }
@@ -576,7 +580,7 @@
             transition: var(--transition);
         }
         .credited-remove-btn:hover {
-            color: #ff3355;
+            color: rgba(var(--zr-rgb-255-51-85, 255, 51, 85), 1);
             transform: scale(1.1);
         }
         .field-hint {
@@ -588,14 +592,14 @@
 
         /* Custom Audio Preview Component */
         .audio-preview-panel {
-            background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: var(--radius-md);
+            background: rgba(0, 0, 0, 0.3); border: 1px solid var(--border); border-radius: var(--radius-md);
             padding: 16px; margin-top: 14px; display: none; align-items: center; gap: 14px;
         }
         .audio-preview-panel.show { display: flex; }
         .ap-btn {
             width: 40px; height: 40px; border-radius: 50%; background: var(--cherry); border: none;
             color: #fff; display: flex; align-items: center; justify-content: center; cursor: pointer;
-            font-size: 0.9rem; transition: var(--transition); box-shadow: 0 4px 12px rgba(230,21,54,0.3);
+            font-size: 0.9rem; transition: var(--transition); box-shadow: 0 4px 12px rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.3);
         }
         .ap-btn:hover { transform: scale(1.08); background: var(--cherry-light); }
         .ap-info { flex: 1; min-width: 0; }
@@ -619,22 +623,22 @@
         }
         .btn-primary {
             background: linear-gradient(135deg, var(--cherry), var(--cherry-dark));
-            color: #fff; border: 1px solid rgba(255, 77, 109, 0.2);
-            box-shadow: 0 4px 20px rgba(230, 21, 54, 0.3);
+            color: #fff; border: 1px solid rgba(var(--zr-rgb-255-77-109, 255, 77, 109), 0.2);
+            box-shadow: 0 4px 20px rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.3);
         }
         .btn-primary:hover {
-            transform: translateY(-2px); box-shadow: 0 8px 30px rgba(230, 21, 54, 0.5);
+            transform: translateY(-2px); box-shadow: 0 8px 30px rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.5);
         }
         .btn-primary:disabled {
             opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none;
         }
         .btn-ghost {
-            background: rgba(230, 21, 54, 0.05); color: var(--text); border: 1px solid rgba(230, 21, 54, 0.12);
+            background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.05); color: var(--text); border: 1px solid rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.12);
         }
-        .btn-ghost:hover { background: rgba(230, 21, 54, 0.1); border-color: var(--border-hover); }
+        .btn-ghost:hover { background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.1); border-color: var(--border-hover); }
 
         .form-actions {
-            display: flex; justify-content: flex-end; gap: 12px; margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.04);
+            display: flex; justify-content: flex-end; gap: 12px; margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(255, 255, 255, 0.04);
         }
 
         .lock-container {
@@ -643,10 +647,10 @@
         .lock-card {
             max-width: 480px; text-align: center; padding: 48px 36px;
             background: var(--dark-panel); border: 1px solid var(--border); border-radius: var(--radius-lg);
-            box-shadow: 0 25px 70px rgba(0,0,0,0.6);
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6);
         }
         .lock-card i.lock-icon { font-size: 4rem; color: var(--cherry); opacity: 0.2; margin-bottom: 24px; display: block; }
-        .lock-card h2 { font-family: 'Outfit', sans-serif; font-size: 1.6rem; font-weight: 800; color: #fff; margin-bottom: 12px; }
+        .lock-card h2 { font-family: 'Satoshi', sans-serif; font-size: 1.6rem; font-weight: 800; color: #fff; margin-bottom: 12px; }
         .lock-card p { font-size: 0.88rem; color: var(--muted); line-height: 1.6; margin-bottom: 28px; }
         .lock-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
         .btn-discord { background: #5865F2; color: #fff; }
@@ -656,12 +660,12 @@
             position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
             z-index: 10000; padding: 12px 24px; border-radius: 30px; font-size: 0.84rem; font-weight: 700;
             display: none; align-items: center; gap: 8px; backdrop-filter: blur(10px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
             animation: alertIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         @keyframes alertIn { from { opacity: 0; transform: translate(-50%, -10px); } to { opacity: 1; transform: translate(-50%, 0); } }
         .studio-alert.show { display: flex; }
-        .studio-alert.error { background: rgba(230, 21, 54, 0.15); border: 1px solid rgba(230, 21, 54, 0.25); color: var(--cherry-light); }
+        .studio-alert.error { background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.15); border: 1px solid rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.25); color: var(--cherry-light); }
         .studio-alert.success { background: rgba(0, 200, 100, 0.15); border: 1px solid rgba(0, 200, 100, 0.25); color: #00e676; }
 
         .sidebar-overlay {
@@ -685,7 +689,7 @@
         .sidebar-mobile-close span {
             font-size: 0.78rem;
             font-weight: 800;
-            color: var(--cherry-light, #ff3b60);
+            color: var(--cherry-light, rgba(var(--zr-rgb-255-59-96, 255, 59, 96), 1));
             text-transform: uppercase;
             letter-spacing: 1px;
         }
@@ -704,8 +708,8 @@
             transition: all 0.2s ease;
         }
         .sidebar-mobile-close button:hover {
-            background: rgba(255, 43, 82, 0.2);
-            border-color: rgba(255, 43, 82, 0.4);
+            background: rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.2);
+            border-color: rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.4);
             color: #fff;
         }
 
@@ -724,9 +728,9 @@
                 border-radius: 0 24px 24px 0;
                 padding-top: 85px;
                 z-index: 9999;
-                box-shadow: 10px 0 40px rgba(0,0,0,0.85);
+                box-shadow: 10px 0 40px rgba(0, 0, 0, 0.85);
                 background: #0e0306;
-                border-right: 1px solid rgba(230, 21, 54, 0.2);
+                border-right: 1px solid rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.2);
             }
             .studio-sidebar.open {
                 left: 0;
@@ -737,7 +741,7 @@
             .sidebar-overlay { z-index: 9998; }
             .sidebar-mobile-close { display: flex !important; }
             .studio-main { margin-left: 0; padding: 24px 16px; width: 100%; }
-            .mobile-trigger { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 10px; background: rgba(230,21,54,0.1); border: 1px solid var(--border); margin-right: 12px; }
+            .mobile-trigger { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 10px; background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.1); border: 1px solid var(--border); margin-right: 12px; }
         }
 
         .social-modal-backdrop {
@@ -754,7 +758,7 @@
             border-radius: 26px;
             padding: 28px;
             width: 100%; max-width: 440px;
-            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 0 50px rgba(255, 43, 82, 0.1);
+            box-shadow: 0 30px 90px rgba(0, 0, 0, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.15), 0 0 50px rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.1);
             position: relative;
             overflow: hidden;
             animation: socialModalPop 0.35s cubic-bezier(0.16, 1, 0.3, 1);
@@ -765,7 +769,7 @@
         }
         .social-modal-top-glow {
             position: absolute; top: 0; left: 10%; right: 10%; height: 2px;
-            background: linear-gradient(90deg, transparent, var(--cherry), rgba(168,85,247,0.8), transparent);
+            background: linear-gradient(90deg, transparent, var(--cherry), rgba(168, 85, 247, 0.8), transparent);
             pointer-events: none;
         }
         .social-modal-header {
@@ -777,15 +781,15 @@
         }
         .social-modal-icon-badge {
             width: 42px; height: 42px; border-radius: 14px;
-            background: linear-gradient(135deg, rgba(230,21,54,0.22), rgba(230,21,54,0.06));
-            border: 1px solid rgba(230,21,54,0.28);
+            background: linear-gradient(135deg, rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.22), rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.06));
+            border: 1px solid rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.28);
             display: flex; align-items: center; justify-content: center;
             color: var(--cherry-light); font-size: 1.1rem;
             flex-shrink: 0;
-            box-shadow: 0 0 20px rgba(230,21,54,0.2);
+            box-shadow: 0 0 20px rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.2);
         }
         .social-modal-brand h3 {
-            margin: 0; font-family: 'Outfit', sans-serif;
+            margin: 0; font-family: 'Satoshi', sans-serif;
             font-size: 1.08rem; font-weight: 800; color: #fff; letter-spacing: -0.2px;
         }
         .social-modal-brand p {
@@ -800,8 +804,8 @@
             transition: all 0.2s ease; font-size: 0.82rem;
         }
         .social-modal-close-btn:hover {
-            color: #fff; background: rgba(255, 43, 82, 0.2);
-            border-color: rgba(255, 43, 82, 0.35); transform: rotate(90deg);
+            color: #fff; background: rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.2);
+            border-color: rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.35); transform: rotate(90deg);
         }
         .social-plat-grid {
             display: grid; grid-template-columns: repeat(4, 1fr);
@@ -823,15 +827,15 @@
             color: #fff; transform: translateY(-2px);
         }
         .plat-select-btn.active {
-            background: linear-gradient(135deg, rgba(230,21,54,0.18), rgba(230,21,54,0.06));
-            border-color: rgba(230, 21, 54, 0.5);
+            background: linear-gradient(135deg, rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.18), rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.06));
+            border-color: rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.5);
             color: #fff;
-            box-shadow: 0 0 20px rgba(230,21,54,0.25), inset 0 1px 0 rgba(255,255,255,0.15);
+            box-shadow: 0 0 20px rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.25), inset 0 1px 0 rgba(255, 255, 255, 0.15);
         }
         .plat-select-btn.active i { transform: scale(1.1); }
-        .plat-ico-tt { color: #ff0050; }
-        .plat-ico-ig { color: #e1306c; }
-        .plat-ico-yt { color: #ff0000; }
+        .plat-ico-tt { color: rgba(var(--zr-rgb-255-0-80, 255, 0, 80), 1); }
+        .plat-ico-ig { color: rgba(var(--zr-rgb-225-48-108, 225, 48, 108), 1); }
+        .plat-ico-yt { color: rgba(var(--zr-rgb-255-0-0, 255, 0, 0), 1); }
         .plat-ico-x { color: #fff; }
         .social-input-row {
             display: flex; align-items: center;
@@ -842,7 +846,7 @@
         }
         .social-input-row:focus-within {
             border-color: var(--cherry-light);
-            box-shadow: 0 0 20px rgba(230,21,54,0.25);
+            box-shadow: 0 0 20px rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.25);
             background: rgba(0, 0, 0, 0.6);
         }
         .social-input-prefix {
@@ -858,16 +862,16 @@
         .social-fetch-btn {
             width: 100%; display: flex; align-items: center; justify-content: center;
             gap: 8px; padding: 14px 20px; border-radius: 14px;
-            background: linear-gradient(135deg, #ff2b52 0%, #c8002a 100%);
+            background: linear-gradient(135deg, var(--zr-accent, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1)) 0%, rgba(var(--zr-rgb-200-0-42, 200, 0, 42), 1) 100%);
             border: 1px solid rgba(255, 255, 255, 0.2);
             color: #fff; font-size: 0.88rem; font-weight: 800;
-            font-family: 'Outfit', sans-serif; cursor: pointer;
-            box-shadow: 0 10px 30px rgba(230, 21, 54, 0.4);
+            font-family: 'Satoshi', sans-serif; cursor: pointer;
+            box-shadow: 0 10px 30px rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.4);
             transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .social-fetch-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 14px 38px rgba(230, 21, 54, 0.6);
+            box-shadow: 0 14px 38px rgba(var(--zr-rgb-230-21-54, 230, 21, 54), 0.6);
             filter: brightness(1.08);
         }
         .social-fetch-btn:disabled {
@@ -883,9 +887,17 @@
             to { opacity: 1; transform: translateY(0); }
         }
     </style>
+    <link rel="stylesheet" href="/css/glass.css?v=67">
+    <link rel="stylesheet" href="/css/atmosphere.css?v=7">
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.fontshare.com">
+    <link rel="stylesheet" href="/css/i18n.css?v=3">
+    <script src="/js/i18n.js?v=15" defer></script>
 </head>
 <body>
-    <div class="bg-aura"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
+    <div class="zr-sweep" aria-hidden="true"></div>
+    <div class="lq-veil" aria-hidden="true"></div>
     <!-- NAVBAR -->
     <nav class="navbar">
         <div class="container">
@@ -895,15 +907,16 @@
             </a>
             <ul class="nav-links" id="navLinks">
                 <li><a href="/">Home</a></li>
-                <li><a href="/resources">Resources</a></li>
+                <li><a href="/leaks">Leaks</a></li>
+                <li><a href="/feed">Feed</a></li>
                 <li><a href="/plugins">Plugins</a></li>
                 <li><a href="/requests">Requests</a></li>
-                <li><a href="/more">More</a></li>
-                <li><a href="/#contact">Contact</a></li>
+                <li><a href="/audio">Audios</a></li>
+                
             </ul>
             <div class="nav-actions">
                 <div id="authBtn"></div>
-                <button class="hamburger" id="hamburger" aria-label="Toggle Menu">
+                <button class="hamburger" id="hamburger" aria-label="Menu">
                     <span></span>
                     <span></span>
                     <span></span>
@@ -912,11 +925,10 @@
         </div>
     </nav>
 
-    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
-
     <div class="studio-alert" id="alertBox"></div>
 
     <div class="studio-container">
+        <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
         <!-- SIDEBAR -->
         <div class="studio-sidebar" id="sidebar">
             <div class="sidebar-mobile-close">
@@ -931,20 +943,17 @@
                 <ul class="sidebar-menu">
                     <div class="menu-title">Publish Portals</div>
                     <li class="menu-item" id="sidebarPreset">
-                        <a href="/upload"><i class="fas fa-layer-group"></i> <span>Resource Uploader</span></a>
+                        <a href="/upload"><i class="fas fa-layer-group"></i> <span>Leak Uploader</span></a>
                     </li>
                     <li class="menu-item active">
                         <a href="/upload-audio"><i class="fas fa-music"></i> <span>Audio Uploader</span></a>
-                    </li>
-                    <li class="menu-item" id="sidebarScenepack">
-                        <a href="/upload-scenepack"><i class="fas fa-film"></i> <span>Scenepack Uploader</span></a>
                     </li>
                 </ul>
             </div>
             
             <div class="sidebar-footer">
                 <div class="user-profile" id="userProfile" style="display:none">
-                    <img src="" id="userAvatar" alt="Avatar">
+                    <img id="userAvatar" alt="Avatar">
                     <div class="user-info">
                         <span class="name" id="userName">Creator</span>
                     </div>
@@ -964,7 +973,7 @@
                 <div>
                     <button class="mobile-trigger" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
                     <h1>Audio Upload</h1>
-                    <p>Share high-quality community sound files on the Zyrex audio library</p>
+                    <p>Share high-quality community audio on the Zyrex audio library</p>
                 </div>
             </div>
 
@@ -996,7 +1005,7 @@
                     </div>
                     <div class="field">
                         <label><i class="fas fa-user"></i> Creator Name (optional)</label>
-                        <input type="text" id="creatorName" placeholder="Auto-filled from social URL" readonly style="background:rgba(0,0,0,0.2);cursor:not-allowed">
+                        <input type="text" id="creatorName" placeholder="Auto-filled from social URL" readonly style="background:rgba(0, 0, 0, 0.2);cursor:not-allowed">
                     </div>
                 </div>
 
@@ -1024,13 +1033,21 @@
                     <div class="field-hint">Search for any member on the Discord server. Selecting a member will automatically bind their Discord User ID and profile as the uploader.</div>
                 </div>
 
-                <div class="field">
-                    <label><i class="fas fa-align-left"></i> Description</label>
-                    <textarea id="audioDesc" placeholder="Provide credits or description for this sound pack..."></textarea>
+                <div class="field" style="margin-top:-4px;margin-bottom:20px;padding:15px 16px;border:1px solid rgba(var(--zr-rgb-255-43-82, 255, 43, 82),.55);border-radius:14px;background:linear-gradient(110deg,rgba(var(--zr-rgb-255-43-82, 255, 43, 82),.14),rgba(var(--zr-rgb-255-43-82, 255, 43, 82),.045));box-shadow:0 0 22px rgba(var(--zr-rgb-255-43-82, 255, 43, 82),.09)">
+                    <label for="anonymousUploader" style="display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0;color:#fff;font-size:.9rem;font-weight:800;cursor:pointer">
+                        <span style="display:flex;align-items:center;gap:9px"><i class="fas fa-user-secret" style="color:rgba(var(--zr-rgb-255-107-131, 255, 107, 131), 1);font-size:1rem"></i> Upload anonymously</span>
+                        <input type="checkbox" id="anonymousUploader" style="width:20px;height:20px;flex:0 0 20px;accent-color:var(--cherry);cursor:pointer">
+                    </label>
+                    <div style="font-size:.74rem;color:rgba(255, 255, 255, .72);line-height:1.5;margin:8px 30px 0 27px">Your uploader name, Discord ID, and avatar will be hidden on this leak.</div>
                 </div>
 
                 <div class="field">
-                    <label><i class="fas fa-cloud-arrow-up"></i> Sound File *</label>
+                    <label><i class="fas fa-align-left"></i> Description</label>
+                    <textarea id="audioDesc" placeholder="Provide credits or description for this audio..."></textarea>
+                </div>
+
+                <div class="field" id="soundFileField">
+                    <label><i class="fas fa-cloud-arrow-up"></i> Audio File *</label>
                     <div class="file-upload-area" id="dropZone" onclick="document.getElementById('fileInput').click()">
                         <div class="fu-icon"><i class="fas fa-cloud-upload-alt"></i></div>
                         <div class="fu-text" id="fuText">Click or Drag & Drop audio file</div>
@@ -1117,7 +1134,7 @@
     </div>
 
     <script src="/js/chunks/chunk-store.js?v=1"></script>
-    <script src="js/auth.js?v=13"></script>
+    <script src="js/auth.js?v=19"></script>
     <script>
         var currentUser = null, audioFile = null, audioBase64 = null;
         var selectedCats = [];
@@ -1129,9 +1146,9 @@
             var ov = document.getElementById('sidebarOverlay');
             if (sb) {
                 sb.classList.remove('sidebar-hidden');
-                sb.classList.toggle('open');
+                sb.classList.toggle('open', !sb.classList.contains('open'));
             }
-            if (ov) ov.classList.toggle('show');
+            if (ov) ov.classList.toggle('show', !!sb && sb.classList.contains('open'));
         }
 
         (async function checkAuth(){
@@ -1139,6 +1156,7 @@
                 var meResp = await fetch('/api/me', {credentials:'include'});
                 if (!meResp.ok) { window.location.href = '/api/login?redirect=' + encodeURIComponent(location.pathname); return; }
                 currentUser = await meResp.json();
+                applyAttributionPermissions(!!currentUser.is_admin);
                 
                 // Show profile footer with Discord CDN avatar
                 document.getElementById('userProfile').style.display = 'flex';
@@ -1157,8 +1175,7 @@
                 // Check roles
                 const roles=[
                     {id:'1519624224476762122',label:'Preset Uploader'},
-                    {id:'1522976282688880720',label:'Audio Uploader'},
-                    {id:'1522976376293167124',label:'Scenepack Uploader'}
+                    {id:'1522976282688880720',label:'Audio Uploader'}
                 ];
                 const checks=await Promise.all(roles.map(role=>fetch('/api/guild/check-role?userId='+currentUser.id+'&roleId='+role.id,{credentials:'include'}).then(resp=>resp.json()).then(d=>d.has_role).catch(()=>false)));
                 const hasAny=checks.some(c=>c);
@@ -1169,10 +1186,7 @@
                 
                 // Update sidebar items
                 if(!checks[0]){
-                    document.getElementById('sidebarPreset').innerHTML = '<span class="locked-item"><i class="fas fa-lock"></i> <span>Resource Uploader</span> <span class="lock-badge">Locked</span></span>';
-                }
-                if(!checks[2]){
-                    document.getElementById('sidebarScenepack').innerHTML = '<span class="locked-item"><i class="fas fa-lock"></i> <span>Scenepack Uploader</span> <span class="lock-badge">Locked</span></span>';
+                    document.getElementById('sidebarPreset').innerHTML = '<span class="locked-item"><i class="fas fa-lock"></i> <span>Leak Uploader</span> <span class="lock-badge">Locked</span></span>';
                 }
                 if (!checks[1]) {
                     showLockScreen('No Audio Uploader Access', 'You do not have the <strong>Audio Uploader</strong> role on Discord yet. Claim it to unlock audio uploads.');
@@ -1190,7 +1204,7 @@
                         <h2>${title}</h2>
                         <p>${text}</p>
                         <div class="lock-actions">
-                            <a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn btn-discord"><i class="fab fa-discord"></i> Join Discord Server</a>
+                            <a href="https://discord.gg/4J3tars4QS" target="_blank" class="btn btn-discord"><i class="fab fa-discord"></i> Join Discord Server</a>
                             <a href="/" class="btn btn-ghost"><i class="fas fa-home"></i> Go Back</a>
                         </div>
                     </div>
@@ -1292,8 +1306,8 @@
             var st = document.getElementById('hlxStatus');
             var btn = document.getElementById('btnHlxLookup');
             st.style.display = 'block';
-            st.style.background = 'rgba(255,255,255,0.03)';
-            st.style.border = '1px solid rgba(255,255,255,0.08)';
+            st.style.background = 'rgba(255, 255, 255, 0.03)';
+            st.style.border = '1px solid rgba(255, 255, 255, 0.08)';
             st.innerHTML = '<div style="display:flex;align-items:center;gap:10px;color:var(--text-sub)"><i class="fas fa-spinner fa-spin" style="color:var(--cherry-light)"></i> <span>Scanning profile info...</span></div>';
             if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Fetching...'; }
 
@@ -1313,28 +1327,28 @@
                     document.getElementById('socialUrl').value = lookupUrl;
                     document.getElementById('creatorName').value = creatorDisplay;
 
-                    var avatarImg = d.avatar ? '<img src="' + d.avatar + '" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid var(--cherry-light);flex-shrink:0">' : '<div style="width:38px;height:38px;border-radius:50%;background:rgba(230,21,54,0.2);display:flex;align-items:center;justify-content:center;color:var(--cherry-light);flex-shrink:0"><i class="fas fa-user"></i></div>';
+                    var avatarImg = d.avatar ? '<img src="' + d.avatar + '" style="width:38px;height:38px;border-radius:50%;object-fit:cover;border:2px solid var(--cherry-light);flex-shrink:0">' : '<div style="width:38px;height:38px;border-radius:50%;background:rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.2);display:flex;align-items:center;justify-content:center;color:var(--cherry-light);flex-shrink:0"><i class="fas fa-user"></i></div>';
 
-                    st.style.background = 'rgba(0,230,118,0.08)';
-                    st.style.border = '1px solid rgba(0,230,118,0.3)';
+                    st.style.background = 'rgba(0, 230, 118, 0.08)';
+                    st.style.border = '1px solid rgba(0, 230, 118, 0.3)';
                     st.innerHTML = '<div style="display:flex;align-items:center;gap:12px">' +
                         avatarImg +
                         '<div style="flex:1;min-width:0">' +
                         '<div style="font-weight:800;color:#fff;font-size:0.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + creatorDisplay + '</div>' +
                         '<div style="font-size:0.72rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + lookupUrl + '</div>' +
                         '</div>' +
-                        '<span style="font-size:0.7rem;font-weight:800;color:#00e676;background:rgba(0,230,118,0.15);padding:4px 8px;border-radius:8px"><i class="fas fa-check"></i> Applied</span>' +
+                        '<span style="font-size:0.7rem;font-weight:800;color:#00e676;background:rgba(0, 230, 118, 0.15);padding:4px 8px;border-radius:8px"><i class="fas fa-check"></i> Applied</span>' +
                         '</div>';
                     
                     setTimeout(toggleHlx, 1400);
                 } else {
-                    st.style.background = 'rgba(230,21,54,0.1)';
-                    st.style.border = '1px solid rgba(230,21,54,0.3)';
+                    st.style.background = 'rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.1)';
+                    st.style.border = '1px solid rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.3)';
                     st.innerHTML = '<div style="color:var(--cherry-light)"><i class="fas fa-exclamation-circle" style="margin-right:6px"></i> ' + ((d && d.error) || 'Could not resolve profile') + '</div>';
                 }
             } catch(e) {
-                st.style.background = 'rgba(230,21,54,0.1)';
-                st.style.border = '1px solid rgba(230,21,54,0.3)';
+                st.style.background = 'rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.1)';
+                st.style.border = '1px solid rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.3)';
                 st.innerHTML = '<div style="color:var(--cherry-light)"><i class="fas fa-exclamation-circle" style="margin-right:6px"></i> Network error connecting to profile service</div>';
             } finally {
                 if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-search"></i> Fetch Profile Info'; }
@@ -1508,15 +1522,148 @@
             if (clearCreditBtn) clearCreditBtn.style.display = 'none';
         }
 
+        // Uploader credit and the anonymous switch are VISIBLE for both admins and non-admin uploaders.
+        function applyAttributionPermissions(isAdmin){
+            // Both admins and non-admin uploaders have credit and anonymous controls visible.
+        }
+
+        // ── Editing an existing audio resource ─────────────────────────────────
+        // Manage Products sends resources here with ?edit=<id>. Only the metadata form is
+        // used and saving goes through the product update route, so the stored audio file is
+        // never replaced.
+        var editModeId = '';
+
+        (function(){
+            var editId = new URLSearchParams(location.search).get('edit');
+            if(!editId) return;
+            var start = function(){ enterAudioEditMode(editId); };
+            if(document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+            else start();
+        })();
+
+        function enterAudioEditMode(id){
+            editModeId = id;
+            fetch('/api/products?id=' + encodeURIComponent(id), {credentials:'include'})
+                .then(function(r){ return r.ok ? r.json() : null; })
+                .then(function(d){
+                    var p = d && (d.product || d);
+                    if(!p || !p.id || String(p.id) !== String(id)){
+                        alertMsg('Could not load that leak for editing', true);
+                        return;
+                    }
+                    fillAudioEditForm(p);
+                })
+                .catch(function(){ alertMsg('Could not load that leak for editing', true); });
+        }
+
+        function lockAudioToMetadata(){
+            // The whole Audio File field goes, not just the drop zone, or an empty label would
+            // be left behind on the edit screen.
+            ['soundFileField','dropZone','fileInput','filePreview','fileName','fileInfo','audioPreview','previewWrap'].forEach(function(id){
+                var el = document.getElementById(id);
+                if(el) el.style.display = 'none';
+            });
+            var btn = document.getElementById('btnSubmit');
+            if(btn) btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Save Changes';
+            var heading = document.querySelector('.studio-head h1,.studio-head h2,h1');
+            if(heading) heading.textContent = 'Edit Audio Leak';
+        }
+
+        function fillAudioEditForm(p){
+            var setValue = function(id, value){
+                var el = document.getElementById(id);
+                if(el && value !== undefined && value !== null) el.value = value;
+            };
+            setValue('audioName', p.name || '');
+            setValue('audioDesc', p.description || '');
+            setValue('socialUrl', p.creator_social_url || '');
+            setValue('creatorName', p.creator_nickname || '');
+
+            var wanted = String(p.category || '').split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+            document.querySelectorAll('#catTags input').forEach(function(cb){ cb.checked = wanted.indexOf(cb.value) >= 0; });
+            if(typeof updateCats === 'function') updateCats();
+
+            var anon = document.getElementById('anonymousUploader');
+            if(anon) anon.checked = p.is_anonymous === true;
+
+            var creditId = p.credited_uploader_id || p.uploader_id || p.author_id || '';
+            if(creditId){
+                selectCreditedMember({
+                    id: String(creditId),
+                    display_name: p.credited_uploader_name || p.uploader_name || p.author_name || '',
+                    avatar: p.credited_uploader_avatar || p.uploader_avatar || p.author_avatar || ''
+                });
+            } else {
+                clearCreditedUploader();
+            }
+            lockAudioToMetadata();
+        }
+
+        async function saveAudioMetadata(){
+            var name = (document.getElementById('audioName').value || '').trim();
+            if(!name) return alertMsg('Name is required', true);
+            if(selectedCats.length === 0) return alertMsg('Please select at least one category', true);
+            var anonymous = !!document.getElementById('anonymousUploader').checked;
+
+            // No file fields: the merge on the update route keeps the stored audio and its path.
+            var payload = {
+                name: name,
+                category: selectedCats.join(','),
+                description: (document.getElementById('audioDesc').value || '').trim(),
+                creator_nickname: (document.getElementById('creatorName').value || '').trim(),
+                creator_social_url: (document.getElementById('socialUrl').value || '').trim(),
+                is_anonymous: anonymous,
+                credited_uploader_id: anonymous ? '' : (document.getElementById('customUploaderId').value || ''),
+                credited_uploader_name: anonymous ? '' : (document.getElementById('customUploaderName').value || ''),
+                credited_uploader_avatar: anonymous ? '' : (document.getElementById('customUploaderAvatar').value || ''),
+                uploader_id: anonymous ? '' : (document.getElementById('customUploaderId').value || ''),
+                uploader_name: anonymous ? '' : (document.getElementById('customUploaderName').value || ''),
+                uploader_avatar: anonymous ? '' : (document.getElementById('customUploaderAvatar').value || ''),
+                author_id: anonymous ? '' : (document.getElementById('customUploaderId').value || ''),
+                author_name: anonymous ? '' : (document.getElementById('customUploaderName').value || ''),
+                author_avatar: anonymous ? '' : (document.getElementById('customUploaderAvatar').value || '')
+            };
+
+            var btn = document.getElementById('btnSubmit');
+            if(btn){ btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...'; }
+            try{
+                var resp = await fetch('/api/products/edit/' + encodeURIComponent(editModeId), {
+                    method:'POST',
+                    headers:{'Content-Type':'application/json'},
+                    body:JSON.stringify(payload),
+                    credentials:'include'
+                });
+                var data = await resp.json().catch(function(){ return {}; });
+                if(resp.ok && data.success !== false){
+                    try{
+                        localStorage.removeItem('zyrex_products_cache');
+                        localStorage.removeItem('zyrex_resources_cache');
+                    }catch(e){}
+                    var panel = document.getElementById('mainPanel');
+                    if(panel){
+                        panel.innerHTML = '<div class="review-card"><div class="check"><i class="fas fa-check"></i></div>'
+                            + '<h2>Saved</h2><p style="color:var(--muted)">The audio details were updated. The stored file was left untouched.</p>'
+                            + '<div style="display:flex;gap:12px;justify-content:center;margin-top:24px">'
+                            + '<a href="/audio" class="btn btn-primary">Browse Audio</a>'
+                            + '<a href="/settings?tab=products" class="btn btn-ghost">Back to Manage Products</a></div></div>';
+                    }
+                    return;
+                }
+                alertMsg(data.error || 'Could not save the changes', true);
+            }catch(e){ alertMsg('Network error', true); }
+            if(btn){ btn.disabled = false; btn.innerHTML = '<i class="fas fa-floppy-disk"></i> Save Changes'; }
+        }
+
         async function submitAudio(){
             var btn = document.getElementById('btnSubmit');
+            if (editModeId) return saveAudioMetadata();
             var name = document.getElementById('audioName').value.trim();
             if (!name) return alertMsg('Name is required', true);
             if (selectedCats.length === 0) return alertMsg('Please select at least one category', true);
             if (!audioBase64) return alertMsg('Please select an audio file', true);
             
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading sound...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading audio...';
             
             try {
                 var ext = audioFile.name.split('.').pop().toLowerCase();
@@ -1525,6 +1672,13 @@
                 var creditedId = (document.getElementById('customUploaderId').value || '').trim();
                 var creditedName = (document.getElementById('customUploaderName').value || '').trim();
                 var creditedAvatar = (document.getElementById('customUploaderAvatar').value || '').trim();
+                var isAnonymous = !!(document.getElementById('anonymousUploader') || {}).checked;
+
+                if (isAnonymous) {
+                    creditedId = '';
+                    creditedName = '';
+                    creditedAvatar = '';
+                }
 
                 if (!creditedId && uploaderInput) {
                     var rawIn = uploaderInput.value.trim();
@@ -1533,9 +1687,9 @@
                     }
                 }
 
-                var authorId = creditedId || (currentUser && currentUser.id) || '';
-                var authorName = creditedName || (currentUser && (currentUser.global_name || currentUser.username)) || 'Zyrex';
-                var authorAvatar = creditedAvatar || (currentUser && currentUser.avatar) || '';
+                var authorId = isAnonymous ? '' : (creditedId || (currentUser && currentUser.id) || '');
+                var authorName = isAnonymous ? 'Anonymous' : (creditedName || (currentUser && (currentUser.global_name || currentUser.username)) || 'Zyrex');
+                var authorAvatar = isAnonymous ? '' : (creditedAvatar || (currentUser && currentUser.avatar) || '');
 
                 var safeName = name.replace(/[\/\\:*?"<>|]/g, '').trim().substring(0, 60);
                 var safeUploader = authorName.replace(/[\/\\:*?"<>|]/g, '').trim().substring(0, 30);
@@ -1559,9 +1713,10 @@
                     thumbnail: '',
                     creator_nickname: document.getElementById('creatorName').value.trim() || authorName,
                     creator_social_url: document.getElementById('socialUrl').value.trim(),
-                    author_id: authorId,
+                    is_anonymous: isAnonymous,
+                    author_id: authorId || undefined,
                     author_name: authorName,
-                    uploader_id: authorId,
+                    uploader_id: authorId || undefined,
                     uploader_name: authorName,
                     uploader_avatar: authorAvatar,
                     creator_avatar: authorAvatar,
@@ -1601,6 +1756,53 @@
             setTimeout(function(){ b.classList.remove('show'); }, 5000);
         }
     </script>
-    <script src="js/script.js?v=47"></script>
+    <script src="js/script.js?v=92"></script>
+
+<footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <a href="/" class="hero-brand-lockup footer-brand-lockup">
+                        <img src="/assets/content.png" alt="Zyrex Logo" class="hero-brand-icon">
+                        <div class="hero-brand-text-col">
+                            <span class="hero-brand-title">Zyrex<sup>™</sup></span>
+                            <span class="hero-brand-sub">EDITING</span>
+                        </div>
+                    </a>
+                    <p>Editing leaks and stuff.</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/leaks">Leaks</a></li>
+                <li><a href="/feed">Feed</a></li>
+                        <li><a href="/plugins">Plugins</a></li>
+                        <li><a href="/requests">Requests</a></li>
+                        <li><a href="/audio">Audios</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="/terms">Terms of Service</a></li>
+                        <li><a href="/privacy">Privacy Policy</a></li>
+                        <li><a href="/dmca">DMCA</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="https://discord.gg/4J3tars4QS" target="_blank" rel="noopener">Discord</a></li>
+                        <li><a href="/#contact">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Zyrex Editing. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+    <script src="/js/page-motion.js?v=6"></script>
 </body>
 </html>

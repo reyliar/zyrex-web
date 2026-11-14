@@ -19,7 +19,7 @@
     <meta name="author" content="Zyrex">
     <title>Zyrex | Preset</title>
     <link rel="icon" type="image/png" href="/assets/content.png">
-    <link rel="stylesheet" href="/css/style.css?v=45">
+    <link rel="stylesheet" href="/css/style.css?v=92">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
@@ -1363,7 +1363,7 @@
     </footer>
 
     <script src="/js/auth.js?v=13"></script>
-    <script src="/js/script.js?v=45"></script>
+    <script src="/js/script.js?v=92"></script>
     <script src="/js/presets-data.js?v=5"></script>
     <script>
     var currentCommentsPresetId = null;
@@ -3061,6 +3061,8 @@
         const q = new URLSearchParams();
         if (fp) q.set("file_path", fp);
         q.set("return_to", location.pathname + location.search);
+        q.set("lang", window.ZyrexI18n ? window.ZyrexI18n.getLanguage() : "en");
+        q.set("theme", localStorage.getItem("zyrex_theme") || "zyrex");
 
         fetch("/api/downloads/request-token/" + encodeURIComponent(pid) + "?" + q.toString(), { credentials: "include" })
             .then(res => res.json().then(data => {
@@ -3071,6 +3073,10 @@
                     if (targetTab) targetTab.close();
                     if (res.status === 401) {
                         window.location.href = "/api/login?redirect=" + encodeURIComponent(location.pathname + location.search);
+                    } else if (data.code === "NOT_VERIFIED" && window.showVerifyRequiredModal) {
+                        window.showVerifyRequiredModal();
+                    } else if (data.code === "ACCESS_REQUIRED" && window.showAccessRequiredModal) {
+                        window.showAccessRequiredModal();
                     } else if (res.status === 429) {
                         alert(data.error || "Please wait before requesting another download link.");
                     } else {

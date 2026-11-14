@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Complete one offer to unlock seven days of downloads.">
+    <title>Download Access | Zyrex</title>
+    <link rel="icon" type="image/png" href="/assets/content.png">
+    <link rel="stylesheet" href="/css/style.css?v=92">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,800,900&amp;display=swap">
+    <style>
+        .access-page { min-height: 100vh; padding: 140px 20px 70px; }
+        .access-card {
+            width: min(100%, 680px);
+            margin: 0 auto;
+            padding: clamp(26px, 6vw, 48px);
+            border: 1px solid var(--glass-border);
+            border-radius: 28px;
+            background: var(--glass-bg);
+            box-shadow: var(--glass-shadow);
+            text-align: center;
+        }
+        .access-card-icon {
+            display: grid;
+            width: 68px;
+            height: 68px;
+            margin: 0 auto 20px;
+            place-items: center;
+            border: 1px solid rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.28);
+            border-radius: 22px;
+            background: rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.12);
+            color: var(--zr-accent-soft, rgba(var(--zr-rgb-255-77-109, 255, 77, 109), 1));
+            font-size: 1.65rem;
+        }
+        .access-eyebrow { color: var(--primary-light); font-size: .75rem; font-weight: 800; letter-spacing: .14em; }
+        .access-card h1 { margin: 8px 0 12px; font-size: clamp(2rem, 5vw, 3rem); }
+        .access-description { max-width: 530px; margin: 0 auto; color: var(--gray); line-height: 1.75; }
+        .access-benefits { display: grid; gap: 10px; margin: 28px 0; text-align: left; }
+        .access-benefit {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 13px 15px;
+            border: 1px solid var(--glass-border);
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.025);
+            color: var(--site-text, var(--light));
+            font-size: .9rem;
+        }
+        .access-benefit i { margin-top: 3px; color: var(--primary-light); }
+        .access-state {
+            margin: 22px 0 14px;
+            color: var(--site-muted, var(--gray));
+            font-size: .9rem;
+            line-height: 1.6;
+        }
+        .access-state[data-kind="success"] { color: #4ade80; }
+        .access-state[data-kind="error"] { color: rgba(var(--zr-rgb-251-113-133, 251, 113, 133), 1); }
+        .access-actions { display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; }
+        .access-button {
+            display: inline-flex;
+            min-height: 48px;
+            align-items: center;
+            justify-content: center;
+            gap: 9px;
+            padding: 12px 22px;
+            border: 1px solid rgba(var(--zr-rgb-255-117-143, 255, 117, 143), .42);
+            border-radius: 14px;
+            background: var(--gradient);
+            color: #fff;
+            font: inherit;
+            font-size: .9rem;
+            font-weight: 800;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .access-button:disabled { cursor: wait; opacity: .65; }
+        .access-button.secondary {
+            border-color: var(--glass-border);
+            background: transparent;
+            color: var(--site-text, var(--light));
+        }
+        .access-expiry { margin-top: 12px; color: var(--site-muted, var(--gray)); font-size: .8rem; }
+        .access-hint {
+            margin-top: 16px;
+            padding: 14px 16px;
+            border: 1px solid rgba(var(--zr-rgb-255-43-82, 255, 43, 82), .4);
+            border-radius: 14px;
+            background: linear-gradient(110deg, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), .12), rgba(var(--zr-rgb-255-43-82, 255, 43, 82), .03));
+            color: var(--site-text, var(--light));
+            font-size: .84rem;
+            line-height: 1.65;
+            text-align: left;
+        }
+        .access-hint strong { display: block; margin-bottom: 6px; color: #fff; }
+        .access-hint ul { margin: 6px 0 0; padding-left: 20px; }
+        .access-hint a { color: var(--primary-light); font-weight: 700; }
+        @media (max-width: 600px) {
+            .access-page { padding: 112px 14px 45px; }
+            .access-card { border-radius: 22px; }
+            .access-actions { flex-direction: column; }
+            .access-button { width: 100%; }
+        }
+    </style>
+    <link rel="stylesheet" href="/css/glass.css?v=67">
+    <link rel="stylesheet" href="/css/atmosphere.css?v=7">
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.fontshare.com">
+    <link rel="stylesheet" href="/css/i18n.css?v=3">
+    <script src="/js/i18n.js?v=15" defer></script>
+</head>
+<body>
+    <div class="zr-sweep" aria-hidden="true"></div>
+    <div class="lq-veil" aria-hidden="true"></div>
+    <nav class="navbar">
+        <div class="container">
+            <a href="/" class="logo"><img src="/assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a>
+            <ul class="nav-links" id="navLinks">
+                <li><a href="/">Home</a></li>
+                <li><a href="/leaks">Leaks</a></li>
+                <li><a href="/feed">Feed</a></li>
+                <li><a href="/plugins">Plugins</a></li>
+                <li><a href="/requests">Requests</a></li>
+                <li><a href="/audio">Audios</a></li>
+                
+            </ul>
+            <div class="nav-actions">
+                <div id="authBtn"></div>
+                <button class="hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="access-page">
+        <section class="access-card" aria-labelledby="accessTitle">
+            <div class="access-card-icon"><i class="fas fa-unlock-keyhole"></i></div>
+            <p class="access-eyebrow" id="accessEyebrow">ONE OFFER · ONE WEEK</p>
+            <h1 id="accessTitle">Leak Download Access</h1>
+            <p class="access-description" id="accessDescription">Complete one free offer to unlock eligible Zyrex leak downloads for 7 days. Your pass starts when the offer is confirmed, is linked to your Discord account, and works across your devices.</p>
+
+            <div class="access-benefits">
+                <div class="access-benefit"><i class="fas fa-calendar-check"></i><span id="accessBenefitWindow">Your 7-day pass begins the moment the offer confirms completion.</span></div>
+                <div class="access-benefit"><i class="fas fa-user-shield"></i><span>Your pass is tied to your Discord account, and the Discord Verified role is required to download.</span></div>
+                <div class="access-benefit"><i class="fas fa-rotate"></i><span>When your pass expires, complete a new offer here to renew it.</span></div>
+            </div>
+
+            <p class="access-state" id="accessState" role="status" aria-live="polite">Checking your access…</p>
+            <div class="access-actions" id="accessActions"></div>
+            <p class="access-expiry" id="accessExpiry"></p>
+            <div class="access-hint" id="accessHint" hidden></div>
+        </section>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <a href="/" class="hero-brand-lockup footer-brand-lockup">
+                        <img src="/assets/content.png" alt="Zyrex Logo" class="hero-brand-icon">
+                        <div class="hero-brand-text-col"><span class="hero-brand-title">Zyrex<sup>™</sup></span><span class="hero-brand-sub">EDITING</span></div>
+                    </a>
+                    <p>Editing leaks and stuff.</p>
+                </div>
+                <div class="footer-links"><h4>Quick Links</h4><ul><li><a href="/">Home</a></li><li><a href="/leaks">Leaks</a></li>
+                <li><a href="/feed">Feed</a></li><li><a href="/plugins">Plugins</a></li><li><a href="/requests">Requests</a></li><li><a href="/audio">Audios</a></li></ul></div>
+                <div class="footer-links"><h4>Legal</h4><ul><li><a href="/terms">Terms of Service</a></li><li><a href="/privacy">Privacy Policy</a></li><li><a href="/dmca">DMCA</a></li></ul></div>
+                <div class="footer-links"><h4>Community</h4><ul><li><a href="https://discord.gg/4J3tars4QS" target="_blank" rel="noopener">Discord</a></li><li><a href="/#contact">Contact</a></li></ul></div>
+            </div>
+            <div class="footer-bottom"><p>&copy; 2026 Zyrex Editing. All rights reserved.</p></div>
+        </div>
+    </footer>
+
+    <script src="/js/auth.js?v=19"></script>
+    <script src="js/script.js?v=92"></script>
+    <script>
+        (function () {
+            const state = document.getElementById('accessState');
+            const actions = document.getElementById('accessActions');
+            const expiry = document.getElementById('accessExpiry');
+            const hint = document.getElementById('accessHint');
+            const params = new URLSearchParams(location.search);
+            const claimId = params.get('claim') || '';
+            const unlockState = params.get('unlock') || '';
+            const returnTo = params.get('return_to') || '';
+            const safeReturnTo = returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '';
+            let currentAccess = null;
+
+            function setState(message, kind) {
+                state.textContent = message;
+                state.dataset.kind = kind || '';
+            }
+
+            function escapeAttribute(value) {
+                return String(value == null ? '' : value)
+                    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+            }
+
+            function hideHint() {
+                hint.hidden = true;
+                hint.innerHTML = '';
+            }
+
+            // Reproduced cause: the offer locker awaits a fetch to a third-party
+            // ad/tracker domain during init. When that request hangs instead of
+            // failing fast, the locker never leaves its "Preparing content"
+            // overlay. Blocked-but-hanging ad domains are the usual trigger, so
+            // the steps are ordered by how reliably they clear it.
+            function showOfferHelp(offerUrl) {
+                hint.innerHTML =
+                    '<strong><i class="fas fa-triangle-exclamation"></i> Offer page stuck on &ldquo;Preparing content&rdquo;?</strong>' +
+                    'The offer page is served by AdMaven and only finishes loading once its third-party ad and ' +
+                    'tracker scripts respond. Networks that silently block those domains — a filtering DNS such as ' +
+                    'AdGuard, NextDNS or Pi-hole, a router or ISP ad filter, or an ad blocker — leave it on the ' +
+                    'loading screen forever. Try these in order:' +
+                    '<ul>' +
+                        '<li>Set your DNS to <strong>1.1.1.1</strong> or <strong>8.8.8.8</strong>, or switch off any ' +
+                        'filtering DNS, parental control or ad filter you use.</li>' +
+                        '<li>Use a VPN, or switch to mobile data.</li>' +
+                        '<li>Turn off ad blockers, shields and privacy extensions for this site.</li>' +
+                        '<li>Allow third-party cookies and cross-site tracking for the offer page.</li>' +
+                    '</ul>' +
+                    '<p style="margin:10px 0 0"><strong style="display:inline;margin:0">Not sure which one it is?</strong> ' +
+                    '<a href="/access-diagnostics">Run connection diagnostics</a> — it tests your network and shows ' +
+                    'us exactly what is blocked.</p>' +
+                    (offerUrl
+                        ? '<p style="margin:10px 0 0">Open it manually: <a href="' + escapeAttribute(offerUrl) +
+                          '" target="_blank" rel="noopener noreferrer">open the offer page</a></p>'
+                        : '') +
+                    '<p style="margin:10px 0 0">Still stuck? Ask in the <a href="https://discord.gg/4J3tars4QS" ' +
+                    'target="_blank" rel="noopener noreferrer">Zyrex Discord</a> and a moderator will help.</p>';
+                hint.hidden = false;
+            }
+
+            // Never leave the newly opened tab as a blank page while the API call
+            // is in flight; about:blank rendered as an empty grey tab before.
+            function writePlaceholderTab(tab) {
+                try {
+                    tab.document.write(
+                        '<!doctype html><html><head><meta charset="utf-8">' +
+                        '<title>Preparing your offer…</title><style>' +
+                        'body{margin:0;min-height:100vh;display:grid;place-items:center;background:#0b0710;' +
+                        'color:#f8f5f6;font:600 15px/1.6 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;' +
+                        'text-align:center;padding:24px}span{display:block;opacity:.72;font-weight:400;font-size:13px;margin-top:8px}' +
+                        '</style></head><body><div>Preparing your offer…' +
+                        '<span>You will be redirected in a moment.</span></div></body></html>'
+                    );
+                    tab.document.close();
+                } catch (_) {}
+            }
+
+            function button(label, onClick, secondary) {
+                const element = document.createElement('button');
+                element.type = 'button';
+                element.className = 'access-button' + (secondary ? ' secondary' : '');
+                element.innerHTML = label;
+                element.addEventListener('click', onClick);
+                actions.appendChild(element);
+                return element;
+            }
+
+            // The pass window is owned by the API, so the copy can never drift
+            // from the duration that is actually granted.
+            function applyDuration(days) {
+                if (!days || !isFinite(days) || days <= 0) return;
+                window.ZYREX_ACCESS_DAYS = days;
+                const eyebrow = document.getElementById('accessEyebrow');
+                const description = document.getElementById('accessDescription');
+                const benefit = document.getElementById('accessBenefitWindow');
+                if (eyebrow) eyebrow.textContent = 'ONE OFFER · ' + (days === 7 ? 'ONE WEEK' : days + ' DAYS');
+                if (description) description.textContent = 'Complete one free offer to unlock eligible Zyrex leak downloads for ' + days + ' days. Your pass starts when the offer is confirmed, is linked to your Discord account, and works across your devices.';
+                if (benefit) benefit.textContent = 'Your ' + days + '-day pass begins the moment the offer confirms completion.';
+            }
+            window.ZYREX_ACCESS_DAYS = 7;
+
+            function renderAccess(data) {
+                currentAccess = data;
+                applyDuration(Number(data.duration_days) || window.ZYREX_ACCESS_DAYS);
+                actions.replaceChildren();
+                expiry.textContent = '';
+                hideHint();
+                if (!data.logged_in) {
+                    setState('Sign in with Discord to check or activate download access.', '');
+                    const login = document.createElement('a');
+                    login.className = 'access-button';
+                    login.href = '/api/login?redirect=' + encodeURIComponent(location.pathname + location.search);
+                    login.innerHTML = '<i class="fab fa-discord"></i> Sign in with Discord';
+                    actions.appendChild(login);
+                    return;
+                }
+                if (data.revoked) {
+                    setState('Your download access has been revoked. If you believe this is a mistake, contact the staff in our Discord server.', 'error');
+                    const appeal = document.createElement('a');
+                    appeal.className = 'access-button';
+                    appeal.href = 'https://discord.gg/4J3tars4QS';
+                    appeal.target = '_blank';
+                    appeal.rel = 'noopener noreferrer';
+                    appeal.innerHTML = '<i class="fab fa-discord"></i> Contact staff';
+                    actions.appendChild(appeal);
+                    return;
+                }
+                if (!data.verified) {
+                    setState('A Discord Verified role is required before download access can be used.', 'error');
+                    const discord = document.createElement('a');
+                    discord.className = 'access-button';
+                    discord.href = 'https://discord.gg/4J3tars4QS';
+                    discord.target = '_blank';
+                    discord.rel = 'noopener noreferrer';
+                    discord.innerHTML = '<i class="fab fa-discord"></i> Join Zyrex Discord';
+                    actions.appendChild(discord);
+                    return;
+                }
+                if (data.ad_free) {
+                    setState('Your account has permanent ad-free download access.', 'success');
+                    return;
+                }
+                if (data.active) {
+                    setState('Access granted — your leak downloads are unlocked.', 'success');
+                    expiry.textContent = 'Access expires ' + new Date(data.expires_at).toLocaleString();
+                    if (safeReturnTo) {
+                        const link = document.createElement('a');
+                        link.className = 'access-button';
+                        link.href = safeReturnTo;
+                        link.textContent = 'Continue to leak';
+                        actions.appendChild(link);
+                    }
+                    return;
+                }
+                const days = Number(data.duration_days) || window.ZYREX_ACCESS_DAYS;
+                setState('No active pass found. Complete one free offer to unlock downloads for ' + days + ' days.', '');
+                const pending = button('<i class="fas fa-unlock"></i> Unlock ' + days + '-Day Access', startAccess);
+                pending.id = 'accessUnlockBtn';
+            }
+
+            async function loadStatus() {
+                setState('Checking your access…', '');
+                actions.replaceChildren();
+                try {
+                    const response = await fetch('/api/access/status', { credentials: 'include', cache: 'no-store' });
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.error || 'Could not check access right now.');
+                    renderAccess(data);
+                } catch (error) {
+                    setState(error.message || 'Could not check access right now. Please retry.', 'error');
+                    button('<i class="fas fa-rotate"></i> Try again', loadStatus, true);
+                }
+            }
+
+            async function claimAccess() {
+                let lastError = null;
+                let lastStatus = 0;
+                for (let attempt = 0; attempt < 6; attempt++) {
+                    try {
+                        const response = await fetch('/api/access/claim', {
+                            method: 'POST',
+                            credentials: 'include',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ grant_id: claimId }),
+                        });
+                        const result = await response.json();
+                        if (response.ok && result.success) {
+                            setState('Offer confirmed. Your access is now active!', 'success');
+                            await loadStatus();
+                            return;
+                        }
+                        lastStatus = response.status;
+                        lastError = result.error || 'Could not confirm your offer completion.';
+                        if (response.status === 401) {
+                            location.href = '/api/login?redirect=' + encodeURIComponent(location.pathname + location.search);
+                            return;
+                        }
+                        if (response.status !== 409) break;
+                    } catch (error) {
+                        lastError = error.message;
+                        break;
+                    }
+                    await new Promise(resolve => setTimeout(resolve, 1200));
+                }
+                await loadStatus();
+                if (lastStatus === 403) return;
+                setState(lastError || 'We have not seen the offer come back as completed yet. Please try again shortly.', 'error');
+                button('<i class="fas fa-rotate"></i> Check completion again', claimAccess, true);
+                button('<i class="fas fa-unlock"></i> Start a new offer', startAccess, true);
+                if (lastStatus !== 401) showOfferHelp('');
+            }
+
+            async function startAccess(event) {
+                const buttonElement = event.currentTarget;
+                const newTab = window.open('about:blank', '_blank');
+                if (newTab) {
+                    writePlaceholderTab(newTab);
+                    newTab.opener = null;
+                }
+                buttonElement.disabled = true;
+                buttonElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing offer…';
+                try {
+                    const response = await fetch('/api/access/start', {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ return_to: safeReturnTo }),
+                    });
+                    const result = await response.json();
+                    if (!response.ok || !result.success) {
+                        if (newTab) newTab.close();
+                        if (response.status === 401) {
+                            location.href = '/api/login?redirect=' + encodeURIComponent(location.pathname + location.search);
+                            return;
+                        }
+                        if (result.active) {
+                            await loadStatus();
+                            return;
+                        }
+                        throw new Error(result.error || 'Could not prepare the offer link.');
+                    }
+                    if (result.active) {
+                        if (newTab) newTab.close();
+                        await loadStatus();
+                        return;
+                    }
+                    if (!result.ad_url) throw new Error('The offer provider did not return a link. Please try again.');
+                    if (newTab) newTab.location.replace(result.ad_url);
+                    else location.href = result.ad_url;
+                    setState('Complete the offer in the new tab. You will be returned here to activate your pass.', '');
+                    actions.replaceChildren();
+                    button('<i class="fas fa-rotate"></i> Refresh access status', loadStatus, true);
+                    showOfferHelp(result.ad_url);
+                } catch (error) {
+                    if (newTab && !newTab.closed) newTab.close();
+                    setState(error.message || 'Could not prepare the offer link. Please retry.', 'error');
+                    buttonElement.disabled = false;
+                    buttonElement.innerHTML = '<i class="fas fa-unlock"></i> Try again';
+                    showOfferHelp('');
+                }
+            }
+
+            if (claimId) {
+                claimAccess();
+            } else if (unlockState === 'expired') {
+                // The member came back from the offer page after the 30-minute claim
+                // window closed, so there is nothing left to confirm.
+                setState('That offer session expired before it came back completed. Start a new one to unlock access.', 'error');
+                button('<i class="fas fa-unlock"></i> Start a new offer', startAccess);
+                showOfferHelp('');
+            } else if (unlockState === 'invalid') {
+                setState('That unlock link was not valid. Start a new offer to unlock access.', 'error');
+                button('<i class="fas fa-unlock"></i> Start a new offer', startAccess);
+            } else {
+                loadStatus();
+            }
+        })();
+    </script>
+    <script src="/js/page-motion.js?v=6"></script>
+</body>
+</html>

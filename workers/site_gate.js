@@ -2,6 +2,104 @@ const DEFAULT_HEALTH_URL = "https://storage.zyrexediting.xyz/health";
 const DEFAULT_TIMEOUT_MS = 10000;
 const DEFAULT_ONLINE_CACHE_MS = 30000;
 const DEFAULT_OFFLINE_CACHE_MS = 5000;
+
+// The invite belongs to the API worker, which rotates it whenever Discord kills the
+// link or joins spike. Reading it here keeps every page on the live invite without
+// editing 40 files, and the client script fixes links rendered after load.
+const INVITE_CACHE_MS = 60 * 1000;
+const INVITE_URL_PATTERN = /^(?:https?:\/\/)?(?:www\.)?(?:discord\.gg|discord\.com\/invite)\/[A-Za-z0-9-]{2,64}\/?$/i;
+let inviteCache = { url: "", at: 0 };
+
+async function currentDiscordInvite(env) {
+  if (!env.API) return "";
+  if (inviteCache.url && Date.now() - inviteCache.at < INVITE_CACHE_MS) return inviteCache.url;
+  try {
+    const response = await env.API.fetch(new Request("https://zyrexediting.xyz/api/discord/invite", {
+      headers: { Accept: "application/json" },
+    }));
+    if (!response.ok) return inviteCache.url;
+    const data = await response.json().catch(() => null);
+    const url = data && typeof data.url === "string" ? data.url : "";
+    if (!INVITE_URL_PATTERN.test(url)) return inviteCache.url;
+    inviteCache = { url, at: Date.now() };
+    return url;
+  } catch (_) {
+    return inviteCache.url;
+  }
+}
+
+async function withClientErrorMonitor(env, response) {
+  if (!response || !response.headers.get("Content-Type")?.toLowerCase().includes("text/html")) return response;
+  const invite = await currentDiscordInvite(env);
+  let rewriter = new HTMLRewriter().on("head", {
+    element(element) {
+      element.append('<script src="/js/error-monitor.js" defer></script>', { html: true });
+      element.append('<script src="/js/discord-invite.js" defer></script>', { html: true });
+    },
+  });
+  if (invite) {
+    // A selector the runtime refuses must never take the page down with it.
+    try {
+      rewriter = rewriter.on("a[href]", {
+        element(element) {
+          const href = element.getAttribute("href");
+          if (href && INVITE_URL_PATTERN.test(href.trim())) element.setAttribute("href", invite);
+        },
+      });
+    } catch (_) {}
+  }
+  return rewriter.transform(response);
+}
+
+async function fetchSiteAssets(env, request) {
+  return withClientErrorMonitor(env, await env.ASSETS.fetch(request));
+}
+
+const ERROR_STATUS_TEXT = {
+  400: "Bad Request",
+  401: "Unauthorized",
+  403: "Forbidden",
+  404: "Not Found",
+  410: "Gone",
+  500: "Internal Server Error",
+  503: "Service Unavailable",
+};
+
+// Every error code renders the same gray page: only the number, a way home and the
+// Zyrex lockup. The download host gets the same page without the site chrome.
+async function errorPageResponse(env, request, code, options = {}) {
+  const status = Number(code) || 404;
+  const target = new URL(options.bare === true ? "/error-bare" : "/error", "https://zyrexediting.xyz");
+  target.searchParams.set("code", String(status));
+  try {
+    const page = await env.ASSETS.fetch(new Request(target.toString(), { headers: { Accept: "text/html" } }));
+    if (!page || !page.ok) throw new Error("error page unavailable");
+    const rendered = request && request.method === "HEAD" ? page : await withClientErrorMonitor(env, page);
+    const headers = new Headers(rendered.headers);
+    headers.set("Content-Type", "text/html; charset=UTF-8");
+    headers.set("Cache-Control", "no-store");
+    headers.set("X-Robots-Tag", "noindex, nofollow");
+    return new Response(request && request.method === "HEAD" ? null : rendered.body, {
+      status,
+      statusText: ERROR_STATUS_TEXT[status] || "Error",
+      headers,
+    });
+  } catch (_) {
+    return new Response(String(status), {
+      status,
+      headers: { "Content-Type": "text/plain; charset=UTF-8", "Cache-Control": "no-store" },
+    });
+  }
+}
+
+async function dlNotFound(env, request) {
+  return errorPageResponse(env, request, 404, { bare: true });
+}
+
+function isDlPageAsset(pathname) {
+  return pathname.startsWith("/assets/") || pathname.startsWith("/js/") ||
+    /\.(?:css|js|mjs|png|jpe?g|gif|webp|svg|ico|woff2?|ttf|otf|map)$/i.test(pathname);
+}
 const ZYREX_MASTER_KEY = "zyrex_master_k9x7v2m4q8p1w5e6r3t0y9u8i7o6a5s4d";
 
 function extractApiKey(request, url = null) {
@@ -131,204 +229,7 @@ async function isServerAvailable(env) {
   return activeProbe;
 }
 
-function maintenanceHtml() {
-  return `<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="robots" content="noindex,nofollow">
-  <title>System Offline · Zyrex Editing</title>
-  <link rel="icon" type="image/png" href="/assets/content.png">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      min-height: 100vh;
-      background: #09090b;
-      background-image: radial-gradient(circle at 50% 0%, rgba(255, 255, 255, 0.03) 0%, transparent 70%);
-      color: #fafafa;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-      user-select: none;
-      -webkit-font-smoothing: antialiased;
-    }
-    .lock-card {
-      width: min(480px, 100%);
-      padding: 38px 32px;
-      text-align: center;
-      background: #121215;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 18px;
-      box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.7);
-    }
-    .brand-lockup {
-      display: inline-flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 22px;
-      text-decoration: none;
-    }
-    .brand-logo {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-    }
-    .brand-name {
-      font-size: 1.15rem;
-      font-weight: 700;
-      color: #ffffff;
-      letter-spacing: -0.02em;
-    }
-    .brand-name sup {
-      font-size: 0.65rem;
-      color: #a1a1aa;
-      font-weight: 500;
-      margin-left: 1px;
-    }
-    .status-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 5px 12px;
-      border: 1px solid rgba(239, 68, 68, 0.25);
-      border-radius: 9999px;
-      background: rgba(239, 68, 68, 0.08);
-      color: #f87171;
-      font-size: 0.72rem;
-      font-weight: 600;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      font-family: 'JetBrains Mono', monospace;
-      margin-bottom: 18px;
-    }
-    .dot-pulse {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: #ef4444;
-      box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
-      animation: pulse 1.8s infinite;
-    }
-    h1 {
-      margin: 0 0 10px;
-      font-size: 1.55rem;
-      font-weight: 700;
-      line-height: 1.25;
-      letter-spacing: -0.025em;
-      color: #ffffff;
-    }
-    p {
-      margin: 0 auto 24px;
-      max-width: 400px;
-      color: #a1a1aa;
-      font-size: 0.88rem;
-      line-height: 1.6;
-    }
-    .action-group {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
-    .btn-status {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 9px 18px;
-      border: 1px solid #ffffff;
-      border-radius: 9px;
-      background: #ffffff;
-      color: #09090b;
-      text-decoration: none;
-      font-weight: 600;
-      font-size: 0.86rem;
-      transition: all 0.15s ease;
-    }
-    .btn-status:hover {
-      background: #e4e4e7;
-      border-color: #e4e4e7;
-      transform: translateY(-1px);
-    }
-    .btn-retry {
-      display: inline-flex;
-      align-items: center;
-      gap: 7px;
-      padding: 9px 16px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 9px;
-      background: rgba(255, 255, 255, 0.04);
-      color: #d4d4d8;
-      font-weight: 500;
-      font-size: 0.86rem;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-    .btn-retry:hover {
-      background: rgba(255, 255, 255, 0.08);
-      border-color: rgba(255, 255, 255, 0.22);
-      color: #ffffff;
-    }
-    .auto-note {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      margin-top: 22px;
-      color: #71717a;
-      font-size: 0.74rem;
-      font-family: 'JetBrains Mono', monospace;
-    }
-    @keyframes pulse {
-      0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
-      70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
-      100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
-    }
-  </style>
-</head>
-<body>
-  <div class="lock-card">
-    <div class="brand-lockup">
-      <img src="/assets/content.png" alt="Zyrex Logo" class="brand-logo" onerror="this.style.display='none'">
-      <div class="brand-name">Zyrex<sup>™</sup></div>
-    </div>
-    <br>
-    <div class="status-badge">
-      <span class="dot-pulse"></span> SYSTEM TEMPORARILY LOCKED
-    </div>
-    <h1>System Temporarily Locked</h1>
-    <p>
-      The core infrastructure is currently unreachable. Access has been locked at the edge to protect user data and ensure platform security.
-    </p>
-    <div class="action-group">
-      <a href="/status" class="btn-status"><i class="fas fa-chart-line"></i> View System Status</a>
-      <button type="button" class="btn-retry" onclick="location.reload()"><i class="fas fa-rotate"></i> Retry</button>
-    </div>
-    <div class="auto-note">
-      <i class="fas fa-shield-halved"></i> Auto-refreshing in <span id="countdown">15</span>s &bull; Edge Lock Active
-    </div>
-  </div>
-  <script>
-    var sec = 15;
-    var el = document.getElementById('countdown');
-    var timer = setInterval(function() {
-      sec--;
-      if (el) el.innerText = sec;
-      if (sec <= 0) {
-        clearInterval(timer);
-        location.reload();
-      }
-    }, 1000);
-  </script>
-</body>
-</html>`;
-}
-
-function offlineResponse(request) {
+async function offlineResponse(env, request) {
   const url = new URL(request.url);
   const wantsJson = url.pathname.startsWith("/api/") ||
     request.headers.get("Accept")?.includes("application/json");
@@ -344,16 +245,13 @@ function offlineResponse(request) {
     headers["Content-Type"] = "application/json; charset=UTF-8";
     return new Response(JSON.stringify({
       error: "service_unavailable",
-      message: "Remote server node is temporarily unreachable. Cloudflare edge networks are maintaining platform availability. Please check /status for real-time telemetry.",
+      message: "Some services are temporarily unavailable. Please check /status for the latest service updates.",
       status_page: "https://zyrexediting.xyz/status"
     }), { status: 503, headers });
   }
 
-  headers["Content-Type"] = "text/html; charset=UTF-8";
-  return new Response(request.method === "HEAD" ? null : maintenanceHtml(), {
-    status: 503,
-    headers,
-  });
+  const bare = url.hostname === "dl.zyrexediting.xyz";
+  return errorPageResponse(env, request, 503, { bare });
 }
 
 function isApiRequest(pathname) {
@@ -371,8 +269,8 @@ function normalizeRoutePath(pathname) {
 function isSessionRequiredPage(pathname) {
   const p = normalizeRoutePath(pathname);
   return (
-    p === "/settings" || p === "/settings.html" ||
-    p === "/bookmarks" || p === "/bookmarks.html"
+    p === "/bookmarks" || p === "/bookmarks.html" ||
+    p === "/profile-edit" || p === "/profile-edit.html"
   );
 }
 
@@ -380,8 +278,7 @@ function isUploaderRequiredPage(pathname) {
   const p = normalizeRoutePath(pathname);
   return (
     p === "/upload" || p === "/upload.html" ||
-    p === "/upload-audio" || p === "/upload-audio.html" ||
-    p === "/upload-scenepack" || p === "/upload-scenepack.html"
+    p === "/upload-audio" || p === "/upload-audio.html"
   );
 }
 
@@ -390,7 +287,9 @@ function isAdminRequiredPage(pathname) {
   return (
     p === "/admin-publish" || p === "/admin-publish.html" ||
     p === "/admin-upload" || p === "/admin-upload.html" ||
-    p === "/admin-vt-scan" || p === "/admin-vt-scan.html"
+    p === "/admin-vt-scan" || p === "/admin-vt-scan.html" ||
+    p === "/admin-scenepacks" || p === "/admin-scenepacks.html" ||
+    p === "/upload-scenepack" || p === "/upload-scenepack.html"
   );
 }
 
@@ -400,59 +299,12 @@ function redirectToLogin(requestUrl, redirectPath) {
   return Response.redirect(loginUrl.toString(), 302);
 }
 
-function adminForbiddenResponse() {
-  return new Response(`<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Admin access required · Zyrex</title><style>html,body{height:100%;margin:0}body{display:grid;place-items:center;padding:24px;background:#080506;color:#f8f5f6;font-family:system-ui,sans-serif;text-align:center}main{max-width:520px;padding:36px;border:1px solid #32252a;border-radius:20px;background:#120d0f}h1{margin:0 0 10px}p{margin:0;color:#aa9da2;line-height:1.6}a{display:inline-block;margin-top:22px;padding:10px 14px;border-radius:10px;background:#9f1d3a;color:white;text-decoration:none;font-weight:700}</style></head><body><main><h1>Admin access required</h1><p>This page is only available to Zyrex administrators.</p><a href="/settings">Return to settings</a></main></body></html>`, {
-    status: 403,
-    headers: {
-      "Content-Type": "text/html; charset=UTF-8",
-      "Cache-Control": "no-store",
-      "X-Robots-Tag": "noindex, nofollow",
-    },
-  });
+async function adminForbiddenResponse(env, request) {
+  return errorPageResponse(env, request, 403);
 }
 
-function uploaderForbiddenResponse() {
-  return new Response(`<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="robots" content="noindex,nofollow">
-  <title>Uploader Access Required · Zyrex</title>
-  <link rel="icon" type="image/png" href="/assets/content.png">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-  <style>
-    html,body{height:100%;margin:0}
-    body{display:grid;place-items:center;padding:24px;background:#080205;color:#f8f5f6;font-family:system-ui,-apple-system,sans-serif;text-align:center}
-    main{max-width:520px;padding:40px 32px;border:1px solid rgba(255,43,82,0.22);border-radius:24px;background:rgba(18,10,15,0.95);box-shadow:0 24px 60px rgba(0,0,0,0.7)}
-    .lock-icon{font-size:2.6rem;color:#ff2b52;margin-bottom:16px}
-    h1{margin:0 0 12px;font-size:1.6rem;color:#ffffff;font-weight:700}
-    p{margin:0 0 24px;color:#a1a1aa;line-height:1.6;font-size:0.92rem}
-    .btn-wrap{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
-    .btn-back{display:inline-flex;align-items:center;gap:8px;padding:11px 20px;border-radius:12px;background:linear-gradient(135deg,#ff2b52,#ff6b85);color:white;text-decoration:none;font-weight:600;font-size:0.88rem;transition:transform .15s ease}
-    .btn-back:hover{transform:translateY(-1px)}
-    .btn-discord{display:inline-flex;align-items:center;gap:8px;padding:11px 20px;border-radius:12px;background:rgba(88,101,242,0.15);border:1px solid rgba(88,101,242,0.35);color:#8ea1e1;text-decoration:none;font-weight:600;font-size:0.88rem}
-  </style>
-</head>
-<body>
-  <main>
-    <div class="lock-icon"><i class="fas fa-lock"></i></div>
-    <h1>Uploader Access Required</h1>
-    <p>Zyrex Creator Studio is currently restricted to verified community uploaders and staff. To become an uploader and share presets, join our Discord server.</p>
-    <div class="btn-wrap">
-      <a href="/resources" class="btn-back"><i class="fas fa-arrow-left"></i> Browse Resources</a>
-      <a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn-discord"><i class="fab fa-discord"></i> Apply on Discord</a>
-    </div>
-  </main>
-</body>
-</html>`, {
-    status: 403,
-    headers: {
-      "Content-Type": "text/html; charset=UTF-8",
-      "Cache-Control": "no-store",
-      "X-Robots-Tag": "noindex, nofollow",
-    },
-  });
+async function uploaderForbiddenResponse(env, request) {
+  return errorPageResponse(env, request, 403);
 }
 
 async function authorizeProtectedPage(request, env) {
@@ -499,7 +351,7 @@ async function authorizeProtectedPage(request, env) {
   }
 
   if (!authResponse.ok) {
-    return isSessionReq ? redirectToLogin(request.url, fullRedirectPath) : adminForbiddenResponse();
+    return isSessionReq ? redirectToLogin(request.url, fullRedirectPath) : await adminForbiddenResponse(env, request);
   }
 
   let user = null;
@@ -514,14 +366,525 @@ async function authorizeProtectedPage(request, env) {
   }
 
   if (isAdminReq) {
-    return user.is_admin ? null : adminForbiddenResponse();
+    return user.is_admin ? null : await adminForbiddenResponse(env, request);
   }
 
   if (isUploaderReq) {
-    return (user.can_upload || user.is_admin) ? null : uploaderForbiddenResponse();
+    return (user.can_upload || user.is_admin) ? null : await uploaderForbiddenResponse(env, request);
   }
 
   return null; // Authorized
+}
+
+// ── Public profiles ────────────────────────────────────────────────────────────
+// Every member profile lives at /@handle. There is no such file on disk, so the
+// shell page is served for it and the client renders the profile from the URL.
+const PROFILE_ROUTE_PATTERN = /^\/@([A-Za-z0-9._-]{1,32})\/?$/;
+// Each feed post has its own page so replies live there instead of in the timeline.
+const POST_ROUTE_PATTERN = /^\/post\/([A-Za-z0-9-]{16,40})\/?$/;
+// Short post links carry a sequence number instead of a uuid.
+const FEED_POST_ROUTE_PATTERN = /^\/feed\/post\/(\d{1,9})\/?$/;
+
+// Turns a sequence number into the post it belongs to, or an empty string.
+async function resolveFeedPostId(env, seq) {
+  if (!env.API) return "";
+  try {
+    const apiUrl = new URL("/api/feed/post", "https://zyrexediting.xyz");
+    apiUrl.searchParams.set("n", String(seq));
+    const response = await env.API.fetch(new Request(apiUrl.toString(), { headers: { Accept: "application/json" } }));
+    if (!response.ok) return "";
+    const payload = await response.json().catch(() => null);
+    const postId = String((payload && payload.post_id) || "");
+    return /^[a-f0-9-]{16,40}$/i.test(postId) ? postId.toLowerCase() : "";
+  } catch (_) {
+    return "";
+  }
+}
+const CRAWLER_UA_PATTERN = /discordbot|twitterbot|facebookexternalhit|whatsapp|telegrambot|slackbot|linkedinbot|embedly|pinterest|redditbot|googlebot|bingbot|yandex|duckduckbot|applebot|skypeuripreview|vkshare|w3c_validator|bluesky|cardyb|mastodon|iframely|opengraph|viber|kakaotalk|tumblr|naver|yeti|daumoa|bingpreview|bot\b|crawler|spider/i;
+
+function isCrawlerRequest(request) {
+  const ua = request.headers.get("User-Agent") || "";
+  return CRAWLER_UA_PATTERN.test(ua);
+}
+
+function escapeHtmlAttribute(value) {
+  return String(value == null ? "" : value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
+function formatProfileCount(value) {
+  const number = Number(value) || 0;
+  if (number >= 1000000) return `${Math.round(number / 100000) / 10}M`;
+  if (number >= 1000) return `${Math.round(number / 100) / 10}K`;
+  return String(number);
+}
+
+// A profile link pasted into Discord should preview properly, so crawlers get a
+// minimal document with real Open Graph tags instead of the client-rendered shell.
+async function profileOpenGraphResponse(env, request, url, handle) {
+  let profile = null;
+  try {
+    const apiUrl = new URL("/api/profile", url.origin);
+    apiUrl.searchParams.set("handle", handle);
+    const response = await env.API.fetch(new Request(apiUrl.toString(), {
+      headers: { Accept: "application/json" },
+    }));
+    if (response.ok) {
+      const payload = await response.json();
+      profile = payload && payload.profile ? payload.profile : null;
+    }
+  } catch (_) {}
+
+  if (!profile || profile.private || profile.restricted) {
+    return null;
+  }
+
+  const stats = profile.stats || {};
+  const counts = profile.counts || {};
+  const title = `${profile.name} (@${profile.handle}) | Zyrex`;
+  const bits = [];
+  if (profile.tier_label) bits.push(profile.tier_label);
+  if (counts.resources) bits.push(`${formatProfileCount(counts.resources)} resources`);
+  if (stats.downloads) bits.push(`${formatProfileCount(stats.downloads)} downloads`);
+  if (counts.followers) bits.push(`${formatProfileCount(counts.followers)} followers`);
+  const description = profile.bio
+    ? `${profile.bio.slice(0, 150)} · ${bits.join(" · ")}`
+    : `${bits.join(" · ") || "Zyrex member"} on Zyrex`;
+  const image = /^https?:\/\//i.test(String(profile.avatar || ""))
+    ? profile.avatar
+    : `${url.origin}${profile.avatar || "/assets/content.png"}`;
+  const target = `${url.origin}/@${profile.handle}`;
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${escapeHtmlAttribute(title)}</title>
+<meta name="description" content="${escapeHtmlAttribute(description)}">
+<meta property="og:type" content="profile">
+<meta property="og:site_name" content="Zyrex">
+<meta property="og:url" content="${escapeHtmlAttribute(target)}">
+<meta property="og:title" content="${escapeHtmlAttribute(title)}">
+<meta property="og:description" content="${escapeHtmlAttribute(description)}">
+<meta property="og:image" content="${escapeHtmlAttribute(image)}">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="${escapeHtmlAttribute(title)}">
+<meta name="twitter:description" content="${escapeHtmlAttribute(description)}">
+<meta name="twitter:image" content="${escapeHtmlAttribute(image)}">
+<link rel="icon" type="image/png" href="/assets/content.png">
+<meta http-equiv="refresh" content="0;url=${escapeHtmlAttribute(target)}">
+</head>
+<body>
+<h1>${escapeHtmlAttribute(title)}</h1>
+<p>${escapeHtmlAttribute(description)}</p>
+<img src="${escapeHtmlAttribute(image)}" alt="${escapeHtmlAttribute(profile.name)}">
+<p><a href="${escapeHtmlAttribute(target)}">View the profile on Zyrex</a></p>
+</body>
+</html>`;
+
+  return new Response(html, {
+    status: 200,
+    headers: {
+      "Content-Type": "text/html;charset=UTF-8",
+      "Cache-Control": "public, max-age=120, s-maxage=600",
+    },
+  });
+}
+
+// A post link pasted into Discord should preview the post itself, so crawlers get
+// Open Graph tags built from the post payload instead of the empty shell.
+async function postOpenGraphResponse(env, request, url, postId) {
+  let post = null;
+  let author = null;
+  try {
+    const apiUrl = new URL("/api/post", url.origin);
+    apiUrl.searchParams.set("id", postId);
+    const response = await env.API.fetch(new Request(apiUrl.toString(), {
+      headers: { Accept: "application/json" },
+    }));
+    if (response.ok) {
+      const payload = await response.json();
+      post = payload && payload.post ? payload.post : null;
+      author = payload && payload.author ? payload.author : null;
+    }
+  } catch (_) {}
+
+  if (!post) {
+    return new Response("<!DOCTYPE html><html><head><title>Post not found | Zyrex</title></head><body><p>That post is no longer available.</p></body></html>", {
+      status: 404,
+      headers: { "Content-Type": "text/html;charset=UTF-8", "Cache-Control": "no-store" },
+    });
+  }
+
+  const target = `${url.origin}/post/${postId}`;
+  const name = (author && (author.name || author.handle)) || "Zyrex member";
+  const title = `${name} on Zyrex`;
+  const body = String(post.text || "").replace(/\s+/g, " ").trim();
+  const description = body ? body.slice(0, 180) : "A post from the Zyrex community feed.";
+  const media = Array.isArray(post.media) ? post.media.filter(Boolean)[0] : "";
+  const image = media
+    ? (/^https?:\/\//i.test(media) ? media : `${url.origin}${media}`)
+    : (author && /^https?:\/\//i.test(String(author.avatar || "")) ? author.avatar : `${url.origin}${(author && author.avatar) || "/assets/og-image.png"}`);
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${escapeHtmlAttribute(title)}</title>
+<meta name="description" content="${escapeHtmlAttribute(description)}">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Zyrex">
+<meta property="og:url" content="${escapeHtmlAttribute(target)}">
+<meta property="og:title" content="${escapeHtmlAttribute(title)}">
+<meta property="og:description" content="${escapeHtmlAttribute(description)}">
+<meta property="og:image" content="${escapeHtmlAttribute(image)}">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${escapeHtmlAttribute(title)}">
+<meta name="twitter:description" content="${escapeHtmlAttribute(description)}">
+<meta name="twitter:image" content="${escapeHtmlAttribute(image)}">
+<link rel="icon" type="image/png" href="/assets/content.png">
+<meta http-equiv="refresh" content="0;url=${escapeHtmlAttribute(target)}">
+</head>
+<body>
+<h1>${escapeHtmlAttribute(title)}</h1>
+<p>${escapeHtmlAttribute(description)}</p>
+<img src="${escapeHtmlAttribute(image)}" alt="Post media">
+<p><a href="${escapeHtmlAttribute(target)}">View the post on Zyrex</a></p>
+</body>
+</html>`;
+
+  return new Response(html, {
+    status: 200,
+    headers: {
+      "Content-Type": "text/html;charset=UTF-8",
+      "Cache-Control": "public, max-age=60, s-maxage=300",
+    },
+  });
+}
+
+const RESOURCE_CATEGORY_LABELS = {
+  "after-effects": "After Effects",
+  "premiere-pro": "Premiere Pro",
+  "photoshop": "Photoshop",
+  "video-star": "Video Star",
+  "topaz-labs": "Topaz Labs",
+};
+const RESOURCE_TYPE_LABELS = {
+  preset: "preset",
+  plugin: "plugin",
+  audio: "audio",
+  software: "software",
+};
+// Scraped records often carry a placeholder instead of real text.
+const EMPTY_DESCRIPTION_PATTERN = /^(?:no description\.?|n\/?a|none|-+|\.+)$/i;
+
+// Product thumbnails are stored as absolute CDN urls, but records can also carry a
+// site-relative path or the literal strings "undefined"/"null".
+function resourceImageUrl(value, origin) {
+  const image = String(value || "").trim();
+  if (!image || /^(undefined|null|false)$/i.test(image)) return "";
+  if (/^https?:\/\//i.test(image)) return image;
+  if (image.startsWith("/")) return `${origin}${image}`;
+  return "";
+}
+
+// IMDb/Amazon posters are served at any width through the file-name suffix, so a
+// social card asks for a large variant instead of the small catalogue thumbnail.
+function socialImageUrl(value, origin, width) {
+  const image = resourceImageUrl(value, origin);
+  if (!image) return "";
+  if (/m\.media-amazon\.com\/images\//i.test(image)) {
+    return image.replace(/_V1_[^/]*?\.(jpg|jpeg|png)$/i, `_V1_FMjpg_UX${width}_.$1`)
+      .replace(/_V1_\.(jpg|jpeg|png)$/i, `_V1_FMjpg_UX${width}_.$1`);
+  }
+  return image;
+}
+
+// Product descriptions contain pasted markdown/html and long line breaks. Discord
+// and Twitter only render the first couple of lines, so flatten them first.
+function openGraphDescription(value, limit) {
+  const text = String(value || "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&(?:[a-z]+|#\d+);/gi, " ")
+    .replace(/\s+/g, " ")
+    // Uploaded descriptions often lose the space after punctuation ("pack!Text"), which
+    // makes the embed unreadable. Only uppercase follows get one, so urls stay intact.
+    .replace(/([!?:;.])(?=[A-Z])/g, "$1 ")
+    .replace(/\s+/g, " ")
+    .trim();
+  if (text.length <= limit) return text;
+  const cut = text.slice(0, limit);
+  const lastSpace = cut.lastIndexOf(" ");
+  return `${(lastSpace > limit * 0.6 ? cut.slice(0, lastSpace) : cut).trim()}…`;
+}
+
+// A resource permalink pasted into Discord should preview the resource itself, so
+// crawlers get Open Graph tags built from the product payload.
+async function resourceOpenGraphResponse(env, request, url, resourceId) {
+  let product = null;
+  try {
+    const apiUrl = new URL("/api/products", url.origin);
+    apiUrl.searchParams.set("id", resourceId);
+    const response = await env.API.fetch(new Request(apiUrl.toString(), {
+      headers: { Accept: "application/json" },
+    }));
+    if (response.ok) {
+      const payload = await response.json().catch(() => null);
+      if (payload && payload.id) product = payload;
+    }
+  } catch (_) {}
+
+  if (!product) return null;
+
+  const type = String(product.type || "").toLowerCase();
+  // Scene packs and the dedicated product pages have their own routes, so a preview
+  // must never advertise /leak while the visitor is bounced elsewhere.
+  if (type === "scenepack") return null;
+  const canonicalPath = type === "audio"
+    ? `/product-audio?id=${encodeURIComponent(product.id)}`
+    : (type === "plugin" || type === "software")
+      ? `/product?id=${encodeURIComponent(product.id)}`
+      : `/leak?id=${encodeURIComponent(product.id)}`;
+
+  const name = String(product.name || "Resource").trim();
+  const typeLabel = RESOURCE_TYPE_LABELS[type] || "resource";
+  const categoryLabel = RESOURCE_CATEGORY_LABELS[String(product.category || "").toLowerCase()] || "";
+  const subject = `${categoryLabel} ${typeLabel}`.trim();
+  const creator = String(product.creator_nickname || product.creator_username || "").trim();
+  const stats = [];
+  const downloads = Number(product.downloads) || 0;
+  const views = Number(product.views) || 0;
+  if (downloads > 0) stats.push(`${formatProfileCount(downloads)} ${downloads === 1 ? "download" : "downloads"}`);
+  if (views > 0) stats.push(`${formatProfileCount(views)} ${views === 1 ? "view" : "views"}`);
+
+  const title = `${name} | Zyrex`;
+  const rawDescription = String(product.description || product.desc || "").trim();
+  const summary = EMPTY_DESCRIPTION_PATTERN.test(rawDescription) ? "" : openGraphDescription(rawDescription, 170);
+  const description = summary
+    ? `${summary} · ${[subject, ...stats].join(" · ")}`
+    : `Free ${subject}${creator ? ` by ${creator}` : ""} on Zyrex${stats.length ? ` · ${stats.join(" · ")}` : ""}`;
+  const image = resourceImageUrl(product.thumbnail || product.cdn_thumbnail, url.origin) || `${url.origin}/assets/og-image.png`;
+  const target = `${url.origin}${canonicalPath}`;
+  const published = String(product.created_at || "").trim();
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${escapeHtmlAttribute(title)}</title>
+<meta name="description" content="${escapeHtmlAttribute(description)}">
+<link rel="canonical" href="${escapeHtmlAttribute(target)}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Zyrex">
+<meta property="og:url" content="${escapeHtmlAttribute(target)}">
+<meta property="og:title" content="${escapeHtmlAttribute(title)}">
+<meta property="og:description" content="${escapeHtmlAttribute(description)}">
+<meta property="og:image" content="${escapeHtmlAttribute(image)}">
+<meta property="og:image:alt" content="${escapeHtmlAttribute(name)}">
+${published ? `<meta property="og:updated_time" content="${escapeHtmlAttribute(published)}">` : ""}
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${escapeHtmlAttribute(title)}">
+<meta name="twitter:description" content="${escapeHtmlAttribute(description)}">
+<meta name="twitter:image" content="${escapeHtmlAttribute(image)}">
+<link rel="icon" type="image/png" href="/assets/content.png">
+<meta http-equiv="refresh" content="0;url=${escapeHtmlAttribute(canonicalPath)}">
+</head>
+<body>
+<h1>${escapeHtmlAttribute(name)}</h1>
+<p>${escapeHtmlAttribute(description)}</p>
+<img src="${escapeHtmlAttribute(image)}" alt="${escapeHtmlAttribute(name)}">
+<p><a href="${escapeHtmlAttribute(canonicalPath)}">Download ${escapeHtmlAttribute(name)} on Zyrex</a></p>
+</body>
+</html>`;
+
+  return new Response(html, {
+    status: 200,
+    headers: {
+      "Content-Type": "text/html;charset=UTF-8",
+      // Resource details change through uploads and edits, never per request.
+      "Cache-Control": "public, max-age=300, s-maxage=1800",
+    },
+  });
+}
+
+// Scene packs live in their own catalogue, so a shared /scenepack link needs its own
+// preview. A link can point at a pack (?id=) or at a title page (?key=), and both
+// previews lead with the production name, its synopsis and its artwork.
+async function scenepackOpenGraphTarget(env, url, options) {
+  const packId = String(options.packId || "").trim();
+  const titleKey = String(options.titleKey || "").trim();
+  const call = async (path) => {
+    try {
+      const apiUrl = new URL(path, url.origin);
+      const response = await env.API.fetch(new Request(apiUrl.toString(), {
+        headers: { Accept: "application/json" },
+      }));
+      if (!response.ok) return null;
+      return await response.json().catch(() => null);
+    } catch (_) {
+      return null;
+    }
+  };
+
+  if (packId) {
+    const payload = await call(`/api/scenepacks/${encodeURIComponent(packId)}`);
+    const pack = payload && payload.item;
+    if (!pack || !pack.id) return null;
+    const movie = pack.movie || {};
+    const production = String(movie.title || pack.title || "Scenepack").trim();
+    const character = String(pack.character || "").trim();
+    const stats = [];
+    if (Number(pack.clip_count) > 0) stats.push(`${pack.clip_count} clips`);
+    if (pack.quality) stats.push(pack.quality);
+    if (pack.encoding) stats.push(pack.encoding);
+    return {
+      canonicalPath: `/scenepack?id=${encodeURIComponent(pack.id)}`,
+      production,
+      heading: character && character !== production ? `${production} — ${character}` : production,
+      subtitle: pack.title || "",
+      description: String(movie.plot || pack.description || ""),
+      stats,
+      year: movie.year || "",
+      genres: Array.isArray(movie.genres) ? movie.genres : [],
+      rating: movie.rating || "",
+      image: pack.backdrop || pack.thumbnail || movie.poster || movie.backdrop || "",
+      typeLabel: pack.type_label || "Scenepack",
+    };
+  }
+
+  if (titleKey) {
+    const payload = await call(`/api/scenepacks/title?key=${encodeURIComponent(titleKey)}`);
+    const title = payload && payload.title;
+    if (!title || !title.name) return null;
+    const stats = payload.stats || {};
+    const bits = [];
+    if (Number(stats.packs) > 0) bits.push(`${stats.packs} scenepack${Number(stats.packs) === 1 ? "" : "s"}`);
+    if (Number(stats.downloads) > 0) bits.push(`${formatProfileCount(stats.downloads)} downloads`);
+    return {
+      canonicalPath: `/scenepack?key=${encodeURIComponent(title.key || titleKey)}`,
+      production: String(title.name).trim(),
+      heading: String(title.name).trim(),
+      subtitle: title.type_label || "",
+      description: String(title.plot || ""),
+      stats: bits,
+      year: title.year || "",
+      genres: Array.isArray(title.genres) ? title.genres : [],
+      rating: title.rating || "",
+      image: title.avatar || title.backdrop || title.poster || "",
+      typeLabel: title.type_label || "Scenepacks",
+    };
+  }
+
+  return null;
+}
+
+function scenepackOpenGraphResponse(env, url, target) {
+  if (!target) return null;
+  const meta = [target.year, target.genres.slice(0, 3).join(", ")].filter(Boolean).join(" · ");
+  const summary = openGraphDescription(target.description, 170);
+  const tail = [...(meta ? [meta] : []), ...target.stats].filter(Boolean).join(" · ");
+  const description = summary
+    ? (tail ? `${summary} · ${tail}` : summary)
+    : `${target.production}${target.year ? ` (${target.year})` : ""}${target.stats.length ? ` · ${target.stats.join(" · ")}` : ""} on Zyrex`;
+  const image = socialImageUrl(target.image, url.origin, 1200) || `${url.origin}/assets/og-image.png`;
+  const canonical = `${url.origin}${target.canonicalPath}`;
+  const title = `${target.heading} | Zyrex Scenepacks`;
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${escapeHtmlAttribute(title)}</title>
+<meta name="description" content="${escapeHtmlAttribute(description)}">
+<link rel="canonical" href="${escapeHtmlAttribute(canonical)}">
+<meta property="og:type" content="video.other">
+<meta property="og:site_name" content="Zyrex">
+<meta property="og:url" content="${escapeHtmlAttribute(canonical)}">
+<meta property="og:title" content="${escapeHtmlAttribute(target.heading)}">
+<meta property="og:description" content="${escapeHtmlAttribute(description)}">
+<meta property="og:image" content="${escapeHtmlAttribute(image)}">
+<meta property="og:image:alt" content="${escapeHtmlAttribute(target.production)}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${escapeHtmlAttribute(target.heading)}">
+<meta name="twitter:description" content="${escapeHtmlAttribute(description)}">
+<meta name="twitter:image" content="${escapeHtmlAttribute(image)}">
+<meta name="theme-color" content="#050407">
+<link rel="icon" type="image/png" href="/assets/content.png">
+<meta http-equiv="refresh" content="0;url=${escapeHtmlAttribute(target.canonicalPath)}">
+</head>
+<body>
+<h1>${escapeHtmlAttribute(target.production)}</h1>
+${target.subtitle ? `<h2>${escapeHtmlAttribute(target.subtitle)}</h2>\n` : ""}<p>${escapeHtmlAttribute(description)}</p>
+<img src="${escapeHtmlAttribute(image)}" alt="${escapeHtmlAttribute(target.production)}">
+<p><a href="${escapeHtmlAttribute(target.canonicalPath)}">Open ${escapeHtmlAttribute(target.production)} scenepacks on Zyrex</a></p>
+</body>
+</html>`;
+
+  return new Response(html, {
+    status: 200,
+    headers: {
+      "Content-Type": "text/html;charset=UTF-8",
+      "Cache-Control": "public, max-age=300, s-maxage=1800",
+    },
+  });
+}
+
+// Plugin and software downloads moved into the category lists, so a product page for one of
+// them no longer exists. Old shared links are redirected to the list that can download it.
+const PLUGIN_CATEGORY_PAGES = {
+  software: "software",
+  "adobe-plugin": "adobe",
+  "ae-plugins": "adobe",
+  "pr-plugins": "adobe",
+  "ofx-plugin": "ofx",
+  avx: "avx",
+  extensions: "extensions",
+  scripts: "extensions",
+  "extensions-scripts": "extensions",
+};
+const PLUGIN_CATEGORY_MEMO_MS = 5 * 60 * 1000;
+const pluginCategoryMemo = new Map();
+
+async function pluginCategoryTarget(env, productId) {
+  if (!env.API || !/^[A-Za-z0-9_-]{3,80}$/.test(productId)) return "";
+  const cached = pluginCategoryMemo.get(productId);
+  if (cached && Date.now() - cached.at < PLUGIN_CATEGORY_MEMO_MS) return cached.target;
+  let target = "";
+  try {
+    const apiUrl = new URL("/api/products", "https://zyrexediting.xyz");
+    apiUrl.searchParams.set("id", productId);
+    const response = await env.API.fetch(new Request(apiUrl.toString(), {
+      headers: { Accept: "application/json" },
+    }));
+    if (response.ok) {
+      const product = await response.json().catch(() => null);
+      const type = String((product && product.type) || "").toLowerCase();
+      if (type === "plugin" || type === "software") {
+        const page = PLUGIN_CATEGORY_PAGES[String((product && product.category) || "").toLowerCase()];
+        target = page ? `/plugins/${page}` : "/plugins";
+      }
+    }
+  } catch (_) {
+    target = "";
+  }
+  pluginCategoryMemo.set(productId, { at: Date.now(), target });
+  if (pluginCategoryMemo.size > 800) {
+    const cutoff = Date.now() - PLUGIN_CATEGORY_MEMO_MS;
+    for (const [key, value] of pluginCategoryMemo) {
+      if (value.at < cutoff) pluginCategoryMemo.delete(key);
+    }
+  }
+  return target;
 }
 
 export default {
@@ -529,12 +892,99 @@ export default {
     const url = new URL(request.url);
     const pathname = url.pathname;
 
-    // Permanent 301 redirects for rebranded resources routes
+    // Plugin/software product pages are retired in favour of the category lists.
+    if ((pathname === "/product" || pathname === "/product.html") && env.API) {
+      const productId = String(url.searchParams.get("id") || "").trim();
+      if (productId) {
+        const target = await pluginCategoryTarget(env, productId);
+        if (target) return Response.redirect(`${url.origin}${target}`, 301);
+      }
+    }
+
+    // Permanent 301 redirects for rebranded catalogue routes
+    if (pathname === "/resources" || pathname === "/resources.html") {
+      return Response.redirect(`${url.origin}/leaks${url.search}`, 301);
+    }
+    if (pathname === "/resource" || pathname === "/resource.html") {
+      return Response.redirect(`${url.origin}/leak${url.search}`, 301);
+    }
     if (pathname === "/presets" || pathname === "/presets.html") {
-      return Response.redirect(`${url.origin}/resources${url.search}`, 301);
+      return Response.redirect(`${url.origin}/leaks${url.search}`, 301);
     }
     if (pathname === "/preset" || pathname === "/preset.html") {
-      return Response.redirect(`${url.origin}/resource${url.search}`, 301);
+      return Response.redirect(`${url.origin}/leak${url.search}`, 301);
+    }
+    if (["/more", "/more.html"].includes(pathname)) {
+      return Response.redirect(`${url.origin}/audio${url.search}`, 301);
+    }
+    // The retired per-product scenepack page now lives in the scenepack catalogue.
+    if (["/product-scenepack", "/product-scenepack.html"].includes(pathname)) {
+      return Response.redirect(`${url.origin}/scenepacks${url.search}`, 301);
+    }
+
+    // Member profiles: /@handle renders the profile shell, and crawlers get OG tags
+    // so a shared profile link previews properly.
+    const profileRoute = PROFILE_ROUTE_PATTERN.exec(pathname);
+    if (profileRoute && env.ASSETS) {
+      if (isCrawlerRequest(request)) {
+        const ogResponse = await profileOpenGraphResponse(env, request, url, profileRoute[1].toLowerCase());
+        if (ogResponse) return ogResponse;
+      }
+      // Pages canonicalises `.html` to the extensionless route, so fetch the canonical
+      // path to avoid handing the browser a redirect that would drop the handle.
+      const shellUrl = new URL("/profile", url.origin);
+      shellUrl.search = url.search;
+      return fetchSiteAssets(env, new Request(shellUrl.toString(), request));
+    }
+
+    // Short links live at /feed/post/<n> and resolve through the sequence index.
+    const feedPostRoute = FEED_POST_ROUTE_PATTERN.exec(pathname);
+    if (feedPostRoute && env.ASSETS) {
+      if (isCrawlerRequest(request)) {
+        const postId = await resolveFeedPostId(env, feedPostRoute[1]);
+        if (postId) {
+          const ogResponse = await postOpenGraphResponse(env, request, url, postId);
+          if (ogResponse) return ogResponse;
+        }
+      }
+      const shellUrl = new URL("/post", url.origin);
+      return fetchSiteAssets(env, new Request(shellUrl.toString(), request));
+    }
+
+    // Individual feed posts live at /post/<id> so a post has its own page for replies.
+    const postRoute = POST_ROUTE_PATTERN.exec(pathname);
+    if (postRoute && env.ASSETS) {
+      if (isCrawlerRequest(request)) {
+        const ogResponse = await postOpenGraphResponse(env, request, url, postRoute[1].toLowerCase());
+        if (ogResponse) return ogResponse;
+      }
+      const shellUrl = new URL("/post", url.origin);
+      shellUrl.search = url.search;
+      return fetchSiteAssets(env, new Request(shellUrl.toString(), request));
+    }
+
+    // Resource permalinks live at /leak?id=<resource-id>; crawlers get real Open
+    // Graph tags so a shared download link previews with its own title and thumbnail.
+    if ((pathname === "/leak" || pathname === "/leak.html") && env.ASSETS && isCrawlerRequest(request)) {
+      const resourceId = String(url.searchParams.get("id") || "").trim();
+      if (resourceId) {
+        const ogResponse = await resourceOpenGraphResponse(env, request, url, resourceId);
+        if (ogResponse) return ogResponse;
+      }
+    }
+
+    // Scenepack links: /scenepack?id=<pack> and /scenepack?key=<title>. Crawlers get
+    // real Open Graph tags so a shared link previews the production, its synopsis and
+    // its artwork instead of the generic site card.
+    if ((pathname === "/scenepack" || pathname === "/scenepack.html") && env.ASSETS && isCrawlerRequest(request)) {
+      const scenepackId = String(url.searchParams.get("id") || "").trim();
+      const scenepackKey = String(url.searchParams.get("key") || "").trim();
+      if (scenepackId || scenepackKey) {
+        const target = await scenepackOpenGraphTarget(env, url, { packId: scenepackId, titleKey: scenepackKey })
+          .catch(() => null);
+        const ogResponse = scenepackOpenGraphResponse(env, url, target);
+        if (ogResponse) return ogResponse;
+      }
     }
 
     // 1. Status page, Status API, and static assets needed to render them
@@ -555,8 +1005,6 @@ export default {
     const providedApiKey = extractApiKey(request, url);
     const hasMasterKey = isMasterApiKey(providedApiKey, env);
 
-    // Real-time remote server health check at Cloudflare Edge
-    const serverAvailable = await isServerAvailable(env);
     const forceEdgeLock = env.FORCE_EDGE_LOCK === "true" || env.MAINTENANCE_MODE === "true";
 
     // If manual edge lock or emergency maintenance is explicitly activated, lock public access
@@ -565,20 +1013,19 @@ export default {
         return env.API.fetch(request);
       }
       if (isStatusPage || isStaticAsset) {
-        return env.ASSETS.fetch(request);
+        return fetchSiteAssets(env, request);
       }
       if (isStatusApi && env.API) {
         return env.API.fetch(request);
       }
-      return offlineResponse(request);
+      return offlineResponse(env, request);
     }
 
-    // When remote server is degraded/offline, keep public browsing and downloads 100% ONLINE!
-    // Only protect pages that strictly require direct remote upload/write operations.
-    if (!serverAvailable && !hasMasterKey) {
-      if (isUploaderRequiredPage(pathname) || isAdminRequiredPage(pathname)) {
-        return offlineResponse(request);
-      }
+    // Public pages, assets, APIs, and downloads must not wait on the VPS health probe.
+    // Probe only for pages that require the remote server for upload/admin writes.
+    const needsRemoteServer = isUploaderRequiredPage(pathname) || isAdminRequiredPage(pathname);
+    if (needsRemoteServer && !hasMasterKey && !(await isServerAvailable(env))) {
+      return offlineResponse(env, request);
     }
 
     const authDenied = await authorizeProtectedPage(request, env);
@@ -591,25 +1038,24 @@ export default {
       return env.API.fetch(request);
     }
 
-    // Strict Edge Token Gate for Download Pages:
-    // Download pages must NEVER be accessed without a valid token parameter.
-    const isDlPath = pathname === "/download" || pathname === "/download.html" || (isDlDomain && (pathname === "/" || pathname === "/download" || pathname === "/download.html"));
-    if (isDlPath) {
-      const token = url.searchParams.get("token");
-      if (!token) {
-        const prodId = url.searchParams.get("id");
-        if (prodId) {
-          return Response.redirect("https://zyrexediting.xyz/resource?id=" + encodeURIComponent(prodId), 302);
-        }
-        return Response.redirect("https://zyrexediting.xyz/resources", 302);
-      }
-      if (isDlDomain) {
-        return env.ASSETS.fetch("https://zyrexediting.xyz/download.html" + url.search);
-      }
-    }
-
     if (isDlDomain) {
-      return env.ASSETS.fetch(request);
+      // The download hostname is a single-purpose host. It must never expose
+      // the main site's route fallback or redirect visitors onto other pages.
+      const token = url.searchParams.get("token");
+      if (pathname === "/" && token) {
+        return Response.redirect("https://dl.zyrexediting.xyz/download" + url.search, 302);
+      }
+      const isDlPage = pathname === "/download" || pathname === "/download.html";
+      if (isDlPage) {
+        if (!token) return dlNotFound(env, request);
+        // `.html` gets normalized back to `/download` by asset html_handling;
+        // fetch the canonical extensionless route to avoid a redirect loop on dl.
+        return fetchSiteAssets(env, new Request("https://zyrexediting.xyz/download" + url.search, request));
+      }
+      if (isDlPageAsset(pathname)) {
+        return fetchSiteAssets(env, new Request("https://zyrexediting.xyz" + pathname + url.search, request));
+      }
+      return dlNotFound(env, request);
     }
 
     if (isApiRequest(pathname) && env.API) {
@@ -617,6 +1063,6 @@ export default {
     }
 
     // Static site assets (HTML, CSS, JS) served from Cloudflare CDN
-    return env.ASSETS.fetch(request);
+    return fetchSiteAssets(env, request);
   },
 };

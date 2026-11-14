@@ -1,0 +1,797 @@
+/* ==========================================================================
+   Zyrex — Settings workspace
+   A dedicated layout for /settings: a sticky section rail plus stacked
+   panels. Everything below is token driven (--site-*, --accent), so the
+   Zyrex, Dark and Light themes all resolve without extra overrides.
+   ========================================================================== */
+
+.settings-page .zset-shell {
+    width: min(1240px, calc(100% - 40px));
+    margin: 118px auto 90px;
+    position: relative;
+    z-index: 1;
+}
+
+.zset-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Light pools sit behind the panels so the translucent surfaces have something
+   to pick up. They are drawn with soft radial gradients only: a real
+   filter/backdrop blur layer here produces the coloured edge fringing the
+   settings page must not have. */
+.settings-page .zset-shell::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 820px;
+    z-index: -1;
+    pointer-events: none;
+    background:
+        radial-gradient(closest-side at 22% 10%, color-mix(in srgb, var(--accent, #ff2b52) 26%, transparent), transparent 100%) 0 0 / 62% 62% no-repeat,
+        radial-gradient(closest-side at 82% 24%, color-mix(in srgb, var(--primary-light, #ff7d97) 18%, transparent), transparent 100%) 0 0 / 58% 58% no-repeat,
+        radial-gradient(closest-side at 52% 72%, color-mix(in srgb, var(--accent, #ff2b52) 14%, transparent), transparent 100%) 0 0 / 52% 52% no-repeat;
+}
+
+.settings-page .zset-shell::after {
+    content: "";
+    position: absolute;
+    inset: auto 0 0 0;
+    height: 560px;
+    z-index: -1;
+    pointer-events: none;
+    background:
+        radial-gradient(closest-side at 70% 46%, color-mix(in srgb, var(--accent, #ff2b52) 16%, transparent), transparent 100%) 100% 100% / 56% 56% no-repeat,
+        radial-gradient(closest-side at 26% 62%, color-mix(in srgb, var(--primary-light, #ff7d97) 12%, transparent), transparent 100%) 0 100% / 50% 50% no-repeat;
+}
+
+/* ----------------------------------------------------------- glass tokens
+   The workspace is a frosted sheet: translucent fills over the page aura,
+   gradient hairlines and a top sheen, so the panels read as liquid glass
+   instead of flat cards. No backdrop-filter: compositing a blur across these
+   large surfaces leaves hairline seams and coloured edge fringes. */
+.settings-page {
+    --zset-glass-edge: color-mix(in srgb, var(--site-text, #fff) 17%, transparent);
+    --zset-glass-sheen: radial-gradient(130% 90% at 12% -30%, rgba(255, 255, 255, .22), transparent 62%);
+    --zset-glass-tint: linear-gradient(152deg, rgba(255, 255, 255, .12) 0%, rgba(255, 255, 255, .025) 46%, rgba(255, 255, 255, .07) 100%);
+    --zset-glass-shadow: 0 26px 70px rgba(0, 0, 0, .34), inset 0 1px 0 rgba(255, 255, 255, .2);
+}
+
+/* ---------------------------------------------------------------- layout */
+.zset-layout {
+    display: grid;
+    grid-template-columns: 258px minmax(0, 1fr);
+    gap: 22px;
+    align-items: start;
+}
+
+/* ------------------------------------------------------------------ rail */
+.zset-rail {
+    position: sticky;
+    top: 96px;
+    padding: 16px;
+    border-radius: 26px;
+    border: 1px solid var(--zset-glass-edge, rgba(255, 255, 255, .15));
+    background: var(--zset-glass-tint, linear-gradient(152deg, rgba(255, 255, 255, .12), rgba(255, 255, 255, .04))),
+                color-mix(in srgb, var(--site-surface, #14111a) 62%, transparent);
+    box-shadow: var(--zset-glass-shadow, 0 20px 50px rgba(0, 0, 0, .22));
+}
+
+.zset-rail-label {
+    display: block;
+    padding: 4px 10px 12px;
+    color: var(--site-muted, #c3ccd9);
+    font-size: .64rem;
+    font-weight: 800;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+}
+
+.zset-nav { display: flex; flex-direction: column; gap: 6px; }
+
+.zset-nav-btn {
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid transparent;
+    border-radius: 14px;
+    background: transparent;
+    color: var(--site-muted, #c3ccd9);
+    font: inherit;
+    font-size: .87rem;
+    font-weight: 650;
+    text-align: left;
+    cursor: pointer;
+    transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
+
+.zset-nav-btn i {
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--site-text, #fff) 8%, transparent);
+    color: inherit;
+    font-size: .8rem;
+}
+
+.zset-nav-btn:hover { color: var(--site-text, #fff); background: color-mix(in srgb, var(--site-text, #fff) 6%, transparent); }
+
+.zset-nav-btn.active {
+    color: #fff;
+    background: var(--accent, #ff2b52);
+    border-color: transparent;
+    box-shadow: 0 10px 24px color-mix(in srgb, var(--accent, #ff2b52) 32%, transparent);
+}
+
+.zset-nav-btn.active i { background: rgba(255, 255, 255, .18); color: #fff; }
+
+.zset-rail-home {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding: 10px 12px;
+    color: var(--site-muted, #c3ccd9);
+    font-size: .78rem;
+    text-decoration: none;
+}
+
+.zset-rail-home:hover { color: var(--site-text, #fff); }
+
+/* ---------------------------------------------------------------- panels */
+.zset-panels { min-width: 0; }
+
+.zset-panel { display: none; }
+.zset-panel.active { display: block; animation: zsetPanelIn .32s ease both; }
+
+@keyframes zsetPanelIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.zset-card {
+    position: relative;
+    isolation: isolate;
+    padding: clamp(20px, 3vw, 30px);
+    margin-bottom: 18px;
+    border: 1px solid var(--zset-glass-edge, rgba(255, 255, 255, .15));
+    border-radius: 26px;
+    background: var(--zset-glass-tint, linear-gradient(152deg, rgba(255, 255, 255, .12), rgba(255, 255, 255, .04))),
+                color-mix(in srgb, var(--site-surface, #14111a) 62%, transparent);
+    box-shadow: var(--zset-glass-shadow, 0 22px 60px rgba(0, 0, 0, .28));
+}
+
+.zset-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: var(--zset-glass-sheen, radial-gradient(130% 90% at 12% -30%, rgba(255, 255, 255, .2), transparent 62%));
+    pointer-events: none;
+}
+
+.zset-card-head { display: flex; align-items: flex-start; gap: 13px; margin-bottom: 6px; }
+
+.zset-card-icon {
+    flex: none;
+    width: 40px;
+    height: 40px;
+    display: grid;
+    place-items: center;
+    border-radius: 13px;
+    background: color-mix(in srgb, var(--accent, #ff2b52) 14%, transparent);
+    color: var(--accent, #ff2b52);
+    font-size: .95rem;
+}
+
+.zset-card-head h2 {
+    margin: 0;
+    font-size: 1.12rem;
+    letter-spacing: -.02em;
+    color: var(--site-text, #fff);
+}
+
+.zset-card-head p {
+    margin: 4px 0 0;
+    color: var(--site-muted, #c3ccd9);
+    font-size: .84rem;
+    line-height: 1.55;
+}
+
+.zset-card-body { margin-top: 18px; }
+
+/* ---------------------------------------------------------------- pieces */
+.zset-profile { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; }
+
+.zset-profile-avatar {
+    position: relative;
+    flex: none;
+    width: 68px;
+    height: 68px;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border-radius: 50%;
+    border: 1px solid color-mix(in srgb, var(--accent, #ff2b52) 45%, transparent);
+    background: linear-gradient(145deg, color-mix(in srgb, var(--accent, #ff2b52) 22%, transparent), rgba(255, 255, 255, .05));
+    color: var(--site-text, #fff);
+    font-size: 1.05rem;
+    font-weight: 850;
+}
+
+.zset-profile-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+.zset-profile-copy { flex: 1; min-width: 200px; }
+.zset-profile-copy h3 { margin: 0 0 4px; font-size: 1.15rem; color: var(--site-text, #fff); }
+.zset-profile-copy p { margin: 0; color: var(--site-muted, #c3ccd9); font-size: .84rem; }
+
+.zset-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+
+.zset-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--site-text, #fff) 12%, transparent);
+    background: color-mix(in srgb, var(--site-text, #fff) 6%, transparent);
+    color: var(--site-muted, #c3ccd9);
+    font-size: .7rem;
+    font-weight: 700;
+}
+
+.zset-chip.is-accent {
+    border-color: color-mix(in srgb, var(--accent, #ff2b52) 45%, transparent);
+    background: color-mix(in srgb, var(--accent, #ff2b52) 14%, transparent);
+    color: var(--accent, #ff2b52);
+}
+
+.zset-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.zset-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 42px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    border: 1px solid var(--site-border, rgba(255, 255, 255, .14));
+    background: color-mix(in srgb, var(--site-text, #fff) 6%, transparent);
+    color: var(--site-text, #fff);
+    font: inherit;
+    font-size: .84rem;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform .18s ease, border-color .18s ease, background .18s ease;
+}
+
+.zset-btn:hover { transform: translateY(-1px); border-color: color-mix(in srgb, var(--accent, #ff2b52) 45%, transparent); }
+
+.zset-btn.is-primary {
+    border-color: transparent;
+    background: var(--accent, #ff2b52);
+    color: #fff;
+    box-shadow: 0 12px 26px color-mix(in srgb, var(--accent, #ff2b52) 30%, transparent);
+}
+
+.zset-btn.is-primary:hover { transform: translateY(-2px); }
+
+.zset-btn:disabled { opacity: .55; cursor: not-allowed; transform: none; }
+
+.zset-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+}
+
+.zset-stat {
+    padding: 16px;
+    border-radius: 18px;
+    border: 1px solid color-mix(in srgb, var(--site-text, #fff) 10%, transparent);
+    background: color-mix(in srgb, var(--site-text, #fff) 4%, transparent);
+}
+
+.zset-stat small {
+    display: block;
+    color: var(--site-muted, #c3ccd9);
+    font-size: .66rem;
+    font-weight: 800;
+    letter-spacing: .13em;
+    text-transform: uppercase;
+}
+
+.zset-stat strong { display: block; margin-top: 8px; font-size: 1.02rem; color: var(--site-text, #fff); overflow-wrap: anywhere; }
+
+.zset-progress {
+    height: 8px;
+    margin-top: 14px;
+    border-radius: 999px;
+    background: color-mix(in srgb, var(--site-text, #fff) 10%, transparent);
+    overflow: hidden;
+}
+
+.zset-progress span {
+    display: block;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--accent, #ff2b52);
+    transition: width .4s ease;
+}
+
+.zset-rows { display: flex; flex-direction: column; }
+
+.zset-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 16px;
+    padding: 13px 2px;
+    border-bottom: 1px solid color-mix(in srgb, var(--site-text, #fff) 8%, transparent);
+}
+
+.zset-row:last-child { border-bottom: 0; }
+.zset-row > div { min-width: 0; }
+.zset-row-title { display: block; color: var(--site-text, #fff); font-size: .88rem; font-weight: 700; }
+.zset-row-sub { display: block; margin-top: 3px; color: var(--site-muted, #c3ccd9); font-size: .78rem; overflow-wrap: anywhere; }
+
+.zset-empty {
+    padding: 26px 10px;
+    text-align: center;
+    color: var(--site-muted, #c3ccd9);
+    font-size: .85rem;
+}
+
+/* switches */
+.zset-switch { position: relative; flex: none; display: inline-flex; }
+.zset-switch input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+
+.zset-switch span {
+    width: 46px;
+    height: 26px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--site-text, #fff) 16%, transparent);
+    background: color-mix(in srgb, var(--site-text, #fff) 10%, transparent);
+    transition: background .2s ease, border-color .2s ease;
+    pointer-events: none;
+}
+
+.zset-switch span::after {
+    content: "";
+    display: block;
+    width: 20px;
+    height: 20px;
+    margin: 2px;
+    border-radius: 50%;
+    background: var(--site-text, #fff);
+    opacity: .85;
+    transition: transform .2s ease, background .2s ease, opacity .2s ease;
+}
+
+.zset-switch input:checked + span { background: var(--accent, #ff2b52); border-color: transparent; }
+.zset-switch input:checked + span::after { transform: translateX(20px); background: #fff; opacity: 1; }
+.zset-switch input:focus-visible + span { outline: 2px solid color-mix(in srgb, var(--accent, #ff2b52) 60%, transparent); outline-offset: 2px; }
+.zset-switch input:disabled + span { opacity: .55; }
+
+/* theme picker */
+.zset-themes { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+
+.zset-theme {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 16px;
+    border-radius: 18px;
+    border: 1px solid color-mix(in srgb, var(--site-text, #fff) 12%, transparent);
+    background: color-mix(in srgb, var(--site-text, #fff) 4%, transparent);
+    color: var(--site-text, #fff);
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    transition: border-color .18s ease, transform .18s ease;
+}
+
+.zset-theme:hover { transform: translateY(-2px); }
+.zset-theme.active { border-color: var(--accent, #ff2b52); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent, #ff2b52) 18%, transparent); }
+
+.zset-theme-swatches { display: flex; gap: 6px; }
+.zset-theme-swatches i { width: 22px; height: 22px; border-radius: 7px; display: block; }
+
+.zset-theme strong { font-size: .92rem; }
+.zset-theme-check { position: absolute; top: 12px; right: 12px; color: var(--accent, #ff2b52); opacity: 0; }
+.zset-theme.active .zset-theme-check { opacity: 1; }
+
+/* downloads */
+.zset-downloads { display: grid; grid-template-columns: repeat(auto-fill, minmax(158px, 1fr)); gap: 12px; }
+
+.zset-download {
+    display: block;
+    overflow: hidden;
+    border-radius: 16px;
+    border: 1px solid color-mix(in srgb, var(--site-text, #fff) 10%, transparent);
+    background: color-mix(in srgb, var(--site-text, #fff) 4%, transparent);
+    text-decoration: none;
+    transition: transform .18s ease, border-color .18s ease;
+}
+
+.zset-download:hover { transform: translateY(-2px); border-color: color-mix(in srgb, var(--accent, #ff2b52) 45%, transparent); }
+
+.zset-download-thumb {
+    display: grid;
+    place-items: center;
+    aspect-ratio: 16 / 10;
+    overflow: hidden;
+    background: color-mix(in srgb, var(--accent, #ff2b52) 16%, transparent);
+    color: var(--site-muted, #c3ccd9);
+}
+
+.zset-download-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.zset-download-meta { padding: 10px 12px; }
+.zset-download-meta strong { display: block; color: var(--site-text, #fff); font-size: .78rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.zset-download-meta small { display: block; margin-top: 4px; color: var(--site-muted, #c3ccd9); font-size: .68rem; }
+
+/* fields */
+.zset-field { display: block; margin-top: 14px; }
+.zset-field > span { display: block; margin-bottom: 7px; color: var(--site-muted, #c3ccd9); font-size: .74rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+
+.zset-field textarea,
+.zset-field input {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid var(--site-border, rgba(255, 255, 255, .14));
+    background: color-mix(in srgb, var(--site-text, #fff) 5%, transparent);
+    color: var(--site-text, #fff);
+    font: inherit;
+    font-size: .88rem;
+    resize: vertical;
+}
+
+.zset-field textarea:focus,
+.zset-field input:focus { outline: none; border-color: color-mix(in srgb, var(--accent, #ff2b52) 55%, transparent); }
+.zset-field ::placeholder { color: var(--site-muted, #c3ccd9); opacity: .75; }
+
+/* followed profiles */
+.zset-follows { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+
+.zset-follow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border-radius: 16px;
+    border: 1px solid color-mix(in srgb, var(--site-text, #fff) 9%, transparent);
+    background: color-mix(in srgb, var(--site-text, #fff) 4%, transparent);
+}
+
+.zset-follow-avatar {
+    position: relative;
+    flex: none;
+    width: 34px;
+    height: 34px;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--site-text, #fff) 10%, transparent);
+    color: var(--site-muted, #c3ccd9);
+    font-size: .72rem;
+}
+
+.zset-follow-avatar img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.zset-follow-copy { flex: 1; min-width: 0; }
+.zset-follow-copy strong { display: block; color: var(--site-text, #fff); font-size: .84rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.zset-follow-copy small { display: block; margin-top: 2px; color: var(--site-muted, #c3ccd9); font-size: .72rem; }
+
+/* admin cards */
+.zset-admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; }
+
+.zset-admin-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 18px;
+    border: 1px solid color-mix(in srgb, var(--site-text, #fff) 10%, transparent);
+    background: color-mix(in srgb, var(--site-text, #fff) 4%, transparent);
+    text-decoration: none;
+    transition: transform .18s ease, border-color .18s ease, background .18s ease;
+}
+
+.zset-admin-card:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--accent, #ff2b52) 45%, transparent);
+    background: color-mix(in srgb, var(--accent, #ff2b52) 8%, transparent);
+}
+
+.zset-admin-icon {
+    flex: none;
+    width: 38px;
+    height: 38px;
+    display: grid;
+    place-items: center;
+    border-radius: 12px;
+    background: color-mix(in srgb, var(--accent, #ff2b52) 14%, transparent);
+    color: var(--accent, #ff2b52);
+}
+
+.zset-admin-card strong { display: block; color: var(--site-text, #fff); font-size: .88rem; }
+.zset-admin-card small { display: block; margin-top: 4px; color: var(--site-muted, #c3ccd9); font-size: .76rem; line-height: 1.45; }
+.zset-admin-card > i { margin-left: auto; color: var(--site-muted, #c3ccd9); font-size: .74rem; }
+
+/* status line */
+.zset-status { min-height: 20px; margin-top: 12px; color: var(--site-muted, #c3ccd9); font-size: .8rem; }
+.zset-status.ok { color: #34d399; }
+.zset-status.bad { color: #f87171; }
+
+/* Invite watch: the live Discord link plus a manual rotate for the founder. */
+.zset-invite {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 14px;
+    padding: 14px 16px;
+    border: 1px solid var(--site-line, rgba(255, 255, 255, .09));
+    border-radius: 16px;
+    background: var(--site-surface-2, rgba(255, 255, 255, .035));
+}
+
+.zset-invite[hidden] { display: none; }
+
+.zset-invite-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.zset-invite-icon {
+    display: grid;
+    place-items: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 11px;
+    border: 1px solid var(--site-line, rgba(255, 255, 255, .09));
+    background: rgba(88, 101, 242, .16);
+    color: #8f9bff;
+    font-size: .95rem;
+}
+
+.zset-invite-copy { display: flex; flex-direction: column; gap: 2px; }
+.zset-invite-copy strong { color: var(--site-text, #fff); font-size: .86rem; }
+.zset-invite-copy small { color: var(--site-muted, #c3ccd9); font-size: .76rem; }
+
+.zset-invite-chip {
+    margin-left: auto;
+    padding: 3px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, .16);
+    color: var(--site-muted, #c3ccd9);
+    font-size: .7rem;
+    font-weight: 800;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+}
+
+.zset-invite-chip.is-accepted { border-color: rgba(52, 211, 153, .45); color: #34d399; }
+.zset-invite-chip.is-rejected { border-color: rgba(255, 113, 136, .45); color: #ff7188; }
+
+.zset-invite-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.zset-invite-actions .zset-btn[hidden] { display: none; }
+
+html[data-zyrex-theme="light"] body .zset-invite {
+    border-color: rgba(21, 45, 90, .14);
+    background: rgba(255, 255, 255, .9);
+}
+
+html[data-zyrex-theme="light"] body .zset-invite-copy strong { color: #122a52; }
+html[data-zyrex-theme="light"] body .zset-invite-copy small { color: #46618f; }
+html[data-zyrex-theme="light"] body .zset-invite-chip { border-color: rgba(21, 45, 90, .18); color: #46618f; }
+html[data-zyrex-theme="light"] body .zset-invite-chip.is-accepted { border-color: rgba(4, 120, 87, .4); color: #04624a; }
+html[data-zyrex-theme="light"] body .zset-invite-chip.is-rejected { border-color: rgba(179, 34, 60, .4); color: #b3223c; }
+html[data-zyrex-theme="light"] body .zset-invite-icon { background: rgba(27, 79, 168, .10); color: #1b4fa8; }
+
+.zset-note {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid color-mix(in srgb, var(--site-text, #fff) 10%, transparent);
+    background: color-mix(in srgb, var(--site-text, #fff) 4%, transparent);
+    color: var(--site-muted, #c3ccd9);
+    font-size: .78rem;
+    line-height: 1.5;
+}
+
+.zset-note i { color: var(--accent, #ff2b52); margin-top: 2px; }
+.zset-note a { color: var(--accent, #ff2b52); font-weight: 700; }
+
+/* ----------------------------------------------------------- guest lock */
+.zset-panel.is-locked > .zset-card:not(.zset-lock) { display: none; }
+
+.zset-lock {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 18px;
+}
+
+.zset-lock-icon {
+    flex: none;
+    width: 46px;
+    height: 46px;
+    display: grid;
+    place-items: center;
+    border-radius: 15px;
+    background: color-mix(in srgb, var(--accent, #ff2b52) 16%, transparent);
+    color: var(--accent, #ff2b52);
+    font-size: 1rem;
+}
+
+.zset-lock-copy { flex: 1; min-width: 220px; }
+.zset-lock-copy h2 { margin: 0 0 6px; color: var(--site-text, #fff); font-size: 1.16rem; }
+.zset-lock-copy p { margin: 0; color: var(--site-muted, #c3ccd9); font-size: .86rem; line-height: 1.6; }
+.zset-lock > .zset-btn { flex: none; white-space: nowrap; }
+
+/* Accent fills become white in the Dark theme, so the ink has to flip with
+   them or the label disappears into the pill. */
+html[data-zyrex-theme="dark"] body :is(.zset-nav-btn.active, .zset-btn.is-primary) {
+    color: #0a0a0a !important;
+}
+
+html[data-zyrex-theme="dark"] body :is(.zset-nav-btn.active, .zset-btn.is-primary) :is(i, svg, span, strong) {
+    color: inherit !important;
+}
+
+html[data-zyrex-theme="dark"] body .zset-nav-btn.active i { background: rgba(0, 0, 0, .14); }
+
+html[data-zyrex-theme="dark"] body .zset-switch input:checked + span::after { background: #0a0a0a; }
+
+/* The light theme sits on white cards, so the status colours need real depth. */
+html[data-zyrex-theme="light"] body .zset-status.ok { color: #0f7a4f; }
+html[data-zyrex-theme="light"] body .zset-status.bad { color: #b3261e; }
+
+/* Daylight glass: bright, slightly milky panes with blue-tinted hairlines. */
+html[data-zyrex-theme="light"] body.settings-page {
+    --zset-glass-edge: rgba(21, 45, 90, .16);
+    --zset-glass-sheen: radial-gradient(130% 90% at 12% -30%, rgba(255, 255, 255, .98), transparent 64%);
+    --zset-glass-tint: linear-gradient(152deg, rgba(255, 255, 255, .9) 0%, rgba(255, 255, 255, .58) 46%, rgba(233, 240, 251, .74) 100%);
+    --zset-glass-shadow: 0 26px 60px rgba(31, 52, 92, .16), inset 0 1px 0 rgba(255, 255, 255, .95);
+}
+
+/* The crimson pools would read as a blush on the bright theme, so the daylight
+   version refracts a blue wash instead. */
+html[data-zyrex-theme="light"] body.settings-page .zset-shell::before {
+    background:
+        radial-gradient(closest-side at 22% 10%, rgba(37, 84, 168, .16), transparent 100%) 0 0 / 62% 62% no-repeat,
+        radial-gradient(closest-side at 82% 24%, rgba(94, 140, 235, .13), transparent 100%) 0 0 / 58% 58% no-repeat,
+        radial-gradient(closest-side at 52% 72%, rgba(37, 84, 168, .08), transparent 100%) 0 0 / 52% 52% no-repeat;
+}
+
+html[data-zyrex-theme="light"] body.settings-page .zset-shell::after {
+    background:
+        radial-gradient(closest-side at 70% 46%, rgba(37, 84, 168, .1), transparent 100%) 100% 100% / 56% 56% no-repeat,
+        radial-gradient(closest-side at 26% 62%, rgba(94, 140, 235, .08), transparent 100%) 0 100% / 50% 50% no-repeat;
+}
+
+/* ------------------------------------------------------------ responsive */
+@media (max-width: 980px) {
+    .zset-layout { grid-template-columns: 1fr; }
+    .zset-rail { position: static; }
+    .zset-nav { flex-direction: row; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; }
+    .zset-nav::-webkit-scrollbar { display: none; }
+    .zset-nav-btn { width: auto; flex: none; white-space: nowrap; }
+    .zset-rail-home { display: none; }
+    .zset-rail-label { display: none; }
+}
+
+@media (max-width: 620px) {
+    .settings-page .zset-shell { width: calc(100% - 24px); margin-top: 96px; }
+    .zset-card { padding: 18px; border-radius: 20px; }
+    .settings-page .zset-rail { min-width: 0; padding: 12px; }
+    .settings-page .zset-nav { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; overflow: visible; padding: 0; }
+    .settings-page .zset-nav-btn { display: flex; min-width: 0; width: 100%; min-height: 60px; flex: none; flex-direction: column; justify-content: center; gap: 5px; padding: 7px 4px; border-radius: 12px; white-space: normal; text-align: center; }
+    .settings-page .zset-nav-btn span { display: block; min-width: 0; max-width: 100%; font-size: .62rem; line-height: 1.15; overflow-wrap: anywhere; }
+    .settings-page .zset-nav-btn i { width: auto; height: auto; font-size: .9rem; }
+    .settings-page .zset-nav-btn::after { display: none; }
+    .zset-profile { gap: 14px; }
+    .zset-actions { width: 100%; }
+    .zset-actions .zset-btn { flex: 1; }
+}
+
+/* ── Staff application ──────────────────────────────────────────────────── */
+.zset-staff-roles {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.zset-staff-role {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px 14px;
+    border: 1px solid color-mix(in srgb, var(--site-text, #fff) 12%, transparent);
+    border-radius: 14px;
+    background: color-mix(in srgb, var(--site-text, #fff) 5%, transparent);
+    color: inherit;
+    text-decoration: none;
+    transition: border-color .18s ease, background .18s ease;
+}
+
+a.zset-staff-role:hover {
+    border-color: color-mix(in srgb, var(--accent, #ff2b52) 45%, transparent);
+    background: color-mix(in srgb, var(--accent, #ff2b52) 8%, transparent);
+}
+
+.zset-staff-role strong { display: block; color: var(--site-text); font-size: .84rem; }
+.zset-staff-role small { color: var(--site-muted, #9aa0ae); font-size: .74rem; line-height: 1.5; }
+.zset-staff-role-copy { flex: 1 1 auto; min-width: 0; }
+.zset-staff-role .zset-staff-chip { align-self: center; }
+
+.zset-staff-role-icon {
+    display: grid;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    flex: 0 0 auto;
+    border-radius: 10px;
+    border: 1px solid color-mix(in srgb, var(--accent, #ff2b52) 40%, transparent);
+    background: color-mix(in srgb, var(--accent, #ff2b52) 14%, transparent);
+    color: var(--accent, #ff2b52);
+    font-size: .78rem;
+}
+
+.zset-staff-row { align-items: flex-start; }
+
+.zset-staff-chip {
+    flex: 0 0 auto;
+    padding: 4px 10px;
+    border-radius: 999px;
+    border: 1px solid color-mix(in srgb, var(--site-text, #fff) 14%, transparent);
+    font-size: .66rem;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--site-muted, #9aa0ae);
+}
+
+.zset-staff-chip.is-accepted {
+    color: #34d399;
+    border-color: color-mix(in srgb, #34d399 45%, transparent);
+    background: color-mix(in srgb, #34d399 14%, transparent);
+}
+
+.zset-staff-chip.is-rejected,
+.zset-staff-chip.is-withdrawn {
+    color: #ff7188;
+    border-color: color-mix(in srgb, #ff7188 42%, transparent);
+    background: color-mix(in srgb, #ff7188 12%, transparent);
+}
+
+html[data-zyrex-theme="light"] .zset-staff-chip.is-accepted { color: #04624a; }
+html[data-zyrex-theme="light"] .zset-staff-chip.is-rejected,
+html[data-zyrex-theme="light"] .zset-staff-chip.is-withdrawn { color: #b3223c; }
+
+.zset-staff-note { flex: 1 1 100%; color: var(--site-muted, #9aa0ae); font-size: .74rem; line-height: 1.5; }
+
+@media (max-width: 620px) {
+    .zset-staff-roles { grid-template-columns: 1fr; }
+}

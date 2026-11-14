@@ -3,20 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Free editing audios and stuff for video edits.">
     <title>Zyrex | Editing Audios</title>
     <link rel="icon" type="image/png" href="/assets/content.png">
-    <link rel="stylesheet" href="css/style.css?v=26">
+    <link rel="stylesheet" href="css/style.css?v=92">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,800,900&amp;display=swap">
     <style>
         :root {
-            --cherry: #ff2b52;
-            --cherry-light: #ff6b85;
-            --cherry-dark: #c8002a;
+            --cherry: var(--zr-accent, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1));
+            --cherry-light: rgba(var(--zr-rgb-255-107-133, 255, 107, 133), 1);
+            --cherry-dark: rgba(var(--zr-rgb-200-0-42, 200, 0, 42), 1);
             --dark-bg: #070209;
             --sp-card-bg: rgba(18, 10, 22, 0.65);
             --sp-row-hover: rgba(255, 255, 255, 0.06);
-            --sp-row-active: rgba(255, 43, 82, 0.12);
+            --sp-row-active: rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.12);
             --sp-border: rgba(255, 255, 255, 0.08);
             --text-muted: rgba(255, 255, 255, 0.55);
             --text-faint: rgba(255, 255, 255, 0.35);
@@ -25,7 +26,7 @@
         body {
             background: var(--dark-bg);
             color: #f8f5f6;
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            font-family: 'Satoshi', sans-serif;
             min-height: 100vh;
             overflow-x: hidden;
             padding-bottom: 110px; /* Space for sticky bottom player */
@@ -37,8 +38,8 @@
             z-index: 0;
             pointer-events: none;
             background:
-                radial-gradient(circle at 15% 10%, rgba(255, 43, 82, 0.14) 0%, transparent 45%),
-                radial-gradient(circle at 85% 70%, rgba(130, 0, 45, 0.10) 0%, transparent 40%),
+                radial-gradient(circle at 15% 10%, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.14) 0%, transparent 45%),
+                radial-gradient(circle at 85% 70%, rgba(var(--zr-rgb-130-0-45, 130, 0, 45), 0.10) 0%, transparent 40%),
                 radial-gradient(circle at 50% 100%, rgba(50, 0, 20, 0.08) 0%, transparent 50%);
         }
 
@@ -57,7 +58,7 @@
             padding: 32px 36px;
             margin-bottom: 28px;
             border-radius: 24px;
-            background: linear-gradient(180deg, rgba(255, 43, 82, 0.10) 0%, rgba(14, 8, 18, 0.7) 100%);
+            background: linear-gradient(180deg, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.10) 0%, rgba(14, 8, 18, 0.7) 100%);
             border: 1px solid var(--sp-border);
             backdrop-filter: blur(28px);
             -webkit-backdrop-filter: blur(28px);
@@ -70,15 +71,15 @@
             position: absolute;
             top: 0; left: 0; right: 0;
             height: 2px;
-            background: linear-gradient(90deg, transparent, rgba(255, 43, 82, 0.6), transparent);
+            background: linear-gradient(90deg, transparent, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.6), transparent);
         }
         .sp-cover-box {
             width: 192px;
             height: 192px;
             border-radius: 16px;
             background: linear-gradient(135deg, #1f0a14, #0b0308);
-            border: 1px solid rgba(255, 43, 82, 0.25);
-            box-shadow: 0 16px 38px rgba(0, 0, 0, 0.7), 0 0 30px rgba(255, 43, 82, 0.18);
+            border: 1px solid rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.25);
+            box-shadow: 0 16px 38px rgba(0, 0, 0, 0.7), 0 0 30px rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.18);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -114,7 +115,7 @@
         .sp-header-title {
             font-size: clamp(2.2rem, 4.5vw, 3.8rem);
             font-weight: 900;
-            font-family: 'Outfit', sans-serif;
+            font-family: 'Satoshi', sans-serif;
             letter-spacing: -1px;
             line-height: 1.05;
             color: #ffffff;
@@ -173,7 +174,7 @@
             width: 56px;
             height: 56px;
             border-radius: 50%;
-            background: linear-gradient(135deg, #ff2b52, #c8002a);
+            background: linear-gradient(135deg, var(--zr-accent, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1)), rgba(var(--zr-rgb-200-0-42, 200, 0, 42), 1));
             border: none;
             color: #ffffff;
             font-size: 1.3rem;
@@ -181,14 +182,14 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            box-shadow: 0 8px 24px rgba(255, 43, 82, 0.45);
+            box-shadow: 0 8px 24px rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.45);
             transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
             outline: none;
         }
         .btn-spotify-play:hover {
             transform: scale(1.08);
-            background: linear-gradient(135deg, #ff456a, #e00032);
-            box-shadow: 0 12px 30px rgba(255, 43, 82, 0.65);
+            background: linear-gradient(135deg, rgba(var(--zr-rgb-255-69-106, 255, 69, 106), 1), rgba(var(--zr-rgb-224-0-50, 224, 0, 50), 1));
+            box-shadow: 0 12px 30px rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.65);
         }
         .btn-spotify-play i {
             margin-left: 2px;
@@ -218,8 +219,8 @@
         }
         .btn-spotify-icon.active {
             color: var(--cherry-light);
-            border-color: rgba(255, 43, 82, 0.4);
-            background: rgba(255, 43, 82, 0.12);
+            border-color: rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.4);
+            background: rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.12);
         }
 
         .sp-action-right {
@@ -261,8 +262,8 @@
         }
         .sp-search-box input:focus {
             background: rgba(255, 255, 255, 0.08);
-            border-color: rgba(255, 43, 82, 0.5);
-            box-shadow: 0 0 0 3px rgba(255, 43, 82, 0.15);
+            border-color: rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.5);
+            box-shadow: 0 0 0 3px rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.15);
         }
         .sp-search-box input::placeholder {
             color: var(--text-faint);
@@ -444,8 +445,8 @@
             width: 42px;
             height: 42px;
             border-radius: 8px;
-            background: rgba(255, 43, 82, 0.12);
-            border: 1px solid rgba(255, 43, 82, 0.2);
+            background: rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.12);
+            border: 1px solid rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.2);
             display: flex;
             align-items: center;
             justify-content: center;
@@ -498,9 +499,9 @@
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            background: rgba(255, 43, 82, 0.12);
+            background: rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.12);
             color: var(--cherry-light);
-            border: 1px solid rgba(255, 43, 82, 0.25);
+            border: 1px solid rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.25);
         }
 
         /* Uploader Cell */
@@ -515,8 +516,8 @@
             height: 26px;
             border-radius: 50%;
             object-fit: cover;
-            border: 1px solid rgba(255, 43, 82, 0.4);
-            background: rgba(0,0,0,0.4);
+            border: 1px solid rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.4);
+            background: rgba(0, 0, 0, 0.4);
             flex-shrink: 0;
         }
         .sp-uploader-name {
@@ -530,7 +531,7 @@
         /* Downloads Cell */
         .sp-dl-cell {
             text-align: right;
-            font-family: 'Outfit', monospace;
+            font-family: 'Satoshi', sans-serif;
             font-size: 0.82rem;
             color: var(--text-muted);
             font-weight: 600;
@@ -609,7 +610,7 @@
             height: 52px;
             border-radius: 8px;
             background: #180a14;
-            border: 1px solid rgba(255, 43, 82, 0.3);
+            border: 1px solid rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.3);
             overflow: hidden;
             display: flex;
             align-items: center;
@@ -698,7 +699,7 @@
             background: var(--cherry-light);
             color: #ffffff;
             transform: scale(1.1);
-            box-shadow: 0 6px 18px rgba(255, 43, 82, 0.5);
+            box-shadow: 0 6px 18px rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.5);
         }
         .sp-ctrl-play i {
             margin-left: 2px;
@@ -753,7 +754,7 @@
             height: 10px;
             border-radius: 50%;
             background: #ffffff;
-            box-shadow: 0 0 6px rgba(0,0,0,0.5);
+            box-shadow: 0 0 6px rgba(0, 0, 0, 0.5);
             opacity: 0;
             transition: opacity 0.15s ease;
             pointer-events: none;
@@ -885,9 +886,17 @@
             .sp-player-left { width: 48%; }
         }
     </style>
+    <link rel="stylesheet" href="/css/glass.css?v=67">
+    <link rel="stylesheet" href="/css/atmosphere.css?v=7">
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.fontshare.com">
+    <link rel="stylesheet" href="/css/i18n.css?v=3">
+    <script src="/js/i18n.js?v=15" defer></script>
 </head>
 <body>
-    <div class="bg-aura"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
+    <div class="zr-sweep" aria-hidden="true"></div>
+    <div class="lq-veil" aria-hidden="true"></div>
     
     <!-- Top Navbar -->
     <nav class="navbar">
@@ -895,15 +904,16 @@
             <a href="/" class="logo"><img src="assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a>
             <ul class="nav-links" id="navLinks">
                 <li><a href="/">Home</a></li>
-                <li><a href="/resources">Resources</a></li>
+                <li><a href="/leaks">Leaks</a></li>
+                <li><a href="/feed">Feed</a></li>
                 <li><a href="/plugins">Plugins</a></li>
                 <li><a href="/requests">Requests</a></li>
-                <li><a href="/more">More</a></li>
-                <li><a href="/#contact">Contact</a></li>
+                <li><a href="/audio">Audios</a></li>
+                
             </ul>
             <div class="nav-actions">
                 <div id="authBtn"></div>
-                <button class="hamburger" id="hamburger" aria-label="Toggle navigation"><span></span><span></span><span></span></button>
+                <button class="hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
             </div>
         </div>
     </nav>
@@ -1040,16 +1050,17 @@
                             <span class="hero-brand-sub">EDITING</span>
                         </div>
                     </a>
-                    <p>Premium editing community &amp; resources.</p>
+                    <p>Editing leaks and stuff.</p>
                 </div>
                 <div class="footer-links">
                     <h4>Quick Links</h4>
                     <ul>
                         <li><a href="/">Home</a></li>
-                        <li><a href="/resources">Resources</a></li>
+                        <li><a href="/leaks">Leaks</a></li>
+                <li><a href="/feed">Feed</a></li>
                         <li><a href="/plugins">Plugins</a></li>
                         <li><a href="/requests">Requests</a></li>
-                        <li><a href="/more">More</a></li>
+                        <li><a href="/audio">Audios</a></li>
                     </ul>
                 </div>
                 <div class="footer-links">
@@ -1063,17 +1074,9 @@
                 <div class="footer-links">
                     <h4>Community</h4>
                     <ul>
-                        <li><a href="https://discord.gg/fAydSzpafA" target="_blank" rel="noopener">Discord</a></li>
+                        <li><a href="https://discord.gg/4J3tars4QS" target="_blank" rel="noopener">Discord</a></li>
                         <li><a href="/#contact">Contact</a></li>
                     </ul>
-                </div>
-                <div class="footer-newsletter">
-                    <h4>Newsletter</h4>
-                    <p>Stay updated with Zyrex Editing.</p>
-                    <div class="newsletter-form">
-                        <input type="email" placeholder="Your email">
-                        <button type="submit" aria-label="Subscribe"><i class="fas fa-arrow-right"></i></button>
-                    </div>
                 </div>
             </div>
             <div class="footer-bottom">
@@ -1083,8 +1086,8 @@
     </footer>
 
     <script src="/js/chunks/chunk-store.js?v=1"></script>
-    <script src="js/auth.js?v=13"></script>
-    <script src="js/script.js?v=5"></script>
+    <script src="js/auth.js?v=19"></script>
+    <script src="js/script.js?v=92"></script>
     <script>
         // Data & State
         var allAudio = [];
@@ -1114,6 +1117,12 @@
 
         // Discord Avatar Fetcher
         async function fetchUploaderDiscordAvatar(uploaderId, fallbackHashOrUrl) {
+            var resolver = window.ZyrexProfile || null;
+
+            if (uploaderId && resolver) {
+                var shared = resolver.cachedAvatar(uploaderId);
+                if (shared) return shared;
+            }
             if (uploaderId && discordAvatarCache[uploaderId]) {
                 return discordAvatarCache[uploaderId];
             }
@@ -1135,6 +1144,7 @@
                             }
                             if (avUrl) {
                                 discordAvatarCache[uploaderId] = avUrl;
+                                if (resolver) resolver.rememberAvatar(uploaderId, avUrl);
                             }
                             var liveName = json.user.display_name || json.user.global_name || json.user.username;
                             if (liveName) {
@@ -1148,13 +1158,21 @@
                 } catch(e) {}
             }
 
+            if (resolver) {
+                var stored = resolver.avatarUrl(fallbackHashOrUrl, uploaderId)
+                    || resolver.defaultDiscordAvatar(uploaderId)
+                    || 'https://cdn.discordapp.com/embed/avatars/0.png';
+                if (fallbackHashOrUrl) resolver.rememberAvatar(uploaderId, stored);
+                return stored;
+            }
+
             if (fallbackHashOrUrl) {
                 if (fallbackHashOrUrl.startsWith('http')) {
                     if (uploaderId) discordAvatarCache[uploaderId] = fallbackHashOrUrl;
                     return fallbackHashOrUrl;
                 }
-                var ext = fallbackHashOrUrl.startsWith('a_') ? 'gif' : 'png';
-                var uUrl = 'https://cdn.discordapp.com/avatars/' + (uploaderId || '0') + '/' + fallbackHashOrUrl + '.' + ext + '?size=128';
+                var bareExt = fallbackHashOrUrl.startsWith('a_') ? 'gif' : 'png';
+                var uUrl = 'https://cdn.discordapp.com/avatars/' + (uploaderId || '0') + '/' + fallbackHashOrUrl + '.' + bareExt + '?size=128';
                 if (uploaderId) discordAvatarCache[uploaderId] = uUrl;
                 return uUrl;
             }
@@ -1279,13 +1297,20 @@
                     ? '<span class="sp-genre-pill">' + escapeHtml(labelMap[cats[0].trim().toLowerCase()] || cats[0].trim()) + '</span>'
                     : '<span class="sp-genre-pill">Audio</span>';
 
-                var discordIdMatch = (track.creator_avatar || track.uploader_avatar || '').match(/\/avatars\/(\d{17,20})\//);
-                var extractedDiscordId = discordIdMatch ? discordIdMatch[1] : '';
+                var profile = (window.ZyrexProfile && window.ZyrexProfile.forProduct)
+                    ? window.ZyrexProfile.forProduct(track)
+                    : null;
 
                 var artist = (track.creator_nickname || track.creator_username || 'Zyrex Sound').trim();
-                var uploaderName = (track.uploader_name || track.creator_nickname || track.author_name || 'Community').trim();
-                var uploaderId = (track.uploader_id || extractedDiscordId || track.author_id || '').trim();
-                var fallbackAv = (track.uploader_avatar || track.creator_avatar || track.author_avatar || '').trim();
+                var uploaderName = profile
+                    ? profile.uploaderName
+                    : (track.uploader_name || track.creator_nickname || track.author_name || 'Community').trim();
+                var uploaderId = profile
+                    ? profile.uploaderId
+                    : (track.uploader_id || track.author_id || '').trim();
+                var avatarSrc = track.is_anonymous
+                    ? (window.ANONYMOUS_AVATAR || window.DEFAULT_AVATAR || '/assets/default-avatar.png')
+                    : ((profile && profile.uploaderAvatar) || window.DEFAULT_AVATAR || 'https://cdn.discordapp.com/embed/avatars/0.png');
 
                 var dlCount = (track.downloads || 0).toLocaleString();
 
@@ -1309,7 +1334,7 @@
                     '<td>' + catPill + '</td>' +
                     '<td>' +
                         '<div class="sp-uploader-cell-wrap">' +
-                            '<img class="sp-uploader-avatar" data-uploader-id="' + uploaderId + '" data-fallback="' + fallbackAv + '" src="https://cdn.discordapp.com/embed/avatars/0.png" alt="">' +
+                            '<img class="sp-uploader-avatar" data-uploader-id="' + uploaderId + '" data-fallback="' + avatarSrc + '" src="' + avatarSrc + '" alt="" onerror="window.handleAvatarError(this)">' +
                             '<span class="sp-uploader-name" data-uploader-id="' + uploaderId + '">' + escapeHtml(uploaderName) + '</span>' +
                         '</div>' +
                     '</td>' +
@@ -1649,5 +1674,6 @@
             }
         });
     </script>
+    <script src="/js/page-motion.js?v=6"></script>
 </body>
 </html>

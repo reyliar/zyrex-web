@@ -7,37 +7,43 @@
     <meta name="description" content="Fix Red Giant, Universe, and Trapcode plugin issues in After Effects — missing effects, license errors, and service problems.">
     <title>Maxon (Red Giant) Fixes — Zyrex</title>
     <link rel="icon" type="image/png" href="/assets/content.png">
-    <link rel="stylesheet" href="/css/style.css?v=24">
+    <link rel="stylesheet" href="/css/style.css?v=92">
+<link rel="stylesheet" href="/css/glass.css?v=53">
+<link rel="stylesheet" href="/css/atmosphere.css?v=7">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,800,900&amp;display=swap">
     <style>
-        :root { --cherry-glow: rgba(230,21,54,0.15); --card-bg: rgba(12,2,4,0.45); --card-border: rgba(230,21,54,0.08); --card-hover-border: rgba(230,21,54,0.22); --transition: all 0.3s cubic-bezier(0.16,1,0.3,1); }
-        body { background: var(--dark); color: var(--light); font-family: 'Poppins', sans-serif; min-height: 100vh; overflow-x: hidden; }
+        :root { --cherry-glow: rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.15); --card-bg: rgba(12, 2, 4, 0.45); --card-border: rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.08); --card-hover-border: rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.22); --transition: all 0.3s cubic-bezier(0.16,1,0.3,1); }
+        body { background: var(--dark); color: var(--light); font-family: 'Satoshi', sans-serif; min-height: 100vh; overflow-x: hidden; }
         .container { max-width: 860px; margin: 0 auto; padding: 0 24px; }
         .page-wrap { padding: 150px 0 80px; }
         .breadcrumb { text-align: center; margin-bottom: 24px; font-size: 0.78rem; }
         .breadcrumb a { color: var(--gray-dark); text-decoration: none; } .breadcrumb a:hover { color: var(--cherry-light); } .breadcrumb span { color: var(--gray-dark); margin: 0 8px; }
-        .guide-card { background: linear-gradient(160deg, rgba(30,4,10,0.55), rgba(10,2,4,0.85)); border: 1px solid var(--card-border); border-radius: 24px; padding: 44px 40px; backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); box-shadow: 0 30px 60px rgba(0,0,0,0.6); }
-        .guide-card h1 { font-size: clamp(1.8rem, 4vw, 2.3rem); font-weight: 900; font-family: 'Outfit', sans-serif; margin: 0 0 8px; display: flex; align-items: center; gap: 12px; }
-        .guide-card .sub { color: var(--gray); font-size: 0.95rem; margin-bottom: 32px; line-height: 1.6; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 20px; }
-        .guide-card h2 { font-size: 1.15rem; font-weight: 800; font-family: 'Outfit', sans-serif; color: var(--cherry-light); margin: 32px 0 12px; padding-left: 14px; border-left: 3px solid var(--cherry); }
+        .guide-card { background: linear-gradient(160deg, rgba(30, 4, 10, 0.55), rgba(10, 2, 4, 0.85)); border: 1px solid var(--card-border); border-radius: 24px; padding: 44px 40px; backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6); }
+        .guide-card h1 { font-size: clamp(1.8rem, 4vw, 2.3rem); font-weight: 900; font-family: 'Satoshi', sans-serif; margin: 0 0 8px; display: flex; align-items: center; gap: 12px; }
+        .guide-card .sub { color: var(--gray); font-size: 0.95rem; margin-bottom: 32px; line-height: 1.6; border-bottom: 1px solid rgba(255, 255, 255, 0.05); padding-bottom: 20px; }
+        .guide-card h2 { font-size: 1.15rem; font-weight: 800; font-family: 'Satoshi', sans-serif; color: var(--cherry-light); margin: 32px 0 12px; padding-left: 14px; border-left: 3px solid var(--cherry); }
         .guide-card h3 { font-size: 0.95rem; font-weight: 700; color: var(--light); margin: 20px 0 8px; }
         .guide-card p, .guide-card li { color: var(--gray); font-size: 0.88rem; line-height: 1.85; }
         .guide-card ul, .guide-card ol { padding-left: 20px; margin: 8px 0 16px; }
-        .guide-card code { background: rgba(230,21,54,0.08); padding: 2px 7px; border-radius: 5px; font-size: 0.82rem; color: var(--cherry-light); }
-        .guide-card .note { background: rgba(230,21,54,0.04); border: 1px solid rgba(230,21,54,0.1); border-radius: 12px; padding: 14px 18px; margin: 16px 0; font-size: 0.84rem; }
+        .guide-card code { background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.08); padding: 2px 7px; border-radius: 5px; font-size: 0.82rem; color: var(--cherry-light); }
+        .guide-card .note { background: rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.04); border: 1px solid rgba(var(--zr-rgb-230-21-54, 230, 21, 54),0.1); border-radius: 12px; padding: 14px 18px; margin: 16px 0; font-size: 0.84rem; }
         .guide-card .note i { color: var(--cherry-light); margin-right: 6px; }
         @media(max-width: 768px) { .guide-card { padding: 28px 18px; } .page-wrap { padding-top: 120px; } }
     </style>
+    <link rel="stylesheet" href="/css/i18n.css?v=3">
+    <script src="/js/i18n.js?v=15" defer></script>
 </head>
 <body>
-<div class="bg-aura"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
+    <div class="zr-sweep" aria-hidden="true"></div>
+    <div class="lq-veil" aria-hidden="true"></div>
 <nav class="navbar"><div class="container"><a href="/" class="logo"><img src="/assets/content.png" alt="ZYREX" class="logo-img"><span class="logo-text">yrex</span></a><ul class="nav-links" id="navLinks">
                 <li><a href="/">Home</a></li>
-                <li><a href="/presets">Presets</a></li>
+                <li><a href="/leaks">Leaks</a></li>
+                <li><a href="/feed">Feed</a></li>
                 <li><a href="/plugins">Plugins</a></li>
-                <li><a href="/more">More</a></li>
-                <li><a href="/#contact">Contact</a></li>
+                <li><a href="/audio">Audios</a></li>
+                
             </ul><div class="nav-actions"><div id="authBtn"></div><button class="hamburger" id="hamburger"><span></span><span></span><span></span></button></div></div></nav>
 
 <div class="page-wrap">
@@ -90,15 +96,17 @@
                             <span class="hero-brand-sub">EDITING</span>
                         </div>
                     </a>
-                    <p>Premium editing community &amp; resources.</p>
+                    <p>Editing leaks and stuff.</p>
                 </div>
                 <div class="footer-links">
                     <h4>Quick Links</h4>
                     <ul>
                         <li><a href="/">Home</a></li>
-                        <li><a href="/presets">Resources</a></li>
+                
+                        <li><a href="/presets">Leaks</a></li>
+                        <li><a href="/feed">Feed</a></li>
                         <li><a href="/plugins">Plugins</a></li>
-                        <li><a href="/more">More</a></li>
+                        <li><a href="/audio">Audios</a></li>
                     </ul>
                 </div>
                 <div class="footer-links">
@@ -112,17 +120,9 @@
                 <div class="footer-links">
                     <h4>Community</h4>
                     <ul>
-                        <li><a href="https://discord.gg/fAydSzpafA">Discord</a></li>
+                        <li><a href="https://discord.gg/4J3tars4QS">Discord</a></li>
                         <li><a href="/#contact">Contact</a></li>
                     </ul>
-                </div>
-                <div class="footer-newsletter">
-                    <h4>Newsletter</h4>
-                    <p>Stay updated with Zyrex Editing.</p>
-                    <div class="newsletter-form">
-                        <input type="email" placeholder="Your email">
-                        <button type="submit" aria-label="Subscribe"><i class="fas fa-arrow-right"></i></button>
-                    </div>
                 </div>
             </div>
             <div class="footer-bottom">
@@ -130,8 +130,9 @@
             </div>
         </div>
     </footer>
-<script src="/js/auth.js?v=10"></script>
-<script src="/js/script.js?v=5"></script>
+<script src="/js/auth.js?v=16"></script>
+<script src="/js/script.js?v=92"></script>
 <script>document.getElementById('hamburger')?.addEventListener('click',function(){document.getElementById('navLinks').classList.toggle('active')});</script>
+    <script src="/js/page-motion.js?v=6"></script>
 </body>
 </html>

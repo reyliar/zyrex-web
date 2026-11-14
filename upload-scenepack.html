@@ -1,1861 +1,419 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Creator Studio — Zyrex</title>
+    <meta name="description" content="Upload a scenepack to the catalogue.">
+    <title>Upload a Scenepack | Zyrex</title>
+    <meta name="theme-color" content="#0f0f11">
+    <meta name="robots" content="noindex, nofollow">
     <link rel="icon" type="image/png" href="/assets/content.png">
-    <link rel="stylesheet" href="css/style.css?v=46">
+    <link rel="stylesheet" href="css/style.css?v=92">
+    <link rel="stylesheet" href="css/scenepacks.css?v=15">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --cherry: #ff2b52;
-            --cherry-rgb: 255, 43, 82;
-            --cherry-light: #ff6b85;
-            --cherry-dark: #c8002a;
-            --dark: #070209;
-            --dark-panel: rgba(14, 10, 18, 0.85);
-            --border: rgba(255, 255, 255, 0.11);
-            --border-hover: rgba(255, 43, 82, 0.35);
-            --text: #f8f5f6;
-            --muted: rgba(255,255,255,0.45);
-            --muted-dark: rgba(255,255,255,0.25);
-            --radius-lg: 28px;
-            --radius-md: 16px;
-            --transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            background: var(--dark);
-            color: var(--text);
-            font-family: 'Inter', 'Poppins', sans-serif;
-            min-height: 100vh;
-            display: flex;
-            overflow-x: hidden;
-        }
-        body::before {
-            content: '';
-            position: fixed;
-            inset: 0;
-            z-index: 0;
-            pointer-events: none;
-            background:
-                radial-gradient(circle at 10% 0%, rgba(255,43,82,0.16) 0%, transparent 40%),
-                radial-gradient(circle at 88% 18%, rgba(120,0,40,0.10) 0%, transparent 35%),
-                radial-gradient(circle at 50% 100%, rgba(60,0,20,0.08) 0%, transparent 50%);
-        }
-
-        .bg-aura { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
-        .bg-aura .orb { position: absolute; border-radius: 50%; filter: blur(120px); opacity: .07; }
-        .orb-1 { width: 500px; height: 500px; background: var(--cherry); top: -10%; left: -10%; }
-        .orb-2 { width: 400px; height: 400px; background: #5865F2; bottom: -5%; right: -5%; opacity: .04; }
-        .orb-3 { width: 300px; height: 300px; background: var(--cherry-light); top: 50%; left: 30%; opacity: .03; }
-        
-        .grid-bg {
-            position: fixed; inset: 0; pointer-events: none; z-index: 0;
-            background-image: linear-gradient(rgba(230, 21, 54, 0.015) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(230, 21, 54, 0.015) 1px, transparent 1px);
-            background-size: 50px 50px;
-            mask-image: radial-gradient(ellipse at 50% 30%, black 40%, transparent 80%);
-            -webkit-mask-image: radial-gradient(ellipse at 50% 30%, black 40%, transparent 80%);
-        }
-
-        .studio-container {
-            display: flex;
-            width: 100%;
-            min-height: 100vh;
-            position: relative;
-            z-index: 1;
-            padding-top: 85px;
-        }
-
-        .studio-sidebar {
-            width: 272px;
-            background: rgba(9, 4, 12, 0.94);
-            backdrop-filter: blur(28px) saturate(190%);
-            -webkit-backdrop-filter: blur(28px) saturate(190%);
-            border-right: 1px solid rgba(255, 255, 255, 0.09);
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-            border-radius: 0 32px 32px 0;
-            padding: 24px 18px;
-            display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-            position: fixed;
-            height: calc(100vh - 104px);
-            left: 0;
-            top: 92px;
-            z-index: 100;
-            box-shadow: 10px 0 40px rgba(0, 0, 0, 0.4);
-            transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
-            overflow-y: auto;
-            scrollbar-width: none;
-        }
-        .studio-sidebar::-webkit-scrollbar { display: none; }
-
-        .studio-sidebar.sidebar-hidden {
-            transform: translateX(-115%) !important;
-            opacity: 0 !important;
-            pointer-events: none !important;
-        }
-
-        .sidebar-brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            text-decoration: none;
-            padding: 4px 6px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.07);
-            margin-bottom: 20px;
-            transition: var(--transition);
-        }
-        .sidebar-brand img {
-            height: 30px;
-            width: auto;
-            filter: drop-shadow(0 0 10px rgba(255, 43, 82, 0.35));
-            transition: transform 0.25s ease;
-        }
-        .sidebar-brand:hover img {
-            transform: scale(1.06);
-        }
-        .sidebar-brand span {
-            font-family: 'Outfit', sans-serif;
-            font-weight: 800;
-            font-size: 1.15rem;
-            letter-spacing: -0.2px;
-            color: #ffffff;
-        }
-        .sidebar-brand span b {
-            background: linear-gradient(135deg, #ff2b52, #ff6b85);
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            font-weight: 800;
-        }
-
-        .sidebar-menu {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            list-style: none;
-            padding: 0;
-            margin: 0;
-            flex: 1;
-        }
-        .menu-title {
-            font-size: 0.66rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            letter-spacing: 1.4px;
-            color: rgba(255, 255, 255, 0.32);
-            padding: 4px 14px 8px;
-            margin-top: 4px;
-        }
-        .menu-item a, .menu-item .locked-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 11px 16px;
-            border-radius: 999px;
-            font-size: 0.86rem;
-            font-weight: 600;
-            color: rgba(255, 255, 255, 0.55);
-            text-decoration: none;
-            transition: all 0.22s ease;
-            background: transparent;
-            border: 1px solid transparent;
-        }
-        .menu-item a i, .menu-item .locked-item i {
-            font-size: 0.92rem;
-            width: 20px;
-            text-align: center;
-            flex-shrink: 0;
-            color: rgba(255, 255, 255, 0.45);
-            transition: color 0.2s ease;
-        }
-        .menu-item a:hover {
-            color: #ffffff;
-            background: rgba(255, 255, 255, 0.05);
-            border-color: rgba(255, 255, 255, 0.08);
-        }
-        .menu-item a:hover i {
-            color: #ffffff;
-        }
-        .menu-item.active a {
-            color: #ffffff;
-            font-weight: 700;
-            background: linear-gradient(135deg, rgba(255, 43, 82, 0.18), rgba(255, 43, 82, 0.08));
-            border-color: rgba(255, 43, 82, 0.32);
-            box-shadow: 0 4px 18px rgba(255, 43, 82, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.12);
-        }
-        .menu-item.active a i {
-            color: var(--cherry-light, #ff3b60);
-            text-shadow: 0 0 10px rgba(255, 43, 82, 0.5);
-        }
-        .menu-item .locked-item {
-            opacity: 0.4;
-            cursor: not-allowed;
-            justify-content: space-between;
-        }
-        .menu-item .locked-item:hover {
-            background: transparent;
-            border-color: transparent;
-        }
-        .menu-item .lock-badge {
-            font-size: 0.62rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            background: rgba(255, 43, 82, 0.12);
-            color: var(--cherry-light, #ff3b60);
-            padding: 2px 7px;
-            border-radius: 999px;
-            border: 1px solid rgba(255, 43, 82, 0.25);
-            margin-left: auto;
-        }
-
-        .sidebar-footer {
-            border-top: 1px solid rgba(255, 255, 255, 0.08);
-            padding-top: 16px;
-            margin-top: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .user-profile {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 14px;
-            border-radius: 16px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.07);
-            transition: var(--transition);
-        }
-        .user-profile:hover {
-            background: rgba(255, 255, 255, 0.06);
-            border-color: rgba(255, 255, 255, 0.11);
-        }
-        .user-profile img {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            border: 2px solid rgba(255, 43, 82, 0.55);
-            box-shadow: 0 0 12px rgba(255, 43, 82, 0.25);
-            object-fit: cover;
-            display: block;
-            flex-shrink: 0;
-        }
-        .user-info {
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-            flex: 1;
-        }
-        .user-info .name {
-            font-size: 0.86rem;
-            font-weight: 700;
-            color: #ffffff;
-            text-overflow: ellipsis;
-            overflow: hidden;
-            white-space: nowrap;
-            font-family: 'Outfit', sans-serif;
-        }
-
-        .footer-nav {
-            display: flex;
-            flex-direction: column;
-            gap: 3px;
-        }
-        .footer-nav a, .footer-nav-link {
-            font-size: 0.80rem;
-            font-weight: 600;
-            color: rgba(255, 255, 255, 0.45);
-            text-decoration: none;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 12px;
-            border-radius: 10px;
-            transition: all 0.2s ease;
-        }
-        .footer-nav a i, .footer-nav-link i {
-            width: 18px;
-            text-align: center;
-            font-size: 0.82rem;
-            color: rgba(255, 255, 255, 0.4);
-            transition: color 0.2s ease;
-        }
-        .footer-nav a:hover, .footer-nav-link:hover {
-            color: #ffffff;
-            background: rgba(255, 255, 255, 0.05);
-        }
-        .footer-nav a:hover i, .footer-nav-link:hover i {
-            color: var(--cherry-light, #ff3b60);
-        }
-        .footer-nav a.link-logout:hover {
-            color: #ff5c75;
-            background: rgba(255, 68, 68, 0.08);
-        }
-        .footer-nav a.link-logout:hover i {
-            color: #ff5c75;
-        }
-
-        .studio-main {
-            flex: 1;
-            margin-left: 272px;
-            padding: 32px 44px 48px;
-            transition: var(--transition);
-            min-width: 0;
-        }
-
-        .studio-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 32px;
-        }
-        .studio-header h1 {
-            font-family: 'Outfit', sans-serif;
-            font-size: 1.8rem;
-            font-weight: 900;
-            letter-spacing: -0.5px;
-        }
-        .studio-header p {
-            font-size: 0.85rem;
-            color: var(--muted);
-        }
-
-        .glass-panel {
-            background: var(--dark-panel);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-lg);
-            padding: 36px;
-            backdrop-filter: blur(25px) saturate(220%);
-            -webkit-backdrop-filter: blur(25px) saturate(220%);
-            box-shadow: 0 25px 70px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.03);
-            position: relative;
-            overflow: hidden;
-            max-width: 760px;
-            margin: 0 auto;
-        }
-
-        .field { margin-bottom: 24px; }
-        .field label {
-            display: block;
-            font-size: 0.72rem;
-            font-weight: 700;
-            color: var(--muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
-        }
-        .field label i { color: var(--cherry-light); margin-right: 4px; }
-        
-        .field input, .field textarea, .field select {
-            width: 100%;
-            padding: 14px 18px;
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-md);
-            color: #fff;
-            font-family: inherit;
-            font-size: 0.88rem;
-            outline: none;
-            transition: var(--transition);
-        }
-        .field input:focus, .field textarea:focus, .field select:focus {
-            border-color: var(--cherry-light);
-            background: rgba(230, 21, 54, 0.02);
-            box-shadow: 0 0 0 3px rgba(230, 21, 54, 0.08);
-        }
-        .field textarea { min-height: 100px; resize: vertical; }
-
-        .row-fields {
-            display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
-        }
-
-        /* Social lookup input */
-        .social-input-wrap {
-            display: flex; border: 1px solid var(--border); border-radius: var(--radius-md); overflow: hidden; background: rgba(0, 0, 0, 0.4);
-        }
-        .social-input-wrap input { border: none; background: transparent; flex: 1; }
-        .social-lookup-btn {
-            width: 48px; border: none; background: rgba(230, 21, 54, 0.08); color: var(--cherry-light); cursor: pointer; transition: var(--transition);
-        }
-        .social-lookup-btn:hover { background: rgba(230, 21, 54, 0.15); color: #fff; }
-
-        /* Scenepack Thumbnail Preview Box */
-        .thumb-preview-box {
-            margin-top: 14px;
-            width: 160px; height: 100px;
-            border-radius: var(--radius-md);
-            border: 1px solid var(--border);
-            background: rgba(0,0,0,0.3);
-            display: none; align-items: center; justify-content: center;
-            overflow: hidden;
-            position: relative;
-        }
-        .thumb-preview-box.show { display: flex; }
-        .thumb-preview-box img { width: 100%; height: 100%; object-fit: cover; }
-
-        .btn {
-            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
-            padding: 13px 24px; border-radius: var(--radius-md); font-size: 0.84rem; font-weight: 700;
-            border: none; cursor: pointer; transition: var(--transition); font-family: inherit;
-        }
-        .btn-primary {
-            background: linear-gradient(135deg, var(--cherry), var(--cherry-dark));
-            color: #fff; border: 1px solid rgba(255, 77, 109, 0.2);
-            box-shadow: 0 4px 20px rgba(230, 21, 54, 0.3);
-        }
-        .btn-primary:hover {
-            transform: translateY(-2px); box-shadow: 0 8px 30px rgba(230, 21, 54, 0.5);
-        }
-        .btn-primary:disabled {
-            opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none;
-        }
-        .btn-ghost {
-            background: rgba(230, 21, 54, 0.05); color: var(--text); border: 1px solid rgba(230, 21, 54, 0.12);
-        }
-        .btn-ghost:hover { background: rgba(230, 21, 54, 0.1); border-color: var(--border-hover); }
-
-        .form-actions {
-            display: flex; justify-content: flex-end; gap: 12px; margin-top: 32px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.04);
-        }
-
-        .lock-container {
-            display: flex; align-items: center; justify-content: center; min-height: calc(100vh - 160px); width: 100%;
-        }
-        .lock-card {
-            max-width: 480px; text-align: center; padding: 48px 36px;
-            background: var(--dark-panel); border: 1px solid var(--border); border-radius: var(--radius-lg);
-            box-shadow: 0 25px 70px rgba(0,0,0,0.6);
-        }
-        .lock-card i.lock-icon { font-size: 4rem; color: var(--cherry); opacity: 0.2; margin-bottom: 24px; display: block; }
-        .lock-card h2 { font-family: 'Outfit', sans-serif; font-size: 1.6rem; font-weight: 800; color: #fff; margin-bottom: 12px; }
-        .lock-card p { font-size: 0.88rem; color: var(--muted); line-height: 1.6; margin-bottom: 28px; }
-        .lock-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
-        .btn-discord { background: #5865F2; color: #fff; }
-        .btn-discord:hover { background: #4752c4; transform: translateY(-2px); }
-
-        .studio-alert {
-            position: fixed; top: 24px; left: 50%; transform: translateX(-50%);
-            z-index: 10000; padding: 12px 24px; border-radius: 30px; font-size: 0.84rem; font-weight: 700;
-            display: none; align-items: center; gap: 8px; backdrop-filter: blur(10px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-            animation: alertIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-        }
-        @keyframes alertIn { from { opacity: 0; transform: translate(-50%, -10px); } to { opacity: 1; transform: translate(-50%, 0); } }
-        .studio-alert.show { display: flex; }
-        .studio-alert.error { background: rgba(230, 21, 54, 0.15); border: 1px solid rgba(230, 21, 54, 0.25); color: var(--cherry-light); }
-        .studio-alert.success { background: rgba(0, 200, 100, 0.15); border: 1px solid rgba(0, 200, 100, 0.25); color: #00e676; }
-
-        .sidebar-overlay {
-            display: none;
-            position: fixed; inset: 0;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(5px);
-            -webkit-backdrop-filter: blur(5px);
-            z-index: 99;
-        }
-        .sidebar-overlay.show { display: block; }
-
-        .sidebar-mobile-close {
-            display: none;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        .sidebar-mobile-close span {
-            font-size: 0.78rem;
-            font-weight: 800;
-            color: var(--cherry-light, #ff3b60);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .sidebar-mobile-close button {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            color: #fff;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .sidebar-mobile-close button:hover {
-            background: rgba(255, 43, 82, 0.2);
-            border-color: rgba(255, 43, 82, 0.4);
-            color: #fff;
-        }
-
-        .mobile-trigger {
-            display: none;
-            background: transparent; border: none; color: #fff; font-size: 1.4rem; cursor: pointer; z-index: 1000;
-        }
-
-        @media(max-width: 900px) {
-            .studio-container { padding-top: 75px; }
-            .studio-sidebar {
-                top: 0;
-                height: 100vh;
-                left: -290px;
-                width: 272px;
-                border-radius: 0 24px 24px 0;
-                padding-top: 85px;
-                z-index: 9999;
-                box-shadow: 10px 0 40px rgba(0,0,0,0.85);
-                background: #0e0306;
-                border-right: 1px solid rgba(230, 21, 54, 0.2);
-            }
-            .studio-sidebar.open {
-                left: 0;
-                transform: none !important;
-                opacity: 1 !important;
-                pointer-events: auto !important;
-            }
-            .sidebar-overlay { z-index: 9998; }
-            .sidebar-mobile-close { display: flex !important; }
-            .studio-main { margin-left: 0; padding: 24px 16px; width: 100%; }
-            .mobile-trigger { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; border-radius: 10px; background: rgba(230,21,54,0.1); border: 1px solid var(--border); margin-right: 12px; }
-        }
-    
-        .prod-lookup-trigger-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 16px;
-            padding: 16px 20px;
-            border-radius: 18px;
-            background: linear-gradient(135deg, rgba(245, 197, 24, 0.08), rgba(6, 182, 212, 0.08));
-            border: 1px solid rgba(245, 197, 24, 0.3);
-            margin-bottom: 24px;
-            flex-wrap: wrap;
-        }
-        .prod-trigger-text strong {
-            display: block;
-            color: #fff;
-            font-size: 0.95rem;
-            margin-top: 3px;
-        }
-        .prod-trigger-text p {
-            margin: 2px 0 0;
-            font-size: 0.75rem;
-            color: var(--muted);
-        }
-        .prod-trigger-badge {
-            font-size: 0.65rem;
-            font-weight: 900;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #f5c518;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .btn-open-prod-lookup {
-            background: linear-gradient(135deg, rgba(245, 197, 24, 0.2), rgba(6, 182, 212, 0.2));
-            border: 1px solid rgba(245, 197, 24, 0.45);
-            color: #fff;
-            padding: 10px 18px;
-            border-radius: 12px;
-            font-size: 0.85rem;
-            font-weight: 700;
-            font-family: inherit;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 9px;
-            transition: all 0.22s ease;
-        }
-        .btn-open-prod-lookup:hover {
-            background: linear-gradient(135deg, rgba(245, 197, 24, 0.35), rgba(6, 182, 212, 0.35));
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(245, 197, 24, 0.25);
-        }
-        .studio-select {
-            width: 100%;
-            padding: 12px 16px;
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-md);
-            color: #fff;
-            font-family: inherit;
-            font-size: 0.88rem;
-            outline: none;
-            transition: var(--transition);
-        }
-        .studio-select:focus {
-            border-color: var(--border-hover);
-            box-shadow: 0 0 0 3px rgba(255, 43, 82, 0.15);
-        }
-
-        .lookup-results-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            max-height: 460px;
-            overflow-y: auto;
-            padding-right: 4px;
-        }
-        .lookup-card-row {
-            display: grid;
-            grid-template-columns: 55px 1fr auto;
-            gap: 14px;
-            align-items: center;
-            padding: 10px 14px;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 14px;
-            transition: all 0.2s ease;
-        }
-        .lookup-card-row:hover {
-            background: rgba(255, 255, 255, 0.07);
-            border-color: rgba(245, 197, 24, 0.4);
-            transform: translateY(-1px);
-        }
-        .lookup-thumb {
-            width: 55px;
-            height: 75px;
-            object-fit: cover;
-            border-radius: 8px;
-            background: #000;
-        }
-        .lookup-info h5 {
-            margin: 0 0 4px;
-            font-size: 0.92rem;
-            font-weight: 800;
-            color: #fff;
-        }
-        .lookup-info-meta {
-            font-size: 0.75rem;
-            color: var(--muted);
-            line-height: 1.4;
-        }
-        .btn-lookup-select {
-            padding: 7px 14px;
-            border-radius: 10px;
-            background: rgba(255, 43, 82, 0.15);
-            border: 1px solid rgba(255, 43, 82, 0.35);
-            color: #fff;
-            font-size: 0.78rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s ease;
-        }
-        .btn-lookup-select:hover {
-            background: #ff2b52;
-            transform: scale(1.04);
-            box-shadow: 0 4px 15px rgba(255, 43, 82, 0.4);
-        }
-
-        .uploader-credit-wrap {
-            position: relative;
-        }
-        .uploader-search-box {
-            display: flex;
-            align-items: center;
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-md);
-            transition: var(--transition);
-        }
-        .uploader-search-box:focus-within {
-            border-color: var(--cherry-light);
-            box-shadow: 0 0 16px rgba(230, 21, 54, 0.15);
-        }
-        .uploader-search-box .search-icon {
-            margin-left: 14px;
-            color: var(--muted);
-            font-size: 0.88rem;
-        }
-        .uploader-search-box input {
-            border: none;
-            background: transparent;
-            padding: 12px 14px;
-            color: #fff;
-            font-size: 0.88rem;
-            flex: 1;
-            outline: none;
-        }
-        .btn-clear-credit {
-            background: transparent;
-            border: none;
-            color: var(--muted);
-            padding: 8px 14px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: var(--transition);
-        }
-        .btn-clear-credit:hover {
-            color: #fff;
-        }
-        .uploader-suggestions {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            right: 0;
-            margin-top: 6px;
-            background: rgba(14, 5, 10, 0.98);
-            border: 1px solid rgba(255, 43, 82, 0.3);
-            border-radius: var(--radius-md);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            box-shadow: 0 16px 36px rgba(0,0,0,0.7);
-            max-height: 250px;
-            overflow-y: auto;
-            z-index: 1000;
-        }
-        .uploader-member-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 14px;
-            cursor: pointer;
-            transition: background 0.15s ease;
-            border-bottom: 1px solid rgba(255,255,255,0.03);
-        }
-        .uploader-member-item:last-child {
-            border-bottom: none;
-        }
-        .uploader-member-item:hover, .uploader-member-item.selected {
-            background: rgba(230, 21, 54, 0.15);
-        }
-        .uploader-member-avatar {
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 1px solid rgba(255, 43, 82, 0.3);
-            background: #11050b;
-        }
-        .uploader-member-info {
-            display: flex;
-            flex-direction: column;
-            min-width: 0;
-            flex: 1;
-        }
-        .uploader-member-name {
-            font-size: 0.85rem;
-            font-weight: 700;
-            color: #fff;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .uploader-member-handle {
-            font-size: 0.72rem;
-            color: var(--muted);
-        }
-        .uploader-member-id {
-            font-size: 0.68rem;
-            color: var(--muted);
-            font-family: monospace;
-            margin-left: auto;
-            opacity: 0.8;
-        }
-        .credited-user-badge {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 16px;
-            background: rgba(230, 21, 54, 0.10);
-            border: 1px solid rgba(230, 21, 54, 0.35);
-            border-radius: var(--radius-md);
-            margin-top: 4px;
-        }
-        .credited-avatar {
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            object-fit: cover;
-            border: 2px solid var(--cherry-light);
-        }
-        .credited-user-meta {
-            display: flex;
-            flex-direction: column;
-            flex: 1;
-        }
-        .credited-name {
-            font-size: 0.88rem;
-            font-weight: 700;
-            color: #fff;
-        }
-        .credited-id {
-            font-size: 0.72rem;
-            color: var(--cherry-light);
-            font-family: monospace;
-        }
-        .credited-remove-btn {
-            background: transparent;
-            border: none;
-            color: var(--muted);
-            padding: 6px 10px;
-            cursor: pointer;
-            border-radius: 8px;
-            transition: all 0.2s ease;
-        }
-        .credited-remove-btn:hover {
-            color: #ff2b52;
-            background: rgba(255, 43, 82, 0.1);
-        }
-    </style>
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,800,900&amp;display=swap">
+    <link rel="stylesheet" href="/css/page-loader.css?v=1">
+    <link rel="stylesheet" href="/css/glass.css?v=67">
+    <link rel="stylesheet" href="/css/atmosphere.css?v=7">
+    <link rel="stylesheet" href="/css/i18n.css?v=3">
+    <script src="/js/i18n.js?v=15" defer></script>
 </head>
+
 <body>
-    <div class="bg-aura"><div class="orb orb-1"></div><div class="orb orb-2"></div><div class="orb orb-3"></div></div>
-    <!-- NAVBAR -->
+    <div class="zr-sweep" aria-hidden="true"></div>
+    <div class="lq-veil" aria-hidden="true"></div>
+
     <nav class="navbar">
         <div class="container">
-            <a href="/" class="logo">
-                <img src="assets/content.png" alt="ZYREX" class="logo-img">
-                <span class="logo-text">yrex</span>
-            </a>
+            <a href="/" class="logo"><img src="/assets/content.png" alt="ZYREX" class="logo-img"><span
+                    class="logo-text">yrex</span></a>
             <ul class="nav-links" id="navLinks">
                 <li><a href="/">Home</a></li>
-                <li><a href="/resources">Resources</a></li>
+                <li><a href="/leaks">Leaks</a></li>
+                <li><a href="/feed">Feed</a></li>
                 <li><a href="/plugins">Plugins</a></li>
                 <li><a href="/requests">Requests</a></li>
-                <li><a href="/more">More</a></li>
-                <li><a href="/#contact">Contact</a></li>
+                <li><a href="/audio">Audios</a></li>
+                <li><a href="/scenepacks" class="active">Scenepacks</a></li>
             </ul>
             <div class="nav-actions">
                 <div id="authBtn"></div>
-                <button class="hamburger" id="hamburger" aria-label="Toggle Menu">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </button>
+                <button class="hamburger" id="hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
             </div>
         </div>
     </nav>
 
-    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+    <div class="sp-app">
+        <div class="sp-shell-narrow">
+            <header class="sp-upload-head">
+                <h1 id="spUploadTitle">Upload a scenepack</h1>
+            </header>
 
-    <div class="studio-alert" id="alertBox"></div>
-
-    <div class="studio-container">
-        <!-- SIDEBAR -->
-        <div class="studio-sidebar" id="sidebar">
-            <div class="sidebar-mobile-close">
-                <span>Creator Studio</span>
-                <button type="button" onclick="toggleSidebar()" aria-label="Close sidebar"><i class="fas fa-times"></i></button>
-            </div>
-            <div>
-                <a href="/" class="sidebar-brand">
-                    <img src="assets/content.png" alt="Zyrex Logo">
-                    <span>Creator <b>Studio</b></span>
-                </a>
-                <ul class="sidebar-menu">
-                    <div class="menu-title">Publish Portals</div>
-                    <li class="menu-item" id="sidebarPreset">
-                        <a href="/upload"><i class="fas fa-layer-group"></i> <span>Resource Uploader</span></a>
-                    </li>
-                    <li class="menu-item" id="sidebarAudio">
-                        <a href="/upload-audio"><i class="fas fa-music"></i> <span>Audio Uploader</span></a>
-                    </li>
-                    <li class="menu-item active">
-                        <a href="/upload-scenepack"><i class="fas fa-film"></i> <span>Scenepack Uploader</span></a>
-                    </li>
-                </ul>
-            </div>
-            
-            <div class="sidebar-footer">
-                <div class="user-profile" id="userProfile" style="display:none">
-                    <img src="" id="userAvatar" alt="Avatar">
-                    <div class="user-info">
-                        <span class="name" id="userName">Creator</span>
-                    </div>
-                </div>
-                <div class="footer-nav">
-                    <a href="/settings" class="footer-nav-link"><i class="fas fa-sliders"></i> <span>Dashboard Settings</span></a>
-                    <a href="/" class="footer-nav-link"><i class="fas fa-house"></i> <span>Back to Main Site</span></a>
-                    <a href="/api/logout" class="footer-nav-link link-logout"><i class="fas fa-arrow-right-from-bracket"></i> <span>Logout</span></a>
-                </div>
-            </div>
-        </div>
-
-        <!-- MAIN MAIN -->
-        <div class="studio-main">
-            <!-- TOP BAR -->
-            <div class="studio-header">
+            <div class="sp-upload-grid">
                 <div>
-                    <button class="mobile-trigger" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
-                    <h1>Scenepack Upload</h1>
-                    <p>Publish scene packs and project media folders on the scenepacks archive</p>
-                </div>
-            </div>
-
-                        <!-- CONTENT CARD -->
-            <div class="glass-panel" id="mainPanel" style="display:none">
-                <!-- PRODUCTION & GAME AUTO-LOOKUP BAR -->
-                <div class="prod-lookup-trigger-bar">
-                    <div class="prod-trigger-text">
-                        <span class="prod-trigger-badge"><i class="fas fa-wand-magic-sparkles"></i> DATABASE AUTO-FILL</span>
-                        <strong>Fetch Movie, TV Series or Video Game</strong>
-                        <p>Search IMDb &amp; IGDB to auto-import official poster, title, origin &amp; category</p>
+                    <div class="sp-note" id="spIdentityNote">
+                        <i class="fas fa-circle-info" aria-hidden="true"></i><span>Checking your Discord session…</span>
                     </div>
-                    <button type="button" class="btn-open-prod-lookup" onclick="openProdLookupModal()">
-                        <i class="fab fa-imdb" style="color:#f5c518;font-size:1.15rem"></i>
-                        <i class="fas fa-gamepad" style="color:#06b6d4;font-size:1rem"></i>
-                        <span>Search IMDb / Games</span>
-                    </button>
-                </div>
 
-                <!-- IMPORTED DATABASE CARD PREVIEW -->
-                <div id="importedProdCard" style="display:none;margin-bottom:20px;padding:14px 18px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.1);border-radius:16px;align-items:center;gap:16px;position:relative">
-                    <img id="importedThumb" src="/assets/content.png" style="width:52px;height:72px;object-fit:cover;border-radius:10px;border:1px solid rgba(255,255,255,0.15);flex-shrink:0" onerror="this.src='/assets/content.png'">
-                    <div style="flex:1;min-width:0">
-                        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;flex-wrap:wrap">
-                            <span id="importedBadge" style="display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:6px;font-size:0.72rem;font-weight:800;background:#f5c518;color:#000">
-                                <i class="fab fa-imdb"></i> <span id="importedRatingText">9.5/10</span>
-                            </span>
-                            <span id="importedCategoryPill" style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:6px;font-size:0.72rem;font-weight:700;background:rgba(255,255,255,0.08);color:#d4d4d8">
-                                Film/TV
-                            </span>
-                            <span style="font-size:0.68rem;color:#10b981;font-weight:600"><i class="fas fa-check-circle"></i> Synced</span>
-                        </div>
-                        <h4 id="importedTitle" style="margin:0 0 3px;font-size:0.96rem;font-weight:800;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Production Title</h4>
-                        <div id="importedMeta" style="font-size:0.76rem;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Genres · Directors · Cast</div>
-                    </div>
-                    <button type="button" onclick="clearImportedProd()" style="padding:6px 12px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:8px;color:#a1a1aa;font-size:0.74rem;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all 0.15s ease">
-                        <i class="fas fa-times"></i> Clear
-                    </button>
-                </div>
+                    <div class="sp-chars" id="spCharacterStrip" hidden></div>
 
-                <input type="hidden" id="spImdbId" value="">
-                <input type="hidden" id="spReleaseDate" value="">
-                <input type="hidden" id="spGenres" value="">
-                <input type="hidden" id="spDirectors" value="">
-                <input type="hidden" id="spCast" value="">
-                <input type="hidden" id="spBanner" value="">
-                <input type="hidden" id="spOriginType" value="">
-
-                <div class="field">
-                    <label><i class="fas fa-clapperboard"></i> Scenepack Name *</label>
-                    <input type="text" id="spName" placeholder="e.g. Steve Harrington — Season 2 (or Elden Ring - Boss Clips)">
-                </div>
-
-                <div class="row-fields">
-                    <div class="field">
-                        <label><i class="fas fa-film"></i> Production / Game Origin (optional)</label>
-                        <input type="text" id="spOrigin" placeholder="e.g. Stranger Things, Cyberpunk 2077">
-                    </div>
-                    <div class="field">
-                        <label><i class="fas fa-tags"></i> Category</label>
-                        <select id="spCat" class="studio-select">
-                            <option value="scenepack">General Scenepack</option>
-                            <option value="movie">Movie / Film</option>
-                            <option value="series">TV Series</option>
-                            <option value="games">Video Games</option>
-                            <option value="anime">Anime</option>
-                            <option value="character">Character / Person</option>
-                        </select>
-                    </div>
-                    <div class="field">
-                        <label><i class="fab fa-imdb" style="color:#f5c518"></i> IMDb / IGDB Rating (optional)</label>
-                        <input type="text" id="spRating" placeholder="Auto-filled from database or e.g. 8.8">
-                    </div>
-                </div>
-
-                <div class="field">
-                    <label><i class="fas fa-align-left"></i> Description</label>
-                    <textarea id="spDesc" placeholder="Provide information on clip resolutions, frame rates, length, and contents..."></textarea>
-                </div>
-
-                <div class="field">
-                    <label><i class="fas fa-download"></i> Download Link * (Mega, Drive, Dropbox, Mediafire)</label>
-                    <input type="url" id="spLink" placeholder="https://mega.nz/file/...">
-                </div>
-
-                <div class="row-fields">
-                    <div class="field">
-                        <label><i class="fas fa-link"></i> Creator Social URL (optional)</label>
-                        <div class="social-input-wrap">
-                            <input type="url" id="socialUrl" placeholder="https://youtube.com/@creator">
-                            <button type="button" class="social-scan-btn" onclick="toggleHlx()" title="Scan creator profile & store">
-                                <i class="fas fa-wand-magic-sparkles"></i> <span>Scan</span>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="field">
-                        <label><i class="fas fa-user"></i> Creator Name (optional)</label>
-                        <input type="text" id="creatorName" placeholder="Auto-filled from social URL" readonly style="background:rgba(0,0,0,0.2);cursor:not-allowed">
-                    </div>
-                <div class="field">
-                    <label><i class="fab fa-discord"></i> Uploader Credit (optional)</label>
-                    <div class="uploader-credit-wrap">
-                        <div class="uploader-search-box">
-                            <i class="fas fa-search search-icon"></i>
-                            <input type="text" id="uploaderSearchInput" placeholder="Search Discord member by username or display name..." autocomplete="off">
-                            <button type="button" class="btn-clear-credit" id="clearCreditBtn" style="display:none" onclick="clearCreditedUploader()"><i class="fas fa-times"></i></button>
-                        </div>
-                        <div class="uploader-suggestions" id="uploaderSuggestions" style="display:none"></div>
-                        <div class="credited-user-badge" id="creditedUserBadge" style="display:none">
-                            <img src="https://cdn.discordapp.com/embed/avatars/0.png" id="creditedAvatar" class="credited-avatar" alt="">
-                            <div class="credited-user-meta">
-                                <span class="credited-name" id="creditedName"></span>
-                                <span class="credited-id" id="creditedId"></span>
+                    <form id="spSubmitForm" novalidate>
+                        <section class="sp-step">
+                            <div class="sp-step-head">
+                                <span class="sp-step-num">1</span>
+                                <div>
+                                    <h2>Find the title on IMDb</h2>
+                                    <p>Type a film, series, anime or game name — or paste an IMDb ID such as
+                                        <code>tt0816692</code>.</p>
+                                </div>
                             </div>
-                            <button type="button" class="credited-remove-btn" onclick="clearCreditedUploader()" title="Remove credit"><i class="fas fa-times"></i></button>
+
+                            <div class="sp-imdb-search" id="spImdbForm" role="search" autocomplete="off">
+                                <div style="display:flex;gap:8px;flex-wrap:wrap">
+                                    <label class="sp-search-field" style="flex:1 1 260px">
+                                        <i class="fas fa-magnifying-glass" aria-hidden="true"></i>
+                                        <input type="search" id="spImdbQuery"
+                                            placeholder="Interstellar, tt0816692, Breaking Bad…"
+                                            aria-label="Search IMDb">
+                                    </label>
+                                    <button type="button" class="sp-btn sp-btn-ghost" id="spImdbSearchBtn"><i class="fas fa-search"
+                                            aria-hidden="true"></i> Search</button>
+                                </div>
+                            </div>
+
+                            <div class="sp-imdb-results" id="spImdbResults"></div>
+                            <div class="sp-picked" id="spImdbSelected" style="display:none"></div>
+
+                            <p style="margin:14px 0 0;font-size:.76rem;color:var(--sp-muted)">
+                                No IMDb match? Fill the metadata block at the bottom by hand — only a pack title is
+                                required.
+                            </p>
+                        </section>
+
+                        <section class="sp-step">
+                            <div class="sp-step-head">
+                                <span class="sp-step-num">2</span>
+                                <div>
+                                    <h2>Pack details</h2>
+                                    <p>How this pack is labelled in the title table.</p>
+                                </div>
+                            </div>
+                            <div class="sp-fields">
+                                <div class="sp-field full">
+                                    <label for="spTitle">Pack name</label>
+                                    <input class="sp-input" id="spTitle"
+                                        placeholder="Steve Harrington — Season 2" maxlength="180">
+                                </div>
+                                <div class="sp-field">
+                                    <label for="spType">Category</label>
+                                    <select class="sp-input" id="spType">
+                                        <option value="movie">Film</option>
+                                        <option value="series">Series</option>
+                                        <option value="anime">Anime</option>
+                                        <option value="game">Game</option>
+                                    </select>
+                                </div>
+                                <div class="sp-field">
+                                    <label for="spCategory">Character category</label>
+                                    <select class="sp-input" id="spCategory">
+                                        <option value="main">Main cast</option>
+                                        <option value="supporting">Supporting</option>
+                                        <option value="guest">Guest</option>
+                                        <option value="">Unsorted</option>
+                                    </select>
+                                </div>
+                                <div class="sp-field">
+                                    <label for="spCharacter">Character</label>
+                                    <input class="sp-input" id="spCharacter" placeholder="Steve Harrington">
+                                </div>
+                                <div class="sp-field">
+                                    <label for="spCharacterAvatar">Character photo <span class="opt">optional</span></label>
+                                    <div class="sp-inline">
+                                        <input class="sp-input" id="spCharacterAvatar" placeholder="https://… or upload">
+                                        <button type="button" class="sp-btn sp-btn-ghost" id="spCharacterAvatarPick" title="Upload a photo"><i class="fas fa-image" aria-hidden="true"></i></button>
+                                    </div>
+                                    <input type="file" id="spCharacterAvatarFile" accept="image/*" hidden>
+                                </div>
+                                <div class="sp-field">
+                                    <label for="spActor">Actor</label>
+                                    <input class="sp-input" id="spActor" placeholder="Joe Keery">
+                                </div>
+                                <div class="sp-field">
+                                    <label for="spCreditName">Credit / creator</label>
+                                    <input class="sp-input" id="spCreditName" placeholder="chaszq">
+                                </div>
+                                <div class="sp-field">
+                                    <label for="spCreditLink">Credit link <span class="opt">optional</span></label>
+                                    <input class="sp-input" id="spCreditLink" placeholder="https://guns.lol/chaszq">
+                                </div>
+                                <div class="sp-field">
+                                    <label for="spEncoding">Encoding</label>
+                                    <input class="sp-input" id="spEncoding" list="spEncodingOptions"
+                                        placeholder="H.265">
+                                    <datalist id="spEncodingOptions">
+                                        <option value="H.264"></option>
+                                        <option value="H.265"></option>
+                                        <option value="HEVC"></option>
+                                        <option value="ProRes"></option>
+                                        <option value="AV1"></option>
+                                    </datalist>
+                                </div>
+                                <div class="sp-field">
+                                    <label for="spQuality">Quality</label>
+                                    <input class="sp-input" id="spQuality" list="spQualityOptions" placeholder="2160p">
+                                    <datalist id="spQualityOptions">
+                                        <option value="2160p"></option>
+                                        <option value="1080p"></option>
+                                        <option value="720p"></option>
+                                        <option value="480p"></option>
+                                    </datalist>
+                                </div>
+                                <div class="sp-field">
+                                    <label for="spSize">File size</label>
+                                    <input class="sp-input" id="spSize" placeholder="3.59 GB">
+                                </div>
+                                <div class="sp-field">
+                                    <label for="spClips">Clip count <span class="opt">optional</span></label>
+                                    <input class="sp-input" id="spClips" type="number" min="0" step="1"
+                                        placeholder="42">
+                                </div>
+                                <div class="sp-field">
+                                    <label for="spDuration">Duration <span class="opt">optional</span></label>
+                                    <input class="sp-input" id="spDuration" placeholder="11:05">
+                                </div>
+                                <div class="sp-field">
+                                    <label for="spFormat">Format <span class="opt">optional</span></label>
+                                    <input class="sp-input" id="spFormat" placeholder="MP4">
+                                </div>
+                                <div class="sp-field">
+                                    <label for="spAudio">Audio <span class="opt">optional</span></label>
+                                    <input class="sp-input" id="spAudio" placeholder="Stereo">
+                                </div>
+                                <div class="sp-field">
+                                    <label for="spInProduction">Title status</label>
+                                    <label class="sp-check" for="spInProduction">
+                                        <input type="checkbox" id="spInProduction">
+                                        <span>In production</span>
+                                    </label>
+                                </div>
+                                <div class="sp-field full">
+                                    <label for="spTags">Tags <span class="opt">comma separated</span></label>
+                                    <input class="sp-input" id="spTags" placeholder="scenepack, 2160p, stranger things">
+                                </div>
+                                <div class="sp-field full">
+                                    <label for="spDescription">Description</label>
+                                    <textarea class="sp-textarea" id="spDescription" maxlength="6000"
+                                        placeholder="Which scenes are inside, grade notes…"></textarea>
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="sp-step">
+                            <div class="sp-step-head">
+                                <span class="sp-step-num">3</span>
+                                <div>
+                                    <h2>Download versions</h2>
+                                    <p>One row per scenepack file (<code>.mp4</code> / <code>.mov</code>). At least
+                                        one link is required before the pack can be downloaded.</p>
+                                </div>
+                            </div>
+                            <div id="spVersions"></div>
+                            <button type="button" class="sp-btn sp-btn-ghost" id="spAddVersion">
+                                <i class="fas fa-plus" aria-hidden="true"></i> Add version
+                            </button>
+                        </section>
+
+                        <section class="sp-step">
+                            <div class="sp-step-head">
+                                <span class="sp-step-num">4</span>
+                                <div>
+                                    <h2>Artwork</h2>
+                                    <p>IMDb artwork is used automatically; upload a poster to override it.</p>
+                                </div>
+                            </div>
+                            <div class="sp-fields">
+                                <div class="sp-field full">
+                                    <div class="sp-dropzone" id="spDropzone" tabindex="0" role="button"
+                                        aria-label="Upload a poster">
+                                        <i class="fas fa-cloud-arrow-up" aria-hidden="true"></i>
+                                        <b>Drop a poster here or click to choose a file</b>
+                                        <span>JPG, PNG or WebP · up to 6 MB · 2:3 works best</span>
+                                    </div>
+                                    <input type="file" id="spThumbFile" accept="image/*" hidden>
+                                    <p id="spThumbStatus"
+                                        style="margin:6px 0 0;font-size:.74rem;color:var(--sp-muted)"></p>
+                                </div>
+                                <div class="sp-field full">
+                                    <label for="spThumb">Poster URL <span class="opt">optional</span></label>
+                                    <input class="sp-input" id="spThumb" placeholder="https://…">
+                                </div>
+                                <div class="sp-field">
+                                    <label for="spPreviewUrl">Preview clip <span class="opt">optional</span></label>
+                                    <input class="sp-input" id="spPreviewUrl" placeholder="https://… .mp4">
+                                </div>
+                                <div class="sp-field">
+                                    <label for="spTrailer">Trailer <span class="opt">optional</span></label>
+                                    <input class="sp-input" id="spTrailer" placeholder="https://youtube.com/watch?v=…">
+                                </div>
+                            </div>
+                        </section>
+
+                        <section class="sp-step">
+                            <div class="sp-step-head">
+                                <span class="sp-step-num">5</span>
+                                <div>
+                                    <h2>IMDb metadata</h2>
+                                    <p>Filled from IMDb automatically — correct anything that looks wrong.</p>
+                                </div>
+                            </div>
+                            <div class="sp-scrape-bar">
+                                <span id="spScrapeStatus">Metadata is scraped the moment an IMDb ID is known.</span>
+                                <button type="button" class="sp-btn sp-btn-ghost" id="spScrapeBtn">
+                                    <i class="fas fa-rotate" aria-hidden="true"></i> Scrape IMDb
+                                </button>
+                            </div>
+                            <div class="sp-fields">
+                                <div class="sp-field">
+                                    <label for="spMovieTitle">Title name</label>
+                                    <input class="sp-input" id="spMovieTitle" placeholder="Stranger Things">
+                                </div>
+                                <div class="sp-field">
+                                    <label for="spImdbId">IMDb ID</label>
+                                    <div class="sp-inline">
+                                        <input class="sp-input" id="spImdbId" placeholder="tt4574334">
+                                        <button type="button" class="sp-btn sp-btn-ghost" id="spImdbIdScrape"
+                                            title="Scrape this id"><i class="fas fa-rotate" aria-hidden="true"></i></button>
+                                    </div>
+                                </div>
+                                <div class="sp-field">
+                                    <label for="spYear">Year</label>
+                                    <input class="sp-input" id="spYear" placeholder="2016–2025">
+                                </div>
+                                <div class="sp-field">
+                                    <label for="spRating">IMDb rating</label>
+                                    <input class="sp-input" id="spRating" placeholder="8.6">
+                                </div>
+                                <div class="sp-field">
+                                    <label for="spRuntime">Runtime</label>
+                                    <input class="sp-input" id="spRuntime" placeholder="51 min">
+                                </div>
+                                <div class="sp-field">
+                                    <label for="spGenres">Genres</label>
+                                    <input class="sp-input" id="spGenres" placeholder="Drama, Fantasy, Horror">
+                                </div>
+                                <div class="sp-field">
+                                    <label for="spDirector">Director / creator</label>
+                                    <input class="sp-input" id="spDirector" placeholder="The Duffer Brothers">
+                                </div>
+                                <div class="sp-field full">
+                                    <label for="spCast">Cast</label>
+                                    <input class="sp-input" id="spCast"
+                                        placeholder="Winona Ryder, David Harbour, Millie Bobby Brown">
+                                </div>
+                                <div class="sp-field full">
+                                    <label for="spPlot">Synopsis</label>
+                                    <textarea class="sp-textarea" id="spPlot" style="min-height:96px"
+                                        placeholder="Pulled from IMDb when available."></textarea>
+                                </div>
+                            </div>
+                        </section>
+
+                        <div class="sp-note" id="spFormStatus" style="display:none"></div>
+                        <div style="display:flex;gap:9px;flex-wrap:wrap">
+                            <button type="submit" class="sp-btn sp-btn-primary" id="spSubmitBtn">
+                                <i class="fas fa-cloud-arrow-up" aria-hidden="true"></i> Publish scenepack
+                            </button>
+                            <button type="button" class="sp-btn sp-btn-ghost" id="spSubmitNext">
+                                <i class="fas fa-plus" aria-hidden="true"></i> Save &amp; add next character
+                            </button>
+                            <a class="sp-btn sp-btn-ghost" href="/admin-scenepacks" id="spEditCancel" hidden><i
+                                    class="fas fa-xmark" aria-hidden="true"></i> Cancel</a>
+                            <a class="sp-btn sp-btn-ghost" href="/scenepacks"><i class="fas fa-arrow-left"
+                                    aria-hidden="true"></i> Back to scenepacks</a>
                         </div>
-                        <input type="hidden" id="customUploaderId" value="">
-                        <input type="hidden" id="customUploaderName" value="">
-                        <input type="hidden" id="customUploaderAvatar" value="">
-                    </div>
-                    <div class="field-hint" style="font-size:0.72rem;color:var(--muted);margin-top:6px">Search for any member on the Discord server. Selecting a member will bind their Discord User ID and profile as the uploader.</div>
+                    </form>
                 </div>
 
-                <div class="field">
-                    <label><i class="fas fa-image"></i> Thumbnail URL (optional)</label>
-                    <input type="url" id="spThumb" placeholder="https://i.imgur.com/xxxxx.png" onchange="previewThumb(this.value)">
-                    <div class="thumb-preview-box" id="thumbPreviewBox">
-                        <img src="" id="thumbPreviewImg" alt="Thumbnail Preview">
+                <aside class="sp-preview-side">
+                    <div class="sp-sideblock">
+                        <h3>Preview</h3>
+                        <div id="spPreview"></div>
                     </div>
-                </div>
 
-                <div class="form-actions">
-                    <a href="/scenepack" class="btn btn-ghost">Cancel</a>
-                    <button class="btn btn-primary" id="btnSubmit" onclick="submitSP()"><i class="fas fa-upload"></i> Publish Scenepack</button>
-                </div>
+                    <div class="sp-sideblock">
+                        <h3>My submissions</h3>
+                        <div class="sp-mine" id="spMineList">
+                            <p style="margin:0;font-size:.78rem;color:var(--sp-muted)">Loading…</p>
+                        </div>
+                    </div>
+
+                    <div class="sp-sideblock">
+                        <h3>Rules</h3>
+                        <p style="margin:0;font-size:.76rem;line-height:1.6;color:var(--sp-muted)">
+                            Only upload footage you have the right to share, keep clips under 50% of the source
+                            runtime, and never re-upload another editor's pack.
+                        </p>
+                        <a href="/dmca" style="display:inline-block;margin-top:10px;font-size:.76rem;color:var(--sp-accent-soft)">DMCA policy</a>
+                    </div>
+                </aside>
             </div>
         </div>
     </div>
 
-    <!-- SOCIAL LOOKUP MODAL (Presets style without TikTok) -->
-    <div id="hlxOverlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(4,1,2,0.85);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)toggleHlx()">
-        <div style="background:#0d0407;border:1px solid var(--border);border-radius:24px;padding:28px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;box-shadow:0 25px 80px rgba(0,0,0,0.8), 0 0 35px rgba(230,21,54,0.15);position:relative">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
-                <div style="display:flex;align-items:center;gap:12px">
-                    <div style="width:38px;height:38px;border-radius:12px;background:rgba(230,21,54,0.12);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--cherry-light);font-size:1rem">
-                        <i class="fas fa-wand-magic-sparkles"></i>
-                    </div>
-                    <div>
-                        <h3 style="font-size:1.1rem;font-weight:800;color:#fff;margin:0">Social Lookup</h3>
-                        <p style="font-size:0.75rem;color:var(--muted);margin:0">Fetch profile info & select posts (YouTube, IG, X)</p>
-                    </div>
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <a href="/" class="hero-brand-lockup footer-brand-lockup">
+                        <img src="/assets/content.png" alt="Zyrex Logo" class="hero-brand-icon">
+                        <div class="hero-brand-text-col">
+                            <span class="hero-brand-title">Zyrex<sup>™</sup></span>
+                            <span class="hero-brand-sub">EDITING</span>
+                        </div>
+                    </a>
+                    <p>Editing leaks and stuff.</p>
                 </div>
-                <button type="button" onclick="toggleHlx()" style="background:rgba(255,255,255,0.05);border:none;color:var(--muted);width:32px;height:32px;border-radius:50%;cursor:pointer;display:inline-flex;align-items:center;justify-content:center"><i class="fas fa-times"></i></button>
-            </div>
-
-            <!-- Platform Tabs (No TikTok) -->
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:18px" id="hlxPlatforms">
-                <button type="button" class="btn-icon active" data-plat="youtube" onclick="selHlxPlat(this,'youtube')" style="padding:10px;border-radius:12px;background:rgba(230,21,54,0.15);border:1px solid var(--cherry-light);color:#fff;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:0.75rem;font-weight:700">
-                    <i class="fab fa-youtube" style="font-size:1.2rem;color:#ff0000"></i> YouTube
-                </button>
-                <button type="button" class="btn-icon" data-plat="instagram" onclick="selHlxPlat(this,'instagram')" style="padding:10px;border-radius:12px;background:rgba(230,21,54,0.04);border:1px solid var(--border);color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:0.75rem;font-weight:700">
-                    <i class="fab fa-instagram" style="font-size:1.2rem;color:#e1306c"></i> Instagram
-                </button>
-                <button type="button" class="btn-icon" data-plat="x" onclick="selHlxPlat(this,'x')" style="padding:10px;border-radius:12px;background:rgba(230,21,54,0.04);border:1px solid var(--border);color:var(--muted);cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px;font-size:0.75rem;font-weight:700">
-                    <i class="fab fa-x-twitter" style="font-size:1.2rem;color:#fff"></i> X / Twitter
-                </button>
-            </div>
-
-            <div style="display:flex;background:rgba(0,0,0,0.5);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px">
-                <span style="padding:12px 0 12px 14px;color:var(--cherry-light);font-size:0.9rem;font-weight:700" id="hlxPrefix">@</span>
-                <input id="hlxUser" placeholder="URL or @username..." style="flex:1;padding:12px;background:transparent;border:none;color:#fff;font-family:inherit;font-size:0.88rem;outline:none" onkeydown="if(event.key==='Enter')hlxLookup()">
-            </div>
-
-            <button type="button" class="social-scan-btn" id="btnHlxLookup" style="width:100%;height:46px;" onclick="hlxLookup()">
-                <i class="fas fa-wand-magic-sparkles"></i> <span>Scan &amp; List Content</span>
-            </button>
-            
-            <div id="hlxStatus" style="display:none;margin-top:14px;padding:10px;border-radius:10px;font-size:0.78rem;text-align:center"></div>
-
-            <!-- Profile Info Header & Posts Selection List -->
-            <div id="hlxResultsArea" style="display:none;margin-top:18px;padding-top:14px;border-top:1px solid rgba(255,255,255,0.08)">
-                <div id="hlxProfileBox" style="display:flex;align-items:center;gap:12px;background:rgba(255,255,255,0.03);padding:12px;border-radius:14px;margin-bottom:14px">
-                    <div style="position:relative;width:40px;height:40px;flex-shrink:0">
-                        <img id="hlxProfileAvatar" src="" alt="" referrerpolicy="no-referrer" style="width:40px;height:40px;border-radius:50%;object-fit:cover;background:rgba(255,43,82,0.1)" onerror="this.style.display='none';var fb=document.getElementById('hlxProfileAvatarFallback');if(fb)fb.style.display='flex';">
-                        <div id="hlxProfileAvatarFallback" style="display:none;width:40px;height:40px;border-radius:50%;background:rgba(255,43,82,0.15);border:1px solid rgba(255,43,82,0.3);align-items:center;justify-content:center;color:var(--cherry-light)"><i class="fas fa-user"></i></div>
-                    </div>
-                    <div style="flex:1;min-width:0">
-                        <strong id="hlxProfileName" style="color:#fff;font-size:0.88rem;display:block"></strong>
-                        <span id="hlxProfileHandle" style="color:var(--muted);font-size:0.75rem"></span>
-                    </div>
-                    <button type="button" onclick="applyProfileOnly()" class="btn btn-ghost" style="padding:6px 12px;font-size:0.72rem">Use Profile</button>
+                <div class="footer-links">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="/">Home</a></li>
+                        <li><a href="/leaks">Leaks</a></li>
+                        <li><a href="/feed">Feed</a></li>
+                        <li><a href="/plugins">Plugins</a></li>
+                        <li><a href="/requests">Requests</a></li>
+                        <li><a href="/audio">Audios</a></li>
+                        <li><a href="/scenepacks">Scenepacks</a></li>
+                    </ul>
                 </div>
-
-                <div style="font-size:0.75rem;font-weight:700;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:0.5px">Recent Content / Posts (Click to select)</div>
-                <div id="hlxPostsGrid" style="display:flex;flex-direction:column;gap:10px"></div>
+                <div class="footer-links">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="/terms">Terms of Service</a></li>
+                        <li><a href="/privacy">Privacy Policy</a></li>
+                        <li><a href="/dmca">DMCA</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Community</h4>
+                    <ul>
+                        <li><a href="https://discord.gg/4J3tars4QS" target="_blank" rel="noopener">Discord</a></li>
+                        <li><a href="/#contact">Contact</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Zyrex Editing. All rights reserved.</p>
             </div>
         </div>
-    </div>
-
-    <script src="/js/chunks/chunk-store.js?v=1"></script>
-    <script src="js/auth.js?v=13"></script>
-    <script>
-        var currentUser = null;
-        var hlxPlatform = 'youtube';
-        var fetchedProfileData = null;
-        var fetchedPosts = [];
-
-        function toggleSidebar() {
-            var sb = document.getElementById('sidebar');
-            var ov = document.getElementById('sidebarOverlay');
-            if (sb) {
-                sb.classList.remove('sidebar-hidden');
-                sb.classList.toggle('open');
-            }
-            if (ov) ov.classList.toggle('show');
-        }
-
-        (async function checkAuth(){
-            try {
-                var meResp = await fetch('/api/me', {credentials:'include'});
-                if (!meResp.ok) { window.location.href = '/api/login?redirect=' + encodeURIComponent(location.pathname); return; }
-                currentUser = await meResp.json();
-                
-                document.getElementById('userProfile').style.display = 'flex';
-                if(currentUser.avatar && currentUser.id) {
-                    document.getElementById('userAvatar').src = avatarProxyUrl(currentUser.id, currentUser.avatar, 64);
-                } else {
-                    document.getElementById('userAvatar').style.display = 'none';
-                }
-                document.getElementById('userName').textContent = currentUser.global_name || currentUser.username;
-
-                if (currentUser.is_admin) {
-                    document.getElementById('mainPanel').style.display = 'block';
-                    return;
-                }
-
-                const roles=[
-                    {id:'1519624224476762122',label:'Preset Uploader'},
-                    {id:'1522976282688880720',label:'Audio Uploader'},
-                    {id:'1522976376293167124',label:'Scenepack Uploader'}
-                ];
-                const checks=await Promise.all(roles.map(role=>fetch('/api/guild/check-role?userId='+currentUser.id+'&roleId='+role.id,{credentials:'include'}).then(resp=>resp.json()).then(d=>d.has_role).catch(()=>false)));
-                const hasAny=checks.some(c=>c);
-                if(!hasAny){
-                    showLockScreen('No Creator Access', 'You do not have permission to access the upload studio. Connect to our Discord and claim a creator role.');
-                    return;
-                }
-                
-                if(!checks[0]){
-                    document.getElementById('sidebarPreset').innerHTML = '<span class="locked-item"><i class="fas fa-lock"></i> <span>Resource Uploader</span> <span class="lock-badge">Locked</span></span>';
-                }
-                if(!checks[1]){
-                    document.getElementById('sidebarAudio').innerHTML = '<span class="locked-item"><i class="fas fa-lock"></i> <span>Audio Uploader</span> <span class="lock-badge">Locked</span></span>';
-                }
-                if (!checks[2]) {
-                    showLockScreen('No Scenepack Uploader Access', 'You do not have the <strong>Scenepack Uploader</strong> role on Discord yet. Claim it to unlock scenepack uploads.');
-                    return;
-                }
-                document.getElementById('mainPanel').style.display = 'block';
-            } catch(e) { redirectToLogin(); }
-        })();
-
-        function showLockScreen(title, text) {
-            document.querySelector('.studio-main').innerHTML = `
-                <div class="lock-container">
-                    <div class="lock-card">
-                        <i class="fas fa-lock lock-icon"></i>
-                        <h2>${title}</h2>
-                        <p>${text}</p>
-                        <div class="lock-actions">
-                            <a href="https://discord.gg/fAydSzpafA" target="_blank" class="btn btn-discord"><i class="fab fa-discord"></i> Join Discord Server</a>
-                            <a href="/" class="btn btn-ghost"><i class="fas fa-home"></i> Go Back</a>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function toggleHlx(){
-            var o=document.getElementById('hlxOverlay');
-            o.style.display=(o.style.display==='flex')?'none':'flex';
-        }
-        function selHlxPlat(btn,p){
-            hlxPlatform=p;
-            document.querySelectorAll('#hlxPlatforms .btn-icon').forEach(b=>{
-                b.classList.remove('active');
-                b.style.background = 'rgba(230,21,54,0.04)';
-                b.style.borderColor = 'var(--border)';
-                b.style.color = 'var(--muted)';
-            });
-            btn.classList.add('active');
-            btn.style.background = 'rgba(230,21,54,0.15)';
-            btn.style.borderColor = 'var(--cherry-light)';
-            btn.style.color = '#fff';
-        }
-        
-        async function hlxLookup(){
-            var user=document.getElementById('hlxUser').value.trim();
-            if(!user) return;
-            var st=document.getElementById('hlxStatus');
-            st.style.display='block';
-            st.textContent='Fetching profile & scanning posts...';
-            st.style.background = 'rgba(230,21,54,0.1)';
-            st.style.color = '#fff';
-            
-            var cleanUser = user.replace(/^@/, '').split('?')[0].replace(/\/$/, '').split('/').pop();
-            var platforms = {
-                youtube: 'https://www.youtube.com/@' + cleanUser,
-                instagram: 'https://www.instagram.com/' + cleanUser,
-                x: 'https://x.com/' + cleanUser
-            };
-            var lookupUrl = (user.startsWith('http://') || user.startsWith('https://')) ? user : (platforms[hlxPlatform] || ('https://www.youtube.com/@' + cleanUser));
-            
-            try {
-                var [rProfile, rScrape] = await Promise.all([
-                    fetch('/api/hlx/resolve?url='+encodeURIComponent(lookupUrl), {credentials:'include'}).then(res => res.json()).catch(() => ({})),
-                    fetch('/api/scrape?url='+encodeURIComponent(lookupUrl), {credentials:'include'}).then(res => res.json()).catch(() => ({}))
-                ]);
-
-                var creatorDisplay = rProfile.nickname || rScrape.author_name || rScrape.creator_nickname || cleanUser;
-                if (!creatorDisplay || ['instagram','youtube','x','twitter'].includes(creatorDisplay.toLowerCase())) {
-                    creatorDisplay = cleanUser;
-                }
-                var avatarUrl = rProfile.cdn_avatar || rProfile.avatar || rScrape.avatar || '';
-
-                fetchedProfileData = {
-                    nickname: creatorDisplay,
-                    avatar: avatarUrl,
-                    url: lookupUrl
-                };
-
-                // Show profile box
-                document.getElementById('hlxResultsArea').style.display = 'block';
-                document.getElementById('hlxProfileName').textContent = creatorDisplay;
-                document.getElementById('hlxProfileHandle').textContent = lookupUrl;
-                var pImg = document.getElementById('hlxProfileAvatar');
-                var pFb = document.getElementById('hlxProfileAvatarFallback');
-                if (avatarUrl) {
-                    pImg.src = avatarUrl;
-                    pImg.style.display = 'block';
-                    if (pFb) pFb.style.display = 'none';
-                } else {
-                    pImg.style.display = 'none';
-                    if (pFb) pFb.style.display = 'flex';
-                }
-
-                // Gather extracted items/posts array
-                fetchedPosts = [];
-
-                // 1. Add real posts from profile if returned (e.g. Instagram posts array)
-                if (rProfile.posts && Array.isArray(rProfile.posts) && rProfile.posts.length > 0) {
-                    rProfile.posts.forEach(p => {
-                        if (p && (p.title || p.desc || p.thumb)) {
-                            fetchedPosts.push({
-                                title: p.title || (creatorDisplay + ' Post'),
-                                desc: p.desc || '',
-                                thumb: p.thumb || avatarUrl,
-                                url: p.url || lookupUrl,
-                                badge: 'Instagram Post'
-                            });
-                        }
-                    });
-                }
-
-                // 2. Add scraped items if returned
-                if (rScrape.items && Array.isArray(rScrape.items)) {
-                    rScrape.items.forEach(it => {
-                        if (it && (it.title || it.name)) {
-                            fetchedPosts.push({
-                                title: it.title || it.name,
-                                desc: it.description || it.desc || '',
-                                thumb: it.cdn_thumbnail || it.image || (it.thumbnails && it.thumbnails[0]) || avatarUrl,
-                                url: it.url || lookupUrl,
-                                badge: 'Recent Post'
-                            });
-                        }
-                    });
-                }
-
-                // 3. Fallback main post if no timeline posts found
-                if (fetchedPosts.length === 0) {
-                    var mainTitle = rScrape.title || rScrape.name || (creatorDisplay + ' Scenepack');
-                    var mainThumb = rScrape.cdn_thumbnail || rScrape.image || (rScrape.thumbnails && rScrape.thumbnails[0]) || avatarUrl || '';
-                    var mainDesc = rScrape.description || rScrape.desc || ('Official scenepack media from ' + creatorDisplay);
-
-                    fetchedPosts.push({
-                        title: mainTitle,
-                        desc: mainDesc,
-                        thumb: mainThumb,
-                        url: lookupUrl,
-                        badge: 'Scraped Content'
-                    });
-                }
-
-                var grid = document.getElementById('hlxPostsGrid');
-                grid.innerHTML = fetchedPosts.map((post, idx) => `
-                    <div onclick="selectHlxPost(${idx})" style="display:flex;align-items:center;gap:14px;padding:12px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.12);border-radius:14px;cursor:pointer;transition:all 0.25s ease" onmouseover="this.style.borderColor='var(--cherry-light)';this.style.background='rgba(255,43,82,0.12)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.12)';this.style.background='rgba(255,255,255,0.05)'">
-                        ${post.thumb ? `<img src="${post.thumb}" referrerpolicy="no-referrer" style="width:64px;height:46px;object-fit:cover;border-radius:10px;flex-shrink:0;border:1px solid rgba(255,255,255,0.1)" alt="" onerror="this.outerHTML='<div style=\\'width:64px;height:46px;border-radius:10px;background:rgba(255,43,82,0.15);display:flex;align-items:center;justify-content:center;color:var(--cherry-light);flex-shrink:0\\'><i class=\\'fas fa-clapperboard\\'></i></div>'">` : `<div style="width:64px;height:46px;border-radius:10px;background:rgba(255,43,82,0.15);display:flex;align-items:center;justify-content:center;color:var(--cherry-light);flex-shrink:0"><i class="fas fa-clapperboard"></i></div>`}
-                        <div style="flex:1;min-width:0">
-                            <strong style="color:#fff;font-size:0.86rem;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${post.title}</strong>
-                            <span style="color:var(--muted);font-size:0.75rem;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px">${post.desc || 'Click to apply title, thumbnail & desc to upload form'}</span>
-                        </div>
-                        <button type="button" class="btn btn-primary" style="padding:6px 14px;font-size:0.72rem;flex-shrink:0;border-radius:999px"><i class="fas fa-check"></i> Select</button>
-                    </div>
-                `).join('');
-
-                st.style.color = '#00e676';
-                st.innerHTML = '<i class="fas fa-check-circle"></i> Content Cards Ready! Click any card below to select.';
-            } catch(e) {
-                st.style.color = 'var(--cherry-light)';
-                st.textContent = 'Network error during lookup';
-            }
-        }
-
-        function applyProfileOnly() {
-            if (!fetchedProfileData) return;
-            document.getElementById('socialUrl').value = fetchedProfileData.url;
-            document.getElementById('creatorName').value = fetchedProfileData.nickname;
-            alertMsg('Applied creator profile: ' + fetchedProfileData.nickname, false);
-            toggleHlx();
-        }
-
-        function selectHlxPost(idx) {
-            var post = fetchedPosts[idx];
-            if (!post) return;
-            if (fetchedProfileData) {
-                document.getElementById('socialUrl').value = post.url || fetchedProfileData.url;
-                document.getElementById('creatorName').value = fetchedProfileData.nickname;
-            }
-            if (post.title) document.getElementById('spName').value = post.title;
-            if (post.desc) document.getElementById('spDesc').value = post.desc;
-            if (post.thumb) {
-                document.getElementById('spThumb').value = post.thumb;
-                previewThumb(post.thumb);
-            }
-            alertMsg('Selected content: ' + post.title, false);
-            toggleHlx();
-        }
-
-        async function resolveCreator(){
-            var url = document.getElementById('socialUrl').value.trim();
-            if (!url || !url.includes('.')) return;
-            try {
-                var r = await fetch('/api/hlx/resolve?url='+encodeURIComponent(url),{credentials:'include'});
-                var d = await r.json();
-                if (d && (d.nickname || d.success)) {
-                    var nick = d.nickname || url.replace(/^@/,'').split('/').pop();
-                    document.getElementById('creatorName').value = nick;
-                    alertMsg('Social resolved: ' + nick, false);
-                }
-            } catch(e) {}
-        }
-
-        
-        var activeLookupSource = 'imdb';
-        var prodLookupDebounce = null;
-
-        function openProdLookupModal() {
-            var el = document.getElementById('prodLookupOverlay');
-            el.style.display = 'flex';
-            var inp = document.getElementById('prodSearchQuery');
-            // If origin or name has text, prefill
-            var orig = document.getElementById('spOrigin').value || document.getElementById('spName').value || '';
-            if (orig && !inp.value) {
-                inp.value = orig.split('—')[0].split('-')[0].trim();
-                execProdLookup();
-            }
-            inp.focus();
-        }
-
-        function closeProdLookupModal() {
-            document.getElementById('prodLookupOverlay').style.display = 'none';
-        }
-
-        function switchLookupSource(src) {
-            activeLookupSource = src;
-            var tImdb = document.getElementById('tabLookupImdb');
-            var tGames = document.getElementById('tabLookupGames');
-            var inp = document.getElementById('prodSearchQuery');
-
-            if (src === 'imdb') {
-                tImdb.style.background = 'rgba(245, 197, 24, 0.15)';
-                tImdb.style.borderColor = 'rgba(245, 197, 24, 0.5)';
-                tImdb.style.color = '#fff';
-                tGames.style.background = 'rgba(255, 255, 255, 0.04)';
-                tGames.style.borderColor = 'var(--border)';
-                tGames.style.color = 'var(--muted)';
-                inp.placeholder = 'Search movie, TV series, anime on IMDb...';
-            } else {
-                tGames.style.background = 'rgba(6, 182, 212, 0.15)';
-                tGames.style.borderColor = 'rgba(6, 182, 212, 0.5)';
-                tGames.style.color = '#fff';
-                tImdb.style.background = 'rgba(255, 255, 255, 0.04)';
-                tImdb.style.borderColor = 'var(--border)';
-                tImdb.style.color = 'var(--muted)';
-                inp.placeholder = 'Search video games on IGDB (e.g. Elden Ring, Valorant, GTA V)...';
-            }
-            if (inp.value.trim()) execProdLookup();
-        }
-
-        async function execProdLookup() {
-            var q = document.getElementById('prodSearchQuery').value.trim();
-            var st = document.getElementById('prodLookupStatus');
-            var rl = document.getElementById('prodResultsList');
-
-            if (!q) {
-                st.style.display = 'block';
-                st.style.background = 'rgba(255,43,82,0.1)';
-                st.style.color = 'var(--cherry-light)';
-                st.textContent = 'Please enter a title to search.';
-                return;
-            }
-
-            st.style.display = 'block';
-            st.style.background = 'rgba(255,255,255,0.05)';
-            st.style.color = '#fff';
-            st.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching ' + (activeLookupSource === 'imdb' ? 'IMDb database...' : 'IGDB video games...');
-            rl.style.display = 'none';
-
-            try {
-                var endpoint = activeLookupSource === 'imdb' ? '/api/lookup/imdb?q=' : '/api/lookup/games?q=';
-                var res = await fetch(endpoint + encodeURIComponent(q));
-                var data = await res.json();
-
-                var results = data && data.results ? data.results : [];
-
-                if (!results.length) {
-                    st.style.background = 'rgba(255,255,255,0.05)';
-                    st.style.color = 'var(--muted)';
-                    st.textContent = 'No matching ' + (activeLookupSource === 'imdb' ? 'movies or series' : 'games') + ' found. Try a different keyword.';
-                    return;
-                }
-
-                st.style.display = 'none';
-                rl.style.display = 'flex';
-
-                rl.innerHTML = results.map(function(item) {
-                    var poster = item.poster || '/assets/content.png';
-                    var metaPieces = [item.year, item.type, item.genres || item.stars, item.directors].filter(Boolean);
-                    var metaLine = metaPieces.join(' · ');
-                    var ratingTag = '';
-                    if (item.rating) {
-                        var isG = (item.type === 'Game' || item.category === 'games' || activeLookupSource === 'games');
-                        var badgeBg = isG ? 'linear-gradient(135deg, #7c3aed, #4f46e5)' : '#f5c518';
-                        var badgeColor = isG ? '#ffffff' : '#000000';
-                        var iconClass = isG ? 'fas fa-gamepad' : 'fab fa-imdb';
-                        ratingTag = '<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 7px;border-radius:6px;background:' + badgeBg + ';color:' + badgeColor + ';font-weight:900;font-size:0.7rem;margin-left:6px"><i class="' + iconClass + '"></i> ' + escapeHtml(item.rating) + '/10</span>';
-                    }
-
-                    return '<div class="lookup-card-row">' +
-                        '<img src="' + poster + '" class="lookup-thumb" onerror="this.src=\'/assets/content.png\'">' +
-                        '<div class="lookup-info">' +
-                            '<h5>' + escapeHtml(item.title) + ' ' + ratingTag + '</h5>' +
-                            '<div class="lookup-info-meta">' + escapeHtml(metaLine) + '</div>' +
-                        '</div>' +
-                        '<div>' +
-                            '<button type="button" class="btn-lookup-select" onclick="selectLookupResult(' + escapeHtml(JSON.stringify(JSON.stringify(item))) + ')">' +
-                                '<i class="fas fa-check"></i> Select' +
-                            '</button>' +
-                        '</div>' +
-                    '</div>';
-                }).join('');
-
-            } catch(e) {
-                st.style.display = 'block';
-                st.style.background = 'rgba(255,43,82,0.1)';
-                st.style.color = 'var(--cherry-light)';
-                st.textContent = 'Lookup error: ' + (e.message || 'Failed to contact database');
-            }
-        }
-
-        function selectLookupResult(jsonStr) {
-            try {
-                var item = JSON.parse(jsonStr);
-                if (!item) return;
-
-                var isGame = (item.type === 'Game' || item.category === 'games' || activeLookupSource === 'games');
-
-                // 1. Set origin
-                document.getElementById('spOrigin').value = item.title || '';
-
-                // 2. Set thumbnail
-                if (item.poster) {
-                    document.getElementById('spThumb').value = item.poster;
-                    previewThumb(item.poster);
-                }
-
-                // 3. Set rating & rich metadata
-                var ratingVal = (item.rating || '').toString().trim().replace(/\/10$/, '');
-                if (document.getElementById('spRating')) {
-                    document.getElementById('spRating').value = ratingVal;
-                }
-                if (document.getElementById('spImdbId')) document.getElementById('spImdbId').value = item.imdb_id || item.id || '';
-                if (document.getElementById('spReleaseDate')) document.getElementById('spReleaseDate').value = item.year || '';
-                if (document.getElementById('spGenres')) document.getElementById('spGenres').value = item.genres || '';
-                if (document.getElementById('spDirectors')) document.getElementById('spDirectors').value = item.directors || '';
-                if (document.getElementById('spCast')) document.getElementById('spCast').value = item.cast || item.stars || '';
-                if (document.getElementById('spBanner')) document.getElementById('spBanner').value = item.banner || item.poster || '';
-                if (document.getElementById('spOriginType')) document.getElementById('spOriginType').value = item.type || (isGame ? 'Game' : 'Movie');
-
-                // 4. Update preview card
-                var card = document.getElementById('importedProdCard');
-                if (card) {
-                    card.style.display = 'flex';
-                    var thumbEl = document.getElementById('importedThumb');
-                    if (thumbEl) thumbEl.src = item.poster || '/assets/content.png';
-
-                    var titleEl = document.getElementById('importedTitle');
-                    if (titleEl) titleEl.textContent = item.title + (item.year ? ' (' + item.year + ')' : '');
-
-                    var badgeEl = document.getElementById('importedBadge');
-                    var rateText = document.getElementById('importedRatingText');
-                    if (badgeEl && rateText) {
-                        if (ratingVal) {
-                            badgeEl.style.display = 'inline-flex';
-                            badgeEl.style.background = isGame ? 'linear-gradient(135deg, #7c3aed, #4f46e5)' : '#f5c518';
-                            badgeEl.style.color = isGame ? '#ffffff' : '#000000';
-                            badgeEl.innerHTML = '<i class="' + (isGame ? 'fas fa-gamepad' : 'fab fa-imdb') + '"></i> ' + escapeHtml(ratingVal) + '/10';
-                        } else {
-                            badgeEl.style.display = 'none';
-                        }
-                    }
-
-                    var catPill = document.getElementById('importedCategoryPill');
-                    if (catPill) {
-                        catPill.textContent = item.type || (isGame ? 'Game' : 'Film/TV');
-                    }
-
-                    var metaEl = document.getElementById('importedMeta');
-                    if (metaEl) {
-                        var pieces = [item.genres, item.directors, item.cast || item.stars].filter(Boolean);
-                        metaEl.textContent = pieces.join(' · ') || 'Database metadata synced';
-                    }
-                }
-
-                // 5. Auto-fill Scenepack name prefix if empty or default
-                var nameInput = document.getElementById('spName');
-                if (!nameInput.value || nameInput.value.includes('—') || nameInput.value.includes('-')) {
-                    nameInput.value = item.title + ' — ';
-                }
-
-                // 6. Auto-select category
-                var catSelect = document.getElementById('spCat');
-                if (item.type === 'Series') catSelect.value = 'series';
-                else if (item.type === 'Game' || isGame) catSelect.value = 'games';
-                else if (item.type === 'Movie') catSelect.value = 'movie';
-
-                alertMsg('Imported from ' + (isGame ? 'IGDB' : 'IMDb') + ': ' + item.title + (item.year ? ' (' + item.year + ')' : ''), false);
-                closeProdLookupModal();
-            } catch(err) {
-                console.error('Error selecting item:', err);
-            }
-        }
-
-        function clearImportedProd() {
-            var card = document.getElementById('importedProdCard');
-            if (card) card.style.display = 'none';
-            if (document.getElementById('spRating')) document.getElementById('spRating').value = '';
-            if (document.getElementById('spImdbId')) document.getElementById('spImdbId').value = '';
-            if (document.getElementById('spReleaseDate')) document.getElementById('spReleaseDate').value = '';
-            if (document.getElementById('spGenres')) document.getElementById('spGenres').value = '';
-            if (document.getElementById('spDirectors')) document.getElementById('spDirectors').value = '';
-            if (document.getElementById('spCast')) document.getElementById('spCast').value = '';
-            if (document.getElementById('spBanner')) document.getElementById('spBanner').value = '';
-            if (document.getElementById('spOriginType')) document.getElementById('spOriginType').value = '';
-        }
-
-        function previewThumb(url) {
-            var box = document.getElementById('thumbPreviewBox');
-            var img = document.getElementById('thumbPreviewImg');
-            if (url && (url.includes('.') || url.startsWith('http'))) {
-                img.src = url;
-                box.classList.add('show');
-            } else {
-                box.classList.remove('show');
-            }
-        }
-
-        var uploaderInput = document.getElementById('uploaderSearchInput');
-        var uploaderSuggestions = document.getElementById('uploaderSuggestions');
-        var clearCreditBtn = document.getElementById('clearCreditBtn');
-        var searchMembersTimeout = null;
-
-        if (uploaderInput) {
-            uploaderInput.addEventListener('input', function() {
-                var val = uploaderInput.value.trim();
-                if (clearCreditBtn) clearCreditBtn.style.display = val ? 'block' : 'none';
-                clearTimeout(searchMembersTimeout);
-                if (!val) {
-                    if (uploaderSuggestions) uploaderSuggestions.style.display = 'none';
-                    return;
-                }
-                searchMembersTimeout = setTimeout(function(){
-                    searchDiscordMembers(val);
-                }, 250);
-            });
-
-            uploaderInput.addEventListener('focus', function(){
-                var val = uploaderInput.value.trim();
-                if (val) searchDiscordMembers(val);
-            });
-        }
-
-        document.addEventListener('click', function(e){
-            if (!e.target.closest('.uploader-credit-wrap')) {
-                if (uploaderSuggestions) uploaderSuggestions.style.display = 'none';
-            }
-        });
-
-        async function searchDiscordMembers(query) {
-            if (!uploaderSuggestions) return;
-            var qTrim = query.trim();
-            if (/^\d{17,20}$/.test(qTrim)) {
-                try {
-                    uploaderSuggestions.style.display = 'block';
-                    uploaderSuggestions.innerHTML = '<div style="padding:12px;font-size:0.78rem;color:var(--muted);text-align:center"><i class="fas fa-spinner fa-spin"></i> Looking up Discord User ID...</div>';
-                    var uRes = await fetch('/api/discord-user?userId=' + qTrim);
-                    if (uRes.ok) {
-                        var uData = await uRes.json();
-                        if (uData.success && uData.user) {
-                            var u = uData.user;
-                            var memberObj = {
-                                id: u.id,
-                                username: u.username,
-                                display_name: u.display_name || u.global_name || u.username,
-                                avatar: u.avatar_url || ''
-                            };
-                            selectCreditedMember(memberObj);
-                            return;
-                        }
-                    }
-                } catch(e) {}
-            }
-            try {
-                uploaderSuggestions.style.display = 'block';
-                uploaderSuggestions.innerHTML = '<div style="padding:12px;font-size:0.78rem;color:var(--muted);text-align:center"><i class="fas fa-spinner fa-spin"></i> Searching Discord server members...</div>';
-                
-                var res = await fetch('/api/guild/members?q=' + encodeURIComponent(query) + '&autocomplete=1');
-                if (!res.ok) throw new Error('Failed to fetch');
-                var data = await res.json();
-                var rawMembers = (data && Array.isArray(data.members)) ? data.members : [];
-                
-                var qLower = query.toLowerCase().trim();
-                var botNames = ['dyno', 'disboard', 'arcane', 'carl-bot', 'probot', 'mee6', 'zyrex bot', 'ticket tool', 'hydra', 'jockie', 'midjourney', 'yggdrasil', 'dank memer', 'tupperbox', 'chip', 'fredboat', 'giveaway', 'helper.gg', 'server stats', 'voice master', 'autocode', 'bleep', 'ai helper', 'statbot', 'zyrex verify'];
-                var members = rawMembers.filter(function(m) {
-                    if (m.bot === true || m.is_bot === true) return false;
-                    var u = (m.username || '').toLowerCase();
-                    var d = (m.display_name || '').toLowerCase();
-                    var id = String(m.id || '');
-                    if (botNames.some(function(b){ return u === b || u.startsWith(b + '#') || (u.includes(b) && !u.includes('bottom')); })) return false;
-                    if (qLower) {
-                        return u.includes(qLower) || d.includes(qLower) || id.includes(qLower);
-                    }
-                    return true;
-                });
-                if (members.length > 25) {
-                    members = members.slice(0, 25);
-                }
-                
-                if (!members.length) {
-                    uploaderSuggestions.innerHTML = '<div style="padding:12px;font-size:0.78rem;color:var(--muted);text-align:center">No Discord members found matching "' + escapeHtml(query) + '"</div>';
-                    return;
-                }
-
-                uploaderSuggestions.innerHTML = members.map(function(m, idx){
-                    var dName = m.display_name || m.username || 'Unknown';
-                    var handle = m.username ? '@' + m.username : '';
-                    var av = m.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png';
-                    return '<div class="uploader-member-item" data-idx="' + idx + '">' +
-                        '<img src="' + escapeHtml(av) + '" class="uploader-member-avatar" onerror="this.src=\'https://cdn.discordapp.com/embed/avatars/0.png\'">' +
-                        '<div class="uploader-member-info">' +
-                            '<div class="uploader-member-name">' +
-                                escapeHtml(dName) +
-                                (m.is_admin ? '<i class="fas fa-circle-check" style="color:#0095F6;font-size:0.75rem" title="Admin"></i>' : '') +
-                            '</div>' +
-                            (handle ? '<span class="uploader-member-handle">' + escapeHtml(handle) + '</span>' : '') +
-                        '</div>' +
-                        '<span class="uploader-member-id">' + escapeHtml(m.id) + '</span>' +
-                    '</div>';
-                }).join('');
-
-                uploaderSuggestions.querySelectorAll('.uploader-member-item').forEach(function(item){
-                    item.addEventListener('click', function(){
-                        var idx = parseInt(item.getAttribute('data-idx'), 10);
-                        selectCreditedMember(members[idx]);
-                    });
-                });
-            } catch(e) {
-                uploaderSuggestions.innerHTML = '<div style="padding:12px;font-size:0.78rem;color:var(--cherry-light);text-align:center">Error searching members</div>';
-            }
-        }
-
-        function selectCreditedMember(m) {
-            if (!m) return;
-            document.getElementById('customUploaderId').value = m.id;
-            var name = m.display_name || m.username || '';
-            document.getElementById('customUploaderName').value = name;
-            document.getElementById('customUploaderAvatar').value = m.avatar || '';
-
-            document.getElementById('creditedAvatar').src = m.avatar || 'https://cdn.discordapp.com/embed/avatars/0.png';
-            document.getElementById('creditedName').textContent = name + (m.username ? ' (@' + m.username + ')' : '');
-            document.getElementById('creditedId').textContent = 'Discord ID: ' + m.id;
-
-            document.getElementById('creditedUserBadge').style.display = 'flex';
-            if (uploaderSuggestions) uploaderSuggestions.style.display = 'none';
-            if (uploaderInput) uploaderInput.value = '';
-            if (clearCreditBtn) clearCreditBtn.style.display = 'none';
-        }
-
-        function clearCreditedUploader() {
-            document.getElementById('customUploaderId').value = '';
-            document.getElementById('customUploaderName').value = '';
-            document.getElementById('customUploaderAvatar').value = '';
-
-            document.getElementById('creditedUserBadge').style.display = 'none';
-            if (uploaderInput) uploaderInput.value = '';
-            if (clearCreditBtn) clearCreditBtn.style.display = 'none';
-            if (uploaderSuggestions) uploaderSuggestions.style.display = 'none';
-        }
-
-        function escapeHtml(text) {
-            if (!text) return '';
-            return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-        }
-
-        async function submitSP(){
-            var btn = document.getElementById('btnSubmit');
-            var name = document.getElementById('spName').value.trim();
-            var link = document.getElementById('spLink').value.trim();
-            if (!name) return alertMsg('Scenepack Name is required', true);
-            if (!link) return alertMsg('Download link is required', true);
-            
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Submitting pack...';
-            
-            var generatedId = 'scenepack-' + Date.now().toString(36);
-
-            var creditedId = (document.getElementById('customUploaderId') || {}).value || '';
-            var creditedName = (document.getElementById('customUploaderName') || {}).value || '';
-            var creditedAvatar = (document.getElementById('customUploaderAvatar') || {}).value || '';
-
-            if (!creditedId && uploaderInput) {
-                var rawIn = uploaderInput.value.trim();
-                if (/^\d{17,20}$/.test(rawIn)) {
-                    creditedId = rawIn;
-                }
-            }
-
-            try {
-                var rawRating = (document.getElementById('spRating') ? document.getElementById('spRating').value.trim() : '');
-                var cleanRating = rawRating ? rawRating.replace(/\/10$/, '').trim() : '';
-
-                var payload = {
-                    id: generatedId,
-                    type: 'scenepack',
-                    name: name,
-                    category: document.getElementById('spCat').value || 'scenepack',
-                    origin: document.getElementById('spOrigin').value.trim(),
-                    rating: cleanRating || undefined,
-                    imdb_rating: cleanRating || undefined,
-                    imdb_id: (document.getElementById('spImdbId') ? document.getElementById('spImdbId').value.trim() : '') || undefined,
-                    release_date: (document.getElementById('spReleaseDate') ? document.getElementById('spReleaseDate').value.trim() : '') || undefined,
-                    genres: (document.getElementById('spGenres') ? document.getElementById('spGenres').value.trim() : '') || undefined,
-                    directors: (document.getElementById('spDirectors') ? document.getElementById('spDirectors').value.trim() : '') || undefined,
-                    cast: (document.getElementById('spCast') ? document.getElementById('spCast').value.trim() : '') || undefined,
-                    banner: (document.getElementById('spBanner') ? document.getElementById('spBanner').value.trim() : '') || undefined,
-                    origin_type: (document.getElementById('spOriginType') ? document.getElementById('spOriginType').value.trim() : '') || undefined,
-                    description: document.getElementById('spDesc').value.trim(),
-                    source_url: link,
-                    product_url: link,
-                    file_url: link,
-                    thumbnail: document.getElementById('spThumb').value.trim(),
-                    creator_nickname: document.getElementById('creatorName').value.trim(),
-                    creator_social_url: document.getElementById('socialUrl').value.trim(),
-                    file_path: '',
-                    credited_uploader_id: creditedId || undefined,
-                    credited_uploader_name: creditedName || undefined,
-                    credited_uploader_avatar: creditedAvatar || undefined,
-                    uploader_id: creditedId || undefined,
-                    uploader_name: creditedName || undefined,
-                    uploader_avatar: creditedAvatar || undefined,
-                    author_id: creditedId || undefined,
-                    author_name: creditedName || undefined
-                };
-                
-                var resp = await fetch('/api/products/submit', {
-                    method: 'POST',
-                    headers: {'Content-Type':'application/json'},
-                    body: JSON.stringify(payload),
-                    credentials: 'include'
-                });
-                var data = await resp.json();
-
-                if (resp.ok && (data.success || data.id || data.product_id || data.product)) {
-                    var finalId = data.id || data.product_id || (data.product && data.product.id) || generatedId;
-                    payload.id = finalId;
-                    try {
-                        localStorage.removeItem('zyrex_products_cache');
-                        localStorage.removeItem('zyrex_resources_cache');
-                        var editedMap = JSON.parse(localStorage.getItem('zyrex_edited_products') || '{}');
-                        editedMap[finalId] = payload;
-                        localStorage.setItem('zyrex_edited_products', JSON.stringify(editedMap));
-                    } catch(e) {}
-
-                    alertMsg('Published! Redirecting to scenepack page...', false);
-                    setTimeout(function(){ window.location.href = '/product-scenepack?id=' + encodeURIComponent(finalId); }, 1000);
-                } else {
-                    throw new Error(data.error || data.message || 'Submit failed');
-                }
-            } catch(e) {
-                alertMsg(e.message || 'Submission error', true);
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-upload"></i> Publish Scenepack';
-            }
-        }
-        
-        function alertMsg(msg, err) {
-            var b = document.getElementById('alertBox');
-            b.textContent = msg;
-            b.className = 'studio-alert show ' + (err ? 'error' : 'success');
-            setTimeout(function(){ b.classList.remove('show'); }, 5000);
-        }
-    </script>
-    <!-- IMDB & IGDB LOOKUP MODAL -->
-    <div id="prodLookupOverlay" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(4,1,2,0.88);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);align-items:center;justify-content:center;padding:20px" onclick="if(event.target===this)closeProdLookupModal()">
-        <div style="background:#0d060a;border:1px solid var(--border);border-radius:26px;padding:28px;width:100%;max-width:580px;max-height:90vh;overflow-y:auto;box-shadow:0 25px 80px rgba(0,0,0,0.85);position:relative">
-            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px">
-                <div style="display:flex;align-items:center;gap:12px">
-                    <div style="width:40px;height:40px;border-radius:12px;background:rgba(245,197,24,0.12);border:1px solid rgba(245,197,24,0.35);display:flex;align-items:center;justify-content:center;color:#f5c518;font-size:1.1rem">
-                        <i class="fas fa-database"></i>
-                    </div>
-                    <div>
-                        <h3 style="font-size:1.15rem;font-weight:800;color:#fff;margin:0">Production &amp; Game Search</h3>
-                        <p style="font-size:0.75rem;color:var(--muted);margin:0">Fetch from IMDb (Films &amp; Series) or IGDB (Video Games)</p>
-                    </div>
-                </div>
-                <button type="button" onclick="closeProdLookupModal()" style="background:rgba(255,255,255,0.05);border:none;color:var(--muted);width:32px;height:32px;border-radius:50%;cursor:pointer;display:inline-flex;align-items:center;justify-content:center"><i class="fas fa-times"></i></button>
-            </div>
-
-            <!-- Tabs: IMDb vs IGDB -->
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px">
-                <button type="button" id="tabLookupImdb" class="btn-icon active" onclick="switchLookupSource('imdb')" style="padding:10px;border-radius:12px;background:rgba(245,197,24,0.15);border:1px solid rgba(245,197,24,0.5);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-size:0.82rem;font-weight:700">
-                    <i class="fab fa-imdb" style="color:#f5c518;font-size:1.2rem"></i> Movies &amp; TV Series (IMDb)
-                </button>
-                <button type="button" id="tabLookupGames" class="btn-icon" onclick="switchLookupSource('games')" style="padding:10px;border-radius:12px;background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-size:0.82rem;font-weight:700">
-                    <i class="fas fa-gamepad" style="color:#06b6d4;font-size:1.1rem"></i> Video Games (IGDB)
-                </button>
-            </div>
-
-            <!-- Search Input -->
-            <div style="display:flex;background:rgba(0,0,0,0.55);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:16px">
-                <span style="padding:12px 0 12px 14px;color:var(--cherry-light);font-size:0.9rem"><i class="fas fa-search"></i></span>
-                <input id="prodSearchQuery" placeholder="Search Stranger Things, The Batman, Elden Ring, Cyberpunk..." style="flex:1;padding:12px;background:transparent;border:none;color:#fff;font-family:inherit;font-size:0.88rem;outline:none" onkeydown="if(event.key==='Enter')execProdLookup()">
-                <button type="button" onclick="execProdLookup()" style="padding:0 16px;background:var(--cherry);border:none;color:#fff;font-weight:700;font-size:0.8rem;cursor:pointer">Search</button>
-            </div>
-
-            <!-- Status Indicator -->
-            <div id="prodLookupStatus" style="display:none;margin-bottom:14px;padding:8px 12px;border-radius:10px;font-size:0.78rem;text-align:center"></div>
-
-            <!-- Results List -->
-            <div id="prodResultsList" class="lookup-results-list" style="display:none"></div>
-        </div>
-    </div>
-    <script src="js/script.js?v=47"></script>
+    </footer>
+
+    <script src="js/auth.js?v=19"></script>
+    <script src="js/script.js?v=92"></script>
+    <script src="/js/safe-dom.js?v=2"></script>
+    <script src="/js/scenepacks-common.js?v=7"></script>
+    <script src="/js/upload-scenepack.js?v=12"></script>
+    <script src="/js/page-motion.js?v=6"></script>
 </body>
+
 </html>

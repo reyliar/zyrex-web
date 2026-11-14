@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex,nofollow">
+    <title>Zyrex | Admin — Feed</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,500,600,700,800,900&amp;display=swap">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --cherry: var(--zr-accent, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1));
+            --glass: rgba(14, 10, 18, 0.82);
+            --border: rgba(255, 255, 255, 0.12);
+            --muted: rgba(255, 255, 255, 0.80);
+            --ok: #34d399;
+            --warn: #fbbf24;
+            --danger: #f87171;
+        }
+        body { background: #070209; color: #f8f5f6; font-family: 'Satoshi', sans-serif; min-height: 100vh; padding: 88px 18px 60px; }
+        body::before { content: ''; position: fixed; inset: 0; z-index: -1; background: radial-gradient(circle at 15% 0%, rgba(var(--zr-rgb-255-43-82, 255, 43, 82),.16) 0%, transparent 40%), radial-gradient(circle at 85% 20%, rgba(var(--zr-rgb-120-0-40, 120, 0, 40),.1) 0%, transparent 35%); }
+        .topbar { position: fixed; top: 0; left: 0; right: 0; height: 64px; display: flex; align-items: center; gap: 14px; padding: 0 20px; background: rgba(7, 2, 9, .86); border-bottom: 1px solid var(--border); backdrop-filter: blur(14px); z-index: 5; }
+        .topbar img { width: 26px; height: 26px; }
+        .topbar strong { font-size: 1rem; letter-spacing: .02em; }
+        .topbar .badge { padding: 3px 9px; border-radius: 999px; background: rgba(var(--zr-rgb-255-43-82, 255, 43, 82),.16); border: 1px solid rgba(var(--zr-rgb-255-43-82, 255, 43, 82),.35); color: rgba(var(--zr-rgb-255-128-152, 255, 128, 152), 1); font-size: .68rem; text-transform: uppercase; letter-spacing: .08em; }
+        .topbar a { margin-left: auto; color: var(--muted); text-decoration: none; font-size: .82rem; }
+        .topbar a:hover { color: #fff; }
+        .wrap { max-width: 1180px; margin: 0 auto; }
+        .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+        .tab { padding: 9px 16px; border-radius: 999px; border: 1px solid var(--border); background: rgba(255, 255, 255, .04); color: var(--muted); font: inherit; font-size: .84rem; cursor: pointer; }
+        .tab.is-active { border-color: rgba(var(--zr-rgb-255-43-82, 255, 43, 82),.55); background: rgba(var(--zr-rgb-255-43-82, 255, 43, 82),.16); color: #fff; }
+        .panel { display: none; }
+        .panel.is-active { display: block; }
+        .card { background: var(--glass); border: 1px solid var(--border); border-radius: 16px; padding: 18px; }
+        .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; }
+        .stat { background: rgba(255, 255, 255, .04); border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
+        .stat span { display: block; color: var(--muted); font-size: .74rem; text-transform: uppercase; letter-spacing: .06em; }
+        .stat strong { display: block; margin-top: 6px; font-size: 1.5rem; }
+        .toolbar { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 14px; }
+        input[type=search], input[type=text], input[type=number], select, textarea {
+            background: rgba(255, 255, 255, .05); border: 1px solid var(--border); border-radius: 10px;
+            color: #fff; padding: 9px 12px; font: inherit; font-size: .84rem; min-width: 0;
+        }
+        input:focus, select:focus, textarea:focus { outline: none; border-color: rgba(var(--zr-rgb-255-43-82, 255, 43, 82),.6); }
+        textarea { width: 100%; min-height: 120px; font-family: ui-monospace, monospace; font-size: .8rem; resize: vertical; }
+        .btn { padding: 9px 14px; border-radius: 10px; border: 1px solid var(--border); background: rgba(255, 255, 255, .05); color: #fff; font: inherit; font-size: .82rem; cursor: pointer; }
+        .btn:hover { border-color: rgba(var(--zr-rgb-255-43-82, 255, 43, 82),.5); }
+        .btn:disabled { opacity: .5; cursor: not-allowed; }
+        .btn.primary { background: var(--cherry); border-color: var(--cherry); }
+        .btn.danger { color: #ffb3c0; border-color: rgba(248,113,113,.45); }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { text-align: left; padding: 11px 10px; border-bottom: 1px solid rgba(255, 255, 255, .07); font-size: .82rem; vertical-align: top; }
+        th { color: var(--muted); font-weight: 500; text-transform: uppercase; letter-spacing: .05em; font-size: .68rem; }
+        tr:last-child td { border-bottom: 0; }
+        .who { display: flex; align-items: center; gap: 8px; }
+        .who img { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; background: #1a1119; }
+        .who small { display: block; color: var(--muted); font-size: .7rem; }
+        .text { color: rgba(255, 255, 255, .86); max-width: 380px; overflow-wrap: anywhere; }
+        .pill { display: inline-flex; align-items: center; gap: 5px; padding: 2px 8px; border-radius: 999px; font-size: .66rem; text-transform: uppercase; letter-spacing: .05em; border: 1px solid var(--border); color: var(--muted); }
+        .pill.hidden { border-color: rgba(251, 191, 36, .45); color: var(--warn); }
+        .pill.flagged { border-color: rgba(248,113,113,.5); color: var(--danger); }
+        .pill.video { border-color: rgba(96, 165, 250, .5); color: #93c5fd; }
+        .row-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+        .row-actions .btn { padding: 5px 9px; font-size: .72rem; border-radius: 8px; }
+        .empty { padding: 26px; text-align: center; color: var(--muted); font-size: .86rem; }
+        .toast { position: fixed; bottom: 22px; left: 50%; transform: translateX(-50%); padding: 11px 18px; border-radius: 12px; background: rgba(14, 10, 18, .95); border: 1px solid var(--border); font-size: .84rem; opacity: 0; pointer-events: none; transition: opacity .2s ease; z-index: 20; }
+        .toast.is-visible { opacity: 1; }
+        .toast.is-error { border-color: rgba(248,113,113,.6); color: #ffc4cd; }
+        .gate { max-width: 460px; margin: 60px auto; text-align: center; }
+        .gate i { font-size: 2rem; color: var(--cherry); margin-bottom: 12px; }
+        .gate h1 { font-size: 1.2rem; margin-bottom: 8px; }
+        .gate p { color: var(--muted); font-size: .88rem; line-height: 1.6; }
+        .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; }
+        label.field { display: block; margin-bottom: 12px; }
+        label.field span { display: block; margin-bottom: 6px; color: var(--muted); font-size: .74rem; text-transform: uppercase; letter-spacing: .05em; }
+        label.check { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; font-size: .84rem; color: rgba(255, 255, 255, .86); }
+        .hint { color: var(--muted); font-size: .76rem; margin-top: 6px; }
+        @media (max-width: 720px) {
+            .text { max-width: 200px; }
+            th:nth-child(5), td:nth-child(5) { display: none; }
+        }
+    </style>
+    <link rel="stylesheet" href="/css/glass.css?v=67">
+    <link rel="stylesheet" href="/css/atmosphere.css?v=7">
+    <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+    <link rel="dns-prefetch" href="https://cdn.fontshare.com">
+    <link rel="stylesheet" href="/css/i18n.css?v=3">
+    <script src="/js/i18n.js?v=15" defer></script>
+</head>
+<body>
+    <div class="zr-sweep" aria-hidden="true"></div>
+    <div class="lq-veil" aria-hidden="true"></div>
+<div class="topbar">
+    <img src="/assets/content.png" alt="Zyrex">
+    <strong>Feed Admin</strong>
+    <span class="badge">Staff</span>
+    <a href="/feed"><i class="fas fa-arrow-up-right-from-square"></i> Open feed</a>
+</div>
+
+<div class="wrap" id="app" hidden>
+    <div class="tabs" id="tabs">
+        <button type="button" class="tab is-active" data-tab="overview">Overview</button>
+        <button type="button" class="tab" data-tab="posts">Posts</button>
+        <button type="button" class="tab" data-tab="announcements">Announcements</button>
+        <button type="button" class="tab" data-tab="detections">Detections</button>
+        <button type="button" class="tab" data-tab="warnings">Warnings</button>
+        <button type="button" class="tab" data-tab="settings">Settings</button>
+    </div>
+
+    <section class="panel is-active" data-panel="overview">
+        <div class="card">
+            <div class="stats" id="stats"></div>
+            <p class="hint" id="overviewHint"></p>
+        </div>
+    </section>
+
+    <section class="panel" data-panel="posts">
+        <div class="card">
+            <div class="toolbar">
+                <input type="search" id="postSearch" placeholder="Search text, author or id…">
+                <select id="postFilter">
+                    <option value="all">All posts</option>
+                    <option value="hidden">Hidden only</option>
+                    <option value="flagged">Flagged only</option>
+                    <option value="video">Video only</option>
+                </select>
+                <button type="button" class="btn" id="postRefresh"><i class="fas fa-rotate"></i> Refresh</button>
+            </div>
+            <div id="postList"><div class="empty">Loading…</div></div>
+        </div>
+    </section>
+
+    <section class="panel" data-panel="announcements">
+        <div class="card">
+            <p class="hint" style="margin-bottom:12px">Leak announcements appear on the feed and on the Zyrex profile. Hide one to keep the leak live but off the timeline.</p>
+            <div id="noticeList"><div class="empty">Loading…</div></div>
+        </div>
+    </section>
+
+    <section class="panel" data-panel="detections">
+        <div class="card">
+            <div class="toolbar">
+                <button type="button" class="btn" id="detectionRefresh"><i class="fas fa-rotate"></i> Refresh</button>
+            </div>
+            <div id="detectionList"><div class="empty">Loading…</div></div>
+        </div>
+    </section>
+
+    <section class="panel" data-panel="warnings">
+        <div class="card" style="margin-bottom:14px">
+            <div class="toolbar">
+                <input type="text" id="warnUser" placeholder="Discord user id" inputmode="numeric">
+                <button type="button" class="btn" id="warnLoad"><i class="fas fa-magnifying-glass"></i> Load warnings</button>
+            </div>
+            <div id="warnList"><div class="empty">Enter a member id to load their warnings.</div></div>
+        </div>
+        <div class="card">
+            <label class="field"><span>Reason</span><input type="text" id="warnReason" placeholder="Why is this member warned?"></label>
+            <label class="check"><input type="checkbox" id="warnDm" checked> Send the warning as a Discord DM</label>
+            <button type="button" class="btn" id="warnClearBan"><i class="fas fa-unlock"></i> Clear posting block</button>
+            <button type="button" class="btn primary" id="warnAdd"><i class="fas fa-triangle-exclamation"></i> Issue warning</button>
+            <p class="hint">Warnings are stored by the moderation bot; three warnings trigger its 15 minute timeout.</p>
+        </div>
+    </section>
+
+    <section class="panel" data-panel="settings">
+        <div class="card">
+            <div class="grid-2">
+                <div>
+                    <label class="field"><span>Blocked words — shared with the Discord bot (one per line)</span><textarea id="setStems"></textarea></label>
+                    <p class="hint">Stored on the server and read by both the site and the moderation bot, so a word added here is blocked everywhere. Matched as a prefix, so “pornosu” trips and “Essex” does not.</p>
+                    <p class="hint" id="setWordStatus"></p>
+                </div>
+                <div>
+                    <label class="field"><span>Allowed words (never flagged)</span><textarea id="setAllowed" style="min-height:80px"></textarea></label>
+                    <label class="field"><span>Image check</span><select id="setClassifier"><option value="site">On the site (Workers AI)</option><option value="bot">Moderation bot (VPS)</option></select></label>
+                    <label class="field"><span>Image threshold (0.2 – 0.95)</span><input type="number" id="setThreshold" min="0.2" max="0.95" step="0.05"></label>
+                    <label class="check"><input type="checkbox" id="setAutoDelete"> Delete flagged media automatically</label>
+                    <label class="check"><input type="checkbox" id="setAutoWarn"> Warn the author through the bot</label>
+                    <label class="check"><input type="checkbox" id="setFailOpen"> Allow uploads when the classifier is down (mark for review)</label>
+                </div>
+            </div>
+            <button type="button" class="btn primary" id="setSave"><i class="fas fa-floppy-disk"></i> Save settings</button>
+            <button type="button" class="btn" id="setWordsReload"><i class="fas fa-rotate"></i> Reload word list from server</button>
+        </div>
+
+        <div class="card">
+            <h2><i class="fas fa-shield-halved"></i> Test the image filter</h2>
+            <p class="hint">Runs the site classifier on one image and prints the verdict it produced. Nothing is deleted and no warning is issued.</p>
+            <label class="field"><span>Image URL</span><input type="url" id="nsfwUrl" placeholder="https://thumbnail.zyrexediting.xyz/post-…jpg"></label>
+            <button type="button" class="btn primary" id="nsfwRun"><i class="fas fa-play"></i> Check image</button>
+            <pre class="hint" id="nsfwOut" style="white-space:pre-wrap;margin-top:12px"></pre>
+        </div>
+
+        <div class="card">
+            <h2><i class="fas fa-file-import"></i> Import the bot word list</h2>
+            <p class="hint">Paste the bot's <code>database.json</code> (its <code>badwords</code> array) or one word per line. Imported words are written to the server and the bot picks them up within a minute.</p>
+            <label class="field"><span>Bot words</span><textarea id="setImport" placeholder="{ &quot;badwords&quot;: [&quot;word&quot;, …] }" style="min-height:110px"></textarea></label>
+            <label class="field"><span>Mode</span><select id="setImportMode"><option value="merge">Merge with the current list</option><option value="replace">Replace the current list</option></select></label>
+            <button type="button" class="btn primary" id="setImportBtn"><i class="fas fa-upload"></i> Import words</button>
+        </div>
+    </section>
+</div>
+
+<div class="gate card" id="gate" hidden>
+    <i class="fas fa-lock"></i>
+    <h1>Staff only</h1>
+    <p id="gateText">Sign in with an admin account to manage the feed.</p>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="/js/auth.js"></script>
+<script>
+(function () {
+    'use strict';
+    var $ = function (id) { return document.getElementById(id); };
+    var esc = function (value) { return String(value == null ? '' : value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); };
+    var toastTimer = 0;
+
+    function toast(message, isError) {
+        var node = $('toast');
+        node.textContent = message || '';
+        node.classList.toggle('is-error', Boolean(isError));
+        node.classList.add('is-visible');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(function () { node.classList.remove('is-visible'); }, 3200);
+    }
+
+    function api(path, options) {
+        var init = Object.assign({ credentials: 'include' }, options || {});
+        if (init.body && typeof init.body !== 'string') {
+            init.headers = Object.assign({ 'Content-Type': 'application/json' }, init.headers || {});
+            init.body = JSON.stringify(init.body);
+        }
+        return fetch(path, init).then(function (response) {
+            return response.json().catch(function () { return {}; }).then(function (data) {
+                if (!response.ok || data.success === false) throw new Error(data.error || 'Request failed (' + response.status + ')');
+                return data;
+            });
+        });
+    }
+
+    function when(value) {
+        var time = Date.parse(String(value || ''));
+        if (!time) return '';
+        return new Date(time).toLocaleString();
+    }
+
+    function initials(name) { return esc(String(name || '?').slice(0, 1).toUpperCase()); }
+
+    // ── tabs ────────────────────────────────────────────────────────────────
+    var loaded = {};
+    function selectTab(name) {
+        Array.prototype.forEach.call(document.querySelectorAll('[data-tab]'), function (tab) {
+            tab.classList.toggle('is-active', tab.dataset.tab === name);
+        });
+        Array.prototype.forEach.call(document.querySelectorAll('[data-panel]'), function (panel) {
+            panel.classList.toggle('is-active', panel.dataset.panel === name);
+        });
+        if (name === 'overview') loadOverview();
+        if (name === 'posts') loadPosts();
+        if (name === 'announcements') loadNotices();
+        if (name === 'detections') loadDetections();
+        if (name === 'settings' && !loaded.settings) loadSettings();
+    }
+    document.querySelectorAll('[data-tab]').forEach(function (tab) {
+        tab.addEventListener('click', function () { selectTab(tab.dataset.tab); });
+    });
+
+    // ── overview ────────────────────────────────────────────────────────────
+    function loadOverview() {
+        api('/api/admin/feed/overview').then(function (data) {
+            $('stats').innerHTML = [
+                ['Post numbers', data.posts], ['Today', data.posts_today], ['Hidden', data.hidden],
+                ['NSFW (7d)', data.detections_7d], ['Review queue', data.review_7d], ['Warnings issued', data.warnings_total],
+            ].map(function (row) {
+                return '<div class="stat"><span>' + esc(row[0]) + '</span><strong>' + esc(row[1]) + '</strong></div>';
+            }).join('');
+            $('overviewHint').textContent = 'Feed channel ' + (data.channel_id || '—') + '. Detections and warnings come from the bot.';
+        }).catch(function (error) { toast(error.message, true); });
+    }
+
+    // ── posts ───────────────────────────────────────────────────────────────
+    function postRow(item) {
+        var author = item.author || {};
+        var avatar = author.avatar || '/assets/default-avatar.png';
+        var badges = '';
+        if (item.hidden) badges += '<span class="pill hidden"><i class="fas fa-eye-slash"></i> hidden</span> ';
+        if (item.flagged) badges += '<span class="pill flagged"><i class="fas fa-triangle-exclamation"></i> flagged</span> ';
+        if (item.video) badges += '<span class="pill video"><i class="fas fa-video"></i> video</span> ';
+        if (item.repost_of) badges += '<span class="pill"><i class="fas fa-retweet"></i> repost</span> ';
+        if (item.media) badges += '<span class="pill"><i class="fas fa-image"></i> ' + item.media + '</span>';
+        return '<tr data-post="' + esc(item.id) + '">' +
+            '<td><div class="who"><img src="' + esc(avatar) + '" alt="" onerror="this.src=\'/assets/default-avatar.png\'"><span><strong>' + esc(author.name || 'Member') + '</strong><small>@' + esc(author.handle || '') + '</small></span></div></td>' +
+            '<td class="text">' + (item.text ? esc(item.text) : '<em style="color:var(--muted)">(media only)</em>') + '</td>' +
+            '<td>' + badges + '</td>' +
+            '<td><a class="btn" href="/feed/post/' + esc(item.seq || '') + '" target="_blank" rel="noopener">#' + esc(item.seq || '0') + '</a><br><small style="color:var(--muted)">' + esc(when(item.created_at)) + '</small></td>' +
+            '<td><div class="row-actions">' +
+            '<button type="button" class="btn" data-act="hide">' + (item.hidden ? 'Show' : 'Hide') + '</button>' +
+            '<button type="button" class="btn" data-act="card"><i class="fas fa-image"></i> Card</button>' +
+            '<button type="button" class="btn" data-act="pin"><i class="fas fa-thumbtack"></i> Pin</button>' +
+            '<button type="button" class="btn danger" data-act="delete"><i class="fas fa-trash-can"></i> Delete</button>' +
+            '</div></td></tr>';
+    }
+
+    function loadPosts() {
+        var query = encodeURIComponent($('postSearch').value.trim());
+        var filter = encodeURIComponent($('postFilter').value);
+        $('postList').innerHTML = '<div class="empty">Loading…</div>';
+        api('/api/admin/feed/posts?q=' + query + '&filter=' + filter).then(function (data) {
+            if (!data.items.length) { $('postList').innerHTML = '<div class="empty">No posts match this filter.</div>'; return; }
+            $('postList').innerHTML = '<table><thead><tr><th>Author</th><th>Post</th><th>Type</th><th>Number</th><th>Actions</th></tr></thead><tbody>' +
+                data.items.map(postRow).join('') + '</tbody></table>';
+        }).catch(function (error) { $('postList').innerHTML = '<div class="empty">' + esc(error.message) + '</div>'; });
+    }
+
+    $('postList').addEventListener('click', function (event) {
+        var button = event.target.closest('[data-act]');
+        if (!button) return;
+        var row = button.closest('[data-post]');
+        var id = row.dataset.post;
+        var act = button.dataset.act;
+        var run = function (promise, message) {
+            button.disabled = true;
+            promise.then(function () { toast(message); loadPosts(); })
+                .catch(function (error) { toast(error.message, true); button.disabled = false; });
+        };
+        if (act === 'hide') {
+            var currentlyHidden = row.querySelector('.pill.hidden') !== null;
+            run(api('/api/admin/feed/posts/hide', { method: 'POST', body: { id: id, hidden: !currentlyHidden } }), currentlyHidden ? 'Post is back in the feed.' : 'Post hidden from the feed.');
+        }
+        if (act === 'card') run(api('/api/admin/feed/card/resend', { method: 'POST', body: { id: id } }), 'Discord card re-sent.');
+        if (act === 'pin') run(api('/api/admin/feed/posts/pin', { method: 'POST', body: { id: id } }), 'Pin updated.');
+        if (act === 'delete') {
+            if (!window.confirm('Delete this post, its media and its Discord message?')) return;
+            run(api('/api/admin/feed/posts/delete', { method: 'POST', body: { id: id } }), 'Post deleted.');
+        }
+    });
+
+    $('postSearch').addEventListener('keydown', function (event) { if (event.key === 'Enter') loadPosts(); });
+    $('postFilter').addEventListener('change', loadPosts);
+    $('postRefresh').addEventListener('click', loadPosts);
+
+    // ── announcements ───────────────────────────────────────────────────────
+    function loadNotices() {
+        api('/api/admin/feed/posts?filter=all&page=1').then(function (data) {
+            if (!data.notices || !data.notices.length) { $('noticeList').innerHTML = '<div class="empty">No announcements yet.</div>'; return; }
+            $('noticeList').innerHTML = '<table><thead><tr><th>Leak</th><th>Category</th><th>Created</th><th>State</th><th>Actions</th></tr></thead><tbody>' +
+                data.notices.map(function (notice) {
+                    return '<tr data-product="' + esc(notice.product_id) + '">' +
+                        '<td><strong>' + esc(notice.name) + '</strong><br><small style="color:var(--muted)">' + esc(notice.product_id) + '</small></td>' +
+                        '<td>' + esc(notice.category || '—') + '</td>' +
+                        '<td>' + esc(when(notice.created_at)) + '</td>' +
+                        '<td>' + (notice.hidden ? '<span class="pill hidden">hidden</span>' : '<span class="pill">live</span>') + '</td>' +
+                        '<td><button type="button" class="btn" data-notice="' + esc(notice.product_id) + '" data-hidden="' + (notice.hidden ? '1' : '0') + '">' + (notice.hidden ? 'Show' : 'Hide') + '</button></td>' +
+                        '</tr>';
+                }).join('') + '</tbody></table>';
+        }).catch(function (error) { $('noticeList').innerHTML = '<div class="empty">' + esc(error.message) + '</div>'; });
+    }
+
+    $('noticeList').addEventListener('click', function (event) {
+        var button = event.target.closest('[data-notice]');
+        if (!button) return;
+        var hidden = button.dataset.hidden === '1';
+        button.disabled = true;
+        api('/api/admin/feed/notices/hide', { method: 'POST', body: { product_id: button.dataset.notice, hidden: !hidden } })
+            .then(function () { toast(hidden ? 'Announcement restored.' : 'Announcement hidden.'); loadNotices(); })
+            .catch(function (error) { toast(error.message, true); button.disabled = false; });
+    });
+
+    // ── detections ──────────────────────────────────────────────────────────
+    function loadDetections() {
+        api('/api/admin/feed/moderation?limit=60').then(function (data) {
+            if (!data.items.length) { $('detectionList').innerHTML = '<div class="empty">Nothing detected yet.</div>'; return; }
+            $('detectionList').innerHTML = '<table><thead><tr><th>When</th><th>Kind</th><th>Level</th><th>Member</th><th>Detail</th><th>Action</th></tr></thead><tbody>' +
+                data.items.map(function (item) {
+                    var detail = item.snippet || item.reason || item.url || item.stems || item.post_id || '';
+                    return '<tr><td>' + esc(when(item.at)) + '</td><td>' + esc(item.kind || '') + '</td><td>' +
+                        (item.level === 'nsfw' ? '<span class="pill flagged">nsfw</span>' : item.level === 'review' ? '<span class="pill hidden">review</span>' : esc(item.level || '')) +
+                        '</td><td>' + esc(item.user_id || item.actor || '—') + '</td><td class="text">' + esc(String(detail).slice(0, 160)) + '</td><td>' + esc(item.action || '') + '</td></tr>';
+                }).join('') + '</tbody></table>';
+        }).catch(function (error) { $('detectionList').innerHTML = '<div class="empty">' + esc(error.message) + '</div>'; });
+    }
+    $('detectionRefresh').addEventListener('click', loadDetections);
+
+    // ── warnings ────────────────────────────────────────────────────────────
+    function renderWarnings(data) {
+        if (!data.warnings || !data.warnings.length) { $('warnList').innerHTML = '<div class="empty">This member has no warnings.</div>'; return; }
+        $('warnList').innerHTML = '<table><thead><tr><th>Id</th><th>Reason</th><th>Moderator</th><th>When</th><th></th></tr></thead><tbody>' +
+            data.warnings.map(function (warn) {
+                return '<tr><td><strong>' + esc(warn.id) + '</strong></td><td class="text">' + esc(warn.reason) + '</td><td>' + esc(warn.moderator_name || '') + '</td><td>' + esc(when(warn.time ? warn.time * 1000 : '')) + '</td>' +
+                    '<td><button type="button" class="btn danger" data-warn="' + esc(warn.id) + '">Remove</button></td></tr>';
+            }).join('') + '</tbody></table>';
+    }
+    function loadWarnings() {
+        var userId = $('warnUser').value.trim();
+        if (!/^\d{15,25}$/.test(userId)) { toast('Enter a valid Discord user id.', true); return; }
+        api('/api/admin/feed/warns?user_id=' + encodeURIComponent(userId)).then(renderWarnings).catch(function (error) { toast(error.message, true); });
+    }
+    $('warnLoad').addEventListener('click', loadWarnings);
+    $('warnList').addEventListener('click', function (event) {
+        var button = event.target.closest('[data-warn]');
+        if (!button) return;
+        var userId = $('warnUser').value.trim();
+        if (!window.confirm('Remove this warning?')) return;
+        button.disabled = true;
+        api('/api/admin/feed/warns/' + encodeURIComponent(button.dataset.warn) + '?user_id=' + encodeURIComponent(userId), { method: 'DELETE' })
+            .then(function () { toast('Warning removed.'); loadWarnings(); })
+            .catch(function (error) { toast(error.message, true); button.disabled = false; });
+    });
+    $('warnClearBan').addEventListener('click', function () {
+        var userId = $('warnUser').value.trim();
+        if (!/^\d{15,25}$/.test(userId)) { toast('Enter a member id first.', true); return; }
+        var button = $('warnClearBan');
+        button.disabled = true;
+        api('/api/admin/feed/bans?user_id=' + encodeURIComponent(userId), { method: 'DELETE' })
+            .then(function (data) { toast(data.cleared ? 'Posting block cleared.' : 'That member is not blocked.'); })
+            .catch(function (error) { toast(error.message, true); })
+            .finally(function () { button.disabled = false; });
+    });
+    $('warnAdd').addEventListener('click', function () {
+        var userId = $('warnUser').value.trim();
+        var reason = $('warnReason').value.trim();
+        if (!/^\d{15,25}$/.test(userId) || !reason) { toast('A member id and a reason are required.', true); return; }
+        var button = $('warnAdd');
+        button.disabled = true;
+        api('/api/admin/feed/warns', { method: 'POST', body: { user_id: userId, reason: reason, send_dm: $('warnDm').checked } })
+            .then(function (data) { toast('Warning ' + (data.warn_id || '') + ' saved (total ' + data.total_warns + ').'); $('warnReason').value = ''; loadWarnings(); })
+            .catch(function (error) { toast(error.message, true); })
+            .finally(function () { button.disabled = false; });
+    });
+
+    // ── settings ────────────────────────────────────────────────────────────
+    function wordStatus(filter) {
+        if (!filter) return 'The shared word list is not created yet.';
+        var when = filter.updated_at ? new Date(filter.updated_at).toLocaleString() : '';
+        return filter.words.length + ' blocked words · last change by ' + (filter.updated_by || 'site') + (when ? ' on ' + when : '') + ' · v' + (filter.version || 1);
+    }
+    function loadSettings() {
+        api('/api/admin/feed/settings').then(function (data) {
+            var settings = data.settings || {};
+            $('setStems').value = (settings.textStems || []).join('\n');
+            $('setAllowed').value = (settings.allowedWords || []).join(', ');
+            $('setThreshold').value = settings.imageThreshold;
+            $('setClassifier').value = settings.imageClassifier === 'bot' ? 'bot' : 'site';
+            $('setAutoDelete').checked = settings.autoDelete !== false;
+            $('setAutoWarn').checked = settings.autoWarn !== false;
+            $('setFailOpen').checked = settings.failOpen !== false;
+            loaded.settings = true;
+        }).catch(function (error) { toast(error.message, true); });
+        api('/api/admin/moderation/words').then(function (data) {
+            $('setWordStatus').textContent = wordStatus(data.filter);
+        }).catch(function () { $('setWordStatus').textContent = 'The shared word list is unavailable.'; });
+    }
+    $('setWordsReload').addEventListener('click', function () {
+        var button = $('setWordsReload');
+        button.disabled = true;
+        api('/api/admin/moderation/words').then(function (data) {
+            var filter = data.filter || {};
+            $('setStems').value = (filter.words || []).join('\n');
+            $('setAllowed').value = (filter.allowlist || []).join(', ');
+            $('setWordStatus').textContent = wordStatus(filter);
+            toast('Word list reloaded from server.');
+        }).catch(function (error) { toast(error.message, true); })
+            .finally(function () { button.disabled = false; });
+    });
+    $('nsfwRun').addEventListener('click', function () {
+        var target = $('nsfwUrl').value.trim();
+        if (!target) { toast('Paste an image URL first.', true); return; }
+        var button = $('nsfwRun');
+        button.disabled = true;
+        $('nsfwOut').textContent = 'Checking…';
+        api('/api/admin/feed/nsfw-probe', { method: 'POST', body: { url: target } })
+            .then(function (data) {
+                var result = data.result || {};
+                var lines = [
+                    'AI binding: ' + (data.ai_binding ? 'yes' : 'no'),
+                    'Verdict: ' + (result.ok ? (result.nsfw ? 'NSFW' : 'safe') : 'unavailable (' + (result.reason || 'unknown') + ')'),
+                    'Score: ' + (result.score === undefined ? '-' : result.score),
+                    'Model: ' + (result.model || '-'),
+                    'Reason: ' + (result.reason || '-'),
+                ];
+                if (result.caption) lines.push('Caption: ' + result.caption);
+                if (result.votes && result.votes.length) lines.push('Votes: ' + result.votes.map(function (vote) { return vote.model + '=' + (vote.nsfw ? 'nsfw' : 'safe') + '(' + vote.score + ')'; }).join(', '));
+                if (result.labels && result.labels.length) lines.push('Matches: ' + result.labels.join(', '));
+                if (result.errors) lines.push('Errors: ' + JSON.stringify(result.errors));
+                $('nsfwOut').textContent = lines.join('\n');
+            })
+            .catch(function (error) { $('nsfwOut').textContent = error.message; toast(error.message, true); })
+            .finally(function () { button.disabled = false; });
+    });
+    $('setImportBtn').addEventListener('click', function () {
+        var raw = $('setImport').value.trim();
+        if (!raw) { toast('Paste the bot word list first.', true); return; }
+        var button = $('setImportBtn');
+        button.disabled = true;
+        api('/api/admin/moderation/words/import', { method: 'POST', body: { raw: raw, mode: $('setImportMode').value } })
+            .then(function (data) {
+                var filter = data.filter || {};
+                $('setStems').value = (filter.words || []).join('\n');
+                $('setAllowed').value = (filter.allowlist || []).join(', ');
+                $('setWordStatus').textContent = wordStatus(filter);
+                $('setImport').value = '';
+                toast('Imported ' + (filter.words || []).length + ' words.');
+            })
+            .catch(function (error) { toast(error.message, true); })
+            .finally(function () { button.disabled = false; });
+    });
+    $('setSave').addEventListener('click', function () {
+        var button = $('setSave');
+        button.disabled = true;
+        api('/api/admin/feed/settings', {
+            method: 'POST',
+            body: {
+                textStems: $('setStems').value.split('\n').map(function (line) { return line.trim(); }).filter(Boolean),
+                allowedWords: $('setAllowed').value.split(',').map(function (word) { return word.trim(); }).filter(Boolean),
+                imageClassifier: $('setClassifier').value,
+                imageThreshold: Number($('setThreshold').value),
+                autoDelete: $('setAutoDelete').checked,
+                autoWarn: $('setAutoWarn').checked,
+                failOpen: $('setFailOpen').checked,
+            },
+        }).then(function () {
+            toast('Settings saved.');
+            return api('/api/admin/moderation/words').then(function (data) { $('setWordStatus').textContent = wordStatus(data.filter); }).catch(function () {});
+        })
+            .catch(function (error) { toast(error.message, true); })
+            .finally(function () { button.disabled = false; });
+    });
+
+    // ── boot ────────────────────────────────────────────────────────────────
+    fetch('/api/me', { credentials: 'include' }).then(function (response) {
+        return response.ok ? response.json() : null;
+    }).then(function (data) {
+        var user = data || {};
+        if (!user.is_admin) {
+            $('gate').hidden = false;
+            $('gateText').textContent = user.id ? 'This account is not a feed admin.' : 'Sign in with an admin account to manage the feed.';
+            return;
+        }
+        $('app').hidden = false;
+        loadOverview();
+    }).catch(function () {
+        $('gate').hidden = false;
+        $('gateText').textContent = 'Could not check the session. Reload the page.';
+    });
+})();
+</script>
+    <script src="/js/page-motion.js?v=6"></script>
+</body>
+</html>

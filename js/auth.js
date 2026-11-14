@@ -20,34 +20,9 @@
                 }
             }
             
-            var p = origFetch.call(this, input, init);
-            if (urlStr && urlStr.indexOf('/api/products') !== -1 && (!init.method || init.method.toUpperCase() === 'GET')) {
-                return p.then(function(response) {
-                    if (!response.ok) return response;
-                    var clone = response.clone();
-                    return clone.json().then(function(jsonObj) {
-                        try {
-                            var editedKey = 'zyrex_edited_products';
-                            var editedMap = JSON.parse(localStorage.getItem(editedKey) || '{}');
-                            if (Object.keys(editedMap).length > 0) {
-                                if (Array.isArray(jsonObj)) {
-                                    jsonObj = jsonObj.map(function(item) {
-                                        return (item && item.id && editedMap[item.id]) ? Object.assign({}, item, editedMap[item.id]) : item;
-                                    });
-                                } else if (jsonObj && jsonObj.id && editedMap[jsonObj.id]) {
-                                    jsonObj = Object.assign({}, jsonObj, editedMap[jsonObj.id]);
-                                }
-                            }
-                        } catch(e) {}
-                        return new Response(JSON.stringify(jsonObj), {
-                            status: response.status,
-                            statusText: response.statusText,
-                            headers: response.headers
-                        });
-                    }).catch(function() { return response; });
-                });
-            }
-            return p;
+            // Product edits live on the server (database/product_overrides.json), so the
+            // response is returned untouched.
+            return origFetch.call(this, input, init);
         };
     }
 })();
@@ -80,7 +55,8 @@ window.isZyrexAdmin = function(u) {
     }
     if (!u) return false;
     var uid = String(u.id || u.userId || '');
-    return !!(u.is_admin || u.can_upload || uid === '1421177012814614548' || uid === '1382421118098346174');
+    return uid !== '1382421118098346174' &&
+        !!(u.is_admin || u.can_upload || uid === '1421177012814614548');
 };
 
 // Avatar proxy helper — bypasses Discord CDN blocks (e.g. Turkey)
@@ -142,7 +118,7 @@ function openLoginModal() {
                 '<button type="button" class="login-modal-close" onclick="closeLoginModal()">&times;</button>' +
                 '<img src="/assets/content.png" alt="Zyrex" class="login-modal-logo">' +
                 '<h2>Welcome to Zyrex</h2>' +
-                '<p>Sign in with Discord to access premium presets, plugins, and cloud downloads.</p>' +
+                '<p>Sign in with Discord to get editing leaks and stuff, plus cloud downloads.</p>' +
                 '<a href="/api/login?redirect=' + encodeURIComponent(window.location.pathname + window.location.search) + '" class="login-discord-btn">' +
                     '<i class="fab fa-discord"></i> Login with Discord' +
                 '</a>' +
@@ -195,17 +171,17 @@ function renderAuthUI(user) {
 
     const displayName = escapeHtml(user.global_name || user.username || 'Zyrex User');
     const username = escapeHtml(user.username || 'member');
-    const roleLabel = user.can_upload ? 'Uploader' : 'Member';
-    const roleHtml = user.is_admin ? '' : '<span class="auth-role">' + roleLabel + '</span>';
+    const founderClass = uid === '1421177012814614548' ? ' founder-name' : '';
+    const userIsAdmin = uid !== '1382421118098346174' && user.is_admin === true;
     const initial = escapeHtml((user.global_name || user.username || 'Z').charAt(0).toUpperCase());
     const fallbackSrc = uid === '1421177012814614548'
         ? '/api/avatar/1421177012814614548/8505f9e52509086a8841b6162f46b0da.png'
         : '/assets/content.png';
     const avatarHtml = avatarUrl
-        ? '<img class="auth-avatar" src="' + avatarUrl + '" alt="" onerror="this.onerror=null;this.src=\'' + fallbackSrc + '\'">'
-        : '<span class="auth-avatar auth-avatar-fallback">' + initial + '</span>';
+        ? '<img class="auth-avatar' + (founderClass ? ' founder-avatar' : '') + '" src="' + avatarUrl + '" alt="" onerror="this.onerror=null;this.src=\'' + fallbackSrc + '\'">'
+        : '<span class="auth-avatar auth-avatar-fallback' + (founderClass ? ' founder-avatar' : '') + '">' + initial + '</span>';
 
-    const adminTickHtml = user.is_admin ? '<i class="fas fa-circle-check auth-admin-tick" style="color:#0095F6;font-size:0.82rem;flex-shrink:0" title="Verified Admin"></i>' : '';
+    const adminTickHtml = userIsAdmin ? '<i class="fas fa-circle-check auth-admin-tick" style="color:#0095F6;font-size:0.82rem;flex-shrink:0" title="Verified Admin"></i>' : '';
 
     btn.classList.remove('menu-open');
     btn.classList.add('auth-ready');
@@ -213,8 +189,7 @@ function renderAuthUI(user) {
         '<button type="button" class="auth-user" onclick="toggleUserMenu()" aria-expanded="false" aria-controls="userMenu">' +
             avatarHtml +
             '<span class="auth-copy">' +
-                '<span class="auth-name"><span class="auth-name-text">' + displayName + '</span>' + adminTickHtml + '</span>' +
-                roleHtml +
+                '<span class="auth-name"><span class="auth-name-text' + founderClass + '">' + displayName + '</span>' + adminTickHtml + '</span>' +
             '</span>' +
             '<i class="fas fa-chevron-down auth-chevron" aria-hidden="true"></i>' +
         '</button>' +
@@ -222,13 +197,13 @@ function renderAuthUI(user) {
             '<div class="auth-menu-head">' +
                 avatarHtml +
                 '<div class="auth-menu-copy">' +
-                    '<div style="display:flex;align-items:center;gap:5px"><strong style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + displayName + '</strong>' + adminTickHtml + '</div>' +
+                    '<div style="display:flex;align-items:center;gap:5px"><strong class="' + founderClass.trim() + '" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + displayName + '</strong>' + adminTickHtml + '</div>' +
                     '<span>@' + username + '</span>' +
                 '</div>' +
             '</div>' +
-            '<a href="/settings" class="auth-menu-link"><i class="fas fa-cog"></i><span>Settings</span></a>' +
-            '<a href="/bookmarks" class="auth-menu-link"><i class="fas fa-bookmark"></i><span>Bookmarks</span></a>' +
-            ((user.can_upload || user.is_admin) ? '<a href="/upload" class="auth-menu-link"><i class="fas fa-cloud-upload-alt"></i><span>Upload</span></a>' : '') +
+            '<a href="/profile" class="auth-menu-link"><i class="fas fa-user"></i><span>Profile</span></a>' +
+                        '<a href="/settings" class="auth-menu-link"><i class="fas fa-cog"></i><span>Settings</span></a>' +
+                        ((user.can_upload || user.is_admin) ? '<a href="/upload" class="auth-menu-link"><i class="fas fa-cloud-upload-alt"></i><span>Upload</span></a>' : '') +
             '<a href="/api/logout" class="auth-menu-link auth-menu-link-danger"><i class="fas fa-sign-out-alt"></i><span>Logout</span></a>' +
         '</div>';
     
@@ -380,21 +355,21 @@ function initCookieConsent() {
             right: auto !important;
             transform: translate(-50%, 20px) !important;
             width: calc(100% - 32px) !important;
-            max-width: 880px !important;
+            max-width: 760px !important;
             background: linear-gradient(135deg, rgba(16, 8, 20, 0.96), rgba(8, 6, 12, 0.96)) !important;
             backdrop-filter: blur(24px) saturate(200%) !important;
             -webkit-backdrop-filter: blur(24px) saturate(200%) !important;
-            border: 1px solid rgba(255, 43, 82, 0.28) !important;
+            border: 1px solid rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.28) !important;
             border-radius: 16px !important;
-            padding: 16px 22px !important;
-            box-shadow: 0 16px 45px rgba(0, 0, 0, 0.65), 0 0 30px rgba(255, 43, 82, 0.12) !important;
+            padding: 12px 16px !important;
+            box-shadow: 0 16px 45px rgba(0, 0, 0, 0.65), 0 0 30px rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.12) !important;
             z-index: 999999 !important;
             font-family: inherit;
             color: #fff;
             display: flex !important;
             align-items: center;
             justify-content: space-between;
-            gap: 20px;
+            gap: 14px;
             box-sizing: border-box;
             margin: 0 !important;
             opacity: 0;
@@ -416,49 +391,49 @@ function initCookieConsent() {
             text-align: left;
         }
         .cookie-banner h3 {
-            font-size: 0.95rem;
+            font-size: 0.86rem;
             font-weight: 700;
-            margin: 0 0 4px 0;
+            margin: 0 0 2px 0;
             color: #fff;
             display: flex;
             align-items: center;
             gap: 8px;
         }
         .cookie-banner p {
-            font-size: 0.78rem;
+            font-size: 0.72rem;
             color: #a0a0b0;
-            line-height: 1.4;
+            line-height: 1.3;
             margin: 0;
         }
         .cookie-actions {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             align-items: center;
             flex-shrink: 0;
         }
 
         .btn-cookie-primary {
-            background: linear-gradient(135deg, #ff2b52 0%, #b81432 100%);
+            background: linear-gradient(135deg, var(--zr-accent, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1)) 0%, var(--zr-accent-deep, rgba(var(--zr-rgb-184-20-50, 184, 20, 50), 1)) 100%);
             color: #fff;
             border: 1px solid rgba(255, 255, 255, 0.15);
-            padding: 9px 18px;
+            padding: 8px 13px;
             border-radius: 10px;
             font-size: 0.80rem;
             font-weight: 700;
             cursor: pointer;
             transition: all 0.2s ease;
-            box-shadow: 0 4px 14px rgba(255, 43, 82, 0.3);
+            box-shadow: 0 4px 14px rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.3);
         }
         .btn-cookie-primary:hover,
         .btn-cookie-primary:active {
             transform: translateY(-1px);
-            box-shadow: 0 6px 18px rgba(255, 43, 82, 0.45);
+            box-shadow: 0 6px 18px rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.45);
         }
         .btn-cookie-secondary {
             background: rgba(255, 255, 255, 0.06);
             color: #e0e0e0;
             border: 1px solid rgba(255, 255, 255, 0.12);
-            padding: 9px 16px;
+            padding: 8px 12px;
             border-radius: 10px;
             font-size: 0.80rem;
             font-weight: 600;
@@ -476,7 +451,7 @@ function initCookieConsent() {
             font-size: 0.78rem;
             font-weight: 500;
             cursor: pointer;
-            padding: 9px 10px;
+            padding: 7px 8px;
             text-decoration: underline;
             transition: color 0.2s;
         }
@@ -490,16 +465,16 @@ function initCookieConsent() {
                 align-items: stretch !important;
                 bottom: max(12px, env(safe-area-inset-bottom, 12px)) !important;
                 width: calc(100% - 24px) !important;
-                padding: 14px 16px !important;
-                gap: 12px !important;
+                padding: 11px 14px !important;
+                gap: 9px !important;
                 border-radius: 14px !important;
             }
             .cookie-banner h3 {
-                font-size: 0.90rem !important;
+                font-size: 0.84rem !important;
             }
             .cookie-banner p {
-                font-size: 0.75rem !important;
-                line-height: 1.35 !important;
+                font-size: 0.70rem !important;
+                line-height: 1.25 !important;
             }
             .cookie-actions {
                 display: flex !important;
@@ -527,13 +502,13 @@ function initCookieConsent() {
     banner.className = 'cookie-banner hidden';
     banner.innerHTML = `
         <div class="cookie-banner-text">
-            <h3><i class="fas fa-cookie-bite" style="color:var(--bordeaux-vivid,#ff2b52)"></i> Privacy Choices</h3>
-            <p>We use essential cookies to power login & downloads, and optional cookies to enhance your Zyrex experience.</p>
+            <h3><i class="fas fa-cookie-bite" style="color:var(--bordeaux-vivid,var(--zr-accent, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 1)))"></i> Privacy Choices</h3>
+            <p>Essential cookies keep login and downloads working. Optional cookies are your choice.</p>
         </div>
         <div class="cookie-actions">
             <button id="acceptAllCookies" class="btn-cookie-primary">Accept All</button>
             <button id="declineCookies" class="btn-cookie-secondary">Essential Only</button>
-            <a href="/settings?tab=general" class="btn-cookie-link">Settings</a>
+            <a href="/settings#privacy" class="btn-cookie-link">Cookie settings</a>
         </div>
     `;
     document.body.appendChild(banner);
@@ -575,7 +550,7 @@ function saveConsent(analytics, personalization) {
 }
 
 function openCookieSettings() {
-    window.location.href = '/settings?tab=general';
+    window.location.href = '/settings#privacy';
 }
 
 function injectCookiePreferencesLink() {

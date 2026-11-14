@@ -8,13 +8,81 @@ DISCORD_CLIENT_ID = "1519456130290417776"
 DISCORD_REDIRECT_URI = "https://zyrexediting.xyz/api/auth/callback"
 GUILD_ID = "1518954946110685184"
 UPLOAD_ROLE_ID = "1519624224476762122"
+# Logger-bot audit rooms: verified-role events and download-access events.
+VERIFY_EVENT_CHANNEL_ID = "1519246519084257430"
+ACCESS_EVENT_CHANNEL_ID = "1551817844633632829"
+# Invite watch: the public invite the site serves. The bot rotates it when Discord
+# invalidates it or joins spike, creating the replacement in DISCORD_INVITE_CHANNEL_ID
+# when set, otherwise in the first general/welcome channel it can invite to.
+DISCORD_INVITE_URL = "https://discord.gg/4J3tars4QS"
+# DISCORD_INVITE_CHANNEL_ID = ""
+# Raid tuning: joins between two two-minute checks that count as a spike, and the member
+# count below which a spike is ignored. Defaults are 25 joins and 50 members.
+# DISCORD_RAID_JOIN_THRESHOLD = "25"
+# DISCORD_RAID_MIN_MEMBERS = "50"
 
 # Secrets (set via wrangler secret put):
 # DISCORD_CLIENT_SECRET
 # DISCORD_BOT_TOKEN
+# SESSION_SECRET          # HMAC key for the zyrex_session cookie (required in practice)
+# ADMAVEN_API_TOKEN       # AdMaven publisher API token for the content locker
 # SHRINKEARN_API_TOKEN
+# HLX_API_KEY
+# VT_API_KEY
+# BOT_SERVICE_TOKEN      shared secret for authenticated Worker-to-bot account exports
+# FFX_RELEASE_SOURCE_TOKEN   shared secret for the Actions-only FFX source endpoint;
+#                            configure the same value as a GitHub Actions secret.
+# FFX_RELEASE_GITHUB_TOKEN   fine-grained token with contents:write for repository_dispatch.
+# FFX_RELEASE_REPOSITORY     optional owner/repo override (defaults to reyliar/zyrex-web).
+
+# Verification (optional): the Worker assigns the Verified role itself and only needs the
+# bot token above. These exist for a different role setup:
+#   VERIFY_ROLE_ID          defaults to 1519246304163659858
+#   UNVERIFIED_ROLE_ID      role removed once verified, defaults to 1519246300313423953
+#
+# Logger bot audit (verified role + download access):
+#   SITE_LOG_BOT_TOKEN      token used to post every audit embed (falls back to
+#                           DISCORD_BOT_TOKEN). The bot must be able to post in the
+#                           channel below.
+#   SECURITY_LOG_CHANNEL_ID optional shared room for both subsystems; defaults to the
+#                           live site-log channel (1555595493936070667).
+#   VERIFY_EVENT_CHANNEL_ID optional room only for verified-role events.
+#   ACCESS_EVENT_CHANNEL_ID optional room only for download-access events.
+# A channel the log bot cannot write to is skipped and the next one is tried, so a
+# permission mistake never loses an audit line.
+#
+# Image moderation (optional): NSFW_AI_MODEL overrides the default vision model chain.
+
+# Optional plain vars for the offer locker:
+#   ADMAVEN_TAG               content-locker tag the API key is scoped to
+#   ADMAVEN_SUB_ID            tracking sub_id, max 7 chars, must exist in the panel
+#   ADMAVEN_LOCKER_BACKGROUND background image or YouTube url for the locker page
+#   ADMAVEN_LOCKER_HOSTS      comma-separated allowlist of accepted offer hosts
+
+# Download tracing:
+#   FFX_TRACE                 set to "off" to serve presets untraced without a redeploy.
+#                             Default is on. Each download gets a copy carrying the
+#                             downloader's Discord id in zero-width characters on the
+#                             credited effect names and in the XMP metadata packet, so a
+#                             reposted file identifies who leaked it even after the visible
+#                             credit is deleted. A preset that stores only effect match names
+#                             ("ADBE Gaussian Blur 2") has no display string to credit, so it
+#                             is traced through its metadata alone - that still names the
+#                             downloader. Decode a leaked file with scratch/_trace_leak.py.
 
 # R2 Bucket bindings
+# Workers AI runs the NSFW image classifier inside this Worker (no VPS round trip).
+[ai]
+binding = "AI"
+
+# Optional override, e.g. @cf/llava-hf/llava-1.5-7b-hf to prefer the cheaper model.
+# NSFW_AI_MODEL
+
+# Retries role assignments that Discord rejected while a member was verifying, so a short
+# Discord outage no longer leaves someone unverified.
+[triggers]
+crons = ["*/2 * * * *"]
+
 [[r2_buckets]]
 binding = "STORAGE"
 bucket_name = "zyrexediting"
@@ -31,3 +99,14 @@ bucket_name = "zyrexediting-staging"
 [[routes]]
 pattern = "thumbnail.zyrexediting.xyz/*"
 zone_id = "1844c05896c2b3897c61d37dc08b71e8"
+
+# === Module rules ===
+# The Discord feed card is rasterised inside the Worker, so the resvg wasm module and
+# the Inter woff files are bundled as binary assets.
+[[rules]]
+type = "CompiledWasm"
+globs = ["**/*.wasm"]
+
+[[rules]]
+type = "Data"
+globs = ["**/*.woff"]
