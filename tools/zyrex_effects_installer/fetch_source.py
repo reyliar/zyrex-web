@@ -6,6 +6,7 @@ import os
 import re
 import urllib.parse
 import urllib.request
+from urllib.error import HTTPError
 from pathlib import Path
 
 API = "https://zyrexediting.xyz/api/installer/ffx-source"
@@ -51,7 +52,11 @@ def main() -> None:
         if not key or name.casefold() in seen:
             raise SystemExit(f"Invalid or duplicate FFX source entry: {name}")
         seen.add(name.casefold())
-        data = request(args.preset_id, token, key)
+        try:
+            data = request(args.preset_id, token, key)
+        except HTTPError as error:
+            detail = error.read().decode("utf-8", "replace").strip().replace("\n", " ")[:400]
+            raise SystemExit(f"FFX source download failed for {name}: HTTP {error.code} {detail}") from error
         if len(data) < 12 or data[:4] != b"RIFX" or data[8:12] != b"FaFX":
             raise SystemExit(f"Invalid After Effects preset received: {name}")
         (args.output / name).write_bytes(data)
