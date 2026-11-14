@@ -2453,14 +2453,151 @@ function installerSecretMatches(provided, expected) {
   return mismatch === 0;
 }
 
+async function deriveInstallerPayloadKey(productId, releaseId, env) {
+  const secret = String(env.SESSION_SECRET || "").trim();
+  if (!secret) throw new Error("Session signing is not configured");
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const signed = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`zyrex-installer-v1:${productId}:${releaseId}`));
+  return base64UrlEncode(new Uint8Array(signed));
+}
+
+function installerDevicePath(deviceCode) {
+  return `installer-auth/${deviceCode}.json`;
+}
+
+async function readInstallerDevice(env, deviceCode) {
+  const object = await env.STORAGE.get(installerDevicePath(deviceCode));
+  if (!object) return null;
+  try { return await object.json(); } catch (_) { return null; }
+}
+
+async function cleanupInstallerAuthRecords(env) {
+  let cursor;
+  let removed = 0;
+  for (let page = 0; page < 3; page++) {
+    const listed = await env.STORAGE.list({ prefix: "installer-auth/", limit: 500, cursor });
+    for (const item of listed.objects || []) {
+      try {
+        const object = await env.STORAGE.get(item.key);
+        const state = object ? await object.json() : null;
+        if (!state || Date.now() - Number(state.createdAt || 0) > 10 * 60 * 1000) {
+          await env.STORAGE.delete(item.key);
+          removed++;
+        }
+      } catch (_) {}
+    }
+    if (!listed.truncated || !listed.cursor) break;
+    cursor = listed.cursor;
+  }
+  return removed;
+}
+
+async function handleInstallerAuthStart(request, env, url) {
+  let body;
+  try { body = await request.json(); } catch (_) { return json({ success: false, error: "Invalid request" }, 400); }
+  const deviceCode = String(body?.device_code || "").trim();
+  const productId = String(body?.product_id || "").trim();
+  if (!/^[A-Za-z0-9_-]{40,80}$/.test(deviceCode) || !/^[A-Za-z0-9_-]{1,100}$/.test(productId)) {
+    return json({ success: false, error: "Invalid device authorization request" }, 400);
+  }
+  const product = await dbGetProduct(env, productId).catch(() => null);
+  if (!product || String(product.type || "preset").toLowerCase() !== "preset") return json({ success: false, error: "Preset not found" }, 404);
+  const releaseId = String(body?.release_id || "").trim();
+  if (!/^[A-Za-z0-9_-]{1,100}$/.test(releaseId)) return json({ success: false, error: "Invalid installer release" }, 400);
+  await env.STORAGE.put(installerDevicePath(deviceCode), JSON.stringify({ productId, releaseId, createdAt: Date.now(), status: "pending" }), { httpMetadata: { contentType: "application/json" } });
+  const callback = `/api/installer/auth/complete?device_code=${encodeURIComponent(deviceCode)}`;
+  const login = new URL("/api/login", url.origin);
+  login.searchParams.set("redirect", callback);
+  return json({ success: true, authorization_url: login.toString(), expires_in: 600 }, 200, { "Cache-Control": "no-store" });
+}
+
+async function handleInstallerAuthComplete(request, env, url) {
+  const deviceCode = String(url.searchParams.get("device_code") || "").trim();
+  if (!/^[A-Za-z0-9_-]{40,80}$/.test(deviceCode)) return new Response("Invalid installer sign-in request.", { status: 400 });
+  const session = parseSession(request.headers.get("Cookie"), request);
+  if (!session?.userId) return redirect(`/api/login?redirect=${encodeURIComponent(url.pathname + url.search)}`);
+  const device = await readInstallerDevice(env, deviceCode);
+  if (!device || Date.now() - Number(device.createdAt || 0) > 10 * 60 * 1000) return new Response("This installer sign-in request expired. Return to the app and try again.", { status: 410, headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" } });
+  if (device.status === "authorized") return new Response("You are signed in. Return to the Zyrex Effects Installer.", { status: 200, headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" } });
+  const grant = { userId: String(session.userId), username: String(session.username || ""), installerProductId: device.productId, installerReleaseId: device.releaseId };
+  const cookie = await setCookie(grant, 3600, env);
+  const accessToken = cookie.slice("zyrex_session=".length).split(";")[0];
+  await env.STORAGE.put(installerDevicePath(deviceCode), JSON.stringify({ ...device, status: "authorized", accessToken, userId: grant.userId, username: grant.username, authorizedAt: Date.now() }), { httpMetadata: { contentType: "application/json" } });
+  return new Response("<html><meta charset=utf-8><title>Zyrex installer sign-in</title><body style='font:16px system-ui;background:#100b0e;color:white;padding:48px'><h1>Signed in</h1><p>Return to the Zyrex Effects Installer to continue.</p></body></html>", { status: 200, headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" } });
+}
+
+async function handleInstallerAuthPoll(url, env) {
+  const deviceCode = String(url.searchParams.get("device_code") || "").trim();
+  if (!/^[A-Za-z0-9_-]{40,80}$/.test(deviceCode)) return json({ success: false, error: "Invalid device code" }, 400);
+  const device = await readInstallerDevice(env, deviceCode);
+  if (!device) return json({ success: false, error: "Sign-in request expired" }, 410, { "Cache-Control": "no-store" });
+  if (Date.now() - Number(device.createdAt || 0) > 10 * 60 * 1000) {
+    await env.STORAGE.delete(installerDevicePath(deviceCode));
+    return json({ success: false, error: "Sign-in request expired" }, 410, { "Cache-Control": "no-store" });
+  }
+  if (device.status !== "authorized" || !device.accessToken) return json({ success: true, pending: true }, 202, { "Cache-Control": "no-store" });
+  return json({ success: true, pending: false, access_token: device.accessToken, user: { id: device.userId, username: device.username } }, 200, { "Cache-Control": "no-store" });
+}
+
+async function installerGrantFromRequest(request, env, productId, releaseId) {
+  const authorization = String(request.headers.get("Authorization") || "");
+  const token = authorization.replace(/^Bearer\s+/i, "").trim();
+  if (!token || token === String(env.FFX_RELEASE_SOURCE_TOKEN || "").trim()) return null;
+  const grant = await decodeSessionCookie(token, env);
+  if (!grant || String(grant.installerProductId || "") !== productId || String(grant.installerReleaseId || "") !== releaseId) return null;
+  return grant;
+}
+
+async function handleInstallerKey(request, url, env) {
+  const productId = String(url.searchParams.get("id") || "").trim();
+  const releaseId = String(url.searchParams.get("release_id") || "").trim();
+  if (!/^[A-Za-z0-9_-]{1,100}$/.test(productId) || !/^[A-Za-z0-9_-]{1,100}$/.test(releaseId)) return json({ success: false, error: "Invalid installer request" }, 400);
+  const grant = await installerGrantFromRequest(request, env, productId, releaseId);
+  if (!grant) return json({ success: false, error: "Sign in with Discord to access these presets", code: "NOT_AUTHORIZED" }, 401, { "Cache-Control": "no-store" });
+  const key = await deriveInstallerPayloadKey(productId, releaseId, env);
+  return json({ success: true, key }, 200, { "Cache-Control": "no-store" });
+}
+
+async function handleInstallerTrace(request, url, env) {
+  const productId = String(url.searchParams.get("id") || "").trim();
+  const releaseId = String(url.searchParams.get("release_id") || "").trim();
+  const fileName = String(url.searchParams.get("name") || "preset.ffx").replace(/\\/g, "/");
+  if (!/^[A-Za-z0-9_-]{1,100}$/.test(productId) || !/^[A-Za-z0-9_-]{1,100}$/.test(releaseId) || !fileName.toLowerCase().endsWith(".ffx") || fileName.split("/").some(part => !part || part === "." || part === "..")) return json({ success: false, error: "Invalid preset trace request" }, 400, { "Cache-Control": "no-store" });
+  const grant = await installerGrantFromRequest(request, env, productId, releaseId);
+  if (!grant) return json({ success: false, error: "Sign in with Discord to access these presets", code: "NOT_AUTHORIZED" }, 401, { "Cache-Control": "no-store" });
+  const length = Number(request.headers.get("Content-Length") || 0);
+  if (length > TRACE_MAX_FILE_BYTES) return json({ success: false, error: "Preset exceeds the safe tracing size limit" }, 413, { "Cache-Control": "no-store" });
+  const original = new Uint8Array(await request.arrayBuffer());
+  if (original.length > TRACE_MAX_FILE_BYTES) return json({ success: false, error: "Preset exceeds the safe tracing size limit" }, 413, { "Cache-Control": "no-store" });
+  const downloadedAt = new Date().toISOString();
+  const marked = traceDownloadBytes(original, fileName, grant.userId, grant.username, downloadedAt);
+  if (!marked) return json({ success: false, error: "This preset cannot be safely traced and was not released." }, 422, { "Cache-Control": "no-store" });
+  return new Response(marked, { status: 200, headers: { "Content-Type": "application/octet-stream", "Cache-Control": "no-store", "X-Zyrex-Downloaded-At": downloadedAt, "X-Content-Type-Options": "nosniff" } });
+}
+
+async function handleInstallerBuildKey(request, env) {
+  const authorization = String(request.headers.get("Authorization") || "");
+  const provided = authorization.replace(/^Bearer\s+/i, "").trim();
+  if (!installerSecretMatches(provided, env.FFX_RELEASE_SOURCE_TOKEN)) return json({ success: false, error: "Unauthorized" }, 401, { "Cache-Control": "no-store" });
+  let body;
+  try { body = await request.json(); } catch (_) { return json({ success: false, error: "Invalid request" }, 400); }
+  const productId = String(body?.product_id || "").trim();
+  const releaseId = String(body?.release_id || "").trim();
+  if (!/^[A-Za-z0-9_-]{1,100}$/.test(productId) || !/^[A-Za-z0-9_-]{1,100}$/.test(releaseId)) return json({ success: false, error: "Invalid installer build" }, 400);
+  return json({ success: true, key: await deriveInstallerPayloadKey(productId, releaseId, env) }, 200, { "Cache-Control": "no-store" });
+}
+
 async function handleInstallerFfxSource(request, url, env) {
   const expected = String(env.FFX_RELEASE_SOURCE_TOKEN || "").trim();
   const authorization = String(request.headers.get("Authorization") || "");
   const provided = authorization.replace(/^Bearer\s+/i, "").trim();
-  if (!installerSecretMatches(provided, expected)) {
+  const productId = String(url.searchParams.get("id") || "").trim();
+  const releaseId = String(url.searchParams.get("release_id") || "").trim();
+  const buildAuthorized = installerSecretMatches(provided, expected);
+  const grant = buildAuthorized ? null : await installerGrantFromRequest(request, env, productId, releaseId);
+  if (!buildAuthorized && !grant) {
     return json({ success: false, error: "Unauthorized" }, 401, { "Cache-Control": "no-store" });
   }
-  const productId = String(url.searchParams.get("id") || "").trim();
   if (!/^[A-Za-z0-9_-]{1,100}$/.test(productId)) {
     return json({ success: false, error: "Invalid leak ID" }, 400, { "Cache-Control": "no-store" });
   }
@@ -2481,7 +2618,14 @@ async function handleInstallerFfxSource(request, url, env) {
     }
     const object = await bucket.get(requestedKey);
     if (!object) return json({ success: false, error: "Source file not found" }, 404, { "Cache-Control": "no-store" });
-    return new Response(object.body, {
+    let body = object.body;
+    if (grant) {
+      const raw = new Uint8Array(await object.arrayBuffer());
+      const traced = traceDownloadBytes(raw, relativeR2Name(requestedKey, prefix), grant.userId, grant.username, new Date().toISOString());
+      if (!traced) return json({ success: false, error: "This preset cannot be safely traced and was not released." }, 422, { "Cache-Control": "no-store" });
+      body = traced;
+    }
+    return new Response(body, {
       status: 200,
       headers: {
         "Content-Type": "application/octet-stream",
@@ -2498,7 +2642,7 @@ async function handleInstallerFfxSource(request, url, env) {
     const listed = await bucket.list({ prefix, limit: 1000, cursor });
     for (const object of listed.objects || []) {
       if (object.key.startsWith(prefix) && /\.ffx$/i.test(object.key) && !object.key.includes("..")) {
-        files.push({ key: object.key, name: object.key.slice(object.key.lastIndexOf("/") + 1), size: object.size });
+        files.push({ key: object.key, name: relativeR2Name(object.key, prefix), size: object.size });
       }
     }
     if (!listed.truncated || !listed.cursor) break;
@@ -5087,7 +5231,7 @@ function traceFindMark(bytes) {
 
 // The packet is written with a large block of trailing spaces so it can be edited in
 // place; the trace is paid for out of that block.
-function traceMarkXmp(tail, discordId) {
+function traceMarkXmp(tail, discordId, username = "", downloadedAt = "") {
   if (!tail.length) return null;
   if (traceXmpText(tail)) return null;               // already carries a trace
   const text = traceTextDecoder().decode(tail);
@@ -5100,8 +5244,12 @@ function traceMarkXmp(tail, discordId) {
   if (padding < TRACE_XMP_MIN_PADDING) return null;
   const closeAt = text.lastIndexOf(TRACE_XMP_CLOSE, endAt);
   if (closeAt < 0) return null;
+  const xmlEscape = (value) => String(value || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
+  const encodedUsername = username ? base64UrlEncode(traceTextEncoder().encode(String(username))) : "";
+  const identity = username ? `<zyrex:Username encoding="base64url-utf8">${encodedUsername}</zyrex:Username>` : "";
+  const date = downloadedAt ? `<zyrex:DownloadedAt>${xmlEscape(downloadedAt)}</zyrex:DownloadedAt>` : "";
   const element = "<" + TRACE_XMP_TAG + ' xmlns:zyrex="' + TRACE_XMP_NS + '">' +
-    traceTokenFor(discordId).text + "</" + TRACE_XMP_TAG + ">";
+    traceTokenFor(discordId).text + "</" + TRACE_XMP_TAG + ">" + identity + date;
   if (element.length + 8 > padding) return null;
   const out = text.slice(0, closeAt) + element +
     text.slice(closeAt, padStart) +
@@ -5184,11 +5332,11 @@ function traceVerify(original, rebuilt, expected) {
 }
 
 // Marks every display string the credit tool already credited, plus the metadata packet.
-function traceWatermarkFfx(bytes, discordId) {
+function traceWatermarkFfx(bytes, discordId, username = "", downloadedAt = "") {
   const parts = traceSplitFfx(bytes);
   if (!parts) return null;
   const mark = traceEncodeMark(discordId);
-  const markedTail = traceMarkXmp(parts.tail, discordId);
+  const markedTail = traceMarkXmp(parts.tail, discordId, username, downloadedAt);
   if (parts.tail.length && !markedTail) return null;   // trailing data we do not recognise
   const nameResult = traceRewriteTexts(parts.container, (text) => {
     if (text.indexOf(TRACE_CREDIT) < 0) return null;
@@ -5235,12 +5383,12 @@ function traceContainsBytes(haystack, needle) {
 
 
 // Returns traced bytes for a downloadable file, or null to serve it untouched.
-function traceDownloadBytes(bytes, fileName, discordId) {
+function traceDownloadBytes(bytes, fileName, discordId, username = "", downloadedAt = "") {
   const id = String(discordId || "").trim();
   if (!/^\d{15,25}$/.test(id)) return null;   // a malformed id must never be stamped into a file
   const lower = String(fileName || "").toLowerCase();
   if (lower.endsWith(".ffx")) {
-    const result = traceWatermarkFfx(bytes, id);
+    const result = traceWatermarkFfx(bytes, id, username, downloadedAt);
     return result ? result.bytes : null;
   }
   if (lower.endsWith(".txt")) {
@@ -24804,6 +24952,13 @@ async function announceProductToDiscord(env, product) {
         return handleInstallerFfxSource(request, url, env);
       }
 
+      if (path === "/api/installer/auth/start" && request.method === "POST") return handleInstallerAuthStart(request, env, url);
+      if (path === "/api/installer/auth/complete" && request.method === "GET") return handleInstallerAuthComplete(request, env, url);
+      if (path === "/api/installer/auth/poll" && request.method === "GET") return handleInstallerAuthPoll(url, env);
+      if (path === "/api/installer/build-key" && request.method === "POST") return handleInstallerBuildKey(request, env);
+      if (path === "/api/installer/payload-key" && request.method === "GET") return handleInstallerKey(request, url, env);
+      if (path === "/api/installer/trace" && request.method === "POST") return handleInstallerTrace(request, url, env);
+
       if (path.startsWith("/api/guild/") || path.startsWith("/api/lookup/") ||
                                path.startsWith("/api/admin/") || path.startsWith("/api/cloud/") || path.startsWith("/api/downloads/") || path.startsWith("/api/hlx/") || path.startsWith("/api/verify") || path.startsWith("/api/sftpgo/") || path.startsWith("/api/search/") || path === "/api/resource-stats" || path === "/api/discord-user" || path === "/api/check-uploader" || path === "/api/team" || path === "/api/products/submit") {
         const session = parseSession(request.headers.get("Cookie"), request);
@@ -26877,6 +27032,12 @@ async function announceProductToDiscord(env, product) {
 
   // Cron: finishes role assignments that Discord rejected while the member was verifying.
   async scheduled(event, env, ctx) {
+    try {
+      const removed = await cleanupInstallerAuthRecords(env);
+      if (removed) console.log("expired installer auth records cleaned:", removed);
+    } catch (error) {
+      console.error("installer auth cleanup failed:", error?.message || String(error));
+    }
     try {
       const result = await processVerifyQueue(env, 25);
       if (result.processed) console.log("verify role queue:", JSON.stringify(result));

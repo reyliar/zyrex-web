@@ -1,7 +1,8 @@
 ﻿"""Zyrex Effects Installer desktop application."""
 from __future__ import annotations
-import json, os, re, shutil, subprocess, sys, threading, time, urllib.parse, urllib.request, zipfile
+import base64, datetime, json, os, re, secrets, shutil, subprocess, sys, threading, time, urllib.error, urllib.parse, urllib.request, zipfile
 from pathlib import Path
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
 SITE = "https://zyrexediting.xyz"
 VERSION = "v1.0.0"
@@ -16,10 +17,9 @@ def safe_part(value: str, fallback: str) -> str:
     return (value[:96] if value and value not in {".", ".."} else fallback)
 
 def load_embedded():
-    with zipfile.ZipFile(resource("payload.zip")) as zf:
-        manifest = json.loads(zf.read("manifest.json").decode("utf-8"))
-        presets = [(Path(name).name, zf.read(name)) for name in zf.namelist() if name.startswith("presets/") and not name.endswith("/")]
-    return manifest, presets
+    manifest = json.loads(resource("metadata.json").read_text(encoding="utf-8"))
+    encrypted_payload = resource("payload.enc").read_bytes()
+    return manifest, encrypted_payload
 
 def detect_destination() -> Path | None:
     docs = Path.home() / "Documents" / "Adobe"
@@ -30,13 +30,51 @@ def detect_destination() -> Path | None:
 
 class InstallerAPI:
     def __init__(self):
-        self.manifest, self.presets = load_embedded()
+        self.manifest, self.encrypted_payload = load_embedded()
         self.product = self.manifest.get("product") or {}
         self.destination = detect_destination()
         self.metadata_loading = False
         self.live = False
-        self.lock = threading.Lock()
+        self.device_code = ""
+        self.access_token = ""
+        self.payload_key = b""
+        self.discord_user_id = ""
+        self.discord_username = ""
+        self.installed_folder = None
         self.creator_folder = self._creator_folder()
+
+    @property
+    def product_id(self):
+        return str(self.manifest.get("product_id") or "")
+
+    @property
+    def release_id(self):
+        return str(self.manifest.get("release_id") or "")
+
+    def _request(self, path, *, method="GET", body=None, token="", binary=False):
+        headers = {"Accept": "application/octet-stream" if binary else "application/json", "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36", "Origin": SITE, "Referer": SITE + "/", "Sec-Fetch-Site": "same-origin", "Sec-Fetch-Mode": "cors", "Sec-Fetch-Dest": "empty"}
+        data = body
+        if isinstance(body, dict):
+            data = json.dumps(body).encode("utf-8")
+            headers["Content-Type"] = "application/json"
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+        request = urllib.request.Request(f"{SITE}{path}", data=data, method=method, headers=headers)
+        try:
+            with urllib.request.urlopen(request, timeout=35) as response:
+                if binary:
+                    return response.read(), response.headers.get("X-Zyrex-Downloaded-At", "")
+                return json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as error:
+            detail = error.read().decode("utf-8", "replace")
+            if error.code == 202:
+                return {"success": True, "pending": True}
+            try:
+                parsed = json.loads(detail)
+                detail = parsed.get("error") or detail
+            except Exception:
+                pass
+            raise RuntimeError(detail or f"Zyrex API returned HTTP {error.code}") from error
 
     def _creator_folder(self):
         username = str(self.product.get("creator_username") or "").strip().lstrip("@").strip()
@@ -44,7 +82,33 @@ class InstallerAPI:
 
     def get_state(self):
         product = self.product
-        return {"leak": self.manifest.get("leak_name") or "Preset pack", "creator": ("@" + str(product.get("creator_username", "")).lstrip("@")) if product.get("creator_username") else (product.get("creator_nickname") or "Unknown creator"), "uploader": "Anonymous" if product.get("is_anonymous") else (product.get("uploader_name") or "Zyrex community"), "description": product.get("description", ""), "category": product.get("category", ""), "presetCount": len(self.presets), "creatorAvatar": product.get("creator_avatar", ""), "uploaderAvatar": "" if product.get("is_anonymous") else product.get("uploader_avatar", ""), "thumbnail": product.get("thumbnail", ""), "destination": str(self.destination) if self.destination else "", "ready": bool(self.destination and self.presets), "live": self.live, "metadataLoading": self.metadata_loading}
+        return {"leak": self.manifest.get("leak_name") or "Preset pack", "creator": ("@" + str(product.get("creator_username", "")).lstrip("@")) if product.get("creator_username") else (product.get("creator_nickname") or "Unknown creator"), "uploader": "Anonymous" if product.get("is_anonymous") else (product.get("uploader_name") or "Zyrex community"), "description": product.get("description", ""), "category": product.get("category", ""), "presetCount": int(self.manifest.get("count") or len(self.manifest.get("files") or [])), "creatorAvatar": product.get("creator_avatar", ""), "uploaderAvatar": "" if product.get("is_anonymous") else product.get("uploader_avatar", ""), "thumbnail": product.get("thumbnail", ""), "destination": str(self.destination) if self.destination else "", "ready": bool(self.destination and self.payload_key), "authenticated": bool(self.access_token and self.payload_key), "username": self.discord_username, "live": self.live, "metadataLoading": self.metadata_loading}
+
+    def start_login(self):
+        self.device_code = secrets.token_urlsafe(36)
+        result = self._request("/api/installer/auth/start", method="POST", body={"device_code": self.device_code, "product_id": self.product_id, "release_id": self.release_id})
+        import webbrowser
+        webbrowser.open(str(result.get("authorization_url") or ""))
+        return {"success": True, "expires_in": result.get("expires_in", 600)}
+
+    def poll_login(self):
+        if not self.device_code:
+            return {"success": False, "error": "Start Discord sign-in first."}
+        query = urllib.parse.urlencode({"device_code": self.device_code})
+        try:
+            result = self._request(f"/api/installer/auth/poll?{query}")
+            if result.get("pending"):
+                return {"success": True, "pending": True}
+            self.access_token = str(result.get("access_token") or "")
+            self.discord_user_id = str((result.get("user") or {}).get("id") or "")
+            self.discord_username = str((result.get("user") or {}).get("username") or "")
+            key_query = urllib.parse.urlencode({"id": self.product_id, "release_id": self.release_id})
+            key_response = self._request(f"/api/installer/payload-key?{key_query}", token=self.access_token)
+            encoded = str(key_response.get("key") or "")
+            self.payload_key = base64.urlsafe_b64decode(encoded + "=" * (-len(encoded) % 4))
+            return {"success": True, "pending": False, "username": self.discord_username}
+        except Exception as error:
+            return {"success": False, "error": str(error)}
 
     def refresh_metadata(self):
         if self.live or self.metadata_loading:
@@ -73,28 +137,52 @@ class InstallerAPI:
             self.destination = detect_destination()
         if not self.destination:
             return {"success": False, "error": "After Effects User Presets folder was not found. Install After Effects and try again."}
+        if not self.access_token or not self.payload_key:
+            return {"success": False, "error": "Sign in with Discord before installing presets."}
         folder = self.destination / self.creator_folder / safe_part(self.manifest.get("leak_name"), "Preset pack")
         try:
+            from io import BytesIO
+            nonce, ciphertext = self.encrypted_payload[:12], self.encrypted_payload[12:]
+            aad = f"{self.product_id}:{self.release_id}".encode("utf-8")
+            plaintext = AESGCM(self.payload_key).decrypt(nonce, ciphertext, aad)
+            archive = zipfile.ZipFile(BytesIO(plaintext))
+            downloaded_at = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds")
             folder.mkdir(parents=True, exist_ok=True)
             installed = skipped = 0
-            for name, data in self.presets:
-                target = folder / safe_part(name, "Preset.ffx")
+            trace_dates = []
+            for archived_name in archive.namelist():
+                if not archived_name.startswith("presets/") or archived_name.endswith("/"):
+                    continue
+                relative = Path(*Path(archived_name.replace("\\", "/")).parts[1:])
+                if not relative.parts or any(part in {"", ".", ".."} for part in relative.parts):
+                    continue
+                name = relative.as_posix()
+                target = folder.joinpath(*[safe_part(part, "Preset.ffx") for part in relative.parts])
                 if target.exists():
                     skipped += 1
                     continue
+                raw = archive.read(archived_name)
+                query = urllib.parse.urlencode({"id": self.product_id, "release_id": self.release_id, "name": name})
+                data, traced_at = self._request(f"/api/installer/trace?{query}", method="POST", body=raw, token=self.access_token, binary=True)
+                target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_bytes(data)
                 installed += 1
+                trace_dates.append(f"{name}\t{traced_at or downloaded_at}")
+            receipt = folder / "Zyrex Download Attribution.txt"
+            receipt.write_text(f"Zyrex preset download\nDiscord username: {self.discord_username}\nDiscord user ID: {self.discord_user_id}\nFFX trace timestamps (UTC):\n" + "\n".join(trace_dates) + "\n", encoding="utf-8")
+            self.installed_folder = folder
             return {"success": True, "installed": installed, "skipped": skipped, "folder": str(folder)}
         except Exception as error:
             return {"success": False, "error": f"Could not install presets: {error}"}
 
     def open_destination(self):
-        if not self.destination or not self.destination.exists():
+        target = self.installed_folder or self.destination
+        if not target or not target.exists():
             return {"success": False, "error": "After Effects User Presets folder was not found."}
         try:
-            if sys.platform == "win32": os.startfile(str(self.destination))
-            elif sys.platform == "darwin": subprocess.Popen(["open", str(self.destination)])
-            else: subprocess.Popen(["xdg-open", str(self.destination)])
+            if sys.platform == "win32": os.startfile(str(target))
+            elif sys.platform == "darwin": subprocess.Popen(["open", str(target)])
+            else: subprocess.Popen(["xdg-open", str(target)])
             return {"success": True}
         except Exception as error: return {"success": False, "error": str(error)}
 

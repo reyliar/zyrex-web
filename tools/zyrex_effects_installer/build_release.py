@@ -2,12 +2,15 @@
 from __future__ import annotations
 
 import argparse
+import base64
+import json
 import os
 import platform
 import shutil
 import subprocess
 import sys
 import tempfile
+import urllib.request
 from pathlib import Path
 
 from build_payload import build_payload, safe_name
@@ -16,9 +19,24 @@ if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(errors="replace")
 
 PROJECT = Path(__file__).resolve().parent
+INSTALLER_API = "https://zyrexediting.xyz/api/installer/build-key"
 
 
-def build(product_id: str, source: Path, output_root: Path) -> Path:
+def get_payload_key(product_id: str, release_id: str) -> bytes:
+    token = os.environ.get("FFX_RELEASE_SOURCE_TOKEN", "").strip()
+    if not token:
+        raise RuntimeError("FFX_RELEASE_SOURCE_TOKEN is required to create a session-gated installer.")
+    body = json.dumps({"product_id": product_id, "release_id": release_id}).encode("utf-8")
+    request = urllib.request.Request(INSTALLER_API, data=body, method="POST", headers={"Authorization": f"Bearer {token}", "Content-Type": "application/json", "Accept": "application/json", "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36", "Origin": "https://zyrexediting.xyz", "Referer": "https://zyrexediting.xyz/", "Sec-Fetch-Site": "same-origin", "Sec-Fetch-Mode": "cors", "Sec-Fetch-Dest": "empty"})
+    with urllib.request.urlopen(request, timeout=20) as response:
+        data = json.loads(response.read().decode("utf-8"))
+    encoded = str(data.get("key") or "")
+    if not encoded:
+        raise RuntimeError("The Zyrex API did not return an installer payload key.")
+    return base64.urlsafe_b64decode(encoded + "=" * (-len(encoded) % 4))
+
+
+def build(product_id: str, source: Path, output_root: Path, release_id: str) -> Path:
     system = platform.system().lower()
     if system not in {"windows", "darwin"}:
         raise RuntimeError(f"Unsupported release platform: {system}")
@@ -31,6 +49,26 @@ def build(product_id: str, source: Path, output_root: Path) -> Path:
         if not manifest.get("count") or credited != int(manifest["count"]):
             raise RuntimeError("Every FFX must be credited before installer generation starts.")
         leak = safe_name(manifest["leak_name"])
+        from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+        payload_key = get_payload_key(product_id, release_id)
+        nonce = os.urandom(12)
+        aad = f"{product_id}:{release_id}".encode("utf-8")
+        encrypted_payload = temp / "payload.enc"
+        encrypted_payload.write_bytes(nonce + AESGCM(payload_key).encrypt(nonce, payload.read_bytes(), aad))
+        metadata = temp / "metadata.json"
+        metadata.write_text(json.dumps({**manifest, "release_id": release_id}, ensure_ascii=False), encoding="utf-8")
+        from PIL import Image
+        icon_image = Image.open(PROJECT / "content.png").convert("RGBA")
+        icon_path = temp / ("content.icns" if system == "darwin" else "content.ico")
+        if system == "darwin":
+            iconset = temp / "content.iconset"
+            iconset.mkdir()
+            for size in (16, 32, 64, 128, 256, 512):
+                icon_image.resize((size, size), Image.Resampling.LANCZOS).save(iconset / f"icon_{size}x{size}.png")
+                icon_image.resize((size * 2, size * 2), Image.Resampling.LANCZOS).save(iconset / f"icon_{size}x{size}@2x.png")
+            subprocess.run(["iconutil", "-c", "icns", str(iconset), "-o", str(icon_path)], check=True)
+        else:
+            icon_image.save(icon_path, format="ICO", sizes=[(16, 16), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)])
         stage, work = temp / "dist", temp / "work"
         stage.mkdir()
         work.mkdir()
@@ -38,7 +76,9 @@ def build(product_id: str, source: Path, output_root: Path) -> Path:
         args = [
             sys.executable, "-m", "PyInstaller", "--noconfirm", "--clean",
             "--name", leak, "--distpath", str(stage), "--workpath", str(work),
-            "--specpath", str(work), "--add-data", f"{payload}{data_sep}.",
+            "--specpath", str(work), "--add-data", f"{encrypted_payload}{data_sep}.",
+            "--add-data", f"{metadata}{data_sep}.",
+            "--icon", str(icon_path),
             "--add-data", f"{PROJECT / 'ui.html'}{data_sep}.",
             "--add-data", f"{PROJECT / 'content.png'}{data_sep}.",
             "--add-data", f"{PROJECT / 'outfit-latin.woff2'}{data_sep}.",
@@ -89,8 +129,9 @@ def main() -> None:
     parser.add_argument("--preset-id", required=True)
     parser.add_argument("--source", required=True, type=Path)
     parser.add_argument("--output-root", required=True, type=Path)
+    parser.add_argument("--release-id", required=True)
     args = parser.parse_args()
-    release = build(args.preset_id, args.source, args.output_root)
+    release = build(args.preset_id, args.source, args.output_root, args.release_id)
     print(f"Built {platform.system()} leak installer folder: {release}")
 
 

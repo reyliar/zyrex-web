@@ -1,28 +1,31 @@
 # Zyrex leak preset installer
 
-Each installer is built for one published leak ID. The builder reads the leak name, creator, uploader, description, thumbnail, and preset files from Zyrex. The app shows the site artwork and metadata, then installs into `User Presets\Creator\Leak\*.ffx` with one click. Metadata uses the embedded product details immediately and retries transient Zyrex API failures in the background.
+Each Windows and macOS installer is built for one published leak ID. It shows the leak thumbnail, description, creator `@username`, and uploader. The application bundle contains only encrypted preset bytes and public metadata; it cannot read or install any `.ffx` preset until the user signs in with Discord through Zyrex.
+
+After sign-in, the app receives a short-lived product-scoped token from the Worker, retrieves the release key, decrypts the pack in memory, and asks the Worker to trace each `.ffx` before writing it. Presets are installed under `User Presets/<creator username>/<leak name>/`, with all original subfolders preserved. Existing files are kept. The app writes a visible attribution receipt with the Discord username, Discord ID, and UTC install time. Where the preset XMP has safe space, those details are also added to the XMP packet; the established effect-name trace carries the Discord ID. Files that cannot be safely traced are not installed.
 
 The release folder contains exactly three entries:
 
 - `Windows/<Leak name>/`: `<Leak name>.exe`
 - `macOS/<Leak name>/`: `<Leak name>.dmg`
-- All platforms: `Leaked by Zyrex.txt` and `Visit for more resources.url`
+- Both platform folders include `Leaked by Zyrex.txt` and `Visit for more resources.url`.
 
-The app is version `v1.0.0`. Its detected After Effects destination is clickable; after install the green Completed button and notification show the exact preset folder. Preset bytes and fonts are embedded in the app. Source `.ffx` files are copied from the production bucket through a token-authenticated Worker endpoint. Every preset is credited in its effect names or, when its effect data cannot be safely edited, its filename before either platform app is generated. Existing presets with matching names are preserved.
+The app is version `v1.0.0`; its icon is generated from `content.png`. Its detected After Effects destination is clickable; after install the green Completed button and notification show the exact preset folder. The executable does not contain plaintext FFX files or the decryption key.
 
 ## Automatic release flow
 
-`.github/workflows/release.yml` builds Windows and macOS artifacts. Product publishing triggers it using `repository_dispatch`; `workflow_dispatch` can build one leak by ID or backfill every existing preset leak with production FFX files. The combined artifact contains separate `Windows/` and `macOS/` folders.
+`.github/workflows/release.yml` builds Windows and macOS artifacts. Product publishing triggers it using `repository_dispatch`; `workflow_dispatch` can build one leak by ID or backfill every existing preset leak with production FFX files. Both platform builds use the same release ID and Worker-derived encryption key. The combined artifact contains separate `Windows/` and `macOS/` folders. Failed IDs can be rebuilt and merged with a successful base run by setting `preset_ids` and `base_run_id`.
 
 Required credentials:
 
-- `FFX_RELEASE_SOURCE_TOKEN`: same random secret in the Worker and GitHub Actions; protects the production preset endpoint.
+- `FFX_RELEASE_SOURCE_TOKEN`: shared Worker/GitHub Actions secret for the build-only source and encryption-key endpoints.
 - `FFX_RELEASE_GITHUB_TOKEN`: Worker secret with repository `contents:write` permission to dispatch Actions.
+- `SESSION_SECRET`: stable Worker HMAC secret used for Zyrex sessions, scoped installer tokens, and release key derivation.
 - `FFX_RELEASE_REPOSITORY`: optional Worker variable; defaults to `reyliar/zyrex-web`.
 
-## Local Windows build and test
+## Local Windows build
 
 ```powershell
+$env:FFX_RELEASE_SOURCE_TOKEN = '<GitHub Actions source token>'
 .\build.ps1 -PresetId preset-mvng96tn -SourceFolder 'C:\path\to\production\folder'
-py -3.12 app.py --self-test
 ```

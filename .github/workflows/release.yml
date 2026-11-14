@@ -78,6 +78,7 @@ jobs:
         with:
           preset_id: ${{ matrix.product_id }}
           platform: windows
+          release_id: ${{ github.run_id }}
 
   macos-installers:
     needs: prepare
@@ -99,6 +100,7 @@ jobs:
         with:
           preset_id: ${{ matrix.product_id }}
           platform: macOS
+          release_id: ${{ github.run_id }}
 
   assemble-release:
     needs: [prepare, windows-installers, macos-installers]

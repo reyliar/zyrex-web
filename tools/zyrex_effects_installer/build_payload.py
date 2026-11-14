@@ -8,7 +8,7 @@ import sys
 import urllib.parse
 import urllib.request
 import zipfile
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 APP_ROOT = Path(__file__).resolve().parent
 SAMPLE_ID = "preset-mvng96tn"
@@ -68,6 +68,7 @@ def build_payload(product_id: str, source: Path, output: Path) -> dict:
     effect_credit = filename_credit = 0
     used: set[str] = set()
     for original in originals:
+        relative = PurePosixPath(original.relative_to(source).as_posix())
         raw = original.read_bytes()
         if len(raw) < 12 or raw[:4] != b"RIFX" or raw[8:12] != b"FaFX":
             raise ValueError(f"Not a valid After Effects preset: {original.name}")
@@ -77,17 +78,17 @@ def build_payload(product_id: str, source: Path, output: Path) -> dict:
             output_bytes, report = raw, {"filename_fallback": True, "reason": str(error)}
         fallback = bool(report.get("no_editable_names") or report.get("filename_fallback"))
         if fallback:
-            name = f"{original.stem} - {BRAND}{original.suffix}"
+            relative = relative.with_name(f"{original.stem} - {BRAND}{original.suffix}")
             filename_credit += 1
             mode = "filename-fallback"
         else:
-            name = original.name
             effect_credit += 1
             mode = "effect-name"
             if BRAND.encode() not in output_bytes:
                 raise ValueError(f"FFX credit could not be verified for {original.name}")
-        if BRAND.casefold() not in name.casefold() and BRAND.encode() not in output_bytes:
+        if BRAND.casefold() not in str(relative).casefold() and BRAND.encode() not in output_bytes:
             raise ValueError(f"No Zyrex credit was applied to {original.name}")
+        name = str(relative)
         key = name.casefold()
         if key in used:
             raise ValueError(f"Duplicate preset name after credit processing: {name}")

@@ -7,7 +7,7 @@ import re
 import urllib.parse
 import urllib.request
 from urllib.error import HTTPError
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 API = "https://zyrexediting.xyz/api/installer/ffx-source"
 
@@ -29,9 +29,13 @@ def request(product_id: str, token: str, file_key: str = "") -> bytes:
         return response.read()
 
 
-def safe_filename(value: str) -> str:
-    name = Path(value.replace("\\", "/")).name
-    name = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", name).strip(" .")
+def safe_relative_name(value: str) -> str:
+    raw = value.replace("\\", "/")
+    parts = [part for part in PurePosixPath(raw).parts if part not in {"", "."}]
+    if not parts or any(part == ".." for part in parts):
+        raise ValueError(f"Unexpected source path: {value}")
+    parts = [re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", part).strip(" .") for part in parts]
+    name = "/".join(part for part in parts if part)
     if not name or not name.lower().endswith(".ffx"):
         raise ValueError(f"Unexpected source filename: {value}")
     return name
@@ -57,16 +61,17 @@ def main() -> None:
     seen: set[str] = set()
     for item in files:
         key = str(item.get("key", ""))
-        name = safe_filename(str(item.get("name", "")))
+        name = safe_relative_name(str(item.get("name", "")))
         if not key:
             raise SystemExit(f"Invalid FFX source entry: {name}")
         # Production packs may contain the same basename in different folders.
         # Preserve every preset with a deterministic unique filename for the
         # crediting and installer stages instead of dropping the whole leak.
-        stem, suffix = Path(name).stem, Path(name).suffix
+        relative = PurePosixPath(name)
+        stem, suffix = relative.stem, relative.suffix
         candidate, duplicate = name, 2
         while candidate.casefold() in seen:
-            candidate = f"{stem} ({duplicate}){suffix}"
+            candidate = str(relative.with_name(f"{stem} ({duplicate}){suffix}"))
             duplicate += 1
         name = candidate
         seen.add(name.casefold())
@@ -77,7 +82,9 @@ def main() -> None:
             raise SystemExit(f"FFX source download failed for {name}: HTTP {error.code} {detail}") from error
         if len(data) < 12 or data[:4] != b"RIFX" or data[8:12] != b"FaFX":
             raise SystemExit(f"Invalid After Effects preset received: {name}")
-        (args.output / name).write_bytes(data)
+        target = args.output.joinpath(*PurePosixPath(name).parts)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(data)
     print(f"Downloaded {len(files)} FFX files for {args.preset_id}.")
 
 
