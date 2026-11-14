@@ -2673,8 +2673,10 @@ async function handleInstallerMigrate(request, url, env) {
   for (const platform of Object.keys(INSTALLER_PLATFORMS)) {
     const extension = INSTALLER_PLATFORMS[platform];
     const legacy = await bucket.list({ prefix: installerStoragePrefix(productId, platform), limit: 20 });
-    for (const object of legacy.objects || []) {
-      if (!object.key.toLowerCase().endsWith(extension)) continue;
+    const copies = (legacy.objects || []).filter(object => object.key.toLowerCase().endsWith(extension));
+    if (!copies.length) continue;
+    let newest = "";
+    for (const object of copies) {
       const filename = object.key.slice(object.key.lastIndexOf("/") + 1);
       const stored = await bucket.get(object.key);
       if (!stored) continue;
@@ -2683,7 +2685,18 @@ async function handleInstallerMigrate(request, url, env) {
         customMetadata: { product_id: productId, platform, migrated_from: object.key },
       });
       await bucket.delete(object.key).catch(() => {});
+      newest = filename;
       moved.push(filename);
+    }
+    // Drop the older build of this platform that is still sitting in the leak folder.
+    if (newest) {
+      const listing = await bucket.list({ prefix, limit: 1000 });
+      for (const object of listing.objects || []) {
+        if (object.key === prefix + newest) continue;
+        if (object.key.toLowerCase().endsWith(extension) && !isWatermarkName(object.key)) {
+          await bucket.delete(object.key).catch(() => {});
+        }
+      }
     }
   }
   return json({ success: true, product_id: productId, moved }, 200, { "Cache-Control": "no-store" });

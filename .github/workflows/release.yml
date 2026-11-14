@@ -25,6 +25,10 @@ on:
         required: false
         default: false
         type: boolean
+      migrate_ids:
+        description: Comma-separated leak IDs whose legacy installer objects should move into the leak folder
+        required: false
+        type: string
   repository_dispatch:
     types: [zyrex_preset_published]
 
@@ -34,7 +38,7 @@ permissions:
 
 jobs:
   prepare:
-    if: github.event_name == 'repository_dispatch' || inputs.backfill_all == true || inputs.preset_id != '' || inputs.preset_ids != '' || inputs.base_run_id != '' || inputs.assemble_only == true
+    if: github.event_name == 'repository_dispatch' || inputs.backfill_all == true || inputs.preset_id != '' || inputs.preset_ids != '' || inputs.base_run_id != '' || inputs.assemble_only == true || inputs.migrate_ids != ''
     runs-on: ubuntu-latest
     outputs:
       product_ids: ${{ steps.targets.outputs.product_ids }}
@@ -54,7 +58,7 @@ jobs:
         run: python tools/zyrex_effects_installer/discover_sources.py > "$RUNNER_TEMP/product_ids.json"
 
       - name: Select requested leak
-        if: inputs.backfill_all != true && inputs.assemble_only != true
+        if: inputs.backfill_all != true && inputs.assemble_only != true && inputs.migrate_ids == ''
         env:
           PRODUCT_IDS: ${{ inputs.preset_ids || github.event.client_payload.product_id || inputs.preset_id }}
         run: python -c 'import json,os,re,pathlib; ids=[p.strip() for p in os.environ["PRODUCT_IDS"].split(",") if p.strip()]; assert ids and all(re.fullmatch(r"[A-Za-z0-9_-]{1,100}",p) for p in ids), "Invalid preset ID list"; pathlib.Path(os.environ["RUNNER_TEMP"],"product_ids.json").write_text(json.dumps(list(dict.fromkeys(ids))))'
@@ -63,13 +67,17 @@ jobs:
         if: inputs.assemble_only == true
         run: echo '[]' > "$RUNNER_TEMP/product_ids.json"
 
+      - name: Select no build targets for migration runs
+        if: inputs.migrate_ids != ''
+        run: echo '[]' > "$RUNNER_TEMP/product_ids.json"
+
       - name: Publish build matrix
         id: targets
         run: echo "product_ids=$(cat "$RUNNER_TEMP/product_ids.json")" >> "$GITHUB_OUTPUT"
 
   windows-installers:
     needs: prepare
-    if: needs.prepare.result == 'success' && inputs.assemble_only != true
+    if: needs.prepare.result == 'success' && inputs.assemble_only != true && inputs.migrate_ids == ''
     runs-on: windows-latest
     timeout-minutes: 35
     strategy:
@@ -91,7 +99,7 @@ jobs:
 
   macos-installers:
     needs: prepare
-    if: needs.prepare.result == 'success' && inputs.assemble_only != true
+    if: needs.prepare.result == 'success' && inputs.assemble_only != true && inputs.migrate_ids == ''
     runs-on: macos-latest
     timeout-minutes: 35
     strategy:
@@ -110,6 +118,27 @@ jobs:
           preset_id: ${{ matrix.product_id }}
           platform: macOS
           release_id: ${{ github.run_id }}
+
+  migrate-installers:
+    needs: prepare
+    if: needs.prepare.result == 'success' && inputs.migrate_ids != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      FFX_RELEASE_SOURCE_TOKEN: ${{ secrets.FFX_RELEASE_SOURCE_TOKEN }}
+    steps:
+      - name: Check out installer source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Move legacy installer objects into their leak folders
+        env:
+          MIGRATE_IDS: ${{ inputs.migrate_ids }}
+        run: python tools/zyrex_effects_installer/migrate_installers.py --ids "$MIGRATE_IDS"
 
   assemble-release:
     needs: [prepare, windows-installers, macos-installers]
