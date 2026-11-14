@@ -17,9 +17,27 @@ def get_json(url: str, token: str = "") -> object:
     headers = {"Accept": "application/json", "Cache-Control": "no-cache", "User-Agent": "Zyrex-Installer-Backfill/1.0"}
     if token:
         headers["Authorization"] = f"Bearer {token}"
-    request = urllib.request.Request(url, headers=headers)
-    with urllib.request.urlopen(request, timeout=30) as response:
-        return json.loads(response.read().decode("utf-8"))
+    last_error: Exception | None = None
+    for attempt in range(1, 7):
+        request = urllib.request.Request(url, headers=headers)
+        try:
+            with urllib.request.urlopen(request, timeout=30) as response:
+                return json.loads(response.read().decode("utf-8"))
+        except urllib.error.HTTPError as error:
+            last_error = error
+            if error.code not in {429, 500, 502, 503, 504} or attempt == 6:
+                raise
+            try:
+                retry_after = float(error.headers.get("Retry-After") or 0)
+            except (TypeError, ValueError):
+                retry_after = 0.0
+            time.sleep(min(90.0, retry_after or attempt * 10))
+        except (TimeoutError, urllib.error.URLError) as error:
+            last_error = error
+            if attempt == 6:
+                raise
+            time.sleep(attempt * 5)
+    raise last_error or RuntimeError("Zyrex API request did not complete.")
 
 
 def discover() -> list[str]:
@@ -64,6 +82,7 @@ def discover() -> list[str]:
                 raise
         if index % 25 == 0:
             print(f"Inspected {index}/{len(products)} Zyrex presets; {len(eligible)} contain FFX files.", file=sys.stderr)
+        time.sleep(0.2)
 
     print(f"Found {len(eligible)} existing leak installers to build.", file=sys.stderr)
     return eligible

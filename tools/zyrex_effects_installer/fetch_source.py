@@ -4,29 +4,51 @@ from __future__ import annotations
 import argparse
 import os
 import re
+import time
 import urllib.parse
 import urllib.request
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 from pathlib import Path, PurePosixPath
 
 API = "https://zyrexediting.xyz/api/installer/ffx-source"
+# Cloudflare rate limits the zone when many matrix jobs fetch at once, so each file
+# download waits briefly and retries a throttled response instead of failing the leak.
+FILE_PAUSE_SECONDS = 0.25
+RETRY_STATUSES = {429, 500, 502, 503, 504}
 
 
 def request(product_id: str, token: str, file_key: str = "") -> bytes:
     query = {"id": product_id}
     if file_key:
         query["file"] = file_key
-    req = urllib.request.Request(
-        f"{API}?{urllib.parse.urlencode(query)}",
-        headers={
-            "Authorization": f"Bearer {token}",
-            "Accept": "application/octet-stream" if file_key else "application/json",
-            "Cache-Control": "no-cache",
-            "User-Agent": "Zyrex-Installer-Backfill/1.0",
-        },
-    )
-    with urllib.request.urlopen(req, timeout=45) as response:
-        return response.read()
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/octet-stream" if file_key else "application/json",
+        "Cache-Control": "no-cache",
+        "User-Agent": "Zyrex-Installer-Backfill/1.0",
+    }
+    url = f"{API}?{urllib.parse.urlencode(query)}"
+    last_error = "source request did not run"
+    for attempt in range(1, 7):
+        req = urllib.request.Request(url, headers=headers)
+        try:
+            with urllib.request.urlopen(req, timeout=45) as response:
+                return response.read()
+        except HTTPError as error:
+            last_error = error
+            if error.code not in RETRY_STATUSES or attempt == 6:
+                raise
+            try:
+                retry_after = float(error.headers.get("Retry-After") or 0)
+            except (TypeError, ValueError):
+                retry_after = 0.0
+            time.sleep(min(90.0, retry_after or attempt * 10))
+        except URLError as error:
+            last_error = error
+            if attempt == 6:
+                raise
+            time.sleep(attempt * 5)
+    raise last_error
 
 
 def safe_relative_name(value: str) -> str:
@@ -85,6 +107,7 @@ def main() -> None:
         target = args.output.joinpath(*PurePosixPath(name).parts)
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_bytes(data)
+        time.sleep(FILE_PAUSE_SECONDS)
     print(f"Downloaded {len(files)} FFX files for {args.preset_id}.")
 
 
