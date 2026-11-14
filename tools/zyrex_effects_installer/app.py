@@ -1,6 +1,6 @@
 ﻿"""Zyrex Effects Installer desktop application."""
 from __future__ import annotations
-import base64, datetime, json, os, re, secrets, shutil, subprocess, sys, threading, time, urllib.error, urllib.parse, urllib.request, zipfile
+import base64, json, os, re, secrets, subprocess, sys, threading, time, urllib.error, urllib.parse, urllib.request, zipfile
 from pathlib import Path
 from Crypto.Cipher import AES
 
@@ -153,10 +153,8 @@ class InstallerAPI:
             cipher.update(f"{self.product_id}:{self.release_id}".encode("utf-8"))
             plaintext = cipher.decrypt_and_verify(ciphertext[:-16], ciphertext[-16:])
             archive = zipfile.ZipFile(BytesIO(plaintext))
-            downloaded_at = datetime.datetime.now(datetime.timezone.utc).isoformat(timespec="seconds")
             folder.mkdir(parents=True, exist_ok=True)
             installed = skipped = 0
-            trace_dates = []
             for archived_name in archive.namelist():
                 if not archived_name.startswith("presets/") or archived_name.endswith("/"):
                     continue
@@ -169,14 +167,13 @@ class InstallerAPI:
                     skipped += 1
                     continue
                 raw = archive.read(archived_name)
+                # The Worker stamps the Discord account and UTC download time into the
+                # preset's own metadata packet, so no sidecar receipt file is written.
                 query = urllib.parse.urlencode({"id": self.product_id, "release_id": self.release_id, "name": name})
-                data, traced_at = self._request(f"/api/installer/trace?{query}", method="POST", body=raw, token=self.access_token, binary=True)
+                data, _ = self._request(f"/api/installer/trace?{query}", method="POST", body=raw, token=self.access_token, binary=True)
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_bytes(data)
                 installed += 1
-                trace_dates.append(f"{name}\t{traced_at or downloaded_at}")
-            receipt = folder / "Zyrex Download Attribution.txt"
-            receipt.write_text(f"Zyrex preset download\nDiscord username: {self.discord_username}\nDiscord user ID: {self.discord_user_id}\nFFX trace timestamps (UTC):\n" + "\n".join(trace_dates) + "\n", encoding="utf-8")
             self.installed_folder = folder
             return {"success": True, "installed": installed, "skipped": skipped, "folder": str(folder)}
         except Exception as error:

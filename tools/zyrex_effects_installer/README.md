@@ -2,7 +2,7 @@
 
 Each Windows and macOS installer is built for one published leak ID. It shows the leak thumbnail, description, creator `@username`, and uploader. The application bundle contains only encrypted preset bytes and public metadata; it cannot read or install any `.ffx` preset until the user signs in with Discord through Zyrex.
 
-After sign-in, the app receives a short-lived product-scoped token from the Worker, retrieves the release key, decrypts the pack in memory, and asks the Worker to trace each `.ffx` before writing it. Presets are installed under `User Presets/<creator username>/<leak name>/`, with all original subfolders preserved. Existing files are kept. The app writes a visible attribution receipt with the Discord username, Discord ID, and UTC install time. Where the preset XMP has safe space, those details are also added to the XMP packet; the established effect-name trace carries the Discord ID. Files that cannot be safely traced are not installed.
+After sign-in, the app receives a short-lived product-scoped token from the Worker, retrieves the release key, decrypts the pack in memory, and asks the Worker to trace each `.ffx` before writing it. Presets are installed under `User Presets/<creator username>/<leak name>/`, with all original subfolders preserved. Existing files are kept. The Discord username, Discord ID and UTC download time are written into the preset's own XMP packet (reusing its existing padding, so the file length never changes) and the account ID is carried in zero-width marks on the credited effect names. No sidecar receipt or extra file is created. Files that cannot be safely traced are not installed.
 
 The release folder contains exactly three entries:
 
