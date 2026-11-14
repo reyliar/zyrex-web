@@ -2733,18 +2733,21 @@ async function handleInstallerRelocateSource(request, url, env) {
   for (const object of objects) {
     const relative = object.key.slice(prefix.length);
     if (!relative || relative.endsWith("/")) continue;
-    if (/\.ffx$/i.test(relative)) {
-      const stored = await bucket.get(object.key);
-      if (!stored) continue;
-      await bucket.put(`_source_ffx/${object.key}`, stored.body, {
-        httpMetadata: { contentType: "application/octet-stream" },
-        customMetadata: { product_id: productId, relocated_at: new Date().toISOString() },
-      });
-      await bucket.delete(object.key).catch(() => {});
-      moved.push(relative);
-    } else {
+    // Only the installer and the injected watermark files stay in the leak folder;
+    // everything else (FFX sources, project files, tutorials, images) is preserved
+    // under _source_ffx/ so the pack can still be rebuilt later.
+    if (/\.(exe|dmg)$/i.test(relative) || isWatermarkName(relative)) {
       remaining.push(relative);
+      continue;
     }
+    const stored = await bucket.get(object.key);
+    if (!stored) continue;
+    await bucket.put(`_source_ffx/${object.key}`, stored.body, {
+      httpMetadata: { contentType: "application/octet-stream" },
+      customMetadata: { product_id: productId, relocated_at: new Date().toISOString() },
+    });
+    await bucket.delete(object.key).catch(() => {});
+    moved.push(relative);
   }
   return json({ success: true, product_id: productId, moved: moved.length, remaining: remaining.slice(0, 40) }, 200, { "Cache-Control": "no-store" });
 }

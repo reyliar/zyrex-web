@@ -82,7 +82,7 @@ def main() -> None:
             skipped += 1
         elif int(result.get("moved") or 0) > 0:
             relocated += 1
-        # Only installers and the injected watermark files may remain.
+        # Only the installer and the injected watermark files may remain.
         unexpected = [
             name for name in result.get("remaining") or []
             if not name.lower().endswith((".exe", ".dmg", ".txt", ".url"))
