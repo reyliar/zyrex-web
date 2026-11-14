@@ -48,6 +48,7 @@ class InstallerAPI:
         self.discord_username = ""
         self.installed_folder = None
         self.creator_folder = self._creator_folder()
+        self.progress = {"active": False, "done": 0, "total": 0, "name": "", "stage": ""}
 
     @property
     def product_id(self):
@@ -88,7 +89,16 @@ class InstallerAPI:
 
     def get_state(self):
         product = self.product
-        return {"leak": self.manifest.get("leak_name") or "Preset pack", "creator": ("@" + str(product.get("creator_username", "")).lstrip("@")) if product.get("creator_username") else (product.get("creator_nickname") or "Unknown creator"), "uploader": "Anonymous" if product.get("is_anonymous") else (product.get("uploader_name") or "Zyrex community"), "description": product.get("description", ""), "category": product.get("category", ""), "presetCount": int(self.manifest.get("count") or len(self.manifest.get("files") or [])), "creatorAvatar": product.get("creator_avatar", ""), "uploaderAvatar": "" if product.get("is_anonymous") else product.get("uploader_avatar", ""), "thumbnail": product.get("thumbnail", ""), "destination": str(self.destination) if self.destination else "", "ready": bool(self.destination and self.payload_key), "authenticated": bool(self.access_token and self.payload_key), "username": self.discord_username, "live": self.live, "metadataLoading": self.metadata_loading}
+        return {"leak": self.manifest.get("leak_name") or "Preset pack", "creator": ("@" + str(product.get("creator_username", "")).lstrip("@")) if product.get("creator_username") else (product.get("creator_nickname") or "Unknown creator"), "uploader": "Anonymous" if product.get("is_anonymous") else (product.get("uploader_name") or "Zyrex community"), "description": product.get("description", ""), "category": product.get("category", ""), "presetCount": int(self.manifest.get("count") or len(self.manifest.get("files") or [])), "creatorAvatar": product.get("creator_avatar", ""), "uploaderAvatar": "" if product.get("is_anonymous") else product.get("uploader_avatar", ""), "thumbnail": product.get("thumbnail", ""), "destination": str(self.destination) if self.destination else "", "ready": bool(self.destination and self.payload_key), "authenticated": bool(self.access_token and self.payload_key), "username": self.discord_username, "live": self.live, "metadataLoading": self.metadata_loading, "progress": dict(self.progress)}
+
+    def log_event(self, event, **fields):
+        if not self.access_token:
+            return
+        payload = {"event": event, "product_id": self.product_id, "product_name": str(self.manifest.get("leak_name") or ""), "version": VERSION, "platform": sys.platform, **fields}
+        try:
+            self._request("/api/installer/log", method="POST", body=payload, token=self.access_token)
+        except Exception:
+            pass
 
     def start_login(self):
         self.device_code = secrets.token_urlsafe(36)
@@ -146,6 +156,9 @@ class InstallerAPI:
         if not self.access_token or not self.payload_key:
             return {"success": False, "error": "Sign in with Discord before installing presets."}
         folder = self.destination / self.creator_folder / safe_part(self.manifest.get("leak_name"), "Preset pack")
+        started = time.monotonic()
+        self.progress = {"active": True, "done": 0, "total": 0, "name": "", "stage": "Preparing"}
+        self.log_event("start")
         try:
             from io import BytesIO
             nonce, ciphertext = self.encrypted_payload[:12], self.encrypted_payload[12:]
@@ -153,18 +166,20 @@ class InstallerAPI:
             cipher.update(f"{self.product_id}:{self.release_id}".encode("utf-8"))
             plaintext = cipher.decrypt_and_verify(ciphertext[:-16], ciphertext[-16:])
             archive = zipfile.ZipFile(BytesIO(plaintext))
+            entries = [name for name in archive.namelist() if name.startswith("presets/") and not name.endswith("/")]
+            self.progress.update({"total": len(entries), "stage": "Installing"})
             folder.mkdir(parents=True, exist_ok=True)
             installed = skipped = 0
-            for archived_name in archive.namelist():
-                if not archived_name.startswith("presets/") or archived_name.endswith("/"):
-                    continue
+            for archived_name in entries:
                 relative = Path(*Path(archived_name.replace("\\", "/")).parts[1:])
                 if not relative.parts or any(part in {"", ".", ".."} for part in relative.parts):
                     continue
                 name = relative.as_posix()
+                self.progress["name"] = relative.name
                 target = folder.joinpath(*[safe_part(part, "Preset.ffx") for part in relative.parts])
                 if target.exists():
                     skipped += 1
+                    self.progress["done"] += 1
                     continue
                 raw = archive.read(archived_name)
                 # The Worker stamps the Discord account and UTC download time into the
@@ -174,9 +189,14 @@ class InstallerAPI:
                 target.parent.mkdir(parents=True, exist_ok=True)
                 target.write_bytes(data)
                 installed += 1
+                self.progress["done"] += 1
             self.installed_folder = folder
+            self.progress.update({"active": False, "stage": "Completed", "name": ""})
+            self.log_event("complete", installed=installed, skipped=skipped, total=len(entries), duration_ms=int((time.monotonic() - started) * 1000))
             return {"success": True, "installed": installed, "skipped": skipped, "folder": str(folder)}
         except Exception as error:
+            self.progress.update({"active": False, "stage": "Failed", "name": ""})
+            self.log_event("error", error=str(error), duration_ms=int((time.monotonic() - started) * 1000))
             return {"success": False, "error": f"Could not install presets: {error}"}
 
     def open_destination(self):

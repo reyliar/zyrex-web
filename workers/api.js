@@ -2772,6 +2772,73 @@ async function handleInstallerRelocateSource(request, url, env) {
   return json({ success: true, product_id: productId, mode, moved: moved.length, remaining: remaining.slice(0, 40), ffx_left: ffxLeft.length }, 200, { "Cache-Control": "no-store" });
 }
 
+async function installerSessionFromRequest(request, env) {
+  const token = String(request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "").trim();
+  const buildToken = String(env.FFX_RELEASE_SOURCE_TOKEN || "").trim();
+  if (!token || (buildToken && token === buildToken)) return null;
+  return decodeSessionCookie(token, env);
+}
+
+const INSTALLER_LOG_KEY = "installer-logs/index.json";
+const INSTALLER_LOG_LIMIT = 5000;
+const INSTALLER_LOG_EVENTS = new Set(["start", "complete", "error"]);
+
+async function handleInstallerLog(request, env) {
+  if (request.method !== "POST") return json({ success: false, error: "Method not allowed" }, 405, { "Cache-Control": "no-store" });
+  const grant = await installerSessionFromRequest(request, env);
+  if (!grant?.userId) return json({ success: false, error: "Sign in with Discord first" }, 401, { "Cache-Control": "no-store" });
+  let body;
+  try { body = await request.json(); } catch (_) { return json({ success: false, error: "Invalid log entry" }, 400, { "Cache-Control": "no-store" }); }
+  const event = String(body?.event || "").trim().toLowerCase();
+  if (!INSTALLER_LOG_EVENTS.has(event)) return json({ success: false, error: "Invalid log event" }, 400, { "Cache-Control": "no-store" });
+  const clip = (value, max) => String(value ?? "").slice(0, max);
+  const productId = clip(body?.product_id, 100);
+  const entry = {
+    id: crypto.randomUUID(),
+    at: new Date().toISOString(),
+    discord_id: String(grant.userId),
+    username: clip(grant.username, 120),
+    event,
+    product_id: /^[A-Za-z0-9_-]{1,100}$/.test(productId) ? productId : "",
+    product_name: clip(body?.product_name, 160),
+    version: clip(body?.version, 32),
+    platform: clip(body?.platform, 24),
+    total: Math.max(0, Math.min(Number(body?.total) || 0, 100000)),
+    installed: Math.max(0, Math.min(Number(body?.installed) || 0, 100000)),
+    skipped: Math.max(0, Math.min(Number(body?.skipped) || 0, 100000)),
+    duration_ms: Math.max(0, Math.min(Number(body?.duration_ms) || 0, 86400000)),
+    error: clip(body?.error, 400),
+    ip: getClientIp(request),
+    user_agent: clip(request.headers.get("User-Agent"), 200),
+  };
+  const stored = await r2GetJSON(env, INSTALLER_LOG_KEY, null).catch(() => null);
+  const entries = Array.isArray(stored?.entries) ? stored.entries : [];
+  entries.unshift(entry);
+  if (entries.length > INSTALLER_LOG_LIMIT) entries.length = INSTALLER_LOG_LIMIT;
+  await r2PutJSON(env, INSTALLER_LOG_KEY, { updated_at: entry.at, entries });
+  return json({ success: true, id: entry.id }, 200, { "Cache-Control": "no-store" });
+}
+
+async function handleInstallerLogs(request, url, env, hasMasterKey) {
+  if (request.method !== "GET") return json({ success: false, error: "Method not allowed" }, 405, { "Cache-Control": "no-store" });
+  if (!isAdminRequest(request, env, hasMasterKey)) return json({ success: false, error: "Founder access required" }, 403, { "Cache-Control": "no-store" });
+  const stored = await r2GetJSON(env, INSTALLER_LOG_KEY, null).catch(() => null);
+  const entries = Array.isArray(stored?.entries) ? stored.entries : [];
+  const query = String(url.searchParams.get("q") || "").trim().toLowerCase();
+  const limit = Math.max(1, Math.min(Number(url.searchParams.get("limit")) || 500, 2000));
+  const filtered = query
+    ? entries.filter(entry => [entry.discord_id, entry.username, entry.product_id, entry.product_name, entry.event, entry.platform, entry.version, entry.error, entry.ip, entry.at]
+        .some(value => String(value || "").toLowerCase().includes(query)))
+    : entries;
+  return json({
+    success: true,
+    total: entries.length,
+    matched: filtered.length,
+    updated_at: stored?.updated_at || "",
+    entries: filtered.slice(0, limit),
+  }, 200, { "Cache-Control": "no-store" });
+}
+
 async function handleInstallerStatus(url, env) {
   const productId = String(url.searchParams.get("id") || "").trim();
   if (!/^[A-Za-z0-9_-]{1,100}$/.test(productId)) return json({ success: false, error: "Invalid leak ID" }, 400, { "Cache-Control": "no-store" });
@@ -5526,9 +5593,18 @@ function traceMarkXmp(tail, discordId, username = "", downloadedAt = "") {
   const encodedUsername = username ? base64UrlEncode(traceTextEncoder().encode(String(username))) : "";
   const identity = username ? `<zyrex:Username encoding="base64url-utf8">${encodedUsername}</zyrex:Username>` : "";
   const date = downloadedAt ? `<zyrex:DownloadedAt>${xmlEscape(downloadedAt)}</zyrex:DownloadedAt>` : "";
-  const element = "<" + TRACE_XMP_TAG + ' xmlns:zyrex="' + TRACE_XMP_NS + '">' +
-    traceTokenFor(discordId).text + "</" + TRACE_XMP_TAG + ">" + identity + date;
-  if (element.length + 8 > padding) return null;
+  // Everything travels inside the single trace element so the preset carries the account
+  // and the download time as one self-contained block. A preset whose XMP padding is too
+  // small for the full block still gets the id on its own.
+  const openTag = "<" + TRACE_XMP_TAG + ' xmlns:zyrex="' + TRACE_XMP_NS + '">';
+  const closeTag = "</" + TRACE_XMP_TAG + ">";
+  const token = traceTokenFor(discordId).text;
+  const idElement = "<zyrex:Id>" + token + "</zyrex:Id>";
+  // A preset with barely any XMP padding still gets the token, exactly as it did before
+  // the account and timestamp moved into the same element.
+  const element = [openTag + idElement + identity + date + closeTag, openTag + idElement + closeTag, openTag + token + closeTag]
+    .find(candidate => candidate.length + 8 <= padding);
+  if (!element) return null;
   const out = text.slice(0, closeAt) + element +
     text.slice(closeAt, padStart) +
     text.slice(padStart, endAt).slice(element.length) +
@@ -17103,6 +17179,7 @@ export default {
                                path.startsWith("/api/status") ||
                                path.startsWith("/api/lookup/") ||
                                path.startsWith("/api/products") ||
+                               path.startsWith("/api/installer") ||
                                path.startsWith("/api/comments") ||
                                path.startsWith("/api/notifications") ||
                                path.startsWith("/api/guild/") ||
@@ -25234,6 +25311,8 @@ async function announceProductToDiscord(env, product) {
       if (path === "/api/installer/migrate" && request.method === "POST") return handleInstallerMigrate(request, url, env);
       if (path === "/api/installer/relocate-source" && request.method === "POST") return handleInstallerRelocateSource(request, url, env);
       if (path === "/api/installer/status" && request.method === "GET") return handleInstallerStatus(url, env);
+      if (path === "/api/installer/log" && request.method === "POST") return handleInstallerLog(request, env);
+      if (path === "/api/installer/logs" && request.method === "GET") return handleInstallerLogs(request, url, env, hasMasterKey);
       if (path === "/api/installer/download" && request.method === "GET") return handleInstallerDownload(request, url, env);
       if (path === "/api/installer/auth/start" && request.method === "POST") return handleInstallerAuthStart(request, env, url);
       if (path === "/api/installer/auth/complete" && request.method === "GET") return handleInstallerAuthComplete(request, env, url);
