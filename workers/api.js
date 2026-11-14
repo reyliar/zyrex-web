@@ -2598,17 +2598,18 @@ function safeInstallerLabel(value, fallback) {
   return cleaned || fallback;
 }
 
-async function installerObjectFor(bucket, productId, platform) {
+async function installerObjectFor(bucket, prefix, platform) {
   const extension = installerPlatformExtension(platform);
-  if (!extension) return null;
-  const listing = await bucket.list({ prefix: installerStoragePrefix(productId, platform), limit: 10 });
+  if (!extension || !prefix) return null;
+  const listing = await bucket.list({ prefix, limit: 1000 });
   const object = (listing.objects || []).find(item => item.key.toLowerCase().endsWith(extension));
   if (!object) return null;
   return { ...object, extension, filename: object.key.slice(object.key.lastIndexOf("/") + 1) };
 }
 
-// GitHub Actions uploads the finished .exe/.dmg here with the shared build token, so
-// no R2 credentials ever leave Cloudflare and every leak keeps exactly one build.
+// GitHub Actions uploads the finished .exe/.dmg next to the leak's own files with the
+// shared build token, so the existing ZIP packer ships it together with the Zyrex
+// watermark files and no R2 credentials ever leave Cloudflare.
 async function handleInstallerPublish(request, url, env) {
   if (request.method !== "POST") return json({ success: false, error: "Method not allowed" }, 405, { "Cache-Control": "no-store" });
   const expected = String(env.FFX_RELEASE_SOURCE_TOKEN || "").trim();
@@ -2630,30 +2631,74 @@ async function handleInstallerPublish(request, url, env) {
     return json({ success: false, error: "Preset not found" }, 404, { "Cache-Control": "no-store" });
   }
   const bucket = env.STORAGE_PROD || env.STORAGE;
-  if (!bucket) return json({ success: false, error: "Production storage is unavailable" }, 503, { "Cache-Control": "no-store" });
+  const prefix = normalizeR2Prefix(product.file_path);
+  if (!bucket || !prefix) return json({ success: false, error: "Production storage is unavailable" }, 503, { "Cache-Control": "no-store" });
   const requested = String(url.searchParams.get("name") || request.headers.get("X-Zyrex-Filename") || "").replace(/\.(exe|dmg)$/i, "");
   const filename = safeInstallerLabel(requested, safeInstallerLabel(product.name, productId)) + extension;
-  const key = installerStoragePrefix(productId, platform) + filename;
+  const key = prefix + filename;
   const uploadedAt = new Date().toISOString();
   await bucket.put(key, request.body, {
     httpMetadata: { contentType: "application/octet-stream" },
     customMetadata: { product_id: productId, platform, release_id: releaseId, uploaded_at: uploadedAt },
   });
-  const listing = await bucket.list({ prefix: installerStoragePrefix(productId, platform), limit: 50 });
+  // Only one build per platform may live beside the leak's files.
+  const listing = await bucket.list({ prefix, limit: 1000 });
   for (const object of listing.objects || []) {
-    if (object.key !== key) await bucket.delete(object.key).catch(() => {});
+    const lower = object.key.toLowerCase();
+    if (object.key !== key && lower.endsWith(extension) && !isWatermarkName(object.key)) {
+      await bucket.delete(object.key).catch(() => {});
+    }
   }
+  // Older releases stored installers under a shared prefix; drop those copies.
+  const legacyPrefix = installerStoragePrefix(productId, platform);
+  const legacy = await bucket.list({ prefix: legacyPrefix, limit: 50 });
+  for (const object of legacy.objects || []) await bucket.delete(object.key).catch(() => {});
   return json({ success: true, key, filename, size: declared, release_id: releaseId, uploaded_at: uploadedAt }, 200, { "Cache-Control": "no-store" });
+}
+
+// One-off: releases published before installers moved beside the leak files live under
+// installers/<id>/<platform>/; copy them into the leak folder and drop the legacy copy.
+async function handleInstallerMigrate(request, url, env) {
+  if (request.method !== "POST") return json({ success: false, error: "Method not allowed" }, 405, { "Cache-Control": "no-store" });
+  const expected = String(env.FFX_RELEASE_SOURCE_TOKEN || "").trim();
+  const provided = String(request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "").trim();
+  if (!expected || !installerSecretMatches(provided, expected)) return json({ success: false, error: "Unauthorized" }, 401, { "Cache-Control": "no-store" });
+  const productId = String(url.searchParams.get("id") || "").trim();
+  if (!/^[A-Za-z0-9_-]{1,100}$/.test(productId)) return json({ success: false, error: "Invalid leak ID" }, 400, { "Cache-Control": "no-store" });
+  const product = await dbGetProduct(env, productId).catch(() => null);
+  const prefix = normalizeR2Prefix(product?.file_path);
+  const bucket = env.STORAGE_PROD || env.STORAGE;
+  if (!product || !bucket || !prefix) return json({ success: false, error: "Leak storage is unavailable" }, 404, { "Cache-Control": "no-store" });
+  const moved = [];
+  for (const platform of Object.keys(INSTALLER_PLATFORMS)) {
+    const extension = INSTALLER_PLATFORMS[platform];
+    const legacy = await bucket.list({ prefix: installerStoragePrefix(productId, platform), limit: 20 });
+    for (const object of legacy.objects || []) {
+      if (!object.key.toLowerCase().endsWith(extension)) continue;
+      const filename = object.key.slice(object.key.lastIndexOf("/") + 1);
+      const stored = await bucket.get(object.key);
+      if (!stored) continue;
+      await bucket.put(prefix + filename, stored.body, {
+        httpMetadata: { contentType: "application/octet-stream" },
+        customMetadata: { product_id: productId, platform, migrated_from: object.key },
+      });
+      await bucket.delete(object.key).catch(() => {});
+      moved.push(filename);
+    }
+  }
+  return json({ success: true, product_id: productId, moved }, 200, { "Cache-Control": "no-store" });
 }
 
 async function handleInstallerStatus(url, env) {
   const productId = String(url.searchParams.get("id") || "").trim();
   if (!/^[A-Za-z0-9_-]{1,100}$/.test(productId)) return json({ success: false, error: "Invalid leak ID" }, 400, { "Cache-Control": "no-store" });
   const bucket = env.STORAGE_PROD || env.STORAGE;
+  const product = await dbGetProduct(env, productId).catch(() => null);
+  const prefix = normalizeR2Prefix(product?.file_path);
   const platforms = {};
-  if (bucket) {
+  if (bucket && prefix) {
     for (const platform of Object.keys(INSTALLER_PLATFORMS)) {
-      const object = await installerObjectFor(bucket, productId, platform).catch(() => null);
+      const object = await installerObjectFor(bucket, prefix, platform).catch(() => null);
       if (!object) continue;
       platforms[platform] = {
         filename: object.filename,
@@ -2678,7 +2723,9 @@ async function handleInstallerDownload(request, url, env) {
     return new Response(ACCESS_REVOKED_MESSAGE, { status: 403, headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" } });
   }
   const bucket = env.STORAGE_PROD || env.STORAGE;
-  const object = bucket ? await installerObjectFor(bucket, productId, platform).catch(() => null) : null;
+  const product = await dbGetProduct(env, productId).catch(() => null);
+  const prefix = normalizeR2Prefix(product?.file_path);
+  const object = bucket && prefix ? await installerObjectFor(bucket, prefix, platform).catch(() => null) : null;
   if (!object) return json({ success: false, error: "This leak does not have a Zyrex Installer for that platform yet." }, 404, { "Cache-Control": "no-store" });
   const stored = await bucket.get(object.key);
   if (!stored) return json({ success: false, error: "Installer is unavailable" }, 404, { "Cache-Control": "no-store" });
@@ -21404,7 +21451,7 @@ async function announceProductToDiscord(env, product) {
             return json({ success: false, error: "No files found in storage" }, 404);
           }
           
-          const selectedObjects = selectedSet
+          let selectedObjects = selectedSet
             ? fileObjects.filter(o => {
                 const rel = relativeR2Name(o.key, r2Prefix);
                 const base = rel.split("/").pop();
@@ -21412,6 +21459,14 @@ async function announceProductToDiscord(env, product) {
                 return selectedSet.has(rel) || selectedSet.has(base) || selectedSet.has(full);
               })
             : fileObjects;
+
+          // Preset leaks ship their Zyrex Installer next to their own files. Unless the
+          // member picked specific files, the archive is the installer (the encrypted
+          // presets live inside it) plus the Zyrex watermark files.
+          if (!selectedSet) {
+            const installers = fileObjects.filter(o => /\.(exe|dmg)$/i.test(o.key));
+            if (installers.length) selectedObjects = installers;
+          }
           
           if (selectedObjects.length === 0) {
             return json({ success: false, error: "Selected files were not found in storage" }, 404);
@@ -25091,6 +25146,7 @@ async function announceProductToDiscord(env, product) {
       }
 
       if (path === "/api/installer/publish" && request.method === "POST") return handleInstallerPublish(request, url, env);
+      if (path === "/api/installer/migrate" && request.method === "POST") return handleInstallerMigrate(request, url, env);
       if (path === "/api/installer/status" && request.method === "GET") return handleInstallerStatus(url, env);
       if (path === "/api/installer/download" && request.method === "GET") return handleInstallerDownload(request, url, env);
       if (path === "/api/installer/auth/start" && request.method === "POST") return handleInstallerAuthStart(request, env, url);
