@@ -30,6 +30,10 @@ runs:
       shell: bash
       run: python tools/zyrex_effects_installer/build_release.py --preset-id "${{ inputs.preset_id }}" --source "$RUNNER_TEMP/zyrex-ffx-source" --output-root "$RUNNER_TEMP/zyrex-release" --release-id "${{ inputs.release_id }}"
 
+    - name: Publish installer to production storage
+      shell: bash
+      run: python tools/zyrex_effects_installer/publish_installer.py --preset-id "${{ inputs.preset_id }}" --platform "${{ inputs.platform }}" --release-id "${{ inputs.release_id }}" --release-root "$RUNNER_TEMP/zyrex-release"
+
     - name: Upload platform build for assembly
       uses: actions/upload-artifact@v4
       with:

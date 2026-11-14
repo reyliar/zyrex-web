@@ -2575,6 +2575,124 @@ async function handleInstallerTrace(request, url, env) {
   return new Response(marked, { status: 200, headers: { "Content-Type": "application/octet-stream", "Cache-Control": "no-store", "X-Zyrex-Downloaded-At": downloadedAt, "X-Content-Type-Options": "nosniff" } });
 }
 
+const INSTALLER_PLATFORMS = { windows: ".exe", macos: ".dmg" };
+const INSTALLER_MAX_BYTES = 96 * 1024 * 1024;
+
+function installerPlatformExtension(platform) {
+  return INSTALLER_PLATFORMS[String(platform || "").trim().toLowerCase()] || "";
+}
+
+function installerStoragePrefix(productId, platform) {
+  return `installers/${productId}/${String(platform || "").trim().toLowerCase()}/`;
+}
+
+function safeInstallerLabel(value, fallback) {
+  const cleaned = String(value || "")
+    .replace(/[<>:"/\\|?*\u0000-\u001f]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/^\.+|\.+$/g, "")
+    .trim()
+    .slice(0, 96);
+  return cleaned || fallback;
+}
+
+async function installerObjectFor(bucket, productId, platform) {
+  const extension = installerPlatformExtension(platform);
+  if (!extension) return null;
+  const listing = await bucket.list({ prefix: installerStoragePrefix(productId, platform), limit: 10 });
+  const object = (listing.objects || []).find(item => item.key.toLowerCase().endsWith(extension));
+  if (!object) return null;
+  return { ...object, extension, filename: object.key.slice(object.key.lastIndexOf("/") + 1) };
+}
+
+// GitHub Actions uploads the finished .exe/.dmg here with the shared build token, so
+// no R2 credentials ever leave Cloudflare and every leak keeps exactly one build.
+async function handleInstallerPublish(request, url, env) {
+  if (request.method !== "POST") return json({ success: false, error: "Method not allowed" }, 405, { "Cache-Control": "no-store" });
+  const expected = String(env.FFX_RELEASE_SOURCE_TOKEN || "").trim();
+  const provided = String(request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "").trim();
+  if (!expected || !installerSecretMatches(provided, expected)) return json({ success: false, error: "Unauthorized" }, 401, { "Cache-Control": "no-store" });
+  const productId = String(url.searchParams.get("id") || "").trim();
+  const platform = String(url.searchParams.get("platform") || "").trim().toLowerCase();
+  const releaseId = String(url.searchParams.get("release_id") || "").trim();
+  const extension = installerPlatformExtension(platform);
+  if (!/^[A-Za-z0-9_-]{1,100}$/.test(productId) || !extension || !/^[A-Za-z0-9_-]{1,100}$/.test(releaseId)) {
+    return json({ success: false, error: "Invalid installer upload" }, 400, { "Cache-Control": "no-store" });
+  }
+  const declared = Number(request.headers.get("Content-Length") || 0);
+  if (!declared || declared > INSTALLER_MAX_BYTES) {
+    return json({ success: false, error: "Installer size is not supported" }, 413, { "Cache-Control": "no-store" });
+  }
+  const product = await dbGetProduct(env, productId).catch(() => null);
+  if (!product || String(product.type || "preset").toLowerCase() !== "preset") {
+    return json({ success: false, error: "Preset not found" }, 404, { "Cache-Control": "no-store" });
+  }
+  const bucket = env.STORAGE_PROD || env.STORAGE;
+  if (!bucket) return json({ success: false, error: "Production storage is unavailable" }, 503, { "Cache-Control": "no-store" });
+  const requested = String(request.headers.get("X-Zyrex-Filename") || "").replace(/\.(exe|dmg)$/i, "");
+  const filename = safeInstallerLabel(requested, safeInstallerLabel(product.name, productId)) + extension;
+  const key = installerStoragePrefix(productId, platform) + filename;
+  const uploadedAt = new Date().toISOString();
+  await bucket.put(key, request.body, {
+    httpMetadata: { contentType: "application/octet-stream" },
+    customMetadata: { product_id: productId, platform, release_id: releaseId, uploaded_at: uploadedAt },
+  });
+  const listing = await bucket.list({ prefix: installerStoragePrefix(productId, platform), limit: 50 });
+  for (const object of listing.objects || []) {
+    if (object.key !== key) await bucket.delete(object.key).catch(() => {});
+  }
+  return json({ success: true, key, filename, size: declared, release_id: releaseId, uploaded_at: uploadedAt }, 200, { "Cache-Control": "no-store" });
+}
+
+async function handleInstallerStatus(url, env) {
+  const productId = String(url.searchParams.get("id") || "").trim();
+  if (!/^[A-Za-z0-9_-]{1,100}$/.test(productId)) return json({ success: false, error: "Invalid leak ID" }, 400, { "Cache-Control": "no-store" });
+  const bucket = env.STORAGE_PROD || env.STORAGE;
+  const platforms = {};
+  if (bucket) {
+    for (const platform of Object.keys(INSTALLER_PLATFORMS)) {
+      const object = await installerObjectFor(bucket, productId, platform).catch(() => null);
+      if (!object) continue;
+      platforms[platform] = {
+        filename: object.filename,
+        size: object.size,
+        uploaded_at: object.uploaded ? new Date(object.uploaded).toISOString() : "",
+        url: `/api/installer/download?id=${encodeURIComponent(productId)}&platform=${platform}`,
+      };
+    }
+  }
+  return json({ success: true, product_id: productId, platforms }, 200, { "Cache-Control": "public, max-age=60" });
+}
+
+async function handleInstallerDownload(request, url, env) {
+  const productId = String(url.searchParams.get("id") || "").trim();
+  const platform = String(url.searchParams.get("platform") || "").trim().toLowerCase();
+  if (!/^[A-Za-z0-9_-]{1,100}$/.test(productId) || !installerPlatformExtension(platform)) {
+    return json({ success: false, error: "Invalid installer request" }, 400, { "Cache-Control": "no-store" });
+  }
+  const session = parseSession(request.headers.get("Cookie"), request);
+  if (!session?.userId) return redirect(`/api/login?redirect=${encodeURIComponent(url.pathname + url.search)}`);
+  if (await isRevoked(env, session.userId) === true) {
+    return new Response(ACCESS_REVOKED_MESSAGE, { status: 403, headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" } });
+  }
+  const bucket = env.STORAGE_PROD || env.STORAGE;
+  const object = bucket ? await installerObjectFor(bucket, productId, platform).catch(() => null) : null;
+  if (!object) return json({ success: false, error: "This leak does not have a Zyrex Installer for that platform yet." }, 404, { "Cache-Control": "no-store" });
+  const stored = await bucket.get(object.key);
+  if (!stored) return json({ success: false, error: "Installer is unavailable" }, 404, { "Cache-Control": "no-store" });
+  return new Response(stored.body, {
+    status: 200,
+    headers: {
+      "Content-Type": "application/octet-stream",
+      "Content-Disposition": `attachment; filename*=UTF-8''${encodeURIComponent(object.filename)}`,
+      "Content-Length": String(object.size),
+      "Cache-Control": "private, max-age=300",
+      "X-Content-Type-Options": "nosniff",
+    },
+  });
+}
+
 async function handleInstallerBuildKey(request, env) {
   const authorization = String(request.headers.get("Authorization") || "");
   const provided = authorization.replace(/^Bearer\s+/i, "").trim();
@@ -2611,17 +2729,32 @@ async function handleInstallerFfxSource(request, url, env) {
     return json({ success: false, error: "Production source is unavailable" }, 404, { "Cache-Control": "no-store" });
   }
 
+  let sourcePrefix = `_source_ffx/${prefix}`;
+  const testListing = await bucket.list({ prefix: sourcePrefix, limit: 5 });
+  if (!testListing.objects || !testListing.objects.some(o => /\.ffx$/i.test(o.key))) {
+    sourcePrefix = prefix;
+  }
+
   const requestedKey = String(url.searchParams.get("file") || "");
   if (requestedKey) {
-    if (!requestedKey.startsWith(prefix) || !/\.ffx$/i.test(requestedKey) || requestedKey.includes("..")) {
-      return json({ success: false, error: "Invalid source file" }, 400, { "Cache-Control": "no-store" });
+    let object = null;
+    let actualPrefix = prefix;
+    if (requestedKey.startsWith(prefix) || requestedKey.startsWith(`_source_ffx/${prefix}`)) {
+      if (!requestedKey.includes("..") && /\.ffx$/i.test(requestedKey)) {
+        object = await bucket.get(requestedKey);
+        actualPrefix = requestedKey.startsWith("_source_ffx/") ? `_source_ffx/${prefix}` : prefix;
+        if (!object && !requestedKey.startsWith("_source_ffx/")) {
+          const altKey = `_source_ffx/${requestedKey}`;
+          object = await bucket.get(altKey);
+          if (object) actualPrefix = `_source_ffx/${prefix}`;
+        }
+      }
     }
-    const object = await bucket.get(requestedKey);
     if (!object) return json({ success: false, error: "Source file not found" }, 404, { "Cache-Control": "no-store" });
     let body = object.body;
     if (grant) {
       const raw = new Uint8Array(await object.arrayBuffer());
-      const traced = traceDownloadBytes(raw, relativeR2Name(requestedKey, prefix), grant.userId, grant.username, new Date().toISOString());
+      const traced = traceDownloadBytes(raw, relativeR2Name(requestedKey, actualPrefix), grant.userId, grant.username, new Date().toISOString());
       if (!traced) return json({ success: false, error: "This preset cannot be safely traced and was not released." }, 422, { "Cache-Control": "no-store" });
       body = traced;
     }
@@ -2639,10 +2772,10 @@ async function handleInstallerFfxSource(request, url, env) {
   const files = [];
   let cursor;
   for (let page = 0; page < 5; page++) {
-    const listed = await bucket.list({ prefix, limit: 1000, cursor });
+    const listed = await bucket.list({ prefix: sourcePrefix, limit: 1000, cursor });
     for (const object of listed.objects || []) {
-      if (object.key.startsWith(prefix) && /\.ffx$/i.test(object.key) && !object.key.includes("..")) {
-        files.push({ key: object.key, name: relativeR2Name(object.key, prefix), size: object.size });
+      if (object.key.startsWith(sourcePrefix) && /\.ffx$/i.test(object.key) && !object.key.includes("..")) {
+        files.push({ key: object.key, name: relativeR2Name(object.key, sourcePrefix), size: object.size });
       }
     }
     if (!listed.truncated || !listed.cursor) break;
@@ -2661,7 +2794,11 @@ async function queuePresetInstallerBuild(env, product) {
   const bucket = env.STORAGE_PROD || env.STORAGE;
   if (!prefix || !bucket) return false;
   const listing = await bucket.list({ prefix, limit: 1000 });
-  if (!(listing.objects || []).some(object => object.key.startsWith(prefix) && /\.ffx$/i.test(object.key))) return false;
+  const hasFfx = (listing.objects || []).some(object => object.key.startsWith(prefix) && /\.ffx$/i.test(object.key));
+  if (!hasFfx) {
+    const backupListing = await bucket.list({ prefix: `_source_ffx/${prefix}`, limit: 10 });
+    if (!(backupListing.objects || []).some(object => /\.ffx$/i.test(object.key))) return false;
+  }
   const response = await fetch(`https://api.github.com/repos/${repository}/dispatches`, {
     method: "POST",
     headers: {
@@ -24952,6 +25089,9 @@ async function announceProductToDiscord(env, product) {
         return handleInstallerFfxSource(request, url, env);
       }
 
+      if (path === "/api/installer/publish" && request.method === "POST") return handleInstallerPublish(request, url, env);
+      if (path === "/api/installer/status" && request.method === "GET") return handleInstallerStatus(url, env);
+      if (path === "/api/installer/download" && request.method === "GET") return handleInstallerDownload(request, url, env);
       if (path === "/api/installer/auth/start" && request.method === "POST") return handleInstallerAuthStart(request, env, url);
       if (path === "/api/installer/auth/complete" && request.method === "GET") return handleInstallerAuthComplete(request, env, url);
       if (path === "/api/installer/auth/poll" && request.method === "GET") return handleInstallerAuthPoll(url, env);
