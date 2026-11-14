@@ -26,13 +26,12 @@ def find_installer(release_root: Path, platform: str) -> Path:
 
 
 def publish(preset_id: str, platform: str, release_id: str, installer: Path, token: str) -> dict:
-    query = urllib.parse.urlencode({"id": preset_id, "platform": platform, "release_id": release_id})
+    query = urllib.parse.urlencode({"id": preset_id, "platform": platform, "release_id": release_id, "name": installer.name})
     payload = installer.read_bytes()
     headers = {
         "Authorization": f"Bearer {token}",
         "Content-Type": "application/octet-stream",
         "Content-Length": str(len(payload)),
-        "X-Zyrex-Filename": installer.name,
         "Accept": "application/json",
         "User-Agent": "Zyrex-Installer-Publisher/1.0",
     }

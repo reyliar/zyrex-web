@@ -2630,7 +2630,7 @@ async function handleInstallerPublish(request, url, env) {
   }
   const bucket = env.STORAGE_PROD || env.STORAGE;
   if (!bucket) return json({ success: false, error: "Production storage is unavailable" }, 503, { "Cache-Control": "no-store" });
-  const requested = String(request.headers.get("X-Zyrex-Filename") || "").replace(/\.(exe|dmg)$/i, "");
+  const requested = String(url.searchParams.get("name") || request.headers.get("X-Zyrex-Filename") || "").replace(/\.(exe|dmg)$/i, "");
   const filename = safeInstallerLabel(requested, safeInstallerLabel(product.name, productId)) + extension;
   const key = installerStoragePrefix(productId, platform) + filename;
   const uploadedAt = new Date().toISOString();
