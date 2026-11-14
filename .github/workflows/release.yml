@@ -20,6 +20,11 @@ on:
         description: Existing Actions run whose successful installer artifacts should be included
         required: false
         type: string
+      assemble_only:
+        description: Assemble successful artifacts from base_run_id without rebuilding leaks
+        required: false
+        default: false
+        type: boolean
   repository_dispatch:
     types: [zyrex_preset_published]
 
@@ -29,7 +34,7 @@ permissions:
 
 jobs:
   prepare:
-    if: github.event_name == 'repository_dispatch' || inputs.backfill_all == true || inputs.preset_id != '' || inputs.preset_ids != '' || inputs.base_run_id != ''
+    if: github.event_name == 'repository_dispatch' || inputs.backfill_all == true || inputs.preset_id != '' || inputs.preset_ids != '' || inputs.base_run_id != '' || inputs.assemble_only == true
     runs-on: ubuntu-latest
     outputs:
       product_ids: ${{ steps.targets.outputs.product_ids }}
@@ -49,10 +54,14 @@ jobs:
         run: python tools/zyrex_effects_installer/discover_sources.py > "$RUNNER_TEMP/product_ids.json"
 
       - name: Select requested leak
-        if: inputs.backfill_all != true
+        if: inputs.backfill_all != true && inputs.assemble_only != true
         env:
           PRODUCT_IDS: ${{ inputs.preset_ids || github.event.client_payload.product_id || inputs.preset_id }}
         run: python -c 'import json,os,re,pathlib; ids=[p.strip() for p in os.environ["PRODUCT_IDS"].split(",") if p.strip()]; assert ids and all(re.fullmatch(r"[A-Za-z0-9_-]{1,100}",p) for p in ids), "Invalid preset ID list"; pathlib.Path(os.environ["RUNNER_TEMP"],"product_ids.json").write_text(json.dumps(list(dict.fromkeys(ids))))'
+
+      - name: Select no build targets for assembly-only releases
+        if: inputs.assemble_only == true
+        run: echo '[]' > "$RUNNER_TEMP/product_ids.json"
 
       - name: Publish build matrix
         id: targets
@@ -60,7 +69,7 @@ jobs:
 
   windows-installers:
     needs: prepare
-    if: needs.prepare.result == 'success'
+    if: needs.prepare.result == 'success' && inputs.assemble_only != true
     runs-on: windows-latest
     timeout-minutes: 35
     strategy:
@@ -82,7 +91,7 @@ jobs:
 
   macos-installers:
     needs: prepare
-    if: needs.prepare.result == 'success'
+    if: needs.prepare.result == 'success' && inputs.assemble_only != true
     runs-on: macos-latest
     timeout-minutes: 35
     strategy:
@@ -104,22 +113,23 @@ jobs:
 
   assemble-release:
     needs: [prepare, windows-installers, macos-installers]
-    if: needs.prepare.result == 'success' && needs.windows-installers.result == 'success' && needs.macos-installers.result == 'success'
+    if: always() && needs.prepare.result == 'success' && (inputs.assemble_only == true || inputs.base_run_id != '' || (needs.windows-installers.result == 'success' && needs.macos-installers.result == 'success'))
     runs-on: ubuntu-latest
     steps:
-      - name: Download Windows and macOS folders
-        uses: actions/download-artifact@v4
-        with:
-          pattern: zyrex-build-*
-          path: release
-          merge-multiple: true
-
       - name: Include successful builds from the base run
         if: inputs.base_run_id != ''
         uses: actions/download-artifact@v4
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ inputs.base_run_id }}
+          pattern: zyrex-build-*
+          path: release
+          merge-multiple: true
+
+      - name: Include builds from this run
+        if: inputs.assemble_only != true
+        uses: actions/download-artifact@v4
+        with:
           pattern: zyrex-build-*
           path: release
           merge-multiple: true
