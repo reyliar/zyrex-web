@@ -1,0 +1,36 @@
+name: Build leak installer
+description: Download, credit, and package one leak for a single native platform.
+inputs:
+  preset_id:
+    description: Zyrex preset ID
+    required: true
+  platform:
+    description: Output platform label
+    required: true
+runs:
+  using: composite
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    - name: Install build dependencies
+      shell: bash
+      run: python -m pip install --upgrade pip pyinstaller pywebview
+
+    - name: Fetch production FFX files
+      shell: bash
+      run: python tools/zyrex_effects_installer/fetch_source.py --preset-id "${{ inputs.preset_id }}" --output "$RUNNER_TEMP/zyrex-ffx-source"
+
+    - name: Credit FFX presets and build app
+      shell: bash
+      run: python tools/zyrex_effects_installer/build_release.py --preset-id "${{ inputs.preset_id }}" --source "$RUNNER_TEMP/zyrex-ffx-source" --output-root "$RUNNER_TEMP/zyrex-release"
+
+    - name: Upload platform build for assembly
+      uses: actions/upload-artifact@v4
+      with:
+        name: zyrex-build-${{ inputs.preset_id }}-${{ inputs.platform }}
+        path: ${{ runner.temp }}/zyrex-release/**
+        if-no-files-found: error
+        retention-days: 1
