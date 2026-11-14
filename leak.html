@@ -252,61 +252,6 @@
             animation: dlIconBounce 1.4s ease-in-out infinite;
         }
 
-        /* ZYREX INSTALLER DECK */
-        .installer-deck {
-            margin-bottom: 14px;
-            padding: 14px;
-            border-radius: 16px;
-            background: linear-gradient(135deg, rgba(255, 43, 82, 0.10), rgba(255, 255, 255, 0.03));
-            border: 1px solid rgba(255, 43, 82, 0.28);
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .installer-deck[hidden] { display: none; }
-        .installer-deck-head {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-        .installer-deck-title {
-            font-size: 0.95rem;
-            font-weight: 800;
-            color: #fff;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .installer-deck-title i { color: var(--cherry-neon); }
-        .installer-deck-sub { font-size: 0.72rem; color: var(--text-sub); }
-        .installer-deck-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-        .installer-platform {
-            flex: 1 1 160px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            padding: 12px 16px;
-            border-radius: 12px;
-            background: #fff;
-            color: #09090b;
-            font-weight: 800;
-            font-size: 0.92rem;
-            text-decoration: none;
-            border: 1px solid rgba(255, 255, 255, 0.9);
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
-            transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-        }
-        .installer-platform:hover {
-            transform: translateY(-2px);
-            background: #f4f4f5;
-            box-shadow: 0 10px 26px rgba(255, 255, 255, 0.18);
-        }
-        .installer-platform span { font-size: 0.7rem; font-weight: 700; color: #52525b; }
-        .installer-deck-note { font-size: 0.7rem; color: var(--text-sub); line-height: 1.5; }
-
         /* PRIMARY DOWNLOAD BUTTON (Minimalist Sleek Modern) */
         .btn-launch-download {
             display: flex;
@@ -2620,9 +2565,6 @@
                             </div>
                         ` : ''}
 
-                        <!-- ZYREX INSTALLER (filled in when the leak has a published build) -->
-                        <div id="installerDeck" class="installer-deck" hidden></div>
-
                         <!-- PRIMARY DOWNLOAD BUTTON -->
                         <a href="#" id="dlBtn" class="btn-launch-download" onclick="genPresetToken(event, '${p.id}', '${p.file_path || ''}')">
                             <i class="fas fa-arrow-down dl-icon-bounce"></i> Download
@@ -2718,7 +2660,6 @@
         renderPartnerAd(p);
         initPresetComments(p.id);
         loadPresetFilesPreview(p);
-        initInstallerDeck(p.id);
     }
 
     const GIPHY_API_KEY = 'hF2tiiF3deZinjO4V7X75pc1q1CwLTkp';
@@ -3468,48 +3409,6 @@
     }
 
     const dlCooldownMap = {};
-
-    const installerStatusCache = {};
-    function formatInstallerSize(bytes) {
-        const mb = Number(bytes) / (1024 * 1024);
-        return mb >= 0.1 ? mb.toFixed(1) + ' MB' : Math.max(1, Math.round(Number(bytes) / 1024)) + ' KB';
-    }
-
-    window.initInstallerDeck = async function(pid) {
-        const deck = document.getElementById('installerDeck');
-        if (!deck || !pid) return;
-        deck.hidden = true;
-        let info = installerStatusCache[pid];
-        if (!info) {
-            try {
-                const res = await fetch('/api/installer/status?id=' + encodeURIComponent(pid), { credentials: 'include' });
-                if (!res.ok) return;
-                info = await res.json();
-                installerStatusCache[pid] = info;
-            } catch (_) {
-                return;
-            }
-        }
-        const platforms = (info && info.platforms) || {};
-        const options = [
-            ['windows', 'Windows', 'fa-windows'],
-            ['macos', 'macOS', 'fa-apple']
-        ];
-        const buttons = options.filter(([key]) => platforms[key]).map(([key, label, icon]) => `
-            <a class="installer-platform" href="${platforms[key].url}" rel="nofollow">
-                <i class="fab ${icon}"></i> ${label}
-                <span>${formatInstallerSize(platforms[key].size)}</span>
-            </a>`).join('');
-        if (!buttons) return;
-        deck.innerHTML = `
-            <div class="installer-deck-head">
-                <span class="installer-deck-title"><i class="fas fa-bolt"></i> Zyrex Installer</span>
-                <span class="installer-deck-sub">One click &middot; Discord sign-in inside</span>
-            </div>
-            <div class="installer-deck-actions">${buttons}</div>
-            <div class="installer-deck-note">Installs the encrypted pack straight into After Effects &rarr; User Presets and traces every file to your Discord account.</div>`;
-        deck.hidden = false;
-    };
 
     window.genPresetToken = function(e, pid, fp) {
         e.preventDefault();

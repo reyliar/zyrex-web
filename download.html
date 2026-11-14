@@ -468,6 +468,57 @@
         .folder-cb:checked { background: var(--cherry); border-color: var(--cherry); }
         .folder-cb:checked::after { content: '\f00c'; font-family: 'Font Awesome 6 Free'; font-weight: 900; font-size: .5rem; color: #fff; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); }
 
+            /* ZYREX INSTALLER DECK */
+            .installer-deck {
+                width: 100%;
+                margin-bottom: 18px;
+                padding: 16px;
+                border-radius: 20px;
+                background: linear-gradient(135deg, rgba(var(--cherry-rgb), 0.12), rgba(255, 255, 255, 0.03));
+                border: 1px solid rgba(var(--cherry-rgb), 0.3);
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+                text-align: left;
+            }
+            .installer-deck[hidden] { display: none; }
+            .installer-deck-head {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+                flex-wrap: wrap;
+            }
+            .installer-deck-title {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 0.98rem;
+                font-weight: 800;
+                color: #fff;
+            }
+            .installer-deck-title i { color: var(--cherry); }
+            .installer-deck-sub { font-size: 0.74rem; color: var(--gray-dark); }
+            .installer-deck-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+            .installer-platform {
+                flex: 1 1 170px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+                padding: 13px 16px;
+                border-radius: 14px;
+                background: #fff;
+                border: 1px solid rgba(255, 255, 255, 0.9);
+                text-decoration: none;
+                box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+                transition: transform 0.22s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.22s, background 0.22s;
+            }
+            .installer-platform:hover { transform: translateY(-2px); background: #f4f4f5; box-shadow: 0 12px 28px rgba(255, 255, 255, 0.18); }
+            .installer-platform i { color: #09090b; font-size: 1.05rem; }
+            .installer-platform .installer-os { font-size: 0.94rem; font-weight: 800; color: #09090b; }
+            .installer-platform .installer-size { font-size: 0.7rem; font-weight: 700; color: #52525b; }
+            .installer-deck-note { font-size: 0.72rem; color: var(--gray-dark); line-height: 1.55; }
     </style>
     <link rel="stylesheet" href="/css/glass.css?v=67">
     <link rel="stylesheet" href="/css/atmosphere.css?v=7">
@@ -794,7 +845,54 @@
             }
         }
 
-        async function loadProduct(pid) {
+        // The installer is the primary way to install a preset leak: it signs the member
+// in with Discord, decrypts the pack in place and traces every installed file.
+var installerStatusCache = {};
+function formatInstallerSize(bytes) {
+    var mb = Number(bytes) / (1024 * 1024);
+    return mb >= 0.1 ? mb.toFixed(1) + ' MB' : Math.max(1, Math.round(Number(bytes) / 1024)) + ' KB';
+}
+
+async function initInstallerDeck(pid) {
+    var deck = document.getElementById('installerDeck');
+    if (!deck || !pid) return;
+    deck.hidden = true;
+    var info = installerStatusCache[pid];
+    if (!info) {
+        try {
+            var res = await fetch('/api/installer/status?id=' + encodeURIComponent(pid), { credentials: 'include' });
+            if (!res.ok) return;
+            info = await res.json();
+            installerStatusCache[pid] = info;
+        } catch (_) {
+            return;
+        }
+    }
+    var platforms = (info && info.platforms) || {};
+    var options = [
+        ['windows', 'Windows', 'fa-windows'],
+        ['macos', 'macOS', 'fa-apple']
+    ];
+    var buttons = options.filter(function(entry) { return platforms[entry[0]]; }).map(function(entry) {
+        var key = entry[0], label = entry[1], icon = entry[2];
+        return '<a class="installer-platform" href="' + platforms[key].url + '" rel="nofollow">' +
+            '<i class="fab ' + icon + '"></i>' +
+            '<span class="installer-os">' + label + '</span>' +
+            '<span class="installer-size">' + formatInstallerSize(platforms[key].size) + '</span>' +
+            '</a>';
+    }).join('');
+    if (!buttons) return;
+    deck.innerHTML =
+        '<div class="installer-deck-head">' +
+            '<span class="installer-deck-title"><i class="fas fa-bolt"></i> Zyrex Installer</span>' +
+            '<span class="installer-deck-sub">One click &middot; Discord sign-in inside</span>' +
+        '</div>' +
+        '<div class="installer-deck-actions">' + buttons + '</div>' +
+        '<div class="installer-deck-note">Installs the encrypted pack straight into After Effects &rarr; User Presets and traces every file to your Discord account.</div>';
+    deck.hidden = false;
+}
+
+async function loadProduct(pid) {
             try {
                 const r = await fetch('/api/products?id=' + encodeURIComponent(pid));
                 if (r.ok) { const j = await r.json(); if (j && j.id) product = j; }
@@ -1073,6 +1171,9 @@
             // Always render file preview panel
             html += '<div class="file-preview-panel" id="filePreviewPanel"><div class="fp-header"><i class="fas fa-eye"></i><span>File Preview</span></div><div class="fp-body"><div class="file-preview-thumb fp-thumb-container"><i class="fas fa-file-lines fp-icon"></i></div><div class="file-preview-info"><div class="fp-name">Click a file to preview</div><div class="fp-meta"><span><i class="fas fa-hdd"></i> --</span><span><i class="fas fa-tag"></i> --</span></div></div></div><div id="fpMediaContainer" style="padding:0 18px 18px;width:100%;display:none"></div></div>';
 
+            // Zyrex Installer deck (filled in when this leak has a published build)
+            html += '<div id="installerDeck" class="installer-deck" hidden></div>';
+
             // Download card
             if (productId || downloadToken) {
                 html += '<div class="dl-card">';
@@ -1085,6 +1186,7 @@
             html += '<a href="https://zyrexediting.xyz/leaks" class="back-link"><i class="fas fa-arrow-left"></i> Back to Leaks</a>';
 
             document.getElementById('st-main').innerHTML = html;
+            initInstallerDeck(p.id || productId);
             setTimeout(function() {
                 updateDownloadCount();
             }, 100);
