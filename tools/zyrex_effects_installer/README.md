@@ -27,6 +27,8 @@ The distributed app is a single file on both platforms (`<Leak name>.exe`, `<Lea
 
 `.github/workflows/release.yml` builds Windows and macOS artifacts. Product publishing triggers it using `repository_dispatch`; `workflow_dispatch` can build one leak by ID or backfill every existing preset leak with production FFX files. Both platform builds use the same release ID and Worker-derived encryption key. The combined artifact contains separate `Windows/` and `macOS/` folders. Failed IDs can be rebuilt and merged with a successful base run by setting `preset_ids` and `base_run_id`.
 
+A full backfill builds ~130 leaks twice, so the source transfer matters for the zone's daily request budget: `fetch_source.py` asks for `GET /api/installer/ffx-source?id=…&bundle=1`, which returns the whole pack in one response (a small length-prefixed stream) instead of one request per preset. A pack over 48 MB, or any Worker that does not answer the bundle, falls back to the original per-file download automatically. Fresh installers cost about three Worker requests per platform instead of one per preset.
+
 Required credentials:
 
 - `FFX_RELEASE_SOURCE_TOKEN`: shared Worker/GitHub Actions secret for the build-only source and encryption-key endpoints.

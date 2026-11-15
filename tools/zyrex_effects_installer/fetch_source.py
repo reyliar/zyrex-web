@@ -2,8 +2,10 @@
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
+import struct
 import time
 import urllib.parse
 import urllib.request
@@ -15,15 +17,20 @@ API = "https://zyrexediting.xyz/api/installer/ffx-source"
 # download waits briefly and retries a throttled response instead of failing the leak.
 FILE_PAUSE_SECONDS = 0.25
 RETRY_STATUSES = {429, 500, 502, 503, 504}
+# A full backfill used to spend one request per preset; the bundle answers a whole pack
+# in a single request, which keeps the zone's daily quota intact.
+BUNDLE_MAGIC = b"ZYXSRC1\n"
 
 
-def request(product_id: str, token: str, file_key: str = "") -> bytes:
+def request(product_id: str, token: str, file_key: str = "", bundle: bool = False) -> bytes:
     query = {"id": product_id}
     if file_key:
         query["file"] = file_key
+    if bundle:
+        query["bundle"] = "1"
     headers = {
         "Authorization": f"Bearer {token}",
-        "Accept": "application/octet-stream" if file_key else "application/json",
+        "Accept": "application/octet-stream" if (file_key or bundle) else "application/json",
         "Cache-Control": "no-cache",
         "User-Agent": "Zyrex-Installer-Backfill/1.0",
     }
@@ -32,7 +39,7 @@ def request(product_id: str, token: str, file_key: str = "") -> bytes:
     for attempt in range(1, 7):
         req = urllib.request.Request(url, headers=headers)
         try:
-            with urllib.request.urlopen(req, timeout=45) as response:
+            with urllib.request.urlopen(req, timeout=90) as response:
                 return response.read()
         except HTTPError as error:
             last_error = error
@@ -51,6 +58,24 @@ def request(product_id: str, token: str, file_key: str = "") -> bytes:
     raise last_error
 
 
+def parse_bundle(payload: bytes) -> list[tuple[str, bytes]]:
+    """Read the Worker's bundle: magic, count, then name length, data length, name, data."""
+    if not payload.startswith(BUNDLE_MAGIC):
+        raise ValueError("unexpected source bundle header")
+    offset = len(BUNDLE_MAGIC)
+    (count,) = struct.unpack_from(">I", payload, offset)
+    offset += 4
+    files: list[tuple[str, bytes]] = []
+    for _ in range(count):
+        name_length, size = struct.unpack_from(">II", payload, offset)
+        offset += 8
+        name = payload[offset:offset + name_length].decode("utf-8")
+        offset += name_length
+        files.append((name, payload[offset:offset + size]))
+        offset += size
+    return files
+
+
 def safe_relative_name(value: str) -> str:
     raw = value.replace("\\", "/")
     parts = [part for part in PurePosixPath(raw).parts if part not in {"", "."}]
@@ -63,6 +88,26 @@ def safe_relative_name(value: str) -> str:
     return name
 
 
+def unique_name(name: str, seen: set[str]) -> str:
+    """Production packs may contain the same basename in different folders."""
+    relative = PurePosixPath(name)
+    stem, suffix = relative.stem, relative.suffix
+    candidate, duplicate = name, 2
+    while candidate.casefold() in seen:
+        candidate = str(relative.with_name(f"{stem} ({duplicate}){suffix}"))
+        duplicate += 1
+    seen.add(candidate.casefold())
+    return candidate
+
+
+def write_source(output: Path, name: str, data: bytes, seen: set[str]) -> None:
+    if len(data) < 12 or data[:4] != b"RIFX" or data[8:12] != b"FaFX":
+        raise SystemExit(f"Invalid After Effects preset received: {name}")
+    target = output.joinpath(*PurePosixPath(unique_name(name, seen)).parts)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(data)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--preset-id", required=True)
@@ -71,42 +116,42 @@ def main() -> None:
     token = os.environ.get("FFX_RELEASE_SOURCE_TOKEN", "").strip()
     if not token:
         raise SystemExit("FFX_RELEASE_SOURCE_TOKEN is not configured in GitHub Actions.")
+    args.output.mkdir(parents=True, exist_ok=True)
+    seen: set[str] = set()
+
+    bundled = None
     try:
-        listing = __import__("json").loads(request(args.preset_id, token).decode("utf-8"))
+        bundled = parse_bundle(request(args.preset_id, token, bundle=True))
+    except (HTTPError, URLError, ValueError, struct.error) as error:
+        # Any bundle problem falls back to the per-file flow, so a Worker that predates
+        # the bundle endpoint can never break a build.
+        print(f"Source bundle unavailable ({error}); falling back to per-file download.")
+
+    if bundled:
+        for name, data in bundled:
+            write_source(args.output, safe_relative_name(name), data, seen)
+        print(f"Downloaded {len(bundled)} FFX files for {args.preset_id} in one request.")
+        return
+
+    try:
+        listing = json.loads(request(args.preset_id, token).decode("utf-8"))
     except HTTPError as error:
         detail = error.read().decode("utf-8", "replace").strip().replace("\n", " ")[:400]
         raise SystemExit(f"Could not list FFX source for {args.preset_id}: HTTP {error.code} {detail}") from error
     files = listing.get("files") if isinstance(listing, dict) else None
     if not isinstance(files, list) or not files:
         raise SystemExit(f"No FFX source files are available for {args.preset_id}.")
-    args.output.mkdir(parents=True, exist_ok=True)
-    seen: set[str] = set()
     for item in files:
         key = str(item.get("key", ""))
         name = safe_relative_name(str(item.get("name", "")))
         if not key:
             raise SystemExit(f"Invalid FFX source entry: {name}")
-        # Production packs may contain the same basename in different folders.
-        # Preserve every preset with a deterministic unique filename for the
-        # crediting and installer stages instead of dropping the whole leak.
-        relative = PurePosixPath(name)
-        stem, suffix = relative.stem, relative.suffix
-        candidate, duplicate = name, 2
-        while candidate.casefold() in seen:
-            candidate = str(relative.with_name(f"{stem} ({duplicate}){suffix}"))
-            duplicate += 1
-        name = candidate
-        seen.add(name.casefold())
         try:
             data = request(args.preset_id, token, key)
         except HTTPError as error:
             detail = error.read().decode("utf-8", "replace").strip().replace("\n", " ")[:400]
             raise SystemExit(f"FFX source download failed for {name}: HTTP {error.code} {detail}") from error
-        if len(data) < 12 or data[:4] != b"RIFX" or data[8:12] != b"FaFX":
-            raise SystemExit(f"Invalid After Effects preset received: {name}")
-        target = args.output.joinpath(*PurePosixPath(name).parts)
-        target.parent.mkdir(parents=True, exist_ok=True)
-        target.write_bytes(data)
+        write_source(args.output, name, data, seen)
         time.sleep(FILE_PAUSE_SECONDS)
     print(f"Downloaded {len(files)} FFX files for {args.preset_id}.")
 

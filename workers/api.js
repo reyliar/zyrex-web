@@ -3080,6 +3080,15 @@ async function handleInstallerFfxSource(request, url, env) {
     });
   }
 
+  const files = await listInstallerSources(bucket, sourcePrefix);
+  if (!files.length) return json({ success: false, error: "No FFX presets in this production folder" }, 404, { "Cache-Control": "no-store" });
+  if (url.searchParams.get("bundle") === "1" && buildAuthorized) {
+    return installerSourceBundle(bucket, sourcePrefix, productId, files);
+  }
+  return json({ success: true, id: productId, files: files.map(({ key, name, size }) => ({ key, name, size })) }, 200, { "Cache-Control": "private, no-store" });
+}
+
+async function listInstallerSources(bucket, sourcePrefix) {
   const files = [];
   let cursor;
   for (let page = 0; page < 5; page++) {
@@ -3092,8 +3101,58 @@ async function handleInstallerFfxSource(request, url, env) {
     if (!listed.truncated || !listed.cursor) break;
     cursor = listed.cursor;
   }
-  if (!files.length) return json({ success: false, error: "No FFX presets in this production folder" }, 404, { "Cache-Control": "no-store" });
-  return json({ success: true, id: productId, files }, 200, { "Cache-Control": "private, no-store" });
+  return files;
+}
+
+// Building one leak used to cost one Worker request per preset, which is what exhausted
+// the zone's daily quota during a full backfill. The bundle answers the whole pack in a
+// single request: magic, file count, then (name length, data length, name, data) per
+// preset — a layout the build tool parses directly.
+const SOURCE_BUNDLE_MAGIC = "ZYXSRC1\n";
+const SOURCE_BUNDLE_MAX_BYTES = 48 * 1024 * 1024;
+
+async function installerSourceBundle(bucket, sourcePrefix, productId, files) {
+  const declared = files.reduce((sum, file) => sum + (Number(file.size) || 0), 0);
+  if (declared > SOURCE_BUNDLE_MAX_BYTES) {
+    return json({ success: false, error: "This pack is too large for a single transfer; request the files one by one.", code: "BUNDLE_TOO_LARGE" }, 413, { "Cache-Control": "no-store" });
+  }
+  const encoder = new TextEncoder();
+  const magic = encoder.encode(SOURCE_BUNDLE_MAGIC);
+  const chunks = [];
+  let total = magic.length + 4;
+  for (const file of files) {
+    const stored = await bucket.get(file.key);
+    if (!stored) continue;
+    const name = encoder.encode(file.name);
+    const data = new Uint8Array(await stored.arrayBuffer());
+    const header = new DataView(new ArrayBuffer(8));
+    header.setUint32(0, name.length, false);
+    header.setUint32(4, data.length, false);
+    chunks.push(new Uint8Array(header.buffer), name, data);
+    total += 8 + name.length + data.length;
+  }
+  if (!chunks.length) return json({ success: false, error: "No FFX presets in this production folder" }, 404, { "Cache-Control": "no-store" });
+  if (total > SOURCE_BUNDLE_MAX_BYTES + 65536) {
+    return json({ success: false, error: "This pack is too large for a single transfer; request the files one by one.", code: "BUNDLE_TOO_LARGE" }, 413, { "Cache-Control": "no-store" });
+  }
+  const output = new Uint8Array(total);
+  output.set(magic, 0);
+  new DataView(output.buffer).setUint32(magic.length, chunks.length / 3, false);
+  let offset = magic.length + 4;
+  for (const chunk of chunks) {
+    output.set(chunk, offset);
+    offset += chunk.length;
+  }
+  return new Response(output, {
+    status: 200,
+    headers: {
+      "Content-Type": "application/octet-stream",
+      "Content-Length": String(output.length),
+      "Cache-Control": "private, no-store",
+      "X-Zyrex-Source-Count": String(chunks.length / 3),
+      "X-Content-Type-Options": "nosniff",
+    },
+  });
 }
 
 async function queuePresetInstallerBuild(env, product) {
