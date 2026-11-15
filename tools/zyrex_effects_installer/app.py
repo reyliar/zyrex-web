@@ -91,6 +91,18 @@ def detect_destination() -> Path | None:
     candidates = sorted((p / "User Presets" for p in docs.glob("After Effects*") if p.is_dir()), key=lambda p: p.parent.name.casefold(), reverse=True)
     return candidates[0] if candidates else None
 
+def normalize_access(raw) -> dict:
+    """Shape the Worker's access verdict so the UI can rely on flat fields."""
+    data = raw if isinstance(raw, dict) else {}
+    return {
+        "allowed": data.get("allowed") is True,
+        "verified": data.get("verified"),
+        "pass": data.get("pass"),
+        "code": str(data.get("code") or ""),
+        "error": str(data.get("error") or ""),
+        "unlock_url": str(data.get("unlock_url") or "/access"),
+    }
+
 class InstallerAPI:
     def __init__(self):
         self.manifest, self.encrypted_payload = load_embedded()
@@ -101,6 +113,8 @@ class InstallerAPI:
         self.device_code = ""
         self.access_token = ""
         self.payload_key = b""
+        self.key_error = ""
+        self.access = normalize_access(None)
         self.discord_user_id = ""
         self.discord_username = ""
         self.installed_folder = None
@@ -146,7 +160,7 @@ class InstallerAPI:
 
     def get_state(self):
         product = self.product
-        return {"leak": self.manifest.get("leak_name") or "Preset pack", "creator": ("@" + str(product.get("creator_username", "")).lstrip("@")) if product.get("creator_username") else (product.get("creator_nickname") or "Unknown creator"), "uploader": "Anonymous" if product.get("is_anonymous") else (product.get("uploader_name") or "Zyrex community"), "description": product.get("description", ""), "category": product.get("category", ""), "presetCount": int(self.manifest.get("count") or len(self.manifest.get("files") or [])), "creatorAvatar": product.get("creator_avatar", ""), "uploaderAvatar": "" if product.get("is_anonymous") else product.get("uploader_avatar", ""), "thumbnail": product.get("thumbnail", ""), "destination": str(self.destination) if self.destination else "", "ready": bool(self.destination and self.payload_key), "authenticated": bool(self.access_token and self.payload_key), "username": self.discord_username, "live": self.live, "metadataLoading": self.metadata_loading, "progress": dict(self.progress)}
+        return {"leak": self.manifest.get("leak_name") or "Preset pack", "creator": ("@" + str(product.get("creator_username", "")).lstrip("@")) if product.get("creator_username") else (product.get("creator_nickname") or "Unknown creator"), "uploader": "Anonymous" if product.get("is_anonymous") else (product.get("uploader_name") or "Zyrex community"), "description": product.get("description", ""), "category": product.get("category", ""), "presetCount": int(self.manifest.get("count") or len(self.manifest.get("files") or [])), "creatorAvatar": product.get("creator_avatar", ""), "uploaderAvatar": "" if product.get("is_anonymous") else product.get("uploader_avatar", ""), "thumbnail": product.get("thumbnail", ""), "destination": str(self.destination) if self.destination else "", "ready": bool(self.destination and self.payload_key), "signedIn": bool(self.access_token), "eligible": bool(self.access.get("allowed")), "access": dict(self.access), "authenticated": bool(self.access_token and self.payload_key), "username": self.discord_username, "live": self.live, "metadataLoading": self.metadata_loading, "progress": dict(self.progress)}
 
     def log_event(self, event, **fields):
         if not self.access_token:
@@ -164,6 +178,26 @@ class InstallerAPI:
         webbrowser.open(str(result.get("authorization_url") or ""))
         return {"success": True, "expires_in": result.get("expires_in", 600)}
 
+    def _fetch_payload_key(self) -> bool:
+        """Ask the Worker for the pack key.
+
+        The key is only released to a member who holds both the verified role and an
+        active download pass, so a refusal here is a normal outcome, not a crash.
+        """
+        if not self.access_token:
+            return False
+        query = urllib.parse.urlencode({"id": self.product_id, "release_id": self.release_id})
+        self.key_error = ""
+        try:
+            response = self._request(f"/api/installer/payload-key?{query}", token=self.access_token)
+        except Exception as error:
+            self.payload_key = b""
+            self.key_error = str(error)
+            return False
+        encoded = str(response.get("key") or "")
+        self.payload_key = base64.urlsafe_b64decode(encoded + "=" * (-len(encoded) % 4)) if encoded else b""
+        return bool(self.payload_key)
+
     def poll_login(self):
         if not self.device_code:
             return {"success": False, "error": "Start Discord sign-in first."}
@@ -175,13 +209,33 @@ class InstallerAPI:
             self.access_token = str(result.get("access_token") or "")
             self.discord_user_id = str((result.get("user") or {}).get("id") or "")
             self.discord_username = str((result.get("user") or {}).get("username") or "")
-            key_query = urllib.parse.urlencode({"id": self.product_id, "release_id": self.release_id})
-            key_response = self._request(f"/api/installer/payload-key?{key_query}", token=self.access_token)
-            encoded = str(key_response.get("key") or "")
-            self.payload_key = base64.urlsafe_b64decode(encoded + "=" * (-len(encoded) % 4))
-            return {"success": True, "pending": False, "username": self.discord_username}
+            self.access = normalize_access(result.get("access"))
+            # An older Worker does not return a verdict; a released key still proves
+            # the account passed the gates, so the app stays usable across deploys.
+            if self.access["allowed"] or not self.access["code"]:
+                if self._fetch_payload_key():
+                    self.access["allowed"] = True
+            return {"success": True, "pending": False, "username": self.discord_username, "access": self.access}
         except Exception as error:
             return {"success": False, "error": str(error)}
+
+    def refresh_access(self):
+        if not self.access_token:
+            return {"success": False, "error": "Sign in with Discord first."}
+        query = urllib.parse.urlencode({"id": self.product_id, "release_id": self.release_id})
+        try:
+            result = self._request(f"/api/installer/access?{query}", token=self.access_token)
+        except Exception as error:
+            return {"success": False, "error": str(error)}
+        self.access = normalize_access(result.get("access"))
+        if self.access["allowed"] and not self.payload_key:
+            self._fetch_payload_key()
+        return {"success": True, "access": self.access, "state": self.get_state()}
+
+    def open_access(self):
+        import webbrowser
+        webbrowser.open(SITE + "/access")
+        return {"success": True}
 
     def refresh_metadata(self):
         if self.live or self.metadata_loading:
@@ -210,8 +264,22 @@ class InstallerAPI:
             self.destination = detect_destination()
         if not self.destination:
             return {"success": False, "needsFolder": True, "error": "After Effects User Presets folder was not found. Choose the folder to continue."}
-        if not self.access_token or not self.payload_key:
+        if not self.access_token:
             return {"success": False, "error": "Sign in with Discord before installing presets."}
+        # Both gates are re-checked here so a member whose pass lapsed or whose role was
+        # removed cannot decrypt the pack with a token they signed in with earlier.
+        if not self.access.get("allowed"):
+            self.refresh_access()
+        if not self.access.get("allowed"):
+            self.log_event("access-denied", code=self.access.get("code") or "ACCESS_REQUIRED", verified=self.access.get("verified"), pass_ok=self.access.get("pass"))
+            return {
+                "success": False,
+                "accessRequired": True,
+                "code": self.access.get("code") or "ACCESS_REQUIRED",
+                "error": self.access.get("error") or "You need the Verified role and an active download pass to install this pack.",
+            }
+        if not self.payload_key and not self._fetch_payload_key():
+            return {"success": False, "accessRequired": True, "code": self.access.get("code") or "ACCESS_REQUIRED", "error": self.key_error or self.access.get("error") or "Could not unlock this pack."}
         folder = self.destination / self.creator_folder / safe_part(self.manifest.get("leak_name"), "Preset pack")
         started = time.monotonic()
         self.progress = {"active": True, "done": 0, "total": 0, "name": "", "stage": "Preparing"}
@@ -346,6 +414,15 @@ def main():
         # No window exists during the self-test, so both window-bound calls must fail softly.
         assert api.choose_destination().get("success") is False and api.exit_app().get("success") is False
         assert "primaryAction" in html and "exit_app" in html
+        # The access verdict is the only thing standing between a member and the pack
+        # key, so its flattened shape is pinned here.
+        denied = normalize_access({"allowed": False, "code": "NOT_VERIFIED", "verified": False, "pass": None})
+        assert denied["allowed"] is False and denied["code"] == "NOT_VERIFIED" and denied["unlock_url"] == "/access"
+        assert denied["verified"] is False and denied["pass"] is None
+        assert normalize_access(None)["allowed"] is False
+        assert normalize_access({"allowed": True})["allowed"] is True
+        assert callable(getattr(api, "refresh_access", None)) and callable(getattr(api, "open_access", None))
+        assert "access" in state and "eligible" in state and "signedIn" in state
         # The chosen folder must survive a restart, so the config round trip is checked here.
         import tempfile
         with tempfile.TemporaryDirectory() as scratch:
@@ -360,6 +437,14 @@ def main():
             finally:
                 config_path = original
         assert config_path().name == "installer.json" and config_path().parent.name == "Zyrex"
+        # A signed-in member without both gates must be refused before any decryption.
+        api.destination = Path(tempfile.gettempdir())
+        api.access_token = "self-test-token"
+        api.access = normalize_access({"allowed": False, "code": "NOT_VERIFIED", "verified": False})
+        api.refresh_access = lambda: {"success": False}
+        api.log_event = lambda *args, **kwargs: None
+        refused = api.install()
+        assert refused.get("success") is False and refused.get("accessRequired") is True and refused.get("code") == "NOT_VERIFIED"
         if sys.stdout:
             print(f"OK: {state['leak']} · {state['presetCount']} presets · creator folder {api.creator_folder} · payload {len(api.encrypted_payload)} bytes")
         return

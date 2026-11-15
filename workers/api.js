@@ -2465,6 +2465,69 @@ function installerDevicePath(deviceCode) {
   return `installer-auth/${deviceCode}.json`;
 }
 
+// The installer carries its own copy of the pack, so the Worker has to enforce the
+// same pair of gates the site enforces before it hands anything over: the verified
+// Discord role *and* an active download pass. The payload key is the only thing that
+// can open the encrypted .ffx bundle, so refusing it here means a member without both
+// cannot read a single preset even with the .exe or .dmg already in hand.
+const INSTALLER_ACCESS_ALLOW_TTL_MS = 20000;
+const installerAccessMemo = new Map();
+
+async function computeInstallerAccess(env, userId) {
+  if (await isRevoked(env, userId) === true) {
+    return { allowed: false, verified: false, pass: false, code: "ACCESS_REVOKED", error: ACCESS_REVOKED_MESSAGE };
+  }
+  const verified = await checkVerifiedRole(userId, env);
+  if (verified === null) {
+    // Failing closed keeps an outage from turning into an open door; retrying works.
+    return { allowed: false, verified: null, pass: null, code: "ROLE_CHECK_UNAVAILABLE", error: "We could not read your Discord roles right now. Please retry in a moment." };
+  }
+  if (!verified) {
+    return { allowed: false, verified: false, pass: null, code: "NOT_VERIFIED", error: "You need the Verified role in the Zyrex Discord server to install presets." };
+  }
+  // The ad-free role is a permanent pass, exactly like the site's download flow.
+  const pass = (await checkAdFreeRole(userId, env)) || await hasActiveDownloadAccess(env, userId);
+  if (!pass) {
+    return { allowed: false, verified: true, pass: false, code: "ACCESS_REQUIRED", error: `Your account is verified but has no active download pass. Unlock ${RESOURCE_ACCESS_LABEL.toLowerCase()} access with one free offer on the Access page.` };
+  }
+  return { allowed: true, verified: true, pass: true, code: "OK", error: "" };
+}
+
+// A pack can be a hundred presets, and each traced file asks for the same verdict, so an
+// allowed answer is reused for a few seconds. Denials are never cached: a member who has
+// just unlocked access must not be held back by a stale refusal.
+async function installerAccess(env, userId, { reuse = true } = {}) {
+  const id = String(userId || "").trim();
+  if (!id) return { allowed: false, verified: false, pass: false, code: "NOT_AUTHORIZED", error: "Sign in with Discord to access these presets." };
+  if (reuse) {
+    const memo = installerAccessMemo.get(id);
+    if (memo && Date.now() < memo.expires) {
+      if (await isRevoked(env, id) !== true) return memo.verdict;
+      installerAccessMemo.delete(id);
+    }
+  }
+  const verdict = await computeInstallerAccess(env, id);
+  if (verdict.allowed) {
+    if (installerAccessMemo.size > 4096) installerAccessMemo.clear();
+    installerAccessMemo.set(id, { verdict, expires: Date.now() + INSTALLER_ACCESS_ALLOW_TTL_MS });
+  } else {
+    installerAccessMemo.delete(id);
+  }
+  return verdict;
+}
+
+function installerAccessDenied(verdict) {
+  const status = verdict.code === "NOT_AUTHORIZED" ? 401 : verdict.code === "ROLE_CHECK_UNAVAILABLE" ? 503 : 403;
+  return json({
+    success: false,
+    code: verdict.code,
+    error: verdict.error,
+    verified: verdict.verified,
+    pass: verdict.pass,
+    unlock_url: "/access",
+  }, status, { "Cache-Control": "no-store" });
+}
+
 async function readInstallerDevice(env, deviceCode) {
   const object = await env.STORAGE.get(installerDevicePath(deviceCode));
   if (!object) return null;
@@ -2536,7 +2599,10 @@ async function handleInstallerAuthPoll(url, env) {
     return json({ success: false, error: "Sign-in request expired" }, 410, { "Cache-Control": "no-store" });
   }
   if (device.status !== "authorized" || !device.accessToken) return json({ success: true, pending: true }, 202, { "Cache-Control": "no-store" });
-  return json({ success: true, pending: false, access_token: device.accessToken, user: { id: device.userId, username: device.username } }, 200, { "Cache-Control": "no-store" });
+  // The verdict travels with the sign-in response so the app can explain the
+  // requirement before it tries to unlock anything.
+  const access = await installerAccess(env, device.userId, { reuse: false });
+  return json({ success: true, pending: false, access_token: device.accessToken, user: { id: device.userId, username: device.username }, access: { ...access, unlock_url: "/access" } }, 200, { "Cache-Control": "no-store" });
 }
 
 async function installerGrantFromRequest(request, env, productId, releaseId) {
@@ -2554,8 +2620,22 @@ async function handleInstallerKey(request, url, env) {
   if (!/^[A-Za-z0-9_-]{1,100}$/.test(productId) || !/^[A-Za-z0-9_-]{1,100}$/.test(releaseId)) return json({ success: false, error: "Invalid installer request" }, 400);
   const grant = await installerGrantFromRequest(request, env, productId, releaseId);
   if (!grant) return json({ success: false, error: "Sign in with Discord to access these presets", code: "NOT_AUTHORIZED" }, 401, { "Cache-Control": "no-store" });
+  const access = await installerAccess(env, grant.userId);
+  if (!access.allowed) return installerAccessDenied(access);
   const key = await deriveInstallerPayloadKey(productId, releaseId, env);
   return json({ success: true, key }, 200, { "Cache-Control": "no-store" });
+}
+
+// Lets the app re-check a member who has just unlocked access without making them
+// sign in again.
+async function handleInstallerAccess(request, url, env) {
+  const productId = String(url.searchParams.get("id") || "").trim();
+  const releaseId = String(url.searchParams.get("release_id") || "").trim();
+  if (!/^[A-Za-z0-9_-]{1,100}$/.test(productId) || !/^[A-Za-z0-9_-]{1,100}$/.test(releaseId)) return json({ success: false, error: "Invalid installer request" }, 400, { "Cache-Control": "no-store" });
+  const grant = await installerGrantFromRequest(request, env, productId, releaseId);
+  if (!grant) return json({ success: false, error: "Sign in with Discord to access these presets", code: "NOT_AUTHORIZED" }, 401, { "Cache-Control": "no-store" });
+  const access = await installerAccess(env, grant.userId, { reuse: false });
+  return json({ success: true, user: { id: grant.userId, username: grant.username }, access: { ...access, unlock_url: "/access" } }, 200, { "Cache-Control": "no-store" });
 }
 
 async function handleInstallerTrace(request, url, env) {
@@ -2565,6 +2645,8 @@ async function handleInstallerTrace(request, url, env) {
   if (!/^[A-Za-z0-9_-]{1,100}$/.test(productId) || !/^[A-Za-z0-9_-]{1,100}$/.test(releaseId) || !fileName.toLowerCase().endsWith(".ffx") || fileName.split("/").some(part => !part || part === "." || part === "..")) return json({ success: false, error: "Invalid preset trace request" }, 400, { "Cache-Control": "no-store" });
   const grant = await installerGrantFromRequest(request, env, productId, releaseId);
   if (!grant) return json({ success: false, error: "Sign in with Discord to access these presets", code: "NOT_AUTHORIZED" }, 401, { "Cache-Control": "no-store" });
+  const access = await installerAccess(env, grant.userId);
+  if (!access.allowed) return installerAccessDenied(access);
   const length = Number(request.headers.get("Content-Length") || 0);
   if (length > TRACE_MAX_FILE_BYTES) return json({ success: false, error: "Preset exceeds the safe tracing size limit" }, 413, { "Cache-Control": "no-store" });
   const original = new Uint8Array(await request.arrayBuffer());
@@ -2891,8 +2973,12 @@ async function handleInstallerDownload(request, url, env) {
   }
   const session = parseSession(request.headers.get("Cookie"), request);
   if (!session?.userId) return redirect(`/api/login?redirect=${encodeURIComponent(url.pathname + url.search)}`);
-  if (await isRevoked(env, session.userId) === true) {
-    return new Response(ACCESS_REVOKED_MESSAGE, { status: 403, headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store" } });
+  const access = await installerAccess(env, session.userId);
+  if (!access.allowed) {
+    // Redirecting to the unlock page keeps the browser flow usable; a scripted client
+    // still has to satisfy the same gates to get the file.
+    if (url.searchParams.get("redirect") === "1") return redirect("/access?return_to=" + encodeURIComponent("/download"));
+    return installerAccessDenied(access);
   }
   const bucket = env.STORAGE_PROD || env.STORAGE;
   const product = await dbGetProduct(env, productId).catch(() => null);
@@ -2935,6 +3021,10 @@ async function handleInstallerFfxSource(request, url, env) {
   const grant = buildAuthorized ? null : await installerGrantFromRequest(request, env, productId, releaseId);
   if (!buildAuthorized && !grant) {
     return json({ success: false, error: "Unauthorized" }, 401, { "Cache-Control": "no-store" });
+  }
+  if (grant) {
+    const access = await installerAccess(env, grant.userId);
+    if (!access.allowed) return installerAccessDenied(access);
   }
   if (!/^[A-Za-z0-9_-]{1,100}$/.test(productId)) {
     return json({ success: false, error: "Invalid leak ID" }, 400, { "Cache-Control": "no-store" });
@@ -25354,6 +25444,7 @@ async function announceProductToDiscord(env, product) {
       if (path === "/api/installer/auth/poll" && request.method === "GET") return handleInstallerAuthPoll(url, env);
       if (path === "/api/installer/build-key" && request.method === "POST") return handleInstallerBuildKey(request, env);
       if (path === "/api/installer/payload-key" && request.method === "GET") return handleInstallerKey(request, url, env);
+      if (path === "/api/installer/access" && request.method === "GET") return handleInstallerAccess(request, url, env);
       if (path === "/api/installer/trace" && request.method === "POST") return handleInstallerTrace(request, url, env);
 
       if (path.startsWith("/api/guild/") || path.startsWith("/api/lookup/") ||
