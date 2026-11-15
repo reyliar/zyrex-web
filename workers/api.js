@@ -2866,7 +2866,7 @@ const INSTALLER_LOG_LIMIT = 2000;
 // One account can never hold more than this many rows, so flooding the endpoint cannot
 // push other members' records out of the audit trail.
 const INSTALLER_LOG_PER_USER = 100;
-const INSTALLER_LOG_EVENTS = new Set(["start", "complete", "error"]);
+const INSTALLER_LOG_EVENTS = new Set(["start", "complete", "error", "access-denied"]);
 const installerLogCooldown = new Map();
 
 function trimInstallerLog(entries) {
@@ -2910,6 +2910,7 @@ async function handleInstallerLog(request, env) {
     total: Math.max(0, Math.min(Number(body?.total) || 0, 100000)),
     installed: Math.max(0, Math.min(Number(body?.installed) || 0, 100000)),
     skipped: Math.max(0, Math.min(Number(body?.skipped) || 0, 100000)),
+    failed: Math.max(0, Math.min(Number(body?.failed) || 0, 100000)),
     duration_ms: Math.max(0, Math.min(Number(body?.duration_ms) || 0, 86400000)),
     error: clip(body?.error, 400),
     ip: getClientIp(request),

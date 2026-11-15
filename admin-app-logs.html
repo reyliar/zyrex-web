@@ -38,7 +38,9 @@ tbody tr:hover{background:rgba(255,255,255,.045)}
 .tag.start{color:#cbb6ff;background:rgba(122,92,255,.14);border-color:rgba(122,92,255,.32)}
 .tag.complete{color:#a8f0ce;background:rgba(32,184,121,.14);border-color:rgba(32,184,121,.34)}
 .tag.error{color:#ffd2d9;background:rgba(255,43,82,.14);border-color:rgba(255,43,82,.34)}
+.tag.denied{color:#ffe0b0;background:rgba(255,171,64,.14);border-color:rgba(255,171,64,.34)}
 .muted{color:var(--muted)}
+.denied{color:#ffcb85}
 .leak{color:#fff;font-weight:600}
 .leak small{display:block;color:var(--muted);font-weight:400;font-size:.72rem}
 .detail{display:none;background:rgba(0,0,0,.28)}
@@ -131,9 +133,9 @@ a.btn{display:inline-block;padding:11px 18px;border-radius:12px;background:rgba(
     return value < 1000 ? value + ' ms' : (value / 1000).toFixed(1) + ' s';
   }
   function eventTag(event) {
-    const key = ['start', 'complete', 'error'].includes(event) ? event : 'start';
-    const icons = { start: 'fa-play', complete: 'fa-circle-check', error: 'fa-triangle-exclamation' };
-    return '<span class="tag ' + key + '"><i class="fas ' + icons[key] + '"></i> ' + esc(event || key) + '</span>';
+    const icons = { start: 'fa-play', complete: 'fa-circle-check', error: 'fa-triangle-exclamation', 'access-denied': 'fa-lock' };
+    const key = icons[event] ? (event === 'access-denied' ? 'denied' : event) : 'start';
+    return '<span class="tag ' + key + '"><i class="fas ' + (icons[event] || icons.start) + '"></i> ' + esc(event || key) + '</span>';
   }
 
   function render() {
@@ -144,7 +146,9 @@ a.btn{display:inline-block;padding:11px 18px;border-radius:12px;background:rgba(
     }
     rows.innerHTML = visible.map((entry, index) => {
       const installed = entry.event === 'complete'
-        ? esc(entry.installed) + (Number(entry.skipped) ? ' <span class="muted">(+' + esc(entry.skipped) + ' kept)</span>' : '')
+        ? esc(entry.installed)
+          + (Number(entry.skipped) ? ' <span class="muted">(+' + esc(entry.skipped) + ' kept)</span>' : '')
+          + (Number(entry.failed) ? ' <span class="denied">(' + esc(entry.failed) + ' locked)</span>' : '')
         : (Number(entry.total) ? esc(entry.total) + ' queued' : '—');
       const detail = JSON.stringify(entry, null, 2);
       return '<tr data-index="' + index + '">' +
