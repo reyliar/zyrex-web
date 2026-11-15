@@ -5367,7 +5367,14 @@ function traceTokenFor(discordId) {
 }
 
 function traceDecodeToken(value) {
-  const match = /(?:^|[^0-9a-f])([0-9a-f])-([0-9a-f]{16})-([0-9a-f])(?![0-9a-f])/.exec(String(value || ""));
+  const text = String(value || "");
+  // Account ids are written in plain decimal so anyone reading the preset can tell who
+  // downloaded it; older files carried the same id as a hex token with a checksum.
+  const plain = /<zyrex:Id>\s*(\d{15,25})\s*<\/zyrex:Id>/.exec(text) ||
+    /^\s*(\d{15,25})\s*$/.exec(text) ||
+    new RegExp("<" + TRACE_XMP_TAG + "[^>]*>\\s*(\\d{15,25})\\s*</" + TRACE_XMP_TAG + ">").exec(text);
+  if (plain) return { version: TRACE_VERSION, id: plain[1] };
+  const match = /(?:^|[^0-9a-f])([0-9a-f])-([0-9a-f]{16})-([0-9a-f])(?![0-9a-f])/.exec(text);
   if (!match) return null;
   const body = match[1] + match[2];
   let sum = 0;
@@ -5612,20 +5619,23 @@ function traceMarkXmp(tail, discordId, username = "", downloadedAt = "") {
   const closeAt = text.lastIndexOf(TRACE_XMP_CLOSE, endAt);
   if (closeAt < 0) return null;
   const xmlEscape = (value) => String(value || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&apos;");
-  const encodedUsername = username ? base64UrlEncode(traceTextEncoder().encode(String(username))) : "";
-  const identity = username ? `<zyrex:Username encoding="base64url-utf8">${encodedUsername}</zyrex:Username>` : "";
-  const date = downloadedAt ? `<zyrex:DownloadedAt>${xmlEscape(downloadedAt)}</zyrex:DownloadedAt>` : "";
-  // Everything travels inside the single trace element so the preset carries the account
-  // and the download time as one self-contained block. A preset whose XMP padding is too
-  // small for the full block still gets the id on its own.
+  const accountId = String(discordId).replace(/[^0-9]/g, "");
+  const accountName = String(username || "").trim().slice(0, 64);
+  // Both values are written in the clear: whoever opens the preset can read the Discord
+  // account and the download time without a decoder. The identity still also travels in
+  // the zero-width marks on the credited names, so deleting this block does not hide it.
   const openTag = "<" + TRACE_XMP_TAG + ' xmlns:zyrex="' + TRACE_XMP_NS + '">';
   const closeTag = "</" + TRACE_XMP_TAG + ">";
-  const token = traceTokenFor(discordId).text;
-  const idElement = "<zyrex:Id>" + token + "</zyrex:Id>";
-  // A preset with barely any XMP padding still gets the token, exactly as it did before
-  // the account and timestamp moved into the same element.
-  const element = [openTag + idElement + identity + date + closeTag, openTag + idElement + closeTag, openTag + token + closeTag]
-    .find(candidate => candidate.length + 8 <= padding);
+  const idElement = "<zyrex:Id>" + accountId + "</zyrex:Id>";
+  const nameElement = accountName ? "<zyrex:Username>" + xmlEscape(accountName) + "</zyrex:Username>" : "";
+  const dateElement = downloadedAt ? "<zyrex:DownloadedAt>" + xmlEscape(downloadedAt) + "</zyrex:DownloadedAt>" : "";
+  // A preset with barely any XMP padding keeps as much of the block as fits.
+  const element = [
+    openTag + idElement + nameElement + dateElement + closeTag,
+    openTag + idElement + nameElement + closeTag,
+    openTag + idElement + closeTag,
+    openTag + accountId + closeTag,
+  ].find(candidate => candidate.length + 8 <= padding);
   if (!element) return null;
   const out = text.slice(0, closeAt) + element +
     text.slice(closeAt, padStart) +
@@ -5714,6 +5724,9 @@ function traceWatermarkFfx(bytes, discordId, username = "", downloadedAt = "") {
   const mark = traceEncodeMark(discordId);
   const markedTail = traceMarkXmp(parts.tail, discordId, username, downloadedAt);
   if (parts.tail.length && !markedTail) return null;   // trailing data we do not recognise
+  // A file installed by an older build already carries marks on its names; those stay and
+  // only the metadata block is refreshed, so count them as part of the expected total.
+  const existingMarks = traceCollectTexts(parts.container).filter(text => text.indexOf(TRACE_ZW_LEAD) >= 0).length;
   const nameResult = traceRewriteTexts(parts.container, (text) => {
     if (text.indexOf(TRACE_CREDIT) < 0) return null;
     if (text.indexOf(TRACE_ZW_LEAD) >= 0) return null;   // already marked
@@ -5729,7 +5742,7 @@ function traceWatermarkFfx(bytes, discordId, username = "", downloadedAt = "") {
   out.set(container, 0);
   out.set(tail, container.length);
   const problems = traceVerify(bytes, out, {
-    nameMarks: nameResult ? nameResult.changed : 0,
+    nameMarks: existingMarks + (nameResult ? nameResult.changed : 0),
     growth: nameResult ? nameResult.growth : 0,
   });
   if (problems.length) {

@@ -17,6 +17,32 @@ def data_uri(name: str, mime: str) -> str:
 def render_html() -> str:
     return resource("ui.html").read_text(encoding="utf-8").replace("__ZYREX_LOGO__", data_uri("content.png", "image/png"))
 
+LEGACY_TRACE_MARKER = b'encoding="base64url-utf8"'
+
+def strip_legacy_trace(data: bytes) -> bytes | None:
+    """Blank the old encoded trace block so the Worker can write the readable one.
+
+    Older builds stored the account as a hex token and a base64 username. The block sits in
+    the metadata packet at the end of the file and is replaced by spaces, which keeps the
+    byte length identical and turns the removed bytes into usable padding.
+    """
+    start = data.rfind(b"<zyrex:Trace")
+    if start < 0 or start < len(data) - 8192:
+        return None
+    close_at = data.find(b"</zyrex:Trace>", start)
+    if close_at < 0:
+        return None
+    end = close_at + len(b"</zyrex:Trace>")
+    # The old format appended the username and the date as sibling tags, in this order.
+    for opening, closing in ((b"<zyrex:Username", b"</zyrex:Username>"), (b"<zyrex:DownloadedAt", b"</zyrex:DownloadedAt>")):
+        if not data.startswith(opening, end):
+            continue
+        trailer_close = data.find(closing, end)
+        if trailer_close < 0:
+            break
+        end = trailer_close + len(closing)
+    return data[:start] + b" " * (end - start) + data[end:]
+
 def safe_part(value: str, fallback: str) -> str:
     value = re.sub(r'[<>:"/\\|?*\x00-\x1f]', " ", str(value or ""))
     value = re.sub(r"\s+", " ", value).strip(" .")
@@ -169,7 +195,7 @@ class InstallerAPI:
             entries = [name for name in archive.namelist() if name.startswith("presets/") and not name.endswith("/")]
             self.progress.update({"total": len(entries), "stage": "Installing"})
             folder.mkdir(parents=True, exist_ok=True)
-            installed = skipped = 0
+            installed = skipped = refreshed = 0
             for archived_name in entries:
                 relative = Path(*Path(archived_name.replace("\\", "/")).parts[1:])
                 if not relative.parts or any(part in {"", ".", ".."} for part in relative.parts):
@@ -177,11 +203,22 @@ class InstallerAPI:
                 name = relative.as_posix()
                 self.progress["name"] = relative.name
                 target = folder.joinpath(*[safe_part(part, "Preset.ffx") for part in relative.parts])
-                if target.exists():
-                    skipped += 1
-                    self.progress["done"] += 1
-                    continue
                 raw = archive.read(archived_name)
+                if target.exists():
+                    # A preset installed by an older build still carries the encoded trace
+                    # block; strip it so this install can write the readable one.
+                    existing = target.read_bytes()
+                    if LEGACY_TRACE_MARKER not in existing:
+                        skipped += 1
+                        self.progress["done"] += 1
+                        continue
+                    stripped = strip_legacy_trace(existing)
+                    if stripped is None:
+                        skipped += 1
+                        self.progress["done"] += 1
+                        continue
+                    raw = stripped
+                    refreshed += 1
                 # The Worker stamps the Discord account and UTC download time into the
                 # preset's own metadata packet, so no sidecar receipt file is written.
                 query = urllib.parse.urlencode({"id": self.product_id, "release_id": self.release_id, "name": name})
@@ -193,7 +230,7 @@ class InstallerAPI:
             self.installed_folder = folder
             self.progress.update({"active": False, "stage": "Completed", "name": ""})
             self.log_event("complete", installed=installed, skipped=skipped, total=len(entries), duration_ms=int((time.monotonic() - started) * 1000))
-            return {"success": True, "installed": installed, "skipped": skipped, "folder": str(folder)}
+            return {"success": True, "installed": installed, "skipped": skipped, "refreshed": refreshed, "folder": str(folder)}
         except Exception as error:
             self.progress.update({"active": False, "stage": "Failed", "name": ""})
             self.log_event("error", error=str(error), duration_ms=int((time.monotonic() - started) * 1000))
@@ -232,6 +269,13 @@ def main():
         html = render_html()
         assert "__ZYREX_LOGO__" not in html and "data:image/png;base64," in html
         assert "__OUTFIT_FONT_DATA__" not in html
+        # The legacy trace block must blank cleanly while keeping the preset's byte length.
+        sample = (b'<rdf:Description><zyrex:Trace xmlns:zyrex="x">1-13b908f6a3c41014-9</zyrex:Trace>'
+                  b'<zyrex:Username encoding="base64url-utf8">cmV5bGlhcg</zyrex:Username>'
+                  b'<zyrex:DownloadedAt>2026-11-14T17:20:47.580Z</zyrex:DownloadedAt></rdf:Description>' + b" " * 256)
+        blanked = strip_legacy_trace(sample)
+        assert blanked is not None and len(blanked) == len(sample)
+        assert b"<zyrex:Trace" not in blanked and b"</zyrex:DownloadedAt>" not in blanked
         import webview
         assert hasattr(webview, "create_window") and hasattr(webview, "start")
         if sys.stdout:
