@@ -53,7 +53,38 @@ def load_embedded():
     encrypted_payload = resource("payload.enc").read_bytes()
     return manifest, encrypted_payload
 
+def config_path() -> Path:
+    if sys.platform == "win32":
+        base = Path(os.environ.get("LOCALAPPDATA") or (Path.home() / "AppData" / "Local"))
+    elif sys.platform == "darwin":
+        base = Path.home() / "Library" / "Application Support"
+    else:
+        base = Path(os.environ.get("XDG_CONFIG_HOME") or (Path.home() / ".config"))
+    return base / "Zyrex" / "installer.json"
+
+def load_saved_destination() -> Path | None:
+    try:
+        data = json.loads(config_path().read_text(encoding="utf-8"))
+    except Exception:
+        return None
+    value = str((data or {}).get("destination") or "").strip()
+    if not value:
+        return None
+    chosen = Path(value)
+    return chosen if chosen.is_dir() else None
+
+def save_destination(path: Path) -> None:
+    try:
+        target = config_path()
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(json.dumps({"destination": str(path)}, ensure_ascii=False), encoding="utf-8")
+    except Exception:
+        pass
+
 def detect_destination() -> Path | None:
+    chosen = load_saved_destination()
+    if chosen:
+        return chosen
     docs = Path.home() / "Documents" / "Adobe"
     if not docs.is_dir():
         return None
@@ -178,7 +209,7 @@ class InstallerAPI:
         if not self.destination:
             self.destination = detect_destination()
         if not self.destination:
-            return {"success": False, "error": "After Effects User Presets folder was not found. Install After Effects and try again."}
+            return {"success": False, "needsFolder": True, "error": "After Effects User Presets folder was not found. Choose the folder to continue."}
         if not self.access_token or not self.payload_key:
             return {"success": False, "error": "Sign in with Discord before installing presets."}
         folder = self.destination / self.creator_folder / safe_part(self.manifest.get("leak_name"), "Preset pack")
@@ -247,6 +278,38 @@ class InstallerAPI:
             return {"success": True}
         except Exception as error: return {"success": False, "error": str(error)}
 
+    def choose_destination(self):
+        """Let the member point the installer at their own User Presets folder."""
+        import webview
+        windows = getattr(webview, "windows", None) or []
+        if not windows:
+            return {"success": False, "error": "The window is not ready yet."}
+        folder_dialog = getattr(getattr(webview, "FileDialog", None), "FOLDER", 20)
+        start = str(self.destination or (Path.home() / "Documents" / "Adobe"))
+        try:
+            picked = windows[0].create_file_dialog(folder_dialog, directory=start)
+        except Exception as error:
+            return {"success": False, "error": f"Could not open the folder picker: {error}"}
+        if not picked:
+            return {"success": False, "cancelled": True}
+        chosen = Path(picked[0])
+        if not chosen.is_dir():
+            return {"success": False, "error": "That folder no longer exists."}
+        self.destination = chosen
+        save_destination(chosen)
+        return {"success": True, "destination": str(chosen), "state": self.get_state()}
+
+    def exit_app(self):
+        try:
+            import webview
+            windows = getattr(webview, "windows", None) or []
+            if not windows:
+                return {"success": False, "error": "The window is not ready yet."}
+            windows[0].destroy()
+            return {"success": True}
+        except Exception as error:
+            return {"success": False, "error": str(error)}
+
     def open_leak(self):
         url = f"{SITE}/leak?id={urllib.parse.quote(str(self.manifest.get('product_id', '')))}"
         import webbrowser
@@ -278,6 +341,25 @@ def main():
         assert b"<zyrex:Trace" not in blanked and b"</zyrex:DownloadedAt>" not in blanked
         import webview
         assert hasattr(webview, "create_window") and hasattr(webview, "start")
+        assert callable(getattr(api, "choose_destination", None)) and callable(getattr(api, "exit_app", None))
+        assert getattr(getattr(webview, "FileDialog", None), "FOLDER", 20) is not None or hasattr(webview, "FOLDER_DIALOG")
+        # No window exists during the self-test, so both window-bound calls must fail softly.
+        assert api.choose_destination().get("success") is False and api.exit_app().get("success") is False
+        assert "primaryAction" in html and "exit_app" in html
+        # The chosen folder must survive a restart, so the config round trip is checked here.
+        import tempfile
+        with tempfile.TemporaryDirectory() as scratch:
+            global config_path
+            original, config_path = config_path, lambda: Path(scratch) / "installer.json"
+            try:
+                saved = Path(scratch) / "User Presets"
+                saved.mkdir()
+                assert load_saved_destination() is None
+                save_destination(saved)
+                assert load_saved_destination() == saved
+            finally:
+                config_path = original
+        assert config_path().name == "installer.json" and config_path().parent.name == "Zyrex"
         if sys.stdout:
             print(f"OK: {state['leak']} · {state['presetCount']} presets · creator folder {api.creator_folder} · payload {len(api.encrypted_payload)} bytes")
         return
