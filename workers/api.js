@@ -2780,13 +2780,35 @@ async function installerSessionFromRequest(request, env) {
 }
 
 const INSTALLER_LOG_KEY = "installer-logs/index.json";
-const INSTALLER_LOG_LIMIT = 5000;
+const INSTALLER_LOG_LIMIT = 2000;
+// One account can never hold more than this many rows, so flooding the endpoint cannot
+// push other members' records out of the audit trail.
+const INSTALLER_LOG_PER_USER = 100;
 const INSTALLER_LOG_EVENTS = new Set(["start", "complete", "error"]);
+const installerLogCooldown = new Map();
+
+function trimInstallerLog(entries) {
+  const counts = new Map();
+  const kept = [];
+  for (const entry of entries) {
+    const id = String(entry?.discord_id || "");
+    const seen = (counts.get(id) || 0) + 1;
+    counts.set(id, seen);
+    if (seen > INSTALLER_LOG_PER_USER) continue;
+    kept.push(entry);
+    if (kept.length >= INSTALLER_LOG_LIMIT) break;
+  }
+  return kept;
+}
 
 async function handleInstallerLog(request, env) {
   if (request.method !== "POST") return json({ success: false, error: "Method not allowed" }, 405, { "Cache-Control": "no-store" });
   const grant = await installerSessionFromRequest(request, env);
   if (!grant?.userId) return json({ success: false, error: "Sign in with Discord first" }, 401, { "Cache-Control": "no-store" });
+  const lastAt = installerLogCooldown.get(String(grant.userId)) || 0;
+  if (Date.now() - lastAt < 1500) return json({ success: true, throttled: true }, 200, { "Cache-Control": "no-store" });
+  installerLogCooldown.set(String(grant.userId), Date.now());
+  if (installerLogCooldown.size > 2000) installerLogCooldown.clear();
   let body;
   try { body = await request.json(); } catch (_) { return json({ success: false, error: "Invalid log entry" }, 400, { "Cache-Control": "no-store" }); }
   const event = String(body?.event || "").trim().toLowerCase();
@@ -2814,8 +2836,8 @@ async function handleInstallerLog(request, env) {
   const stored = await r2GetJSON(env, INSTALLER_LOG_KEY, null).catch(() => null);
   const entries = Array.isArray(stored?.entries) ? stored.entries : [];
   entries.unshift(entry);
-  if (entries.length > INSTALLER_LOG_LIMIT) entries.length = INSTALLER_LOG_LIMIT;
-  await r2PutJSON(env, INSTALLER_LOG_KEY, { updated_at: entry.at, entries });
+  const kept = trimInstallerLog(entries);
+  await r2PutJSON(env, INSTALLER_LOG_KEY, { updated_at: entry.at, entries: kept });
   return json({ success: true, id: entry.id }, 200, { "Cache-Control": "no-store" });
 }
 
