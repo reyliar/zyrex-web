@@ -148,9 +148,10 @@ def after_effects_versions() -> list[tuple[int, str]]:
 
 def user_presets_for(version_name: str, create: bool = True) -> Path | None:
     documents = documents_root()
-    if not documents or not AE_FOLDER_PATTERN.match(version_name or ""):
+    name = version_folder_name(version_name)
+    if not documents or not AE_FOLDER_PATTERN.match(name):
         return None
-    target = documents / "Adobe" / version_name / "User Presets"
+    target = documents / "Adobe" / name / "User Presets"
     if not target.is_dir():
         if not create:
             return None
