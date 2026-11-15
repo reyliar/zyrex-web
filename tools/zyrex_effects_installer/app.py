@@ -48,6 +48,13 @@ def safe_part(value: str, fallback: str) -> str:
     value = re.sub(r"\s+", " ", value).strip(" .")
     return (value[:96] if value and value not in {".", ".."} else fallback)
 
+def public_error(error) -> str:
+    """One short sentence for the member instead of a Python traceback."""
+    if isinstance(error, OSError) and getattr(error, "strerror", ""):
+        return str(error.strerror)[:200]
+    text = str(error) or error.__class__.__name__
+    return " ".join(text.split())[:300]
+
 def load_embedded():
     manifest = json.loads(resource("metadata.json").read_text(encoding="utf-8"))
     encrypted_payload = resource("payload.enc").read_bytes()
@@ -62,6 +69,146 @@ def config_path() -> Path:
         base = Path(os.environ.get("XDG_CONFIG_HOME") or (Path.home() / ".config"))
     return base / "Zyrex" / "installer.json"
 
+PROTECTED_DESTINATIONS = "Documents › Adobe › After Effects … › User Presets"
+AE_FOLDER_PATTERN = re.compile(r"^(?:adobe )?after effects(?: \d{4})?$", re.IGNORECASE)
+
+def version_folder_name(name: str) -> str:
+    """`Adobe After Effects 2025` is the app folder; Documents uses `After Effects 2025`."""
+    return re.sub(r"^adobe\s+", "", str(name or "").strip(), flags=re.IGNORECASE)
+
+def documents_root() -> Path | None:
+    """The real Documents folder, which OneDrive and non-English Windows relocate."""
+    if sys.platform == "win32":
+        try:
+            import ctypes, uuid
+            class Guid(ctypes.Structure):
+                _fields_ = [("data1", ctypes.c_ulong), ("data2", ctypes.c_ushort), ("data3", ctypes.c_ushort), ("data4", ctypes.c_ubyte * 8)]
+            folder_id = Guid.from_buffer_copy(uuid.UUID("FDD39AD0-238F-46AF-ADB4-6C85480369C7").bytes_le)
+            value = ctypes.c_wchar_p()
+            if ctypes.windll.shell32.SHGetKnownFolderPath(ctypes.byref(folder_id), 0, None, ctypes.byref(value)) == 0:
+                resolved = value.value
+                ctypes.windll.ole32.CoTaskMemFree(value)
+                if resolved and Path(resolved).is_dir():
+                    return Path(resolved)
+        except Exception:
+            pass
+    guesses = [Path.home() / "Documents"]
+    for variable in ("OneDrive", "OneDriveConsumer", "OneDriveCommercial"):
+        base = str(os.environ.get(variable) or "").strip()
+        if base:
+            guesses.append(Path(base) / "Documents")
+    for guess in guesses:
+        try:
+            if guess.is_dir():
+                return guess
+        except OSError:
+            continue
+    return None
+
+def is_protected(path: Path) -> bool:
+    """After Effects lives in Program Files on Windows, which is never writable."""
+    if sys.platform != "win32":
+        return False
+    try:
+        resolved = str(Path(path).resolve()).casefold()
+    except OSError:
+        resolved = str(path).casefold()
+    for variable in ("ProgramFiles", "ProgramFiles(x86)", "ProgramW6432", "SystemRoot", "ProgramData"):
+        root = str(os.environ.get(variable) or "").strip().casefold()
+        if root and (resolved == root or resolved.startswith(root + "\\")):
+            return True
+    return False
+
+def is_writable(path: Path) -> bool:
+    try:
+        if not path.is_dir():
+            return False
+        probe = path / f".zyrex-write-{os.getpid()}.tmp"
+        probe.write_bytes(b"zyrex")
+        probe.unlink()
+        return True
+    except OSError:
+        return False
+
+def after_effects_versions() -> list[tuple[int, str]]:
+    """Installed After Effects version folder names, newest first."""
+    names = set()
+    documents = documents_root()
+    if documents:
+        adobe = documents / "Adobe"
+        if adobe.is_dir():
+            names.update(entry.name for entry in adobe.glob("After Effects*") if entry.is_dir())
+    roaming = str(os.environ.get("APPDATA") or "").strip()
+    if roaming and (Path(roaming) / "Adobe").is_dir():
+        names.update(entry.name for entry in (Path(roaming) / "Adobe").glob("After Effects*") if entry.is_dir())
+    def sort_key(name: str):
+        digits = re.findall(r"\d+", name)
+        return (int(digits[0]) if digits else 0, name)
+    return sorted(((sort_key(name)[0], name) for name in names), reverse=True)
+
+def user_presets_for(version_name: str, create: bool = True) -> Path | None:
+    documents = documents_root()
+    if not documents or not AE_FOLDER_PATTERN.match(version_name or ""):
+        return None
+    target = documents / "Adobe" / version_name / "User Presets"
+    if not target.is_dir():
+        if not create:
+            return None
+        try:
+            target.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            return None
+    return target if is_writable(target) else None
+
+def detect_destination() -> Path | None:
+    saved = load_saved_destination()
+    if saved:
+        return saved
+    versions = after_effects_versions()
+    # Existing folders win, so a machine with 2024 and 2025 keeps using whichever already
+    # holds presets instead of a folder this installer creates.
+    for _version, name in versions:
+        found = user_presets_for(name, create=False)
+        if found:
+            return found
+    # After Effects is installed but never saved a preset: create the folder it expects.
+    for _version, name in versions:
+        if re.search(r"\b(?:19|20)\d{2}\b", name):
+            created = user_presets_for(name)
+            if created:
+                return created
+    return None
+
+def resolve_destination(raw) -> tuple[Path | None, str]:
+    """Map whatever the member picked onto a writable User Presets folder."""
+    path = Path(str(raw or "").strip())
+    if not str(raw or "").strip():
+        return None, "No folder was selected."
+    if is_protected(path):
+        # Picking the app folder (or its Plug-ins) is a common slip; point at the real one.
+        version = next((version_folder_name(ancestor.name) for ancestor in path.parents if AE_FOLDER_PATTERN.match(ancestor.name)), version_folder_name(path.name))
+        fallback = user_presets_for(version) if AE_FOLDER_PATTERN.match(version) else None
+        if fallback:
+            return fallback, ""
+        return None, f"That folder belongs to the After Effects installation and Windows blocks writes there. Choose {PROTECTED_DESTINATIONS}."
+    if not path.is_dir():
+        return None, "That folder no longer exists."
+    if (path / "User Presets").is_dir():
+        return (path / "User Presets", "") if is_writable(path / "User Presets") else resolve_writable_or_error(path / "User Presets")
+    if AE_FOLDER_PATTERN.match(path.name):
+        version_folder = user_presets_for(path.name)
+        if version_folder:
+            return version_folder, ""
+        return None, f"Could not create the User Presets folder there. Choose {PROTECTED_DESTINATIONS}."
+    if not is_writable(path):
+        return None, f"Windows does not allow saving presets in that folder. Choose {PROTECTED_DESTINATIONS}."
+    return path, ""
+
+def resolve_writable_or_error(path: Path) -> tuple[Path | None, str]:
+    if is_writable(path):
+        return path, ""
+    return None, f"Windows does not allow saving presets in that folder. Choose {PROTECTED_DESTINATIONS}."
+
 def load_saved_destination() -> Path | None:
     try:
         data = json.loads(config_path().read_text(encoding="utf-8"))
@@ -70,8 +217,10 @@ def load_saved_destination() -> Path | None:
     value = str((data or {}).get("destination") or "").strip()
     if not value:
         return None
-    chosen = Path(value)
-    return chosen if chosen.is_dir() else None
+    # A remembered folder can become unusable (moved, deleted, or back in Program Files),
+    # so it is re-validated instead of trusted blindly on the next launch.
+    resolved, _reason = resolve_destination(value)
+    return resolved
 
 def save_destination(path: Path) -> None:
     try:
@@ -80,16 +229,6 @@ def save_destination(path: Path) -> None:
         target.write_text(json.dumps({"destination": str(path)}, ensure_ascii=False), encoding="utf-8")
     except Exception:
         pass
-
-def detect_destination() -> Path | None:
-    chosen = load_saved_destination()
-    if chosen:
-        return chosen
-    docs = Path.home() / "Documents" / "Adobe"
-    if not docs.is_dir():
-        return None
-    candidates = sorted((p / "User Presets" for p in docs.glob("After Effects*") if p.is_dir()), key=lambda p: p.parent.name.casefold(), reverse=True)
-    return candidates[0] if candidates else None
 
 def normalize_access(raw) -> dict:
     """Shape the Worker's access verdict so the UI can rely on flat fields."""
@@ -280,6 +419,10 @@ class InstallerAPI:
             }
         if not self.payload_key and not self._fetch_payload_key():
             return {"success": False, "accessRequired": True, "code": self.access.get("code") or "ACCESS_REQUIRED", "error": self.key_error or self.access.get("error") or "Could not unlock this pack."}
+        if not is_writable(self.destination):
+            # The old folder can become read-only (moved to Program Files, drive removed).
+            self.destination = None
+            return {"success": False, "needsFolder": True, "error": f"Presets cannot be saved in the folder this installer remembered. Choose {PROTECTED_DESTINATIONS}."}
         folder = self.destination / self.creator_folder / safe_part(self.manifest.get("leak_name"), "Preset pack")
         started = time.monotonic()
         self.progress = {"active": True, "done": 0, "total": 0, "name": "", "stage": "Preparing"}
@@ -294,7 +437,8 @@ class InstallerAPI:
             entries = [name for name in archive.namelist() if name.startswith("presets/") and not name.endswith("/")]
             self.progress.update({"total": len(entries), "stage": "Installing"})
             folder.mkdir(parents=True, exist_ok=True)
-            installed = skipped = refreshed = 0
+            installed = skipped = refreshed = failed = 0
+            first_error = ""
             for archived_name in entries:
                 relative = Path(*Path(archived_name.replace("\\", "/")).parts[1:])
                 if not relative.parts or any(part in {"", ".", ".."} for part in relative.parts):
@@ -303,10 +447,16 @@ class InstallerAPI:
                 self.progress["name"] = relative.name
                 target = folder.joinpath(*[safe_part(part, "Preset.ffx") for part in relative.parts])
                 raw = archive.read(archived_name)
-                if target.exists():
+                if target.is_file():
                     # A preset installed by an older build still carries the encoded trace
                     # block; strip it so this install can write the readable one.
-                    existing = target.read_bytes()
+                    try:
+                        existing = target.read_bytes()
+                    except OSError as read_error:
+                        failed += 1
+                        first_error = first_error or f"{relative.name}: {read_error.strerror or read_error}"
+                        self.progress["done"] += 1
+                        continue
                     if LEGACY_TRACE_MARKER not in existing:
                         skipped += 1
                         self.progress["done"] += 1
@@ -322,18 +472,35 @@ class InstallerAPI:
                 # preset's own metadata packet, so no sidecar receipt file is written.
                 query = urllib.parse.urlencode({"id": self.product_id, "release_id": self.release_id, "name": name})
                 data, _ = self._request(f"/api/installer/trace?{query}", method="POST", body=raw, token=self.access_token, binary=True)
-                target.parent.mkdir(parents=True, exist_ok=True)
-                target.write_bytes(data)
+                # A preset After Effects is holding open (or an antivirus lock) must not
+                # abort the rest of the pack; the file is counted and reported instead.
+                try:
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    target.write_bytes(data)
+                except OSError as write_error:
+                    failed += 1
+                    first_error = first_error or f"{relative.name}: {write_error.strerror or write_error}"
+                    self.progress["done"] += 1
+                    continue
                 installed += 1
                 self.progress["done"] += 1
             self.installed_folder = folder
             self.progress.update({"active": False, "stage": "Completed", "name": ""})
-            self.log_event("complete", installed=installed, skipped=skipped, total=len(entries), duration_ms=int((time.monotonic() - started) * 1000))
-            return {"success": True, "installed": installed, "skipped": skipped, "refreshed": refreshed, "folder": str(folder)}
+            duration = int((time.monotonic() - started) * 1000)
+            summary = {"installed": installed, "skipped": skipped, "failed": failed, "total": len(entries), "duration_ms": duration}
+            if first_error:
+                summary["error"] = first_error
+            self.log_event("complete", **summary)
+            if not installed and failed:
+                return {
+                    "success": False,
+                    "error": f"None of the presets could be saved. Close After Effects (it locks the preset files) and run the installer again. First problem: {first_error}",
+                }
+            return {"success": True, "installed": installed, "skipped": skipped, "refreshed": refreshed, "failed": failed, "firstError": first_error, "folder": str(folder)}
         except Exception as error:
             self.progress.update({"active": False, "stage": "Failed", "name": ""})
-            self.log_event("error", error=str(error), duration_ms=int((time.monotonic() - started) * 1000))
-            return {"success": False, "error": f"Could not install presets: {error}"}
+            self.log_event("error", error=public_error(error), installed=0, skipped=0, total=self.progress.get("total", 0), duration_ms=int((time.monotonic() - started) * 1000))
+            return {"success": False, "error": f"Could not install presets: {public_error(error)}"}
 
     def open_destination(self):
         target = self.installed_folder or self.destination
@@ -353,16 +520,17 @@ class InstallerAPI:
         if not windows:
             return {"success": False, "error": "The window is not ready yet."}
         folder_dialog = getattr(getattr(webview, "FileDialog", None), "FOLDER", 20)
-        start = str(self.destination or (Path.home() / "Documents" / "Adobe"))
+        documents = documents_root()
+        start = str(self.destination or (documents / "Adobe" if documents else Path.home()))
         try:
             picked = windows[0].create_file_dialog(folder_dialog, directory=start)
         except Exception as error:
             return {"success": False, "error": f"Could not open the folder picker: {error}"}
         if not picked:
             return {"success": False, "cancelled": True}
-        chosen = Path(picked[0])
-        if not chosen.is_dir():
-            return {"success": False, "error": "That folder no longer exists."}
+        chosen, reason = resolve_destination(picked[0])
+        if not chosen:
+            return {"success": False, "error": reason or "That folder cannot be used."}
         self.destination = chosen
         save_destination(chosen)
         return {"success": True, "destination": str(chosen), "state": self.get_state()}
@@ -437,6 +605,26 @@ def main():
             finally:
                 config_path = original
         assert config_path().name == "installer.json" and config_path().parent.name == "Zyrex"
+        # A destination that cannot be written must never be used, because the fold into
+        # User Presets is only skipped when the folder really is writable.
+        with tempfile.TemporaryDirectory() as scratch:
+            plain = Path(scratch) / "User Presets"
+            plain.mkdir()
+            assert is_writable(plain) and not is_protected(plain)
+            assert resolve_destination(plain) == (plain, "")
+            year = Path(scratch) / "After Effects 2025"
+            year.mkdir()
+            inside = year / "User Presets"
+            inside.mkdir()
+            assert resolve_destination(year) == (inside, "")
+            loose = year / "Loose"
+            loose.mkdir()
+            mapped, reason = resolve_destination(loose)
+            assert mapped == loose and reason == ""
+            protected = resolve_destination(Path(os.environ.get("ProgramFiles") or "C:/Program Files") / "Adobe")
+            if os.environ.get("ProgramFiles"):
+                assert protected[0] is None and "Windows blocks writes" in protected[1], protected
+            assert resolve_destination("")[0] is None
         # A signed-in member without both gates must be refused before any decryption.
         api.destination = Path(tempfile.gettempdir())
         api.access_token = "self-test-token"
