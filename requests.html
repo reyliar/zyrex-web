@@ -1095,6 +1095,16 @@
     <script src="/js/post-markdown.js?v=1"></script>
     <style id="requests-grid-rework">
       .requests-page { --req-font:'Outfit','Satoshi',sans-serif; font-family:var(--req-font); }
+      /* The board must be paintable even when no animation, transition or observer runs
+         (low power mode, throttled tab, blocked script). Shared reveal rules used to
+         leave this page as a blank stretch on a phone, so visibility is pinned here. */
+      .requests-page .request-dashboard,
+      .requests-page .request-explorer,
+      .requests-page #requestsGrid,
+      .requests-page .request-explorer-heading,
+      .requests-page .req-toolbar,
+      .requests-page .req-pills { opacity:1 !important; filter:none !important; transform:none !important; }
+      .requests-page .req-card { opacity:1 !important; }
       .requests-page :is(button,input,select,textarea,.req-card,.req-title,.req-desc,.req-status-pill,.req-price-label,.req-price-val,.req-stat-item) { font-family:var(--req-font); }
       .requests-page .req-grid { width:min(1320px,calc(100% - 48px)); max-width:none; margin:0 auto 72px; padding:0; grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr)); align-items:stretch; gap:clamp(16px,2vw,24px); }
       .requests-page .req-card { min-width:0; border-radius:24px; background:linear-gradient(150deg,rgba(255,255,255,.075),rgba(255,255,255,.015) 48%),rgba(16,13,20,.74); border-color:rgba(255,255,255,.13); }
