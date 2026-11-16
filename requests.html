@@ -302,6 +302,18 @@
         .req-empty > i { font-size: 3rem; color: rgba(var(--zr-rgb-255-43-82, 255, 43, 82), 0.35); margin-bottom: 16px; display: inline-block; }
         .req-empty h3 { font-size: 1.3rem; font-weight: 700; margin: 0 0 8px; }
         .req-empty p { font-size: 0.88rem; color: rgba(255, 255, 255, 0.45); margin: 0 0 20px; }
+        .req-empty.req-error { border-style: solid; border-color: rgba(var(--zr-rgb-255-43-82, 255, 43, 82), .28); background: linear-gradient(150deg, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), .1), rgba(14, 10, 17, .6)); }
+        .req-empty.req-error > i { color: rgba(var(--zr-rgb-255-43-82, 255, 43, 82), .75); }
+
+        /* LOADING PLACEHOLDERS: the board must never look blank while it loads */
+        .req-skeleton { border-radius: 24px; overflow: hidden; border: 1px solid rgba(255, 255, 255, .07); background: rgba(255, 255, 255, .025); }
+        .req-skeleton-media { height: 176px; background: linear-gradient(110deg, rgba(255, 255, 255, .05) 8%, rgba(255, 255, 255, .11) 18%, rgba(255, 255, 255, .05) 33%); background-size: 220% 100%; animation: reqSkeleton 1.4s linear infinite; }
+        .req-skeleton-body { padding: 18px; display: grid; gap: 10px; }
+        .req-skeleton-body span { height: 12px; border-radius: 999px; background: linear-gradient(110deg, rgba(255, 255, 255, .05) 8%, rgba(255, 255, 255, .11) 18%, rgba(255, 255, 255, .05) 33%); background-size: 220% 100%; animation: reqSkeleton 1.4s linear infinite; }
+        .req-skeleton-body span:nth-child(1) { width: 38%; height: 18px; }
+        .req-skeleton-body span:nth-child(2) { width: 82%; }
+        .req-skeleton-body span:nth-child(3) { width: 64%; }
+        @keyframes reqSkeleton { to { background-position: -120% 0; } }
 
         /* =====================================================
            REDESIGNED REQUEST MODAL STYLES
@@ -1041,7 +1053,7 @@
       @media(max-width:900px) { .request-dashboard { grid-template-columns:1fr; } .req-hero { min-height:290px; } .request-board-orbit { right:5%; width:220px; height:220px; } .req-stats-bar { grid-template-columns:repeat(4,minmax(0,1fr)); } }
       @media(max-width:700px) { .request-dashboard,.request-explorer { width:calc(100% - 28px); } .request-dashboard { margin-top:92px; gap:10px; } .req-hero { min-height:330px; padding:28px 22px; border-radius:24px; } .request-board-orbit { width:145px; height:145px; right:5%; top:22%; opacity:.45; } .request-board-orbit img { width:42px;height:42px; } .request-hero-copy { max-width:100%; } .req-hero h1 { font-size:clamp(2.45rem,11vw,3.4rem); } .req-hero p { max-width:390px; font-size:.92rem; } .req-stats-bar { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; } .req-stat-card { min-height:92px; padding:15px; border-radius:18px; } .request-explorer { margin-top:48px; } .request-explorer-hint { display:none; } .req-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; } .req-card-body { padding:15px; } .req-form { grid-template-columns:1fr; gap:15px; padding:18px; } #requestForm > *,#presetFields,#presetFields > * { grid-column:1/-1; } #presetFields { grid-template-columns:1fr; } .req-modal-box { width:calc(100% - 18px); border-radius:22px; } .req-modal-header { padding:18px; } }
       @media(max-width:480px) { .req-grid { grid-template-columns:1fr; } .req-card-media { aspect-ratio:16/9; } .req-hero { min-height:320px; } .request-board-orbit { top:15%; right:0; } }
-      @media(prefers-reduced-motion:reduce) { .req-card,.btn-submit-req { transition:none; } }
+      @media(prefers-reduced-motion:reduce) { .req-card,.btn-submit-req { transition:none; } .req-card { animation:none !important; } .req-skeleton-media,.req-skeleton-body span { animation:none !important; } }
     </style>
     <style>
       @media (prefers-reduced-motion:no-preference) {
@@ -1558,10 +1570,48 @@
 
         // INIT & DATA LOADING
         async function initRequests() {
-            await fetchUserAllowance();
-            await loadExistingProducts();
+            // The board paints from the last visit immediately, then refreshes itself; the
+            // allowance and catalogue calls used to be awaited first and could hold the
+            // grid empty for seconds on a phone.
+            renderCachedRequests();
+            renderRequestsSkeleton();
             await loadAndRenderRequests();
             setupEventListeners();
+            Promise.allSettled([fetchUserAllowance(), loadExistingProducts()]);
+        }
+
+        function renderCachedRequests() {
+            try {
+                var raw = localStorage.getItem('zyrex_cache_requests');
+                var list = raw ? JSON.parse(raw) : null;
+                if (!Array.isArray(list) || !list.length) return;
+                currentRequests = list.map(normalizeRequestRecord).filter(Boolean);
+                if (!currentRequests.length) return;
+                renderRequestsGrid();
+                updateStats(currentRequests);
+            } catch (e) {}
+        }
+
+        function renderRequestsSkeleton() {
+            var grid = document.getElementById('requestsGrid');
+            if (!grid || currentRequests.length) return;
+            var skeleton = '';
+            for (var i = 0; i < 6; i++) {
+                skeleton += '<div class="req-skeleton" aria-hidden="true"><div class="req-skeleton-media"></div><div class="req-skeleton-body"><span></span><span></span><span></span></div></div>';
+            }
+            grid.innerHTML = skeleton;
+        }
+
+        function showRequestsError(message) {
+            var grid = document.getElementById('requestsGrid');
+            if (!grid || currentRequests.length) return;
+            var safe = String(message || 'Please check your connection and try again.').replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; });
+            grid.innerHTML = '<div class="req-empty req-error"><i class="fas fa-triangle-exclamation"></i><h3>Requests could not load</h3><p>' + safe + '</p><button class="btn-submit-req" onclick="retryRequests()"><i class="fas fa-rotate-right"></i> <span>Try again</span></button></div>';
+        }
+
+        function retryRequests() {
+            renderRequestsSkeleton();
+            loadAndRenderRequests();
         }
 
         async function loadExistingProducts() {
@@ -1595,21 +1645,27 @@
         }
 
         async function loadAndRenderRequests() {
+            var controller = typeof AbortController === 'function' ? new AbortController() : null;
+            var timer = controller ? setTimeout(function () { controller.abort(); }, 15000) : null;
             try {
                 var params = new URLSearchParams({ limit: '100' });
-                var resp = await fetch('/api/requests?' + params.toString(), { credentials: 'include', headers: { 'X-Zyrex-Client': 'web-portal' } });
-                if (resp.ok) {
-                    var data = await resp.json();
-                    var requestList = Array.isArray(data)
-                        ? data
-                        : (data && Array.isArray(data.requests) ? data.requests : null);
-                    if (requestList) {
-                        currentRequests = requestList.map(normalizeRequestRecord).filter(Boolean);
-                        renderRequestsGrid();
-                        updateStats(currentRequests);
-                    }
-                }
-            } catch(e) { console.error('Load requests failed:', e); }
+                var resp = await fetch('/api/requests?' + params.toString(), { credentials: 'include', headers: { 'X-Zyrex-Client': 'web-portal' }, signal: controller ? controller.signal : undefined });
+                if (!resp.ok) throw new Error('Server answered ' + resp.status + '.');
+                var data = await resp.json();
+                var requestList = Array.isArray(data)
+                    ? data
+                    : (data && Array.isArray(data.requests) ? data.requests : null);
+                if (!requestList) throw new Error('The board returned an unexpected response.');
+                currentRequests = requestList.map(normalizeRequestRecord).filter(Boolean);
+                renderRequestsGrid();
+                updateStats(currentRequests);
+                try { localStorage.setItem('zyrex_cache_requests', JSON.stringify(currentRequests)); } catch (e) {}
+            } catch(e) {
+                console.error('Load requests failed:', e);
+                showRequestsError(e && e.name === 'AbortError' ? 'The board took too long to answer. Please try again.' : (e && e.message) || 'Please check your connection and try again.');
+            } finally {
+                if (timer) clearTimeout(timer);
+            }
         }
 
         function updateStats(requests) {
@@ -1713,7 +1769,7 @@
                 var priceDisplay = formatPriceDisplay(r.price);
                 var priceClass = !priceDisplay ? '' : (/free/i.test(r.price) ? 'price-free' : (priceDisplay.startsWith('$') ? '' : 'price-gold'));
 
-                return '<article class="req-card ' + (isCompleted ? 'completed-glow' : '') + '" style="animation-delay:' + (index * 0.04) + 's;cursor:pointer" onclick="window.location.href=\'/request?id=' + encodeURIComponent(r.id) + '\'">' +
+                return '<article class="req-card ' + (isCompleted ? 'completed-glow' : '') + '" style="animation-delay:' + (Math.min(index, 12) * 0.035) + 's;cursor:pointer" onclick="window.location.href=\'/request?id=' + encodeURIComponent(r.id) + '\'">' +
                     '<div class="req-card-media">' +
                         (thumbnail ? '<img src="' + thumbnail + '" alt="" loading="lazy">' : '<div class="req-media-placeholder"><i class="fas fa-box-open"></i></div>') +
                         '<span class="req-media-badge ' + getTypeClass(r.type) + '">' + getTypeLabel(r.type) + '</span>' +
