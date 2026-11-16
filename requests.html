@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -219,7 +219,10 @@
             cursor: pointer;
             animation: cardIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
         }
-        @keyframes cardIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        /* Transform-only: a card must never depend on an animation clock to become
+           visible, because a throttled or interrupted animation would leave the whole
+           grid transparent on a slow phone. */
+        @keyframes cardIn { from { transform: translateY(18px); } to { transform: translateY(0); } }
         .req-card:hover { transform: translateY(-4px); border-color: rgba(var(--zr-rgb-255-91-122, 255, 91, 122), .42); box-shadow: 0 24px 54px rgba(0, 0, 0, .4), 0 0 26px rgba(var(--zr-rgb-255-43-82, 255, 43, 82), .12); }
 
         /* TOP THUMBNAIL BANNER */
@@ -953,7 +956,7 @@
 </style>
 
     <link rel="stylesheet" href="/css/glass.css?v=67">
-    <link rel="stylesheet" href="/css/atmosphere.css?v=7">
+    <link rel="stylesheet" href="/css/atmosphere.css?v=8">
     <link rel="preconnect" href="https://api.fontshare.com" crossorigin>
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="dns-prefetch" href="https://cdn.fontshare.com">
@@ -1272,7 +1275,7 @@
                             <div class="req-panel-icon"><i class="fas fa-wand-magic-sparkles"></i></div>
                             <div class="req-panel-text">
                                 <h4 data-i18n="requests.modal.creator_lookup_title">Creator Social Lookup</h4>
-                                <p data-i18n="requests.modal.creator_lookup_desc">Enter a social media profile — store & products are scanned automatically</p>
+                                <p data-i18n="requests.modal.creator_lookup_desc">Enter a social media profile â€” store & products are scanned automatically</p>
                             </div>
                         </div>
                         <div class="req-field-group">
@@ -1307,7 +1310,7 @@
                             <div class="req-preview-title" id="previewTitle">Product Title</div>
                             <div class="req-preview-meta">
                                 <span id="previewCreator">Creator</span>
-                                <span class="req-preview-sep">•</span>
+                                <span class="req-preview-sep">â€¢</span>
                                 <span id="previewPrice" class="req-preview-price">$0.00</span>
                             </div>
                         </div>
@@ -1319,7 +1322,7 @@
                         <div class="req-dup-text">
                             <strong id="duplicateTitle">Already Available!</strong>
                             <span id="duplicateText">This leak has already been shared on Zyrex.</span>
-                            <a href="#" id="duplicateLink" class="req-dup-link" target="_blank"><span data-i18n="requests.modal.view_leak">View Leak →</span></a>
+                            <a href="#" id="duplicateLink" class="req-dup-link" target="_blank"><span data-i18n="requests.modal.view_leak">View Leak â†’</span></a>
                         </div>
                     </div>
                 </div>
@@ -1339,7 +1342,7 @@
                 <!-- PRICE FIELD -->
                 <div class="req-field-group" id="priceFieldGroup">
                     <label class="req-field-label"><i class="fas fa-tag"></i> <span data-i18n="Price">Price</span></label>
-                    <input type="text" id="modalPriceInput" class="req-field-input" placeholder="e.g. $7.50, £5.00, €6.99 or Free" data-i18n-placeholder="requests.modal.price_placeholder">
+                    <input type="text" id="modalPriceInput" class="req-field-input" placeholder="e.g. $7.50, Â£5.00, â‚¬6.99 or Free" data-i18n-placeholder="requests.modal.price_placeholder">
                 </div>
 
                 <!-- ANONYMOUS TOGGLE -->
@@ -1424,7 +1427,7 @@
                     <a href="/" class="hero-brand-lockup footer-brand-lockup">
                         <img src="/assets/content.png" alt="Zyrex Logo" class="hero-brand-icon">
                         <div class="hero-brand-text-col">
-                            <span class="hero-brand-title">Zyrex<sup>™</sup></span>
+                            <span class="hero-brand-title">Zyrex<sup>â„¢</sup></span>
                             <span class="hero-brand-sub">EDITING</span>
                         </div>
                     </a>
@@ -1715,9 +1718,9 @@
             if (!price) return '';
             var p = price.toString().trim();
             if (/^free$/i.test(p)) return 'Free';
-            var m = p.match(/([\$£€¥₺])\s*(\d+(?:\.\d{2})?)/);
+            var m = p.match(/([\$Â£â‚¬Â¥â‚º])\s*(\d+(?:\.\d{2})?)/);
             if (m) return m[1] + m[2];
-            var m2 = p.match(/(\d+(?:\.\d{2})?)\s*([\$£€¥₺])/);
+            var m2 = p.match(/(\d+(?:\.\d{2})?)\s*([\$Â£â‚¬Â¥â‚º])/);
             if (m2) return m2[2] + m2[1];
             return p;
         }
@@ -1800,6 +1803,11 @@
             }).join('');
 
             if (typeof window.translate === 'function') window.translate(document.documentElement.lang || 'en');
+
+            // Cached page-motion builds used to hide freshly rendered cards until an
+            // observer fired; clearing the class keeps the board visible either way.
+            var hidden = grid.querySelectorAll('.zr-reveal:not(.zr-visible)');
+            for (var i = 0; i < hidden.length; i++) hidden[i].classList.add('zr-visible');
         }
 
         function setupEventListeners() {
@@ -1853,7 +1861,7 @@
             url = url.trim();
             var scrapeSeq = ++_productScrapeSeq;
             var scrapeStatus = document.getElementById('productScrapeStatus');
-            if (scrapeStatus) scrapeStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Scrapin is loading product details…</span>';
+            if (scrapeStatus) scrapeStatus.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span>Scrapin is loading product detailsâ€¦</span>';
 
             // 1. Duplicate check strictly against store/source links
             var dup = checkClientDuplicate(url);
@@ -1865,7 +1873,7 @@
                     title: 'Already Available!',
                     text: 'This leak has already been shared on Zyrex.',
                     href: '/leak?id=' + encodeURIComponent(dup.id),
-                    label: 'View Leak →'
+                    label: 'View Leak â†’'
                 });
                 if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> <span data-i18n="requests.modal.already_on_zyrex">Already on Zyrex</span>'; }
                 return;
@@ -1875,7 +1883,7 @@
                     title: 'Already Requested!',
                     text: 'Someone already asked for this product. Upvote that request instead of creating another.',
                     href: '/request?id=' + encodeURIComponent(dupRequest.id),
-                    label: 'View Request →'
+                    label: 'View Request â†’'
                 });
                 if (submitBtn) { submitBtn.disabled = true; submitBtn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> <span data-i18n="requests.modal.already_requested">Already requested</span>'; }
                 return;
@@ -2056,12 +2064,12 @@
             if (productUrl) {
                 var dup = checkClientDuplicate(productUrl);
                 if (dup) {
-                    showDuplicateWarning({ title: 'Already Available!', text: 'This leak has already been shared on Zyrex.', href: '/leak?id=' + encodeURIComponent(dup.id), label: 'View Leak →' });
+                    showDuplicateWarning({ title: 'Already Available!', text: 'This leak has already been shared on Zyrex.', href: '/leak?id=' + encodeURIComponent(dup.id), label: 'View Leak â†’' });
                     btn.disabled = true; btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> <span data-i18n="requests.modal.already_on_zyrex">Already on Zyrex</span>'; return;
                 }
                 var dupRequest = checkClientDuplicateRequest(productUrl);
                 if (dupRequest) {
-                    showDuplicateWarning({ title: 'Already Requested!', text: 'Someone already asked for this product. Upvote that request instead of creating another.', href: '/request?id=' + encodeURIComponent(dupRequest.id), label: 'View Request →' });
+                    showDuplicateWarning({ title: 'Already Requested!', text: 'Someone already asked for this product. Upvote that request instead of creating another.', href: '/request?id=' + encodeURIComponent(dupRequest.id), label: 'View Request â†’' });
                     btn.disabled = true; btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> <span data-i18n="requests.modal.already_requested">Already requested</span>'; return;
                 }
             }
@@ -2087,11 +2095,11 @@
                             title: String(resData.request.status || '').toLowerCase() === 'completed' ? 'Already Fulfilled!' : 'Already Requested!',
                             text: resData.message || 'This product has already been requested.',
                             href: resData.request.resource_url || ('/request?id=' + encodeURIComponent(resData.request.id)),
-                            label: String(resData.request.status || '').toLowerCase() === 'completed' ? 'View Leak →' : 'View Request →'
+                            label: String(resData.request.status || '').toLowerCase() === 'completed' ? 'View Leak â†’' : 'View Request â†’'
                         });
                         btn.disabled = true; btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> <span data-i18n="requests.modal.already_requested">Already requested</span>'; return;
                     }
-                    showDuplicateWarning({ title: 'Already Available!', text: 'This leak has already been shared on Zyrex.', href: resData.product && resData.product.id ? '/leak?id=' + encodeURIComponent(resData.product.id) : '#', label: 'View Leak →' });
+                    showDuplicateWarning({ title: 'Already Available!', text: 'This leak has already been shared on Zyrex.', href: resData.product && resData.product.id ? '/leak?id=' + encodeURIComponent(resData.product.id) : '#', label: 'View Leak â†’' });
                     btn.disabled = true; btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i> <span data-i18n="requests.modal.already_on_zyrex">Already on Zyrex</span>'; return;
                 }
 
@@ -2135,6 +2143,6 @@
         // Initialize on DOM ready
         document.addEventListener('DOMContentLoaded', initRequests);
     </script>
-    <script src="/js/page-motion.js?v=6"></script>
+    <script src="/js/page-motion.js?v=7"></script>
 </body>
 </html>

@@ -43,6 +43,9 @@
                 var el = found[i];
                 if (el.closest('.zr-sweep, .lq-veil, .bg-aura')) continue;
                 if (el.closest('.nav-links, .auth-dropdown, .footer, .site-footer')) continue;
+                // The requests board owns its own motion; a staggered intro must never be
+                // the reason its heading or cards are invisible on a slow device.
+                if (el.closest('.requests-page, .request-dashboard, .request-explorer, #requestsGrid')) continue;
                 if (seen.indexOf(el) !== -1) continue;
                 // Skip blocks that start below the viewport: the scroll observer
                 // handles those, otherwise they would animate while invisible.
@@ -79,10 +82,16 @@
     function setupScrollReveal() {
         if (reduceMotion || typeof window.IntersectionObserver !== 'function') return;
 
+        // The requests board renders its own cards with their own entrance animation, and
+        // its list is rebuilt whenever the member filters or a refresh lands. Tracking
+        // those cards here used to leave a rebuilt board hidden behind .zr-reveal on slow
+        // devices, so the whole page is left to its own motion.
+        if (document.querySelector('.requests-page, #requestsGrid')) return;
+
         var candidates = document.querySelectorAll([
             'main section', '.section-padding', '.resource-card', '.stats-card', '.team-card',
             '.brand-showcase', '.about-intro-card', '.lp-sec', '.lp-card', '.lp-note',
-            '.vf-card', '.access-card', '.req-card', '.bm-card', '.pf-card'
+            '.vf-card', '.access-card', '.bm-card', '.pf-card'
         ].join(','));
 
         var tracked = [];

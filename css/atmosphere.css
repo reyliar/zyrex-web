@@ -82,11 +82,19 @@ body.zr-sweeping .zr-sweep::before {
         opacity .62s var(--zr-sweep-ease),
         transform .62s var(--zr-sweep-ease);
     transition-delay: var(--zr-delay, 0ms);
+    /* Safety net: an observer that never fires (throttled tab, blocked script, a block
+       rendered after setup) must not leave content invisible forever. */
+    animation: zrRevealFallback .01s linear 2.4s forwards;
+}
+
+@keyframes zrRevealFallback {
+    to { opacity: 1; transform: none; }
 }
 
 .zr-reveal.zr-visible {
     opacity: 1;
     transform: none;
+    animation: none;
 }
 
 /* --------------------------------------------------------------------------
