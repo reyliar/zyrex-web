@@ -2,6 +2,20 @@
    Loaded on demand by /js/i18n.js; English is the source and the default. */
 window.ZyrexI18nDictionaries = window.ZyrexI18nDictionaries || {};
 window.ZyrexI18nDictionaries["tr"] = {
+/* coming-soon copy: /audio and /scenepacks */
+        "IN PREPARATION": "HAZIRLIK AŞAMASINDA",
+        "Audios are being prepared.": "Sesler hazırlanıyor.",
+        "Scenepacks are being prepared.": "Scenepack'ler hazırlanıyor.",
+        "We are rebuilding the audio library so it opens with clean previews, instant search and direct downloads. It will be available again shortly.": "Ses kütüphanesini temiz önizlemeler, anında arama ve doğrudan indirmelerle açılacak şekilde yeniden kuruyoruz. Kısa süre içinde yeniden yayında olacak.",
+        "We are rebuilding the scenepack library so it opens with clean previews, instant filters and direct downloads. It will be available again shortly.": "Scenepack kütüphanesini temiz önizlemeler, anında filtreler ve doğrudan indirmelerle açılacak şekilde yeniden kuruyoruz. Kısa süre içinde yeniden yayında olacak.",
+        "Curated audio library": "Seçilmiş ses kütüphanesi",
+        "Curated scenepack library": "Seçilmiş scenepack kütüphanesi",
+        "Instant previews": "Anında önizleme",
+        "Instant filters": "Anında filtreler",
+        "Direct downloads": "Doğrudan indirme",
+        "Browse leaks": "Leak'lere göz at",
+        "Join Discord": "Discord'a katıl",
+        "Need something in the meantime? Ask in our Discord — the community shares files there every day.": "Bu arada bir şeye mi ihtiyacın var? Discord'umuzda sor — topluluk orada her gün dosya paylaşıyor.",
         "-- available": "-- mevcut",
         "— Add to Render Queue": "— Render Kuyruğu'na ekle",
         "— Adobe Plugin": "— Adobe Eklentisi",

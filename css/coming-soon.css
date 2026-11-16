@@ -1,0 +1,175 @@
+/* Shared "this page is being prepared" screen. */
+.cs-main {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    place-items: center;
+    min-height: clamp(520px, 72vh, 780px);
+    padding: clamp(88px, 12vh, 132px) 20px clamp(56px, 8vh, 96px);
+    /* A preparation notice must be readable on any device, so no shared reveal rule or
+       entrance animation is allowed to hold it at opacity 0. */
+    opacity: 1 !important;
+    filter: none !important;
+    transform: none !important;
+}
+
+.cs-card {
+    position: relative;
+    width: min(760px, 100%);
+    padding: clamp(28px, 4vw, 52px);
+    border-radius: 30px;
+    text-align: center;
+    overflow: hidden;
+    background: linear-gradient(155deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, .015) 55%), rgba(14, 11, 18, .72);
+    border: 1px solid rgba(255, 255, 255, .12);
+    box-shadow: 0 30px 90px rgba(0, 0, 0, .45), inset 0 1px rgba(255, 255, 255, .08);
+    backdrop-filter: blur(26px) saturate(150%);
+    -webkit-backdrop-filter: blur(26px) saturate(150%);
+    opacity: 1 !important;
+    filter: none !important;
+    transform: none !important;
+}
+
+.cs-card::before {
+    content: '';
+    position: absolute;
+    inset: -40% -20% auto -20%;
+    height: 70%;
+    pointer-events: none;
+    background: radial-gradient(60% 100% at 50% 0%, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), .26), transparent 72%);
+}
+
+.cs-icon {
+    width: 76px;
+    height: 76px;
+    margin: 0 auto 20px;
+    border-radius: 24px;
+    display: grid;
+    place-items: center;
+    font-size: 1.8rem;
+    color: #fff;
+    background: linear-gradient(150deg, rgba(var(--zr-rgb-255-43-82, 255, 43, 82), .3), rgba(255, 255, 255, .06));
+    border: 1px solid rgba(var(--zr-rgb-255-43-82, 255, 43, 82), .38);
+    box-shadow: 0 18px 40px rgba(var(--zr-rgb-255-43-82, 255, 43, 82), .22);
+}
+
+.cs-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 16px;
+    padding: 7px 14px;
+    border-radius: 999px;
+    font: 700 .68rem/1 'Satoshi', sans-serif;
+    letter-spacing: 2.4px;
+    text-transform: uppercase;
+    color: #ffd6de;
+    background: rgba(var(--zr-rgb-255-43-82, 255, 43, 82), .14);
+    border: 1px solid rgba(var(--zr-rgb-255-43-82, 255, 43, 82), .34);
+}
+
+.cs-card h1 {
+    margin: 0 0 14px;
+    font-size: clamp(1.9rem, 4.4vw, 2.9rem);
+    line-height: 1.1;
+    letter-spacing: -.03em;
+}
+
+.cs-lead {
+    max-width: 52ch;
+    margin: 0 auto;
+    color: rgba(255, 255, 255, .66);
+    font-size: clamp(.95rem, 1.1vw, 1.02rem);
+    line-height: 1.65;
+}
+
+.cs-points {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+    margin: 26px 0 30px;
+    padding: 0;
+    list-style: none;
+}
+
+.cs-points li {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 15px;
+    border-radius: 16px;
+    text-align: left;
+    font-size: .9rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, .86);
+    background: rgba(255, 255, 255, .045);
+    border: 1px solid rgba(255, 255, 255, .08);
+}
+
+.cs-points i {
+    font-size: .95rem;
+    color: var(--zr-accent-soft, #ff718a);
+}
+
+.cs-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: center;
+}
+
+.cs-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 13px 22px;
+    border-radius: 999px;
+    font-size: .92rem;
+    font-weight: 750;
+    text-decoration: none;
+    transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+}
+
+.cs-btn-primary {
+    color: #fff;
+    background: linear-gradient(115deg, #ff3159, #d62972);
+    box-shadow: 0 14px 34px rgba(255, 49, 89, .32);
+}
+
+.cs-btn-ghost {
+    color: #fff;
+    background: rgba(255, 255, 255, .05);
+    border: 1px solid rgba(255, 255, 255, .16);
+}
+
+.cs-btn:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.08);
+}
+
+.cs-note {
+    margin: 22px 0 0;
+    font-size: .82rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, .45);
+}
+
+html[data-zyrex-theme="light"] body .cs-card {
+    background: linear-gradient(155deg, rgba(255, 255, 255, .96), rgba(243, 247, 252, .9));
+    border-color: rgba(21, 45, 90, .14);
+    box-shadow: 0 26px 70px rgba(21, 45, 90, .16);
+}
+
+html[data-zyrex-theme="light"] body .cs-card h1 { color: #122a52; }
+html[data-zyrex-theme="light"] body .cs-lead { color: rgba(18, 42, 82, .68); }
+html[data-zyrex-theme="light"] body .cs-points li { color: #1b3055; background: rgba(21, 45, 90, .05); border-color: rgba(21, 45, 90, .1); }
+html[data-zyrex-theme="light"] body .cs-badge { color: #b3173c; }
+html[data-zyrex-theme="light"] body .cs-note { color: rgba(18, 42, 82, .55); }
+html[data-zyrex-theme="light"] body .cs-btn-ghost { color: #122a52; background: rgba(21, 45, 90, .06); border-color: rgba(21, 45, 90, .16); }
+
+@media (max-width: 520px) {
+    .cs-card { padding: 26px 20px 30px; border-radius: 24px; }
+    .cs-icon { width: 64px; height: 64px; border-radius: 20px; font-size: 1.5rem; }
+    .cs-actions { flex-direction: column; }
+    .cs-btn { justify-content: center; }
+}

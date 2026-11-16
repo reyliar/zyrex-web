@@ -2,6 +2,20 @@
    Loaded on demand by /js/i18n.js; English is the source and the default. */
 window.ZyrexI18nDictionaries = window.ZyrexI18nDictionaries || {};
 window.ZyrexI18nDictionaries["es"] = {
+/* coming-soon copy: /audio and /scenepacks */
+        "IN PREPARATION": "EN PREPARACIÓN",
+        "Audios are being prepared.": "Los audios se están preparando.",
+        "Scenepacks are being prepared.": "Los scenepacks se están preparando.",
+        "We are rebuilding the audio library so it opens with clean previews, instant search and direct downloads. It will be available again shortly.": "Estamos reconstruyendo la biblioteca de audios para que abra con vistas previas limpias, búsqueda instantánea y descargas directas. Volverá a estar disponible en breve.",
+        "We are rebuilding the scenepack library so it opens with clean previews, instant filters and direct downloads. It will be available again shortly.": "Estamos reconstruyendo la biblioteca de scenepacks para que abra con vistas previas limpias, filtros instantáneos y descargas directas. Volverá a estar disponible en breve.",
+        "Curated audio library": "Biblioteca de audios seleccionada",
+        "Curated scenepack library": "Biblioteca de scenepacks seleccionada",
+        "Instant previews": "Vistas previas instantáneas",
+        "Instant filters": "Filtros instantáneos",
+        "Direct downloads": "Descargas directas",
+        "Browse leaks": "Explorar leaks",
+        "Join Discord": "Unirse a Discord",
+        "Need something in the meantime? Ask in our Discord — the community shares files there every day.": "¿Necesitas algo mientras tanto? Pregunta en nuestro Discord: la comunidad comparte archivos allí todos los días.",
         "-- available": "-- disponibles",
         "— Add to Render Queue": "— Añadir a la cola de procesamiento",
         "— Adobe Plugin": "— Plugin de Adobe",

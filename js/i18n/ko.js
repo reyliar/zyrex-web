@@ -2,6 +2,20 @@
    Loaded on demand by /js/i18n.js; English is the source and the default. */
 window.ZyrexI18nDictionaries = window.ZyrexI18nDictionaries || {};
 window.ZyrexI18nDictionaries["ko"] = {
+/* coming-soon copy: /audio and /scenepacks */
+        "IN PREPARATION": "준비 중",
+        "Audios are being prepared.": "오디오를 준비하고 있습니다.",
+        "Scenepacks are being prepared.": "씬팩을 준비하고 있습니다.",
+        "We are rebuilding the audio library so it opens with clean previews, instant search and direct downloads. It will be available again shortly.": "오디오 라이브러리를 깔끔한 미리듣기, 즉시 검색, 바로 다운로드로 다시 만들고 있습니다. 곧 다시 열립니다.",
+        "We are rebuilding the scenepack library so it opens with clean previews, instant filters and direct downloads. It will be available again shortly.": "씬팩 라이브러리를 깔끔한 미리보기, 즉시 필터, 바로 다운로드로 다시 만들고 있습니다. 곧 다시 열립니다.",
+        "Curated audio library": "엄선된 오디오 라이브러리",
+        "Curated scenepack library": "엄선된 씬팩 라이브러리",
+        "Instant previews": "즉시 미리듣기",
+        "Instant filters": "즉시 필터",
+        "Direct downloads": "바로 다운로드",
+        "Browse leaks": "유출 자료 보기",
+        "Join Discord": "Discord 참여",
+        "Need something in the meantime? Ask in our Discord — the community shares files there every day.": "그동안 필요한 게 있나요? Discord에서 물어보세요 — 커뮤니티가 매일 파일을 공유합니다.",
         "-- available": "--개 이용 가능",
         "— Add to Render Queue": "— 렌더링 대기열에 추가",
         "— Adobe Plugin": "— Adobe 플러그인",

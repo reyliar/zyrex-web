@@ -2,6 +2,20 @@
    Loaded on demand by /js/i18n.js; English is the source and the default. */
 window.ZyrexI18nDictionaries = window.ZyrexI18nDictionaries || {};
 window.ZyrexI18nDictionaries["zh"] = {
+/* coming-soon copy: /audio and /scenepacks */
+        "IN PREPARATION": "准备中",
+        "Audios are being prepared.": "音频正在准备中。",
+        "Scenepacks are being prepared.": "场景包正在准备中。",
+        "We are rebuilding the audio library so it opens with clean previews, instant search and direct downloads. It will be available again shortly.": "我们正在重建音频库，让它拥有更清晰的试听、即时搜索和直接下载。很快就会重新开放。",
+        "We are rebuilding the scenepack library so it opens with clean previews, instant filters and direct downloads. It will be available again shortly.": "我们正在重建场景包库，让它拥有更清晰的预览、即时筛选和直接下载。很快就会重新开放。",
+        "Curated audio library": "精选音频库",
+        "Curated scenepack library": "精选场景包库",
+        "Instant previews": "即时试听",
+        "Instant filters": "即时筛选",
+        "Direct downloads": "直接下载",
+        "Browse leaks": "浏览泄漏内容",
+        "Join Discord": "加入 Discord",
+        "Need something in the meantime? Ask in our Discord — the community shares files there every day.": "这段时间需要什么？到我们的 Discord 问问吧——社区每天都在那里分享文件。",
         "-- available": "-- 项可用",
         "— Add to Render Queue": "— 添加到渲染队列",
         "— Adobe Plugin": "— Adobe 插件",

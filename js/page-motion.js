@@ -46,6 +46,7 @@
                 // The requests board owns its own motion; a staggered intro must never be
                 // the reason its heading or cards are invisible on a slow device.
                 if (el.closest('.requests-page, .request-dashboard, .request-explorer, #requestsGrid')) continue;
+                if (el.closest('.coming-soon-page')) continue;
                 if (seen.indexOf(el) !== -1) continue;
                 // Skip blocks that start below the viewport: the scroll observer
                 // handles those, otherwise they would animate while invisible.
@@ -87,7 +88,8 @@
         // those cards here used to leave a rebuilt board hidden behind .zr-reveal on slow
         // devices, so the whole page is left to its own motion.
         if (document.querySelector('.requests-page, #requestsGrid')) return;
-
+        // The preparation notice is static and must never wait for a reveal.
+        if (document.querySelector('.coming-soon-page')) return;
         var candidates = document.querySelectorAll([
             'main section', '.section-padding', '.resource-card', '.stats-card', '.team-card',
             '.brand-showcase', '.about-intro-card', '.lp-sec', '.lp-card', '.lp-note',
