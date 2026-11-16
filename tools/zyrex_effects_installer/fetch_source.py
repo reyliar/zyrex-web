@@ -100,12 +100,32 @@ def unique_name(name: str, seen: set[str]) -> str:
     return candidate
 
 
+def describe_magic(data: bytes) -> str:
+    """Name what a mislabelled source file actually is, for the build log."""
+    if not data:
+        return "empty file"
+    head = data[:12]
+    if head[:4] == b"RIFX" and head[8:12] == b"Egg!":
+        return "After Effects project (.aep), not a preset"
+    if head[:4] == b"%PDF":
+        return "PDF document"
+    if head[:8] == b"\x89PNG\r\n\x1a\n":
+        return "PNG image"
+    if head[:4] in {b"\x00\x00\x00 ", b"\x00\x00\x00\x00"}:
+        return "zeroed/truncated data"
+    if head[:1] == b"{" or head[:1] == b"[":
+        return "JSON/text file"
+    if head[:4].isalpha():
+        return head[:4].decode("ascii", "replace") + " header"
+    return "unrecognised format"
+
+
 def write_source(output: Path, name: str, data: bytes, seen: set[str]) -> str:
     """Write one preset; returns a reason when the source file is unusable."""
     if len(data) < 12:
-        return f"{name} (only {len(data)} bytes)"
+        return f"{name} ({len(data)} bytes, empty)"
     if data[:4] != b"RIFX" or data[8:12] != b"FaFX":
-        return f"{name} (starts with {data[:4]!r})"
+        return f"{name} ({describe_magic(data)})"
     target = output.joinpath(*PurePosixPath(unique_name(name, seen)).parts)
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_bytes(data)
