@@ -17763,8 +17763,8 @@ export default {
 const LEAK_ANNOUNCE_CHANNEL_ID = "1521792240320516197";
 // Leak announcements ping this role so followers get a Discord notification.
 const LEAK_ANNOUNCE_ROLE_ID = "1519246268252029072";
-// Cherry red, matching the leak cards on the site.
-const LEAK_ANNOUNCE_EMBED_COLOR = 0xa80f2d;
+// Violet strip, matching the resource monitor card the channel uses.
+const LEAK_ANNOUNCE_EMBED_COLOR = 0x6c5ce7;
 
 function leakAnnounceRoleIds(env) {
   const raw = String((env && env.LEAK_ANNOUNCE_ROLE_ID) || LEAK_ANNOUNCE_ROLE_ID);
@@ -17783,6 +17783,122 @@ function leakAnnounceButtons(product, notice) {
   const postUrl = notice ? feedPostUrl(notice) : "";
   if (postUrl) buttons.push({ type: 2, style: 5, label: "View Post", url: postUrl });
   return buttons.length ? [{ type: 1, components: buttons }] : undefined;
+}
+
+// The Discord card mirrors the resource monitor layout: name, "Uploaded by", a 📦/📁/🏷
+// metadata block, the leak's own description, the pack image and the two buttons.
+const LEAK_ANNOUNCE_FOOTER = "© Zyrex™ Website 2026 · Resource Monitor";
+
+// The pack ships as an installer next to its watermarks and its presets live in the
+// backup prefix, so the count is taken from wherever the presets actually are.
+async function leakPackStats(env, product) {
+  const prefix = normalizeR2Prefix(product && product.file_path);
+  const bucket = env.STORAGE_PROD || env.STORAGE;
+  if (!prefix || !bucket) return { files: 0, size: "" };
+  const countPrefix = async (candidate) => {
+    let files = 0;
+    let bytes = 0;
+    let cursor;
+    for (let page = 0; page < 4; page++) {
+      const listing = await bucket.list({ prefix: candidate, limit: 1000, cursor });
+      for (const object of listing.objects || []) {
+        if (!isDownloadableR2Object(object, candidate)) continue;
+        // The installer wrapper and the watermark files are not pack contents.
+        if (/\.(exe|dmg)$/i.test(object.key)) continue;
+        files += 1;
+        bytes += Number(object.size) || 0;
+      }
+      if (!listing.truncated || !listing.cursor) break;
+      cursor = listing.cursor;
+    }
+    return { files, bytes };
+  };
+  try {
+    let stats = await countPrefix(`_source_ffx/${prefix}`);
+    if (!stats.files) stats = await countPrefix(prefix);
+    if (!stats.files) return { files: 0, size: "" };
+    return { files: stats.files, size: formatSizeR2(stats.bytes) };
+  } catch (_) {
+    return { files: 0, size: "" };
+  }
+}
+
+// Leak descriptions come from upload forms and shops, so they arrive with markup,
+// zero-width padding and hard line breaks.
+function leakAnnouncementDescription(product, limit = 700) {
+  const raw = String((product && (product.description || product.desc || product.notes)) || "");
+  if (!raw) return "";
+  const text = raw
+    .replace(/<\s*br\s*\/?\s*>/gi, "\n")
+    .replace(/<\/\s*(p|div|li)\s*>/gi, "\n")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/[\u200b-\u200f\u2060\ufeff]/g, "")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+  if (!text) return "";
+  return text.length > limit ? `${text.slice(0, limit - 1).trimEnd()}…` : text;
+}
+
+function buildLeakAnnouncementEmbed(product, notice, options) {
+  const opts = options || {};
+  const identity = opts.identity || {};
+  const counts = opts.counts || { likes: 0, views: 0, replies: 0 };
+  const stats = opts.stats || { files: 0, size: "" };
+  const uploaderId = String(opts.uploaderId || "");
+  const mentionable = /^\d{17,20}$/.test(uploaderId);
+  const anonymous = product.is_anonymous === true;
+  const thumbnail = absoluteMediaUrl(product.thumbnail || product.cdn_thumbnail || "");
+
+  const uploadedBy = anonymous
+    ? "**Uploaded by** Anonymous"
+    : `**Uploaded by** ${mentionable ? `<@${uploaderId}>` : (identity.handle ? `@${identity.handle}` : String(identity.name || "Zyrex member"))}`;
+  const description = leakAnnouncementDescription(product);
+  // Discord rejects an embed whose description is empty, so the block is assembled and
+  // trimmed as a whole.
+  const body = [uploadedBy, description].filter(Boolean).join("\n\n").slice(0, 4000);
+
+  const fields = [];
+  if (notice && notice.seq) fields.push({ name: "🆔 Resource ID", value: `#${notice.seq}`, inline: true });
+  if (stats.size) fields.push({ name: "📦 Size", value: stats.size, inline: true });
+  if (stats.files) fields.push({ name: "📁 Files", value: String(stats.files), inline: true });
+  const categoryLabels = Array.isArray(notice && notice.resource && notice.resource.category_labels) && notice.resource.category_labels.length
+    ? notice.resource.category_labels
+    : productCategoryLabels(product);
+  // "Preset" and "Others" say nothing when the platform is already listed, so the card
+  // shows the specific category the reference layout uses.
+  const generic = new Set(["Preset", "Others", "Project File"]);
+  const specific = categoryLabels.filter(label => !generic.has(label));
+  const shownCategories = specific.length ? specific : categoryLabels;
+  if (shownCategories.length) fields.push({ name: "🏷️ Category", value: shownCategories.join(" · ").slice(0, 1024), inline: false });
+  fields.push({ name: "👤 Uploader", value: anonymous ? "Anonymous" : String(identity.name || "Zyrex member").slice(0, 200), inline: false });
+  const productLink = String(product.product_url || product.source_url || "").trim();
+  const leakUrl = leakPublicUrl(product);
+  if (/^https?:\/\//i.test(productLink)) fields.push({ name: "🔗 Product", value: `[Product Link](${productLink})`, inline: false });
+  else if (leakUrl) fields.push({ name: "🔗 Product", value: `[Open on Zyrex](${leakUrl})`, inline: false });
+  // The counters keep being patched in place when members like, view or reply.
+  fields.push(
+    { name: "❤️ Likes", value: String(counts.likes || 0), inline: true },
+    { name: "👁️ Views", value: String(counts.views || 0), inline: true },
+    { name: "💬 Replies", value: String(counts.replies || 0), inline: true },
+  );
+
+  return {
+    title: String(product.name || "New leak").slice(0, 256),
+    description: body,
+    color: LEAK_ANNOUNCE_EMBED_COLOR,
+    ...(leakUrl ? { url: leakUrl } : {}),
+    ...(thumbnail ? { thumbnail: { url: thumbnail }, image: { url: thumbnail } } : {}),
+    fields,
+    footer: { text: LEAK_ANNOUNCE_FOOTER },
+    timestamp: String(notice && notice.created_at ? notice.created_at : new Date().toISOString()),
+  };
 }
 
 // The announcement is a normal feed item: the official profile posts it, so it carries
@@ -17868,15 +17984,17 @@ async function discordUploaderIdentity(env, userId, fallback) {
   }
 }
 
-// Uploads are announced as an embed: the leak image sits inside it, the embed header is
-// the uploader's Discord profile and the sentence tags their account. Outside the embed
-// the message only carries the role ping. Returns true when the channel got a message.
+// Uploads are announced as an embed shaped like the resource monitor card: the leak name
+// on top, "Uploaded by", a size/files/category block, the leak's own description, the
+// pack image and the View Leak / View Post buttons. Outside the embed the message only
+// carries the role ping. Returns true when the channel got a message.
 async function postLeakAnnouncement(env, product) {
   const token = getSiteLogBotToken(env);
   if (!token || !product || !String(product.id || "")) return false;
   const notice = await buildLeakAnnouncementNotice(env, product);
   const channelId = String(env.LEAK_ANNOUNCE_CHANNEL_ID || LEAK_ANNOUNCE_CHANNEL_ID);
   const counts = await readFeedPostCounts(env, notice).catch(() => ({ likes: 0, views: 0, replies: 0 }));
+  const stats = await leakPackStats(env, product);
   const components = leakAnnounceButtons(product, notice);
   const roleIds = leakAnnounceRoleIds(env);
   const uploader = notice.uploader || {};
@@ -17884,28 +18002,7 @@ async function postLeakAnnouncement(env, product) {
   const isDiscordId = /^\d{17,20}$/.test(uploaderId);
   const identity = await discordUploaderIdentity(env, uploaderId, uploader);
 
-  const embed = buildFeedPostEmbed(notice, counts);
-  embed.color = LEAK_ANNOUNCE_EMBED_COLOR;
-  // The categories tell people where the leak lives before they open it.
-  const categoryLabels = Array.isArray(notice.resource && notice.resource.category_labels) && notice.resource.category_labels.length
-    ? notice.resource.category_labels
-    : productCategoryLabels(product);
-  if (categoryLabels.length) {
-    embed.fields = [{ name: "📂 Categories", value: categoryLabels.join(" · ").slice(0, 1024), inline: false }, ...(embed.fields || [])];
-  }
-  const profileUrl = absoluteMediaUrl(identity.url);
-  const avatarUrl = absoluteMediaUrl(identity.avatar);
-  if (identity.name || avatarUrl) {
-    embed.author = {
-      name: String(identity.name || "Zyrex member").slice(0, 100),
-      ...(profileUrl ? { url: profileUrl } : {}),
-      ...(avatarUrl ? { icon_url: avatarUrl } : {}),
-    };
-  }
-  // A real Discord tag replaces the plain "@handle" the timeline shows.
-  embed.description = isDiscordId
-    ? `<@${uploaderId}> uploaded a new leak!`
-    : `${identity.handle ? `@${identity.handle}` : identity.name || "A member"} uploaded a new leak!`;
+  const embed = buildLeakAnnouncementEmbed(product, notice, { identity, counts, stats, uploaderId });
 
   const payload = {
     embeds: [embed],
@@ -26437,22 +26534,20 @@ async function announceProductToDiscord(env, product) {
           const uploader = (preview && preview.uploader) || {};
           const uploaderId = String(uploader.id || "").trim();
           const identity = await discordUploaderIdentity(env, uploaderId, uploader);
+          // The preview returns the exact embed the channel would receive, so the card
+          // can be checked (or rendered by a tool) before anything is posted.
+          const previewCounts = await readFeedPostCounts(env, preview || {}).catch(() => ({ likes: 0, views: 0, replies: 0 }));
+          const previewStats = await leakPackStats(env, product);
+          const embed = buildLeakAnnouncementEmbed(product, preview || {}, { identity, counts: previewCounts, stats: previewStats, uploaderId });
           return json({
             success: true,
             dry_run: true,
             product_id: String(product.id),
             name: String(product.name || ""),
-            embed_author: {
-              name: identity.name,
-              handle: identity.handle,
-              avatar: identity.avatar,
-              is_admin: ADMIN_IDS.includes(uploaderId),
-            },
-            description: /^\d{17,20}$/.test(uploaderId)
-              ? `<@${uploaderId}> uploaded a new leak!`
-              : `${identity.handle ? `@${identity.handle}` : identity.name || "A member"} uploaded a new leak!`,
-            categories: ((preview && preview.resource && preview.resource.category_labels) || productCategoryLabels(product)).join(" · "),
+            embed,
+            components: leakAnnounceButtons(product, preview) || [],
             content: leakAnnounceRoleIds(env).map(id => `<@&${id}>`).join(" "),
+            stats: previewStats,
           }, 200, { "Cache-Control": "no-store" });
         }
         const announced = await postLeakAnnouncement(env, product).catch(error => {
