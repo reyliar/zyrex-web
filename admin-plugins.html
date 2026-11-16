@@ -97,7 +97,7 @@
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="dns-prefetch" href="https://cdn.fontshare.com">
     <link rel="stylesheet" href="/css/i18n.css?v=3">
-    <script src="/js/i18n.js?v=15" defer></script>
+    <script src="/js/i18n.js?v=20" defer></script>
 </head>
 <body>
     <div class="zr-sweep" aria-hidden="true"></div>
@@ -122,15 +122,15 @@
 
     <section class="panel is-active" id="panel-products">
         <div class="stats">
-            <div class="stat"><span>Products</span><strong id="statTotal">â€”</strong></div>
-            <div class="stat"><span>Edited</span><strong id="statEdited">â€”</strong></div>
-            <div class="stat"><span>Hidden / deleted</span><strong id="statHidden">â€”</strong></div>
-            <div class="stat"><span>No download link</span><strong id="statNoLink">â€”</strong></div>
-            <div class="stat"><span>Catalogue version</span><strong id="statVersion">â€”</strong></div>
+            <div class="stat"><span>Products</span><strong id="statTotal">—</strong></div>
+            <div class="stat"><span>Edited</span><strong id="statEdited">—</strong></div>
+            <div class="stat"><span>Hidden / deleted</span><strong id="statHidden">—</strong></div>
+            <div class="stat"><span>No download link</span><strong id="statNoLink">—</strong></div>
+            <div class="stat"><span>Catalogue version</span><strong id="statVersion">—</strong></div>
         </div>
         <div class="card">
             <div class="toolbar">
-                <input type="search" id="q" placeholder="Search name, id, categoryâ€¦" style="flex:1;min-width:220px">
+                <input type="search" id="q" placeholder="Search name, id, category…" style="flex:1;min-width:220px">
                 <select id="filterCategory"><option value="">All categories</option></select>
                 <select id="filterState">
                     <option value="">All states</option>
@@ -154,7 +154,7 @@
                         </tr>
                     </thead>
                     <tbody id="rows">
-                        <tr><td colspan="6" class="empty">Loading catalogueâ€¦</td></tr>
+                        <tr><td colspan="6" class="empty">Loading catalogue…</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -170,7 +170,7 @@
             <div class="tableWrap">
                 <table>
                     <thead><tr><th>When</th><th>Actor</th><th>Product</th><th>Action</th><th>Fields</th></tr></thead>
-                    <tbody id="auditRows"><tr><td colspan="5" class="empty">Loadingâ€¦</td></tr></tbody>
+                    <tbody id="auditRows"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
                 </table>
             </div>
         </div>
@@ -292,7 +292,7 @@
         openEntry: null
     };
 
-    // â”€â”€ data â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── data ────────────────────────────────────────────────────────────────
     function bundlePlugins() {
         return Array.isArray(window.pluginsData) ? window.pluginsData : [];
     }
@@ -341,7 +341,7 @@
     }
 
     function loadAll() {
-        $('rows').innerHTML = '<tr><td colspan="6" class="empty">Loading catalogueâ€¦</td></tr>';
+        $('rows').innerHTML = '<tr><td colspan="6" class="empty">Loading catalogue…</td></tr>';
         return Promise.all([
             fetch('/api/products', { credentials: 'include' }).then(function (r) { return r.ok ? r.json() : []; }).catch(function () { return []; }),
             api('/api/admin/products')
@@ -429,7 +429,7 @@
             return '<tr>' +
                 '<td><span class="name">' + esc(product.name || product.title || '(untitled)') + '</span>' +
                 '<span class="sub">' + esc(row.id) + '</span></td>' +
-                '<td><span class="chip">' + esc(product.category || 'â€”') + '</span>' +
+                '<td><span class="chip">' + esc(product.category || '—') + '</span>' +
                 (product.platform ? '<span class="chip">' + esc(product.platform) + '</span>' : '') + '</td>' +
                 '<td>' + (firstLink
                     ? '<a href="' + esc(firstLink.url) + '" target="_blank" rel="noopener" style="color:rgba(var(--zr-rgb-255-128-152, 255, 128, 152), 1);font-size:.78rem">' + esc(firstLink.label || 'Download') + '</a>' +
@@ -445,14 +445,14 @@
         }).join('');
     }
 
-    // â”€â”€ drawer â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── drawer ──────────────────────────────────────────────────────────────
     function linkRow(link) {
         var row = document.createElement('div');
         row.className = 'link-row';
         var url = document.createElement('input');
         url.type = 'url';
         url.className = 'linkUrl';
-        url.placeholder = 'https://â€¦/file.zip';
+        url.placeholder = 'https://…/file.zip';
         url.value = (link && link.url) || '';
         var label = document.createElement('input');
         label.type = 'text';
@@ -475,8 +475,8 @@
         state.openId = id;
         state.openEntry = row.entry;
         $('drawerTitle').textContent = product.name || product.title || id;
-        $('drawerSub').textContent = id + (row.deleted ? ' â€” currently deleted' : row.hidden ? ' â€” currently hidden' : '') +
-            (row.source === 'bundle' ? ' â€” shipped in the static bundle' : row.source === 'catalogue' ? ' â€” stored in the catalogue' : ' â€” override only');
+        $('drawerSub').textContent = id + (row.deleted ? ' — currently deleted' : row.hidden ? ' — currently hidden' : '') +
+            (row.source === 'bundle' ? ' — shipped in the static bundle' : row.source === 'catalogue' ? ' — stored in the catalogue' : ' — override only');
         $('fId').value = id;
         $('fName').value = product.name || product.title || '';
         $('fLabel').value = product.label || '';
@@ -546,11 +546,11 @@
                 var entry = data && data.items ? data.items[id] : null;
                 var title = entry && entry.patch ? entry.patch.name || entry.patch.title : '';
                 if (entry && (entry.deleted || entry.hidden)) {
-                    return 'Saved â€” product is hidden from the site.';
+                    return 'Saved — product is hidden from the site.';
                 }
                 if (!expectedTitle) return 'Saved.';
                 if (String(title) === String(expectedTitle)) {
-                    return 'Saved â€” live on the site (v' + (data.version || 0) + ').';
+                    return 'Saved — live on the site (v' + (data.version || 0) + ').';
                 }
                 return 'Saved, but the public endpoint still reports a different title. Reload with a hard refresh.';
             })
@@ -564,7 +564,7 @@
         var patch = collectPatch();
         var button = $('saveBtn');
         button.disabled = true;
-        setStatus('Savingâ€¦');
+        setStatus('Saving…');
         api('/api/admin/products/' + encodeURIComponent(id), {
             method: 'PUT',
             body: {
@@ -582,7 +582,7 @@
             return loadAll();
         }).catch(function (error) {
             if (error.code === 'STALE') {
-                setStatus('Someone else saved this product in the meantime. Reloadingâ€¦', 'bad');
+                setStatus('Someone else saved this product in the meantime. Reloading…', 'bad');
                 return loadAll();
             }
             setStatus(error.message, 'bad');
@@ -595,11 +595,11 @@
         if (!state.openId) return;
         if (!window.confirm('Delete this product? It disappears from the whole site immediately.')) return;
         var id = state.openId;
-        setStatus('Deletingâ€¦');
+        setStatus('Deleting…');
         api('/api/admin/products/' + encodeURIComponent(id), { method: 'DELETE' })
             .then(function (data) {
                 if (window.ZyrexProductOverrides) window.ZyrexProductOverrides.reload();
-                setStatus(data.catalog_row_removed ? 'Deleted from the catalogue and hidden everywhere.' : 'Deleted â€” hidden everywhere.', 'ok');
+                setStatus(data.catalog_row_removed ? 'Deleted from the catalogue and hidden everywhere.' : 'Deleted — hidden everywhere.', 'ok');
                 toast('Product deleted');
                 return loadAll();
             })
@@ -620,9 +620,9 @@
             .catch(function (error) { toast(error.message, true); });
     }
 
-    // â”€â”€ audit â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── audit ───────────────────────────────────────────────────────────────
     function loadAudit() {
-        $('auditRows').innerHTML = '<tr><td colspan="5" class="empty">Loadingâ€¦</td></tr>';
+        $('auditRows').innerHTML = '<tr><td colspan="5" class="empty">Loading…</td></tr>';
         api('/api/admin/products/audit?limit=100').then(function (data) {
             var rows = data.items || [];
             if (!rows.length) {
@@ -632,10 +632,10 @@
             $('auditRows').innerHTML = rows.map(function (row) {
                 return '<tr>' +
                     '<td>' + esc(new Date(row.at).toLocaleString()) + '</td>' +
-                    '<td>' + esc(row.actor || 'â€”') + '</td>' +
-                    '<td>' + esc(row.id || 'â€”') + '</td>' +
+                    '<td>' + esc(row.actor || '—') + '</td>' +
+                    '<td>' + esc(row.id || '—') + '</td>' +
                     '<td><span class="chip ' + (row.action === 'delete' ? 'bad' : row.action === 'restore' ? 'ok' : 'edit') + '">' + esc(row.action || 'update') + '</span></td>' +
-                    '<td>' + esc((row.changed || []).join(', ') || 'â€”') + '</td>' +
+                    '<td>' + esc((row.changed || []).join(', ') || '—') + '</td>' +
                 '</tr>';
             }).join('');
         }).catch(function (error) {
@@ -643,16 +643,16 @@
         });
     }
 
-    // â”€â”€ verify diagnostics â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── verify diagnostics ──────────────────────────────────────────────────
     function runDiagnostics() {
         var userId = $('diagUser').value.trim();
-        $('diagOut').textContent = 'Runningâ€¦';
+        $('diagOut').textContent = 'Running…';
         api('/api/admin/diagnostics/verify' + (userId ? '?user_id=' + encodeURIComponent(userId) : ''))
             .then(function (data) { $('diagOut').textContent = JSON.stringify(data, null, 2); })
             .catch(function (error) { $('diagOut').textContent = 'Check failed: ' + error.message; });
     }
 
-    // â”€â”€ wiring â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+    // ── wiring ──────────────────────────────────────────────────────────────
     Array.prototype.forEach.call(document.querySelectorAll('[data-tab]'), function (tab) {
         tab.addEventListener('click', function () {
             Array.prototype.forEach.call(document.querySelectorAll('[data-tab]'), function (other) {

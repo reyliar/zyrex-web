@@ -514,7 +514,7 @@
     <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
     <link rel="dns-prefetch" href="https://cdn.fontshare.com">
     <link rel="stylesheet" href="/css/i18n.css?v=3">
-    <script src="/js/i18n.js?v=15" defer></script>
+    <script src="/js/i18n.js?v=20" defer></script>
 </head>
 <body>
     <div class="zr-sweep" aria-hidden="true"></div>
@@ -567,7 +567,7 @@
             </ol>
             <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">
                 <a href="https://discord.gg/4J3tars4QS" target="_blank" class="btn-discord-login"><i class="fab fa-discord"></i> Join Discord</a>
-                <button class="btn-cherry-sm" id="recheckBtn" onclick="recheckAccess()"><i class="fas fa-arrows-rotate"></i> Verified â€” Check Again</button>
+                <button class="btn-cherry-sm" id="recheckBtn" onclick="recheckAccess()"><i class="fas fa-arrows-rotate"></i> Verified — Check Again</button>
             </div>
         </div>
 
@@ -825,11 +825,11 @@
                     setTimeout(function() { location.reload(); }, 1200);
                 } else {
                     if (status) { status.className = 'verify-status not-verified'; status.innerHTML = '<i class="fas fa-circle-xmark"></i> Not verified yet'; }
-                    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-arrows-rotate"></i> Verified â€” Check Again'; }
+                    if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-arrows-rotate"></i> Verified — Check Again'; }
                 }
             } catch (e) {
                 if (status) { status.className = 'verify-status not-verified'; status.innerHTML = '<i class="fas fa-circle-xmark"></i> Connection error'; }
-                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-arrows-rotate"></i> Verified â€” Check Again'; }
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-arrows-rotate"></i> Verified — Check Again'; }
             }
         }
 
@@ -1058,7 +1058,7 @@
 
                     if (depth >= MAX_TREE_DEPTH) {
                         tHtml += '<div class="tree-truncated" style="padding-left: ' + (indent + 12) + 'px;color: var(--gray); font-size: 0.76rem">' +
-                            '<i class="fas fa-ellipsis"></i> ' + keys.length + ' more item(s) in ' + (node.name ? '"' + node.name + '"' : 'this folder') + ' hidden â€” the folder tree is nested too deeply to show' +
+                            '<i class="fas fa-ellipsis"></i> ' + keys.length + ' more item(s) in ' + (node.name ? '"' + node.name + '"' : 'this folder') + ' hidden — the folder tree is nested too deeply to show' +
                             '</div>';
                         return tHtml;
                     }
@@ -1329,7 +1329,7 @@
             var currentPreviewFile = selectedPreviewFile;
             
             panel.classList.add('active');
-            panel.querySelector('.fp-header span').textContent = 'File Preview â€” Selected';
+            panel.querySelector('.fp-header span').textContent = 'File Preview — Selected';
             panel.querySelector('.fp-name').textContent = filename;
             panel.querySelector('.fp-meta').innerHTML = '<span><i class="fas fa-hdd"></i> ' + size + '</span><span><i class="fas fa-tag"></i> ' + getFileTypeLabel(filename) + '</span>';
             
@@ -1494,7 +1494,7 @@
             }
         });
 
-        // Download count: directly from Bot VPS API â€” NO localStorage
+        // Download count: directly from Bot VPS API — NO localStorage
         function updateDownloadCount() {
             var el = document.getElementById('dlCount');
             if (!el || !product || !product.id) return;
@@ -1598,9 +1598,9 @@
                     }
                     const transferSpeed = speedMBps.toFixed(2) + ' MB/s';
                     if (total > 0) {
-                        updateProgress(Math.min(99, Math.round((received / total) * 100)), formatSize(received) + ' / ' + formatSize(total) + ' Â· ' + transferSpeed);
+                        updateProgress(Math.min(99, Math.round((received / total) * 100)), formatSize(received) + ' / ' + formatSize(total) + ' · ' + transferSpeed);
                     } else {
-                        updateProgress(0, formatSize(received) + ' received Â· ' + transferSpeed);
+                        updateProgress(0, formatSize(received) + ' received · ' + transferSpeed);
                     }
                     document.getElementById('progText').textContent = 'Downloading...';
                 }
