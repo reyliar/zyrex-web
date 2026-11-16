@@ -100,12 +100,25 @@ def unique_name(name: str, seen: set[str]) -> str:
     return candidate
 
 
-def write_source(output: Path, name: str, data: bytes, seen: set[str]) -> None:
-    if len(data) < 12 or data[:4] != b"RIFX" or data[8:12] != b"FaFX":
-        raise SystemExit(f"Invalid After Effects preset received: {name}")
+def write_source(output: Path, name: str, data: bytes, seen: set[str]) -> str:
+    """Write one preset; returns a reason when the source file is unusable."""
+    if len(data) < 12:
+        return f"{name} (only {len(data)} bytes)"
+    if data[:4] != b"RIFX" or data[8:12] != b"FaFX":
+        return f"{name} (starts with {data[:4]!r})"
     target = output.joinpath(*PurePosixPath(unique_name(name, seen)).parts)
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_bytes(data)
+    return ""
+
+
+def skip_unusable(skipped: list[str], preset_id: str) -> None:
+    if not skipped:
+        return
+    # One broken production file used to fail the whole leak, leaving it without an
+    # installer forever. The rest of the pack still ships, and the skips stay visible
+    # in the build log.
+    print(f"Skipped {len(skipped)} unusable source file(s) for {preset_id}: " + "; ".join(skipped[:8]))
 
 
 def main() -> None:
@@ -127,10 +140,17 @@ def main() -> None:
         # the bundle endpoint can never break a build.
         print(f"Source bundle unavailable ({error}); falling back to per-file download.")
 
+    skipped: list[str] = []
     if bundled:
         for name, data in bundled:
-            write_source(args.output, safe_relative_name(name), data, seen)
-        print(f"Downloaded {len(bundled)} FFX files for {args.preset_id} in one request.")
+            reason = write_source(args.output, safe_relative_name(name), data, seen)
+            if reason:
+                skipped.append(reason)
+        skip_unusable(skipped, args.preset_id)
+        written = len(bundled) - len(skipped)
+        if not written:
+            raise SystemExit(f"No usable FFX presets are available for {args.preset_id}.")
+        print(f"Downloaded {written} FFX files for {args.preset_id} in one request.")
         return
 
     try:
@@ -151,9 +171,15 @@ def main() -> None:
         except HTTPError as error:
             detail = error.read().decode("utf-8", "replace").strip().replace("\n", " ")[:400]
             raise SystemExit(f"FFX source download failed for {name}: HTTP {error.code} {detail}") from error
-        write_source(args.output, name, data, seen)
+        reason = write_source(args.output, name, data, seen)
+        if reason:
+            skipped.append(reason)
         time.sleep(FILE_PAUSE_SECONDS)
-    print(f"Downloaded {len(files)} FFX files for {args.preset_id}.")
+    skip_unusable(skipped, args.preset_id)
+    written = len(files) - len(skipped)
+    if not written:
+        raise SystemExit(f"No usable FFX presets are available for {args.preset_id}.")
+    print(f"Downloaded {written} FFX files for {args.preset_id}.")
 
 
 if __name__ == "__main__":
