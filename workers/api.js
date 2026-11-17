@@ -5462,12 +5462,12 @@ function crc32(data) {
 }
 
 // ── Per-download forensic tracing for .ffx presets and .txt resources ──────────
-// A reposter deletes the visible credit, because text a person can read they can
-// delete. So the downloader's id travels in two places that survive that edit: zero
-// width characters appended to the credited effect names, and a <zyrex:Trace> property
-// paid for out of the XMP packet's own padding so the packet keeps its exact byte
-// length. Only files that already carry the credit are touched, and every result is
-// verified before it ships - anything unexpected leaves the original bytes in place.
+// The downloader's Discord id, name and UTC time travel in a <zyrex:Trace> property paid
+// for out of the metadata packet's own padding, so the packet keeps its exact byte length
+// and the preset body is never touched. The body must stay untouched: After Effects draws
+// every display string it holds, and a hidden character there fails its text engine with
+// "Unable to draw string. GDI Status: GenericError" - the preset then applies nothing.
+// Every result is verified before it ships; anything unexpected leaves the bytes as stored.
 const TRACE_CREDIT = "zyrexediting.xyz";
 const TRACE_ZW_ALPHABET = ["\u200b", "\u200c", "\u200d", "\u2060"]; // 2 bits each
 const TRACE_ZW_LEAD = "\u2062";   // invisible times: opens a mark
@@ -5633,102 +5633,8 @@ function traceUtf8TextOf(bytes, node) {
   return { text: traceTextDecoder().decode(slice) };
 }
 
-function traceWriteHeader(target, at, id, size) {
-  target[at] = id.charCodeAt(0);
-  target[at + 1] = id.charCodeAt(1);
-  target[at + 2] = id.charCodeAt(2);
-  target[at + 3] = id.charCodeAt(3);
-  target[at + 4] = (size >>> 24) & 0xff;
-  target[at + 5] = (size >>> 16) & 0xff;
-  target[at + 6] = (size >>> 8) & 0xff;
-  target[at + 7] = size & 0xff;
-}
-
-// `targetSize` is the size the chunk had before plus whatever the new text added, so any
-// slack the original carried is preserved and only the text itself changes.
-function traceBuildUtf8(text, targetSize) {
-  const textBytes = traceTextEncoder().encode(text);
-  const base = 8 + textBytes.length;
-  let size = base % 2 ? base + 1 : base;
-  if (targetSize && targetSize > size && targetSize - size <= 1024) size = targetSize;
-  if (size % 2) size += 1;
-  const payload = new Uint8Array(size);
-  payload[0] = 85; payload[1] = 116; payload[2] = 102; payload[3] = 56; // 'Utf8'
-  const n = textBytes.length;
-  payload[4] = (n >>> 24) & 0xff;
-  payload[5] = (n >>> 16) & 0xff;
-  payload[6] = (n >>> 8) & 0xff;
-  payload[7] = n & 0xff;
-  payload.set(textBytes, 8);
-  return payload;
-}
-
-function traceSerialize(nodes, bytes, replace) {
-  const parts = [];
-  let total = 0;
-  for (const node of nodes) {
-    if (node.gap) { parts.push(node.bytes); total += node.bytes.length; continue; }
-    let piece;
-    if (node.isList) {
-      const inner = traceSerialize(node.children, bytes, replace);
-      piece = new Uint8Array(12 + inner.length);
-      traceWriteHeader(piece, 0, node.id, 4 + inner.length);
-      // The list type sits after the size field, at offset 8, not offset 4.
-      piece[8] = node.listType.charCodeAt(0);
-      piece[9] = node.listType.charCodeAt(1);
-      piece[10] = node.listType.charCodeAt(2);
-      piece[11] = node.listType.charCodeAt(3);
-      piece.set(inner, 12);
-    } else {
-      let payload = replace(node);
-      if (!payload) payload = bytes.subarray(node.payloadStart, node.chunkEnd);
-      piece = new Uint8Array(8 + payload.length);
-      traceWriteHeader(piece, 0, node.id, payload.length);
-      piece.set(payload, 8);
-    }
-    parts.push(piece);
-    total += piece.length;
-  }
-  const out = new Uint8Array(total);
-  let at = 0;
-  for (const part of parts) { out.set(part, at); at += part.length; }
-  return out;
-}
-
-// Re-attaches the RIFX header to a serialized child list: [0..4 'RIFX'][4..8 size]
-// [8..12 form][12.. children].
-function traceWrapContainer(children, source) {
-  const out = new Uint8Array(12 + children.length);
-  traceWriteHeader(out, 0, "RIFX", 4 + children.length);
-  out[8] = source[8]; out[9] = source[9]; out[10] = source[10]; out[11] = source[11];
-  out.set(children, 12);
-  return out;
-}
-
-// Maps every display text through `mapFn` and rebuilds the container. Only chunks the
-// mapper changes are rewritten, so everything else stays byte-identical.
-function traceRewriteTexts(bytes, mapFn) {
-  if (!traceIsFfx(bytes)) return null;
-  const declaredEnd = Math.min(bytes.length, 8 + traceU32(bytes, 4));
-  if (declaredEnd !== bytes.length) return null;
-  let changed = 0;
-  let growth = 0;
-  const replace = (node) => {
-    const info = traceUtf8TextOf(bytes, node);
-    if (!info) return null;
-    const next = mapFn(info.text, node);
-    if (next === null || next === undefined || next === info.text) return null;
-    changed++;
-    const delta = traceTextEncoder().encode(next).length - traceTextEncoder().encode(info.text).length;
-    const payload = traceBuildUtf8(next, node.size + delta);
-    growth += payload.length - node.size;
-    return payload;
-  };
-  const rebuilt = traceSerialize(traceChildrenOf(bytes), bytes, replace);
-  if (!changed) return null;
-  return { bytes: traceWrapContainer(rebuilt, bytes), changed, growth };
-}
-
+// After Effects renders every display string the preset carries, so the body is never
+// rewritten: only the metadata packet after it is edited.
 function traceXmpText(tail) {
   if (!tail.length) return null;
   const text = traceTextDecoder().decode(tail);
@@ -5757,9 +5663,18 @@ function traceFindMark(bytes) {
 // place; the trace is paid for out of that block.
 function traceMarkXmp(tail, discordId, username = "", downloadedAt = "") {
   if (!tail.length) return null;
-  if (traceXmpText(tail)) return null;               // already carries a trace
-  const text = traceTextDecoder().decode(tail);
+  let text = traceTextDecoder().decode(tail);
   if (!text.startsWith("<?xpacket")) return null;
+  // A preset downloaded before may already carry a block. Blank it back into padding so the
+  // current member's trace can take its place instead of stacking a second element.
+  if (traceXmpText(tail)) {
+    const at = text.indexOf("<" + TRACE_XMP_TAG);
+    const openEnd = text.indexOf(">", at);
+    const closeEnd = openEnd < 0 ? -1 : text.indexOf("</" + TRACE_XMP_TAG + ">", openEnd);
+    if (at < 0 || closeEnd < 0) return null;
+    const end = closeEnd + ("</" + TRACE_XMP_TAG + ">").length;
+    text = text.slice(0, at) + " ".repeat(end - at) + text.slice(end);
+  }
   const endAt = text.lastIndexOf(TRACE_XMP_END);
   if (endAt < 0) return null;
   let padStart = endAt;
@@ -5772,8 +5687,9 @@ function traceMarkXmp(tail, discordId, username = "", downloadedAt = "") {
   const accountId = String(discordId).replace(/[^0-9]/g, "");
   const accountName = String(username || "").trim().slice(0, 64);
   // Both values are written in the clear: whoever opens the preset can read the Discord
-  // account and the download time without a decoder. The identity still also travels in
-  // the zero-width marks on the credited names, so deleting this block does not hide it.
+  // account and the download time without a decoder. Nothing else in the preset is
+  // touched, because After Effects renders every display name and a hidden character in
+  // one of them makes its text engine fail.
   const openTag = "<" + TRACE_XMP_TAG + ' xmlns:zyrex="' + TRACE_XMP_NS + '">';
   const closeTag = "</" + TRACE_XMP_TAG + ">";
   const idElement = "<zyrex:Id>" + accountId + "</zyrex:Id>";
@@ -5797,20 +5713,6 @@ function traceMarkXmp(tail, discordId, username = "", downloadedAt = "") {
   return encoded;
 }
 
-function traceShapeOf(bytes) {
-  const parts = [];
-  const walk = (nodes) => {
-    for (const node of nodes) {
-      if (node.gap) { parts.push("GAP:" + node.bytes.length); continue; }
-      parts.push(node.id + ":" + node.size);
-      if (node.isList) walk(node.children);
-    }
-  };
-  parts.push("RIFX:" + traceU32(bytes, 4));
-  walk(traceChildrenOf(bytes));
-  return parts.join("|");
-}
-
 function traceCollectTexts(bytes) {
   const out = [];
   const walk = (nodes) => {
@@ -5825,86 +5727,50 @@ function traceCollectTexts(bytes) {
   return out;
 }
 
-// Everything that must hold before a rebuilt preset may be shipped.
-function traceVerify(original, rebuilt, expected) {
+const TRACE_HIDDEN = /[\u200b\u200c\u200d\u2060\u2062\u2064]/;
+
+// Everything that must hold before a traced preset may be shipped. The preset body must come
+// through byte for byte: After Effects renders the display strings it holds, and an invisible
+// character in one of them fails its text engine ("Unable to draw string. GDI Status:
+// GenericError"), after which the preset applies nothing at all.
+function traceVerify(original, rebuilt) {
   const problems = [];
   if (!traceIsFfx(rebuilt)) problems.push("not RIFX/FaFX");
   const before = traceSplitFfx(original);
   const after = traceSplitFfx(rebuilt);
   if (!before || !after) return problems.concat("does not split cleanly");
   if (after.tail.length !== before.tail.length) problems.push("the XMP packet changed size");
-  if (expected && expected.growth !== undefined) {
-    const grew = rebuilt.length - original.length;
-    // The only thing allowed to change the file's size is the text we rewrote.
-    if (grew !== expected.growth) problems.push("grew by " + grew + " but only the text changed (" + expected.growth + ")");
-  }
-  const beforeTexts = traceCollectTexts(before.container);
-  const afterTexts = traceCollectTexts(after.container);
-  if (afterTexts.length !== beforeTexts.length) {
-    problems.push("text chunk count changed");
+  if (after.container.length !== before.container.length) {
+    problems.push("the preset body changed size");
   } else {
-    let marks = 0;
-    for (let i = 0; i < beforeTexts.length; i++) {
-      if (afterTexts[i].indexOf(beforeTexts[i]) !== 0) problems.push("a text no longer starts with the original");
-      if (afterTexts[i].indexOf(TRACE_ZW_LEAD) >= 0) marks++;
-    }
-    if (expected && expected.nameMarks !== undefined && marks !== expected.nameMarks) {
-      problems.push("marks " + marks + " != " + expected.nameMarks);
+    for (let i = 0; i < before.container.length; i++) {
+      if (before.container[i] !== after.container[i]) { problems.push("a preset byte changed"); break; }
     }
   }
-  const beforeShape = traceShapeOf(before.container).split("|");
-  const afterShape = traceShapeOf(after.container).split("|");
-  if (beforeShape.length !== afterShape.length) {
-    problems.push("chunk count changed");
-  } else {
-    for (let j = 0; j < beforeShape.length; j++) {
-      if (beforeShape[j] === afterShape[j]) continue;
-      const id = beforeShape[j].split(":")[0];
-      if (id === "tdsn" || id === "fnam" || id === "LIST" || id === "RIFX") continue;
-      problems.push("unexpected structural change: " + beforeShape[j] + " -> " + afterShape[j]);
-    }
+  for (const text of traceCollectTexts(after.container)) {
+    if (TRACE_HIDDEN.test(text)) { problems.push("a display name carries a hidden character"); break; }
   }
+  if (!traceXmpText(after.tail)) problems.push("the metadata packet carries no trace");
   return problems;
 }
 
-// Marks every display string the credit tool already credited, plus the metadata packet.
+// Stamps the metadata packet only. The preset body is copied unchanged so After Effects reads
+// exactly the file the creator made, and the account, name and UTC time stay readable in the
+// packet itself - text a reposter cannot delete without also destroying the metadata.
 function traceWatermarkFfx(bytes, discordId, username = "", downloadedAt = "") {
   const parts = traceSplitFfx(bytes);
-  if (!parts) return null;
-  const mark = traceEncodeMark(discordId);
+  if (!parts || !parts.tail.length) return null;
   const markedTail = traceMarkXmp(parts.tail, discordId, username, downloadedAt);
-  if (parts.tail.length && !markedTail) return null;   // trailing data we do not recognise
-  // A file installed by an older build already carries marks on its names; those stay and
-  // only the metadata block is refreshed, so count them as part of the expected total.
-  const existingMarks = traceCollectTexts(parts.container).filter(text => text.indexOf(TRACE_ZW_LEAD) >= 0).length;
-  const nameResult = traceRewriteTexts(parts.container, (text) => {
-    if (text.indexOf(TRACE_CREDIT) < 0) return null;
-    if (text.indexOf(TRACE_ZW_LEAD) >= 0) return null;   // already marked
-    return text + mark;
-  });
-  if (!nameResult && !markedTail) return null;   // nothing in the file can carry a trace
-  // A preset that stores only effect match names ("ADBE Gaussian Blur 2") has no display
-  // string to put a credit in, but its metadata packet still carries the trace, so it is
-  // protected even though it cannot be visibly branded.
-  const container = nameResult ? nameResult.bytes : parts.container;
-  const tail = markedTail || parts.tail;
-  const out = new Uint8Array(container.length + tail.length);
-  out.set(container, 0);
-  out.set(tail, container.length);
-  const problems = traceVerify(bytes, out, {
-    nameMarks: existingMarks + (nameResult ? nameResult.changed : 0),
-    growth: nameResult ? nameResult.growth : 0,
-  });
+  if (!markedTail) return null;
+  const out = new Uint8Array(parts.container.length + markedTail.length);
+  out.set(parts.container, 0);
+  out.set(markedTail, parts.container.length);
+  const problems = traceVerify(bytes, out);
   if (problems.length) {
     console.warn("FFX trace rejected:", problems.slice(0, 3).join("; "));
     return null;
   }
-  return {
-    bytes: out,
-    nameMarks: nameResult ? nameResult.changed : 0,
-    xmpMarked: Boolean(markedTail),
-    growth: nameResult ? nameResult.growth : 0,
-  };
+  return { bytes: out, xmpMarked: true, growth: 0 };
 }
 
 function traceContainsBytes(haystack, needle) {

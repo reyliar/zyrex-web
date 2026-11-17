@@ -18,13 +18,24 @@ def render_html() -> str:
     return resource("ui.html").read_text(encoding="utf-8").replace("__ZYREX_LOGO__", data_uri("content.png", "image/png"))
 
 LEGACY_TRACE_MARKER = b'encoding="base64url-utf8"'
+# A build before v1.0.1 hid the account in zero-width characters inside the effect names.
+# After Effects renders those names, so such a preset loads but applies nothing; a reinstall
+# has to replace it rather than skip it.
+BROKEN_TRACE_MARKERS = (
+    b"\xe2\x80\x8b", b"\xe2\x80\x8c", b"\xe2\x80\x8d", b"\xe2\x81\xa0", b"\xe2\x81\xa2", b"\xe2\x81\xa4",
+)
+
+def needs_repair(data: bytes) -> bool:
+    if LEGACY_TRACE_MARKER in data:
+        return True
+    return any(marker in data for marker in BROKEN_TRACE_MARKERS)
 
 def strip_legacy_trace(data: bytes) -> bytes | None:
-    """Blank the old encoded trace block so the Worker can write the readable one.
+    """Blank the old encoded trace block so a fresh one can take its place.
 
-    Older builds stored the account as a hex token and a base64 username. The block sits in
-    the metadata packet at the end of the file and is replaced by spaces, which keeps the
-    byte length identical and turns the removed bytes into usable padding.
+    Builds before v1.0.1 stored the account as a hex token and a base64 username. The block
+    sits in the metadata packet at the end of the file and is replaced by spaces, which keeps
+    the byte length identical and turns the removed bytes into usable padding.
     """
     start = data.rfind(b"<zyrex:Trace")
     if start < 0 or start < len(data) - 8192:
@@ -523,8 +534,9 @@ class InstallerAPI:
                 target = folder.joinpath(*[safe_part(part, "Preset.ffx") for part in relative.parts])
                 raw = archive.read(archived_name)
                 if target.is_file():
-                    # A preset installed by an older build still carries the encoded trace
-                    # block; strip it so this install can write the readable one.
+                    # A preset written by an older build carries the retired trace forms and
+                    # After Effects refuses to apply it, so those are rebuilt from the clean
+                    # bytes inside this installer instead of being skipped.
                     try:
                         existing = target.read_bytes()
                     except OSError as read_error:
@@ -532,16 +544,10 @@ class InstallerAPI:
                         first_error = first_error or f"{relative.name}: {read_error.strerror or read_error}"
                         self.progress["done"] += 1
                         continue
-                    if LEGACY_TRACE_MARKER not in existing:
+                    if not needs_repair(existing):
                         skipped += 1
                         self.progress["done"] += 1
                         continue
-                    stripped = strip_legacy_trace(existing)
-                    if stripped is None:
-                        skipped += 1
-                        self.progress["done"] += 1
-                        continue
-                    raw = stripped
                     refreshed += 1
                 # The Worker stamps the Discord account and UTC download time into the
                 # preset's own metadata packet, so no sidecar receipt file is written.
@@ -643,13 +649,17 @@ def main():
         html = render_html()
         assert "__ZYREX_LOGO__" not in html and "data:image/png;base64," in html
         assert "__OUTFIT_FONT_DATA__" not in html
-        # The legacy trace block must blank cleanly while keeping the preset's byte length.
+        # A preset written by an older build must be recognised as broken, because After
+        # Effects refuses to apply the hidden characters it carries.
         sample = (b'<rdf:Description><zyrex:Trace xmlns:zyrex="x">1-13b908f6a3c41014-9</zyrex:Trace>'
                   b'<zyrex:Username encoding="base64url-utf8">cmV5bGlhcg</zyrex:Username>'
                   b'<zyrex:DownloadedAt>2026-11-14T17:20:47.580Z</zyrex:DownloadedAt></rdf:Description>' + b" " * 256)
         blanked = strip_legacy_trace(sample)
         assert blanked is not None and len(blanked) == len(sample)
         assert b"<zyrex:Trace" not in blanked and b"</zyrex:DownloadedAt>" not in blanked
+        assert needs_repair(sample) is True
+        assert needs_repair("zyrexediting.xyz \u2022 Exposure\u2062\u200b".encode("utf-8")) is True
+        assert needs_repair("zyrexediting.xyz \u2022 Exposure".encode("utf-8")) is False
         import webview
         assert hasattr(webview, "create_window") and hasattr(webview, "start")
         assert callable(getattr(api, "choose_destination", None)) and callable(getattr(api, "exit_app", None))
