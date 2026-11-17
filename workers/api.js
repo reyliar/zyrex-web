@@ -8526,11 +8526,21 @@ async function mirrorSocialAvatar(env, value, platform, handle, { force = false 
 
 // Creator studio needs more than a label: the bio text and the links inside it decide
 // which store belongs to the creator, so Scrapin answers those directly.
+// Creator bios often print the link without a scheme ("guns.lol/name", "linktr.ee/name"), so
+// the known hosts are also matched bare before the text is scanned for real URLs.
+const CREATOR_BARE_LINK = /(?<![\w.\/-])((?:(?:www\.)?(?:linktr\.ee|guns\.lol|bio\.link|beacons\.ai|carrd\.co|bento\.me|lit\.link|lnk\.bio|solo\.to|taplink\.cc|koji\.to|allmylinks\.com|hoo\.be|snipfeed\.co|linkin\.bio|campsite\.bio|payhip\.com|boosty\.to|patreon\.com|gumroad\.com|ko-fi\.com|sellfy\.com))\/[A-Za-z0-9._~\-/%]+)/gi;
+
 function scrapinLinksFromText(text) {
   const found = [];
+  const source = String(text || "");
+  for (const match of source.matchAll(CREATOR_BARE_LINK)) {
+    const link = `https://${match[1]}`.replace(/[.,]+$/, "");
+    if (!found.includes(link)) found.push(link);
+    if (found.length >= 12) break;
+  }
   const pattern = /https?:\/\/[^\s"'<>()]+/gi;
   let match;
-  while ((match = pattern.exec(String(text || ""))) !== null) {
+  while ((match = pattern.exec(source)) !== null) {
     const link = match[0].replace(/[.,)]+$/, "");
     if (!found.includes(link)) found.push(link);
     if (found.length >= 12) break;

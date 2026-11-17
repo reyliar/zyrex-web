@@ -2610,7 +2610,9 @@
             statusEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <div><h4>Scanning Store Products</h4><p>Fetching catalog from ' + storeUrl + '</p></div>';
 
             try {
-                var r = await fetch('/api/scan-creator-links?url=' + encodeURIComponent(storeUrl));
+                // The store is re-read on demand so a catalogue the member just updated is not
+                // answered from the cached empty scan.
+                var r = await fetch('/api/scan-creator-links?nocache=1&url=' + encodeURIComponent(storeUrl));
                 var scanData = await r.json();
                 if (scanData && scanData.products && scanData.products.length > 0) {
                     setWizStep(3);
