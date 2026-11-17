@@ -5,7 +5,7 @@ from pathlib import Path
 from Crypto.Cipher import AES
 
 SITE = "https://zyrexediting.xyz"
-VERSION = "v1.0.0"
+VERSION = "v1.0.1"
 
 def resource(name: str) -> Path:
     root = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
