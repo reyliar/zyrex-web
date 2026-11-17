@@ -27,6 +27,9 @@ EXCLUDED_MODULES = (
     "PIL", "numpy", "pytest", "IPython", "cryptography",
     "setuptools", "_distutils_hack", "pkg_resources",
 )
+# certifi is intentionally NOT excluded: its CA bundle is shipped as cacert.pem so the
+# frozen app can verify HTTPS (macOS had no trust store and every request failed).
+REQUIRED_MODULES = ("certifi",)
 
 
 def get_payload_key(product_id: str, release_id: str) -> bytes:
@@ -95,6 +98,14 @@ def build(product_id: str, source: Path, output_root: Path, release_id: str) -> 
         stage, work = temp / "dist", temp / "work"
         stage.mkdir()
         work.mkdir()
+        # A frozen macOS build has no OpenSSL trust store, so every request failed with
+        # CERTIFICATE_VERIFY_FAILED. The CA bundle ships inside the app instead.
+        ca_bundle = temp / "cacert.pem"
+        try:
+            import certifi
+            ca_bundle.write_bytes(Path(certifi.where()).read_bytes())
+        except Exception as error:
+            raise RuntimeError("certifi is required so the bundled app can verify HTTPS.") from error
         data_sep = ";" if system == "windows" else ":"
         args = [
             sys.executable, "-m", "PyInstaller", "--noconfirm", "--clean",
@@ -104,6 +115,7 @@ def build(product_id: str, source: Path, output_root: Path, release_id: str) -> 
             "--icon", str(icon_path),
             "--add-data", f"{PROJECT / 'ui.html'}{data_sep}.",
             "--add-data", f"{PROJECT / 'content.png'}{data_sep}.",
+            "--add-data", f"{ca_bundle}{data_sep}.",
         ]
         # Keep the bundle small: the UI inlines its own assets and only urllib,
         # tkinter-free pywebview, and the AES-GCM backend of pycryptodome are

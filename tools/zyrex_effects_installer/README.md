@@ -12,7 +12,7 @@ The release folder contains exactly three entries:
 - `macOS/<Leak name>/`: `<Leak name>.dmg`
 - Both platform folders include `Leaked by Zyrex.txt` and `Visit for more resources.url`.
 
-The app is version `v1.0.0`; its icon is generated from `content.png`. Its detected After Effects destination is clickable; after install, the primary button turns into a green **Exit** button that closes the app, and the notification shows the exact preset folder. Destination detection uses the real Windows Documents folder (so OneDrive-redirected and non-English installs work) and creates `User Presets` when After Effects exists but never saved one. When no folder can be found the primary button becomes **Choose After Effects folder** and opens the native folder picker: an `After Effects <year>` folder is mapped to its `User Presets`, and a folder inside the After Effects installation (`Program Files`) is refused with the correct path instead of failing later. The chosen path is stored in `%LOCALAPPDATA%\Zyrex\installer.json` (`~/Library/Application Support` on macOS), re-validated on every launch, and reused. A preset that After Effects is holding open no longer aborts the pack: the remaining presets are installed, the locked ones are counted in the completion message, and every failure is logged. The executable does not contain plaintext FFX files or the decryption key.
+The app is version `v1.0.0`; its icon is generated from `content.png`. Its detected After Effects destination is clickable; after install, the primary button turns into a green **Exit** button that closes the app, and the notification shows the exact preset folder. Destination detection uses the real Windows Documents folder (so OneDrive-redirected and non-English installs work) and creates `User Presets` when After Effects exists but never saved one; on macOS it scans `/Applications`, the per-user Applications folder and `~/Library/Application Support/Adobe` for `Adobe After Effects <year>`. When no folder can be found the primary button becomes **Choose After Effects folder**, the destination row turns amber (`is-missing`) and the notice explains the problem *before* any sign-in: picking the folder **continues the flow automatically** (sign-in → access check → install) instead of dropping the member back to the start. An `After Effects <year>` folder is mapped to its `User Presets`, and a folder inside the After Effects installation (`Program Files`, `/Applications`, `/Library`, `/System`) is refused with the correct path instead of failing later. The chosen path is stored in `%LOCALAPPDATA%\Zyrex\installer.json` (`~/Library/Application Support` on macOS), re-validated on every launch, and reused. A preset that After Effects is holding open no longer aborts the pack: the remaining presets are installed, the locked ones are counted in the completion message, and every failure is logged. The executable does not contain plaintext FFX files or the decryption key.
 
 ## Bundle layout
 
@@ -22,6 +22,18 @@ The distributed app is a single file on both platforms (`<Leak name>.exe`, `<Lea
 - AES-256-GCM decryption uses pycryptodome; `cryptography` stays a build-time dependency only for encrypting the payload.
 - `pyihooks/hook-Crypto.py` ships only the AES/ECB/CTR/GHASH backends instead of every pycryptodome module.
 - Unused stdlib and packaging modules (`tkinter`, `setuptools`, `unittest`, `PIL`, ...) are excluded in `build_release.py`.
+
+## HTTPS trust (macOS and Windows)
+
+A PyInstaller one-file bundle does not inherit an OpenSSL trust store, so on macOS every request used to die with `CERTIFICATE_VERIFY_FAILED`, which also meant no `start`/`complete`/`error` event ever reached `/api/installer/log`. The build now copies `certifi.where()` into the bundle as `cacert.pem` (`--add-data cacert.pem`), and the app builds one verifying `ssl.SSLContext` for every `urlopen` call:
+
+1. `ZYREX_CA_BUNDLE` (escape hatch for a corporate proxy),
+2. `certifi.where()`,
+3. the bundled `cacert.pem` next to the executable,
+4. `sys.prefix/ssl/cacert.pem`,
+5. `/etc/ssl/cert.pem`.
+
+`ca_bundle()` also exports `SSL_CERT_FILE` and `REQUESTS_CA_BUNDLE` with `os.environ.setdefault`, so pywebview and any library that opens its own TLS connection uses the same roots. Certificate verification is never disabled: a failure is reported to the member as a readable message ("the installer could not verify zyrexediting.xyz …") instead of a raw traceback. `build_release.py` raises if `certifi` is missing, and `--self-test` asserts the bundle exists, holds real CAs, verifies certificates and can reach the API over HTTPS (`ZYREX_SKIP_NETWORK=1` skips only the live probe).
 
 ## Automatic release flow
 

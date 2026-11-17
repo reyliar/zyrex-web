@@ -55,6 +55,64 @@ def public_error(error) -> str:
     text = str(error) or error.__class__.__name__
     return " ".join(text.split())[:300]
 
+_ca_bundle: str | None = None
+
+def ca_bundle() -> str:
+    """Path to a CA bundle the frozen app can trust.
+
+    A PyInstaller one-file build on macOS has no OpenSSL trust store of its own, so every
+    HTTPS call failed with CERTIFICATE_VERIFY_FAILED and nothing ever reached the API. The
+    bundle ships `cacert.pem` next to the app and, when that is missing, falls back to
+    certifi or the interpreter's own store.
+    """
+    global _ca_bundle
+    if _ca_bundle is not None:
+        return _ca_bundle
+    candidates = []
+    configured = str(os.environ.get("ZYREX_CA_BUNDLE") or "").strip()
+    if configured:
+        candidates.append(Path(configured))
+    try:
+        import certifi
+        candidates.append(Path(certifi.where()))
+    except Exception:
+        pass
+    candidates.append(resource("cacert.pem"))
+    candidates.append(Path(sys.prefix) / "ssl" / "cacert.pem")
+    candidates.append(Path("/etc/ssl/cert.pem"))
+    for candidate in candidates:
+        try:
+            if candidate.is_file() and candidate.stat().st_size > 1024:
+                _ca_bundle = str(candidate)
+                return _ca_bundle
+        except OSError:
+            continue
+    _ca_bundle = ""
+    return _ca_bundle
+
+def ssl_context():
+    import ssl
+    bundle = ca_bundle()
+    if bundle:
+        # SSL_CERT_FILE keeps libraries that build their own context (pywebview, requests)
+        # working with the same store.
+        os.environ.setdefault("SSL_CERT_FILE", bundle)
+        os.environ.setdefault("REQUESTS_CA_BUNDLE", bundle)
+        try:
+            return ssl.create_default_context(cafile=bundle)
+        except Exception:
+            pass
+    return ssl.create_default_context()
+
+def network_error_message(error) -> str:
+    """Turn a connection failure into something a member can act on."""
+    detail = str(getattr(error, "reason", error) or "")
+    if "CERTIFICATE_VERIFY_FAILED" in detail or "certificate verify failed" in detail.lower():
+        return "This device could not verify zyrexediting.xyz. Connect once to the internet without a proxy or VPN, then open the installer again."
+    if "timed out" in detail.lower():
+        return "zyrexediting.xyz did not answer in time. Check your connection and try again."
+    return f"Could not reach zyrexediting.xyz: {public_error(detail)}"
+
 def load_embedded():
     manifest = json.loads(resource("metadata.json").read_text(encoding="utf-8"))
     encrypted_payload = resource("payload.enc").read_bytes()
@@ -106,13 +164,15 @@ def documents_root() -> Path | None:
     return None
 
 def is_protected(path: Path) -> bool:
-    """After Effects lives in Program Files on Windows, which is never writable."""
-    if sys.platform != "win32":
-        return False
+    """The application bundle itself is never writable (Program Files, /Applications)."""
     try:
         resolved = str(Path(path).resolve()).casefold()
     except OSError:
         resolved = str(path).casefold()
+    if sys.platform == "darwin":
+        return resolved.startswith("/applications/") or resolved.startswith("/system") or resolved.startswith("/library/")
+    if sys.platform != "win32":
+        return False
     for variable in ("ProgramFiles", "ProgramFiles(x86)", "ProgramW6432", "SystemRoot", "ProgramData"):
         root = str(os.environ.get(variable) or "").strip().casefold()
         if root and (resolved == root or resolved.startswith(root + "\\")):
@@ -141,6 +201,18 @@ def after_effects_versions() -> list[tuple[int, str]]:
     roaming = str(os.environ.get("APPDATA") or "").strip()
     if roaming and (Path(roaming) / "Adobe").is_dir():
         names.update(entry.name for entry in (Path(roaming) / "Adobe").glob("After Effects*") if entry.is_dir())
+    if sys.platform == "darwin":
+        # On macOS the app lives in /Applications and its preferences in Application
+        # Support, so a fresh install has no folder in Documents yet.
+        for base in (Path("/Applications"), Path("/Applications/Adobe After Effects"),
+                     Path.home() / "Library" / "Application Support" / "Adobe",
+                     Path.home() / "Library" / "Preferences" / "Adobe"):
+            try:
+                if base.is_dir():
+                    names.update(entry.name.replace(".app", "") for entry in base.glob("After Effects*"))
+                    names.update(entry.name for entry in base.glob("Adobe After Effects*") if entry.is_dir())
+            except OSError:
+                continue
     def sort_key(name: str):
         digits = re.findall(r"\d+", name)
         return (int(digits[0]) if digits else 0, name)
@@ -279,7 +351,7 @@ class InstallerAPI:
             headers["Authorization"] = f"Bearer {token}"
         request = urllib.request.Request(f"{SITE}{path}", data=data, method=method, headers=headers)
         try:
-            with urllib.request.urlopen(request, timeout=35) as response:
+            with urllib.request.urlopen(request, timeout=35, context=ssl_context()) as response:
                 if binary:
                     return response.read(), response.headers.get("X-Zyrex-Downloaded-At", "")
                 return json.loads(response.read().decode("utf-8"))
@@ -293,6 +365,8 @@ class InstallerAPI:
             except Exception:
                 pass
             raise RuntimeError(detail or f"Zyrex API returned HTTP {error.code}") from error
+        except urllib.error.URLError as error:
+            raise RuntimeError(network_error_message(error)) from error
 
     def _creator_folder(self):
         username = str(self.product.get("creator_username") or "").strip().lstrip("@").strip()
@@ -384,7 +458,7 @@ class InstallerAPI:
         try:
             query = urllib.parse.urlencode({"id": self.manifest.get("product_id", "")})
             request = urllib.request.Request(f"{SITE}/api/products?{query}", headers={"Accept": "application/json", "User-Agent": "Zyrex-Effects-Installer/1.0"})
-            with urllib.request.urlopen(request, timeout=12) as response:
+            with urllib.request.urlopen(request, timeout=12, context=ssl_context()) as response:
                 product = json.loads(response.read().decode("utf-8"))
             if isinstance(product, dict) and product.get("id") == self.manifest.get("product_id"):
                 # Embedded data remains an immediate fallback if the API is unavailable.
@@ -592,6 +666,25 @@ def main():
         assert normalize_access({"allowed": True})["allowed"] is True
         assert callable(getattr(api, "refresh_access", None)) and callable(getattr(api, "open_access", None))
         assert "access" in state and "eligible" in state and "signedIn" in state
+        # A frozen macOS build has no trust store of its own, so the CA bundle and the
+        # verifying context are pinned here — without them every request failed with
+        # CERTIFICATE_VERIFY_FAILED and nothing reached the API.
+        bundle = ca_bundle()
+        assert bundle and Path(bundle).is_file(), f"no CA bundle found (looked in {sys.prefix})"
+        assert Path(bundle).stat().st_size > 1024
+        context = ssl_context()
+        import ssl
+        assert context.verify_mode == ssl.CERT_REQUIRED and context.check_hostname is True
+        assert context.cert_store_stats().get("x509_ca", 0) > 10, context.cert_store_stats()
+        assert "verify" in network_error_message(urllib.error.URLError(Exception("CERTIFICATE_VERIFY_FAILED: unable to get local issuer"))).lower()
+        # The online check only runs where the sandbox has network access; the bundle test
+        # above already proves verification is configured.
+        if os.environ.get("ZYREX_SKIP_NETWORK") != "1":
+            try:
+                with urllib.request.urlopen(urllib.request.Request(f"{SITE}/api/installer/status?id=self-test", headers={"User-Agent": "Zyrex-Self-Test"}), timeout=20, context=context) as probe:
+                    assert probe.status < 500
+            except urllib.error.HTTPError as error:
+                assert error.code in {400, 404}, f"unexpected HTTPS status {error.code}"
         # The chosen folder must survive a restart, so the config round trip is checked here.
         import tempfile
         with tempfile.TemporaryDirectory() as scratch:
@@ -637,6 +730,9 @@ def main():
         if sys.stdout:
             print(f"OK: {state['leak']} · {state['presetCount']} presets · creator folder {api.creator_folder} · payload {len(api.encrypted_payload)} bytes")
         return
+    # Pin the trust store before any TLS handshake, so every library in the process
+    # (urllib, pywebview, requests) agrees on the bundled certificate authorities.
+    ssl_context()
     import webview
     api = InstallerAPI()
     threading.Thread(target=lambda: (time.sleep(2), api.refresh_metadata()), daemon=True).start()
