@@ -2653,8 +2653,19 @@ async function handleInstallerTrace(request, url, env) {
   if (original.length > TRACE_MAX_FILE_BYTES) return json({ success: false, error: "Preset exceeds the safe tracing size limit" }, 413, { "Cache-Control": "no-store" });
   const downloadedAt = new Date().toISOString();
   const marked = traceDownloadBytes(original, fileName, grant.userId, grant.username, downloadedAt);
-  if (!marked) return json({ success: false, error: "This preset cannot be safely traced and was not released." }, 422, { "Cache-Control": "no-store" });
-  return new Response(marked, { status: 200, headers: { "Content-Type": "application/octet-stream", "Cache-Control": "no-store", "X-Zyrex-Downloaded-At": downloadedAt, "X-Content-Type-Options": "nosniff" } });
+  // A preset whose metadata packet cannot hold a trace is still delivered; failing the whole
+  // pack over it would leave the member with nothing installed.
+  const body = marked || original;
+  return new Response(body, {
+    status: 200,
+    headers: {
+      "Content-Type": "application/octet-stream",
+      "Cache-Control": "no-store",
+      "X-Zyrex-Downloaded-At": downloadedAt,
+      "X-Zyrex-Trace": marked ? "stamped" : "skipped",
+      "X-Content-Type-Options": "nosniff",
+    },
+  });
 }
 
 const INSTALLER_PLATFORMS = { windows: ".exe", macos: ".dmg" };
