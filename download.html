@@ -320,6 +320,10 @@
 
         /* Files */
         .files-block { width: 100%; margin-bottom: 20px }
+        .app-pending { display: flex; align-items: flex-start; gap: 11px; margin-bottom: 16px; padding: 13px 15px; border: 1px solid rgba(var(--cherry-rgb), .28); border-radius: 13px; background: rgba(var(--cherry-rgb), .07); color: var(--light); font-size: .78rem; line-height: 1.5 }
+        .app-pending i { color: var(--cherry-light); margin-top: 3px }
+        .app-pending strong { display: block; font-size: .82rem; font-weight: 800; margin-bottom: 2px }
+        .app-pending span { color: var(--gray) }
         .files-scroll { max-height: 260px; overflow-y: auto; border-radius: 14px; padding-right: 4px }
         .files-scroll::-webkit-scrollbar { width: 4px }
         .files-scroll::-webkit-scrollbar-thumb { background: var(--dl-border); border-radius: 2px }
@@ -992,6 +996,19 @@
             }
             
             const realFiles = fileList.filter(function(f) { return !watermarkNames.includes(f.name); });
+
+            // A freshly published leak gets its .exe/.dmg a few minutes later, so the page says
+            // it is on the way instead of looking like the app was never generated.
+            const installerExtensions = realFiles.map(function (f) {
+                var name = String((f && f.name) || '').toLowerCase();
+                return name.slice(name.lastIndexOf('.') + 1);
+            });
+            if (String(p.type || 'preset').toLowerCase() === 'preset' && (p.id || productId)) {
+                const missingPlatforms = [];
+                if (installerExtensions.indexOf('exe') < 0) missingPlatforms.push('windows');
+                if (installerExtensions.indexOf('dmg') < 0) missingPlatforms.push('macos');
+                if (missingPlatforms.length) html += '<div class="app-pending" id="appPendingNote"><i class="fas fa-hourglass-half"></i><div><strong>Zyrex app is being prepared</strong><span>The ' + missingPlatforms.map(function (platform) { return platform === 'windows' ? 'Windows' : 'macOS'; }).join(' and ') + ' build is generated right after publishing and shows up here in a few minutes.</span></div></div>';
+            }
                 
             if (realFiles.length > 0) {
                 html += '<div class="files-block"><div class="files-label"><div><i class="fas fa-folder-open"></i> Files in this pack (' + realFiles.length + ')</div><div class="files-label-right"><button class="select-all-btn" onclick="toggleSelectAll(this)">Select All</button></div></div>';

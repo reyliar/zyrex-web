@@ -2746,7 +2746,13 @@ async function handleInstallerPublish(request, url, env) {
   const legacyPrefix = installerStoragePrefix(productId, platform);
   const legacy = await bucket.list({ prefix: legacyPrefix, limit: 50 });
   for (const object of legacy.objects || []) await bucket.delete(object.key).catch(() => {});
-  return json({ success: true, key, filename, size: declared, release_id: releaseId, uploaded_at: uploadedAt }, 200, { "Cache-Control": "no-store" });
+  // Once both platforms are published the leak folder keeps only the installers, so the
+  // preset sources never show up next to the app downloads.
+  const relocation = await relocateLeakSources(env, bucket, prefix, productId).catch(error => {
+    console.error("installer source relocation failed:", productId, error?.message || String(error));
+    return { moved: 0, waiting: [] };
+  });
+  return json({ success: true, key, filename, size: declared, release_id: releaseId, uploaded_at: uploadedAt, sources_moved: relocation.moved, sources_waiting_for: relocation.waiting }, 200, { "Cache-Control": "no-store" });
 }
 
 // One-off: releases published before installers moved beside the leak files live under
@@ -2798,6 +2804,30 @@ async function handleInstallerMigrate(request, url, env) {
 // Production folders keep everything except the FFX source, which is relocated to the
 // _source_ffx/ backup the build endpoint already reads. mode=restore undoes an earlier
 // relocation for non-FFX files (project files, tutorials, images).
+// The leak folder ships the installer and the watermarks only, so the preset sources it was
+// built from move into the backup prefix. Both platforms must be present first, otherwise the
+// build that has not finished yet would lose its input.
+async function relocateLeakSources(env, bucket, prefix, productId) {
+  const listing = await r2List(env, prefix, true).catch(() => []);
+  const platforms = Object.keys(INSTALLER_PLATFORMS);
+  const ready = platforms.every(extension => listing.some(object => object.key.toLowerCase().endsWith(INSTALLER_PLATFORMS[extension])));
+  if (!ready) return { moved: 0, waiting: platforms.filter(extension => !listing.some(object => object.key.toLowerCase().endsWith(INSTALLER_PLATFORMS[extension]))) };
+  let moved = 0;
+  for (const object of listing) {
+    const relative = object.key.slice(prefix.length);
+    if (!relative || relative.endsWith("/") || !/\.ffx$/i.test(relative)) continue;
+    const stored = await bucket.get(object.key).catch(() => null);
+    if (!stored) continue;
+    await bucket.put(`_source_ffx/${object.key}`, stored.body, {
+      httpMetadata: { contentType: "application/octet-stream" },
+      customMetadata: { product_id: productId, relocated_at: new Date().toISOString() },
+    }).catch(() => null);
+    await bucket.delete(object.key).catch(() => {});
+    moved += 1;
+  }
+  return { moved, waiting: [] };
+}
+
 async function handleInstallerRelocateSource(request, url, env) {
   if (request.method !== "POST") return json({ success: false, error: "Method not allowed" }, 405, { "Cache-Control": "no-store" });
   const expected = String(env.FFX_RELEASE_SOURCE_TOKEN || "").trim();
@@ -2955,11 +2985,11 @@ async function handleInstallerLogs(request, url, env, hasMasterKey) {
   }, 200, { "Cache-Control": "no-store" });
 }
 
-async function handleInstallerStatus(url, env) {
-  const productId = String(url.searchParams.get("id") || "").trim();
-  if (!/^[A-Za-z0-9_-]{1,100}$/.test(productId)) return json({ success: false, error: "Invalid leak ID" }, 400, { "Cache-Control": "no-store" });
+// A newly published leak ships its installers a few minutes after the leak itself appears,
+// because every platform is built by CI. The status therefore says whether a build is still
+// expected, so the page can show "preparing" instead of looking broken.
+async function installerStatusPayload(env, productId, product) {
   const bucket = env.STORAGE_PROD || env.STORAGE;
-  const product = await dbGetProduct(env, productId).catch(() => null);
   const prefix = normalizeR2Prefix(product?.file_path);
   const platforms = {};
   if (bucket && prefix) {
@@ -2974,7 +3004,20 @@ async function handleInstallerStatus(url, env) {
       };
     }
   }
-  return json({ success: true, product_id: productId, platforms }, 200, { "Cache-Control": "public, max-age=60" });
+  const isPreset = String(product?.type || "preset").toLowerCase() === "preset";
+  const missing = Object.keys(INSTALLER_PLATFORMS).filter(platform => !platforms[platform]);
+  const created = Date.parse(String(product?.created_at || product?.uploaded_at || "")) || 0;
+  // An install that never appeared within a day is not "on its way" any more.
+  const waiting = isPreset && Boolean(product) && missing.length > 0 && (!created || Date.now() - created < 24 * 60 * 60 * 1000);
+  return { success: true, product_id: productId, platforms, missing, pending: waiting };
+}
+
+async function handleInstallerStatus(url, env) {
+  const productId = String(url.searchParams.get("id") || "").trim();
+  if (!/^[A-Za-z0-9_-]{1,100}$/.test(productId)) return json({ success: false, error: "Invalid leak ID" }, 400, { "Cache-Control": "no-store" });
+  const product = await dbGetProduct(env, productId).catch(() => null);
+  const payload = await installerStatusPayload(env, productId, product);
+  return json(payload, 200, { "Cache-Control": "public, max-age=60" });
 }
 
 async function handleInstallerDownload(request, url, env) {
@@ -3194,6 +3237,58 @@ async function queuePresetInstallerBuild(env, product) {
   });
   if (!response.ok) throw new Error(`GitHub release dispatch failed (${response.status})`);
   return true;
+}
+
+// A leak whose build was never dispatched - files added after publishing, a failed dispatch, a
+// dropped webhook - would otherwise never get its installer. Every scheduled tick looks at the
+// newest leaks that still miss a platform and asks CI again, at most once every twenty minutes
+// per leak and two builds per run, so the sweep stays cheap.
+const INSTALLER_SWEEP_INTERVAL_MS = 10 * 60 * 1000;
+const INSTALLER_SWEEP_RETRY_MS = 20 * 60 * 1000;
+const INSTALLER_SWEEP_MAX_AGE_MS = 3 * 24 * 60 * 60 * 1000;
+
+async function sweepMissingInstallers(env) {
+  const lockKey = "cache/installer_sweep/last.json";
+  const lock = await r2GetJSON(env, lockKey, null).catch(() => null);
+  if (lock && Date.now() - Number(lock.at || 0) < INSTALLER_SWEEP_INTERVAL_MS) return { skipped: true };
+  await r2PutJSON(env, lockKey, { at: Date.now() }).catch(() => false);
+  const products = await dbGetProducts(env).catch(() => []);
+  let checked = 0;
+  let queued = 0;
+  for (const product of products) {
+    if (String(product?.type || "preset").toLowerCase() !== "preset") continue;
+    const created = Date.parse(String(product.created_at || product.updated_at || "")) || 0;
+    if (!created || Date.now() - created > INSTALLER_SWEEP_MAX_AGE_MS) continue;
+    if (checked >= 12) break;
+    checked += 1;
+    const id = String(product.id || "");
+    const status = await installerStatusPayload(env, id, product).catch(() => null);
+    if (!status) continue;
+    if (!status.missing.length) {
+      // Both builds are in place, so any preset source still sitting in the leak folder is
+      // moved into the backup prefix and stops showing up next to the app downloads.
+      const bucket = env.STORAGE_PROD || env.STORAGE;
+      const prefix = normalizeR2Prefix(product.file_path);
+      if (bucket && prefix) {
+        const relocated = await relocateLeakSources(env, bucket, prefix, id).catch(() => null);
+        if (relocated && relocated.moved) console.log("installer sources relocated:", id, relocated.moved);
+      }
+      continue;
+    }
+    const markerKey = `cache/installer_dispatch/${id.replace(/[^A-Za-z0-9_-]/g, "")}.json`;
+    const marker = await r2GetJSON(env, markerKey, null).catch(() => null);
+    if (marker && Date.now() - Number(marker.at || 0) < INSTALLER_SWEEP_RETRY_MS) continue;
+    if (queued >= 2) break;
+    const dispatched = await queuePresetInstallerBuild(env, product).catch(error => {
+      console.error("installer sweep dispatch failed:", id, error?.message || String(error));
+      return false;
+    });
+    if (!dispatched) continue;
+    queued += 1;
+    await r2PutJSON(env, markerKey, { at: Date.now(), missing: status.missing }).catch(() => false);
+    console.log("installer sweep queued:", id, status.missing.join(","));
+  }
+  return { checked, queued };
 }
 
 function relativeR2Name(key, prefix) {
@@ -27715,6 +27810,12 @@ async function announceProductToDiscord(env, product) {
       if (invite.status !== "ok") console.log("discord invite watch:", JSON.stringify(publicDiscordInviteState(invite)));
     } catch (error) {
       console.error("discord invite watch failed:", error?.message || String(error));
+    }
+    try {
+      const sweep = await sweepMissingInstallers(env);
+      if (sweep.queued) console.log("installer sweep:", JSON.stringify(sweep));
+    } catch (error) {
+      console.error("installer sweep failed:", error?.message || String(error));
     }
   },
 };
