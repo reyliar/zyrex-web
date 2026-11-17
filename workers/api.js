@@ -6495,6 +6495,112 @@ async function scrapeProductWithScrapin(url, env) {
   return scrapeProductShape(payload, validated.url, validated.provider);
 }
 
+// Link aggregators publish the creator's links only in the page itself, so the page is read
+// directly. Asking Scrapin for a Linktree returned the aggregator's own assets and nothing
+// else, which is why the wizard never saw the store behind the bio.
+const CREATOR_AGGREGATOR_HOSTS = ["linktr.ee", "guns.lol", "bio.link", "beacons.ai", "carrd.co", "bento.me", "lit.link", "lnk.bio", "solo.to", "taplink.cc", "koji.to", "allmylinks.com", "hoo.be", "snipfeed.co", "linkin.bio", "campsite.bio"];
+const CREATOR_LINK_NOISE = /(?:favicon|apple-touch-icon|llms\.txt|challenges\.cloudflare\.com|n\.cloudflare\.com|fonts\.(?:googleapis|gstatic)\.com|webmanifest|^https?:\/\/(?:assets|cdn|static|ugc|og|img)\.|\.(?:png|jpe?g|gif|webp|svg|ico|css|js|json|mp3|mp4|woff2?)(?:$|[?#]))/i;
+// Card labels that are navigation, not a product.
+const CREATOR_GENERIC_TITLES = /^(?:visit product page|view product|shop|shop now|view all(?: results)?|buy now|read more|cart|home|contact|about|login|sign ?up)$/i;
+
+function creatorAggregatorHost(host) {
+  const value = String(host || "").toLowerCase().replace(/^www\./, "");
+  return CREATOR_AGGREGATOR_HOSTS.some(item => value === item || value.endsWith("." + item));
+}
+
+// Pulls the outbound links out of an aggregator page: anchors first, then URLs embedded in
+// the page's JSON payload, with asset and tracker URLs dropped.
+function harvestCreatorLinks(payload, originHost = "") {
+  const found = [];
+  const origin = String(originHost || "").toLowerCase().replace(/^www\./, "");
+  const push = (raw) => {
+    const value = String(raw || "").replaceAll("\\/", "/").trim().replace(/[),.;]+$/, "");
+    if (!/^https?:\/\//i.test(value)) return;
+    let parsed;
+    try { parsed = new URL(value); } catch (_) { return; }
+    if (parsed.protocol !== "https:") return;
+    if (origin && parsed.hostname.toLowerCase().replace(/^www\./, "") === origin) return;
+    const clean = `${parsed.origin}${parsed.pathname}${parsed.search}`;
+    if (CREATOR_LINK_NOISE.test(clean)) return;
+    if (!found.includes(clean)) found.push(clean);
+  };
+  const text = String((payload && payload.text) || "");
+  for (const match of text.matchAll(/href\s*=\s*(?:"([^"]+)"|'([^']+)')/gi)) push(match[1] || match[2]);
+  for (const match of text.matchAll(/"(https?:\/\/[^"\\\s]+)"/g)) push(match[1]);
+  for (const token of text.split(/[\s"'<>()]+/)) if (/^https?:\/\//i.test(token)) push(token);
+  return found.slice(0, 60);
+}
+
+async function creatorPageLinks(url, env = null) {
+  let host = "";
+  try { host = new URL(url).hostname; } catch (_) {}
+  // The plain page is enough for aggregators that render server side (Linktree, Beacons).
+  const plain = await fetchPayhipRaw(url, env, { timeoutMs: 8000, skipProxy: true }).catch(() => null);
+  const direct = harvestCreatorLinks(plain, host);
+  if (direct.length) return direct;
+  // The rest draw their links in the browser, so the rendered page is asked for next.
+  const rendered = await scrapinRequest(env, "/scrape/html", { url }, { timeoutMs: 20000, rawText: true }).catch(() => null);
+  if (rendered) {
+    const text = typeof rendered === "string" ? rendered : JSON.stringify(rendered);
+    const harvested = harvestCreatorLinks({ type: "html", text }, host);
+    if (harvested.length) return harvested;
+    console.warn("creator_page_unparsed", host, text.length);
+  } else {
+    console.warn("creator_page_unavailable", host, plain ? plain.type : "no-page");
+  }
+  // Last resort: the text proxy renders JavaScript but is rate limited without a key.
+  const proxied = await fetchPayhipRaw(url, env, { timeoutMs: 10000 }).catch(() => null);
+  return harvestCreatorLinks(proxied, host);
+}
+
+// Payhip serves its whole catalogue in the store page, so it is read directly: the scraper's
+// store endpoint answers with an empty list, which is why every store showed "no products".
+async function listPayhipStoreProducts(storeUrl, env = null) {
+  const seen = new Set();
+  const products = [];
+  const add = (rows) => {
+    for (const row of rows) {
+      const url = String((row && row.url) || "").trim();
+      if (!url || seen.has(url)) continue;
+      const title = String((row && row.title) || "").trim();
+      // Navigation cards ("Visit product page", "Shop") are not products.
+      if (!title || CREATOR_GENERIC_TITLES.test(title)) continue;
+      seen.add(url);
+      products.push({
+        title,
+        description: row.description || "",
+        price: row.price || "",
+        image: row.image || "",
+        thumbnail: row.image || "",
+        url,
+        provider: "payhip",
+        source: "payhip",
+      });
+    }
+  };
+  const storePage = await fetchPayhipRaw(storeUrl, env).catch(() => null);
+  const parsed = parsePayhipProductsAndCollections(storePage);
+  add(parsed.products);
+  // The front page carries only the newest cards, so the collections fill in the rest.
+  for (const collection of [...parsed.collections].slice(0, 6)) {
+    if (products.length >= 100) break;
+    const page = await fetchPayhipRaw(`https://payhip.com/collection/${collection}`, env).catch(() => null);
+    add(parsePayhipProductsAndCollections(page).products);
+  }
+  if (products.length) return products.slice(0, 100);
+  const catalog = await scrapinRequest(env, "/payhip/products", { url: storeUrl, descriptions: "true" });
+  return scrapeProductRows(catalog).map(item => ({
+    title: item.title || item.name || item.product_name || item.product_title || "Product",
+    description: item.description || item.product_description || item.summary || item.excerpt || "",
+    price: item.price || item.formatted_price || item.display_price || item.amount || "",
+    image: item.image || item.thumbnail || item.image_url || item.thumbnail_url || item.cover_image || "",
+    thumbnail: item.image || item.thumbnail || item.image_url || item.thumbnail_url || item.cover_image || "",
+    url: item.url || item.product_url || item.link || "",
+    provider: "payhip",
+    source: "scrapin",
+  })).filter(item => item.url).slice(0, 100);
+}
+
 async function scanCreatorLinksWithScrapin(rawUrl, env) {
   let target = String(rawUrl || "").trim();
   if (!target) return { success: false, error: "URL or username is required" };
@@ -6510,19 +6616,28 @@ async function scanCreatorLinksWithScrapin(rawUrl, env) {
   let creator = null;
   let content = null;
   const direct = socialStoreProvider(target);
-  const scanHosts = ["linktr.ee", "guns.lol", "bio.link", "beacons.ai", "carrd.co", "bento.me", "lit.link", "lnk.bio", "solo.to", "taplink.cc", "koji.to", "allmylinks.com", "hoo.be", "snipfeed.co", "linkin.bio", "campsite.bio"];
-  const allowedAggregator = scanHosts.some(host => parsed.hostname === host || parsed.hostname.endsWith(`.${host}`));
+  const allowedAggregator = creatorAggregatorHost(parsed.hostname);
   if (!profileTarget && !direct && !allowedAggregator) return { success: false, error: "Unsupported creator or store URL", source: "scrapin" };
   if (profileTarget) {
     creator = await scrapinSocialProfile(env, target).catch(() => null);
     if (!creator) return { success: false, error: "Scrapin could not resolve this creator profile", source: "scrapin" };
     content = { bio: creator.bio || "", links: creator.links || [] };
-  } else if (!direct) {
-    content = await scrapinRequest(env, "/scrape/json", { url: target });
-    if (!content) return { success: false, error: "Scrapin could not scan this profile or store", source: "scrapin" };
   }
-  const rawStrings = [JSON.stringify(content), ...(creator ? [creator.bio, ...(creator.links || [])] : [])].filter(Boolean).join(" ");
+  const rawStrings = [JSON.stringify(content || {}), ...(creator ? [creator.bio, ...(creator.links || [])] : [])].filter(Boolean).join(" ");
   const links = [...new Set([...scrapeCollectUrls(content), ...scrapeCollectUrls(rawStrings)])].slice(0, 40);
+  // The profile itself may be an aggregator, or the bio may point at one; both are read so
+  // the store that sits behind the bio is found.
+  const queue = [target, ...links].filter(value => {
+    try { return creatorAggregatorHost(new URL(value).hostname); } catch (_) { return false; }
+  }).filter((value, index, list) => list.indexOf(value) === index).slice(0, 5);
+  const harvested = [];
+  for (const aggregator of queue) {
+    const found = await creatorPageLinks(aggregator, env).catch(() => []);
+    for (const link of found) {
+      if (!links.includes(link)) links.push(link);
+      if (!harvested.includes(link)) harvested.push(link);
+    }
+  }
   const store = links.map(value => ({ url: value, match: socialStoreProvider(value) })).find(item => item.match);
   const matchedStore = store || (direct ? { url: target, match: direct } : null);
   const result = {
@@ -6536,28 +6651,36 @@ async function scanCreatorLinksWithScrapin(rawUrl, env) {
     boostyUrl: matchedStore?.match === "boosty" ? matchedStore.url : null,
     patreonUrl: matchedStore?.match === "patreon" ? matchedStore.url : null,
     platform: creator?.platform || matchedStore?.match || null,
-    bioLinks: links,
+    bioLinks: links.slice(0, 60),
     creator: creator ? { name: creator.name || "", avatar: creator.avatar || "", handle: creator.handle || "", platform: creator.platform || "" } : null,
     products: [],
     source: "scrapin",
   };
-  if (matchedStore?.match === "payhip" && /\/b\//i.test(new URL(matchedStore.url).pathname)) {
+  if (!matchedStore) return result;
+  if (matchedStore.match === "payhip" && /\/b\//i.test(new URL(matchedStore.url).pathname)) {
     const product = await scrapeProductWithScrapin(matchedStore.url, env);
     if (product.success) result.products = [{ ...product, url: product.url || matchedStore.url }];
-  } else if (matchedStore?.match === "payhip") {
-    const catalog = await scrapinRequest(env, "/payhip/products", { url: matchedStore.url, descriptions: "true" });
-    const rows = scrapeProductRows(catalog);
-    if (rows.length) result.products = rows.map(item => ({
-      ...item,
-      title: item.title || item.name || item.product_name || item.product_title || "Product",
-      description: item.description || item.product_description || item.summary || item.excerpt || "",
-      price: item.price || item.formatted_price || item.display_price || item.amount || "",
-      image: item.image || item.thumbnail || item.image_url || item.thumbnail_url || item.cover_image || "",
-      url: item.url || item.product_url || item.link || "",
-    })).filter(item => item.url).slice(0, 100);
-  } else if (matchedStore?.match === "patreon" || matchedStore?.match === "boosty") {
+  } else if (matchedStore.match === "payhip") {
+    result.products = await listPayhipStoreProducts(matchedStore.url, env);
+  } else if (matchedStore.match === "patreon" || matchedStore.match === "boosty") {
     const product = await scrapeProductWithScrapin(matchedStore.url, env);
     if (product.success) result.products = [{ ...product, url: product.url || matchedStore.url }];
+    if (!result.products.length) {
+      // Patreon and Boosty keep their catalogue behind their own API, but their pages still
+      // link each post or shop item, which is enough to offer something to pick from.
+      const pageLinks = await creatorPageLinks(matchedStore.url, env).catch(() => []);
+      const productLinks = pageLinks.filter(link => /\/shop\/|\/posts\/|\/purchases\//i.test(link)).slice(0, 24);
+      result.products = productLinks.map(link => ({
+        title: link.split("/").filter(Boolean).pop()?.replace(/[-_]+/g, " ") || "Product",
+        description: "",
+        price: "",
+        image: "",
+        thumbnail: "",
+        url: link,
+        provider: matchedStore.match,
+        source: matchedStore.match,
+      }));
+    }
   }
   return result;
 }
@@ -6827,14 +6950,15 @@ async function scrapeProviderMetadata(url, env = null) {
   return { success: true, title: title || "Product", description, image, thumbnails: image ? [image] : [], price: "" };
 }
 
-async function fetchPayhipRaw(targetUrl, env = null) {
+async function fetchPayhipRaw(targetUrl, env = null, options = {}) {
   const headers = {
     "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.9"
   };
+  const directTimeout = Number(options.timeoutMs) > 0 ? Number(options.timeoutMs) : 12000;
   try {
-    const resp = await fetch(targetUrl, { headers, redirect: "follow" });
+    const resp = await fetch(targetUrl, { headers, redirect: "follow", signal: AbortSignal.timeout(directTimeout) });
     if (resp.ok) {
       const text = await resp.text();
       if (!text.includes("Just a moment...") && !text.includes("Attention Required! | Cloudflare") && !text.includes("cf-chl")) {
@@ -6843,6 +6967,8 @@ async function fetchPayhipRaw(targetUrl, env = null) {
     }
   } catch (e) {}
 
+  if (options.skipProxy) return null;
+
   // Fallback to r.jina.ai when Cloudflare challenge / 403 occurs
   try {
     const cleanUrl = targetUrl.replace(/^https?:\/\//, "");
@@ -6850,7 +6976,7 @@ async function fetchPayhipRaw(targetUrl, env = null) {
     if (env?.JINA_API_KEY) {
       jHeaders["Authorization"] = `Bearer ${env.JINA_API_KEY}`;
     }
-    const jinaResp = await fetch(`https://r.jina.ai/https://${cleanUrl}`, { headers: jHeaders });
+    const jinaResp = await fetch(`https://r.jina.ai/https://${cleanUrl}`, { headers: jHeaders, signal: AbortSignal.timeout(15000) });
     if (jinaResp.ok) {
       const text = await jinaResp.text();
       return { type: "markdown", text };
@@ -8508,7 +8634,7 @@ function gameProfileCacheKey(platformKey, handle) {
   return `${GAME_PROFILE_CACHE_PREFIX}${String(platformKey || "game").toLowerCase()}-${slug}.json`;
 }
 
-async function scrapinRequest(env, path, params) {
+async function scrapinRequest(env, path, params, options = {}) {
   const apiKey = String(env?.SCRAPIN_API_KEY || "");
   if (!apiKey) return null;
   const target = new URL(path, SCRAPIN_API_URL);
@@ -8519,13 +8645,17 @@ async function scrapinRequest(env, path, params) {
   try {
     const response = await fetch(target.toString(), {
       headers: { "X-API-Key": apiKey, Accept: "application/json" },
-      signal: AbortSignal.timeout(5000),
+      // A rendered page takes far longer than a profile lookup, so callers that ask for one
+      // pass their own budget instead of inheriting the five seconds a JSON call needs.
+      signal: AbortSignal.timeout(Number(options.timeoutMs) > 0 ? Number(options.timeoutMs) : 5000),
     });
     if (!response.ok) {
       const detail = await response.text().catch(() => "");
       console.warn("scrapin_request_failed", path, response.status, target.toString(), String(detail).replace(/\s+/g, " ").slice(0, 200));
       return null;
     }
+    // The html endpoint answers with a document, not JSON.
+    if (options.rawText) return await response.text().catch(() => null);
     return await response.json().catch(() => null);
   } catch (error) {
     console.warn("scrapin_request_error", path, error?.message || String(error));
@@ -17596,13 +17726,19 @@ export default {
       // A recent good scan is reused so the wizard's second pass cannot contradict the
       // first one just because a third-party profile fetch flapped.
       const scanInputKey = String(scanUrl || "").trim().toLowerCase();
-      // The readable slug keeps two different inputs from sharing a hash bucket.
-      const scanCacheKey = scanInputKey
-        ? `cache/creator_scan_scrapin_v2/${shortHash(scanInputKey)}-${scanInputKey.replace(/^https?:\/\//, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60)}.json`
+      // "nocache=1" re-runs the scan, which the wizard uses when the member fixes a bio link.
+      const scanBypassCache = /^(?:1|true|yes)$/i.test(String(url.searchParams.get("nocache") || ""));
+      // The readable slug keeps two different inputs from sharing a hash bucket. The version
+      // bump retires results cached before stores could list their products.
+      const scanCacheKey = scanInputKey && !scanBypassCache
+        ? `cache/creator_scan_scrapin_v3/${shortHash(scanInputKey)}-${scanInputKey.replace(/^https?:\/\//, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60)}.json`
         : "";
       if (scanCacheKey) {
         const cachedScan = await r2GetJSON(env, scanCacheKey, null);
-        if (cachedScan && cachedScan.payload && Date.now() - Number(cachedScan.cached_at || 0) < CREATOR_SCAN_TTL_MS) {
+        // A store that was found but produced no products is not a good result to reuse, so
+        // the next attempt scans again instead of repeating the empty answer.
+        const reusable = cachedScan && cachedScan.payload && (!cachedScan.payload.found || (cachedScan.payload.products || []).length > 0);
+        if (reusable && Date.now() - Number(cachedScan.cached_at || 0) < CREATOR_SCAN_TTL_MS) {
           return json({ ...cachedScan.payload, cached: true });
         }
       }
