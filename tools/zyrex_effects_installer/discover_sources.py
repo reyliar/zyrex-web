@@ -48,8 +48,10 @@ def discover() -> list[str]:
     products: list[dict] = []
     page = 1
     while True:
-        query = urllib.parse.urlencode({"type": "preset", "page": page, "limit": 100, "ts": int(time.time())})
-        catalog = get_json(f"{SITE}/api/products?{query}")
+        # The catalogue hides leaks whose installers are still being built, and those are
+        # exactly the ones a backfill has to find, so the token unlocks the pending entries.
+        query = urllib.parse.urlencode({"type": "preset", "page": page, "limit": 100, "include_pending": "1", "ts": int(time.time())})
+        catalog = get_json(f"{SITE}/api/products?{query}", token)
         if not isinstance(catalog, dict) or not isinstance(catalog.get("items"), list):
             raise RuntimeError(f"Unexpected Zyrex product catalog response on page {page}.")
         items = catalog["items"]

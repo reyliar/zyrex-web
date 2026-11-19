@@ -25,6 +25,11 @@ on:
         required: false
         default: false
         type: boolean
+      reconcile_catalogue:
+        description: After a backfill, hide every leak that still misses an app download and re-queue its build
+        required: false
+        default: true
+        type: boolean
       migrate_ids:
         description: Comma-separated leak IDs whose legacy installer objects should move into the leak folder
         required: false
@@ -204,3 +209,22 @@ jobs:
           path: ${{ runner.temp }}/zyrex-release-index/**
           if-no-files-found: error
           retention-days: 30
+
+  reconcile-catalogue:
+    needs: [prepare, assemble-release]
+    if: always() && inputs.backfill_all == true && inputs.reconcile_catalogue != false
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      FFX_RELEASE_SOURCE_TOKEN: ${{ secrets.FFX_RELEASE_SOURCE_TOKEN }}
+    steps:
+      - name: Check out installer source
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Hide every leak that still misses an app download
+        run: python tools/zyrex_effects_installer/reconcile_catalogue.py

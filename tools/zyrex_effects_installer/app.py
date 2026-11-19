@@ -1,11 +1,11 @@
 ﻿"""Zyrex Effects Installer desktop application."""
 from __future__ import annotations
-import base64, json, os, re, secrets, subprocess, sys, threading, time, urllib.error, urllib.parse, urllib.request, zipfile
+import base64, json, os, re, secrets, shutil, subprocess, sys, tempfile, threading, time, urllib.error, urllib.parse, urllib.request, zipfile
 from pathlib import Path
 from Crypto.Cipher import AES
 
 SITE = "https://zyrexediting.xyz"
-VERSION = "v1.0.1"
+VERSION = "v1.0.2"
 
 def resource(name: str) -> Path:
     root = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
@@ -73,8 +73,8 @@ def ca_bundle() -> str:
 
     A PyInstaller one-file build on macOS has no OpenSSL trust store of its own, so every
     HTTPS call failed with CERTIFICATE_VERIFY_FAILED and nothing ever reached the API. The
-    bundle ships `cacert.pem` next to the app and, when that is missing, falls back to
-    certifi or the interpreter's own store.
+    bundle ships next to the app (cacert.pem, copied from certifi at build time) and is
+    preferred over any system store, because a stock macOS /etc/ssl/cert.pem can be stale.
     """
     global _ca_bundle
     if _ca_bundle is not None:
@@ -83,14 +83,18 @@ def ca_bundle() -> str:
     configured = str(os.environ.get("ZYREX_CA_BUNDLE") or "").strip()
     if configured:
         candidates.append(Path(configured))
+    # The shipped bundle always exists in a frozen build, so it is tried before anything
+    # the host system happens to provide.
+    candidates.append(resource("cacert.pem"))
     try:
         import certifi
         candidates.append(Path(certifi.where()))
     except Exception:
         pass
-    candidates.append(resource("cacert.pem"))
     candidates.append(Path(sys.prefix) / "ssl" / "cacert.pem")
     candidates.append(Path("/etc/ssl/cert.pem"))
+    candidates.append(Path("/usr/local/etc/openssl/cert.pem"))
+    candidates.append(Path("/opt/homebrew/etc/openssl@3/cert.pem"))
     for candidate in candidates:
         try:
             if candidate.is_file() and candidate.stat().st_size > 1024:
@@ -105,12 +109,18 @@ def ssl_context():
     import ssl
     bundle = ca_bundle()
     if bundle:
-        # SSL_CERT_FILE keeps libraries that build their own context (pywebview, requests)
-        # working with the same store.
-        os.environ.setdefault("SSL_CERT_FILE", bundle)
-        os.environ.setdefault("REQUESTS_CA_BUNDLE", bundle)
+        # Every TLS client in the process (urllib, pywebview, requests) must agree on the
+        # same store; setdefault would let an inherited, broken value win.
+        os.environ["SSL_CERT_FILE"] = bundle
+        os.environ["REQUESTS_CA_BUNDLE"] = bundle
+        os.environ["CURL_CA_BUNDLE"] = bundle
+        os.environ.pop("SSL_CERT_DIR", None)
         try:
-            return ssl.create_default_context(cafile=bundle)
+            context = ssl.create_default_context(cafile=bundle)
+            # A host that only ships an empty OpenSSL default store still verifies against
+            # the shipped bundle, and the platform roots are added on top.
+            context.load_default_certs()
+            return context
         except Exception:
             pass
     return ssl.create_default_context()
@@ -123,6 +133,85 @@ def network_error_message(error) -> str:
     if "timed out" in detail.lower():
         return "zyrexediting.xyz did not answer in time. Check your connection and try again."
     return f"Could not reach zyrexediting.xyz: {public_error(detail)}"
+
+def archive_launch_path(*candidates_override) -> str:
+    """The archive path when the app was started straight out of a .zip.
+
+    ZIP files do not run in place: Explorer and Finder hand out a temporary copy, so the
+    presets land in a throw-away folder and the app cannot update or delete itself.
+    """
+    candidates = list(candidates_override) or [
+        getattr(sys, "executable", ""), getattr(sys, "_MEIPASS", ""), str(Path(__file__)),
+    ]
+    for raw in candidates:
+        text = str(raw or "").strip()
+        if not text:
+            continue
+        lowered = text.replace("\\", "/").lower()
+        # ".../Temp1_Zyrex.zip/Zyrex.exe" (Windows Explorer) and ".../pack.zip/app" (macOS).
+        if re.search(r"\.zip(?:/|$)", lowered):
+            return text
+    return ""
+
+def show_archive_warning(archive_path: str) -> None:
+    message = (
+        "This installer was opened from inside a ZIP file.\n\n"
+        "Windows and macOS run a temporary copy, so the presets would be installed from a "
+        "folder that disappears afterwards and the app could not clean up after itself.\n\n"
+        "Extract the ZIP first (right click \u2192 Extract All), then open the installer "
+        "from the extracted folder."
+    )
+    if sys.platform == "win32":
+        try:
+            import ctypes
+            ctypes.windll.user32.MessageBoxW(None, message, "Zyrex Effects Installer", 0x00000010)
+            return
+        except Exception:
+            pass
+    if sys.platform == "darwin":
+        try:
+            script = 'display alert "Zyrex Effects Installer" message "%s" as critical' % message.replace('"', '\\"').replace("\n", "\\n")
+            subprocess.run(["osascript", "-e", script], check=False)
+            return
+        except Exception:
+            pass
+    print(message)
+
+# After Effects writes its RIFX "head" chunk version into every preset it saves. The app
+# compares that number with the maxima below so a pack built in a newer AE is flagged
+# before anything is copied. 95 = AE 2024, 97 = AE 2025, and each release adds two.
+AE_FORMAT_STEP = 2
+AE_FORMAT_BASE_YEAR = 2024
+AE_FORMAT_BASE = 95
+AE_FORMAT_KNOWN = {2022: 91, 2023: 93, 2024: 95, 2025: 97, 2026: 99}
+
+def ae_max_format(year: int | None) -> int:
+    if not year:
+        return 0
+    if year in AE_FORMAT_KNOWN:
+        return AE_FORMAT_KNOWN[year]
+    if year > max(AE_FORMAT_KNOWN):
+        return AE_FORMAT_BASE + (year - AE_FORMAT_BASE_YEAR) * AE_FORMAT_STEP
+    return max(0, AE_FORMAT_KNOWN[2023] - (2023 - year) * AE_FORMAT_STEP)
+
+def ae_min_label(format_version: int) -> str:
+    for threshold, label in ((99, "2026"), (97, "2025"), (95, "2024"), (93, "2023")):
+        if format_version >= threshold:
+            return label
+    return "2022 or older" if format_version else ""
+
+def ae_year_from_name(name: str) -> int | None:
+    text = str(name or "")
+    year = re.search(r"(20\d{2})", text)
+    if year:
+        return int(year.group(1))
+    # Premiere-style names ("After Effects 24.0") map 24 -> 2024, 26 -> 2026.
+    version = re.search(r"(?:^|\s)(\d{2})(?:\.\d+)?", text)
+    if version:
+        major = int(version.group(1))
+        if 15 <= major <= 40:
+            return 2000 + major
+    return None
 
 def load_embedded():
     manifest = json.loads(resource("metadata.json").read_text(encoding="utf-8"))
@@ -385,7 +474,7 @@ class InstallerAPI:
 
     def get_state(self):
         product = self.product
-        return {"leak": self.manifest.get("leak_name") or "Preset pack", "creator": ("@" + str(product.get("creator_username", "")).lstrip("@")) if product.get("creator_username") else (product.get("creator_nickname") or "Unknown creator"), "uploader": "Anonymous" if product.get("is_anonymous") else (product.get("uploader_name") or "Zyrex community"), "description": product.get("description", ""), "category": product.get("category", ""), "presetCount": int(self.manifest.get("count") or len(self.manifest.get("files") or [])), "creatorAvatar": product.get("creator_avatar", ""), "uploaderAvatar": "" if product.get("is_anonymous") else product.get("uploader_avatar", ""), "thumbnail": product.get("thumbnail", ""), "destination": str(self.destination) if self.destination else "", "ready": bool(self.destination and self.payload_key), "signedIn": bool(self.access_token), "eligible": bool(self.access.get("allowed")), "access": dict(self.access), "authenticated": bool(self.access_token and self.payload_key), "username": self.discord_username, "live": self.live, "metadataLoading": self.metadata_loading, "progress": dict(self.progress)}
+        return {"leak": self.manifest.get("leak_name") or "Preset pack", "creator": ("@" + str(product.get("creator_username", "")).lstrip("@")) if product.get("creator_username") else (product.get("creator_nickname") or "Unknown creator"), "uploader": "Anonymous" if product.get("is_anonymous") else (product.get("uploader_name") or "Zyrex community"), "description": product.get("description", ""), "category": product.get("category", ""), "presetCount": int(self.manifest.get("count") or len(self.manifest.get("files") or [])), "creatorAvatar": product.get("creator_avatar", ""), "uploaderAvatar": "" if product.get("is_anonymous") else product.get("uploader_avatar", ""), "thumbnail": product.get("thumbnail", ""), "destination": str(self.destination) if self.destination else "", "ready": bool(self.destination and self.payload_key), "signedIn": bool(self.access_token), "eligible": bool(self.access.get("allowed")), "access": dict(self.access), "authenticated": bool(self.access_token and self.payload_key), "username": self.discord_username, "live": self.live, "metadataLoading": self.metadata_loading, "progress": dict(self.progress), "version": VERSION, "aeVersion": self.ae_year() or 0}
 
     def log_event(self, event, **fields):
         if not self.access_token:
@@ -633,6 +722,127 @@ class InstallerAPI:
         webbrowser.open(url)
         return {"success": True}
 
+    def ae_year(self) -> int | None:
+        """The newest After Effects the member has installed, if any."""
+        years = []
+        for _sort_key, name in after_effects_versions():
+            year = ae_year_from_name(name)
+            if year:
+                years.append(year)
+        if not years and self.destination:
+            for ancestor in [self.destination, *self.destination.parents]:
+                year = ae_year_from_name(ancestor.name)
+                if year:
+                    years.append(year)
+                    break
+        return max(years) if years else None
+
+    def preset_compatibility(self):
+        """Every FFX in the pack with the After Effects version it needs.
+
+        The list is read from the installer's own manifest, so it is available before the
+        pack is unlocked and nothing is written until the member confirms.
+        """
+        files = self.manifest.get("files") or []
+        year = self.ae_year()
+        user_max = ae_max_format(year)
+        rows = []
+        for item in files:
+            name = str(item.get("name") or "")
+            format_version = int(item.get("format_version") or 0)
+            required = str(item.get("ae_min") or ae_min_label(format_version))
+            compatible = None
+            if format_version and user_max:
+                compatible = format_version <= user_max
+            rows.append({
+                "name": name,
+                "file": name.split("/")[-1],
+                "format": format_version,
+                "aeMin": required,
+                "compatible": compatible,
+            })
+        return {
+            "success": True,
+            "userVersion": year or 0,
+            "userMaxFormat": user_max,
+            "count": len(rows),
+            "incompatible": sum(1 for row in rows if row["compatible"] is False),
+            "unknown": sum(1 for row in rows if row["compatible"] is None),
+            "files": rows,
+        }
+
+    def remove_app(self):
+        """Delete this installer and quit, after the presets are already in place."""
+        target = Path(sys.executable).resolve()
+        bundle = None
+        if sys.platform == "darwin":
+            bundle = next((parent for parent in target.parents if parent.suffix == ".app"), None)
+        removal_target = bundle or target
+        manual = "This copy lives in a folder it cannot clean up by itself, so delete it by hand."
+        try:
+            if sys.platform == "darwin":
+                # macOS keeps the inode alive, so the bundle can disappear while it runs.
+                shutil.rmtree(removal_target, ignore_errors=True)
+                if removal_target.exists():
+                    return {"success": False, "error": manual}
+                shutil.rmtree(self._config_dir(), ignore_errors=True)
+            elif sys.platform == "win32":
+                if is_protected(removal_target):
+                    return {"success": False, "error": manual}
+                # Windows locks a running executable, so a detached shell waits for the exit
+                # and retries before clearing the one-file extraction folder as well.
+                scratch = str(getattr(sys, "_MEIPASS", "") or "")
+                script = Path(tempfile.gettempdir()) / f"zyrex-remove-{os.getpid()}.cmd"
+                script.write_text(
+                    "@echo off\r\n"
+                    "setlocal\r\n"
+                    "set tries=0\r\n"
+                    ":wait\r\n"
+                    "ping -n 2 127.0.0.1 >nul\r\n"
+                    "set /a tries+=1\r\n"
+                    f'del /f /q "{target}" 2>nul\r\n'
+                    f'if not exist "{target}" goto done\r\n'
+                    "if %tries% lss 15 goto wait\r\n"
+                    ":done\r\n"
+                    f'rmdir /s /q "{self._config_dir()}" 2>nul\r\n'
+                    + (f'rmdir /s /q "{scratch}" 2>nul\r\n' if scratch else "")
+                    + 'del /f /q "%~f0"\r\n',
+                    encoding="utf-8",
+                )
+                subprocess.Popen(["cmd", "/c", str(script)], creationflags=0x00000008, close_fds=True)
+            else:
+                removal_target.unlink(missing_ok=True)
+        except Exception as error:
+            return {"success": False, "error": f"The app could not delete itself: {public_error(error)}"}
+        self.log_event("self-remove", target=str(removal_target))
+        self._quit_window(delay=0.5)
+        return {"success": True, "removed": str(removal_target)}
+
+    @staticmethod
+    def _config_dir() -> Path:
+        return config_path().parent
+
+    @staticmethod
+    def _quit_window(delay: float = 0.0) -> None:
+        """Close the window and make sure the process really ends so the file unlocks."""
+        def quit_now():
+            try:
+                import webview
+                windows = getattr(webview, "windows", None) or []
+                for window in windows:
+                    try:
+                        window.destroy()
+                    except Exception:
+                        pass
+            except Exception:
+                pass
+            os._exit(0)
+
+        if delay > 0:
+            threading.Timer(delay, quit_now).start()
+        else:
+            quit_now()
+
 def main():
     if "--self-test" in sys.argv:
         api = InstallerAPI()
@@ -676,6 +886,25 @@ def main():
         assert normalize_access({"allowed": True})["allowed"] is True
         assert callable(getattr(api, "refresh_access", None)) and callable(getattr(api, "open_access", None))
         assert "access" in state and "eligible" in state and "signedIn" in state
+        # v1.0.2: the app refuses to run from inside a ZIP, lists the payload's presets with
+        # the After Effects version each one needs, and can delete itself afterwards.
+        assert archive_launch_path("C:\\Temp\\Temp1_pack.zip\\Zyrex.exe"), "zip launch not detected"
+        assert archive_launch_path("/tmp/pack.zip/Zyrex.app/Contents/MacOS/Zyrex"), "zip app launch not detected"
+        assert archive_launch_path("C:\\Apps\\Zyrex.exe") == "" and archive_launch_path("/Applications/Zyrex.app") == ""
+        assert ae_max_format(2023) == 93 and ae_max_format(2024) == 95 and ae_max_format(2025) == 97 and ae_max_format(2026) == 99
+        assert ae_max_format(2027) > ae_max_format(2026)
+        assert ae_min_label(95) == "2024" and ae_min_label(97) == "2025" and ae_min_label(99) == "2026"
+        assert ae_year_from_name("After Effects 2026") == 2026
+        assert ae_year_from_name("After Effects 24.0") == 2024
+        report = api.preset_compatibility()
+        assert report["success"] is True and report["count"] == state["presetCount"], report
+        assert "files" in report and all("aeMin" in row for row in report["files"])
+        assert callable(getattr(api, "remove_app", None)) and callable(getattr(api, "preset_compatibility", None))
+        assert VERSION == "v1.0.2" and VERSION in html
+        for marker in ("ffxSheet", "removeSheet", "preset_compatibility", "remove_app"):
+            assert marker in html, marker
+        # The vendored bundle is what makes HTTPS work on a frozen macOS build.
+        assert Path(resource("cacert.pem")).is_file(), "cacert.pem is missing from the bundle"
         # A frozen macOS build has no trust store of its own, so the CA bundle and the
         # verifying context are pinned here — without them every request failed with
         # CERTIFICATE_VERIFY_FAILED and nothing reached the API.
@@ -743,6 +972,10 @@ def main():
     # Pin the trust store before any TLS handshake, so every library in the process
     # (urllib, pywebview, requests) agrees on the bundled certificate authorities.
     ssl_context()
+    blocked = archive_launch_path()
+    if blocked:
+        show_archive_warning(blocked)
+        return
     import webview
     api = InstallerAPI()
     threading.Thread(target=lambda: (time.sleep(2), api.refresh_metadata()), daemon=True).start()

@@ -19,6 +19,24 @@ import ffx_credit as credit  # noqa: E402
 BRAND = "zyrexediting.xyz"
 SITE = "https://zyrexediting.xyz"
 
+# After Effects stores the format version of the saving release in the RIFX head chunk
+# (byte 24). Installers show it next to every preset so a member can see whether their
+# own After Effects can open the pack before anything is copied.
+AE_MIN_BY_FORMAT = ((99, "2026"), (97, "2025"), (95, "2024"), (93, "2023"))
+
+
+def ffx_format_version(data: bytes) -> int:
+    if len(data) < 32 or data[:4] != b"RIFX" or data[8:12] != b"FaFX":
+        return 0
+    return int.from_bytes(data[24:28], "big")
+
+
+def ae_min_label(format_version: int) -> str:
+    for threshold, label in AE_MIN_BY_FORMAT:
+        if format_version >= threshold:
+            return label
+    return "2022 or older" if format_version else ""
+
 
 def fetch_product(product_id: str) -> dict:
     query = urllib.parse.urlencode({"id": product_id})
@@ -65,6 +83,7 @@ def build_payload(product_id: str, source: Path, output: Path) -> dict:
     credit.load_known_effect_names(credit.default_asset_path("ffx-effect-names.json"))
     credit.load_template_library(credit.default_asset_path("assets", "ffx-effect-templates.json"))
     prepared: list[tuple[str, bytes, str]] = []
+    details: list[dict] = []
     effect_credit = filename_credit = 0
     used: set[str] = set()
     for original in originals:
@@ -72,6 +91,9 @@ def build_payload(product_id: str, source: Path, output: Path) -> dict:
         raw = original.read_bytes()
         if len(raw) < 12 or raw[:4] != b"RIFX" or raw[8:12] != b"FaFX":
             raise ValueError(f"Not a valid After Effects preset: {original.name}")
+        # Crediting may upgrade the head to the AE 2024 format, so compatibility is read
+        # from the bytes After Effects originally wrote.
+        format_version = ffx_format_version(raw)
         try:
             output_bytes, report = credit.credit_ffx_bytes(raw, original.name)
         except Exception as error:
@@ -94,6 +116,13 @@ def build_payload(product_id: str, source: Path, output: Path) -> dict:
             raise ValueError(f"Duplicate preset name after credit processing: {name}")
         used.add(key)
         prepared.append((name, output_bytes, mode))
+        details.append({
+            "name": name,
+            "credit_mode": mode,
+            "bytes": len(output_bytes),
+            "format_version": format_version,
+            "ae_min": ae_min_label(format_version),
+        })
 
     manifest = {
         "product_id": product_id,
@@ -102,7 +131,7 @@ def build_payload(product_id: str, source: Path, output: Path) -> dict:
         "count": len(prepared),
         "effect_name_credited": effect_credit,
         "filename_credited": filename_credit,
-        "files": [{"name": name, "credit_mode": mode, "bytes": len(data)} for name, data, mode in prepared],
+        "files": details,
     }
     if effect_credit + filename_credit != len(prepared):
         raise ValueError("Every FFX preset must receive an effect-name or filename credit before app generation.")

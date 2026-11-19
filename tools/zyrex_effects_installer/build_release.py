@@ -99,13 +99,18 @@ def build(product_id: str, source: Path, output_root: Path, release_id: str) -> 
         stage.mkdir()
         work.mkdir()
         # A frozen macOS build has no OpenSSL trust store, so every request failed with
-        # CERTIFICATE_VERIFY_FAILED. The CA bundle ships inside the app instead.
+        # CERTIFICATE_VERIFY_FAILED. The CA bundle ships inside the app instead; the copy
+        # kept in the repository wins so a build never depends on the runner's certifi.
         ca_bundle = temp / "cacert.pem"
+        vendored = PROJECT / "cacert.pem"
         try:
-            import certifi
-            ca_bundle.write_bytes(Path(certifi.where()).read_bytes())
+            if vendored.is_file() and vendored.stat().st_size > 1024:
+                ca_bundle.write_bytes(vendored.read_bytes())
+            else:
+                import certifi
+                ca_bundle.write_bytes(Path(certifi.where()).read_bytes())
         except Exception as error:
-            raise RuntimeError("certifi is required so the bundled app can verify HTTPS.") from error
+            raise RuntimeError("A CA bundle is required so the bundled app can verify HTTPS.") from error
         data_sep = ";" if system == "windows" else ":"
         args = [
             sys.executable, "-m", "PyInstaller", "--noconfirm", "--clean",

@@ -14,6 +14,41 @@ const SITE_LOG_CHANNEL_ID = "1555595493936070667";
 // Downloads are archived in their own room so the site-error channel stays readable.
 const DOWNLOAD_LOG_CHANNEL_ID = "1551817844633632829";
 const SITE_ERROR_ALERT_USER_ID = "1421177012814614548";
+// Leak announcement field icons: red, transparent PNGs uploaded as guild emojis, so the
+// card matches the site palette instead of Discord's coloured unicode emojis.
+const LEAK_ANNOUNCE_ICONS = {
+  id: "<:zyrex_id:1572550335069814838>",
+  size: "<:zyrex_size:1572550336613453924>",
+  files: "<:zyrex_files:1572550337762689084>",
+  category: "<:zyrex_category:1572550339121647686>",
+  uploader: "<:zyrex_uploader:1572550340396580908>",
+  product: "<:zyrex_product:1572550341801549854>",
+  likes: "<:zyrex_likes:1572550342883934211>",
+  views: "<:zyrex_views:1572550344477773964>",
+  downloads: "<:zyrex_downloads:1572550345736069180>",
+  replies: "<:zyrex_replies:1572550347791142912>",
+  check: "<:zyrex_check:1572620497475342468>",
+  cross: "<:zyrex_cross:1572620498758668399>",
+  warning: "<:zyrex_warning:1572620500335599616>",
+  info: "<:zyrex_info:1572620502063784057>",
+  shield: "<:zyrex_shield:1572620503632576512>",
+  hammer: "<:zyrex_hammer:1572620506946085014>",
+  clock: "<:zyrex_clock:1572620508162297856>",
+  trash: "<:zyrex_trash:1572620509667921940>",
+  role: "<:zyrex_role:1572620511358488617>",
+  user: "<:zyrex_user:1572620512889274517>",
+  server: "<:zyrex_server:1572620518098600066>",
+  channel: "<:zyrex_channel:1572620519793230055>",
+  cloud: "<:zyrex_cloud:1572620521529549033>",
+  lock: "<:zyrex_lock:1572620523547009084>",
+  announce: "<:zyrex_announce:1572620524885114971>",
+  link: "<:zyrex_link:1572620527783383061>",
+  game: "<:zyrex_game:1572620529393737768>",
+  media: "<:zyrex_media:1572620530823995492>",
+  sparkle: "<:zyrex_sparkle:1572620532107583529>",
+  restart: "<:zyrex_restart:1572620544787095613>",
+  ping: "<:zyrex_ping:1572620548930928650>",
+};
 
 // The download archive keeps one immutable object per download plus small capped
 // indexes, so any single lookup is a direct read instead of scanning everything.
@@ -2752,7 +2787,12 @@ async function handleInstallerPublish(request, url, env) {
     console.error("installer source relocation failed:", productId, error?.message || String(error));
     return { moved: 0, waiting: [] };
   });
-  return json({ success: true, key, filename, size: declared, release_id: releaseId, uploaded_at: uploadedAt, sources_moved: relocation.moved, sources_waiting_for: relocation.waiting }, 200, { "Cache-Control": "no-store" });
+  // The second platform completes the pair, which is the moment the deferred share can go out.
+  const announced = await announcePendingLeak(env, productId).catch(error => {
+    console.error("pending leak announcement failed:", productId, error?.message || String(error));
+    return false;
+  });
+  return json({ success: true, key, filename, size: declared, release_id: releaseId, uploaded_at: uploadedAt, sources_moved: relocation.moved, sources_waiting_for: relocation.waiting, announced }, 200, { "Cache-Control": "no-store" });
 }
 
 // One-off: releases published before installers moved beside the leak files live under
@@ -3020,6 +3060,85 @@ async function handleInstallerStatus(url, env) {
   return json(payload, 200, { "Cache-Control": "public, max-age=60" });
 }
 
+// Backfill for the whole catalogue: a preset leak is only ever listed with both app
+// downloads next to it, so every leak that misses one is hidden again and its build is
+// re-queued. Old leaks never post a new Discord message - they just become visible.
+async function handleInstallerReconcile(request, url, env) {
+  if (request.method !== "POST") return json({ success: false, error: "Method not allowed" }, 405, { "Cache-Control": "no-store" });
+  const expected = String(env.FFX_RELEASE_SOURCE_TOKEN || "").trim();
+  const provided = String(request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "").trim();
+  if (!expected || !installerSecretMatches(provided, expected)) return json({ success: false, error: "Unauthorized" }, 401, { "Cache-Control": "no-store" });
+  const apply = String(url.searchParams.get("apply") || "") === "1";
+  const dispatchBuilds = apply && String(url.searchParams.get("dispatch") || "1") !== "0";
+  const hideUnbuildable = String(url.searchParams.get("hide_unbuildable") || "") === "1";
+  const limit = Math.max(1, Math.min(50, Number.parseInt(url.searchParams.get("limit") || "20", 10) || 20));
+  const maxDispatch = Math.max(0, Math.min(12, Number.parseInt(url.searchParams.get("max_dispatch") || "6", 10) || 6));
+  const products = (await dbGetProducts(env).catch(() => []))
+    .filter(product => product && product.id && String(product.type || "preset").toLowerCase() === "preset")
+    .sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
+  const offset = Math.max(0, Number.parseInt(url.searchParams.get("offset") || "0", 10) || 0);
+  const slice = products.slice(offset, offset + limit);
+  const pipelineReady = presetInstallerPipelineReady(env);
+  const report = {
+    success: true,
+    total: products.length,
+    offset,
+    limit,
+    next_offset: offset + slice.length < products.length ? offset + slice.length : 0,
+    apply,
+    pipeline_ready: pipelineReady,
+    dispatched: 0,
+    complete: [],
+    missing: [],
+    unbuildable: [],
+    revealed: [],
+    hidden: [],
+    failed: [],
+  };
+  for (const product of slice) {
+    const id = String(product.id);
+    const status = await installerStatusPayload(env, id, product).catch(() => null);
+    if (!status) {
+      report.failed.push({ id, error: "status unavailable" });
+      continue;
+    }
+    if (!status.missing.length) {
+      report.complete.push(id);
+      if (apply && product.installers_pending === true) {
+        // Its installers exist, so the catalogue entry was only waiting on the build.
+        await dbUpdateProduct(env, id, { installers_pending: false });
+        report.revealed.push(id);
+      }
+      continue;
+    }
+    const sourceReady = await presetInstallerSourceReady(env, product).catch(() => false);
+    if (!sourceReady && !hideUnbuildable) {
+      // Nothing to build from, so hiding it would remove the leak from the site for good.
+      report.unbuildable.push({ id, missing: status.missing });
+      continue;
+    }
+    report.missing.push({ id, missing: status.missing, source_ready: sourceReady });
+    if (!apply) continue;
+    if (!pipelineReady) {
+      report.failed.push({ id, error: "installer pipeline is not configured" });
+      continue;
+    }
+    if (product.installers_pending !== true) {
+      await dbUpdateProduct(env, id, { installers_pending: true });
+      report.hidden.push(id);
+    }
+    if (!dispatchBuilds || !sourceReady || report.dispatched >= maxDispatch) continue;
+    const queued = await queuePresetInstallerBuild(env, product).catch(error => {
+      console.error("installer reconcile dispatch failed:", id, error?.message || String(error));
+      return false;
+    });
+    if (!queued) continue;
+    report.dispatched += 1;
+    await r2PutJSON(env, `cache/installer_dispatch/${id.replace(/[^A-Za-z0-9_-]/g, "")}.json`, { at: Date.now(), missing: status.missing }).catch(() => false);
+  }
+  return json(report, 200, { "Cache-Control": "no-store" });
+}
+
 async function handleInstallerDownload(request, url, env) {
   const productId = String(url.searchParams.get("id") || "").trim();
   const platform = String(url.searchParams.get("platform") || "").trim().toLowerCase();
@@ -3209,20 +3328,28 @@ async function installerSourceBundle(bucket, sourcePrefix, productId, files) {
   });
 }
 
-async function queuePresetInstallerBuild(env, product) {
-  const githubToken = String(env.FFX_RELEASE_GITHUB_TOKEN || "").trim();
-  const sourceToken = String(env.FFX_RELEASE_SOURCE_TOKEN || "").trim();
-  const repository = String(env.FFX_RELEASE_REPOSITORY || "reyliar/zyrex-web").trim();
-  if (!githubToken || !sourceToken || !product || String(product.type || "preset").toLowerCase() !== "preset") return false;
-  const prefix = normalizeR2Prefix(product.file_path);
+// Both the leak folder and the relocated backup can hold the preset sources an
+// installer is built from.
+function presetInstallerPipelineReady(env) {
+  return Boolean(String(env.FFX_RELEASE_GITHUB_TOKEN || "").trim())
+    && Boolean(String(env.FFX_RELEASE_SOURCE_TOKEN || "").trim());
+}
+
+async function presetInstallerSourceReady(env, product) {
+  const prefix = normalizeR2Prefix(product && product.file_path);
   const bucket = env.STORAGE_PROD || env.STORAGE;
   if (!prefix || !bucket) return false;
   const listing = await bucket.list({ prefix, limit: 1000 });
-  const hasFfx = (listing.objects || []).some(object => object.key.startsWith(prefix) && /\.ffx$/i.test(object.key));
-  if (!hasFfx) {
-    const backupListing = await bucket.list({ prefix: `_source_ffx/${prefix}`, limit: 10 });
-    if (!(backupListing.objects || []).some(object => /\.ffx$/i.test(object.key))) return false;
-  }
+  if ((listing.objects || []).some(object => object.key.startsWith(prefix) && /\.ffx$/i.test(object.key))) return true;
+  const backupListing = await bucket.list({ prefix: `_source_ffx/${prefix}`, limit: 10 });
+  return (backupListing.objects || []).some(object => /\.ffx$/i.test(object.key));
+}
+
+async function queuePresetInstallerBuild(env, product) {
+  const githubToken = String(env.FFX_RELEASE_GITHUB_TOKEN || "").trim();
+  const repository = String(env.FFX_RELEASE_REPOSITORY || "reyliar/zyrex-web").trim();
+  if (!presetInstallerPipelineReady(env) || !product || String(product.type || "preset").toLowerCase() !== "preset") return false;
+  if (!(await presetInstallerSourceReady(env, product))) return false;
   const response = await fetch(`https://api.github.com/repos/${repository}/dispatches`, {
     method: "POST",
     headers: {
@@ -3237,6 +3364,50 @@ async function queuePresetInstallerBuild(env, product) {
   });
   if (!response.ok) throw new Error(`GitHub release dispatch failed (${response.status})`);
   return true;
+}
+
+const LEAK_ANNOUNCE_CLAIM_MS = 5 * 60 * 1000;
+// A leak that waited days for its installers is not news any more, so a backfill reveals it
+// without posting another message in the announcement channel.
+const LEAK_ANNOUNCE_MAX_AGE_MS = 48 * 60 * 60 * 1000;
+const leakAnnounceLocks = new Set();
+
+// A preset is shared only after CI has published both installers, so the announcement can
+// never land on a leak whose app download is still missing. The claim marker keeps the
+// second platform upload and the cron sweep from posting the same leak twice.
+async function announcePendingLeak(env, productId) {
+  const id = String(productId || "").trim();
+  if (!id || leakAnnounceLocks.has(id)) return false;
+  const product = await dbGetProduct(env, id).catch(() => null);
+  if (!product || product.installers_pending !== true) return false;
+  if (String(product.type || "preset").toLowerCase() !== "preset") return false;
+  const status = await installerStatusPayload(env, id, product).catch(() => null);
+  if (!status || (status.missing || []).length) return false;
+  const created = Date.parse(String(product.created_at || product.updated_at || "")) || 0;
+  if (!created || Date.now() - created > LEAK_ANNOUNCE_MAX_AGE_MS) {
+    await dbUpdateProduct(env, id, { installers_pending: false });
+    return false;
+  }
+  const claimKey = `cache/leak_announce_claims/${id.replace(/[^A-Za-z0-9_-]/g, "")}.json`;
+  const claim = await r2GetJSON(env, claimKey, null).catch(() => null);
+  if (claim && Date.now() - Number(claim.at || 0) < LEAK_ANNOUNCE_CLAIM_MS) return false;
+  const claimToken = crypto.randomUUID();
+  await r2PutJSON(env, claimKey, { at: Date.now(), token: claimToken }).catch(() => false);
+  const confirmed = await r2GetJSON(env, claimKey, null).catch(() => null);
+  if (!confirmed || confirmed.token !== claimToken) return false;
+  leakAnnounceLocks.add(id);
+  try {
+    const announced = await announceProductToDiscord(env, product).catch(() => false);
+    if (!announced) return false;
+    await dbUpdateProduct(env, id, {
+      installers_pending: false,
+      installers_announced_at: new Date().toISOString(),
+    });
+    await env.STORAGE.delete(claimKey).catch(() => false);
+    return true;
+  } finally {
+    leakAnnounceLocks.delete(id);
+  }
 }
 
 // A leak whose build was never dispatched - files added after publishing, a failed dispatch, a
@@ -3273,6 +3444,9 @@ async function sweepMissingInstallers(env) {
         const relocated = await relocateLeakSources(env, bucket, prefix, id).catch(() => null);
         if (relocated && relocated.moved) console.log("installer sources relocated:", id, relocated.moved);
       }
+      // A build that finished outside the publish callback is shared from the sweep.
+      const announced = await announcePendingLeak(env, id).catch(() => false);
+      if (announced) console.log("installer announcement sent:", id);
       continue;
     }
     const markerKey = `cache/installer_dispatch/${id.replace(/[^A-Za-z0-9_-]/g, "")}.json`;
@@ -3449,10 +3623,10 @@ async function hasCommunityUploaderRole(userId, env) {
   } catch (_) {}
 
   // Direct Discord fallback keeps the gate working when the VPS bot API is down.
-  if (env?.DISCORD_BOT_TOKEN) {
+  if (getSiteLogBotToken(env)) {
     try {
       const response = await fetch(`${DISCORD_API}/guilds/${env.GUILD_ID || "1518954946110685184"}/members/${encodeURIComponent(userId)}`, {
-        headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` },
+        headers: { Authorization: `Bot ${getSiteLogBotToken(env)}` },
         signal: AbortSignal.timeout(3500),
       });
       if (response.ok) {
@@ -5181,6 +5355,23 @@ function normalizeProductNotifications(list) {
   return Array.isArray(list) ? list.map(normalizeProductNotification) : list;
 }
 
+// The bot turns recent products into bell items, so a preset waiting for its app build
+// has to be dropped here before it reaches the member.
+async function filterPendingProductNotifications(env, list) {
+  if (!Array.isArray(list) || !list.length) return list;
+  const pending = new Set(
+    (await dbReadProductCatalog(env).catch(() => []))
+      .filter(product => product && product.installers_pending === true)
+      .map(product => String(product.id || ""))
+      .filter(Boolean)
+  );
+  if (!pending.size) return list;
+  return list.filter(item => {
+    const id = String((item && item.id) || "");
+    return !id.startsWith("prod_") || !pending.has(id.slice("prod_".length));
+  });
+}
+
 function filterAccountNotifications(list, notificationPrefs, followPrefs) {
   const prefs = notificationPrefs && typeof notificationPrefs === "object" ? notificationPrefs : {};
   const follows = followPrefs && typeof followPrefs === "object" ? followPrefs : {};
@@ -6650,10 +6841,30 @@ async function creatorPageLinks(url, env = null) {
 
 // Payhip serves its whole catalogue in the store page, so it is read directly: the scraper's
 // store endpoint answers with an empty list, which is why every store showed "no products".
+const PAYHIP_STORE_LIMITS = {
+  // A store can hold hundreds of products across many pages, so every page is read
+  // instead of only the first card grid. The caps keep one scan inside a Worker's
+  // request budget and stop a pathological store from looping forever.
+  MAX_PRODUCTS: 2000,
+  MAX_PAGES: 40,
+  MAX_COLLECTIONS: 12,
+  PAGE_TIMEOUT_MS: 9000,
+  BUDGET_MS: 22000,
+};
+
+function payhipPagedUrl(baseUrl, page) {
+  if (page <= 1) return baseUrl;
+  const separator = baseUrl.includes("?") ? "&" : "?";
+  return `${baseUrl}${separator}page=${page}`;
+}
+
 async function listPayhipStoreProducts(storeUrl, env = null) {
   const seen = new Set();
   const products = [];
+  const collections = new Set();
+  const deadline = Date.now() + PAYHIP_STORE_LIMITS.BUDGET_MS;
   const add = (rows) => {
+    let added = 0;
     for (const row of rows) {
       const url = String((row && row.url) || "").trim();
       if (!url || seen.has(url)) continue;
@@ -6671,18 +6882,33 @@ async function listPayhipStoreProducts(storeUrl, env = null) {
         provider: "payhip",
         source: "payhip",
       });
+      added += 1;
     }
+    return added;
   };
-  const storePage = await fetchPayhipRaw(storeUrl, env).catch(() => null);
-  const parsed = parsePayhipProductsAndCollections(storePage);
-  add(parsed.products);
-  // The front page carries only the newest cards, so the collections fill in the rest.
-  for (const collection of [...parsed.collections].slice(0, 6)) {
-    if (products.length >= 100) break;
-    const page = await fetchPayhipRaw(`https://payhip.com/collection/${collection}`, env).catch(() => null);
-    add(parsePayhipProductsAndCollections(page).products);
+
+  // Payhip renders one grid page per request, so a store with several pages is walked
+  // until a page repeats cards we already have (the real end) or the budget runs out.
+  async function harvest(baseUrl) {
+    for (let page = 1; page <= PAYHIP_STORE_LIMITS.MAX_PAGES; page += 1) {
+      if (products.length >= PAYHIP_STORE_LIMITS.MAX_PRODUCTS) return;
+      if (Date.now() > deadline) return;
+      const payload = await fetchPayhipRaw(payhipPagedUrl(baseUrl, page), env, { timeoutMs: PAYHIP_STORE_LIMITS.PAGE_TIMEOUT_MS }).catch(() => null);
+      if (!payload) return;
+      const parsed = parsePayhipProductsAndCollections(payload);
+      for (const collection of parsed.collections) collections.add(collection);
+      // A page that adds nothing new means the store has no further page.
+      if (!add(parsed.products)) return;
+    }
   }
-  if (products.length) return products.slice(0, 100);
+
+  await harvest(storeUrl);
+  // The front page carries only the newest cards, so collections fill in the rest.
+  for (const collection of [...collections].slice(0, PAYHIP_STORE_LIMITS.MAX_COLLECTIONS)) {
+    if (products.length >= PAYHIP_STORE_LIMITS.MAX_PRODUCTS || Date.now() > deadline) break;
+    await harvest(`https://payhip.com/collection/${collection}`);
+  }
+  if (products.length) return products;
   const catalog = await scrapinRequest(env, "/payhip/products", { url: storeUrl, descriptions: "true" });
   return scrapeProductRows(catalog).map(item => ({
     title: item.title || item.name || item.product_name || item.product_title || "Product",
@@ -6693,7 +6919,7 @@ async function listPayhipStoreProducts(storeUrl, env = null) {
     url: item.url || item.product_url || item.link || "",
     provider: "payhip",
     source: "scrapin",
-  })).filter(item => item.url).slice(0, 100);
+  })).filter(item => item.url);
 }
 
 async function scanCreatorLinksWithScrapin(rawUrl, env) {
@@ -7420,10 +7646,10 @@ async function handlePresenceAPI(request, env) {
 
     // 2. Fetch Official Discord REST API user data (/users/{id}) if bot token exists
     let discordUserObj = null;
-    if (env.DISCORD_BOT_TOKEN) {
+    if (getSiteLogBotToken(env)) {
       try {
         const dRes = await fetch(`https://discord.com/api/v10/users/${id}`, {
-          headers: { "Authorization": `Bot ${env.DISCORD_BOT_TOKEN}` }
+          headers: { "Authorization": `Bot ${getSiteLogBotToken(env)}` }
         });
         if (dRes.ok) {
           discordUserObj = await dRes.json();
@@ -10058,6 +10284,16 @@ function isAdminRequest(request, env, hasMasterKey) {
   return isAdminSession(parseSession(null, request));
 }
 
+// The release pipeline proves itself with FFX_RELEASE_SOURCE_TOKEN, the secret every
+// installer endpoint already accepts, so a backfill run can read the leaks that are still
+// waiting for their app build.
+function isReleasePipelineRequest(request, env) {
+  const expected = String(env.FFX_RELEASE_SOURCE_TOKEN || "").trim();
+  if (!expected) return false;
+  const provided = String(request.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "").trim();
+  return Boolean(provided) && installerSecretMatches(provided, expected);
+}
+
 // The VPS bot proves itself with its own Discord token, exactly like /api/internal/*. The
 // public app key is never accepted here.
 // Tokens proven valid by Discord, so a token that only lives in the VPS environment still
@@ -10722,11 +10958,12 @@ function snowflakeToIso(id) {
   return Number.isFinite(timestamp) ? new Date(timestamp).toISOString() : "";
 }
 
-// Every secret that may hold a bot token, in preference order. A token that Discord
-// rejects is skipped instead of failing the whole call.
+// Every secret that may hold a bot token, in preference order. The logger bot is the
+// live account, so it goes first; a token that Discord rejects is skipped instead of
+// failing the whole call.
 const DISCORD_TOKEN_SOURCES = [
-  "DISCORD_BOT_TOKEN",
   "SITE_LOG_BOT_TOKEN",
+  "DISCORD_BOT_TOKEN",
   "ZYREX_BOT_TOKEN",
   "DISCORD_LOGGER_BOT_TOKEN",
   "LOGGER_BOT_TOKEN",
@@ -11505,8 +11742,28 @@ function feedInteractionCounts(row) {
 
 function applyFeedCounts(fields, counts) {
   const next = Array.isArray(fields) ? fields.map(field => ({ ...field })) : [];
-  const labels = { "❤️ Likes": counts.likes, "👁️ Views": counts.views, "💬 Replies": counts.replies };
-  return next.map(field => (field && labels[field.name] !== undefined ? { ...field, value: String(labels[field.name]) } : field));
+  // Field icons may be unicode or a custom emoji, so counters are matched by their label.
+  const counters = [
+    ["Likes", counts.likes],
+    ["Views", counts.views],
+    ["Replies", counts.replies],
+    ["Downloads", counts.downloads],
+  ];
+  const patched = next.map(field => {
+    if (!field || !field.name) return field;
+    const name = String(field.name);
+    const counter = counters.find(([label, value]) => value !== undefined && value !== null && name.endsWith(` ${label}`));
+    return counter ? { ...field, value: String(counter[1]) } : field;
+  });
+  // Announcements posted before the download counter existed gain the field on their
+  // next refresh, so older cards keep matching the site.
+  if (counts.downloads !== undefined && counts.downloads !== null && !patched.some(field => field && String(field.name || "").endsWith(" Downloads"))) {
+    const index = patched.findIndex(field => field && String(field.name || "").endsWith(" Views"));
+    const downloads = { name: `${LEAK_ANNOUNCE_ICONS.downloads} Downloads`, value: String(counts.downloads), inline: true };
+    if (index >= 0) patched.splice(index + 1, 0, downloads);
+    else patched.push(downloads);
+  }
+  return patched;
 }
 
 function buildFeedPostEmbed(post, counts) {
@@ -11561,13 +11818,24 @@ async function readFeedPostCounts(env, post) {
     const productId = String((post && post.product_id) || "").trim()
       || (post && post.kind === "resource_notice" ? await resolveNoticeProductId(env, post.id) : "");
     if (productId) {
-      const summary = await leakInteractionSummary(env, productId, "", false);
-      return { likes: summary.likes, views: summary.views, replies: summary.replies };
+      // Downloads are counted in their own document, with the preset stats as fallback,
+      // so the card shows the same number as the leak page.
+      const [summary, downloadData] = await Promise.all([
+        leakInteractionSummary(env, productId, "", false),
+        dbGetDownloadCounts(env).catch(() => ({ counts: {} })),
+      ]);
+      const storedDownloads = Number((downloadData && downloadData.counts && downloadData.counts[productId]));
+      return {
+        likes: summary.likes,
+        views: summary.views,
+        replies: summary.replies,
+        downloads: Number.isFinite(storedDownloads) ? storedDownloads : (Number(summary.downloads) || 0),
+      };
     }
     const row = sanitizeSocialInteraction(await r2GetJSON(env, feedPostSocialKey(post), null) || emptySocialInteraction());
     return feedInteractionCounts(row);
   } catch (_) {
-    return { likes: 0, views: 0, replies: 0 };
+    return { likes: 0, views: 0, replies: 0, downloads: 0 };
   }
 }
 
@@ -11855,6 +12123,15 @@ async function scheduleFeedDiscordRefresh(env, postId) {
   if (await refreshFeedDiscordMessage(env, postId)) return true;
   await new Promise(resolve => setTimeout(resolve, FEED_MESSAGE_EDIT_MIN_MS + 500));
   return refreshFeedDiscordMessage(env, postId, { force: true });
+}
+
+// A download changes no feed interaction, so the upload announcement is refreshed from
+// the download paths as well; duplicates (bot relay plus track call) are skipped.
+function scheduleLeakAnnouncementRefresh(env, productId, isNew) {
+  if (isNew === false) return Promise.resolve(false);
+  const id = String(productId || "").trim();
+  if (!id) return Promise.resolve(false);
+  return scheduleFeedDiscordRefresh(env, noticePostId(id)).catch(() => false);
 }
 
 async function deleteFeedDiscordMessage(env, postId) {
@@ -12399,7 +12676,8 @@ function isScenepackProduct(product) {
 const FEED_HIDDEN_RESOURCE_TYPES = ["plugin", "audio"];
 function isFeedAnnounceableProduct(product) {
   if (!product || typeof product !== "object") return false;
-  if (product.is_anonymous === true || isScenepackProduct(product)) return false;
+  // A preset waiting for its app build is not shared yet.
+  if (product.is_anonymous === true || product.installers_pending === true || isScenepackProduct(product)) return false;
   const values = [product.type, product.category, product.resource_category]
     .flatMap(value => String(value || "").toLowerCase().split(/[,/]/).map(part => part.trim()));
   return !values.some(value => FEED_HIDDEN_RESOURCE_TYPES.some(type =>
@@ -12433,7 +12711,7 @@ function profileOwnedProducts(catalog, discordId) {
 // Anonymous resources are invisible to visitors and to the owner's public listing;
 // the owner keeps a private count instead.
 function profileVisibleProducts(ownedProducts) {
-  return (ownedProducts || []).filter(product => product && product.is_anonymous !== true);
+  return (ownedProducts || []).filter(product => product && product.is_anonymous !== true && product.installers_pending !== true);
 }
 
 // The same ownership rules as profileOwnedProducts, applied to the whole catalogue
@@ -12441,7 +12719,7 @@ function profileVisibleProducts(ownedProducts) {
 function profileOwnedResourceCounts(catalog) {
   const counts = new Map();
   for (const product of Array.isArray(catalog) ? catalog : []) {
-    if (!isProfileResourceProduct(product) || product.is_anonymous === true) continue;
+    if (!isProfileResourceProduct(product) || product.is_anonymous === true || product.installers_pending === true) continue;
     const creditedId = String(product.credited_uploader_id || "").trim();
     const ownerId = creditedId || String(product.uploader_id || product.author_id || "").trim();
     if (!ownerId) continue;
@@ -13180,7 +13458,7 @@ function flattenLeakComments(list) {
 
 async function leakInteractionSummary(env, productId, viewerId = "", includeItems = false) {
   const id = String(productId || "").trim();
-  if (!id) return { likes: 0, liked: false, views: 0, replies: 0, ...(includeItems ? { items: [] } : {}) };
+  if (!id) return { likes: 0, liked: false, views: 0, replies: 0, downloads: 0, ...(includeItems ? { items: [] } : {}) };
   const [stats, stored, row] = await Promise.all([
     dbGetPresetStats(env, id).catch(() => ({ views: 0, downloads: 0, likes: 0 })),
     dbGetPresetComments(env, id).catch(() => []),
@@ -13191,6 +13469,7 @@ async function leakInteractionSummary(env, productId, viewerId = "", includeItem
     likes: row.likes.length,
     liked: Boolean(viewerId) && row.likes.includes(viewerId),
     views: Math.max(0, Number(stats.views) || 0),
+    downloads: Math.max(0, Number(stats.downloads) || 0),
     replies: items.length,
     ...(includeItems ? { items } : {}),
   };
@@ -13452,10 +13731,10 @@ async function enrichAccessNames(env, rows) {
     // The worker's own bot token cannot always read a member — it may belong to a
     // different bot than the one in the guild — so the VPS bot relay is the fallback
     // that resolves names in production.
-    if (env?.DISCORD_BOT_TOKEN) {
+    if (getSiteLogBotToken(env)) {
       try {
         const response = await fetch(`${DISCORD_API}/guilds/${env.GUILD_ID || "1518954946110685184"}/members/${encodeURIComponent(row.id)}`, {
-          headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` },
+          headers: { Authorization: `Bot ${getSiteLogBotToken(env)}` },
           signal: AbortSignal.timeout(3500),
         });
         if (response.ok) {
@@ -17371,6 +17650,464 @@ async function handleDiscordInviteAPI(request, env, session, hasMasterKey = fals
   return json({ success: true, ...publicDiscordInviteState(fresh), is_admin: true }, 200, { "Cache-Control": "no-store" });
 }
 
+// Leak uploads are announced with the same rendered card the timeline uses, so the
+// channel shows the upload exactly as the site does. Two link buttons follow: the leak
+// page and the numbered feed post for the announcement.
+const LEAK_ANNOUNCE_CHANNEL_ID = "1521792240320516197";
+// Leak announcements ping this role so followers get a Discord notification.
+const LEAK_ANNOUNCE_ROLE_ID = "1519246268252029072";
+// Violet strip, matching the leak monitor card the channel uses.
+const LEAK_ANNOUNCE_EMBED_COLOR = 0x6c5ce7;
+
+function leakAnnounceRoleIds(env) {
+  const raw = String((env && env.LEAK_ANNOUNCE_ROLE_ID) || LEAK_ANNOUNCE_ROLE_ID);
+  return raw.split(/[\s,]+/).map(id => id.trim()).filter(id => /^\d{17,20}$/.test(id)).slice(0, 3);
+}
+
+function leakPublicUrl(product) {
+  const id = String((product && product.id) || "").trim();
+  return id ? `https://zyrexediting.xyz/leak?id=${encodeURIComponent(id)}` : "";
+}
+
+function leakAnnounceButtons(product, notice) {
+  const buttons = [];
+  const leakUrl = leakPublicUrl(product);
+  if (leakUrl) buttons.push({ type: 2, style: 5, label: "View Leak", url: leakUrl });
+  const postUrl = notice ? feedPostUrl(notice) : "";
+  if (postUrl) buttons.push({ type: 2, style: 5, label: "View Post", url: postUrl });
+  return buttons.length ? [{ type: 1, components: buttons }] : undefined;
+}
+
+// The Discord card mirrors the leak monitor layout: name, "Uploaded by", a
+// size/files/category metadata block, the leak's own description, the pack image and
+// the two buttons.
+const LEAK_ANNOUNCE_FOOTER = "© Zyrex™ Website 2026 · Leak Monitor";
+
+// The pack ships as an installer next to its watermarks and its presets live in the
+// backup prefix, so the count is taken from wherever the presets actually are.
+async function leakPackStats(env, product) {
+  const prefix = normalizeR2Prefix(product && product.file_path);
+  const bucket = env.STORAGE_PROD || env.STORAGE;
+  if (!prefix || !bucket) return { files: 0, size: "" };
+  const countPrefix = async (candidate) => {
+    let files = 0;
+    let bytes = 0;
+    let cursor;
+    for (let page = 0; page < 4; page++) {
+      const listing = await bucket.list({ prefix: candidate, limit: 1000, cursor });
+      for (const object of listing.objects || []) {
+        if (!isDownloadableR2Object(object, candidate)) continue;
+        // The installer wrapper and the watermark files are not pack contents.
+        if (/\.(exe|dmg)$/i.test(object.key)) continue;
+        files += 1;
+        bytes += Number(object.size) || 0;
+      }
+      if (!listing.truncated || !listing.cursor) break;
+      cursor = listing.cursor;
+    }
+    return { files, bytes };
+  };
+  try {
+    let stats = await countPrefix(`_source_ffx/${prefix}`);
+    if (!stats.files) stats = await countPrefix(prefix);
+    if (!stats.files) return { files: 0, size: "" };
+    return { files: stats.files, size: formatSizeR2(stats.bytes) };
+  } catch (_) {
+    return { files: 0, size: "" };
+  }
+}
+
+// Leak descriptions come from upload forms and shops, so they arrive with markup,
+// zero-width padding and hard line breaks.
+function leakAnnouncementDescription(product, limit = 700) {
+  const raw = String((product && (product.description || product.desc || product.notes)) || "");
+  if (!raw) return "";
+  const text = raw
+    .replace(/<\s*br\s*\/?\s*>/gi, "\n")
+    .replace(/<\/\s*(p|div|li)\s*>/gi, "\n")
+    .replace(/<[^>]+>/g, " ")
+    .replace(/&nbsp;/gi, " ")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/[\u200b-\u200f\u2060\ufeff]/g, "")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+  if (!text) return "";
+  return text.length > limit ? `${text.slice(0, limit - 1).trimEnd()}…` : text;
+}
+
+function buildLeakAnnouncementEmbed(product, notice, options) {
+  const opts = options || {};
+  const identity = opts.identity || {};
+  const counts = opts.counts || { likes: 0, views: 0, replies: 0, downloads: 0 };
+  const stats = opts.stats || { files: 0, size: "" };
+  const uploaderId = String(opts.uploaderId || "");
+  const mentionable = /^\d{17,20}$/.test(uploaderId);
+  const anonymous = product.is_anonymous === true;
+  const thumbnail = absoluteMediaUrl(product.thumbnail || product.cdn_thumbnail || "");
+
+  const uploadedBy = anonymous
+    ? "**Uploaded by** Anonymous"
+    : `**Uploaded by** ${mentionable ? `<@${uploaderId}>` : (identity.handle ? `@${identity.handle}` : String(identity.name || "Zyrex member"))}`;
+  const description = leakAnnouncementDescription(product);
+  // Discord rejects an embed whose description is empty, so the block is assembled and
+  // trimmed as a whole.
+  const body = [uploadedBy, description].filter(Boolean).join("\n\n").slice(0, 4000);
+
+  const fields = [];
+  // The card identifies the leak itself, not the feed post that announces it.
+  const leakId = String((product && product.id) || "").trim();
+  if (leakId) fields.push({ name: `${LEAK_ANNOUNCE_ICONS.id} Leak ID`, value: leakId.slice(0, 1024), inline: true });
+  if (stats.size) fields.push({ name: `${LEAK_ANNOUNCE_ICONS.size} Size`, value: stats.size, inline: true });
+  if (stats.files) fields.push({ name: `${LEAK_ANNOUNCE_ICONS.files} Files`, value: String(stats.files), inline: true });
+  const categoryLabels = Array.isArray(notice && notice.resource && notice.resource.category_labels) && notice.resource.category_labels.length
+    ? notice.resource.category_labels
+    : productCategoryLabels(product);
+  // "Preset" and "Others" say nothing when the platform is already listed, so the card
+  // shows the specific category the reference layout uses.
+  const generic = new Set(["Preset", "Others", "Project File"]);
+  const specific = categoryLabels.filter(label => !generic.has(label));
+  const shownCategories = specific.length ? specific : categoryLabels;
+  if (shownCategories.length) fields.push({ name: `${LEAK_ANNOUNCE_ICONS.category} Category`, value: shownCategories.join(" · ").slice(0, 1024), inline: false });
+  fields.push({ name: `${LEAK_ANNOUNCE_ICONS.uploader} Uploader`, value: anonymous ? "Anonymous" : String(identity.name || "Zyrex member").slice(0, 200), inline: false });
+  const productLink = String(product.product_url || product.source_url || "").trim();
+  const leakUrl = leakPublicUrl(product);
+  if (/^https?:\/\//i.test(productLink)) fields.push({ name: `${LEAK_ANNOUNCE_ICONS.product} Product`, value: `[Product Link](${productLink})`, inline: false });
+  else if (leakUrl) fields.push({ name: `${LEAK_ANNOUNCE_ICONS.product} Product`, value: `[Open on Zyrex](${leakUrl})`, inline: false });
+  // The counters keep being patched in place when members like, view, download or reply.
+  fields.push(
+    { name: `${LEAK_ANNOUNCE_ICONS.likes} Likes`, value: String(counts.likes || 0), inline: true },
+    { name: `${LEAK_ANNOUNCE_ICONS.views} Views`, value: String(counts.views || 0), inline: true },
+    { name: `${LEAK_ANNOUNCE_ICONS.downloads} Downloads`, value: String(counts.downloads || 0), inline: true },
+    { name: `${LEAK_ANNOUNCE_ICONS.replies} Replies`, value: String(counts.replies || 0), inline: true },
+  );
+
+  return {
+    title: String(product.name || "New leak").slice(0, 256),
+    description: body,
+    color: LEAK_ANNOUNCE_EMBED_COLOR,
+    ...(leakUrl ? { url: leakUrl } : {}),
+    ...(thumbnail ? { thumbnail: { url: thumbnail }, image: { url: thumbnail } } : {}),
+    fields,
+    footer: { text: LEAK_ANNOUNCE_FOOTER },
+    timestamp: String(notice && notice.created_at ? notice.created_at : new Date().toISOString()),
+  };
+}
+
+// The announcement is a normal feed item: the official profile posts it, so it carries
+// the same author, wording, thumbnail and numbered short link as the timeline entry.
+async function buildLeakAnnouncementNotice(env, product) {
+  const official = await resolveZyrexProfile(env).catch(() => null);
+  const officialId = official ? String(official.id || "") : "";
+  const owner = String(product.credited_uploader_id || product.uploader_id || product.author_id || "").trim();
+  const handles = invertHandleIndex(await readHandleIndex(env).catch(() => ({})));
+  const handle = handles[owner] || "";
+  const displayName = String(
+    product.credited_uploader_name || product.uploader_name || product.author_name || ""
+  ).trim() || "Zyrex member";
+  const postId = noticePostId(product.id);
+  const thumbnail = String(product.thumbnail || product.cdn_thumbnail || "");
+  const identity = {
+    id: officialId,
+    name: official ? official.name : "Zyrex",
+    handle: ZYREX_HANDLE,
+    avatar: official ? official.avatar : "/assets/content.png",
+    url: `/@${ZYREX_HANDLE}`,
+    is_admin: true,
+    is_official: true,
+  };
+  const notice = {
+    kind: "resource_notice",
+    id: postId,
+    post_id: postId,
+    product_id: String(product.id || ""),
+    author_id: officialId,
+    author: identity,
+    announcement: { ...identity },
+    resource: profilePublicResource(product),
+    uploader: {
+      id: owner,
+      name: displayName,
+      handle,
+      avatar: String(product.credited_uploader_avatar || product.uploader_avatar || ""),
+      url: handle ? `/@${handle}` : `/profile?id=${encodeURIComponent(owner)}`,
+    },
+    text: `${handle ? "@" + handle : displayName} uploaded a new leak!`,
+    media: thumbnail ? [thumbnail] : [],
+    created_at: product.created_at || new Date().toISOString(),
+  };
+  // The short link needs a number; assigning it here also registers the post id.
+  await assignNoticeSequences(env, [notice]).catch(() => [notice]);
+  return notice;
+}
+
+// The Discord profile behind the member who uploaded the leak, so the card header shows
+// them instead of the official feed author.
+async function discordUploaderIdentity(env, userId, fallback) {
+  const identity = {
+    id: String(userId || ""),
+    name: String((fallback && fallback.name) || "Zyrex member"),
+    handle: String((fallback && fallback.handle) || ""),
+    avatar: String((fallback && fallback.avatar) || ""),
+    url: String((fallback && fallback.url) || ""),
+  };
+  // Default avatars live on this Worker's own host, which it cannot fetch, so lean on
+  // the Discord CDN lookup below (or the card's initials fallback).
+  if (/^\/api\/avatar\/default\//i.test(identity.avatar)) identity.avatar = "";
+  if (!/^\d{17,20}$/.test(identity.id)) return identity;
+  const token = getSiteLogBotToken(env);
+  if (!token) return identity;
+  try {
+    const response = await fetch(`${DISCORD_API}/users/${identity.id}`, {
+      headers: { Authorization: `Bot ${token}` },
+      signal: AbortSignal.timeout(5000),
+    });
+    if (!response.ok) return identity;
+    const user = await response.json().catch(() => null);
+    if (!user || !user.id) return identity;
+    const name = String(user.global_name || user.username || "").trim();
+    if (name) identity.name = name;
+    if (user.avatar) {
+      const ext = String(user.avatar).startsWith("a_") ? "gif" : "png";
+      identity.avatar = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${ext}?size=160`;
+    }
+    return identity;
+  } catch (_) {
+    return identity;
+  }
+}
+
+// Uploads are announced as an embed shaped like the leak monitor card: the leak name
+// on top, "Uploaded by", a size/files/category block, the leak's own description, the
+// pack image and the View Leak / View Post buttons. Outside the embed the message only
+// carries the role ping. Returns true when the channel got a message.
+async function postLeakAnnouncement(env, product) {
+  const token = getSiteLogBotToken(env);
+  if (!token || !product || !String(product.id || "")) return false;
+  const notice = await buildLeakAnnouncementNotice(env, product);
+  const channelId = String(env.LEAK_ANNOUNCE_CHANNEL_ID || LEAK_ANNOUNCE_CHANNEL_ID);
+  const counts = await readFeedPostCounts(env, notice).catch(() => ({ likes: 0, views: 0, replies: 0, downloads: 0 }));
+  const stats = await leakPackStats(env, product);
+  const components = leakAnnounceButtons(product, notice);
+  const roleIds = leakAnnounceRoleIds(env);
+  const uploader = notice.uploader || {};
+  const uploaderId = String(uploader.id || "").trim();
+  const isDiscordId = /^\d{17,20}$/.test(uploaderId);
+  const identity = await discordUploaderIdentity(env, uploaderId, uploader);
+
+  const embed = buildLeakAnnouncementEmbed(product, notice, { identity, counts, stats, uploaderId });
+
+  const payload = {
+    embeds: [embed],
+    // Only the role and the uploader may be mentioned, and only the role is written out.
+    allowed_mentions: { parse: [], roles: roleIds, users: isDiscordId ? [uploaderId] : [] },
+    components,
+  };
+  const roleMentions = roleIds.map(id => `<@&${id}>`).join(" ");
+  if (roleMentions) payload.content = roleMentions;
+  try {
+    const response = await fetch(`${DISCORD_API}/channels/${channelId}/messages`, {
+      method: "POST",
+      headers: { Authorization: `Bot ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!response.ok) {
+      console.warn("Leak announcement failed:", response.status, String(await response.text().catch(() => "")).slice(0, 200));
+      return false;
+    }
+    const message = await response.json().catch(() => null);
+    const messageId = String((message && message.id) || "");
+    if (messageId) {
+      // The embed is stored so like/view/reply changes can patch its counters.
+      await r2PutJSON(env, feedMessageKey(notice.id), {
+        version: 1,
+        post_id: notice.id,
+        product_id: notice.product_id,
+        author_id: notice.author_id,
+        channel_id: channelId,
+        message_id: messageId,
+        embed,
+        counts,
+        edited_at: Date.now(),
+      }).catch(() => false);
+    }
+    return Boolean(messageId);
+  } catch (error) {
+    console.error("Leak announcement failed:", error?.message || String(error));
+    return false;
+  }
+}
+
+// Announce a new product to the Discord announcement channel (mirrors bot.py announce_product())
+async function announceProductToDiscord(env, product) {
+  try {
+    const announceType = String(product.type || "preset").toLowerCase();
+    // Skip plugins silently
+    if (announceType === "plugin" || announceType === "adobe-plugin" || announceType === "ofx-plugin") return false;
+    // Leaks get their own upload embed; the generic announcement below covers the rest.
+    if (!announceType || announceType === "preset" || announceType === "resource") {
+      const sentCard = await postLeakAnnouncement(env, product).catch(error => {
+        console.error("Leak card announcement failed:", error?.message || String(error));
+        return false;
+      });
+      if (sentCard) return true;
+    }
+
+    const botToken = getSiteLogBotToken(env);
+    if (!botToken) {
+      // Fall back to the VPS bot, which maintains its own Discord credentials.
+      const fallback = await fetch(`${BOT_API}/api/products/announce`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(product),
+        signal: AbortSignal.timeout(8000),
+      }).catch(() => null);
+      return Boolean(fallback && fallback.ok);
+    }
+    const ptype = String(product.type || "preset").toLowerCase();
+
+    const ANNOUNCE_CHANNEL = "1521792240320516197";
+    const productName = String(product.name || "Untitled").slice(0, 200);
+    const productDesc = String(product.description || "").slice(0, 350) || "*No description provided*";
+
+    let productUrl, typeLabel, color, catDisplay, downloadLabel, sizeStr;
+
+    if (ptype === "audio") {
+      productUrl = `https://zyrexediting.xyz/product-audio?id=${product.id}`;
+      color = 0x7c3aed;  // Purple
+      typeLabel = "Audio";
+      catDisplay = (product.category || "others").replace(",",", ").replace(/-/g," ");
+      sizeStr = product.size_str || "Audio File";
+      downloadLabel = "Listen / Download";
+    } else if (ptype === "scenepack") {
+      productUrl = `https://zyrexediting.xyz/product-scenepack?id=${product.id}`;
+      color = 0xfbbf24;  // Amber
+      typeLabel = "Scenepack";
+      catDisplay = "Scenepack";
+      sizeStr = product.size_str || "External";
+      downloadLabel = "Download";
+    } else {
+      productUrl = `https://zyrexediting.xyz/leak?id=${product.id}`;
+      const catMap = {
+        "after-effects": { label: "After Effects", color: 0x9b59b6 },
+        "premiere-pro": { label: "Premiere Pro", color: 0x3498db },
+        "photoshop": { label: "Photoshop", color: 0x00bcd4 },
+        "video-star": { label: "Video Star", color: 0xffd700 },
+        "topaz-labs": { label: "Topaz Labs", color: 0x00e676 },
+        "software": { label: "Software", color: 0xe67e22 },
+        "adobe-plugin": { label: "Adobe Plugin", color: 0xe91e63 },
+        "ofx-plugin": { label: "OFX Plugin", color: 0x7c4dff },
+      };
+      const rcat = product.resource_category || product.category || "preset";
+      typeLabel = rcat === "project-file" ? "Project File" : "Leak";
+      const catInfo = catMap[rcat] || {};
+      catDisplay = catInfo.label || String(rcat).replace(/-/g," ").replace(/\b\w/g, c => c.toUpperCase());
+      color = catInfo.color || 0xa80f2d;  // Cherry red default
+      sizeStr = product.size_str || "";
+      downloadLabel = "Download";
+    }
+
+    // Uploader name & avatar
+    let uploaderName = "Zyrex Community";
+    let uploaderAvatarUrl = null;
+    const uploaderId = String(product.uploader_id || product.author_id || "").trim();
+    const uploaderAvatar = String(product.uploader_avatar || product.creator_avatar || "").trim();
+    const uploaderNameField = String(product.uploader_name || product.creator_nickname || product.author_name || "").trim();
+
+    if (uploaderNameField) uploaderName = uploaderNameField;
+    if (uploaderAvatar.startsWith("http")) {
+      uploaderAvatarUrl = uploaderAvatar;
+    } else if (uploaderAvatar && uploaderId) {
+      const ext = uploaderAvatar.startsWith("a_") ? "gif" : "png";
+      uploaderAvatarUrl = `https://cdn.discordapp.com/avatars/${uploaderId}/${uploaderAvatar}.${ext}?size=64`;
+    }
+
+    // Try to fetch live Discord display name
+    if (uploaderId && /^\d{17,20}$/.test(uploaderId)) {
+      try {
+        const memberResp = await fetch(`https://discord.com/api/v10/users/${uploaderId}`, {
+          headers: { Authorization: `Bot ${botToken}` },
+          signal: AbortSignal.timeout(3000)
+        });
+        if (memberResp.ok) {
+          const m = await memberResp.json();
+          if (m && m.id) {
+            uploaderName = m.global_name || m.username || uploaderName;
+            if (m.avatar) {
+              const ext = m.avatar.startsWith("a_") ? "gif" : "png";
+              uploaderAvatarUrl = `https://cdn.discordapp.com/avatars/${m.id}/${m.avatar}.${ext}?size=64`;
+            }
+          }
+        }
+      } catch(e) {}
+    }
+
+    // Build embed fields
+    const fields = [{ name: "Type", value: typeLabel, inline: true }];
+    if (catDisplay) fields.push({ name: "Category", value: catDisplay, inline: true });
+    if (sizeStr && ptype === "preset") fields.push({ name: "Size", value: sizeStr, inline: true });
+    fields.push({ name: "Access", value: `[${downloadLabel}](${productUrl})`, inline: false });
+
+    const embed = {
+      title: productName,
+      description: productDesc,
+      url: productUrl,
+      color,
+      fields,
+      footer: {
+        text: "Zyrex™ Leaks",
+        icon_url: "https://zyrexediting.xyz/assets/content.png"
+      },
+      timestamp: new Date().toISOString()
+    };
+
+    if (uploaderAvatarUrl) {
+      embed.author = { name: uploaderName, url: productUrl, icon_url: uploaderAvatarUrl };
+    } else {
+      embed.author = { name: uploaderName, url: productUrl };
+    }
+
+    const thumb = String(product.cdn_thumbnail || product.thumbnail || "");
+    if (thumb) embed.thumbnail = { url: thumb };
+
+    // A leak keeps both links even when only the embed fallback reaches Discord.
+    let fallbackComponents;
+    if (!ptype || ptype === "preset" || ptype === "resource") {
+      const fallbackNotice = await buildLeakAnnouncementNotice(env, product).catch(() => null);
+      fallbackComponents = leakAnnounceButtons(product, fallbackNotice);
+    }
+
+    try {
+      const announceResp = await fetch(`https://discord.com/api/v10/channels/${ANNOUNCE_CHANNEL}/messages`, {
+        method: "POST",
+        headers: { Authorization: `Bot ${botToken}`, "Content-Type": "application/json" },
+        body: JSON.stringify(fallbackComponents ? { embeds: [embed], components: fallbackComponents } : { embeds: [embed] }),
+        signal: AbortSignal.timeout(8000)
+      });
+      if (!announceResp.ok) throw new Error(`Discord announce returned ${announceResp.status}`);
+      return true;
+    } catch (error) {
+      console.error("Discord product announcement failed:", error?.message || String(error));
+      // Fall back to the VPS bot, which maintains its own Discord connection.
+      const fallback = await fetch(`${BOT_API}/api/products/announce`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(product),
+        signal: AbortSignal.timeout(8000),
+      }).catch(() => null);
+      return Boolean(fallback && fallback.ok);
+    }
+  } catch(e) {
+    console.error("announceProductToDiscord failed:", e.message);
+    return false;
+  }
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -17875,457 +18612,6 @@ export default {
       return json(result, result.success ? 200 : 502);
     }
 
-// Leak uploads are announced with the same rendered card the timeline uses, so the
-// channel shows the upload exactly as the site does. Two link buttons follow: the leak
-// page and the numbered feed post for the announcement.
-const LEAK_ANNOUNCE_CHANNEL_ID = "1521792240320516197";
-// Leak announcements ping this role so followers get a Discord notification.
-const LEAK_ANNOUNCE_ROLE_ID = "1519246268252029072";
-// Violet strip, matching the resource monitor card the channel uses.
-const LEAK_ANNOUNCE_EMBED_COLOR = 0x6c5ce7;
-
-function leakAnnounceRoleIds(env) {
-  const raw = String((env && env.LEAK_ANNOUNCE_ROLE_ID) || LEAK_ANNOUNCE_ROLE_ID);
-  return raw.split(/[\s,]+/).map(id => id.trim()).filter(id => /^\d{17,20}$/.test(id)).slice(0, 3);
-}
-
-function leakPublicUrl(product) {
-  const id = String((product && product.id) || "").trim();
-  return id ? `https://zyrexediting.xyz/leak?id=${encodeURIComponent(id)}` : "";
-}
-
-function leakAnnounceButtons(product, notice) {
-  const buttons = [];
-  const leakUrl = leakPublicUrl(product);
-  if (leakUrl) buttons.push({ type: 2, style: 5, label: "View Leak", url: leakUrl });
-  const postUrl = notice ? feedPostUrl(notice) : "";
-  if (postUrl) buttons.push({ type: 2, style: 5, label: "View Post", url: postUrl });
-  return buttons.length ? [{ type: 1, components: buttons }] : undefined;
-}
-
-// The Discord card mirrors the resource monitor layout: name, "Uploaded by", a 📦/📁/🏷
-// metadata block, the leak's own description, the pack image and the two buttons.
-const LEAK_ANNOUNCE_FOOTER = "© Zyrex™ Website 2026 · Resource Monitor";
-
-// The pack ships as an installer next to its watermarks and its presets live in the
-// backup prefix, so the count is taken from wherever the presets actually are.
-async function leakPackStats(env, product) {
-  const prefix = normalizeR2Prefix(product && product.file_path);
-  const bucket = env.STORAGE_PROD || env.STORAGE;
-  if (!prefix || !bucket) return { files: 0, size: "" };
-  const countPrefix = async (candidate) => {
-    let files = 0;
-    let bytes = 0;
-    let cursor;
-    for (let page = 0; page < 4; page++) {
-      const listing = await bucket.list({ prefix: candidate, limit: 1000, cursor });
-      for (const object of listing.objects || []) {
-        if (!isDownloadableR2Object(object, candidate)) continue;
-        // The installer wrapper and the watermark files are not pack contents.
-        if (/\.(exe|dmg)$/i.test(object.key)) continue;
-        files += 1;
-        bytes += Number(object.size) || 0;
-      }
-      if (!listing.truncated || !listing.cursor) break;
-      cursor = listing.cursor;
-    }
-    return { files, bytes };
-  };
-  try {
-    let stats = await countPrefix(`_source_ffx/${prefix}`);
-    if (!stats.files) stats = await countPrefix(prefix);
-    if (!stats.files) return { files: 0, size: "" };
-    return { files: stats.files, size: formatSizeR2(stats.bytes) };
-  } catch (_) {
-    return { files: 0, size: "" };
-  }
-}
-
-// Leak descriptions come from upload forms and shops, so they arrive with markup,
-// zero-width padding and hard line breaks.
-function leakAnnouncementDescription(product, limit = 700) {
-  const raw = String((product && (product.description || product.desc || product.notes)) || "");
-  if (!raw) return "";
-  const text = raw
-    .replace(/<\s*br\s*\/?\s*>/gi, "\n")
-    .replace(/<\/\s*(p|div|li)\s*>/gi, "\n")
-    .replace(/<[^>]+>/g, " ")
-    .replace(/&nbsp;/gi, " ")
-    .replace(/&amp;/gi, "&")
-    .replace(/&lt;/gi, "<")
-    .replace(/&gt;/gi, ">")
-    .replace(/&quot;/gi, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/[\u200b-\u200f\u2060\ufeff]/g, "")
-    .replace(/[ \t]+/g, " ")
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-  if (!text) return "";
-  return text.length > limit ? `${text.slice(0, limit - 1).trimEnd()}…` : text;
-}
-
-function buildLeakAnnouncementEmbed(product, notice, options) {
-  const opts = options || {};
-  const identity = opts.identity || {};
-  const counts = opts.counts || { likes: 0, views: 0, replies: 0 };
-  const stats = opts.stats || { files: 0, size: "" };
-  const uploaderId = String(opts.uploaderId || "");
-  const mentionable = /^\d{17,20}$/.test(uploaderId);
-  const anonymous = product.is_anonymous === true;
-  const thumbnail = absoluteMediaUrl(product.thumbnail || product.cdn_thumbnail || "");
-
-  const uploadedBy = anonymous
-    ? "**Uploaded by** Anonymous"
-    : `**Uploaded by** ${mentionable ? `<@${uploaderId}>` : (identity.handle ? `@${identity.handle}` : String(identity.name || "Zyrex member"))}`;
-  const description = leakAnnouncementDescription(product);
-  // Discord rejects an embed whose description is empty, so the block is assembled and
-  // trimmed as a whole.
-  const body = [uploadedBy, description].filter(Boolean).join("\n\n").slice(0, 4000);
-
-  const fields = [];
-  if (notice && notice.seq) fields.push({ name: "🆔 Resource ID", value: `#${notice.seq}`, inline: true });
-  if (stats.size) fields.push({ name: "📦 Size", value: stats.size, inline: true });
-  if (stats.files) fields.push({ name: "📁 Files", value: String(stats.files), inline: true });
-  const categoryLabels = Array.isArray(notice && notice.resource && notice.resource.category_labels) && notice.resource.category_labels.length
-    ? notice.resource.category_labels
-    : productCategoryLabels(product);
-  // "Preset" and "Others" say nothing when the platform is already listed, so the card
-  // shows the specific category the reference layout uses.
-  const generic = new Set(["Preset", "Others", "Project File"]);
-  const specific = categoryLabels.filter(label => !generic.has(label));
-  const shownCategories = specific.length ? specific : categoryLabels;
-  if (shownCategories.length) fields.push({ name: "🏷️ Category", value: shownCategories.join(" · ").slice(0, 1024), inline: false });
-  fields.push({ name: "👤 Uploader", value: anonymous ? "Anonymous" : String(identity.name || "Zyrex member").slice(0, 200), inline: false });
-  const productLink = String(product.product_url || product.source_url || "").trim();
-  const leakUrl = leakPublicUrl(product);
-  if (/^https?:\/\//i.test(productLink)) fields.push({ name: "🔗 Product", value: `[Product Link](${productLink})`, inline: false });
-  else if (leakUrl) fields.push({ name: "🔗 Product", value: `[Open on Zyrex](${leakUrl})`, inline: false });
-  // The counters keep being patched in place when members like, view or reply.
-  fields.push(
-    { name: "❤️ Likes", value: String(counts.likes || 0), inline: true },
-    { name: "👁️ Views", value: String(counts.views || 0), inline: true },
-    { name: "💬 Replies", value: String(counts.replies || 0), inline: true },
-  );
-
-  return {
-    title: String(product.name || "New leak").slice(0, 256),
-    description: body,
-    color: LEAK_ANNOUNCE_EMBED_COLOR,
-    ...(leakUrl ? { url: leakUrl } : {}),
-    ...(thumbnail ? { thumbnail: { url: thumbnail }, image: { url: thumbnail } } : {}),
-    fields,
-    footer: { text: LEAK_ANNOUNCE_FOOTER },
-    timestamp: String(notice && notice.created_at ? notice.created_at : new Date().toISOString()),
-  };
-}
-
-// The announcement is a normal feed item: the official profile posts it, so it carries
-// the same author, wording, thumbnail and numbered short link as the timeline entry.
-async function buildLeakAnnouncementNotice(env, product) {
-  const official = await resolveZyrexProfile(env).catch(() => null);
-  const officialId = official ? String(official.id || "") : "";
-  const owner = String(product.credited_uploader_id || product.uploader_id || product.author_id || "").trim();
-  const handles = invertHandleIndex(await readHandleIndex(env).catch(() => ({})));
-  const handle = handles[owner] || "";
-  const displayName = String(
-    product.credited_uploader_name || product.uploader_name || product.author_name || ""
-  ).trim() || "Zyrex member";
-  const postId = noticePostId(product.id);
-  const thumbnail = String(product.thumbnail || product.cdn_thumbnail || "");
-  const identity = {
-    id: officialId,
-    name: official ? official.name : "Zyrex",
-    handle: ZYREX_HANDLE,
-    avatar: official ? official.avatar : "/assets/content.png",
-    url: `/@${ZYREX_HANDLE}`,
-    is_admin: true,
-    is_official: true,
-  };
-  const notice = {
-    kind: "resource_notice",
-    id: postId,
-    post_id: postId,
-    product_id: String(product.id || ""),
-    author_id: officialId,
-    author: identity,
-    announcement: { ...identity },
-    resource: profilePublicResource(product),
-    uploader: {
-      id: owner,
-      name: displayName,
-      handle,
-      avatar: String(product.credited_uploader_avatar || product.uploader_avatar || ""),
-      url: handle ? `/@${handle}` : `/profile?id=${encodeURIComponent(owner)}`,
-    },
-    text: `${handle ? "@" + handle : displayName} uploaded a new leak!`,
-    media: thumbnail ? [thumbnail] : [],
-    created_at: product.created_at || new Date().toISOString(),
-  };
-  // The short link needs a number; assigning it here also registers the post id.
-  await assignNoticeSequences(env, [notice]).catch(() => [notice]);
-  return notice;
-}
-
-// The Discord profile behind the member who uploaded the leak, so the card header shows
-// them instead of the official feed author.
-async function discordUploaderIdentity(env, userId, fallback) {
-  const identity = {
-    id: String(userId || ""),
-    name: String((fallback && fallback.name) || "Zyrex member"),
-    handle: String((fallback && fallback.handle) || ""),
-    avatar: String((fallback && fallback.avatar) || ""),
-    url: String((fallback && fallback.url) || ""),
-  };
-  // Default avatars live on this Worker's own host, which it cannot fetch, so lean on
-  // the Discord CDN lookup below (or the card's initials fallback).
-  if (/^\/api\/avatar\/default\//i.test(identity.avatar)) identity.avatar = "";
-  if (!/^\d{17,20}$/.test(identity.id)) return identity;
-  const token = getSiteLogBotToken(env);
-  if (!token) return identity;
-  try {
-    const response = await fetch(`${DISCORD_API}/users/${identity.id}`, {
-      headers: { Authorization: `Bot ${token}` },
-      signal: AbortSignal.timeout(5000),
-    });
-    if (!response.ok) return identity;
-    const user = await response.json().catch(() => null);
-    if (!user || !user.id) return identity;
-    const name = String(user.global_name || user.username || "").trim();
-    if (name) identity.name = name;
-    if (user.avatar) {
-      const ext = String(user.avatar).startsWith("a_") ? "gif" : "png";
-      identity.avatar = `https://cdn.discordapp.com/avatars/${user.id}/${user.avatar}.${ext}?size=160`;
-    }
-    return identity;
-  } catch (_) {
-    return identity;
-  }
-}
-
-// Uploads are announced as an embed shaped like the resource monitor card: the leak name
-// on top, "Uploaded by", a size/files/category block, the leak's own description, the
-// pack image and the View Leak / View Post buttons. Outside the embed the message only
-// carries the role ping. Returns true when the channel got a message.
-async function postLeakAnnouncement(env, product) {
-  const token = getSiteLogBotToken(env);
-  if (!token || !product || !String(product.id || "")) return false;
-  const notice = await buildLeakAnnouncementNotice(env, product);
-  const channelId = String(env.LEAK_ANNOUNCE_CHANNEL_ID || LEAK_ANNOUNCE_CHANNEL_ID);
-  const counts = await readFeedPostCounts(env, notice).catch(() => ({ likes: 0, views: 0, replies: 0 }));
-  const stats = await leakPackStats(env, product);
-  const components = leakAnnounceButtons(product, notice);
-  const roleIds = leakAnnounceRoleIds(env);
-  const uploader = notice.uploader || {};
-  const uploaderId = String(uploader.id || "").trim();
-  const isDiscordId = /^\d{17,20}$/.test(uploaderId);
-  const identity = await discordUploaderIdentity(env, uploaderId, uploader);
-
-  const embed = buildLeakAnnouncementEmbed(product, notice, { identity, counts, stats, uploaderId });
-
-  const payload = {
-    embeds: [embed],
-    // Only the role and the uploader may be mentioned, and only the role is written out.
-    allowed_mentions: { parse: [], roles: roleIds, users: isDiscordId ? [uploaderId] : [] },
-    components,
-  };
-  const roleMentions = roleIds.map(id => `<@&${id}>`).join(" ");
-  if (roleMentions) payload.content = roleMentions;
-  try {
-    const response = await fetch(`${DISCORD_API}/channels/${channelId}/messages`, {
-      method: "POST",
-      headers: { Authorization: `Bot ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-      signal: AbortSignal.timeout(8000),
-    });
-    if (!response.ok) {
-      console.warn("Leak announcement failed:", response.status, String(await response.text().catch(() => "")).slice(0, 200));
-      return false;
-    }
-    const message = await response.json().catch(() => null);
-    const messageId = String((message && message.id) || "");
-    if (messageId) {
-      // The embed is stored so like/view/reply changes can patch its counters.
-      await r2PutJSON(env, feedMessageKey(notice.id), {
-        version: 1,
-        post_id: notice.id,
-        product_id: notice.product_id,
-        author_id: notice.author_id,
-        channel_id: channelId,
-        message_id: messageId,
-        embed,
-        counts,
-        edited_at: Date.now(),
-      }).catch(() => false);
-    }
-    return Boolean(messageId);
-  } catch (error) {
-    console.error("Leak announcement failed:", error?.message || String(error));
-    return false;
-  }
-}
-
-// Announce a new product to the Discord announcement channel (mirrors bot.py announce_product())
-async function announceProductToDiscord(env, product) {
-  try {
-    const announceType = String(product.type || "preset").toLowerCase();
-    // Skip plugins silently
-    if (announceType === "plugin" || announceType === "adobe-plugin" || announceType === "ofx-plugin") return;
-    // Leaks get their own upload embed; the generic announcement below covers the rest.
-    if (!announceType || announceType === "preset" || announceType === "resource") {
-      const sentCard = await postLeakAnnouncement(env, product).catch(error => {
-        console.error("Leak card announcement failed:", error?.message || String(error));
-        return false;
-      });
-      if (sentCard) return;
-    }
-
-    const botToken = env.DISCORD_BOT_TOKEN || env.SITE_LOG_BOT_TOKEN || "";
-    if (!botToken) {
-      // Fall back to the VPS bot, which maintains its own Discord credentials.
-      await fetch(`${BOT_API}/api/products/announce`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(product),
-        signal: AbortSignal.timeout(8000),
-      }).catch(() => {});
-      return;
-    }
-    const ptype = String(product.type || "preset").toLowerCase();
-
-    const ANNOUNCE_CHANNEL = "1521792240320516197";
-    const productName = String(product.name || "Untitled").slice(0, 200);
-    const productDesc = String(product.description || "").slice(0, 350) || "*No description provided*";
-
-    let productUrl, typeLabel, color, catDisplay, downloadLabel, sizeStr;
-
-    if (ptype === "audio") {
-      productUrl = `https://zyrexediting.xyz/product-audio?id=${product.id}`;
-      color = 0x7c3aed;  // Purple
-      typeLabel = "Audio";
-      catDisplay = (product.category || "others").replace(",",", ").replace(/-/g," ");
-      sizeStr = product.size_str || "Audio File";
-      downloadLabel = "Listen / Download";
-    } else if (ptype === "scenepack") {
-      productUrl = `https://zyrexediting.xyz/product-scenepack?id=${product.id}`;
-      color = 0xfbbf24;  // Amber
-      typeLabel = "Scenepack";
-      catDisplay = "Scenepack";
-      sizeStr = product.size_str || "External";
-      downloadLabel = "Download";
-    } else {
-      productUrl = `https://zyrexediting.xyz/leak?id=${product.id}`;
-      const catMap = {
-        "after-effects": { label: "After Effects", color: 0x9b59b6 },
-        "premiere-pro": { label: "Premiere Pro", color: 0x3498db },
-        "photoshop": { label: "Photoshop", color: 0x00bcd4 },
-        "video-star": { label: "Video Star", color: 0xffd700 },
-        "topaz-labs": { label: "Topaz Labs", color: 0x00e676 },
-        "software": { label: "Software", color: 0xe67e22 },
-        "adobe-plugin": { label: "Adobe Plugin", color: 0xe91e63 },
-        "ofx-plugin": { label: "OFX Plugin", color: 0x7c4dff },
-      };
-      const rcat = product.resource_category || product.category || "preset";
-      typeLabel = rcat === "project-file" ? "Project File" : "Leak";
-      const catInfo = catMap[rcat] || {};
-      catDisplay = catInfo.label || String(rcat).replace(/-/g," ").replace(/\b\w/g, c => c.toUpperCase());
-      color = catInfo.color || 0xa80f2d;  // Cherry red default
-      sizeStr = product.size_str || "";
-      downloadLabel = "Download";
-    }
-
-    // Uploader name & avatar
-    let uploaderName = "Zyrex Community";
-    let uploaderAvatarUrl = null;
-    const uploaderId = String(product.uploader_id || product.author_id || "").trim();
-    const uploaderAvatar = String(product.uploader_avatar || product.creator_avatar || "").trim();
-    const uploaderNameField = String(product.uploader_name || product.creator_nickname || product.author_name || "").trim();
-
-    if (uploaderNameField) uploaderName = uploaderNameField;
-    if (uploaderAvatar.startsWith("http")) {
-      uploaderAvatarUrl = uploaderAvatar;
-    } else if (uploaderAvatar && uploaderId) {
-      const ext = uploaderAvatar.startsWith("a_") ? "gif" : "png";
-      uploaderAvatarUrl = `https://cdn.discordapp.com/avatars/${uploaderId}/${uploaderAvatar}.${ext}?size=64`;
-    }
-
-    // Try to fetch live Discord display name
-    if (uploaderId && /^\d{17,20}$/.test(uploaderId)) {
-      try {
-        const memberResp = await fetch(`https://discord.com/api/v10/users/${uploaderId}`, {
-          headers: { Authorization: `Bot ${botToken}` },
-          signal: AbortSignal.timeout(3000)
-        });
-        if (memberResp.ok) {
-          const m = await memberResp.json();
-          if (m && m.id) {
-            uploaderName = m.global_name || m.username || uploaderName;
-            if (m.avatar) {
-              const ext = m.avatar.startsWith("a_") ? "gif" : "png";
-              uploaderAvatarUrl = `https://cdn.discordapp.com/avatars/${m.id}/${m.avatar}.${ext}?size=64`;
-            }
-          }
-        }
-      } catch(e) {}
-    }
-
-    // Build embed fields
-    const fields = [{ name: "Type", value: typeLabel, inline: true }];
-    if (catDisplay) fields.push({ name: "Category", value: catDisplay, inline: true });
-    if (sizeStr && ptype === "preset") fields.push({ name: "Size", value: sizeStr, inline: true });
-    fields.push({ name: "Access", value: `[${downloadLabel}](${productUrl})`, inline: false });
-
-    const embed = {
-      title: productName,
-      description: productDesc,
-      url: productUrl,
-      color,
-      fields,
-      footer: {
-        text: "Zyrex™ Leaks",
-        icon_url: "https://zyrexediting.xyz/assets/content.png"
-      },
-      timestamp: new Date().toISOString()
-    };
-
-    if (uploaderAvatarUrl) {
-      embed.author = { name: uploaderName, url: productUrl, icon_url: uploaderAvatarUrl };
-    } else {
-      embed.author = { name: uploaderName, url: productUrl };
-    }
-
-    const thumb = String(product.cdn_thumbnail || product.thumbnail || "");
-    if (thumb) embed.thumbnail = { url: thumb };
-
-    // A leak keeps both links even when only the embed fallback reaches Discord.
-    let fallbackComponents;
-    if (!ptype || ptype === "preset" || ptype === "resource") {
-      const fallbackNotice = await buildLeakAnnouncementNotice(env, product).catch(() => null);
-      fallbackComponents = leakAnnounceButtons(product, fallbackNotice);
-    }
-
-    try {
-      const announceResp = await fetch(`https://discord.com/api/v10/channels/${ANNOUNCE_CHANNEL}/messages`, {
-        method: "POST",
-        headers: { Authorization: `Bot ${botToken}`, "Content-Type": "application/json" },
-        body: JSON.stringify(fallbackComponents ? { embeds: [embed], components: fallbackComponents } : { embeds: [embed] }),
-        signal: AbortSignal.timeout(8000)
-      });
-      if (!announceResp.ok) throw new Error(`Discord announce returned ${announceResp.status}`);
-    } catch (error) {
-      console.error("Discord product announcement failed:", error?.message || String(error));
-      // Fall back to the VPS bot, which maintains its own Discord connection.
-      await fetch(`${BOT_API}/api/products/announce`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(product),
-        signal: AbortSignal.timeout(8000),
-      }).catch(() => {});
-    }
-  } catch(e) {
-    console.error("announceProductToDiscord failed:", e.message);
-  }
-}
-
     if ((path === "/api/hlx/resolve" || path === "/api/hlx/resolve/") && request.method === "GET") {
       const targetSocialUrl = url.searchParams.get("url") || "";
       let scrapinCreator;
@@ -18798,6 +19084,8 @@ async function announceProductToDiscord(env, product) {
                       ip: event.ip,
                       country: event.country,
                     });
+                    const refresh = scheduleLeakAnnouncementRefresh(env, event.product_id, record.isNew);
+                    if (ctx?.waitUntil) ctx.waitUntil(refresh); else refresh.catch(() => {});
                     return await scheduleDownloadLog(env, record);
                   })()
                 : sendVpsSiteLogToDiscord(env, event);
@@ -19972,7 +20260,7 @@ async function announceProductToDiscord(env, product) {
         }
 
         // Try Discord API directly if bot token is present
-        const botToken = env.DISCORD_BOT_TOKEN || env.BOT_TOKEN;
+        const botToken = getSiteLogBotToken(env) || env.BOT_TOKEN;
         if (botToken) {
           try {
             const chResp = await fetch(`https://discord.com/api/v10/channels/${channelId}`, {
@@ -20211,11 +20499,11 @@ async function announceProductToDiscord(env, product) {
         let staff = [];
         let contributors = [];
 
-        if (env.DISCORD_BOT_TOKEN) {
+        if (getSiteLogBotToken(env)) {
           try {
             for (const fId of founderIds) {
               const uResp = await fetch(`${DISCORD_API}/guilds/${guildId}/members/${fId}`, {
-                headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` }
+                headers: { Authorization: `Bot ${getSiteLogBotToken(env)}` }
               });
               if (uResp.ok) {
                 const m = await uResp.json();
@@ -20232,7 +20520,7 @@ async function announceProductToDiscord(env, product) {
             }
 
             const gResp = await fetch(`${DISCORD_API}/guilds/${guildId}/members?limit=1000`, {
-              headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` }
+              headers: { Authorization: `Bot ${getSiteLogBotToken(env)}` }
             });
             if (gResp.ok) {
               const members = await gResp.json();
@@ -21791,6 +22079,8 @@ async function announceProductToDiscord(env, product) {
             token_id: body.token_id || "",
           });
           await scheduleDownloadLog(env, record);
+          const refresh = scheduleLeakAnnouncementRefresh(env, productId, record.isNew);
+          if (ctx?.waitUntil) ctx.waitUntil(refresh); else refresh.catch(() => {});
           const latestCounts = await dbGetDownloadCounts(env);
           return json({ success: true, tracked: true, duplicate: !record.isNew, product_id: productId, count: Number(latestCounts?.counts?.[productId]) || record.count });
         } catch (e) { return json({ success: false, error: "Track failed: " + e.message }, 500); }
@@ -22076,7 +22366,10 @@ async function announceProductToDiscord(env, product) {
                   token_id: tokenFingerprint,
                   user_id: data.discord_id,
                   access_source: "download_direct",
-                }).then(record => scheduleDownloadLog(env, record)).catch(() => {});
+                }).then(async record => {
+                  await scheduleDownloadLog(env, record);
+                  return scheduleLeakAnnouncementRefresh(env, data.product_id, record.isNew);
+                }).catch(() => {});
                 if (ctx?.waitUntil) ctx.waitUntil(directTask); else await directTask;
                 return direct;
               }
@@ -22106,7 +22399,10 @@ async function announceProductToDiscord(env, product) {
             token_id: tokenFingerprint,
             user_id: data.discord_id,
             access_source: "download_zip",
-          }).then(record => scheduleDownloadLog(env, record)).catch(error => console.error("Download log persistence failed:", error?.message || String(error)));
+          }).then(async record => {
+            await scheduleDownloadLog(env, record);
+            return scheduleLeakAnnouncementRefresh(env, data.product_id, record.isNew);
+          }).catch(error => console.error("Download log persistence failed:", error?.message || String(error)));
           if (ctx?.waitUntil) ctx.waitUntil(recordTask);
           else await recordTask;
           const bodyForVisitor = cached ? storageResponse.body : cacheArchiveWhileStreaming(ctx, env, archiveKey, storageResponse);
@@ -22981,7 +23277,7 @@ async function announceProductToDiscord(env, product) {
           const userMention = (reqData.user_id && !reqData.is_anonymous && /^\d{17,20}$/.test(reqData.user_id)) ? `<@${reqData.user_id}>` : requestedBy;
 
           // 1. Try Discord REST directly if token is configured in Worker
-          if (env.DISCORD_BOT_TOKEN) {
+          if (getSiteLogBotToken(env)) {
             try {
               const fields = [
                 { name: "🏷️ Type", value: `\`${typeLabel}\``, inline: true },
@@ -23038,7 +23334,7 @@ async function announceProductToDiscord(env, product) {
               const discordResp = await fetch(`https://discord.com/api/v10/channels/${REQUESTS_CHANNEL_ID}/messages`, {
                 method: "POST",
                 headers: {
-                  Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`,
+                  Authorization: `Bot ${getSiteLogBotToken(env)}`,
                   "Content-Type": "application/json"
                 },
                 body: JSON.stringify(payload)
@@ -23090,12 +23386,12 @@ async function announceProductToDiscord(env, product) {
           // 3. Create Discord discussion thread for this request embed
           let threadId = (botData && botData.thread_id) ? botData.thread_id : null;
           if (messageId && !threadId) {
-            if (env.DISCORD_BOT_TOKEN) {
+            if (getSiteLogBotToken(env)) {
               try {
                 const thResp = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages/${messageId}/threads`, {
                   method: "POST",
                   headers: {
-                    Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`,
+                    Authorization: `Bot ${getSiteLogBotToken(env)}`,
                     "Content-Type": "application/json"
                   },
                   body: JSON.stringify({
@@ -23111,7 +23407,7 @@ async function announceProductToDiscord(env, product) {
                       await fetch(`https://discord.com/api/v10/channels/${threadId}/messages`, {
                         method: "POST",
                         headers: {
-                          Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`,
+                          Authorization: `Bot ${getSiteLogBotToken(env)}`,
                           "Content-Type": "application/json"
                         },
                         body: JSON.stringify({
@@ -23292,11 +23588,11 @@ async function announceProductToDiscord(env, product) {
             return !!(created && created.messageId);
           }
           const channelId = reqData.discord_channel_id || REQUESTS_CHANNEL_ID;
-          if (env.DISCORD_BOT_TOKEN && reqData.discord_message_id) {
+          if (getSiteLogBotToken(env) && reqData.discord_message_id) {
             try {
               const messageUrl = `https://discord.com/api/v10/channels/${channelId}/messages/${reqData.discord_message_id}`;
               const currentResp = await fetch(messageUrl, {
-                headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` }
+                headers: { Authorization: `Bot ${getSiteLogBotToken(env)}` }
               });
               if (currentResp.ok) {
                 const current = await currentResp.json();
@@ -23335,7 +23631,7 @@ async function announceProductToDiscord(env, product) {
                 if (reqData.thumbnail && /^https?:\/\//i.test(reqData.thumbnail)) embed.thumbnail = { url: reqData.thumbnail };
                 const editResp = await fetch(messageUrl, {
                   method: "PATCH",
-                  headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`, "Content-Type": "application/json" },
+                  headers: { Authorization: `Bot ${getSiteLogBotToken(env)}`, "Content-Type": "application/json" },
                   body: JSON.stringify({
                     embeds: [embed],
                     components: [{
@@ -23404,12 +23700,12 @@ async function announceProductToDiscord(env, product) {
           if (!messageId) return null;
 
           let threadId = null;
-          if (env.DISCORD_BOT_TOKEN) {
+          if (getSiteLogBotToken(env)) {
             try {
               const thResp = await fetch(`https://discord.com/api/v10/channels/${channelId}/messages/${messageId}/threads`, {
                 method: "POST",
                 headers: {
-                  Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`,
+                  Authorization: `Bot ${getSiteLogBotToken(env)}`,
                   "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
@@ -23920,10 +24216,10 @@ async function announceProductToDiscord(env, product) {
           const channelId = targetReq.discord_channel_id || REQUESTS_CHANNEL_ID;
 
           let messages = [];
-          if (threadId && env.DISCORD_BOT_TOKEN) {
+          if (threadId && getSiteLogBotToken(env)) {
             try {
               const dResp = await fetch(`https://discord.com/api/v10/channels/${threadId}/messages?limit=50`, {
-                headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` }
+                headers: { Authorization: `Bot ${getSiteLogBotToken(env)}` }
               });
               if (dResp.ok) {
                 const rawMsgs = await dResp.json();
@@ -24030,9 +24326,9 @@ async function announceProductToDiscord(env, product) {
           try {
             let whId = null;
             let whToken = null;
-            if (env.DISCORD_BOT_TOKEN) {
+            if (getSiteLogBotToken(env)) {
               const whListResp = await fetch(`https://discord.com/api/v10/channels/${channelId}/webhooks`, {
-                headers: { Authorization: `Bot ${env.DISCORD_BOT_TOKEN}` }
+                headers: { Authorization: `Bot ${getSiteLogBotToken(env)}` }
               });
               if (whListResp.ok) {
                 const whList = await whListResp.json();
@@ -24041,7 +24337,7 @@ async function announceProductToDiscord(env, product) {
                   const createWhResp = await fetch(`https://discord.com/api/v10/channels/${channelId}/webhooks`, {
                     method: "POST",
                     headers: {
-                      Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`,
+                      Authorization: `Bot ${getSiteLogBotToken(env)}`,
                       "Content-Type": "application/json"
                     },
                     body: JSON.stringify({ name: "Zyrex Requests Webhook" })
@@ -24079,12 +24375,12 @@ async function announceProductToDiscord(env, product) {
           }
 
           // 2. Fallback: Direct Bot REST message into thread
-          if (!sentMessage && env.DISCORD_BOT_TOKEN) {
+          if (!sentMessage && getSiteLogBotToken(env)) {
             try {
               const directResp = await fetch(`https://discord.com/api/v10/channels/${threadId}/messages`, {
                 method: "POST",
                 headers: {
-                  Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`,
+                  Authorization: `Bot ${getSiteLogBotToken(env)}`,
                   "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
@@ -24235,7 +24531,7 @@ async function announceProductToDiscord(env, product) {
 
             // Update Discord message and notify requester via DM and site notifications
             const channelId = targetReq.discord_channel_id || REQUESTS_CHANNEL_ID;
-            if (targetReq.discord_message_id && env.DISCORD_BOT_TOKEN) {
+            if (targetReq.discord_message_id && getSiteLogBotToken(env)) {
               const resourceLink = targetReq.resource_url
                 ? `\n✅ **Fulfilled!** → [View Resource](https://zyrexediting.xyz${targetReq.resource_url})`
                 : "\n✅ **This request has been fulfilled!**";
@@ -24243,7 +24539,7 @@ async function announceProductToDiscord(env, product) {
                 await fetch(`https://discord.com/api/v10/channels/${channelId}/messages/${targetReq.discord_message_id}`, {
                   method: "PATCH",
                   headers: {
-                    Authorization: `Bot ${env.DISCORD_BOT_TOKEN}`,
+                    Authorization: `Bot ${getSiteLogBotToken(env)}`,
                     "Content-Type": "application/json"
                   },
                   body: JSON.stringify({
@@ -24497,11 +24793,21 @@ async function announceProductToDiscord(env, product) {
           if (id) {
             const product = normalized.find(item => String(item.id) === id);
             if (!product) return json({ error: "Product not found" }, 404, { "Cache-Control": "public, max-age=5" });
+            // Opening the page after the build finished also releases the deferred share.
+            if (product.installers_pending === true) {
+              const announceTask = announcePendingLeak(env, id);
+              if (ctx?.waitUntil) ctx.waitUntil(announceTask); else announceTask.catch(() => {});
+            }
             return json(product, 200, { "Cache-Control": "public, max-age=5, s-maxage=10, stale-while-revalidate=30" });
           }
 
           const type = String(url.searchParams.get("type") || "").toLowerCase();
+          // A leak waiting for its app build stays out of the catalogue until it is shared.
+          // Staff tooling that has to see the whole catalogue asks for the pending ones.
+          const includePending = url.searchParams.get("include_pending") === "1"
+            && (canSeeDownloadData || isReleasePipelineRequest(request, env));
           const products = normalized.filter(item => !type || String(item.type || "").toLowerCase() === type)
+            .filter(item => includePending || item.installers_pending !== true)
             .sort((a, b) => String(b.created_at || "").localeCompare(String(a.created_at || "")));
           if (url.searchParams.has("chunk") || url.searchParams.has("page")) {
             const page = Math.max(1, Number.parseInt(url.searchParams.get("chunk") || url.searchParams.get("page") || "1", 10) || 1);
@@ -24598,7 +24904,7 @@ async function announceProductToDiscord(env, product) {
       // /api/resource-stats — compute from R2 products
       if (path === "/api/resource-stats") {
         try {
-          const products = (await dbGetProducts(env)).filter(product => !isScenepackProduct(product));
+          const products = (await dbGetProducts(env)).filter(product => !isScenepackProduct(product) && product.installers_pending !== true);
           const dlData = await dbGetDownloadCounts(env);
           const counts = dlData?.counts || {};
           const total_downloads = Object.values(counts).reduce((s, v) => s + (Number(v) || 0), 0);
@@ -24687,7 +24993,7 @@ async function announceProductToDiscord(env, product) {
           if (response.ok) {
             const payload = await response.json();
             if (payload?.success && Array.isArray(payload.notifications)) {
-              const notifications = filterAccountNotifications(mergeFeedNotifications(normalizeProductNotifications(payload.notifications), feedItems), accountNotificationPrefs, followNotificationPrefs);
+              const notifications = filterAccountNotifications(mergeFeedNotifications(await filterPendingProductNotifications(env, normalizeProductNotifications(payload.notifications)), feedItems), accountNotificationPrefs, followNotificationPrefs);
               return json({ ...payload, notifications: decorateNotifications(notifications), read_ids: [...readIds], dismissed_ids: [...dismissedIds] }, 200, { "Cache-Control": "no-store, private" });
             }
             console.error("Bot notifications API returned an invalid payload");
@@ -24731,7 +25037,7 @@ async function announceProductToDiscord(env, product) {
 
           try {
             const products = await dbReadProductCatalog(env);
-            for (const product of products.filter(item => item?.id && !isScenepackProduct(item)).slice(0, 8)) {
+            for (const product of products.filter(item => item?.id && !isScenepackProduct(item) && item.installers_pending !== true).slice(0, 8)) {
               const type = String(product.type || "").toLowerCase();
               let category = "resource";
               let link = `/leak?id=${encodeURIComponent(product.id)}`;
@@ -24782,7 +25088,7 @@ async function announceProductToDiscord(env, product) {
             uniqueNotifications.push(notification);
             if (uniqueNotifications.length === 20) break;
           }
-          const fallbackNotifications = filterAccountNotifications(mergeFeedNotifications(normalizeProductNotifications(uniqueNotifications), feedItems), accountNotificationPrefs, followNotificationPrefs);
+          const fallbackNotifications = filterAccountNotifications(mergeFeedNotifications(await filterPendingProductNotifications(env, normalizeProductNotifications(uniqueNotifications)), feedItems), accountNotificationPrefs, followNotificationPrefs);
           return json({ success: true, notifications: decorateNotifications(fallbackNotifications), read_ids: [...readIds], dismissed_ids: [...dismissedIds], source: "r2-fallback" }, 200, {
             "Cache-Control": "no-store, private",
           });
@@ -25711,6 +26017,7 @@ async function announceProductToDiscord(env, product) {
       if (path === "/api/installer/migrate" && request.method === "POST") return handleInstallerMigrate(request, url, env);
       if (path === "/api/installer/relocate-source" && request.method === "POST") return handleInstallerRelocateSource(request, url, env);
       if (path === "/api/installer/status" && request.method === "GET") return handleInstallerStatus(url, env);
+      if (path === "/api/installer/reconcile" && request.method === "POST") return handleInstallerReconcile(request, url, env);
       if (path === "/api/installer/log" && request.method === "POST") return handleInstallerLog(request, env);
       if (path === "/api/installer/logs" && request.method === "GET") return handleInstallerLogs(request, url, env, hasMasterKey);
       if (path === "/api/installer/download" && request.method === "GET") return handleInstallerDownload(request, url, env);
@@ -25928,6 +26235,12 @@ async function announceProductToDiscord(env, product) {
             type: String(submitData.type || "resource").trim().toLowerCase(),
             created_at: submitData.created_at || now,
           };
+          // Every new preset leak is held back from the catalogue and the announcement until
+          // both app downloads exist. The source check only decides when the build can be
+          // queued; visibility is never granted before the installer is published.
+          const installerEligible = String(product.type).toLowerCase() === "preset"
+            && presetInstallerPipelineReady(env);
+          if (installerEligible) product.installers_pending = true;
 
           // The submitter is known here even though the public record hides them,
           // so this is the one place that can still answer "who uploaded this?".
@@ -25971,17 +26284,28 @@ async function announceProductToDiscord(env, product) {
               console.error("Product request completion failed:", error?.message || String(error));
             });
             if (ctx?.waitUntil) ctx.waitUntil(completionTask);
-            // Announce to Discord asynchronously
-            const announceTask = announceProductToDiscord(env, savedProduct).catch(error => {
-              console.error("Discord product announcement failed:", error?.message || String(error));
-            });
-            if (ctx?.waitUntil) ctx.waitUntil(announceTask);
-            const installerTask = queuePresetInstallerBuild(env, savedProduct).catch(error => {
-              console.error("Preset installer release dispatch failed:", error?.message || String(error));
-              return false;
-            });
-            if (ctx?.waitUntil) ctx.waitUntil(installerTask);
-            else installerTask.catch(() => {});
+            if (installerEligible) {
+              // Queue the app build first; announcePendingLeak shares the leak once both
+              // installers are in the leak folder. A dispatch that fails or finds no source
+              // leaves the leak pending on purpose, so the sweep retries it instead of the
+              // leak going live without an app download.
+              const installerTask = queuePresetInstallerBuild(env, savedProduct).then(dispatched => {
+                if (!dispatched) console.warn("Preset installer dispatch deferred to the sweep:", productId);
+                return dispatched;
+              }).catch(error => {
+                console.error("Preset installer release dispatch failed:", error?.message || String(error));
+                return false;
+              });
+              if (ctx?.waitUntil) ctx.waitUntil(installerTask);
+              else installerTask.catch(() => {});
+            } else {
+              // Announce to Discord asynchronously
+              const announceTask = announceProductToDiscord(env, savedProduct).catch(error => {
+                console.error("Discord product announcement failed:", error?.message || String(error));
+              });
+              if (ctx?.waitUntil) ctx.waitUntil(announceTask);
+              else announceTask.catch(() => {});
+            }
             return json({ success: true, id: productId, product: savedProduct }, 201);
           } catch (error) {
             console.error("Storage product submission failed:", error?.message || String(error));
@@ -26654,7 +26978,7 @@ async function announceProductToDiscord(env, product) {
           const identity = await discordUploaderIdentity(env, uploaderId, uploader);
           // The preview returns the exact embed the channel would receive, so the card
           // can be checked (or rendered by a tool) before anything is posted.
-          const previewCounts = await readFeedPostCounts(env, preview || {}).catch(() => ({ likes: 0, views: 0, replies: 0 }));
+          const previewCounts = await readFeedPostCounts(env, preview || {}).catch(() => ({ likes: 0, views: 0, replies: 0, downloads: 0 }));
           const previewStats = await leakPackStats(env, product);
           const embed = buildLeakAnnouncementEmbed(product, preview || {}, { identity, counts: previewCounts, stats: previewStats, uploaderId });
           return json({
@@ -26674,6 +26998,74 @@ async function announceProductToDiscord(env, product) {
         });
         if (!announced) return json({ success: false, error: "Discord did not accept the announcement." }, 502);
         return json({ success: true, product_id: String(product.id), name: String(product.name || "") }, 200, { "Cache-Control": "no-store" });
+      }
+
+      // TEMP: one-shot admin route used to upload the bot's red icon set as guild emojis.
+      if (path === "/api/zyrex/emoji-upload" && request.method === "POST") {
+        if (!isAdminRequest(request, env, hasMasterKey)) return json({ success: false, error: "Unauthorized" }, 403);
+        const body = await request.json().catch(() => null);
+        const requested = Array.isArray(body && body.emojis) ? body.emojis.slice(0, 40) : [];
+        if (!requested.length && !(body && body.list_all)) return json({ success: false, error: "No emojis were provided." }, 400);
+        const token = String((body && body.bot_token) || "").trim()
+          || String(env.DISCORD_BOT_TOKEN || "").trim() || getSiteLogBotToken(env);
+        if (!token) return json({ success: false, error: "The bot token is unavailable." }, 503);
+        const authHeaders = { Authorization: `Bot ${token}` };
+        const guildId = String(env.GUILD_ID || "1518954946110685184");
+        const appId = String(env.DISCORD_CLIENT_ID || "1519456130290417776");
+        const existing = new Map();
+        try {
+          const guildRows = await fetch(`${DISCORD_API}/guilds/${guildId}/emojis`, { headers: authHeaders, signal: AbortSignal.timeout(8000) })
+            .then(response => response.ok ? response.json() : []).catch(() => []);
+          for (const emoji of Array.isArray(guildRows) ? guildRows : []) existing.set(String(emoji.name), String(emoji.id));
+          const appRows = await fetch(`${DISCORD_API}/applications/${appId}/emojis`, { headers: authHeaders, signal: AbortSignal.timeout(8000) })
+            .then(response => response.ok ? response.json() : null).catch(() => null);
+          for (const emoji of (appRows && Array.isArray(appRows.items) ? appRows.items : [])) existing.set(String(emoji.name), String(emoji.id));
+        } catch (_) {}
+        if (body && body.list_all) {
+          return json({ success: true, emojis: Object.fromEntries(existing) }, 200, { "Cache-Control": "no-store" });
+        }
+        if (body && body.fetch_emoji_id) {
+          const resp = await fetch(`https://cdn.discordapp.com/emojis/${encodeURIComponent(body.fetch_emoji_id)}.png`, { signal: AbortSignal.timeout(8000) }).catch(() => null);
+          if (!resp || !resp.ok) return json({ success: false, error: "Failed to fetch emoji" }, 404);
+          const buf = await resp.arrayBuffer();
+          const b64 = btoa(String.fromCharCode(...new Uint8Array(buf)));
+          return json({ success: true, base64: `data:image/png;base64,${b64}` }, 200, { "Cache-Control": "no-store" });
+        }
+        const results = [];
+        for (const item of requested) {
+          const name = String((item && item.name) || "").trim().toLowerCase().replace(/[^a-z0-9_]/g, "_").slice(0, 32);
+          const image = String((item && item.image) || "");
+          if (!name || name.length < 2 || !/^data:image\/(png|gif|jpe?g);base64,[A-Za-z0-9+/=]+$/.test(image)) {
+            results.push({ name, ok: false, error: "Invalid emoji name or image." });
+            continue;
+          }
+          if (existing.has(name)) {
+            results.push({ name, ok: true, id: existing.get(name), reused: true });
+            continue;
+          }
+          const upload = async target => {
+            const response = await fetch(target, {
+              method: "POST",
+              headers: { ...authHeaders, "Content-Type": "application/json" },
+              body: JSON.stringify({ name, image }),
+              signal: AbortSignal.timeout(10000),
+            }).catch(() => null);
+            return { response, data: response ? await response.json().catch(() => null) : null };
+          };
+          let scope = "guild";
+          let { response, data } = await upload(`${DISCORD_API}/guilds/${guildId}/emojis`);
+          if (!response || !response.ok) {
+            const guildError = String((data && data.message) || `HTTP ${response ? response.status : 0}`);
+            scope = "application";
+            ({ response, data } = await upload(`${DISCORD_API}/applications/${appId}/emojis`));
+            if (!response || !response.ok) {
+              results.push({ name, ok: false, error: `${guildError} / ${String((data && data.message) || `HTTP ${response ? response.status : 0}`)}` });
+              continue;
+            }
+          }
+          results.push({ name, ok: true, id: data && data.id ? String(data.id) : "", scope });
+        }
+        return json({ success: results.every(item => item.ok), results }, 200, { "Cache-Control": "no-store" });
       }
 
       // The announce slash command publishes here: an official feed post plus the site
