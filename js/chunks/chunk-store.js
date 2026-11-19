@@ -182,6 +182,17 @@
             var subChunkSize = opts.subChunkSize || 12;
             var onComplete = opts.onComplete || function() {};
 
+            // The grid is re-rendered whenever the catalogue changes (cache first, then the
+            // API list, then any filter). A previous pass may still be waiting for its next
+            // idle slot, and it would append its remaining cards on top of the new list, so
+            // the member sees the same leak twice. Every pass claims a token and a stale one
+            // stops before touching the container again.
+            var token = (container.__zyrexProgressiveToken || 0) + 1;
+            container.__zyrexProgressiveToken = token;
+            function isCurrent() {
+                return container.__zyrexProgressiveToken === token && container.isConnected !== false;
+            }
+
             container.innerHTML = '';
             if (!items || !items.length) {
                 onComplete();
@@ -190,6 +201,7 @@
 
             var index = 0;
             function processNextSubChunk() {
+                if (!isCurrent()) return;
                 var end = Math.min(index + subChunkSize, items.length);
                 var frag = document.createDocumentFragment();
                 var tempDiv = document.createElement('div');
@@ -205,13 +217,18 @@
                         frag.appendChild(res);
                     }
                 }
+                if (!isCurrent()) return;
                 container.appendChild(frag);
 
                 if (index < items.length) {
+                    var next = function() {
+                        if (!isCurrent()) return;
+                        processNextSubChunk();
+                    };
                     if (window.requestIdleCallback) {
-                        window.requestIdleCallback(processNextSubChunk, { timeout: 80 });
+                        window.requestIdleCallback(next, { timeout: 80 });
                     } else {
-                        requestAnimationFrame(processNextSubChunk);
+                        requestAnimationFrame(next);
                     }
                 } else {
                     onComplete();
