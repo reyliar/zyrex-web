@@ -1003,7 +1003,13 @@
                 var name = String((f && f.name) || '').toLowerCase();
                 return name.slice(name.lastIndexOf('.') + 1);
             });
-            if (String(p.type || 'preset').toLowerCase() === 'preset' && (p.id || productId)) {
+            // Only a pack that really holds After Effects presets can get an app. Colouring
+            // packs, project files and settings dumps never will, so they must not claim a
+            // build is on the way.
+            const hasPresetSource = realFiles.some(function (f) {
+                return /\.ffx$/i.test(String((f && f.name) || ''));
+            });
+            if (String(p.type || 'preset').toLowerCase() === 'preset' && hasPresetSource && (p.id || productId)) {
                 const missingPlatforms = [];
                 if (installerExtensions.indexOf('exe') < 0) missingPlatforms.push('windows');
                 if (installerExtensions.indexOf('dmg') < 0) missingPlatforms.push('macos');
