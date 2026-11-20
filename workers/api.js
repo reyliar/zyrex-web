@@ -21369,14 +21369,29 @@ export default {
           return redirect(back.toString());
         }
         const now = Date.now();
+        const session = parseSession(request.headers.get("Cookie"), request);
         const pendingExpired = Number(grant.expires_at) <= now;
         // The provider only redirects at the end of a long offer chain, so a return can land
         // after the pending window closed. It is still the member's own browser and the same
         // Discord account, which is exactly what a shared claim URL cannot produce.
+        const sameMember = String(session?.userId || "") === String(grant.discord_id || "");
         const lateAllowed = pendingExpired
           && now - Number(grant.created_at || 0) <= ACCESS_GRANT_LATE_MS
-          && String((parseSession(request.headers.get("Cookie"), request) || {}).userId || "") === String(grant.discord_id || "");
+          && sameMember;
         if (pendingExpired && !lateAllowed && !grant.completed_at) {
+          // Silent rejection is why a finished offer used to vanish without a trace, so the
+          // audit channel records it and staff can see the pattern.
+          queueSecurityEvent(env, ctx, "access", {
+            level: "warn",
+            title: "Access offer returned after its window closed",
+            description: sameMember
+              ? "The member returned to a claim older than its pending window, so it was not credited."
+              : "An unlock claim expired and the return did not carry the owning Discord session.",
+            action: "access-offer-return-rejected",
+            user_id: grant.discord_id,
+            ip: getClientIp(request),
+            access: `Grant \`${claim.slice(0, 12)}\` • age ${Math.round((now - Number(grant.created_at || now)) / 60000)} min`,
+          });
           back.searchParams.set("unlock", "expired");
           return redirect(back.toString());
         }
