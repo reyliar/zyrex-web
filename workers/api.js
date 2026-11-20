@@ -662,9 +662,20 @@ function getClientIp(request) {
   return String(request.headers.get("CF-Connecting-IP") || "").trim();
 }
 
-// A pending unlock is a short-lived claim: it exists for 30 minutes, and is only
-// marked complete when the offer provider sends the member back through the unlock
-// landing route. Nothing else can complete it.
+// A pending unlock is a claim that exists until the offer provider sends the member back
+// through the unlock landing route. Nothing else can complete it. The window has to cover a
+// whole multi-step locker: the provider only redirects at the very end of the offer chain, so
+// a thirty-minute claim expired while the member was still finishing offers and every
+// completed offer then came back as "expired" without ever granting a pass.
+const ACCESS_GRANT_PENDING_MS = 6 * 60 * 60 * 1000;
+// A return that lands after that window is still accepted when it arrives in the member's own
+// browser, because the Discord session in the request proves the offer belongs to the account
+// that created the claim. A shared claim URL opened by someone else has no such session.
+const ACCESS_GRANT_LATE_MS = 24 * 60 * 60 * 1000;
+// The provider can return before the member presses claim, and they may open the tab on
+// another device, so a completed claim stays claimable for a day.
+const ACCESS_CLAIM_WINDOW_MS = 24 * 60 * 60 * 1000;
+
 async function getAccessGrant(env, grantId) {
   if (!env.STORAGE || !grantId) return null;
   try {
@@ -21353,16 +21364,28 @@ export default {
         back.searchParams.set("claim", claim);
 
         const grant = await getAccessGrant(env, claim);
-        if (!grant || grant.purpose !== "access" || Number(grant.expires_at) <= Date.now()) {
+        if (!grant || grant.purpose !== "access") {
+          back.searchParams.set("unlock", "expired");
+          return redirect(back.toString());
+        }
+        const now = Date.now();
+        const pendingExpired = Number(grant.expires_at) <= now;
+        // The provider only redirects at the end of a long offer chain, so a return can land
+        // after the pending window closed. It is still the member's own browser and the same
+        // Discord account, which is exactly what a shared claim URL cannot produce.
+        const lateAllowed = pendingExpired
+          && now - Number(grant.created_at || 0) <= ACCESS_GRANT_LATE_MS
+          && String((parseSession(request.headers.get("Cookie"), request) || {}).userId || "") === String(grant.discord_id || "");
+        if (pendingExpired && !lateAllowed && !grant.completed_at) {
           back.searchParams.set("unlock", "expired");
           return redirect(back.toString());
         }
         // Idempotent: a refresh or a second landing must not rewrite the completion
         // time, which is what the pass length is measured from.
         if (!grant.completed_at) {
-          grant.completed_at = Date.now();
+          grant.completed_at = now;
           grant.completed_ip = getClientIp(request);
-          grant.completed_via = "offer_return";
+          grant.completed_via = lateAllowed ? "offer_return_late" : "offer_return";
           await env.STORAGE.put("unlock/grants/" + claim, JSON.stringify(grant), {
             httpMetadata: { contentType: "application/json" },
           });
@@ -21370,12 +21393,14 @@ export default {
             grant_id: claim,
             created_at: grant.created_at,
             completed_at: grant.completed_at,
-            completed_via: "offer_return",
+            completed_via: grant.completed_via,
           });
           queueSecurityEvent(env, ctx, "access", {
             level: "success",
-            title: "Access offer completed",
-            description: "The offer provider returned the member; the claim can now be turned into a download pass.",
+            title: lateAllowed ? "Access offer completed after the window closed" : "Access offer completed",
+            description: lateAllowed
+              ? "The provider returned the member after the pending window; the session proved the claim was theirs, so the offer still counts."
+              : "The offer provider returned the member; the claim can now be turned into a download pass.",
             action: "access-offer-completed",
             user_id: grant.discord_id,
             ip: grant.completed_ip,
@@ -21443,6 +21468,15 @@ export default {
         const access = await getDownloadAccess(env, session.userId);
         const expiresAt = Number(access?.expires_at) || 0;
         const active = expiresAt > Date.now();
+        // A member who finished the offer but closed the returning tab still owns a completed
+        // claim, so the page is told about it and activates the pass without another offer.
+        let pendingClaim = null;
+        if (!adFree && !active) {
+          const grants = await readUserGrants(env, session.userId).catch(() => []);
+          const claimable = grants.find(grant => grant && grant.completed_at && !grant.claimed_at
+            && Date.now() - Number(grant.completed_at) <= ACCESS_CLAIM_WINDOW_MS);
+          pendingClaim = claimable ? String(claimable.grant_id) : null;
+        }
         return json({
           success: true,
           logged_in: true,
@@ -21452,6 +21486,7 @@ export default {
           ad_free: adFree,
           active: adFree || active,
           expires_at: active ? expiresAt : null,
+          pending_claim: pendingClaim,
           duration_days: RESOURCE_ACCESS_DURATION_DAYS,
         });
       }
@@ -21503,7 +21538,7 @@ export default {
           discord_id: session.userId,
           ip: clientIp,
           created_at: now,
-          expires_at: now + 30 * 60 * 1000,
+          expires_at: now + ACCESS_GRANT_PENDING_MS,
           completed_at: 0,
         };
         await env.STORAGE.put("unlock/grants/" + grantId, JSON.stringify(grant), {
@@ -21537,7 +21572,7 @@ export default {
             ip: clientIp,
             access: `Grant \`${grantId.slice(0, 12)}\``,
           });
-          return json({ success: true, ad_url: adUrl, expires_in: 1800 });
+          return json({ success: true, ad_url: adUrl, expires_in: Math.round(ACCESS_GRANT_PENDING_MS / 1000) });
         } catch (error) {
           await env.STORAGE.delete("unlock/grants/" + grantId).catch(() => {});
           console.error("AdMaven offer link creation failed:", error.message);
@@ -21610,16 +21645,24 @@ export default {
           });
           return json({ success: false, error: "This access claim does not belong to your Discord account." }, 403);
         }
-        if (!grant.completed_at || Number(grant.expires_at) <= Date.now()) {
+        if (!grant.completed_at) {
+          // Distinguish "the provider has not returned yet" from "the claim is too old": the
+          // page has to tell the member to press the button again in the first case and to
+          // start a fresh offer in the second.
+          const pendingExpired = Number(grant.expires_at) <= Date.now();
           return json({
             success: false,
-            code: "OFFER_INCOMPLETE",
-            error: "We have not seen the offer come back as completed yet. Finish the offer page and retry, or start a new one.",
+            code: pendingExpired ? "OFFER_EXPIRED" : "OFFER_INCOMPLETE",
+            error: pendingExpired
+              ? "This offer session was open for too long and closed before it came back completed. Start a new offer to unlock access."
+              : "We have not seen the offer come back as completed yet. Finish the offer page and retry, or start a new one.",
           }, 409);
         }
 
         const expiresAt = Number(grant.completed_at) + RESOURCE_ACCESS_DURATION_MS;
-        if (expiresAt <= Date.now()) return json({ success: false, error: "This access claim has expired. Please start again." }, 410);
+        if (Date.now() - Number(grant.completed_at) > ACCESS_CLAIM_WINDOW_MS || expiresAt <= Date.now()) {
+          return json({ success: false, code: "CLAIM_EXPIRED", error: "This access claim has expired. Please start again." }, 410);
+        }
         const access = {
           discord_id: session.userId,
           granted_at: Number(grant.completed_at),

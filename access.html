@@ -181,7 +181,9 @@
             const expiry = document.getElementById('accessExpiry');
             const hint = document.getElementById('accessHint');
             const params = new URLSearchParams(location.search);
-            const claimId = params.get('claim') || '';
+            const claimIdFromUrl = params.get('claim') || '';
+            let claimId = claimIdFromUrl;
+            let autoClaimTried = false;
             const unlockState = params.get('unlock') || '';
             const returnTo = params.get('return_to') || '';
             const safeReturnTo = returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '';
@@ -341,6 +343,14 @@
                     const response = await fetch('/api/access/status', { credentials: 'include', cache: 'no-store' });
                     const data = await response.json();
                     if (!response.ok) throw new Error(data.error || 'Could not check access right now.');
+                    // A completed offer whose returning tab was closed leaves an unclaimed pass
+                    // behind; activate it instead of asking the member to watch more offers.
+                    if (!autoClaimTried && !claimId && data.pending_claim) {
+                        autoClaimTried = true;
+                        claimId = String(data.pending_claim);
+                        claimAccess(null, true);
+                        return;
+                    }
                     renderAccess(data);
                 } catch (error) {
                     setState(error.message || 'Could not check access right now. Please retry.', 'error');
@@ -348,10 +358,28 @@
                 }
             }
 
-            async function claimAccess() {
+            // The provider only returns the member at the end of the offer chain, so the page
+            // keeps checking for a while after they come back instead of giving up in a few
+            // seconds and claiming the offer was never seen.
+            const CLAIM_RETRY_MS = 1500;
+            const CLAIM_ATTEMPTS = 8;
+            let claimInFlight = false;
+            let claimPending = false;
+
+            async function claimAccess(event, quick) {
+                if (claimInFlight || !claimId) return;
+                claimInFlight = true;
+                claimPending = true;
+                const attempts = quick ? 1 : CLAIM_ATTEMPTS;
+                const trigger = event && event.currentTarget ? event.currentTarget : null;
+                if (trigger && trigger.tagName === 'BUTTON') {
+                    trigger.disabled = true;
+                    trigger.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Checking…';
+                }
                 let lastError = null;
                 let lastStatus = 0;
-                for (let attempt = 0; attempt < 6; attempt++) {
+                let lastCode = '';
+                for (let attempt = 0; attempt < attempts; attempt++) {
                     try {
                         const response = await fetch('/api/access/claim', {
                             method: 'POST',
@@ -361,26 +389,45 @@
                         });
                         const result = await response.json();
                         if (response.ok && result.success) {
+                            claimInFlight = false;
+                            claimPending = false;
                             setState('Offer confirmed. Your access is now active!', 'success');
                             await loadStatus();
                             return;
                         }
                         lastStatus = response.status;
+                        lastCode = String(result.code || '');
                         lastError = result.error || 'Could not confirm your offer completion.';
                         if (response.status === 401) {
+                            claimInFlight = false;
+                            claimPending = false;
                             location.href = '/api/login?redirect=' + encodeURIComponent(location.pathname + location.search);
                             return;
                         }
-                        if (response.status !== 409) break;
+                        // Only "the provider has not come back yet" is worth another attempt;
+                        // an expired or mismatched claim never turns into a pass by waiting.
+                        if (lastCode !== 'OFFER_INCOMPLETE') break;
                     } catch (error) {
                         lastError = error.message;
                         break;
                     }
-                    await new Promise(resolve => setTimeout(resolve, 1200));
+                    await new Promise(resolve => setTimeout(resolve, CLAIM_RETRY_MS));
                 }
+                claimInFlight = false;
+                claimPending = false;
+                // A re-check triggered by coming back to the tab must not repaint the page
+                // when there is still nothing to confirm.
+                if (quick && lastCode === 'OFFER_INCOMPLETE') return;
                 await loadStatus();
                 if (lastStatus === 403) return;
                 setState(lastError || 'We have not seen the offer come back as completed yet. Please try again shortly.', 'error');
+                if (lastCode === 'OFFER_EXPIRED' || lastCode === 'CLAIM_EXPIRED' || (unlockState === 'expired' && lastCode !== 'OFFER_INCOMPLETE')) {
+                    // The offer page came back after the session window closed, so there is
+                    // nothing left to confirm: the only way forward is a fresh offer.
+                    button('<i class="fas fa-unlock"></i> Start a new offer', startAccess);
+                    showOfferHelp('');
+                    return;
+                }
                 button('<i class="fas fa-rotate"></i> Check completion again', claimAccess, true);
                 button('<i class="fas fa-unlock"></i> Start a new offer', startAccess, true);
                 if (lastStatus !== 401) showOfferHelp('');
@@ -436,12 +483,22 @@
                 }
             }
 
+            // Finishing the offer in the locker tab leaves this tab with a stale status, so
+            // coming back to it re-checks instead of showing an old "nothing yet" message.
+            document.addEventListener('visibilitychange', function () {
+                if (document.visibilityState !== 'visible') return;
+                if (claimInFlight || claimPending) return;
+                if (currentAccess && (currentAccess.active || currentAccess.ad_free)) return;
+                if (claimId) claimAccess(null, true);
+                else loadStatus();
+            });
+
             if (claimId) {
                 claimAccess();
             } else if (unlockState === 'expired') {
-                // The member came back from the offer page after the 30-minute claim
-                // window closed, so there is nothing left to confirm.
-                setState('That offer session expired before it came back completed. Start a new one to unlock access.', 'error');
+                // The claim was already too old when the offer page came back, so there is
+                // nothing left to confirm for this session.
+                setState('That offer session expired before it came back completed. Start a new offer to unlock access.', 'error');
                 button('<i class="fas fa-unlock"></i> Start a new offer', startAccess);
                 showOfferHelp('');
             } else if (unlockState === 'invalid') {
