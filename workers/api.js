@@ -3171,9 +3171,12 @@ async function handleInstallerVersion(request, url, env) {
   const prefix = normalizeR2Prefix(product?.file_path);
   payload.platform = platform;
   payload.leak_version = bucket && prefix ? await installerObjectVersion(bucket, prefix, platform) : "";
-  // The update is only offered once this leak's own build contains it, otherwise the app
-  // would download itself again and stay on the same version.
-  payload.update_available = versionGreater(latest, client) && (!payload.leak_version || !versionGreater(latest, payload.leak_version));
+  // An update is only offered when the leak's own build declares the newer version. A
+  // build without that metadata is treated as "not ready", because offering it would make
+  // the app download the same old installer over and over.
+  payload.update_available = versionGreater(latest, client)
+    && Boolean(payload.leak_version)
+    && !versionGreater(latest, payload.leak_version);
   return json(payload, 200, { "Cache-Control": "no-store" });
 }
 
