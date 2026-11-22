@@ -5,7 +5,24 @@ from pathlib import Path
 from Crypto.Cipher import AES
 
 SITE = "https://zyrexediting.xyz"
-VERSION = "v1.0.2"
+VERSION = "v1.0.3"
+# Every build ships inside a specific leak folder, so an update can only be served once that
+# leak's own installer has been rebuilt. The Worker reports both numbers and the app waits
+# instead of downloading a build that is still the old version.
+APP_NAME = "Zyrex Effects Installer"
+
+def installer_platform() -> str:
+    return "macos" if sys.platform == "darwin" else "windows" if sys.platform == "win32" else "linux"
+
+def version_tuple(value) -> tuple[int, ...]:
+    parts = re.findall(r"\d+", str(value or ""))
+    return tuple(int(part) for part in parts[:4]) or (0,)
+
+def version_gt(left, right) -> bool:
+    """Compare `v1.0.10` against `v1.0.9` numerically instead of as text."""
+    a, b = version_tuple(left), version_tuple(right)
+    width = max(len(a), len(b))
+    return a + (0,) * (width - len(a)) > b + (0,) * (width - len(b))
 
 def resource(name: str) -> Path:
     root = Path(getattr(sys, "_MEIPASS", Path(__file__).resolve().parent))
@@ -227,7 +244,7 @@ def config_path() -> Path:
         base = Path(os.environ.get("XDG_CONFIG_HOME") or (Path.home() / ".config"))
     return base / "Zyrex" / "installer.json"
 
-PROTECTED_DESTINATIONS = "Documents › Adobe › After Effects … › User Presets"
+PROTECTED_DESTINATIONS = "a folder you own, such as Documents"
 AE_FOLDER_PATTERN = re.compile(r"^(?:adobe )?after effects(?: \d{4})?$", re.IGNORECASE)
 
 def version_folder_name(name: str) -> str:
@@ -278,6 +295,23 @@ def is_protected(path: Path) -> bool:
         if root and (resolved == root or resolved.startswith(root + "\\")):
             return True
     return False
+
+def hidden_startup_info():
+    """A STARTUPINFO that asks Windows for a hidden window, or None elsewhere."""
+    if sys.platform != "win32":
+        return None
+    try:
+        startup = subprocess.STARTUPINFO()
+        startup.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+        startup.wShowWindow = subprocess.SW_HIDE
+        return startup
+    except Exception:
+        return None
+
+def hidden_process_flags() -> int:
+    if sys.platform != "win32":
+        return 0
+    return getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000) | getattr(subprocess, "CREATE_NEW_PROCESS_GROUP", 0)
 
 def is_writable(path: Path) -> bool:
     try:
@@ -333,6 +367,22 @@ def user_presets_for(version_name: str, create: bool = True) -> Path | None:
             return None
     return target if is_writable(target) else None
 
+def fallback_destination() -> Path | None:
+    """Anywhere the member can write, for a machine without After Effects.
+
+    The app no longer insists on the After Effects folder: User Presets is only the
+    default, and the pack can be saved to any folder the member picks.
+    """
+    documents = documents_root()
+    if not documents:
+        return None
+    target = documents / "Zyrex"
+    try:
+        target.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        return None
+    return target if is_writable(target) else None
+
 def detect_destination() -> Path | None:
     saved = load_saved_destination()
     if saved:
@@ -350,10 +400,14 @@ def detect_destination() -> Path | None:
             created = user_presets_for(name)
             if created:
                 return created
-    return None
+    # No After Effects at all: default to a normal folder instead of blocking the install.
+    return fallback_destination()
+
+def is_user_presets_path(path: Path | None) -> bool:
+    return bool(path) and "user presets" in str(path).casefold()
 
 def resolve_destination(raw) -> tuple[Path | None, str]:
-    """Map whatever the member picked onto a writable User Presets folder."""
+    """The member's own folder is the destination; only AE folders are corrected."""
     path = Path(str(raw or "").strip())
     if not str(raw or "").strip():
         return None, "No folder was selected."
@@ -363,24 +417,26 @@ def resolve_destination(raw) -> tuple[Path | None, str]:
         fallback = user_presets_for(version) if AE_FOLDER_PATTERN.match(version) else None
         if fallback:
             return fallback, ""
-        return None, f"That folder belongs to the After Effects installation and Windows blocks writes there. Choose {PROTECTED_DESTINATIONS}."
+        return None, "That folder belongs to the After Effects installation and Windows blocks writes there. Choose a folder you can save to."
     if not path.is_dir():
         return None, "That folder no longer exists."
     if (path / "User Presets").is_dir():
         return (path / "User Presets", "") if is_writable(path / "User Presets") else resolve_writable_or_error(path / "User Presets")
     if AE_FOLDER_PATTERN.match(path.name):
+        # An After Effects year folder is never a preset location on its own, so the files
+        # would be invisible to After Effects. Only this case is redirected.
         version_folder = user_presets_for(path.name)
         if version_folder:
             return version_folder, ""
-        return None, f"Could not create the User Presets folder there. Choose {PROTECTED_DESTINATIONS}."
+        return None, "Could not create the User Presets folder there. Choose a folder you can save to."
     if not is_writable(path):
-        return None, f"Windows does not allow saving presets in that folder. Choose {PROTECTED_DESTINATIONS}."
+        return None, "That folder does not allow saving files. Choose a folder you can write to."
     return path, ""
 
 def resolve_writable_or_error(path: Path) -> tuple[Path | None, str]:
     if is_writable(path):
         return path, ""
-    return None, f"Windows does not allow saving presets in that folder. Choose {PROTECTED_DESTINATIONS}."
+    return None, "That folder does not allow saving files. Choose a folder you can write to."
 
 def load_saved_destination() -> Path | None:
     try:
@@ -432,6 +488,12 @@ class InstallerAPI:
         self.installed_folder = None
         self.creator_folder = self._creator_folder()
         self.progress = {"active": False, "done": 0, "total": 0, "name": "", "stage": ""}
+        # The API refuses installer calls from a build older than the current minimum, so
+        # the app has to know about it and offer the update instead of failing silently.
+        self.update_required = False
+        self.latest_version = VERSION
+        self.update_ready = False
+        self.update_info = {}
 
     @property
     def product_id(self):
@@ -441,8 +503,8 @@ class InstallerAPI:
     def release_id(self):
         return str(self.manifest.get("release_id") or "")
 
-    def _request(self, path, *, method="GET", body=None, token="", binary=False):
-        headers = {"Accept": "application/octet-stream" if binary else "application/json", "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36", "Origin": SITE, "Referer": SITE + "/", "Sec-Fetch-Site": "same-origin", "Sec-Fetch-Mode": "cors", "Sec-Fetch-Dest": "empty"}
+    def _request(self, path, *, method="GET", body=None, token="", binary=False, timeout=35):
+        headers = {"Accept": "application/octet-stream" if binary else "application/json", "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36", "Origin": SITE, "Referer": SITE + "/", "Sec-Fetch-Site": "same-origin", "Sec-Fetch-Mode": "cors", "Sec-Fetch-Dest": "empty", "X-Zyrex-App-Version": VERSION, "X-Zyrex-App-Platform": installer_platform()}
         data = body
         if isinstance(body, dict):
             data = json.dumps(body).encode("utf-8")
@@ -451,7 +513,7 @@ class InstallerAPI:
             headers["Authorization"] = f"Bearer {token}"
         request = urllib.request.Request(f"{SITE}{path}", data=data, method=method, headers=headers)
         try:
-            with urllib.request.urlopen(request, timeout=35, context=ssl_context()) as response:
+            with urllib.request.urlopen(request, timeout=timeout, context=ssl_context()) as response:
                 if binary:
                     return response.read(), response.headers.get("X-Zyrex-Downloaded-At", "")
                 return json.loads(response.read().decode("utf-8"))
@@ -459,14 +521,84 @@ class InstallerAPI:
             detail = error.read().decode("utf-8", "replace")
             if error.code == 202:
                 return {"success": True, "pending": True}
+            code = ""
             try:
                 parsed = json.loads(detail)
+                code = str(parsed.get("code") or "")
                 detail = parsed.get("error") or detail
+                if code == "UPGRADE_REQUIRED":
+                    # Older builds cannot unlock anything any more; remember it so the UI
+                    # can offer the update instead of showing a dead end.
+                    self.update_required = True
+                    self.latest_version = str(parsed.get("latest") or self.latest_version)
             except Exception:
                 pass
             raise RuntimeError(detail or f"Zyrex API returned HTTP {error.code}") from error
         except urllib.error.URLError as error:
             raise RuntimeError(network_error_message(error)) from error
+
+    def check_update(self):
+        """Ask the Worker which build is current and whether this leak has it yet."""
+        try:
+            info = self._request(f"/api/installer/version?id={urllib.parse.quote(self.product_id)}&release_id={urllib.parse.quote(self.release_id)}&platform={installer_platform()}")
+        except Exception as error:
+            return {"success": False, "error": public_error(error)}
+        if not isinstance(info, dict) or not info.get("success", True):
+            return {"success": False, "error": "Could not check for updates."}
+        latest = str(info.get("latest") or VERSION)
+        leak_version = str(info.get("leak_version") or "")
+        self.latest_version = latest
+        self.update_info = dict(info)
+        self.update_required = bool(info.get("update_required")) or version_gt(info.get("minimum"), VERSION)
+        # An update is only offered when the leak's own installer already contains it,
+        # otherwise the download would install the same old build again.
+        self.update_ready = version_gt(latest, VERSION) and (
+            not leak_version or not version_gt(latest, leak_version)
+        )
+        return {
+            "success": True,
+            "current": VERSION,
+            "latest": latest,
+            "minimum": str(info.get("minimum") or ""),
+            "leakVersion": leak_version,
+            "updateRequired": bool(self.update_required),
+            "updateReady": bool(self.update_ready),
+            "notes": str(info.get("notes") or ""),
+        }
+
+    def apply_update(self):
+        """Download the rebuilt installer for this leak, start it, then delete this copy."""
+        if not self.access_token:
+            return {"success": False, "error": "Sign in with Discord first, then try the update again."}
+        info = self.check_update()
+        if not info.get("success"):
+            return {"success": False, "error": info.get("error") or "Could not reach the update server."}
+        if not info.get("updateReady"):
+            return {"success": False, "error": f"The {info.get('latest') or 'new'} build for this pack is still being prepared. Try again in a minute."}
+        query = urllib.parse.urlencode({"id": self.product_id, "release_id": self.release_id, "platform": installer_platform()})
+        try:
+            payload, _ = self._request(f"/api/installer/update?{query}", token=self.access_token, binary=True, timeout=300)
+        except Exception as error:
+            return {"success": False, "error": public_error(error)}
+        suffix = ".dmg" if sys.platform == "darwin" else ".exe"
+        target = Path(tempfile.gettempdir()) / f"Zyrex-{self.latest_version.lstrip('v')}{suffix}"
+        try:
+            target.write_bytes(payload)
+        except OSError as error:
+            return {"success": False, "error": public_error(error)}
+        try:
+            if sys.platform == "darwin":
+                subprocess.Popen(["open", str(target)], start_new_session=True, close_fds=True)
+            elif sys.platform == "win32":
+                subprocess.Popen([str(target)], creationflags=hidden_process_flags(), startupinfo=hidden_startup_info(), close_fds=True)
+            else:
+                target.chmod(0o755)
+                subprocess.Popen([str(target)], start_new_session=True, close_fds=True)
+        except Exception as error:
+            return {"success": False, "error": f"The update was downloaded but could not start: {public_error(error)}"}
+        self.log_event("update", from_version=VERSION, to_version=self.latest_version)
+        self._quit_window(delay=0.4)
+        return {"success": True, "started": str(target), "version": self.latest_version}
 
     def _creator_folder(self):
         username = str(self.product.get("creator_username") or "").strip().lstrip("@").strip()
@@ -474,7 +606,8 @@ class InstallerAPI:
 
     def get_state(self):
         product = self.product
-        return {"leak": self.manifest.get("leak_name") or "Preset pack", "creator": ("@" + str(product.get("creator_username", "")).lstrip("@")) if product.get("creator_username") else (product.get("creator_nickname") or "Unknown creator"), "uploader": "Anonymous" if product.get("is_anonymous") else (product.get("uploader_name") or "Zyrex community"), "description": product.get("description", ""), "category": product.get("category", ""), "presetCount": int(self.manifest.get("count") or len(self.manifest.get("files") or [])), "creatorAvatar": product.get("creator_avatar", ""), "uploaderAvatar": "" if product.get("is_anonymous") else product.get("uploader_avatar", ""), "thumbnail": product.get("thumbnail", ""), "destination": str(self.destination) if self.destination else "", "ready": bool(self.destination and self.payload_key), "signedIn": bool(self.access_token), "eligible": bool(self.access.get("allowed")), "access": dict(self.access), "authenticated": bool(self.access_token and self.payload_key), "username": self.discord_username, "live": self.live, "metadataLoading": self.metadata_loading, "progress": dict(self.progress), "version": VERSION, "aeVersion": self.ae_year() or 0}
+        presets_default = is_user_presets_path(self.destination)
+        return {"leak": self.manifest.get("leak_name") or "Preset pack", "creator": ("@" + str(product.get("creator_username", "")).lstrip("@")) if product.get("creator_username") else (product.get("creator_nickname") or "Unknown creator"), "uploader": "Anonymous" if product.get("is_anonymous") else (product.get("uploader_name") or "Zyrex community"), "description": product.get("description", ""), "category": product.get("category", ""), "presetCount": int(self.manifest.get("count") or len(self.manifest.get("files") or [])), "assetCount": int(self.manifest.get("asset_count") or len(self.manifest.get("assets") or [])), "creatorAvatar": product.get("creator_avatar", ""), "uploaderAvatar": "" if product.get("is_anonymous") else product.get("uploader_avatar", ""), "thumbnail": product.get("thumbnail", ""), "destination": str(self.destination) if self.destination else "", "destinationPresets": presets_default, "ready": bool(self.destination and self.payload_key), "signedIn": bool(self.access_token), "eligible": bool(self.access.get("allowed")), "access": dict(self.access), "authenticated": bool(self.access_token and self.payload_key), "username": self.discord_username, "live": self.live, "metadataLoading": self.metadata_loading, "progress": dict(self.progress), "version": VERSION, "aeVersion": self.ae_year() or 0, "updateRequired": bool(self.update_required), "latestVersion": self.latest_version}
 
     def log_event(self, event, **fields):
         if not self.access_token:
@@ -574,10 +707,12 @@ class InstallerAPI:
         return self.get_state()
 
     def install(self):
+        if self.update_required:
+            return {"success": False, "upgradeRequired": True, "latest": self.latest_version, "error": f"This installer is out of date. Update to {self.latest_version} to install this pack."}
         if not self.destination:
             self.destination = detect_destination()
         if not self.destination:
-            return {"success": False, "needsFolder": True, "error": "After Effects User Presets folder was not found. Choose the folder to continue."}
+            return {"success": False, "needsFolder": True, "error": "No save folder was found. Choose where the pack should go to continue."}
         if not self.access_token:
             return {"success": False, "error": "Sign in with Discord before installing presets."}
         # Both gates are re-checked here so a member whose pass lapsed or whose role was
@@ -593,11 +728,18 @@ class InstallerAPI:
                 "error": self.access.get("error") or "You need the Verified role and an active download pass to install this pack.",
             }
         if not self.payload_key and not self._fetch_payload_key():
+            if self.update_required:
+                return {"success": False, "upgradeRequired": True, "latest": self.latest_version, "error": f"This installer is out of date. Update to {self.latest_version} to install this pack."}
             return {"success": False, "accessRequired": True, "code": self.access.get("code") or "ACCESS_REQUIRED", "error": self.key_error or self.access.get("error") or "Could not unlock this pack."}
+        # The destination is the member's own folder now, so it may not exist yet.
+        try:
+            self.destination.mkdir(parents=True, exist_ok=True)
+        except OSError:
+            pass
         if not is_writable(self.destination):
             # The old folder can become read-only (moved to Program Files, drive removed).
             self.destination = None
-            return {"success": False, "needsFolder": True, "error": f"Presets cannot be saved in the folder this installer remembered. Choose {PROTECTED_DESTINATIONS}."}
+            return {"success": False, "needsFolder": True, "error": "Files cannot be saved in the folder this installer remembered. Choose another folder."}
         folder = self.destination / self.creator_folder / safe_part(self.manifest.get("leak_name"), "Preset pack")
         started = time.monotonic()
         self.progress = {"active": True, "done": 0, "total": 0, "name": "", "stage": "Preparing"}
@@ -610,10 +752,31 @@ class InstallerAPI:
             plaintext = cipher.decrypt_and_verify(ciphertext[:-16], ciphertext[-16:])
             archive = zipfile.ZipFile(BytesIO(plaintext))
             entries = [name for name in archive.namelist() if name.startswith("presets/") and not name.endswith("/")]
-            self.progress.update({"total": len(entries), "stage": "Installing"})
+            asset_entries = [name for name in archive.namelist() if name.startswith("files/") and not name.endswith("/")]
+            self.progress.update({"total": len(entries) + len(asset_entries), "stage": "Installing"})
             folder.mkdir(parents=True, exist_ok=True)
-            installed = skipped = refreshed = failed = 0
+            installed = skipped = refreshed = failed = assets_saved = 0
             first_error = ""
+            for archived_name in asset_entries:
+                # Project files, archives and extras are delivered encrypted but untouched:
+                # only their name carries the brand, so nothing is content-credited.
+                relative = Path(*Path(archived_name.replace("\\", "/")).parts[1:])
+                if not relative.parts or any(part in {"", ".", ".."} for part in relative.parts):
+                    continue
+                self.progress["name"] = relative.name
+                target = folder.joinpath(*[safe_part(part, "file") for part in relative.parts])
+                try:
+                    if target.is_file():
+                        skipped += 1
+                        self.progress["done"] += 1
+                        continue
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    target.write_bytes(archive.read(archived_name))
+                    assets_saved += 1
+                except OSError as write_error:
+                    failed += 1
+                    first_error = first_error or f"{relative.name}: {write_error.strerror or write_error}"
+                self.progress["done"] += 1
             for archived_name in entries:
                 relative = Path(*Path(archived_name.replace("\\", "/")).parts[1:])
                 if not relative.parts or any(part in {"", ".", ".."} for part in relative.parts):
@@ -657,16 +820,17 @@ class InstallerAPI:
             self.installed_folder = folder
             self.progress.update({"active": False, "stage": "Completed", "name": ""})
             duration = int((time.monotonic() - started) * 1000)
-            summary = {"installed": installed, "skipped": skipped, "failed": failed, "total": len(entries), "duration_ms": duration}
+            summary = {"installed": installed, "skipped": skipped, "failed": failed, "assets": assets_saved, "total": len(entries) + len(asset_entries), "duration_ms": duration}
             if first_error:
                 summary["error"] = first_error
             self.log_event("complete", **summary)
-            if not installed and failed:
+            # Files are what the member came for, so only a run that saved nothing fails.
+            if not installed and not assets_saved and failed:
                 return {
                     "success": False,
-                    "error": f"None of the presets could be saved. Close After Effects (it locks the preset files) and run the installer again. First problem: {first_error}",
+                    "error": f"None of the files could be saved. Close After Effects (it locks the preset files) and run the installer again. First problem: {first_error}",
                 }
-            return {"success": True, "installed": installed, "skipped": skipped, "refreshed": refreshed, "failed": failed, "firstError": first_error, "folder": str(folder)}
+            return {"success": True, "installed": installed, "skipped": skipped, "refreshed": refreshed, "failed": failed, "assets": assets_saved, "firstError": first_error, "folder": str(folder)}
         except Exception as error:
             self.progress.update({"active": False, "stage": "Failed", "name": ""})
             self.log_event("error", error=public_error(error), installed=0, skipped=0, total=self.progress.get("total", 0), duration_ms=int((time.monotonic() - started) * 1000))
@@ -809,7 +973,17 @@ class InstallerAPI:
                     + 'del /f /q "%~f0"\r\n',
                     encoding="utf-8",
                 )
-                subprocess.Popen(["cmd", "/c", str(script)], creationflags=0x00000008, close_fds=True)
+                subprocess.Popen(
+                    ["cmd.exe", "/c", str(script)],
+                    # The window must never flash: a hidden console plus a hidden startup
+                    # window keeps the deletion invisible to the member.
+                    creationflags=hidden_process_flags(),
+                    startupinfo=hidden_startup_info(),
+                    stdin=subprocess.DEVNULL,
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    close_fds=True,
+                )
             else:
                 removal_target.unlink(missing_ok=True)
         except Exception as error:
@@ -900,9 +1074,25 @@ def main():
         assert report["success"] is True and report["count"] == state["presetCount"], report
         assert "files" in report and all("aeMin" in row for row in report["files"])
         assert callable(getattr(api, "remove_app", None)) and callable(getattr(api, "preset_compatibility", None))
-        assert VERSION == "v1.0.2" and VERSION in html
-        for marker in ("ffxSheet", "removeSheet", "preset_compatibility", "remove_app"):
+        assert VERSION == "v1.0.3" and VERSION in html
+        for marker in ("ffxSheet", "removeSheet", "updateSheet", "wipeScreen", "changeFolder", "preset_compatibility", "remove_app", "apply_update"):
             assert marker in html, marker
+        # v1.0.3: the destination is the member's own folder, the API refuses old builds,
+        # and the app can update itself to whatever the Worker reports as current.
+        assert callable(getattr(api, "check_update", None)) and callable(getattr(api, "apply_update", None))
+        assert isinstance(state.get("destinationPresets"), bool)
+        assert version_gt("v1.0.10", "v1.0.9") and not version_gt("v1.0.9", "v1.0.10")
+        assert version_gt("1.1", "v1.0.99") and not version_gt("v1.0.3", "1.0.3")
+        assert installer_platform() in {"windows", "macos", "linux"}
+        target = Path(os.environ.get("TEMP") or os.environ.get("TMPDIR") or "/tmp") / "zyrex-self-test-destination"
+        target.mkdir(parents=True, exist_ok=True)
+        chosen, reason = resolve_destination(target)
+        assert chosen == target and reason == "", (chosen, reason)
+        # An After Effects year folder is the one place that is still corrected, because a
+        # preset saved there is invisible to After Effects.
+        assert resolve_destination("")[0] is None
+        assert hidden_startup_info() is not None or sys.platform != "win32"
+        assert "assetCount" in state
         # The vendored bundle is what makes HTTPS work on a frozen macOS build.
         assert Path(resource("cacert.pem")).is_file(), "cacert.pem is missing from the bundle"
         # A frozen macOS build has no trust store of its own, so the CA bundle and the
@@ -979,6 +1169,9 @@ def main():
     import webview
     api = InstallerAPI()
     threading.Thread(target=lambda: (time.sleep(2), api.refresh_metadata()), daemon=True).start()
+    # The API refuses builds older than the current minimum, so the check runs on every
+    # launch and the UI shows the update prompt before the member tries to install.
+    threading.Thread(target=lambda: (time.sleep(2.4), api.check_update()), daemon=True).start()
     webview.create_window("Zyrex Effects Installer", html=render_html(), js_api=api, width=900, height=720, min_size=(620, 560), background_color="#100b0e")
     webview.start(debug=False)
 

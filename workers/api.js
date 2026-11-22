@@ -2661,6 +2661,8 @@ async function installerGrantFromRequest(request, env, productId, releaseId) {
 }
 
 async function handleInstallerKey(request, url, env) {
+  const upgrade = installerUpgradeGate(request, env);
+  if (upgrade) return upgrade;
   const productId = String(url.searchParams.get("id") || "").trim();
   const releaseId = String(url.searchParams.get("release_id") || "").trim();
   if (!/^[A-Za-z0-9_-]{1,100}$/.test(productId) || !/^[A-Za-z0-9_-]{1,100}$/.test(releaseId)) return json({ success: false, error: "Invalid installer request" }, 400);
@@ -2675,6 +2677,8 @@ async function handleInstallerKey(request, url, env) {
 // Lets the app re-check a member who has just unlocked access without making them
 // sign in again.
 async function handleInstallerAccess(request, url, env) {
+  const upgrade = installerUpgradeGate(request, env);
+  if (upgrade) return upgrade;
   const productId = String(url.searchParams.get("id") || "").trim();
   const releaseId = String(url.searchParams.get("release_id") || "").trim();
   if (!/^[A-Za-z0-9_-]{1,100}$/.test(productId) || !/^[A-Za-z0-9_-]{1,100}$/.test(releaseId)) return json({ success: false, error: "Invalid installer request" }, 400, { "Cache-Control": "no-store" });
@@ -2685,6 +2689,8 @@ async function handleInstallerAccess(request, url, env) {
 }
 
 async function handleInstallerTrace(request, url, env) {
+  const upgrade = installerUpgradeGate(request, env);
+  if (upgrade) return upgrade;
   const productId = String(url.searchParams.get("id") || "").trim();
   const releaseId = String(url.searchParams.get("release_id") || "").trim();
   const fileName = String(url.searchParams.get("name") || "preset.ffx").replace(/\\/g, "/");
@@ -2716,6 +2722,71 @@ async function handleInstallerTrace(request, url, env) {
 
 const INSTALLER_PLATFORMS = { windows: ".exe", macos: ".dmg" };
 const INSTALLER_MAX_BYTES = 96 * 1024 * 1024;
+// The installer app is useless the moment its protocol changes, because it can no longer
+// unlock the pack. The minimum is therefore bumped whenever a build ships, and the app
+// updates itself to whatever this Worker reports as the newest release.
+const INSTALLER_VERSION_FALLBACK = "1.0.3";
+
+function installerLatestVersion(env) {
+  return String(env.INSTALLER_LATEST_VERSION || "").trim() || INSTALLER_VERSION_FALLBACK;
+}
+
+function installerMinVersion(env) {
+  return String(env.INSTALLER_MIN_VERSION || "").trim() || INSTALLER_VERSION_FALLBACK;
+}
+
+function versionParts(value) {
+  const parts = String(value || "").match(/\d+/g) || [];
+  return parts.slice(0, 4).map(Number);
+}
+
+function versionGreater(left, right) {
+  const a = versionParts(left);
+  const b = versionParts(right);
+  if (!a.length) return false;
+  if (!b.length) return true;
+  const width = Math.max(a.length, b.length);
+  for (let index = 0; index < width; index += 1) {
+    const x = a[index] || 0;
+    const y = b[index] || 0;
+    if (x !== y) return x > y;
+  }
+  return false;
+}
+
+function installerClientVersion(request) {
+  return String(request.headers.get("X-Zyrex-App-Version") || "").trim();
+}
+
+// A build older than the minimum can no longer complete an install, so every endpoint that
+// drives one answers 426 instead of letting it decrypt and install a half-broken pack.
+function installerUpgradeGate(request, env) {
+  const client = installerClientVersion(request);
+  const minimum = installerMinVersion(env);
+  const latest = installerLatestVersion(env);
+  if (client && !versionGreater(minimum, client)) return null;
+  return json({
+    success: false,
+    code: "UPGRADE_REQUIRED",
+    upgrade_required: true,
+    minimum,
+    latest,
+    error: `This installer version is no longer supported. Open the leak page and download the ${latest} build, then run it again.`,
+  }, 426, { "Cache-Control": "no-store" });
+}
+
+// The app version is written into the installer object when CI publishes it, which is the
+// only way to know whether this leak already carries the newest build.
+async function installerObjectVersion(bucket, prefix, platform) {
+  const object = await installerObjectFor(bucket, prefix, platform).catch(() => null);
+  if (!object) return "";
+  try {
+    const head = await bucket.head(object.key);
+    return String(head?.customMetadata?.app_version || "");
+  } catch (_) {
+    return "";
+  }
+}
 
 function installerPlatformExtension(platform) {
   return INSTALLER_PLATFORMS[String(platform || "").trim().toLowerCase()] || "";
@@ -2778,7 +2849,15 @@ async function handleInstallerPublish(request, url, env) {
   const uploadedAt = new Date().toISOString();
   await bucket.put(key, request.body, {
     httpMetadata: { contentType: "application/octet-stream" },
-    customMetadata: { product_id: productId, platform, release_id: releaseId, uploaded_at: uploadedAt },
+    // The app version travels with the object so the update check can tell whether this
+    // leak already carries the newest build instead of offering the same file again.
+    customMetadata: {
+      product_id: productId,
+      platform,
+      release_id: releaseId,
+      uploaded_at: uploadedAt,
+      app_version: String(request.headers.get("X-Zyrex-App-Version") || "").replace(/^v/i, "").slice(0, 16),
+    },
   });
   // Only one build per platform may live beside the leak's files.
   const listing = await bucket.list({ prefix, limit: 1000 });
@@ -3069,6 +3148,63 @@ async function handleInstallerStatus(url, env) {
   const product = await dbGetProduct(env, productId).catch(() => null);
   const payload = await installerStatusPayload(env, productId, product);
   return json(payload, 200, { "Cache-Control": "public, max-age=60" });
+}
+
+// Which build is current, and whether this leak already carries it. Public on purpose: the
+// app has to know before it can talk to anything that needs a session.
+async function handleInstallerVersion(request, url, env) {
+  const productId = String(url.searchParams.get("id") || "").trim();
+  const platform = String(url.searchParams.get("platform") || "").trim().toLowerCase();
+  const latest = installerLatestVersion(env);
+  const minimum = installerMinVersion(env);
+  const client = installerClientVersion(request);
+  const payload = {
+    success: true,
+    latest,
+    minimum,
+    client: client || "",
+    update_required: !client || versionGreater(minimum, client),
+  };
+  if (!/^[A-Za-z0-9_-]{1,100}$/.test(productId) || !installerPlatformExtension(platform)) return json(payload, 200, { "Cache-Control": "no-store" });
+  const product = await dbGetProduct(env, productId).catch(() => null);
+  const bucket = env.STORAGE_PROD || env.STORAGE;
+  const prefix = normalizeR2Prefix(product?.file_path);
+  payload.platform = platform;
+  payload.leak_version = bucket && prefix ? await installerObjectVersion(bucket, prefix, platform) : "";
+  // The update is only offered once this leak's own build contains it, otherwise the app
+  // would download itself again and stay on the same version.
+  payload.update_available = versionGreater(latest, client) && (!payload.leak_version || !versionGreater(latest, payload.leak_version));
+  return json(payload, 200, { "Cache-Control": "no-store" });
+}
+
+// Serves the newest build of this leak's installer to the app itself, so a stale copy can
+// replace itself. Signing in with Discord is enough: a pass is only needed to decrypt.
+async function handleInstallerUpdate(request, url, env) {
+  const productId = String(url.searchParams.get("id") || "").trim();
+  const releaseId = String(url.searchParams.get("release_id") || "").trim();
+  const platform = String(url.searchParams.get("platform") || "").trim().toLowerCase();
+  if (!/^[A-Za-z0-9_-]{1,100}$/.test(productId) || !installerPlatformExtension(platform)) return json({ success: false, error: "Invalid update request" }, 400, { "Cache-Control": "no-store" });
+  const grant = await installerGrantFromRequest(request, env, productId, releaseId);
+  if (!grant) return json({ success: false, error: "Sign in with Discord to update this installer", code: "NOT_AUTHORIZED" }, 401, { "Cache-Control": "no-store" });
+  const product = await dbGetProduct(env, productId).catch(() => null);
+  const bucket = env.STORAGE_PROD || env.STORAGE;
+  const prefix = normalizeR2Prefix(product?.file_path);
+  if (!product || !bucket || !prefix) return json({ success: false, error: "This pack's installer is not available" }, 404, { "Cache-Control": "no-store" });
+  const object = await installerObjectFor(bucket, prefix, platform).catch(() => null);
+  if (!object) return json({ success: false, error: "This pack's installer is still being rebuilt. Try again in a minute." }, 404, { "Cache-Control": "no-store" });
+  const stored = await bucket.get(object.key);
+  if (!stored) return json({ success: false, error: "This pack's installer could not be read" }, 503, { "Cache-Control": "no-store" });
+  return new Response(stored.body, {
+    status: 200,
+    headers: {
+      "Content-Type": "application/octet-stream",
+      "Content-Length": String(object.size || ""),
+      "Content-Disposition": `attachment; filename="${object.filename.replace(/"/g, "")}"`,
+      "Cache-Control": "no-store",
+      "X-Zyrex-Installer-Version": String(stored.customMetadata?.app_version || ""),
+      "X-Content-Type-Options": "nosniff",
+    },
+  });
 }
 
 // Backfill for the whole catalogue: a preset leak is only ever listed with both app
@@ -26075,6 +26211,8 @@ export default {
       if (path === "/api/installer/migrate" && request.method === "POST") return handleInstallerMigrate(request, url, env);
       if (path === "/api/installer/relocate-source" && request.method === "POST") return handleInstallerRelocateSource(request, url, env);
       if (path === "/api/installer/status" && request.method === "GET") return handleInstallerStatus(url, env);
+      if (path === "/api/installer/version" && request.method === "GET") return handleInstallerVersion(request, url, env);
+      if (path === "/api/installer/update" && request.method === "GET") return handleInstallerUpdate(request, url, env);
       if (path === "/api/installer/reconcile" && request.method === "POST") return handleInstallerReconcile(request, url, env);
       if (path === "/api/installer/log" && request.method === "POST") return handleInstallerLog(request, env);
       if (path === "/api/installer/logs" && request.method === "GET") return handleInstallerLogs(request, url, env, hasMasterKey);

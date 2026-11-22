@@ -81,6 +81,16 @@ def build(product_id: str, source: Path, output_root: Path, release_id: str) -> 
         aad = f"{product_id}:{release_id}".encode("utf-8")
         encrypted_payload = temp / "payload.enc"
         encrypted_payload.write_bytes(nonce + AESGCM(payload_key).encrypt(nonce, payload.read_bytes(), aad))
+        # The publish endpoint refuses anything above 96 MB, and the one-file bundle adds its
+        # own runtime on top, so an oversized pack has to fail here with a usable message.
+        encrypted_size = encrypted_payload.stat().st_size
+        MAX_ENCRYPTED_PAYLOAD = 80 * 1024 * 1024
+        if encrypted_size > MAX_ENCRYPTED_PAYLOAD:
+            raise RuntimeError(
+                f"The pack payload is {encrypted_size / (1024 * 1024):.1f} MB, which is over the "
+                f"{MAX_ENCRYPTED_PAYLOAD / (1024 * 1024):.0f} MB installer limit. Lower ASSET_BUDGET_BYTES "
+                "in build_payload.py or split the pack."
+            )
         metadata = temp / "metadata.json"
         metadata.write_text(json.dumps({**manifest, "release_id": release_id}, ensure_ascii=False), encoding="utf-8")
         from PIL import Image

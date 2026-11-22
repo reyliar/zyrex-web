@@ -1,4 +1,4 @@
-"""Fetch a public Zyrex leak record and package its locally produced FFX files."""
+"""Fetch a public Zyrex leak record and package its locally produced files."""
 from __future__ import annotations
 
 import argparse
@@ -24,6 +24,37 @@ SITE = "https://zyrexediting.xyz"
 # own After Effects can open the pack before anything is copied.
 AE_MIN_BY_FORMAT = ((99, "2026"), (97, "2025"), (95, "2024"), (93, "2023"))
 
+# The installer encrypts the pack's real payload, but pictures, videos and code files are
+# not payload: they are how a member reads the instructions, and shipping them inside the
+# app only inflates the build. Everything else (projects, archives, mogrts, presets) is
+# paid content and is encrypted and delivered.
+IMAGE_EXTENSIONS = {
+    ".png", ".jpg", ".jpeg", ".jpe", ".jfif", ".webp", ".gif", ".bmp", ".dib", ".svg",
+    ".ico", ".tif", ".tiff", ".heic", ".heif", ".avif", ".psd", ".psb",
+}
+VIDEO_EXTENSIONS = {
+    ".mp4", ".m4v", ".mov", ".avi", ".mkv", ".webm", ".wmv", ".flv", ".mpg", ".mpeg",
+    ".3gp", ".ogv", ".mts", ".m2ts",
+}
+CODE_EXTENSIONS = {
+    ".json", ".jsonc", ".json5", ".jsonl", ".ndjson", ".js", ".mjs", ".cjs", ".jsx",
+    ".ts", ".tsx", ".py", ".pyw", ".html", ".htm", ".xhtml", ".css", ".scss", ".sass",
+    ".less", ".md", ".markdown", ".rst", ".txt", ".yml", ".yaml", ".toml", ".ini",
+    ".cfg", ".conf", ".properties", ".xml", ".xsl", ".xslt", ".csv", ".tsv", ".sh",
+    ".bash", ".zsh", ".fish", ".bat", ".cmd", ".ps1", ".psd1", ".psm1", ".c", ".h",
+    ".cc", ".cpp", ".cxx", ".hpp", ".cs", ".java", ".kt", ".php", ".rb", ".go", ".rs",
+    ".swift", ".lua", ".pl", ".r", ".sql", ".url", ".webloc", ".lnk", ".desktop", ".lock",
+}
+# Everything the installer can hold is embedded in one executable, so the release fails
+# to upload past 96 MB. A pack with a huge archive keeps its presets and reports what was
+# left out rather than producing an installer nobody can download.
+ASSET_MAX_FILE_BYTES = 40 * 1024 * 1024
+ASSET_BUDGET_BYTES = 60 * 1024 * 1024
+IGNORED_FILENAMES = {
+    "leaked by zyrex.txt", "visit for more resources.url", "visit for more resources!.url",
+    "visit for more leaks.url", "visit for more leaks!.url", "thumbs.db", "desktop.ini", ".ds_store",
+}
+
 
 def ffx_format_version(data: bytes) -> int:
     if len(data) < 32 or data[:4] != b"RIFX" or data[8:12] != b"FaFX":
@@ -36,6 +67,35 @@ def ae_min_label(format_version: int) -> str:
         if format_version >= threshold:
             return label
     return "2022 or older" if format_version else ""
+
+
+def excluded_reason(name: str) -> str:
+    """Why a file never travels inside the installer payload, empty when it does."""
+    base = PurePosixPath(str(name or "")).name
+    lowered = base.casefold()
+    if not base or lowered in IGNORED_FILENAMES:
+        return "watermark"
+    suffix = PurePosixPath(base).suffix.casefold()
+    if suffix in IMAGE_EXTENSIONS:
+        return "image"
+    if suffix in VIDEO_EXTENSIONS:
+        return "video"
+    if suffix in CODE_EXTENSIONS:
+        return "code"
+    return ""
+
+
+def branded_asset_name(name: str) -> str:
+    """`Project.aep` -> `Project - zyrexediting.xyz.aep`, without renaming twice."""
+    parts = list(PurePosixPath(str(name)).parts)
+    base = parts[-1]
+    if BRAND.casefold() in base.casefold():
+        return str(PurePosixPath(*parts))
+    suffix = PurePosixPath(base).suffix
+    stem = base[: -len(suffix)] if suffix else base
+    parts[-1] = f"{stem} - {BRAND}{suffix}"
+    return str(PurePosixPath(*parts))
+
 
 
 def fetch_product(product_id: str) -> dict:
@@ -73,11 +133,44 @@ def safe_name(value: str) -> str:
     return value[:96]
 
 
+def collect_source_files(source: Path) -> tuple[list[Path], list[Path], list[dict]]:
+    """Split the leak folder into presets, encrypted assets, and anything left out."""
+    presets: list[Path] = []
+    assets: list[Path] = []
+    skipped: list[dict] = []
+    for path in sorted(source.rglob("*"), key=lambda p: str(p).casefold()):
+        try:
+            if not path.is_file():
+                continue
+        except OSError:
+            continue
+        relative = PurePosixPath(path.relative_to(source).as_posix())
+        if any(part.startswith(".") for part in relative.parts):
+            continue
+        suffix = relative.suffix.casefold()
+        if suffix == ".ffx":
+            presets.append(path)
+            continue
+        reason = excluded_reason(relative.name)
+        if reason:
+            skipped.append({"name": str(relative), "reason": reason, "bytes": 0})
+            continue
+        try:
+            size = path.stat().st_size
+        except OSError:
+            continue
+        if size > ASSET_MAX_FILE_BYTES:
+            skipped.append({"name": str(relative), "reason": "too-large", "bytes": size})
+            continue
+        assets.append(path)
+    return presets, assets, skipped
+
+
 def build_payload(product_id: str, source: Path, output: Path) -> dict:
     product = fetch_product(product_id)
     if not source.is_dir():
         raise FileNotFoundError(f"FFX source folder not found: {source}")
-    originals = sorted(source.rglob("*.ffx"), key=lambda p: str(p).casefold())
+    originals, asset_paths, skipped = collect_source_files(source)
     if not originals:
         raise ValueError(f"No .ffx presets found in: {source}")
     credit.load_known_effect_names(credit.default_asset_path("ffx-effect-names.json"))
@@ -124,14 +217,44 @@ def build_payload(product_id: str, source: Path, output: Path) -> dict:
             "ae_min": ae_min_label(format_version),
         })
 
+    # Non-preset files travel as they are, only renamed so every delivered file carries the
+    # brand. They are encrypted by the installer like the presets, but never content-credited:
+    # rewriting a project or an archive would corrupt it.
+    asset_entries: list[tuple[str, bytes]] = []
+    asset_details: list[dict] = []
+    asset_bytes = 0
+    for original in asset_paths:
+        relative = PurePosixPath(original.relative_to(source).as_posix())
+        try:
+            data = original.read_bytes()
+        except OSError as error:
+            skipped.append({"name": str(relative), "reason": f"unreadable: {error}", "bytes": 0})
+            continue
+        if asset_bytes + len(data) > ASSET_BUDGET_BYTES:
+            skipped.append({"name": str(relative), "reason": "budget", "bytes": len(data)})
+            continue
+        name = branded_asset_name(str(relative))
+        if name.casefold() in used:
+            skipped.append({"name": str(relative), "reason": "duplicate", "bytes": len(data)})
+            continue
+        used.add(name.casefold())
+        asset_bytes += len(data)
+        asset_entries.append((name, data))
+        asset_details.append({"name": name, "original": str(relative), "bytes": len(data)})
+
     manifest = {
         "product_id": product_id,
         "leak_name": product["name"],
         "product": product,
         "count": len(prepared),
+        "asset_count": len(asset_entries),
+        "asset_bytes": asset_bytes,
+        "brand": BRAND,
         "effect_name_credited": effect_credit,
         "filename_credited": filename_credit,
         "files": details,
+        "assets": asset_details,
+        "skipped": skipped,
     }
     if effect_credit + filename_credit != len(prepared):
         raise ValueError("Every FFX preset must receive an effect-name or filename credit before app generation.")
@@ -140,7 +263,10 @@ def build_payload(product_id: str, source: Path, output: Path) -> dict:
         archive.writestr("manifest.json", json.dumps(manifest, ensure_ascii=False, indent=2))
         for name, data, _ in prepared:
             archive.writestr("presets/" + name, data)
+        for name, data in asset_entries:
+            archive.writestr("files/" + name, data)
     return manifest
+
 
 
 def main() -> None:

@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import sys
 import time
 import urllib.error
@@ -19,6 +20,16 @@ PUBLISH_API = f"{SITE}/api/installer/publish"
 PLATFORM_FOLDERS = {"windows": "Windows", "macos": "macOS"}
 PLATFORM_SUFFIXES = {"windows": ".exe", "macos": ".dmg"}
 MAX_ATTEMPTS = 4
+
+
+def app_version() -> str:
+    """The version baked into the build, read from the same app.py PyInstaller bundled."""
+    try:
+        source = (Path(__file__).resolve().parent / "app.py").read_text(encoding="utf-8")
+    except OSError:
+        return ""
+    match = re.search(r'^VERSION\s*=\s*"(v?\d+(?:\.\d+)*)"', source, re.MULTILINE)
+    return match.group(1).lstrip("v") if match else ""
 
 
 def find_installer(release_root: Path, platform: str) -> Path:
@@ -38,6 +49,9 @@ def publish(preset_id: str, platform: str, release_id: str, installer: Path, tok
         "Content-Length": str(len(payload)),
         "Accept": "application/json",
         "User-Agent": "Zyrex-Installer-Publisher/1.0",
+        # The Worker stores this next to the object, so the update check can tell whether a
+        # leak already ships the newest build.
+        "X-Zyrex-App-Version": app_version(),
     }
     last_error = "publish did not run"
     for attempt in range(1, MAX_ATTEMPTS + 1):
