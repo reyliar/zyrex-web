@@ -3373,11 +3373,16 @@ async function handleInstallerFfxSource(request, url, env) {
   if (requestedKey) {
     let object = null;
     let actualPrefix = prefix;
-    if (requestedKey.startsWith(prefix) || requestedKey.startsWith(`_source_ffx/${prefix}`)) {
-      if (!requestedKey.includes("..") && /\.ffx$/i.test(requestedKey)) {
+    const relative = requestedKey.startsWith(`_source_ffx/${prefix}`)
+      ? requestedKey.slice(`_source_ffx/${prefix}`.length)
+      : requestedKey.startsWith(prefix) ? requestedKey.slice(prefix.length) : "";
+    const wantedFfx = /\.ffx$/i.test(relative);
+    // A preset is traced for a member; any other payload file is served untouched.
+    if (relative && !requestedKey.includes("..") && (wantedFfx || isSourceAssetName(relative))) {
+      if (requestedKey.startsWith(prefix) || requestedKey.startsWith(`_source_ffx/${prefix}`)) {
         object = await bucket.get(requestedKey);
         actualPrefix = requestedKey.startsWith("_source_ffx/") ? `_source_ffx/${prefix}` : prefix;
-        if (!object && !requestedKey.startsWith("_source_ffx/")) {
+        if (!object && !requestedKey.startsWith("_source_ffx/") && wantedFfx) {
           const altKey = `_source_ffx/${requestedKey}`;
           object = await bucket.get(altKey);
           if (object) actualPrefix = `_source_ffx/${prefix}`;
@@ -3386,7 +3391,7 @@ async function handleInstallerFfxSource(request, url, env) {
     }
     if (!object) return json({ success: false, error: "Source file not found" }, 404, { "Cache-Control": "no-store" });
     let body = object.body;
-    if (grant) {
+    if (grant && wantedFfx) {
       const raw = new Uint8Array(await object.arrayBuffer());
       const traced = traceDownloadBytes(raw, relativeR2Name(requestedKey, actualPrefix), grant.userId, grant.username, new Date().toISOString());
       if (!traced) return json({ success: false, error: "This preset cannot be safely traced and was not released." }, 422, { "Cache-Control": "no-store" });
@@ -3408,7 +3413,10 @@ async function handleInstallerFfxSource(request, url, env) {
   if (url.searchParams.get("bundle") === "1" && buildAuthorized) {
     return installerSourceBundle(bucket, sourcePrefix, productId, files);
   }
-  return json({ success: true, id: productId, files: files.map(({ key, name, size }) => ({ key, name, size })) }, 200, { "Cache-Control": "private, no-store" });
+  // The extras stay in the leak folder and are listed separately, so the existing preset
+  // bundle stays exactly as fast as it was.
+  const assets = await listInstallerAssets(bucket, prefix);
+  return json({ success: true, id: productId, files: files.map(({ key, name, size }) => ({ key, name, size })), assets: assets.map(({ key, name, size }) => ({ key, name, size })) }, 200, { "Cache-Control": "private, no-store" });
 }
 
 async function listInstallerSources(bucket, sourcePrefix) {
@@ -3426,6 +3434,63 @@ async function listInstallerSources(bucket, sourcePrefix) {
   }
   return files;
 }
+
+// Pictures, videos and code never travel inside the installer, and neither do the app
+// downloads themselves. Everything else in the leak folder is payload and is fetched so
+// the build can encrypt it.
+const SOURCE_ASSET_MAX_BYTES = 40 * 1024 * 1024;
+const SOURCE_ASSET_BUDGET_BYTES = 60 * 1024 * 1024;
+const SOURCE_EXCLUDED_EXTENSIONS = new Set([
+  ".exe", ".dmg",
+  ".png", ".jpg", ".jpeg", ".jpe", ".jfif", ".webp", ".gif", ".bmp", ".dib", ".svg",
+  ".ico", ".tif", ".tiff", ".heic", ".heif", ".avif", ".psd", ".psb",
+  ".mp4", ".m4v", ".mov", ".avi", ".mkv", ".webm", ".wmv", ".flv", ".mpg", ".mpeg",
+  ".3gp", ".ogv", ".mts", ".m2ts",
+  ".json", ".jsonc", ".json5", ".jsonl", ".ndjson", ".js", ".mjs", ".cjs", ".jsx",
+  ".ts", ".tsx", ".py", ".pyw", ".html", ".htm", ".xhtml", ".css", ".scss", ".sass",
+  ".less", ".md", ".markdown", ".rst", ".txt", ".yml", ".yaml", ".toml", ".ini",
+  ".cfg", ".conf", ".properties", ".xml", ".xsl", ".xslt", ".csv", ".tsv", ".sh",
+  ".bash", ".zsh", ".fish", ".bat", ".cmd", ".ps1", ".psd1", ".psm1", ".c", ".h",
+  ".cc", ".cpp", ".cxx", ".hpp", ".cs", ".java", ".kt", ".php", ".rb", ".go", ".rs",
+  ".swift", ".lua", ".pl", ".r", ".sql", ".url", ".webloc", ".lnk", ".desktop", ".lock",
+]);
+
+function isSourceAssetName(name) {
+  const base = String(name || "").split("/").pop() || "";
+  if (!base || base.startsWith(".")) return false;
+  if (isWatermarkName(base)) return false;
+  const lower = base.toLowerCase();
+  if (lower === "thumbs.db" || lower === "desktop.ini") return false;
+  const dot = lower.lastIndexOf(".");
+  if (dot <= 0) return true;
+  return !SOURCE_EXCLUDED_EXTENSIONS.has(lower.slice(dot));
+}
+
+// The leak folder keeps its extras after the presets move into the source backup, so both
+// prefixes are inspected.
+async function listInstallerAssets(bucket, prefix) {
+  const assets = [];
+  let total = 0;
+  let cursor;
+  for (let page = 0; page < 5; page++) {
+    const listed = await bucket.list({ prefix, limit: 1000, cursor });
+    for (const object of listed.objects || []) {
+      if (!object.key.startsWith(prefix) || object.key.includes("..")) continue;
+      if (object.key.endsWith("/") || object.key === prefix) continue;
+      const name = relativeR2Name(object.key, prefix);
+      if (!name || !isSourceAssetName(name)) continue;
+      const size = Number(object.size) || 0;
+      if (!size || size > SOURCE_ASSET_MAX_BYTES) continue;
+      if (total + size > SOURCE_ASSET_BUDGET_BYTES) continue;
+      total += size;
+      assets.push({ key: object.key, name, size });
+    }
+    if (!listed.truncated || !listed.cursor) break;
+    cursor = listed.cursor;
+  }
+  return assets;
+}
+
 
 // Building one leak used to cost one Worker request per preset, which is what exhausted
 // the zone's daily quota during a full backfill. The bundle answers the whole pack in a

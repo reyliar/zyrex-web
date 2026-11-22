@@ -76,14 +76,18 @@ def parse_bundle(payload: bytes) -> list[tuple[str, bytes]]:
     return files
 
 
-def safe_relative_name(value: str) -> str:
+def safe_relative_name(value: str, allow_any: bool = False) -> str:
     raw = value.replace("\\", "/")
     parts = [part for part in PurePosixPath(raw).parts if part not in {"", "."}]
     if not parts or any(part == ".." for part in parts):
         raise ValueError(f"Unexpected source path: {value}")
     parts = [re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", part).strip(" .") for part in parts]
     name = "/".join(part for part in parts if part)
-    if not name or not name.lower().endswith(".ffx"):
+    if not name:
+        raise ValueError(f"Unexpected source filename: {value}")
+    if allow_any:
+        return name
+    if not name.lower().endswith(".ffx"):
         raise ValueError(f"Unexpected source filename: {value}")
     return name
 
@@ -141,6 +145,47 @@ def skip_unusable(skipped: list[str], preset_id: str) -> None:
     print(f"Skipped {len(skipped)} unusable source file(s) for {preset_id}: " + "; ".join(skipped[:8]))
 
 
+def download_assets(output: Path, preset_id: str, token: str, seen: set[str]) -> int:
+    """Fetch the leak's non-preset payload files, which travel encrypted and uncredited.
+
+    The Worker lists them separately from the presets so the preset bundle stays a single
+    request; a Worker that predates the field simply returns nothing and the build ships
+    the presets only.
+    """
+    try:
+        listing = json.loads(request(preset_id, token).decode("utf-8"))
+    except (HTTPError, URLError, ValueError) as error:
+        print(f"Asset listing unavailable for {preset_id} ({error}); shipping presets only.")
+        return 0
+    assets = listing.get("assets") if isinstance(listing, dict) else None
+    if not isinstance(assets, list) or not assets:
+        return 0
+    written = 0
+    for item in assets:
+        key = str(item.get("key", ""))
+        try:
+            name = safe_relative_name(str(item.get("name", "")), allow_any=True)
+        except ValueError as error:
+            print(f"Skipping asset with an unusable name: {error}")
+            continue
+        if not key:
+            continue
+        try:
+            data = request(preset_id, token, key)
+        except HTTPError as error:
+            print(f"Asset download failed for {name}: HTTP {error.code}; it is left out of the installer.")
+            continue
+        target = output.joinpath(*PurePosixPath(name).parts)
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(data)
+        seen.add(name.casefold())
+        written += 1
+        time.sleep(FILE_PAUSE_SECONDS)
+    if written:
+        print(f"Downloaded {written} extra payload file(s) for {preset_id}.")
+    return written
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--preset-id", required=True)
@@ -170,6 +215,7 @@ def main() -> None:
         written = len(bundled) - len(skipped)
         if not written:
             raise SystemExit(f"No usable FFX presets are available for {args.preset_id}.")
+        download_assets(args.output, args.preset_id, token, seen)
         print(f"Downloaded {written} FFX files for {args.preset_id} in one request.")
         return
 
@@ -199,6 +245,7 @@ def main() -> None:
     written = len(files) - len(skipped)
     if not written:
         raise SystemExit(f"No usable FFX presets are available for {args.preset_id}.")
+    download_assets(args.output, args.preset_id, token, seen)
     print(f"Downloaded {written} FFX files for {args.preset_id}.")
 
 
